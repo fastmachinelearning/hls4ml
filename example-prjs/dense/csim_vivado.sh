@@ -20,4 +20,6 @@ echo "====================================================="
 echo "====================================================="
 echo "C++ EXECUTION"
 rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"my-Vivado-test/firmware/weights\" -Imy-Vivado-test/firmware -Imy-Vivado-test/firmware/ap_types -I$MGC_HOME/shared/include my-Vivado-test/firmware/myproject.cpp my-Vivado-test/myproject_test.cpp; a.out
+# python3 agrmax.py
+perf record -g ./a.out
 

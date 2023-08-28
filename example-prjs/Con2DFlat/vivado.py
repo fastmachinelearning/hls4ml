@@ -19,5 +19,5 @@ hls_model = hls4ml.converters.keras_to_hls(config)
 print("\n============================================================================================")
 print("Building HLS C++ model")
 hls_model.build(csim=True, synth=True, cosim=True, validation=True, vsynth=True)
-hls_model.build()
+# hls_model.build()
 

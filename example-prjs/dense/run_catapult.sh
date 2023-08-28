@@ -18,25 +18,13 @@ export OSTYPE=linux-gnu
 
 echo "Activating Virtual Environment..."
 #    bash
-source ../../../../venv/bin/activate
-# source $VENV/bin/activate
-
-rm -rf ./my-Catapult-test*
-
-mkdir -p tb_data
-
-# to run catapult+vivado_rtl
-sed -e 's/Vivado/Catapult/g' vivado.py | sed -e 's/ap_fixed/ac_fixed/' >catapult.py
-# to only run catapult
-# sed -e 's/Vivado/Catapult/g' vivado.py | sed -e 's/vsynth=True/vsynth=False/g' >catapult.py
-
-# actually run HLS4ML + Catapult (+ optional vivado RTL)
-python3 catapult.py
+source $VENV/bin/activate
 
 # run just the C++ execution
 echo ""
 echo "====================================================="
 echo "====================================================="
-echo "C++ EXECUTION"
-pushd my-Catapult-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++17 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -I$MGC_HOME/shared/include firmware/myproject.cpp myproject_test.cpp; a.out; popd
-
+echo "Running Catapult"
+# pushd my-Catapult-test; $MGC_HOME/bin/catapult -f build_prj.tcl "csim=1 cosim=1 synth=1 vsynth=1 validation=1"; popd
+# hls4ml build -p  my-Catapult-test -a
+python3 catapult.py
