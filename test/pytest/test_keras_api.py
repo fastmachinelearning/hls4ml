@@ -330,7 +330,7 @@ def test_depthwise2d(backend, io_type):
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_depthwise1d(backend, io_type):
     '''
-    Test proper handling of QConv2DBatchnorm.
+    Test proper handling of DepthwiseConv1D.
     '''
     X = np.random.rand(10, 32, 3)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
