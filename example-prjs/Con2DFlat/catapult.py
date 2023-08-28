@@ -7,7 +7,7 @@ print(hls4ml.__version__)
 
 print("\n============================================================================================")
 print("Configuring HLS4ML")
-with open('Catapult_dense_config.yml', 'r') as ymlfile:
+with open('Catapult_con2d_config.yml', 'r') as ymlfile:
   config = yaml.safe_load(ymlfile)
 
 print("\n============================================================================================")

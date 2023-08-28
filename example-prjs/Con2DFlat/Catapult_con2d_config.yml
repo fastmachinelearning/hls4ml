@@ -17,7 +17,6 @@ HLSConfig:
     LayerName:
       softmax:
         Precision: ac_fixed<16,6,false>
-        ReuseFactor: 1
         Strategy: Stable
         exp_table_t: ac_fixed<18,8,true>
         inv_table_t: ac_fixed<18,4,true>
@@ -31,26 +30,18 @@ HLSConfig:
       relu1:
         Precision:
           result: ac_fixed<7,1,true>
-        ReuseFactor: 1
       BatchN_input:
         Precision:
           result: ac_fixed<16,6,true>
-        ReuseFactor: 1  
       BatchN:
         Precision:
           bias: ac_fixed<6,1,true>
           weight: ac_fixed<6,1,true>
-        ReuseFactor: 1
-        Strategy: Latency
       Conv2DQ:
         Precision:
           bias: ac_fixed<6,1,true>
           weight: ac_fixed<6,1,true>
-        ReuseFactor: 1
-        Strategy: Latency
       Dense:
         Precision:
           bias: ac_fixed<6,1,true>
           weight: ac_fixed<6,1,true>
-        ReuseFactor: 1
-        Strategy: Latency

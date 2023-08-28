@@ -43,9 +43,8 @@ def compare_files(file1_path, file2_path):
 def create_model():
     # Create a model
     model = tf.keras.Sequential()
-    model.add(layers.Flatten(input_shape=(8, 8)))  # Flattens the 28x28 input into a 784-dimensional vector
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dense(32, activation='relu'))
+    model.add(layers.Flatten(input_shape=(4, 4)))  # Flattens the 28x28 input into a 784-dimensional vector
+    model.add(layers.Dense(128, activation='relu'))
     model.add(layers.Dense(10, activation='softmax'))
 
     return model
@@ -68,8 +67,8 @@ if __name__ == '__main__':
     x_test = x_test / 255.0
     
     # # # Resize the images to 4x4
-    x_train_resized = tf.image.resize(x_train[..., np.newaxis], size=(8, 8)).numpy()
-    x_test_resized = tf.image.resize(x_test[..., np.newaxis], size=(8, 8)).numpy()
+    x_train_resized = tf.image.resize(x_train[..., np.newaxis], size=(4, 4)).numpy()
+    x_test_resized = tf.image.resize(x_test[..., np.newaxis], size=(4, 4)).numpy()
 
     # Convert labels to one-hot encoding
     y_train = tf.keras.utils.to_categorical(y_train, num_classes=10)
