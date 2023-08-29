@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 
-from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
+from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
 rnn_layers = ['RNN', 'LSTM', 'GRU']
 
@@ -55,12 +55,10 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
     if class_object.dropout > 0:
         raise Exception('hls4ml does not support RNNs with dropout')
 
-    (
-        layer['weight_data'],
-        layer['recurrent_weight_data'],
-        layer['bias_data'],
-        layer['recurrent_bias_data'],
-    ) = get_weights_data(data_reader, layer['name'], ['weight_ih_l0', 'weight_hh_l0', 'bias_ih_l0', 'bias_hh_l0'])
+    layer['weight_data'] = class_object.weight_ih_l0.data.numpy()
+    layer['recurrent_weight_data'] = class_object.weight_hh_l0.data.numpy()
+    layer['bias_data'] = class_object.bias_ih_l0.data.numpy()
+    layer['recurrent_bias_data'] = class_object.bias_hh_l0.data.numpy()
 
     if class_object.bias is False:
         layer['bias_data'] = np.zeros(layer['weight_data'].shape[0])

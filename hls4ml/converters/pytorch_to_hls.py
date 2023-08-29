@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 
 from hls4ml.model import ModelGraph
@@ -17,22 +16,12 @@ class PyTorchModelReader:
     def get_weights_data(self, layer_name, var_name):
         data = None
 
-        # Workaround for naming schme in nn.Sequential,
-        # have to remove the prefix we previously had to add to make sure the tensors are found
-        if 'layer_' in layer_name:
-            layer_name = layer_name.split('layer_')[-1]
+        tensorName = layer_name + '.' + var_name
 
-        # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
-        # have to snap that off to find the tensors
-        if layer_name.split('_')[-1].isdigit() and len(layer_name.split('_')) > 1:
-            layer_name = '_'.join(layer_name.split('_')[:-1])
+        if tensorName in self.state_dict:
+            data = self.state_dict[tensorName].numpy()
 
-        if layer_name + '.' + var_name in self.state_dict:
-            data = self.state_dict[layer_name + '.' + var_name].numpy()
-            return data
-
-        else:
-            return None
+        return data
 
 
 class PyTorchFileReader(PyTorchModelReader):  # Inherit get_weights_data method
@@ -99,12 +88,13 @@ layer_name_map = {
     'elu': 'ELU',
     'prelu': 'PReLU',
     'sigmoid': 'Sigmoid',
-    'layer_threshold': 'Threshold',
+    '_threshold': 'Threshold',
     'softmax': 'Softmax',
     'max_pool1d': 'MaxPool1d',
     'max_pool2d': 'MaxPool2d',
     'avg_pool1d': 'AvgPool1d',
     'avg_pool2d': 'AvgPool2d',
+    'flatten': 'Flatten',
 }
 
 
@@ -134,6 +124,7 @@ def pytorch_to_hls(config):
         input_shapes = [list(reader.input_shape)]
     else:
         input_shapes = list(reader.input_shape)
+    input_shapes = [list(shape) for shape in input_shapes]
 
     model = reader.torch_model
 
@@ -144,10 +135,13 @@ def pytorch_to_hls(config):
 
     traced_model = symbolic_trace(model)
     # Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten', 'Sequential']
+    skip_layers = ['Dropout', 'Sequential']
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
+
+    # Map inputs of skipped and split (activation) layers
+    inputs_map = {}
 
     input_layers = []
 
@@ -162,15 +156,16 @@ def pytorch_to_hls(config):
     n_inputs = 0
 
     for node in traced_model.graph.nodes:
-        # If part of an unnamend nn.Sequntial, the node name will start with an "_" which messes up the parsing
-        if node.name[0] == '_':
-            node.name = 'layer' + node.name
-
         if node.op == 'call_module':
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
             # where x is an integer numbering the elements of the Sequential
             if '.' in node.target:
-                class_object = children[node.target.split('.')[0]][int(node.target.split('.')[1])]
+                fqn_path = node.target.split('.')
+                sub_children = dict(children[fqn_path[0]].named_children())
+                for name in fqn_path[1:-1]:
+                    sub_children = dict(sub_children[name].named_children())
+                sub_children[fqn_path[-1]]
+                class_object = sub_children[fqn_path[-1]]
             else:
                 class_object = children[node.target]
 
@@ -189,10 +184,12 @@ def pytorch_to_hls(config):
                 if pytorch_class == 'Sequential':  # Ignore the mother module's class name
                     continue
 
-                if pytorch_class == 'Flatten':
-                    output_shapes[layer_name] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
-                else:
-                    output_shapes[layer_name] = input_shapes[0]
+                # Assuming only one input
+                parent_input = [str(i) for i in node.args][0]
+                inputs_map[layer_name] = inputs_map.get(parent_input, parent_input)
+
+                output_shapes[layer_name] = input_shapes[0]
+
                 continue
 
             # Increment the layer counter after initial screenings
@@ -200,18 +197,20 @@ def pytorch_to_hls(config):
                 layer_counter += 1
 
             # parse info from class object
-            input_names = [str(i) for i in node.args]
+            input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
             if pytorch_class in ["RNN", "GRU", "LSTM"]:
                 # we currently don't support the passing of the initial value of the hidden state to RNN models
-                input_names = [str(node.args[0])]
+                input_names = [inputs_map.get(str(node.args[0]), str(node.args[0]))]
                 input_shapes = [output_shapes[str(node.args[0])]]
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif "getitem" in node.args[0].name:
                 for tmp_node in traced_model.graph.nodes:
-                    if tmp_node.name == node.args[0]:
-                        input_names = [str(tmp_node.args[0])]
+                    if tmp_node.name == node.args[0].name:
+                        if "getitem" in tmp_node.args[0].name:
+                            raise Exception('Nested getitem calles not resolved at the moment.')
+                        input_names = [inputs_map.get(str(tmp_node.args[0]), str(tmp_node.args[0]))]
                         input_shapes = [output_shapes[str(tmp_node.args[0])]]
-                        node.args = tmp_node.args[0]
+                        node.args = [tmp_node.args[0]]
             else:
                 input_shapes = [output_shapes[str(i)] for i in node.args]
             # for Conv layers
@@ -249,7 +248,7 @@ def pytorch_to_hls(config):
             input_layer['input_shape'] = list(input_shapes[n_inputs][1:])
             layer_list.insert(n_inputs, input_layer)
 
-            output_shapes[input_layer['name']] = input_shapes[n_inputs]
+            output_shapes[input_layer['name']] = list(input_shapes[n_inputs])
             input_layers.append(input_layer['name'])
             n_inputs += 1
 
@@ -280,7 +279,7 @@ def pytorch_to_hls(config):
 
             layer_counter += 1
 
-            input_names = [str(i) for i in node.all_input_nodes]
+            input_names = [inputs_map.get(str(i), str(i)) for i in node.all_input_nodes]
             input_shapes = [list(output_shapes[str(i)]) for i in input_names]
 
             # Process the layer
@@ -333,10 +332,7 @@ def pytorch_to_hls(config):
 
             layer_counter += 1
 
-            if 'View' in operation:
-                input_names = [str(node.args[0])]
-            else:
-                input_names = [str(i) for i in node.args]
+            input_names = [inputs_map.get(str(i), str(i)) for i in node.all_input_nodes]
 
             # Process the layer
             input_shapes = [list(output_shapes[str(i)]) for i in input_names]

@@ -76,6 +76,22 @@ ReadInputHeight:
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
+void depthwise_conv_2d_cl(
+    hls::stream<data_T> &data, hls::stream<res_T> &res,
+    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],
+    typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+    #pragma HLS inline recursive
+    switch (CONFIG_T::implementation) {
+    case conv_implementation::linebuffer:
+        depthwise_conv_2d_buffer_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        break;
+    case conv_implementation::encoded:
+        depthwise_conv_2d_encoded_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        break;
+    }
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
 void pointwise_conv_2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
                           typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
                           typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
@@ -116,17 +132,8 @@ void separable_conv_2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
     unsigned res_depth = CONFIG_T::depthwise_config::out_height * CONFIG_T::depthwise_config::out_width;
     #pragma HLS STREAM variable=depthwise_res depth=res_depth
 
-    switch (CONFIG_T::depthwise_config::implementation) {
-    case conv_implementation::linebuffer:
-        depthwise_conv_2d_buffer_cl<data_T, data_T, typename CONFIG_T::depthwise_config>(
-            data, depthwise_res, depthwise_weights, depthwise_biases);
-        break;
-    case conv_implementation::encoded:
-        depthwise_conv_2d_encoded_cl<data_T, data_T, typename CONFIG_T::depthwise_config>(
-            data, depthwise_res, depthwise_weights, depthwise_biases);
-        break;
-    }
-
+    depthwise_conv_2d_cl<data_T, data_T, typename CONFIG_T::depthwise_config>(data, depthwise_res, depthwise_weights,
+                                                                              depthwise_biases);
     pointwise_conv_2d_cl<data_T, res_T, typename CONFIG_T::pointwise_config>(depthwise_res, res, pointwise_weights,
                                                                              pointwise_biases);
 }
