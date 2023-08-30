@@ -166,6 +166,7 @@ def _build(args, extra_args):
     backend_map = {}
     backend_map['vivado'] = _build_vivado
     backend_map['quartus'] = _build_quartus
+    backend_map['catapult'] = _build_catapult
 
     backend = yamlConfig.get('Backend')
 
@@ -276,6 +277,51 @@ def _build_quartus(args, extra_args):
 
     os.chdir(curr_dir)
 
+def _build_catapult(args, extra_args):
+    catapult_parser = argparse.ArgumentParser(prog=f'hls4ml build -p {args.project}', add_help=False)
+    catapult_parser.add_argument('-c', '--simulation', help='Run C simulation', action='store_true', default=False)
+    catapult_parser.add_argument('-s', '--synthesis', help='Run C/RTL synthesis', action='store_true', default=False)
+    catapult_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
+    catapult_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
+    catapult_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
+    catapult_parser.add_argument(
+        '-l', '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False
+    )
+    catapult_parser.add_argument(
+        '-a',
+        '--all',
+        help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis',
+        action='store_true',
+    )
+    catapult_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
+
+    if args.list_options:
+        catapult_parser.print_help()
+        sys.exit(0)
+
+    catapult_args = catapult_parser.parse_args(extra_args)
+
+    reset = int(catapult_args.reset)
+    csim = int(catapult_args.simulation)
+    synth = int(catapult_args.synthesis)
+    cosim = int(catapult_args.co_simulation)
+    validation = int(catapult_args.validation)
+    export = int(catapult_args.export)
+    vsynth = int(catapult_args.catapult_synthesis)
+    if catapult_args.all:
+        csim = synth = cosim = validation = export = vsynth = 1
+
+    # Check if catapult_hls is available
+    if 'linux' in sys.platform:
+        found = os.system('command -v catapult > /dev/null')
+        if found != 0:
+            print('Catapult HLS installation not found. Make sure "catapult" is on PATH.')
+            sys.exit(1)
+
+    ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile)
+    ccs_invoke = 'catapult -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
+    print(ccs_invoke)
+    os.system(ccs_invoke)
 
 def _report(args, extra_args):
     if args.project is None:
