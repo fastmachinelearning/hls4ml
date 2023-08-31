@@ -6,31 +6,19 @@ from tensorflow.keras.models import model_from_json
 import numpy as np
 from qkeras import *
 
+# Load and preprocess the Fashion MNIST dataset
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0  # Normalize pixel values
 
+# Reshape the data to fit the Conv2D layer
+x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
 
-#Loading Fashion MNIST dataset
-(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
-#creating a smaller dataset
-train_labels = np.tile(train_labels, 3)
-train_labels = np.clip(train_labels, a_min=0, a_max=7)
-train_labels = train_labels[:125440].reshape([10, 112, 112])
-test_labels = np.tile(test_labels, 13)
-test_labels = np.clip(test_labels, a_min=0, a_max=7)
-test_labels = test_labels[:125440].reshape([10, 112, 112])
-#Normalizing the dataset
-train_images = train_images[:1920].astype('float32') / 255
-test_images = test_images[:1920].astype('float32') / 255
-# Reshaping the data for inputing into the model
-train_images = train_images.reshape((10,  224, 224,3))
-test_images = test_images.reshape((10,  224, 224,3))
 #Defining and compiling the keras model
 def create_model():
     model = tf.keras.Sequential()
-    # Must define the input shape in the first layer of the neural network
-   # model.add(QConv2D(filters=8, kernel_size=3, padding='same', strides=2, activation='relu', input_shape=(224,224,3), 
-   #     kernel_quantizer=quantizers.quantized_bits(bits=8, integer=0), bias_quantizer=quantizers.quantized_bits(bits=8, integer=0)))
-    model.add(QConv2DBatchnorm(filters=8, kernel_size=3, padding='same', strides=2, activation='relu', input_shape=(224,224,3), 
-        kernel_quantizer=quantizers.quantized_bits(bits=8, integer=0), bias_quantizer=quantizers.quantized_bits(bits=8, integer=0)))
+    model.add(QConv2DBatchnorm(filters=8, kernel_size=3, padding='same', strides=2, activation='relu', input_shape=(28,28,1),kernel_quantizer=quantizers.quantized_bits(bits=8, integer=0), bias_quantizer=quantizers.quantized_bits(bits=8, integer=0)))
+    model.add(Activation("softmax"))
 
     #Compiling the model
     model.compile(loss='sparse_categorical_crossentropy',
@@ -42,11 +30,11 @@ def create_model():
 model = create_model()
 model.summary()
 
-model.fit(train_images,
-          train_labels,
+model.fit(x_train,
+          y_train,
 
           epochs=1,
-          validation_data=(test_images,test_labels))
+          validation_data=(x_test,y_test))
 
 
 # serialize model to json
@@ -57,7 +45,7 @@ with open('fashionmnist_model.json', 'w') as json_file:
 #saving the weights of the model
 model.save_weights('FashionMNIST_weights.h5')
 #Model loss and accuracy
-loss,acc = model.evaluate(test_images,  test_labels, verbose=2)
+loss,acc = model.evaluate(x_test, y_test, verbose=2)
 model.save('FashionMNIST.h5')
 
 import json

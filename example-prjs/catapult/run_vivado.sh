@@ -2,7 +2,7 @@
 
 # This script runs the Catapult flows to generate the HLS.
 
-VENV=$HOME/venv
+VENV=../../../../venv
 
 export PATH=/wv/hlstools/python/python38/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin
 export LD_LIBRARY_PATH=/wv/hlstools/python/python38/lib:$XILINX_VIVADO/lib/lnx64.o:$MGC_HOME/lib

@@ -2,7 +2,7 @@
 
 # This script runs the Vivado flows to generate the HLS.
 
-VENV=$HOME/venv
+VENV=../../../../venv
 
 MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
 export MGC_HOME

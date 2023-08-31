@@ -20,6 +20,8 @@ source $VENV/bin/activate
 
 rm -rf ./my-Catapult-test*
 
+python3 conv2d_1layer.py
+
 # to run catapult+vivado_rtl
 sed -e 's/Vivado/Catapult/g' vivado.py >catapult.py
 # to only run catapult

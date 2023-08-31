@@ -14,6 +14,8 @@ def read_catapult_report(hls_dir, full_report=False):
 
     if os.path.isfile(hls_dir + '/build_prj.tcl'):
         prj_dir, top_func_name = _parse_build_script(hls_dir + '/build_prj.tcl')
+        print("Prj Dir:", prj_dir)
+        print("Top func name:", top_func_name)
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -25,11 +27,8 @@ def read_catapult_report(hls_dir, full_report=False):
         return
 
     solutions = _find_solutions(sln_dir)
-    print('Found {} solution(s) in {}.'.format(len(solutions), sln_dir))
 
-    for sln in solutions:
-        print('Reports for solution "{}":\n'.format(sln))
-        _find_reports(sln_dir + '/' + sln, top_func_name, full_report)
+    _find_reports(solutions, top_func_name, full_report)
 
 def _parse_build_script(script_path):
     prj_dir = None
@@ -39,8 +38,7 @@ def _parse_build_script(script_path):
         for line in f.readlines():
             if 'project new' in line:
                 prj_dir = line.split()[-1]
-            elif 'directive set -DESIGN_HIERARCHY' in line:
-                top_func_name = line.split()[-1]
+            top_func_name = 'myproject'
 
     return prj_dir, top_func_name
 
@@ -50,7 +48,7 @@ def _find_solutions(sln_dir):
     return solutions
 
 def _find_reports(sln_dir, top_func_name, full_report=False):
-    csim_file = sln_dir + '/csim/report/{}_csim.log'.format(top_func_name)
+    csim_file = sln_dir + '/../../tb_data/csim_results.log'
     if os.path.isfile(csim_file):
         _show_csim_report(csim_file)
     else:
@@ -68,6 +66,18 @@ def _find_reports(sln_dir, top_func_name, full_report=False):
     else:
         print('Co-simulation report not found.')
 
+    timing_report = sln_dir + '/vivado_concat_v/timing_summary_synth.rpt'
+    if os.path.isfile(timing_report):
+        _show_timing_report(timing_report)
+    else:
+        print('Timing synthesis report not found.')
+
+    utilization_report = sln_dir + '/vivado_concat_v/utilization_synth.rpt'
+    if os.path.isfile(utilization_report):
+        _show_utilization_report(utilization_report)
+    else:
+        print('Utilization synthesis report not found.')
+
 def _show_csim_report(csim_file):
     with open(csim_file, 'r') as f:
         print('C SIMULATION RESULT:')
@@ -84,6 +94,16 @@ def _show_synth_report(synth_file, full_report=False):
 def _show_cosim_report(cosim_file):
     with open(cosim_file, 'r') as f:
         print('CO-SIMULATION RESULT:')
+        print(f.read())
+
+def _show_timing_report(timing_report):
+    with open(timing_report, 'r') as f:
+        print('TIMING REPORT:')
+        print(f.read())
+
+def _show_utilization_report(utilization_report):
+    with open(utilization_report, 'r') as f:
+        print('UTILIZATION REPORT:')
         print(f.read())
 
 def _get_abs_and_percentage_values(unparsed_cell):
@@ -123,155 +143,34 @@ def parse_catapult_report(hls_dir):
                 csim_results.append([r for r in line.split()])
         report['CSimResults'] = csim_results
 
-    sim_file = hls_dir + '/tb_data/rtl_cosim_results.log'
-    if os.path.isfile(sim_file):
-        cosim_results = []
-        with open(sim_file, 'r') as f:
-            for line in f.readlines():
-                cosim_results.append([r for r in line.split()])
-        report['CosimResults'] = cosim_results
-
-    syn_file = sln_dir + '/' + solutions[0] + '/syn/report/{}_csynth.xml'.format(top_func_name)
-    c_synth_report = {}
-    if os.path.isfile(syn_file):
-        root = ET.parse(syn_file).getroot()
-
-        # Performance
-        perf_node = root.find('./PerformanceEstimates')
-        c_synth_report['EstimatedClockPeriod'] = perf_node.find('./SummaryOfTimingAnalysis/EstimatedClockPeriod').text
-        c_synth_report['BestLatency'] = perf_node.find('./SummaryOfOverallLatency/Best-caseLatency').text
-        c_synth_report['WorstLatency'] = perf_node.find('./SummaryOfOverallLatency/Worst-caseLatency').text
-        c_synth_report['IntervalMin'] = perf_node.find('./SummaryOfOverallLatency/Interval-min').text
-        c_synth_report['IntervalMax'] = perf_node.find('./SummaryOfOverallLatency/Interval-max').text
-        # Area
-        area_node = root.find('./AreaEstimates')
-        for child in area_node.find('./Resources'):
-            c_synth_report[child.tag] = child.text
-        for child in area_node.find('./AvailableResources'):
-            c_synth_report['Available' + child.tag] = child.text
-        report['CSynthesisReport'] = c_synth_report
-    else:
-        print('CSynthesis report not found.')
-
-    catapult_syn_file = hls_dir + '/catapult_synth.rpt'
-    if os.path.isfile(catapult_syn_file):
-        catapult_synth_rpt = {}
-        with open(catapult_syn_file) as f:
+    util_report_file = hls_dir + '/' + prj_dir + '/myproject.v1/vivado_concat_v/utilization_synth.rpt'
+    if os.path.isfile(util_report_file):
+        util_report = {}
+        a = 0
+        with open(util_report_file) as f:
             for line in f.readlines():
                 # Sometimes, phrases such as 'CLB Registers' can show up in the non-tabular sections of the report
                 if '|' in line:
-                    if 'CLB LUTs' in line:
-                        catapult_synth_rpt['LUT'] = line.split('|')[2].strip()
-                    elif 'CLB Registers' in line:
-                        catapult_synth_rpt['FF'] = line.split('|')[2].strip()
-                    elif 'RAMB18 ' in line:
-                        catapult_synth_rpt['BRAM_18K'] = line.split('|')[2].strip()
-                    elif 'DSPs' in line:
-                        catapult_synth_rpt['DSP48E'] = line.split('|')[2].strip()
-                    elif 'URAM' in line:
-                        catapult_synth_rpt['URAM'] = line.split('|')[2].strip()
-        report['CatapultSynthReport'] = catapult_synth_rpt
+                    if (('CLB LUTs' in line) and (a==0)):
+                        a += 1
+                        util_report['LUT'] = line.split('|')[2].strip()
+                    elif (('CLB Registers' in line) and (a==1)):
+                        a += 1
+                        util_report['FF'] = line.split('|')[2].strip()
+                    elif (('RAMB18 ' in line) and (a==2)):
+                        a += 1
+                        util_report['BRAM_18K'] = line.split('|')[2].strip()
+                    elif (('DSPs' in line) and (a==3)):
+                        a += 1
+                        util_report['DSP48E'] = line.split('|')[2].strip()
+                    elif (('URAM' in line) and (a==4)):
+                        a += 1
+                        util_report['URAM'] = line.split('|')[2].strip()
+        report['UtilizationReport'] = util_report
     else:
-        print('Catapult synthesis report not found.')
+        print('Utilization report not found.')
 
-    cosim_file = sln_dir + '/' + solutions[0] + '/sim/report/{}_cosim.rpt'.format(top_func_name)
-    if os.path.isfile(cosim_file):
-        cosim_report = {}
-        with open(cosim_file, 'r') as f:
-            for line in f.readlines():
-                if re.search('VHDL', line) or re.search('Verilog', line):
-                    result = line[1:].split() # [1:] skips the leading '|'
-                    result = [res[:-1] if res[-1] == '|' else res for res in result]
-                    # RTL, Status, Latency-min, Latency-avg, Latency-max, Interval-min, Interval-avg, Interval-max
-                    if result[1] == 'NA':
-                        continue
-                    else:
-                        cosim_report['RTL'] = result[0]
-                        cosim_report['Status'] = result[1]
-                        cosim_report['LatencyMin'] = result[2]
-                        cosim_report['LatencyMax'] = result[4]
-                        cosim_report['IntervalMin'] = result[5]
-                        cosim_report['IntervalMax'] = result[7]
-        report['CosimReport'] = cosim_report
-    else:
-        print('Cosim report not found.')
-
-    if os.path.isfile(cosim_file):
-        transaction_file = sln_dir + '/' + solutions[0] + '/sim/' + report['CosimReport']['RTL'].lower() + '/' + top_func_name + '.performance.result.transaction.xml'
-        if os.path.isfile(transaction_file):
-            cosim_transactions = {'InitiationInterval': {'max': 0, 'min': sys.maxsize, 'avg': 0.0},
-                                  'Latency': {'max': 0, 'min': sys.maxsize, 'avg': 0.0}}
-            with open(transaction_file, 'r') as f:
-                i = 1
-                for line in f.readlines():
-                    if re.search('transaction', line):
-                        result = line.split()
-                        # update min
-                        if result[3] != 'x':
-                            cosim_transactions['InitiationInterval']['min'] = int(result[3]) if int(result[3]) < cosim_transactions['InitiationInterval']['min'] else cosim_transactions['InitiationInterval']['min']
-                        cosim_transactions['Latency']['min'] = int(result[2]) if int(result[2]) < cosim_transactions['Latency']['min'] else cosim_transactions['Latency']['min']
-                        # update max
-                        if result[3] != 'x':
-                            cosim_transactions['InitiationInterval']['max'] = int(result[3]) if int(result[3]) > cosim_transactions['InitiationInterval']['max'] else cosim_transactions['InitiationInterval']['max']
-                        cosim_transactions['Latency']['max'] = int(result[2]) if int(result[2]) > cosim_transactions['Latency']['max'] else cosim_transactions['Latency']['max']
-                        # update avg
-                        if result[3] != 'x':
-                            cosim_transactions['InitiationInterval']['avg'] = cosim_transactions['InitiationInterval']['avg'] + float((int(result[3]) - cosim_transactions['InitiationInterval']['avg']) / i)
-                        cosim_transactions['Latency']['avg'] = cosim_transactions['Latency']['avg'] + float((int(result[2]) - cosim_transactions['Latency']['avg']) / i)
-                        i += 1
-
-            report['CosimReport']['LatencyMin'] = cosim_transactions['Latency']['min']
-            report['CosimReport']['LatencyMax'] = cosim_transactions['Latency']['max']
-            report['CosimReport']['LatencyAvg'] = cosim_transactions['Latency']['avg']
-
-            report['CosimReport']['IntervalMin'] = cosim_transactions['InitiationInterval']['min']
-            report['CosimReport']['IntervalMax'] = cosim_transactions['InitiationInterval']['max']
-            report['CosimReport']['IntervalAvg'] = cosim_transactions['InitiationInterval']['avg']
-
-        util_rpt_file = hls_dir + '/util.rpt'
-        if os.path.isfile(util_rpt_file):
-            implementation_report = {}
-            with open(util_rpt_file, 'r') as f:
-                for line in f.readlines():
-                    if re.search('\(top\)', line):
-                        # Total LUTs  |   Logic LUTs  |   LUTRAMs  |     SRLs    |      FFs      |    RAMB36   |   RAMB18  (|   URAM   )| DSP48 Blocks
-                        # skipping the first 2 unuseful cells with [:2]
-                        results = [_get_abs_and_percentage_values(elem) for elem in line.replace('|', '').split()[2:]]
-                        implementation_report['TotLUTs'] = results[0][0]
-                        implementation_report['TotLUTs%'] = results[0][1]
-
-                        implementation_report['LogicLUTs'] = results[1][0]
-                        implementation_report['LogicLUTs%'] = results[1][1]
-
-                        implementation_report['LUTRAMs'] = results[2][0]
-                        implementation_report['LUTRAMs%'] = results[2][1]
-
-                        implementation_report['SRLs'] = results[3][0]
-                        implementation_report['SRLs%'] = results[3][1]
-
-                        implementation_report['FFs'] = results[4][0]
-                        implementation_report['FFs%'] = results[4][1]
-
-                        implementation_report['RAMB36s'] = results[5][0]
-                        implementation_report['RAMB36s%'] = results[5][1]
-
-                        implementation_report['RAMB18s'] = results[6][0]
-                        implementation_report['RAMB18s%'] = results[6][1]
-
-                        if len(results) == 9:
-                            implementation_report['URAMs'] = results[7][0]
-                            implementation_report['URAMs%'] = results[7][1]
-
-                            implementation_report['DSPs'] = results[8][0]
-                            implementation_report['DSPs%'] = results[8][1]
-                        else:
-                            implementation_report['DSPs'] = results[7][0]
-                            implementation_report['DSPs%'] = results[7][1]
-            report['ImplementationReport'] = implementation_report
-        else:
-            print('Implementation report not found.')
-
-    timing_report_file = hls_dir + '/' + prj_dir.split('_')[0] + '_catapult_accelerator/project_1.runs/impl_1/design_1_wrapper_timing_summary_routed.rpt'
+    timing_report_file = hls_dir + '/' + prj_dir + '/myproject.v1/vivado_concat_v/timing_summary_synth.rpt'
     if os.path.isfile(timing_report_file):
         timing_report = {}
         with open(timing_report_file, 'r') as f:

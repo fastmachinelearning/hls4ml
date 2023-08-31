@@ -108,33 +108,101 @@ if __name__ == '__main__':
     save_model(model, name='conv2d')
     print(hls4ml.__version__)
 
-    ## Configure and convert the model for Vivado HLS
-    print("\n============================================================================================")
-    print("Configuring HLS4ML for Vivado")
-    with open('Vivado_con2d_config.yml', 'r') as ymlfile:
-        config_vivado = yaml.safe_load(ymlfile)
-    config_vivado['Backend'] = 'Vivado'
-    config_vivado['OutputDir'] = 'my-Vivado-test'
-    print("\n============================================================================================")
-    print("HLS4ML converting keras model/Vivado to HLS C++")
-    hls_model_vivado = hls4ml.converters.keras_to_hls(config_vivado)
-    hls_model_vivado.compile()
-    vivado_hls_model_predictions = hls_model_vivado.predict(x_test)
+    # ## Configure and convert the model for Vivado HLS
+    # print("\n============================================================================================")
+    # print("Configuring HLS4ML for Vivado")
+    # with open('Vivado_con2d_config.yml', 'r') as ymlfile:
+        # config_vivado = yaml.safe_load(ymlfile)
+    # config_vivado['Backend'] = 'Vivado'
+    # config_vivado['OutputDir'] = 'my-Vivado-test'
+    # print("\n============================================================================================")
+    # print("HLS4ML converting keras model/Vivado to HLS C++")
+    # hls_model_vivado = hls4ml.converters.keras_to_hls(config_vivado)
+    # hls_model_vivado.compile()
+    # vivado_hls_model_predictions = hls_model_vivado.predict(x_test)
  
-    ## Compare Vivado HLS predictions with original model predictions
-    print("HLS4ML Vivado Comparison")
-    np.savetxt('tb_data/vivado_hls_model_predictions.dat', np.argmax(vivado_hls_model_predictions, axis=1), fmt='%d')
-    mismatches, total_lines = compare_files('tb_data/vivado_hls_model_predictions.dat', 'tb_data/tb_output_predictions.dat')
-    print(f"Number of mismatches: {mismatches}")
-    print(f"Total number of lines: {total_lines}")
+    # ## Compare Vivado HLS predictions with original model predictions
+    # print("HLS4ML Vivado Comparison")
+    # np.savetxt('tb_data/vivado_hls_model_predictions.dat', np.argmax(vivado_hls_model_predictions, axis=1), fmt='%d')
+    # mismatches, total_lines = compare_files('tb_data/vivado_hls_model_predictions.dat', 'tb_data/tb_output_predictions.dat')
+    # print(f"Number of mismatches: {mismatches}")
+    # print(f"Total number of lines: {total_lines}")
     
-    ## Configure and convert the model for Catapult HLS
-    print("\n============================================================================================")
-    print("Configuring HLS4ML for Catapult")
-    with open('Catapult_con2d_config.yml', 'r') as ymlfile:
-        config_ccs = yaml.safe_load(ymlfile)
-    config_ccs['Backend'] = 'Catapult'
-    config_ccs['OutputDir'] = 'my-Catapult-test'
+    # ## Configure and convert the model for Catapult HLS
+    # print("\n============================================================================================")
+    # print("Configuring HLS4ML for Catapult")
+    # with open('Catapult_con2d_config.yml', 'r') as ymlfile:
+        # config_ccs = yaml.safe_load(ymlfile)
+    # config_ccs['Backend'] = 'Catapult'
+    # config_ccs['OutputDir'] = 'my-Catapult-test'
+    config_ccs = {
+    'Backend': 'Catapult',
+    'ClockPeriod': 5,
+    'HLSConfig': {
+        'Model': {
+            'Precision': 'ac_fixed<16,6,true>',
+            'ReuseFactor': 1,
+            'Strategy': 'Latency',
+        },
+        'LayerName': {
+            'softmax': {
+                'Precision': 'ac_fixed<16,6,false>',
+                'Strategy': 'Stable',
+                'exp_table_t': 'ac_fixed<18,8,true>',
+                'inv_table_t': 'ac_fixed<18,4,true>',
+                'table_size': 1024,
+            },
+            'Conv2DQ_input': {
+                'Precision': {
+                    'result': 'ac_fixed<16,6,true>',
+                },
+            },
+            'Dense_input': {
+                'Precision': {
+                    'result': 'ac_fixed<16,6,true>',
+                },
+            },
+            'relu1': {
+                'Precision': {
+                    'result': 'ac_fixed<7,1,true>',
+                },
+            },
+            'BatchN_input': {
+                'Precision': {
+                    'result': 'ac_fixed<16,6,true>',
+                },
+            },
+            'BatchN': {
+                'Precision': {
+                    'bias': 'ac_fixed<6,1,true>',
+                    'weight': 'ac_fixed<6,1,true>',
+                },
+            },
+            'Conv2DQ': {
+                'Precision': {
+                    'bias': 'ac_fixed<6,1,true>',
+                    'weight': 'ac_fixed<6,1,true>',
+                },
+            },
+            'Dense': {
+                'Precision': {
+                    'bias': 'ac_fixed<6,1,true>',
+                    'weight': 'ac_fixed<6,1,true>',
+                },
+            },
+        },
+    },
+    'IOType': 'io_stream',
+    'KerasH5': 'conv2d_weights.h5',
+    'KerasJson': 'conv2d.json',
+    'OutputDir': 'my-Catapult-test',
+    'ProjectName': 'myproject',
+    'Part': 'xcku115-flvb2104-2-i',
+    'XilinxPart': 'xcku115-flvb2104-2-i',
+    'InputData': 'tb_data/tb_input_features.dat',
+    'OutputPredictions': 'tb_data/tb_output_predictions.dat',}
+
+    
     print("\n============================================================================================")
     print("HLS4ML converting keras model/Catapult to HLS C++")
     hls_model_ccs = hls4ml.converters.keras_to_hls(config_ccs)

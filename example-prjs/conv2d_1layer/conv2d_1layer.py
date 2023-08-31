@@ -11,9 +11,9 @@ import numpy as np
 def random_kernel(shape=(3,3,1), dtype=None):
 
     f = np.array([
-            [[[1]], [[-1]], [[1]]],
-            [[[-1]], [[1]], [[-1]]],
-            [[[1]], [[-1]], [[1]]]
+            [[[0.87553641]], [[-0.8359631]], [[0.20843763]]],
+            [[[-0.49807304]], [[0.86302378]], [[-0.07618628]]],
+            [[[0.0654571]], [[-0.28131722]], [[0.36197313]]]
         ])
     assert f.shape == shape
     return f
@@ -38,7 +38,7 @@ def create_model():
 
 	# NOTE: Input size indicates a 5x5 pixel image (matrix) with one channel (i.e. just the red channel from RGB).
 	# Image (matrix) size is equal to kernel size since this is a very small example.
-	model.add(tf.keras.layers.Conv2D(1, 3, 1, padding="valid", kernel_initializer=random_kernel, input_shape=(5, 5, 1)))
+	model.add(tf.keras.layers.Conv2D(1, 3, 1, padding="valid", kernel_initializer='glorot_uniform', input_shape=(5, 5, 1)))
 				
 	return model
 
