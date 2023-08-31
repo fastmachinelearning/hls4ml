@@ -14,7 +14,7 @@ def create_model():
     model = Sequential()
     quantizer = quantizers.quantized_bits(bits=8, integer=0)
     qconv_batchnorm = QConv2DBatchnorm(
-        filters=4,
+        filters=5,
         kernel_size=5,
         strides=3,
         activation='relu',
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     'HLSConfig': {
         'Model': {
             'Precision': 'ac_fixed<16,6,true>',
-            'ReuseFactor': 2,
+            'ReuseFactor': 1,
             'Strategy': 'Latency',
         },
         'LayerName': {
