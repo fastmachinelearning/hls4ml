@@ -11,6 +11,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['PATH'] = '/tools/Xilinx/Vivado/2019.1/bin:' + os.environ['PATH']
 
+
 def print_dict(d, indent=0):
     align=20
     for key, value in d.items():
@@ -152,12 +153,16 @@ if len(sys.argv) == 2 and sys.argv[1] == 'profile':
 else:
 
     if BACKEND == 'VivadoAccelerator':
-        results = hls_model.build(csim=False, synth=True, vsynth=False, export=True, bitfile=True)
+        results = hls_model.build(csim=True, synth=True, cosim=True, validation=True, vsynth=True, export=True, bitfile=True)
     else:
-        results = hls_model.build(csim=False, synth=True, vsynth=False, export=True)
+        results = hls_model.build(csim=True, synth=True, cosim=True, validation=True, vsynth=True, export=True, bitfile=True)
 
     # Show reports
-    #hls4ml.report.read_vivado_report(OUTPUT_DIR)
+    hls4ml.report.read_catapult_report(OUTPUT_DIR)
+
+    print_report = hls4ml.report.parse_catapult_report(OUTPUT_DIR)
+
+    print('The report is: ', print_report)
 
     # Write header files with hardcoded data set
     if BACKEND == 'VivadoAccelerator':
