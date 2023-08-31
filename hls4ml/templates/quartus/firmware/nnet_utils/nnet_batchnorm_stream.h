@@ -58,7 +58,13 @@ BinaryNormLoop:
     BatchNormPack:
         #pragma unroll
         for (int j = 0; j < data_T::size; j++) {
-            out_data[j] = (in_data[j] > threshold[i * data_T::size + j]) ? 1 : 0;
+            int norm_index;
+            if (CONFIG_T::n_filt == -1)
+                norm_index = i * data_T::size + j;
+            else
+                norm_index = j % CONFIG_T::n_filt;
+
+            out_data[j] = (in_data[j] >= threshold[norm_index]) ? 1 : 0;
         }
 
         res.write(out_data);
@@ -79,7 +85,12 @@ TernaryNormLoop:
     BatchNormPack:
         #pragma unroll
         for (int j = 0; j < data_T::size; j++) {
-            int norm_index = i * data_T::size + j;
+            int norm_index;
+            if (CONFIG_T::n_filt == -1)
+                norm_index = i * data_T::size + j;
+            else
+                norm_index = j % CONFIG_T::n_filt;
+
             if (in_data[j] > threshold_hi[norm_index])
                 out_data[j] = 1;
             else if (in_data[j] <= threshold_lo[norm_index])
