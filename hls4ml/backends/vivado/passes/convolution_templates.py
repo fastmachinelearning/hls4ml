@@ -244,10 +244,12 @@ sepconv_config_template = """struct config{index} {{
 }};\n"""
 
 sepconv1d_function_template = (
-    'nnet::separable_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_1d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 sepconv2d_function_template = (
-    'nnet::separable_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_2d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
@@ -360,6 +362,7 @@ class SeparableConv1DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name
@@ -487,6 +490,7 @@ class SeparableConv2DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name
