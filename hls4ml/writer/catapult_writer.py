@@ -624,7 +624,7 @@ class CatapultWriter(Writer):
         fout.close()
 
     def write_build_script(self, model):
-        """Write the TCL/Shell build scripts (project.tcl, build_prj.tcl, catapult_synth.tcl, build_lib.sh)
+        """Write the TCL/Shell build scripts (build_prj.tcl, build_lib.sh)
 
         Args:
             model (ModelGraph): the hls4ml model.
@@ -632,17 +632,19 @@ class CatapultWriter(Writer):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        # project.tcl
-        f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
-        f.write('variable project_name\n')
-        f.write(f'set project_name "{model.config.get_project_name()}"\n')
-        f.write('variable backend\n')
-        f.write('set backend "catapult"\n')
-        f.write('variable part\n')
-        f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
-        f.write('variable clock_period\n')
-        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
-        f.close()
+        ### # project.tcl
+        ### f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
+        ### f.write('variable project_name\n')
+        ### f.write(f'set project_name "{model.config.get_project_name()}"\n')
+        ### f.write('variable backend\n')
+        ### f.write('set backend "catapult"\n')
+        ### f.write('variable part\n')
+        ### f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
+        ### f.write('variable clock_period\n')
+        ### f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+        ### f.write('variable version\n')
+        ### f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
+        ### f.close()
 
         # build_prj.tcl
         srcpath = os.path.join(filedir, '../templates/catapult/build_prj.tcl')
@@ -660,20 +662,20 @@ class CatapultWriter(Writer):
         f.close()
         fout.close()
 
-        # catapult_synth.tcl
-        srcpath = os.path.join(filedir, '../templates/catapult/catapult_synth.tcl')
-        dstpath = f'{model.config.get_output_dir()}/catapult_synth.tcl'
-        # copyfile(srcpath, dstpath)
-        f = open(srcpath,'r')
-        fout = open(dstpath,'w')
-        for line in f.readlines():
-            line = line.replace('myproject', model.config.get_project_name())
-            if '-part' in line:
-                line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('Part'))
+        ### # catapult_synth.tcl
+        ### srcpath = os.path.join(filedir, '../templates/catapult/catapult_synth.tcl')
+        ### dstpath = f'{model.config.get_output_dir()}/catapult_synth.tcl'
+        ### # copyfile(srcpath, dstpath)
+        ### f = open(srcpath,'r')
+        ### fout = open(dstpath,'w')
+        ### for line in f.readlines():
+        ###     line = line.replace('myproject', model.config.get_project_name())
+        ###     if '-part' in line:
+        ###         line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('Part'))
 
-            fout.write(line)
-        f.close()
-        fout.close()
+        ###     fout.write(line)
+        ### f.close()
+        ### fout.close()
 
         # build_lib.sh
         f = open(os.path.join(filedir, '../templates/catapult/build_lib.sh'))
@@ -714,10 +716,11 @@ class CatapultWriter(Writer):
         srcpath = os.path.join(filedir,'../../ac_types/')
         dstpath = '{}/firmware/ac_types/'.format(model.config.get_output_dir())
 
-        if os.path.exists(dstpath):
-            rmtree(dstpath)
+        if os.path.exists(srcpath):
+          if os.path.exists(dstpath):
+              rmtree(dstpath)
 
-        copytree(srcpath, dstpath)
+          copytree(srcpath, dstpath)
 
         # ac_math
         filedir = os.path.dirname(os.path.abspath(__file__))
@@ -725,10 +728,11 @@ class CatapultWriter(Writer):
         srcpath = os.path.join(filedir,'../../ac_math/')
         dstpath = '{}/firmware/ac_math/'.format(model.config.get_output_dir())
 
-        if os.path.exists(dstpath):
-            rmtree(dstpath)
+        if os.path.exists(srcpath):
+          if os.path.exists(dstpath):
+              rmtree(dstpath)
 
-        copytree(srcpath, dstpath)
+          copytree(srcpath, dstpath)
 
         # ac_simutils
         filedir = os.path.dirname(os.path.abspath(__file__))
@@ -736,10 +740,11 @@ class CatapultWriter(Writer):
         srcpath = os.path.join(filedir,'../../ac_simutils/')
         dstpath = '{}/firmware/ac_simutils/'.format(model.config.get_output_dir())
 
-        if os.path.exists(dstpath):
-            rmtree(dstpath)
+        if os.path.exists(srcpath):
+          if os.path.exists(dstpath):
+              rmtree(dstpath)
 
-        copytree(srcpath, dstpath)
+          copytree(srcpath, dstpath)
 
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))

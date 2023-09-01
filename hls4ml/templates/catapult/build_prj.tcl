@@ -35,6 +35,38 @@ proc report_time { op_name time_start time_end } {
   puts "***** ${op_name} COMPLETED IN ${time_h}h${time_m}m${time_s}s *****"
 }
 
+proc dump_table { } {
+  if { [solution get /STATE -checkpath 0] != "extract" } {
+    # silently return
+    return
+  }
+
+  puts "[string repeat {=} 20]"
+  puts "HLS4ML 'nnet' Layer Results"
+  array unset data
+  set layers {}
+  foreach {p v} [solution get /DATUM/FIELDS/area/FIELDS/extract/FIELDS/*/FIELDS/*/COLUMNS/total/VALUE -match glob -ret pv -checkpath 0] {
+    set layer [regsub {:inst} [lindex [split $p /] end-3] {}]
+    if { [string match {nnet::*} $layer] != 1 } { continue }
+    lappend layers $layer
+    set data($layer,Area) $v
+  }
+  foreach layer $layers {
+    foreach {field entry} {tm_latency_cycles Latency tm_thruput_cycles Thruput} {
+      foreach {p1 v1} [solution get /DATUM/FIELDS/timing/FIELDS/*/FIELDS/$layer/FIELDS/core/COLUMNS/tm_latency_cycles/VALUE  -match glob -ret pv] {
+        set data($layer,$entry) $v1
+      }
+    }
+  }
+  puts ""
+  puts "[format {%-60s  %8s  %8s  %8s} Layer Area Latency Thruput]"
+  puts "[format {%-60s  %8s  %8s  %8s} [string repeat {-} 60] [string repeat {-} 8] [string repeat {-} 8] [string repeat {-} 8]]"
+  foreach layer $layers {
+    puts "[format {%-60s  %8.0f  %8d  %8d} $layer $data($layer,Area) $data($layer,Latency) $data($layer,Thruput)]"
+  }
+  puts "\n"
+}
+
 options set Input/CppStandard {c++17}
 
 if {$opt(reset)} {
@@ -191,7 +223,7 @@ if {$opt(cosim) || $opt(validation)} {
 if {$opt(export)} {
   puts "***** EXPORT IP *****"
   set time_start [clock clicks -milliseconds]
-# Not yet implemented
+# Not yet implemented. Do we need to include value of $version ?
 #  flow package option set /Vivado/BoardPart xilinx.com:zcu102:part0:3.1
 #  flow package option set /Vivado/IP_Taxonomy {/Catapult}
 #  flow run /Vivado/launch_package_ip -shell ./vivado_concat_v/concat_v_package_ip.tcl
@@ -209,4 +241,6 @@ if {$opt(vsynth)} {
 if {$opt(bitfile)} {
   puts "***** Option bitfile not supported yet *****"
 }
+
+dump_table
 

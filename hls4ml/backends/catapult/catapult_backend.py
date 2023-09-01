@@ -190,15 +190,24 @@ class CatapultBackend(FPGABackend):
         fifo_opt=False,
         bitfile=False,
     ):
+        catapult_exe = 'catapult'
         if 'linux' in sys.platform:
-            found = os.system('command -v catapult > /dev/null')
+            cmd = 'command -v ' + catapult_exe + ' > /dev/null'
+            found = os.system(cmd)
+            if found != 0:
+                catapult_exe = os.getenv('MGC_HOME') + '/bin/catapult'
+                cmd = 'command -v ' + catapult_exe + ' > /dev/null'
+            found = os.system(cmd)
+            if found != 0:
+                catapult_exe = os.getenv('CATAPULT_HOME') + '/bin/catapult'
+                cmd = 'command -v ' + catapult_exe + ' > /dev/null'
             if found != 0:
                 raise Exception('Catapult HLS installation not found. Make sure "catapult" is on PATH.')
 
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
         ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile)
-        ccs_invoke = 'catapult -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
+        ccs_invoke = catapult_exe + ' -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
         print(ccs_invoke)
         os.system(ccs_invoke)
         os.chdir(curr_dir)

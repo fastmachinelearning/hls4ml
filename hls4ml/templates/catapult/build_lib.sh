@@ -3,11 +3,15 @@
 CC=g++
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     CFLAGS="-O3 -fPIC -std=c++11 -fno-gnu-unique"
+elif [[ "$OSTYPE" == "linux"* ]]; then
+    CFLAGS="-O3 -fPIC -std=c++11 -fno-gnu-unique -Wno-pragmas"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     CFLAGS="-O3 -fPIC -std=c++11"
 fi
 LDFLAGS=
-INCFLAGS="-Ifirmware/ac_types/include -I$MGC_HOME/shared/include -Ifirmware/ac_simutils/include"
+
+# Pick up AC libraries from Catapult install first
+INCFLAGS="-I$MGC_HOME/shared/include -Ifirmware/ac_types/include -Ifirmware/ac_math/include -Ifirmware/ac_simutils/include"
 PROJECT=myproject
 LIB_STAMP=mystamp
 

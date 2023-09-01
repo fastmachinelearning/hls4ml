@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+import glob
 
 def read_catapult_report(hls_dir, full_report=False):
     if not os.path.exists(hls_dir):
@@ -28,7 +29,9 @@ def read_catapult_report(hls_dir, full_report=False):
 
     solutions = _find_solutions(sln_dir)
 
-    _find_reports(solutions, top_func_name, full_report)
+    for sln in solutions:
+        print(f'Reports for solution "{sln}":\n')
+        _find_reports(sln, top_func_name, full_report)
 
 def _parse_build_script(script_path):
     prj_dir = None
@@ -42,9 +45,9 @@ def _parse_build_script(script_path):
 
     return prj_dir, top_func_name
 
-def _find_solutions(sln_dir):
-    solutions = []
-    solutions = sln_dir + '/myproject.v1'
+def _find_solutions(project_dir):
+    globpat = project_dir + '/*.v[0-9]*'
+    solutions = glob.glob(globpat)
     return solutions
 
 def _find_reports(sln_dir, top_func_name, full_report=False):

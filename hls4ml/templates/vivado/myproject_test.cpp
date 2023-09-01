@@ -12,8 +12,7 @@
 
 // hls-fpga-machine-learning insert bram
 
-#define CHECKPOINT 5
-#define E_LIMIT 20
+#define CHECKPOINT 5000
 
 namespace nnet {
 bool trace_enabled = true;
@@ -50,8 +49,6 @@ int main(int argc, char **argv) {
                 in.push_back(atof(current));
                 current = strtok(NULL, " ");
             }
-			//Simply adding this line.......................
-			
             cstr = const_cast<char *>(pline.c_str());
             std::vector<float> pr;
             current = strtok(cstr, " ");
@@ -64,18 +61,14 @@ int main(int argc, char **argv) {
 
             // hls-fpga-machine-learning insert top-level-function
 
-            // if (e % CHECKPOINT == 0) {
-                // std::cout << "Predictions" << std::endl;
-                // // hls-fpga-machine-learning insert predictions
-                // std::cout << "Quantized predictions" << std::endl;
-                // // hls-fpga-machine-learning insert quantized
-            // }
+            if (e % CHECKPOINT == 0) {
+                std::cout << "Predictions" << std::endl;
+                // hls-fpga-machine-learning insert predictions
+                std::cout << "Quantized predictions" << std::endl;
+                // hls-fpga-machine-learning insert quantized
+            }
             e++;
 
-      if ((E_LIMIT > 0) && (e > E_LIMIT)) {
-        std::cout << "Simulation stopping after " << E_LIMIT << " iterations" << std::endl;
-        break;
-      }
             // hls-fpga-machine-learning insert tb-output
         }
         fin.close();

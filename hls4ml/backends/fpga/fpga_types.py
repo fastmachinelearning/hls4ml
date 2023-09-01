@@ -235,7 +235,9 @@ class QuartusArrayVariableDefinition(VariableDefinition):
 
 class CatapultArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}{suffix}[{shape}]'.format(type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp())
+        return '{type} {name}{suffix}[{shape}] {pragma}'.format(
+            type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma
+        )
 
 class VivadoInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
@@ -280,7 +282,6 @@ class CatapultArrayVariableConverter(ArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Catapult', definition_cls=CatapultArrayVariableDefinition)
 
-
 class VivadoInplaceArrayVariableConverter(ArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoInplaceArrayVariableDefinition)
@@ -298,7 +299,6 @@ class CatapultInplaceArrayVariableConverter(ArrayVariableConverter):
             type_converter=type_converter, prefix='Catapult', definition_cls=CatapultInplaceArrayVariableDefinition
         )
 
-
 # endregion
 
 # region StructMemberVariable
@@ -310,6 +310,11 @@ class QuartusStructMemberVariableDefinition(VariableDefinition):
             type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp()
         )
 
+class CatapultStructMemberVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return '{type} {name}{suffix}[{shape}]'.format(
+            type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp()
+        )
 
 class StructMemberVariableConverter:
     def __init__(self, type_converter, prefix, definition_cls):
@@ -339,20 +344,11 @@ class QuartusStructMemberVariableConverter(StructMemberVariableConverter):
             type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStructMemberVariableDefinition
         )
 
-class CatapultStructMemberVariableDefinition(VariableDefinition):
-    def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}{suffix}[{shape}]'.format(
-            type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp()
-        )
-
-
 class CatapultStructMemberVariableConverter(StructMemberVariableConverter):
     def __init__(self, type_converter):
         super().__init__(
             type_converter=type_converter, prefix='Catapult', definition_cls=CatapultStructMemberVariableDefinition
         )
-
-
 
 # endregion
 
