@@ -56,7 +56,6 @@ class Layer:
         ConfigurableAttribute('trace', default=False),
         TypeAttribute('result'),
     ]
-    """"""
 
     @classproperty
     def expected_attributes(cls):
@@ -1331,8 +1330,10 @@ layer_map = {
     'QConv2D': Conv2D,
     'QConv2DBatchnorm': Conv2DBatchnorm,
     'SeparableConv1D': SeparableConv1D,
+    'QSeparableConv1D': SeparableConv1D,
     'DepthwiseConv1D': DepthwiseConv1D,
     'SeparableConv2D': SeparableConv2D,
+    'QSeparableConv2D': SeparableConv2D,
     'DepthwiseConv2D': DepthwiseConv2D,
     'QDepthwiseConv2D': DepthwiseConv2D,
     'BatchNormalization': BatchNormalization,
