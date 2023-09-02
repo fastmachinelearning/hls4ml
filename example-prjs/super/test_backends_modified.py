@@ -34,7 +34,7 @@ def print_dict(d, indent=0):
 #CLOCK_PERIOD = 10
 #
 BOARD_NAME = 'ultra96v2'
-FPGA_PART = 'xcku115-flvb2104-2-i'
+FPGA_PART = 'xczu3eg-sbva484-1-e'
 CLOCK_PERIOD = 5
 
 # Load and scale dataset
@@ -48,18 +48,9 @@ X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.2,
 scaler = StandardScaler()
 X_train_val = scaler.fit_transform(X_train_val)
 X_test = scaler.transform(X_test)
-# np.save(DATA_DIR + '/y_test.npy', y_test)
-# np.save(DATA_DIR + '/X_test.npy', X_test)
+np.save(DATA_DIR + '/y_test.npy', y_test)
+np.save(DATA_DIR + '/X_test.npy', X_test)
 np.save(DATA_DIR + '/classes.npy', le.classes_, allow_pickle=True)
-
-DATA_DIR_ = 'tb_data'
-
-np.savetxt('tb_data/tb_input_features.dat', X_test.reshape(X_test.shape[0], -1), fmt='%f')
-
-# np.savetxt(DATA_DIR_ + '/tb_output_predictions.dat', y_test)
-# np.savetxt(DATA_DIR_ + '/tb_input_features.dat', data=X_test)
-# np.savetxt(DATA_DIR + '/classes.dat', le.classes_, fmt='%s')
-
 
 # Load pre-trained quantized model
 MODEL_DIR = 'model'
@@ -77,8 +68,7 @@ model.load_weights(WEIGHTS)
 
 # Run QKeras model prediction
 y_qkeras = model.predict(X_test)
-# np.save(DATA_DIR_ + '/tb_output_predictions.dat', y_qkeras)
-np.savetxt('tb_data/tb_output_predictions.dat', np.argmax(model.predict(X_test), axis=1), fmt='%d')
+np.save(DATA_DIR + '/y_qkeras.npy', y_qkeras)
 
 # Setup rounding and saturation modes on activation layers
 import hls4ml
@@ -125,8 +115,8 @@ if ENABLE_AXI_WRAPPER:
             io_type='io_stream',
             interface='axi_master',
             driver='c',
-            input_data_tb=DATA_DIR_+'/tb_input_features.dat',
-            output_data_tb=DATA_DIR_+'/tb_output_predictions.dat',
+            input_data_tb=DATA_DIR+'/X_test.npy',
+            output_data_tb=DATA_DIR+'/y_test.npy',
             hls_config=config,
             output_dir=OUTPUT_DIR)
 else:
@@ -138,8 +128,6 @@ else:
             hls_config=config,
             part=FPGA_PART,
             io_type='io_stream',
-            input_data_tb=DATA_DIR_+'/tb_input_features.dat',
-            output_data_tb=DATA_DIR_+'/tb_output_predictions.dat',
             output_dir=OUTPUT_DIR)
 
 hls_model.compile()
@@ -165,15 +153,9 @@ if len(sys.argv) == 2 and sys.argv[1] == 'profile':
 else:
 
     if BACKEND == 'VivadoAccelerator':
-<<<<<<< HEAD
-        results = hls_model.build(csim=True, synth=True, vsynth=True, export=False, bitfile=False)
+        results = hls_model.build(csim=True, synth=True, vsynth=True, export=True, bitfile=True)
     else:
-        results = hls_model.build(csim=True, synth=True, vsynth=True, export=False)
-=======
-        results = hls_model.build(csim=True, synth=True, cosim=True, validation=True, vsynth=True, export=True, bitfile=True)
-    else:
-        results = hls_model.build(csim=True, synth=True, cosim=True, validation=True, vsynth=True, export=True, bitfile=True)
->>>>>>> 70cf49850f79f0d2278bd97539d08a8fd7106587
+        results = hls_model.build(csim=True, synth=True, vsynth=True, export=True)
 
     # Show reports
     hls4ml.report.read_catapult_report(OUTPUT_DIR)

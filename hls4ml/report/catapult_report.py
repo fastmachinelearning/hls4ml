@@ -2,8 +2,8 @@ from __future__ import print_function
 import os
 import re
 import sys
-import xml.etree.ElementTree as ET
 import glob
+import xml.etree.ElementTree as ET
 
 def read_catapult_report(hls_dir, full_report=False):
     if not os.path.exists(hls_dir):
@@ -27,11 +27,11 @@ def read_catapult_report(hls_dir, full_report=False):
         print('Project {} does not exist. Rerun "hls4ml build -p {}".'.format(prj_dir, hls_dir))
         return
 
-    solutions = _find_solutions(sln_dir)
+    solutions = _find_solutions(sln_dir, hls_dir)
 
     for sln in solutions:
         print(f'Reports for solution "{sln}":\n')
-        _find_reports(sln, top_func_name, full_report)
+        _find_reports(sln_dir + '/' + sln, top_func_name, full_report)
 
 def _parse_build_script(script_path):
     prj_dir = None
@@ -41,13 +41,19 @@ def _parse_build_script(script_path):
         for line in f.readlines():
             if 'project new' in line:
                 prj_dir = line.split()[-1]
-            top_func_name = 'myproject'
+                top_func_name = line.split()[-1].strip('_prj')
 
     return prj_dir, top_func_name
 
-def _find_solutions(project_dir):
-    globpat = project_dir + '/*.v[0-9]*'
-    solutions = glob.glob(globpat)
+def _find_solutions(sln_dir, hls_dir):
+    solutions = []
+    prj_dir, top_func_name = _parse_build_script(hls_dir + '/build_prj.tcl')
+    for path in os.listdir(sln_dir):
+        # check if current path is a dir
+        if os.path.isdir(os.path.join(sln_dir, path)):
+            pathstring = str(path)
+            if top_func_name in pathstring:
+                solutions.append(pathstring)
     return solutions
 
 def _find_reports(sln_dir, top_func_name, full_report=False):
@@ -132,7 +138,7 @@ def parse_catapult_report(hls_dir):
         print('Project {} does not exist. Rerun "hls4ml build -p {}".'.format(prj_dir, hls_dir))
         return
 
-    solutions = _find_solutions(sln_dir)
+    solutions = _find_solutions(sln_dir, hls_dir)
     if len(solutions) > 1:
         print('WARNING: Found {} solution(s) in {}. Using the first solution.'.format(len(solutions), sln_dir))
 
@@ -146,7 +152,7 @@ def parse_catapult_report(hls_dir):
                 csim_results.append([r for r in line.split()])
         report['CSimResults'] = csim_results
 
-    util_report_file = hls_dir + '/' + prj_dir + '/myproject.v1/vivado_concat_v/utilization_synth.rpt'
+    util_report_file = hls_dir + '/' + prj_dir + '/' + solutions[0] + '/vivado_concat_v/utilization_synth.rpt'
     if os.path.isfile(util_report_file):
         util_report = {}
         a = 0
@@ -173,7 +179,7 @@ def parse_catapult_report(hls_dir):
     else:
         print('Utilization report not found.')
 
-    timing_report_file = hls_dir + '/' + prj_dir + '/myproject.v1/vivado_concat_v/timing_summary_synth.rpt'
+    timing_report_file = hls_dir + '/' + prj_dir + '/' + solutions[0] + '/vivado_concat_v/timing_summary_synth.rpt'
     if os.path.isfile(timing_report_file):
         timing_report = {}
         with open(timing_report_file, 'r') as f:
