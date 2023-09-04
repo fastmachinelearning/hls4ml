@@ -1,4 +1,3 @@
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -47,8 +46,7 @@ def test_pysr_luts(data):
     try:
         from pysr import PySRRegressor
     except ImportError:
-        warnings.warn(UserWarning('Failed to import PySR, test will be skipped.'), stacklevel=1)
-        return True
+        pytest.skip('Failed to import PySR, test will be skipped.')
 
     function_definitions = ['cos_lut(x) = math_lut(cos, x, N=1024, range_start=-4, range_end=4)']
     hls4ml.utils.symbolic_utils.init_pysr_lut_functions(init_defaults=True, function_definitions=function_definitions)
