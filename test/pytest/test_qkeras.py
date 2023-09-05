@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
+from qkeras.qconvolutional import QDepthwiseConv2D
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
@@ -387,7 +388,7 @@ def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qconv2dbn_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -398,6 +399,47 @@ def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.fixture(scope='module')
+def randX_10_32_32_3():
+    return np.random.rand(10, 32, 32, 3)
+
+
+# Currently only Vivado and Vitis is supported for io_stream.
+# Note, qkeras only supports 2d version of depthwise
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qdepthwiseconv2d(randX_10_32_32_3, backend, io_type):
+    '''
+    Test proper handling of QDepthwiseConv2D.
+    '''
+    X = randX_10_32_32_3
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QDepthwiseConv2D(
+            kernel_size=(3, 3),
+            input_shape=(32, 32, 3),
+            depthwise_quantizer='quantized_bits(6, 0, alpha=1)',
+            bias_quantizer='quantized_bits(4, 0, alpha=1)',
+            bias_initializer='he_normal',
+            activation='quantized_relu(3, 0)',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qdepthwiseconv2d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
