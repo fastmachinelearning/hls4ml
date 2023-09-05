@@ -44,6 +44,14 @@ hls4ml.utils.string\_utils module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.symbolic\_utils module
+-----------------------------------
+
+.. automodule:: hls4ml.utils.symbolic_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

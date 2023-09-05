@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev35+g4b4b5a0c
+                0.8.0.dev36+gdea24dcb
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -84,6 +84,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.fixed_point_utils">hls4ml.utils.fixed_point_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.plot">hls4ml.utils.plot module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.symbolic_utils">hls4ml.utils.symbolic_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils">Module contents</a></li>
 </ul>
 </li>
@@ -453,6 +454,69 @@ This enables in-line display of the model plots in notebooks.</p>
 </dd>
 </dl>
 </dd></dl>
+
+</section>
+<section id="module-hls4ml.utils.symbolic_utils">
+<span id="hls4ml-utils-symbolic-utils-module"></span><h2>hls4ml.utils.symbolic_utils module<a class="headerlink" href="#module-hls4ml.utils.symbolic_utils" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.LUTFunction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">LUTFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">math_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.LUTFunction" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.generate_operator_complexity">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">generate_operator_complexity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unary_operators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_operators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_include_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_libs_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.generate_operator_complexity" title="Permalink to this definition"></a></dt>
+<dd><p>Generates HLS projects and synthesizes them to obtain operator complexity (clock cycles per given math operation).</p>
+<p>This function can be used to obtain a list of operator complexity for a given FPGA part at a given precision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>part</strong> (<em>str</em>) – FPGA part number to use.</p></li>
+<li><p><strong>precision</strong> (<em>str</em>) – Precision to use.</p></li>
+<li><p><strong>unary_operators</strong> (<em>list</em><em>, </em><em>optional</em>) – List of unary operators to evaluate. Defaults to None.</p></li>
+<li><p><strong>binary_operators</strong> (<em>list</em><em>, </em><em>optional</em>) – List of binary operators to evaluate. Defaults to None.</p></li>
+<li><p><strong>hls_include_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the HLS include files. Defaults to None.</p></li>
+<li><p><strong>hls_libs_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the HLS libs. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of obtained operator complexities.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.init_pysr_lut_functions">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">init_pysr_lut_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_definitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.init_pysr_lut_functions" title="Permalink to this definition"></a></dt>
+<dd><p>Register LUT-based approximations with PySR.</p>
+<p>Functions should be in the form of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">func_name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">math_lut</span><span class="p">(</span><span class="o">&lt;</span><span class="n">func</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">=&lt;</span><span class="n">table_size</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">range_start</span><span class="o">=&lt;</span><span class="n">start</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">range_end</span><span class="o">=&lt;</span><span class="n">end</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;func_name&gt;</span></code> is a given name that can be used with PySR, <code class="docutils literal notranslate"><span class="pre">&lt;func&gt;</span></code> is the math function to approximate
+(<cite>sin</cite>, <cite>cos</cite>, <cite>log</cite>,…), <code class="docutils literal notranslate"><span class="pre">&lt;table_size&gt;</span></code> is the size of the lookup table, and <code class="docutils literal notranslate"><span class="pre">&lt;start&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;end&gt;</span></code> are the
+ranges in which the function will be approximated. It is <strong>strongly</strong> recommended to use a power-of-two as a range.</p>
+<p>Registered functions can be passed by name to <code class="docutils literal notranslate"><span class="pre">PySRRegressor</span></code> (as <code class="docutils literal notranslate"><span class="pre">unary_operators</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>init_defaults</strong> (<em>bool</em><em>, </em><em>optional</em>) – Register the most frequently used functions (sin, cos, tan, log, exp).
+Defaults to False.</p></li>
+<li><p><strong>function_definitions</strong> (<em>list</em><em>, </em><em>optional</em>) – List of strings with function definitions to register with PySR.
+Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.register_pysr_lut_function">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">register_pysr_lut_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">julia_main</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.register_pysr_lut_function" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </section>
 <section id="module-hls4ml.utils">

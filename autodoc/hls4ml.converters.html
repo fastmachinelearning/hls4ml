@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev35+g4b4b5a0c
+                0.8.0.dev36+gdea24dcb
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -639,6 +639,66 @@ io_stream.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph">ModelGraph</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.convert_from_symbolic_expression">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_symbolic_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lut_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_built_in_lut_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_symbolic_expression" title="Permalink to this definition"></a></dt>
+<dd><p>Converts a given (SymPy or string) expression to hls4ml model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>expr</strong> (<em>str</em><em> or </em><em>sympy.Expr</em>) – Expression to convert. The variables in the expression should be in the form of
+<code class="docutils literal notranslate"><span class="pre">x0,</span> <span class="pre">x1,</span> <span class="pre">x2,</span> <span class="pre">...</span></code>.</p></li>
+<li><p><strong>n_symbols</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of symbols in the expression. If not provided, the largest index of the variable
+will be used as the number of symbols. Useful if number of inputs differs from the number of variables used
+in the expression. Defaults to None.</p></li>
+<li><p><strong>lut_functions</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>LUT function definitions. Defaults to None.
+The dictionary should have the form of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;&lt;func_name&gt;&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;math_func&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;func&gt;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;table_size&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">table_size</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="s1">&#39;range_start&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">start</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="s1">&#39;range_end&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">end</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;func_name&gt;</span></code> is a given name that can be used with PySR, <code class="docutils literal notranslate"><span class="pre">&lt;func&gt;</span></code> is the math function to
+approximate (<cite>sin</cite>, <cite>cos</cite>, <cite>log</cite>,…), <code class="docutils literal notranslate"><span class="pre">&lt;table_size&gt;</span></code> is the size of the lookup table, and <code class="docutils literal notranslate"><span class="pre">&lt;start&gt;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&lt;end&gt;</span></code> are the ranges in which the function will be approximated. It is <strong>strongly</strong> recommended to use a
+power-of-two as a range.</p>
+</p></li>
+<li><p><strong>use_built_in_lut_functions</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use built-in sin/cos LUT functions. Defaults to False.</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Output directory of the generated HLS
+project. Defaults to ‘my-hls-test’.</p></li>
+<li><p><strong>project_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the HLS project.
+Defaults to ‘myproject’.</p></li>
+<li><p><strong>input_data_tb</strong> (<em>str</em><em>, </em><em>optional</em>) – String representing the path of input data in .npy or .dat format that will be
+used during csim and cosim.</p></li>
+<li><p><strong>output_data_tb</strong> (<em>str</em><em>, </em><em>optional</em>) – String representing the path of output data in .npy or .dat format that will be
+used during csim and cosim.</p></li>
+<li><p><strong>precision</strong> (<em>str</em><em>, </em><em>optional</em>) – Precision to use. Defaults to ‘ap_fixed&lt;16,6&gt;’.</p></li>
+<li><p><strong>part</strong> (<em>str</em><em>, </em><em>optional</em>) – The FPGA part. If set to <cite>None</cite> a default part of a backend will be used.</p></li>
+<li><p><strong>clock_period</strong> (<em>int</em><em>, </em><em>optional</em>) – Clock period of the design.
+Defaults to 5.</p></li>
+<li><p><strong>compiler</strong> (<em>str</em><em>, </em><em>optional</em>) – Compiler to use, <code class="docutils literal notranslate"><span class="pre">vivado_hls</span></code> or <code class="docutils literal notranslate"><span class="pre">vitis_hls</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">vivado_hls</span></code>.</p></li>
+<li><p><strong>hls_include_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to HLS inlcude files. If <cite>None</cite> the location will be inferred from the
+location of the <cite>compiler</cite> used. If an empty string is passed the HLS math libraries won’t be used during
+compilation, meaning Python integration won’t work unless all functions are LUT-based. Doesn’t affect synthesis.
+Defaults to None.</p></li>
+<li><p><strong>hls_libs_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to HLS libs files. If <cite>None</cite> the location will be inferred from the
+location of the <cite>compiler</cite> used. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>hls4ml model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph">ModelGraph</a></p>
 </dd>
 </dl>
 </dd></dl>

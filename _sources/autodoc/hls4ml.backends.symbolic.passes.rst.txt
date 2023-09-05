@@ -1,0 +1,29 @@
+hls4ml.backends.symbolic.passes package
+=======================================
+
+Submodules
+----------
+
+hls4ml.backends.symbolic.passes.expr\_templates module
+------------------------------------------------------
+
+.. automodule:: hls4ml.backends.symbolic.passes.expr_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.symbolic.passes.validate\_lut module
+----------------------------------------------------
+
+.. automodule:: hls4ml.backends.symbolic.passes.validate_lut
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.symbolic.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

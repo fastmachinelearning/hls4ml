@@ -35,7 +35,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev35+g4b4b5a0c
+                0.8.0.dev36+gdea24dcb
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -276,6 +276,8 @@
       <li><a href="autodoc/hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.build">build() (hls4ml.backends.quartus.quartus_backend.QuartusBackend method)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.build">(hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend.build">(hls4ml.backends.vitis.vitis_backend.VitisBackend method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.build">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
@@ -369,14 +371,14 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1D">Conv1D (class in hls4ml.model.layers)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.convolution_templates.Conv1DConfigTemplate">Conv1DConfigTemplate (class in hls4ml.backends.quartus.passes.convolution_templates)</a>
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate">(class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.convolution_templates.Conv1DFunctionTemplate">Conv1DFunctionTemplate (class in hls4ml.backends.quartus.passes.convolution_templates)</a>
 
       <ul>
@@ -429,6 +431,8 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.convert_from_pytorch_model">convert_from_pytorch_model() (in module hls4ml.converters)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.convert_from_symbolic_expression">convert_from_symbolic_expression() (in module hls4ml.converters)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.CompressedTypeConverter.convert_precision">convert_precision() (hls4ml.backends.fpga.fpga_types.CompressedTypeConverter method)</a>
 
       <ul>
@@ -449,6 +453,8 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.create_initial_config">(hls4ml.backends.quartus.quartus_backend.QuartusBackend method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.create_initial_config">(hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.create_initial_config">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
@@ -805,6 +811,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.generate_max_depth_file">generate_max_depth_file() (in module hls4ml.backends.vivado.passes.fifo_depth_optimization)</a>
 </li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.symbolic_utils.generate_operator_complexity">generate_operator_complexity() (in module hls4ml.utils.symbolic_utils)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.codegen.GenerateConvIm2col">GenerateConvIm2col (class in hls4ml.backends.fpga.passes.codegen)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions">GenerateConvStreamingInstructions (class in hls4ml.backends.vivado.passes.conv_stream)</a>
@@ -856,6 +864,8 @@
       <ul>
         <li><a href="autodoc/hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.get_default_flow">(hls4ml.backends.quartus.quartus_backend.QuartusBackend method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.get_default_flow">(hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.get_default_flow">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.get_default_flow">(hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend method)</a>
@@ -895,10 +905,10 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_layer_precision">get_layer_precision() (hls4ml.model.layers.Layer method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layers">get_layers() (hls4ml.model.graph.ModelGraph method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layers">get_layers() (hls4ml.model.graph.ModelGraph method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.get_max_reuse_factor">get_max_reuse_factor() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_model_arch">get_model_arch() (in module hls4ml.converters.keras_to_hls)</a>
@@ -993,6 +1003,8 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.get_writer_flow">(hls4ml.backends.quartus.quartus_backend.QuartusBackend method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.get_writer_flow">(hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.get_writer_flow">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
@@ -1261,6 +1273,34 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.symbolic
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#module-hls4ml.backends.symbolic">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.symbolic.passes
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#module-hls4ml.backends.symbolic.passes">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.symbolic.passes.validate_lut
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#module-hls4ml.backends.symbolic.passes.validate_lut">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.symbolic.symbolic_backend
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#module-hls4ml.backends.symbolic.symbolic_backend">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.template
 
       <ul>
@@ -1435,6 +1475,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#module-hls4ml.backends.vivado_accelerator.passes">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization
 
@@ -1442,8 +1484,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#module-hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator.vivado_accelerator_backend
 
@@ -1823,6 +1863,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.utils.symbolic_utils
+
+      <ul>
+        <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.symbolic_utils">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.writer
 
       <ul>
@@ -1834,6 +1881,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.quartus_writer">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.writer.symbolic_writer
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.symbolic_writer">module</a>
 </li>
       </ul></li>
       <li>
@@ -1932,6 +1986,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_pooling2d">init_pooling2d() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.symbolic_utils.init_pysr_lut_functions">init_pysr_lut_functions() (in module hls4ml.utils.symbolic_utils)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_sepconv1d">init_sepconv1d() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_sepconv2d">init_sepconv2d() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
@@ -2015,6 +2071,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Softmax.initialize">(hls4ml.model.layers.Softmax method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SymbolicExpression.initialize">(hls4ml.model.layers.SymbolicExpression method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TernaryTanh.initialize">(hls4ml.model.layers.TernaryTanh method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Transpose.initialize">(hls4ml.model.layers.Transpose method)</a>
@@ -2094,6 +2152,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.recurrent_templates.LSTMFunctionTemplate">LSTMFunctionTemplate (class in hls4ml.backends.quartus.passes.recurrent_templates)</a>
 </li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.symbolic_utils.LUTFunction">LUTFunction (class in hls4ml.utils.symbolic_utils)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -2134,6 +2194,8 @@
         <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.pointwise.OptimizePointwiseConv.match">(hls4ml.backends.quartus.passes.pointwise.OptimizePointwiseConv method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.resource_strategy.ApplyResourceStrategy.match">(hls4ml.backends.quartus.passes.resource_strategy.ApplyResourceStrategy method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.match">(hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.match">(hls4ml.backends.template.Template method)</a>
 </li>
@@ -2279,6 +2341,14 @@
         <li><a href="autodoc/hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.transform_types">hls4ml.backends.quartus.passes.transform_types</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.quartus.html#module-hls4ml.backends.quartus.quartus_backend">hls4ml.backends.quartus.quartus_backend</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#module-hls4ml.backends.symbolic">hls4ml.backends.symbolic</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#module-hls4ml.backends.symbolic.passes">hls4ml.backends.symbolic.passes</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#module-hls4ml.backends.symbolic.passes.validate_lut">hls4ml.backends.symbolic.passes.validate_lut</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.html#module-hls4ml.backends.symbolic.symbolic_backend">hls4ml.backends.symbolic.symbolic_backend</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#module-hls4ml.backends.template">hls4ml.backends.template</a>
 </li>
@@ -2440,9 +2510,13 @@
 </li>
         <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils</a>
 </li>
+        <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.symbolic_utils">hls4ml.utils.symbolic_utils</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer">hls4ml.writer</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.quartus_writer">hls4ml.writer.quartus_writer</a>
+</li>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.symbolic_writer">hls4ml.writer.symbolic_writer</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.vitis_writer">hls4ml.writer.vitis_writer</a>
 </li>
@@ -2801,6 +2875,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.register_pointwise">(in module hls4ml.backends.vivado.passes.pointwise)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.symbolic_utils.register_pysr_lut_function">register_pysr_lut_function() (in module hls4ml.utils.symbolic_utils)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.register_qkeras">register_qkeras() (in module hls4ml.model.optimizer.passes.qkeras)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.register_repack_stream">register_repack_stream() (in module hls4ml.backends.fpga.passes.repack_stream)</a>
@@ -2809,10 +2885,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.backend.Backend.register_template">register_template() (hls4ml.backends.backend.Backend method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.writers.register_writer">register_writer() (in module hls4ml.writer.writers)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.writers.register_writer">register_writer() (in module hls4ml.writer.writers)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights">RegisterBramWeights (class in hls4ml.backends.fpga.passes.bram_weights)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.remove_node">remove_node() (hls4ml.model.graph.ModelGraph method)</a>
@@ -2905,10 +2981,10 @@
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits">set_msb_bits() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.set_target_reuse_factor">set_target_reuse_factor() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds">set_thresholds() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat">SetPrecisionConcat (class in hls4ml.model.optimizer.passes.precision_merge)</a>
@@ -2942,6 +3018,12 @@
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StreamVariableConverter">StreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter">StructMemberVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SymbolicExpression">SymbolicExpression (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend">SymbolicExpressionBackend (class in hls4ml.backends.symbolic.symbolic_backend)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.symbolic_writer.SymbolicExpressionWriter">SymbolicExpressionWriter (class in hls4ml.writer.symbolic_writer)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -2991,6 +3073,8 @@
         <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.resource_strategy.ApplyResourceStrategy.transform">(hls4ml.backends.quartus.passes.resource_strategy.ApplyResourceStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.transform_types.TransformTypes.transform">(hls4ml.backends.quartus.passes.transform_types.TransformTypes method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.transform">(hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate.transform">(hls4ml.backends.template.FunctionCallTemplate method)</a>
 </li>
@@ -3121,6 +3205,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateStrategy">ValidateStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable">ValidateUserLookupTable (class in hls4ml.backends.symbolic.passes.validate_lut)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Variable">Variable (class in hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition">VariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
@@ -3133,10 +3219,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend">VivadoAcceleratorBackend (class in hls4ml.backends.vivado_accelerator.vivado_accelerator_backend)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig">VivadoAcceleratorConfig (class in hls4ml.backends.vivado_accelerator.vivado_accelerator_config)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig">VivadoAcceleratorConfig (class in hls4ml.backends.vivado_accelerator.vivado_accelerator_config)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter">VivadoAcceleratorWriter (class in hls4ml.writer.vivado_accelerator_writer)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoArrayVariableConverter">VivadoArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
@@ -3202,6 +3288,8 @@
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_build_script">write_build_script() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.symbolic_writer.SymbolicExpressionWriter.write_build_script">(hls4ml.writer.symbolic_writer.SymbolicExpressionWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_build_script">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>
@@ -3220,6 +3308,8 @@
       <ul>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_hls">(hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.symbolic_writer.SymbolicExpressionWriter.write_hls">(hls4ml.writer.symbolic_writer.SymbolicExpressionWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_hls">(hls4ml.writer.vitis_writer.VitisWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_hls">(hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
@@ -3236,6 +3326,8 @@
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_nnet_utils">write_nnet_utils() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.symbolic_writer.SymbolicExpressionWriter.write_nnet_utils">(hls4ml.writer.symbolic_writer.SymbolicExpressionWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_nnet_utils">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>

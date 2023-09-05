@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.vivado_accelerator.passes package &mdash; hls4ml 0.7.1 documentation</title>
+  <title>hls4ml.backends.symbolic.passes package &mdash; hls4ml 0.7.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/sphinx_contributors.css" type="text/css" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hls4ml.converters package" href="hls4ml.converters.html" />
-    <link rel="prev" title="hls4ml.backends.vivado_accelerator package" href="hls4ml.backends.vivado_accelerator.html" /> 
+    <link rel="next" title="hls4ml.backends.vitis package" href="hls4ml.backends.vitis.html" />
+    <link rel="prev" title="hls4ml.backends.symbolic package" href="hls4ml.backends.symbolic.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -103,10 +103,10 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="hls4ml.backends.html">hls4ml.backends package</a></li>
-          <li class="breadcrumb-item"><a href="hls4ml.backends.vivado_accelerator.html">hls4ml.backends.vivado_accelerator package</a></li>
-      <li class="breadcrumb-item active">hls4ml.backends.vivado_accelerator.passes package</li>
+          <li class="breadcrumb-item"><a href="hls4ml.backends.symbolic.html">hls4ml.backends.symbolic package</a></li>
+      <li class="breadcrumb-item active">hls4ml.backends.symbolic.passes package</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/autodoc/hls4ml.backends.vivado_accelerator.passes.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/autodoc/hls4ml.backends.symbolic.passes.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -114,20 +114,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hls4ml-backends-vivado-accelerator-passes-package">
-<h1>hls4ml.backends.vivado_accelerator.passes package<a class="headerlink" href="#hls4ml-backends-vivado-accelerator-passes-package" title="Permalink to this heading"></a></h1>
+  <section id="hls4ml-backends-symbolic-passes-package">
+<h1>hls4ml.backends.symbolic.passes package<a class="headerlink" href="#hls4ml-backends-symbolic-passes-package" title="Permalink to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
 </section>
-<section id="module-hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization">
-<span id="hls4ml-backends-vivado-accelerator-passes-fifo-depth-optimization-module"></span><h2>hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization module<a class="headerlink" href="#module-hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization" title="Permalink to this heading"></a></h2>
+<section id="hls4ml-backends-symbolic-passes-expr-templates-module">
+<h2>hls4ml.backends.symbolic.passes.expr_templates module<a class="headerlink" href="#hls4ml-backends-symbolic-passes-expr-templates-module" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.backends.symbolic.passes.validate_lut">
+<span id="hls4ml-backends-symbolic-passes-validate-lut-module"></span><h2>hls4ml.backends.symbolic.passes.validate_lut module<a class="headerlink" href="#module-hls4ml.backends.symbolic.passes.validate_lut" title="Permalink to this heading"></a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">FifoDepthOptimization</span></span><a class="headerlink" href="#hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurableOptimizerPass</span></code></a>, <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOptimizerPass</span></code></a></p>
+<dt class="sig sig-object py" id="hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.symbolic.passes.validate_lut.</span></span><span class="sig-name descname"><span class="pre">ValidateUserLookupTable</span></span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurableOptimizerPass</span></code></a></p>
+<p>Validates the precision of user-defined LUTs is adequate</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization.transform" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.transform" title="Permalink to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -143,8 +158,8 @@
 </dd></dl>
 
 </section>
-<section id="module-hls4ml.backends.vivado_accelerator.passes">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.vivado_accelerator.passes" title="Permalink to this heading"></a></h2>
+<section id="module-hls4ml.backends.symbolic.passes">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.symbolic.passes" title="Permalink to this heading"></a></h2>
 </section>
 </section>
 
@@ -152,8 +167,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="hls4ml.backends.vivado_accelerator.html" class="btn btn-neutral float-left" title="hls4ml.backends.vivado_accelerator package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hls4ml.converters.html" class="btn btn-neutral float-right" title="hls4ml.converters package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hls4ml.backends.symbolic.html" class="btn btn-neutral float-left" title="hls4ml.backends.symbolic package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.backends.vitis.html" class="btn btn-neutral float-right" title="hls4ml.backends.vitis package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

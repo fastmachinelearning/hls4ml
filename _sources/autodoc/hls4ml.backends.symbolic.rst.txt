@@ -1,0 +1,29 @@
+hls4ml.backends.symbolic package
+================================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hls4ml.backends.symbolic.passes
+
+Submodules
+----------
+
+hls4ml.backends.symbolic.symbolic\_backend module
+-------------------------------------------------
+
+.. automodule:: hls4ml.backends.symbolic.symbolic_backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.symbolic
+   :members:
+   :undoc-members:
+   :show-inheritance:
