@@ -89,7 +89,7 @@ binary/ternary networks:
 Acknowledgments
 ===============
 If you benefited from participating in our community, we ask that you please acknowledge the Fast Machine Learning collaboration, and particular individuals who helped you, in any publications.
-Please use the following text for this acknowledgment: 
+Please use the following text for this acknowledgment:
   We acknowledge the Fast Machine Learning collective as an open community of multi-domain experts and collaborators. This community and \<names of individuals\>, in particular, were important for the development of this project.
 
 
