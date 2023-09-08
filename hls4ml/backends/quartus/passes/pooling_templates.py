@@ -18,6 +18,7 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
 
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
+    static const bool count_pad = {count_pad};
 
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     typedef {accum_t.name} accum_t;
@@ -44,6 +45,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_bottom = {pad_bottom};
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
+    static const bool count_pad = {count_pad};
 
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     typedef {accum_t.name} accum_t;

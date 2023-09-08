@@ -33,8 +33,10 @@ del optimizers
 register_flow(
     'convert',
     [
+        'channels_last_converter',
         'fuse_bias_add',
         'remove_useless_transpose',
+        'expand_layer_group',
         'output_rounding_saturation_mode',
         'qkeras_factorize_alpha',
         'extract_ternary_threshold',
