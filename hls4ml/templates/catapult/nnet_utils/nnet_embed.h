@@ -33,10 +33,13 @@ void embedding(
     // non-constant access pattern, so let's leave it out
     ////#pragma HLS ARRAY_PARTITION variable=embeddings complete
 
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
+    #pragma hls_unroll
     InputSequence: for (int j = 0; j < CONFIG_T::n_in; j++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         DenseEmbedding: for (int i = 0; i < CONFIG_T::n_out; i++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             res[j * CONFIG_T::n_out + i] = embeddings[data[j] * CONFIG_T::n_out + i];
         }
     }

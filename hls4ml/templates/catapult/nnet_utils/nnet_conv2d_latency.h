@@ -383,3 +383,4 @@ void pointwise_conv_2d_latency_cl(
 
 }
 #endif
+

@@ -1,21 +1,3 @@
-//
-//    rfnoc-hls-neuralnet: Vivado HLS code for neural-net building blocks
-//
-//    Copyright (C) 2017 EJ Kreinar
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
 
 #ifndef NNET_MERGE_H_
 #define NNET_MERGE_H_
@@ -127,6 +109,8 @@ void dot1d(
     res_T res[CONFIG_T::n_out])
 {
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+	 #pragma hls_pipeline_init_interval ce_reuse_factor
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
     CONFIG_T::template product<input1_T, input2_T>::limit(multiplier_limit);
@@ -135,13 +119,15 @@ void dot1d(
     //#pragma HLS ARRAY_PARTITION variable=mult complete
     typename CONFIG_T::accum_t acc = 0;
 
+    #pragma hls_unroll
     Product: for(int i_mult=0; i_mult < CONFIG_T::n_in; i_mult++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         mult[i_mult] = CONFIG_T::template product<input1_T, input2_T>::product(data1[i_mult], data2[i_mult]);
     }
 
+    #pragma hls_unroll
     Accum: for(int i_acc = 0; i_acc < CONFIG_T::n_in; i_acc++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         acc += mult[i_acc];
     }
 

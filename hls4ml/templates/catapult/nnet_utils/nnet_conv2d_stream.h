@@ -26,7 +26,7 @@ ComputeIndex:
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T, unsigned reuse_factor>
+template<class data_T, class res_T, typename CONFIG_T>
 void conv_2d_encoded_cl(
     ac_channel<data_T> &data, ac_channel<res_T>  &res,
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -49,11 +49,12 @@ void conv_2d_encoded_cl(
     ac_int<CONFIG_T::filt_height * CONFIG_T::filt_width,false> pixel_idx[data_T::size / CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
 ReadInputHeight: 
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-    if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
-        #pragma hls_pipeline_init_interval reuse_factor
-    }
+        if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
+            #pragma hls_pipeline_init_interval ce_reuse_factor
+        }
     ReadInputWidth: 
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
             //#pragma HLS LOOP_FLATTEN
@@ -61,13 +62,13 @@ ReadInputHeight:
                 //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
             compute_scaled_indices_2d<data_T, CONFIG_T>(i_ih, i_iw, pixel_idx);
-            compute_output_encoded<data_T, res_T, CONFIG_T, reuse_factor>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
+            compute_output_encoded<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
         }
     }
 }
 
 // Line Buffer
-template <class data_T, class res_T, typename CONFIG_T, unsigned reuse_factor>
+template <class data_T, class res_T, typename CONFIG_T>
 void conv_2d_buffer_cl(
     ac_channel<data_T> &data, ac_channel<res_T>  &res,
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -77,11 +78,12 @@ void conv_2d_buffer_cl(
     static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
 ReadInputHeight: 
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-    if(CONFIG_T::strategy == nnet::latency) {
-        #pragma hls_pipeline_init_interval reuse_factor
-    }
+        if(CONFIG_T::strategy == nnet::latency) {
+            #pragma hls_pipeline_init_interval ce_reuse_factor
+        }
     ReadInputWidth: 
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             //#pragma HLS LOOP_FLATTEN
@@ -106,10 +108,10 @@ void conv_2d_cl(
     //#pragma HLS inline region
     switch(CONFIG_T::implementation){
         case conv_implementation::linebuffer:
-            conv_2d_buffer_cl<data_T, res_T, CONFIG_T, CONFIG_T::reuse_factor>(data, res, weights, biases);
+            conv_2d_buffer_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
             break;
         case conv_implementation::encoded:
-            conv_2d_encoded_cl<data_T, res_T, CONFIG_T, CONFIG_T::reuse_factor>(data, res, weights, biases);
+            conv_2d_encoded_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
             break;
     }  
 }

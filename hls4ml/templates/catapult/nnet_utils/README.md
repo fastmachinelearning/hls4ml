@@ -1,1 +1,0 @@
-Adapted from https://github.com/Xilinx/RFNoC-HLS-NeuralNet/tree/master/rfnoc/hls/nnet_lib

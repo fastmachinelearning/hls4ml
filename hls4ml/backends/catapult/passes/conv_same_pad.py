@@ -1,13 +1,16 @@
+from hls4ml.model.layers import Conv1D, Conv2D, SeparableConv1D, SeparableConv2D
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import Conv1D, SeparableConv1D, Conv2D, SeparableConv2D
+
 
 class InsertZeroPaddingBeforeConv1D(OptimizerPass):
     name = 'insert_zero_padding_before_conv1d'
     
     def match(self, node):
-        is_match = isinstance(node, (Conv1D, SeparableConv1D)) and \
-            ((node.get_attr('padding') == 'same') or (node.get_attr('padding') == 'causal')) and \
-            node.get_attr('filt_width') != 1
+        is_match = (
+            isinstance(node, (Conv1D, SeparableConv1D))
+            and ((node.get_attr('padding') == 'same') or (node.get_attr('padding') == 'causal'))
+            and node.get_attr('filt_width') != 1
+        )
         return is_match
 
     def transform(self, model, node):
@@ -30,7 +33,7 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
             'in_width': node.get_attr('in_width'),
             'out_width': out_width,
             'n_chan': node.get_attr('n_chan'),
-            'data_format': node.get_attr('data_format', 'channels_last')
+            'data_format': node.get_attr('data_format', 'channels_last'),
         }
 
         # Switch Conv1D layer padding to 'valid'
@@ -46,13 +49,17 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
 
         return True
 
+
 class InsertZeroPaddingBeforeConv2D(OptimizerPass):
     name = 'insert_zero_padding_before_conv2d'
 
     def match(self, node):
-        is_match = isinstance(node, (Conv2D, SeparableConv2D)) and \
-            node.get_attr('padding') == 'same' and \
-            node.get_attr('filt_height') != 1 and node.get_attr('filt_width') != 1
+        is_match = (
+            isinstance(node, (Conv2D, SeparableConv2D))
+            and node.get_attr('padding') == 'same'
+            and node.get_attr('filt_height') != 1
+            and node.get_attr('filt_width') != 1
+        )
         return is_match
 
     def transform(self, model, node):
@@ -82,7 +89,7 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
             'out_height': out_height,
             'out_width': out_width,
             'n_chan': node.get_attr('n_chan'),
-            'data_format': node.get_attr('data_format', 'channels_last')
+            'data_format': node.get_attr('data_format', 'channels_last'),
         }
 
         # Switch Conv2D layer padding to 'valid'

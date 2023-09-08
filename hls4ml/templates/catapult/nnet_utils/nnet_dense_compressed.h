@@ -31,8 +31,9 @@ template<typename CONFIG_T>
 void fill_mult(typename CONFIG_T::index_t index,
         typename CONFIG_T::accum_t mult[CONFIG_T::n_out],
         typename CONFIG_T::accum_t weight) {
+    #pragma hls_unroll
     for(unsigned  k = 0; k < CONFIG_T::n_out; k++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         if (k == index) mult[k] += weight;
     }
 }
@@ -71,15 +72,17 @@ void dense_compressed(
         typename CONFIG_T::accum_t mult[CONFIG_T::n_out];
         //#pragma HLS ARRAY_PARTITION variable=mult complete
 
+        #pragma hls_unroll
         ResetMult:
         for(int imult = 0; imult < CONFIG_T::n_out; imult++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             mult[imult] = 0;
         }
 
+        #pragma hls_unroll
         CompressedMultLoop:
         for(unsigned im = 0; im < multiplier_limit; im++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             unsigned w = im * rufactor + ir;
             auto row = weights[w].row_index;
             auto col = weights[w].col_index;
@@ -96,9 +99,10 @@ void dense_compressed(
     }
 
     // Cast to "res_t" type
+    #pragma hls_unroll
     ResultLoop:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++){
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         //res[i] = (res_T) (acc[i]);
         res[i] = cast<data_T, res_T, CONFIG_T>(acc[i]);
     }

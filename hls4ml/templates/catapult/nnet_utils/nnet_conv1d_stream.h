@@ -22,17 +22,17 @@ ComputeIndex:
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T, unsigned reuse_factor>
+template<class data_T, class res_T, typename CONFIG_T>
 void conv_1d_encoded_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
                         typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
                         typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
     ac_channel<typename data_T::value_type> data_window[CONFIG_T::filt_width * CONFIG_T::n_chan];
-    const int win_depth = CONFIG_T::out_width;
-    for (unsigned i_out = 0; i_out < CONFIG_T::filt_width * CONFIG_T::n_chan; i_out++) {
-        //#pragma HLS STREAM variable=data_window[i_out] depth=win_depth
-    }
+//  const int win_depth = CONFIG_T::out_width;
+//  for (unsigned i_out = 0; i_out < CONFIG_T::filt_width * CONFIG_T::n_chan; i_out++) {
+//      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
+//  }
 
     //#pragma HLS ARRAY_PARTITION variable=CONFIG_T::pixels complete
 
@@ -44,7 +44,8 @@ void conv_1d_encoded_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
     //#pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
 if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
-    #pragma hls_pipeline_init_interval reuse_factor
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 }
 ReadInputWidth: 
     for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
@@ -53,7 +54,7 @@ ReadInputWidth:
             //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         }
         compute_scaled_indices_1d<data_T, CONFIG_T>(i_iw, pixel_idx);
-        compute_output_encoded<data_T, res_T, CONFIG_T, reuse_factor>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
+        compute_output_encoded<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
     }
 }
 
@@ -64,7 +65,8 @@ void conv_1d_buffer_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
 if (CONFIG_T::strategy == nnet::latency) {
-    #pragma hls_pipeline_init_interval reuse_factor
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 }
 ReadInputWidth: 
     for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
@@ -86,7 +88,7 @@ void conv_1d_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
             conv_1d_buffer_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
             break;
         case conv_implementation::encoded:
-            conv_1d_encoded_cl<data_T, res_T, CONFIG_T, CONFIG_T::reuse_factor>(data, res, weights, biases);
+            conv_1d_encoded_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
             break;
     }  
 }

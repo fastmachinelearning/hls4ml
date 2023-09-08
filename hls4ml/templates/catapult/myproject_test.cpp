@@ -1,30 +1,12 @@
-//
-//    rfnoc-hls-neuralnet: Vivado HLS code for neural-net building blocks
-//
-//    Copyright (C) 2017 EJ Kreinar
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
+#include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <algorithm>
-#include <vector>
 #include <map>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
+#include <vector>
 
 #include "firmware/myproject.h"
 #include "firmware/nnet_utils/nnet_helpers.h"
@@ -65,9 +47,12 @@ CCS_MAIN(int argc, char *argv[])
 #endif
   std::string iline;
   std::string pline;
+  int e = 0;
 
   if (fin.is_open() && fpr.is_open()) {
     while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
+      if (e % CHECKPOINT == 0)
+        std::cout << "Processing input " << e << std::endl;
       char* cstr=const_cast<char*>(iline.c_str());
       char* current;
       std::vector<float> in;
@@ -89,6 +74,13 @@ CCS_MAIN(int argc, char *argv[])
 
       //hls-fpga-machine-learning insert top-level-function
 
+      if (e % CHECKPOINT == 0) {
+        std::cout << "Predictions" << std::endl;
+        // hls-fpga-machine-learning insert predictions
+        std::cout << "Quantized predictions" << std::endl;
+        // hls-fpga-machine-learning insert quantized
+      }
+      e++;
 
       //hls-fpga-machine-learning insert tb-output
     }
@@ -104,7 +96,6 @@ CCS_MAIN(int argc, char *argv[])
     //hls-fpga-machine-learning insert output
 
     //hls-fpga-machine-learning insert tb-output
-
   }
 
   fout.close();

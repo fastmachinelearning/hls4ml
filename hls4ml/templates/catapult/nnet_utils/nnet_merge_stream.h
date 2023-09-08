@@ -1,21 +1,3 @@
-//
-//    rfnoc-hls-neuralnet: Vivado HLS code for neural-net building blocks
-//
-//    Copyright (C) 2017 EJ Kreinar
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
 
 #ifndef NNET_MERGE_STREAM_H_
 #define NNET_MERGE_STREAM_H_
@@ -42,8 +24,9 @@ void add(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         AddPack: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[j] = in_data1[j] + in_data2[j];
         }
 
@@ -67,8 +50,9 @@ void subtract(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         SubtractPack: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[j] = in_data1[j] - in_data2[j];
         }
 
@@ -84,6 +68,8 @@ void multiply(
 {
     assert(input1_T::size == input2_T::size && input1_T::size == res_T::size);
 
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
     MultiplyLoop: for (int i = 0; i < CONFIG_T::n_elem / input1_T::size; i++) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
@@ -92,8 +78,9 @@ void multiply(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         MultiplyPack: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[j] = in_data1[j] * in_data2[j];
         }
 
@@ -109,6 +96,8 @@ void average(
 {
     assert(input1_T::size == input2_T::size && input1_T::size == res_T::size);
 
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
     AverageLoop: for (int i = 0; i < CONFIG_T::n_elem / input1_T::size; i++) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
@@ -117,8 +106,9 @@ void average(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         AveragePack: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[j] = (in_data1[j] + in_data2[j]) / (typename res_T::value_type) 2;
         }
 
@@ -134,6 +124,8 @@ void maximum(
 {
     assert(input1_T::size == input2_T::size && input1_T::size == res_T::size);
 
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
     MaximumLoop: for (int i = 0; i < CONFIG_T::n_elem / input1_T::size; i++) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
@@ -142,8 +134,9 @@ void maximum(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         MaximumPack: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[j] = (in_data1[j] > in_data2[j]) ? in_data1[j] : in_data2[j];
         }
 
@@ -159,6 +152,8 @@ void minimum(
 {
     assert(input1_T::size == input2_T::size && input1_T::size == res_T::size);
 
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
     MinimumLoop: for (int i = 0; i < CONFIG_T::n_elem / input1_T::size; i++) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
@@ -167,8 +162,9 @@ void minimum(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         MinimumPack: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[j] = (in_data1[j] < in_data2[j]) ? in_data1[j] : in_data2[j];
         }
 
@@ -183,6 +179,7 @@ void concatenate3d_0(
     ac_channel<res_T> &res)
 {
     ConcatLoopHeight1: for (int i = 0; i < CONFIG_T::n_elem1_0; i++) {
+        #pragma hls_pipeline_init_interval 1
         ConcatLoopWidth1: for (int j = 0; j < CONFIG_T::n_elem1_1; j++) {
             //#pragma HLS PIPELINE II=1
 
@@ -190,8 +187,9 @@ void concatenate3d_0(
             res_T out_data;
             //#pragma HLS DATA_PACK variable=out_data
 
+            #pragma hls_unroll
             ConcatPackInput1: for (int k = 0; k < input1_T::size; k++) {
-                #pragma hls_unroll
+                // #pragma HLS UNROLL
                 out_data[k] = in_data1[k];
             }
 
@@ -199,6 +197,7 @@ void concatenate3d_0(
         }
     }
     ConcatLoopHeight2: for (int i = 0; i < CONFIG_T::n_elem2_0; i++) {
+        #pragma hls_pipeline_init_interval 1
         ConcatLoopWidth2: for (int j = 0; j < CONFIG_T::n_elem2_1; j++) {
             //#pragma HLS PIPELINE II=1
 
@@ -206,8 +205,9 @@ void concatenate3d_0(
             res_T out_data;
             //#pragma HLS DATA_PACK variable=out_data
 
+            #pragma hls_unroll
             ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
-                #pragma hls_unroll
+                // #pragma HLS UNROLL
                 out_data[k] = in_data2[k];
             }
 
@@ -223,6 +223,7 @@ void concatenate3d_1(
     ac_channel<res_T> &res)
 {
     ConcatLoopHeight: for (int i = 0; i < CONFIG_T::n_elem1_0; i++) {
+        #pragma hls_pipeline_init_interval 1
         ConcatLoopWidth1: for (int j = 0; j < CONFIG_T::n_elem1_1; j++) {
             //#pragma HLS PIPELINE II=1
 
@@ -230,13 +231,15 @@ void concatenate3d_1(
             res_T out_data;
             //#pragma HLS DATA_PACK variable=out_data
 
+            #pragma hls_unroll
             ConcatPackInput1: for (int k = 0; k < input1_T::size; k++) {
-                #pragma hls_unroll
+                // #pragma HLS UNROLL
                 out_data[k] = in_data1[k];
             }
 
             res.write(out_data);
         }
+        #pragma hls_pipeline_init_interval 1
         ConcatLoopWidth2: for (int j = 0; j < CONFIG_T::n_elem2_1; j++) {
             //#pragma HLS PIPELINE II=1
 
@@ -244,8 +247,9 @@ void concatenate3d_1(
             res_T out_data;
             //#pragma HLS DATA_PACK variable=out_data
 
+            #pragma hls_unroll
             ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
-                #pragma hls_unroll
+                // #pragma HLS UNROLL
                 out_data[k] = in_data2[k];
             }
 
@@ -261,6 +265,7 @@ void concatenate3d_2(
     ac_channel<res_T> &res)
 {
     ConcatLoopHeight: for (int i = 0; i < CONFIG_T::n_elem1_0; i++) {
+        #pragma hls_pipeline_init_interval 1
         ConcatLoopWidth: for (int j = 0; j < CONFIG_T::n_elem1_1; j++) {
             //#pragma HLS PIPELINE II=1
 
@@ -269,13 +274,15 @@ void concatenate3d_2(
             res_T out_data;
             //#pragma HLS DATA_PACK variable=out_data
 
+            #pragma hls_unroll
             ConcatPackInput1: for (int k = 0; k < input1_T::size; k++) {
-                #pragma hls_unroll
+                // #pragma HLS UNROLL
                 out_data[k] = in_data1[k];
             }
             
+            #pragma hls_unroll
             ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
-                #pragma hls_unroll
+                // #pragma HLS UNROLL
                 out_data[input1_T::size + k] = in_data2[k];
             }
 
@@ -305,6 +312,7 @@ void concatenate2d_0(
     ac_channel<input2_T> &data2,
     ac_channel<res_T> &res)
 {
+    #pragma hls_pipeline_init_interval 1
     ConcatLoopHeight1: for (int i = 0; i < CONFIG_T::n_elem1_0; i++) {
         //pragma HLS PIPELINE II=1
 
@@ -312,13 +320,15 @@ void concatenate2d_0(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         ConcatPackInput1: for (int k = 0; k < input1_T::size; k++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[k] = in_data1[k];
         }
 
         res.write(out_data);
     }
+    #pragma hls_pipeline_init_interval 1
     ConcatLoopHeight2: for (int i = 0; i < CONFIG_T::n_elem2_0; i++) {
         //#pragma HLS PIPELINE II=1
 
@@ -326,8 +336,9 @@ void concatenate2d_0(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[k] = in_data2[k];
 	}
 
@@ -341,6 +352,7 @@ void concatenate2d_1(
     ac_channel<input2_T> &data2,
     ac_channel<res_T> &res)
 {
+    #pragma hls_pipeline_init_interval 1
     ConcatLoopHeight: for (int i = 0; i < CONFIG_T::n_elem1_0; i++) {
         //#pragma HLS PIPELINE II=1
 
@@ -349,13 +361,15 @@ void concatenate2d_1(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         ConcatPackInput1: for (int k = 0; k < input1_T::size; k++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[k] = in_data1[k];
 	}
             
+   #pragma hls_unroll
 	ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             out_data[input1_T::size + k] = in_data2[k];
 	}
 
@@ -387,8 +401,9 @@ void concatenate1d(
     ConcatLoop1: for (int i = 0; i < CONFIG_T::n_elem1_0 / input1_T::size; i++) {
         //#pragma HLS PIPELINE
         input1_T in_data1 = data1.read();
+        #pragma hls_unroll
         ConcatPack1: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
 	    out_data[j] = in_data1[j];
         }
         res.write(out_data);
@@ -396,8 +411,9 @@ void concatenate1d(
     ConcatLoop2: for (int i = 0; i < CONFIG_T::n_elem2_0 / input2_T::size; i++) {
         //#pragma HLS PIPELINE
         input2_T in_data2 = data2.read();
+        #pragma hls_unroll
         ConcatPack2: for (int j = 0; j < res_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
 	    out_data[j] = in_data2[j];
         }
         res.write(out_data);

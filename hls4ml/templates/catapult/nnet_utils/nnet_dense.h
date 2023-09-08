@@ -44,7 +44,7 @@ void dense(
 {
     //#pragma HLS inline
     if (CONFIG_T::strategy == nnet::latency) {
-        dense_latency<data_T, res_T, CONFIG_T, CONFIG_T::reuse_factor>(data, res, weights, biases);
+        dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }

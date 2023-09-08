@@ -1,7 +1,12 @@
 from hls4ml.backends.backend import get_backend
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.backends.catapult.passes.core_templates import (
+    batchnorm_config_template,
+    batchnorm_function_template,
+    batchnorm_include_list,
+)
 from hls4ml.model.optimizer.passes.qkeras import ApplyAlpha
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
-from hls4ml.backends.catapult.passes.core_templates import batchnorm_config_template, batchnorm_function_template, batchnorm_include_list
+
 
 class ApplyAlphaConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -11,9 +16,12 @@ class ApplyAlphaConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['product_type'] = get_backend('catapult').product_type(node.get_input_variable().type.precision, node.get_weights('scale').type.precision)
+        params['product_type'] = get_backend('catapult').product_type(
+            node.get_input_variable().type.precision, node.get_weights('scale').type.precision
+        )
 
         return self.template.format(**params)
+
 
 class ApplyAlphaFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -26,4 +34,3 @@ class ApplyAlphaFunctionTemplate(FunctionCallTemplate):
         params['bias'] = node.get_weights('bias').name
 
         return self.template.format(**params)
-

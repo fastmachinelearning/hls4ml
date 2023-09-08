@@ -27,8 +27,9 @@ void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<
         //#pragma HLS DATA_PACK variable=out_data1
         //#pragma HLS DATA_PACK variable=out_data2
 
+        #pragma hls_unroll
         ClonePack: for (int j = 0; j < data_T::size; j++) {
-            #pragma hls_unroll
+            //#pragma HLS UNROLL
             out_data1[j] = in_data[j];
             out_data2[j] = in_data[j];
         }
@@ -48,8 +49,9 @@ void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
             res_T out_data;
             //#pragma HLS DATA_PACK variable=out_data
 
+            #pragma hls_unroll
             for (int j = 0; j < data_T::size; j++) {
-                #pragma hls_unroll
+                //#pragma HLS UNROLL
                 out_data[j] = in_data[j];
             }
 
@@ -70,8 +72,9 @@ void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
                 //#pragma HLS PIPELINE
 
                 res_T out_data;
+                #pragma hls_unroll
                 for (int k = 0; k < res_T::size; k++) {
-                    #pragma hls_unroll
+                    //#pragma HLS UNROLL
                     out_data[k] = in_data[j * res_T::size + k];
                 }
                 res.write(out_data);
@@ -85,8 +88,9 @@ void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
             //#pragma HLS PIPELINE
 
             data_T in_data = data.read();
+            #pragma hls_unroll
             for (int j = 0; j < data_T::size; j++) {
-                #pragma hls_unroll
+                //#pragma HLS UNROLL
                 out_data[pack_cnt * data_T::size + j] = in_data[j];
             }
 
@@ -111,8 +115,9 @@ void broadcast_stream_1x1xC(ac_channel<data_T> &data, ac_channel<res_T> &res) {
             //#pragma HLS PIPELINE
             res_T out_data;
             //#pragma HLS DATA_PACK variable=out_data
+            #pragma hls_unroll
             for (int k = 0; k < res_T::size; k++) {
-                #pragma hls_unroll
+                //#pragma HLS UNROLL
                 out_data[k] = in_data[k];
             }
             res.write(out_data);
@@ -128,8 +133,9 @@ void broadcast_stream_HxWx1(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         data_T in_data = data.read();
 	res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
+   #pragma hls_unroll
 	for (int k = 0; k < res_T::size; k++) {
-            #pragma hls_unroll
+            //#pragma HLS UNROLL
 	    out_data[k] = in_data[0];
 	}
 	res.write(out_data);

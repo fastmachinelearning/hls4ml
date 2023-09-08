@@ -1,21 +1,3 @@
-//
-//    rfnoc-hls-neuralnet: Vivado HLS code for neural-net building blocks
-//
-//    Copyright (C) 2017 EJ Kreinar
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
 
 // Change History:
 //   2022-06-30  dgburnette - Cleaned up code to separate AC Math from LUT code.
@@ -184,20 +166,14 @@ void softmax_latency(ac_channel<data_T> &data, ac_channel<res_T> &res){
     }
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
-    constexpr unsigned ii = data_T::size / multiplier_limit;
+    constexpr unsigned ii = data_T::size / multiplier_limit; (void)ii;
 
     // Calculate all the e^x's
     typename CONFIG_T::exp_table_t exp_res[data_T::size];
     //#pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
 
-    if constexpr(ii==1) {
-      #pragma hls_pipeline_init_interval 1
-    }
-    if constexpr(ii!=1) {
-      // future enhancement for Catapult
-      #pragma hls_pipeline_init_interval ii
-    }
+    #pragma hls_pipeline_init_interval ii
     SoftmaxExpLoop: for(unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++){
         //#pragma HLS PIPELINE II=ii
 
@@ -250,7 +226,7 @@ void softmax_stable(ac_channel<data_T> &data, ac_channel<res_T> &res){
     }
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
-    constexpr unsigned ii = data_T::size / multiplier_limit;
+    constexpr unsigned ii = data_T::size / multiplier_limit; (void)ii;
 
     typename data_T::value_type data_array[data_T::size];
     //#pragma HLS ARRAY_PARTITION variable=data_array complete

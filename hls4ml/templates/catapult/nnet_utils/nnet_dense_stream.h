@@ -19,7 +19,7 @@ void dense_wrapper(
     //#pragma HLS INLINE region
     if (CONFIG_T::strategy == nnet::latency) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-        dense_latency<data_T, res_T, CONFIG_T, CONFIG_T::reuse_factor>(data, res, weights, biases);
+        dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }

@@ -85,7 +85,7 @@ class ap_shift_reg
   public:
     /// Constructors
     ap_shift_reg() {
-      #pragma unroll yes
+      #pragma hls_unroll yes
       for (unsigned int i=0; i < __SHIFT_DEPTH__; i++) {
         __SHIFT_T__ dummy;
         Array[i] = dummy; // uninitialize so Catapult does not add a reset

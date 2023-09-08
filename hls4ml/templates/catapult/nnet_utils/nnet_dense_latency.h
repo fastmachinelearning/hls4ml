@@ -1,21 +1,3 @@
-//
-//    rfnoc-hls-neuralnet: Vivado HLS code for neural-net building blocks
-//
-//    Copyright (C) 2017 EJ Kreinar
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
 
 #ifndef NNET_DENSE_LATENCY_H_
 #define NNET_DENSE_LATENCY_H_
@@ -28,7 +10,7 @@
 
 namespace nnet {
 
-template<class data_T, class res_T, typename CONFIG_T, unsigned II_reuse_factor>
+template<class data_T, class res_T, typename CONFIG_T>
 void dense_latency(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
@@ -36,7 +18,8 @@ void dense_latency(
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
   // For Catapult, add an extra scope so that we can apply the pipeline pragma as if it applied to the function
-  #pragma hls_pipeline_init_interval II_reuse_factor
+  constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+  #pragma hls_pipeline_init_interval ce_reuse_factor
   #pragma hls_preserve_loop yes
   #pragma hls_unroll //yet to finalize on this 
 

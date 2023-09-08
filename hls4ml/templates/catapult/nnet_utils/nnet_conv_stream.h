@@ -97,7 +97,7 @@ InitData:
 
     //#pragma HLS INLINE region
     if (CONFIG_T::strategy == nnet::latency) {
-        dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config, CONFIG_T::reuse_factor>(data, res, weights, biases);
+        dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(data, res, weights, biases);
     } else {
         dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(data, res, weights, biases);
     }
@@ -125,15 +125,15 @@ CastLoop:
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T, unsigned reuse_factor>
+template<class data_T, class res_T, typename CONFIG_T>
 void compute_output_encoded(const data_T& in_elem,
                             ac_channel<typename data_T::value_type> data_window[CONFIG_T::kernel_size * CONFIG_T::n_chan],
                             ac_channel<res_T> &res, res_T &res_pack, unsigned &outputs_ready,
                             typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan * CONFIG_T::n_filt],
                             typename CONFIG_T::bias_t biases[CONFIG_T::n_filt], ac_int<CONFIG_T::kernel_size,false> *pixel_idx) {
     //#pragma HLS INLINE
-
-#pragma hls_pipeline_init_interval reuse_factor
+constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+#pragma hls_pipeline_init_interval ce_reuse_factor
 #pragma hls_unroll
 MultLoop: 
     for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
@@ -304,7 +304,7 @@ void compute_output_buffer_2d(
         // Dense multiply
         //#pragma HLS INLINE region
         if (CONFIG_T::strategy == nnet::latency) {
-            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config, CONFIG_T::reuse_factor>(
+            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
                 kernel_data, res_out, weights, biases);
         } else {
             dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
@@ -376,7 +376,7 @@ void compute_output_buffer_1d(
         // Dense multiply
         //#pragma HLS INLINE region
         if (CONFIG_T::strategy == nnet::latency) {
-            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config, CONFIG_T::reuse_factor>(
+            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
                 kernel_data, res_out, weights, biases);
         } else {
             dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(

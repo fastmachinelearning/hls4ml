@@ -1,7 +1,7 @@
 #ifndef NNET_POOLING_STREAM_H_
 #define NNET_POOLING_STREAM_H_
 
-#include "utils/x_hls_utils.h"
+// #include "utils/x_hls_utils.h"
 #include "ap_shift_reg.h"
 #include "nnet_common.h"
 #include "nnet_pooling.h"
@@ -134,10 +134,10 @@ void pooling2d_encoded_cl(
     unsigned outputs_ready = 0;
 
     ac_channel<typename data_T::value_type> data_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt];
-    constexpr int win_depth = CONFIG_T::pool_height * CONFIG_T::out_width;
-    for (unsigned i_out = 0; i_out < CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt; i_out++) {
-        //#pragma HLS STREAM variable=data_window[i_out] depth=win_depth
-    }
+//  constexpr int win_depth = CONFIG_T::pool_height * CONFIG_T::out_width;
+//  for (unsigned i_out = 0; i_out < CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt; i_out++) {
+//      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
+//  }
 
     constexpr int pack_factor = data_T::size / CONFIG_T::n_filt;
 
@@ -348,10 +348,10 @@ void pooling1d_encoded_cl(
     unsigned outputs_ready = 0;
 
     ac_channel<typename data_T::value_type> data_window[CONFIG_T::pool_width * CONFIG_T::n_filt];
-    constexpr int win_depth = CONFIG_T::n_out;
-    for (unsigned i_out = 0; i_out < CONFIG_T::pool_width * CONFIG_T::n_filt; i_out++) {
-        //#pragma HLS STREAM variable=data_window[i_out] depth=win_depth
-    }
+//  constexpr int win_depth = CONFIG_T::n_out;
+//  for (unsigned i_out = 0; i_out < CONFIG_T::pool_width * CONFIG_T::n_filt; i_out++) {
+//      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
+//  }
 
     constexpr int pack_factor = data_T::size / CONFIG_T::n_filt;
 
