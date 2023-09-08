@@ -190,7 +190,7 @@ class CatapultWriter(Writer):
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
-                    if model.config.model_strategy.lower() == 'resource':
+                    if model.config.model_strategy.lower() == 'dataflow':
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
@@ -219,11 +219,12 @@ class CatapultWriter(Writer):
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.get_attr('function_cpp', None)
                     if func:
-                        func = [func]
+                        if not isinstance(func, (list, set)):
+                            func = [func]
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
-                            newline += '// ' + layer.name + '\n'
+                            newline += '    // ' + layer.name + '\n'
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
@@ -262,7 +263,6 @@ class CatapultWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
@@ -296,7 +296,6 @@ class CatapultWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-
             # Insert numbers
             if '//hls-fpga-machine-learning insert numbers' in line:
                 newline = line
@@ -341,7 +340,6 @@ class CatapultWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/parameters.h', 'w')
 
         for line in f.readlines():
-
             if '//hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
@@ -550,7 +548,6 @@ class CatapultWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
