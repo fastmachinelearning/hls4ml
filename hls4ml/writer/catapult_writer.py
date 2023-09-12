@@ -95,15 +95,17 @@ class CatapultWriter(Writer):
 
         if mode in ['partition', 'reshape']:
             if typ == 'complete':
-                template = '#pragma HLS ARRAY_{mode} variable={name} {type} dim={dim}'
+                template = '// #pragma HLS ARRAY_{mode} variable={name} {type} dim={dim}'
             else:
-                template = '#pragma HLS ARRAY_{mode} variable={name} {type} factor={factor} dim={dim}'
+                template = '// #pragma HLS ARRAY_{mode} variable={name} {type} factor={factor} dim={dim}'
 
             return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
 
         elif mode == 'stream':
             # Bug in Catapult - hls_resource inserted by catapult_writer.py not applied to static var. workaround is placed in build_prj.tcl
             return f'// #pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="ccs_ioport.ccs_pipe FIFO_DEPTH={depth}"'
+        else:
+            return ''
 
     def write_project_cpp(self, model):
         """Write the main architecture source file (myproject.cpp)
@@ -187,20 +189,20 @@ class CatapultWriter(Writer):
                         newline += indent + self._make_array_pragma(o) + '\n'
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays
                     # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
-                    newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
+                    newline += indent + '// #pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
                     if model.config.model_strategy.lower() == 'dataflow':
-                        newline += indent + '#pragma HLS DATAFLOW \n'
+                        newline += indent + '// #pragma HLS DATAFLOW \n'
                     else:
-                        newline += indent + '#pragma HLS PIPELINE \n'
+                        newline += indent + '// #pragma HLS PIPELINE \n'
                 if io_type == 'io_stream':
-                    newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(
+                    newline += indent + '// #pragma HLS INTERFACE axis port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
                     if all_brams:
-                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
-                    newline += indent + '#pragma HLS DATAFLOW \n'
+                        newline += indent + '// #pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
+                    newline += indent + '// #pragma HLS DATAFLOW \n'
 
             elif '//hls-fpga-machine-learning insert layers' in line:
                 io_type = model.config.get_config_value("IOType")

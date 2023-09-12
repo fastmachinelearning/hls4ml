@@ -83,6 +83,7 @@ ReadInputHeight:
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_conv_2d_cl(
     ac_channel<data_T> &data, ac_channel<res_T> &res,
@@ -99,6 +100,7 @@ void depthwise_conv_2d_cl(
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void pointwise_conv_2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
                           typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],

@@ -16,6 +16,7 @@ struct broadcast_config
   static const unsigned out_chan = 3;
 };
 
+#pragma hls_design block
 template<class data_T, class res_T, int N>
 void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<res_T> &res2) {
     CloneLoop: for (int i = 0; i < N / data_T::size; i++) {
@@ -39,6 +40,7 @@ void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<
     }
 }
 
+#pragma hls_design block
 template<class data_T, class res_T, int N>
 void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     if (data_T::size == res_T::size) {
@@ -104,6 +106,7 @@ void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     }
 }
 
+#pragma hls_design block
 template<class data_T, class res_T, typename CONFIG_T>
 void broadcast_stream_1x1xC(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     assert(CONFIG_T::in_height == 1 && CONFIG_T::in_width == 1 && CONFIG_T::in_chan == CONFIG_T::out_chan);
@@ -125,6 +128,7 @@ void broadcast_stream_1x1xC(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     }
 }
 
+#pragma hls_design block
 template<class data_T, class res_T, typename CONFIG_T>
 void broadcast_stream_HxWx1(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     assert(CONFIG_T::in_chan == 1 && CONFIG_T::in_height == CONFIG_T::out_height && CONFIG_T::in_width == CONFIG_T::out_width);

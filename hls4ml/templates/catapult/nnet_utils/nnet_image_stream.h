@@ -6,6 +6,7 @@
 
 namespace nnet {
 
+#pragma hls_design block
 template<class data_T, typename CONFIG_T>
 void resize_nearest(
     ac_channel<data_T> &image,

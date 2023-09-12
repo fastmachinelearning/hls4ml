@@ -240,6 +240,7 @@ void pooling2d_buffer_cl(
     }
 }
 
+#pragma hls_design block
 template<class data_T, class res_T, typename CONFIG_T>
 void pooling2d_cl(
     ac_channel<data_T> &data,

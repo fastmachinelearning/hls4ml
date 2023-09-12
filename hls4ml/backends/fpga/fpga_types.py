@@ -235,7 +235,7 @@ class QuartusArrayVariableDefinition(VariableDefinition):
 
 class CatapultArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}{suffix}[{shape}] {pragma}'.format(
+        return '{type} {name}{suffix}[{shape}] /* {pragma} */'.format(
             type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma
         )
 
