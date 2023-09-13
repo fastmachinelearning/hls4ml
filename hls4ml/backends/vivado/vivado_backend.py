@@ -168,7 +168,9 @@ class VivadoBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, clock_uncertainty='12.5%', io_type='io_parallel'):
+    def create_initial_config(
+        self, part='xcku115-flvb2104-2-i', clock_period=5, clock_uncertainty='12.5%', io_type='io_parallel'
+    ):
         config = {}
 
         config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
