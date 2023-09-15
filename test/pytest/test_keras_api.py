@@ -12,6 +12,8 @@ from tensorflow.keras.layers import (
     Conv1D,
     Conv2D,
     Dense,
+    DepthwiseConv1D,
+    DepthwiseConv2D,
     LeakyReLU,
     MaxPooling1D,
     MaxPooling2D,
@@ -295,6 +297,58 @@ def test_conv2d(chans, padds, backend, io_type):
         assert list(hls_model.get_layers())[1].attributes['pad_bottom'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
+
+
+# Currently only Vivado and Vitis is supported for io_stream.
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_depthwise2d(backend, io_type):
+    '''
+    Test proper handling of DepthwiseConv2D
+    '''
+    X = np.random.rand(10, 32, 32, 3)
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = tf.keras.models.Sequential()
+    model.add(DepthwiseConv2D(kernel_size=(3, 3), input_shape=(32, 32, 3)))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<32,12>')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
+
+
+# Currently only Vivado and Vitis is supported for io_stream.
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_depthwise1d(backend, io_type):
+    '''
+    Test proper handling of DepthwiseConv1D.
+    '''
+    X = np.random.rand(10, 32, 3)
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = tf.keras.models.Sequential()
+    model.add(DepthwiseConv1D(kernel_size=3, input_shape=(32, 3)))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv1d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
 
 pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D]

@@ -23,6 +23,8 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
             'padding': 'valid',
             'n_chan': input_shape[-1],
             'n_filt': node.get_attr('n_out'),
+            'weight_data': node.get_attr('weight_data'),
+            'bias_data': node.get_attr('bias_data'),
         }
 
         if dim == 1:
