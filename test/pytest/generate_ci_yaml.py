@@ -32,5 +32,26 @@ for test in tests:
     else:
         yml.update(new_yml)
 
+# hls4ml Optimization API
+tests = glob.glob('test_optimization/test_*.py')
+for test in tests:
+    name = test.replace('test_optimization/', '').replace('test_', '').replace('.py', '')
+    new_yml = yaml.safe_load(template.format(name, f'test_optimization/test_{name}.py', int(uses_example_model(test))))
+    if yml is None:
+        yml = new_yml
+    else:
+        yml.update(new_yml)
+
+tests = glob.glob('test_optimization/test_keras/test_*.py')
+for test in tests:
+    name = test.replace('test_optimization/test_keras/', '').replace('test_', '').replace('.py', '')
+    new_yml = yaml.safe_load(
+        template.format(name, f'test_optimization/test_keras/test_{name}.py', int(uses_example_model(test)))
+    )
+    if yml is None:
+        yml = new_yml
+    else:
+        yml.update(new_yml)
+
 yamlfile = open('pytests.yml', 'w')
 yaml.safe_dump(yml, yamlfile)

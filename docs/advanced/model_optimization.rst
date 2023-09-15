@@ -80,6 +80,7 @@ To optimize GPU FLOPs, the code is similar to above:
         baseline_model, model_attributes, GPUFLOPEstimator, scheduler,
         X_train, y_train, X_val, y_val, batch_size, epochs, optimizer, loss_fn, metric, increasing, rtol
     )
+
     # Evaluate optimized model
     y_optimized = optimized_model.predict(X_test)
     acc_optimized = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_optimized, axis=1))
@@ -109,8 +110,14 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
     # Note the change from ParameterEstimator to VivadoDSPEstimator
     optimized_model = optimize_keras_for_hls4ml(
         baseline_model, model_attributes, VivadoDSPEstimator, scheduler,
-        X_train, y_train, X_val, y_val, batch_size, epochs, optimizer, loss_fn, metric, increasing, rtol
+        X_train, y_train, X_val, y_val, batch_size, epochs,
+        optimizer, loss_fn, metric, increasing, rtol
     )
+
+    # Evaluate optimized model
+    y_optimized = optimized_model.predict(X_test)
+    acc_optimized = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_optimized, axis=1))
+    print(f'Optimized Keras accuracy: {acc_optimized}')
 
 There are two more Vivado "optimizers" - VivadoFFEstimator, aimed at reducing register utilisation and VivadoMultiObjectiveEstimator, aimed at optimising BRAM and DSP utilisation.
 Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used before synthesing HLS, by modifying the config:
