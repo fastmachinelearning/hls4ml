@@ -17,7 +17,8 @@ def get_model_gradients(model, loss_fn, X, y):
         - grads (dict): Per-layer gradients of loss with respect to weights
     '''
     grads = {}
-    # While persistent GradientTape slows down execution, it is faster than performing forward pass and non-persisten GradientTape for every layer
+    # While persistent GradientTape slows down execution,
+    # Is faster than performing forward pass and non-persistent for every layer
     with tf.GradientTape(persistent=True) as tape:
         output = model(X, training=True)
         loss_value = loss_fn(y, output)
@@ -83,7 +84,7 @@ def get_model_sparsity(model):
 
     try:
         return zero_weights / total_weights, layer_sparsity
-    except:
+    except ZeroDivisionError:
         return 0.0, layer_sparsity
 
 
@@ -92,7 +93,8 @@ def get_last_layer_with_weights(model):
     '''
     Finds the last layer with weights
     The last layer with weights determined the output shape, so, pruning is sometimes not applicable to it
-    As an example, consider a network with 16 - 32 - 5 neurons - the last layer's neuron (5) cannot be removed, as they map to the data labels
+    As an example, consider a network with 16 - 32 - 5 neurons - the last layer's neuron (5) cannot be removed
+    Since they map to the data labels
     Args:
         - model (keras.model): Input model
 

@@ -17,15 +17,17 @@ For more information, see attributes.py
         - Dense: Neurons, determined by their outgoing connections (columns in Keras weight tensors)
         - Conv2D: Filters (structures of size filt_width x filt_height x n_chan)
         - Notes:
-            - For Dense, it was also possible optimize by incoming connections (rows); however, removing zero neurons becomes harder
+            - For Dense, it was also possible optimize by incoming connections (rows);
+                However, removing zero neurons becomes harder because of Keras Surgeon
             - For Conv2D, significant literature explored pruning channels; currently not supported
     - Supports: All layers in SUPPORTED_LAYERS (hls4ml.optimization.keras)
 
 3. Pattern:
     - Pruning: Y
     - Weight sharing: Y
-    - Description: Zeroes out or quantizes all the weights in a group.
-       Groups are determined by a variable, n, and every n-th weight in the flattened, transposed (Resource) weight tensor is collected and stored in the same group
+    - Description: Zeroes out or quantizes all the weights in a group
+       Groups are determined by a variable, n, and every n-th weight in the flattened,
+       Transposed (Resource) weight tensor is collected and stored in the same group
        Equivalent to pruning/quantizing weight processed by the same DSP in hls4ml
     - Supports: All layers in SUPPORTED_LAYERS (hls4ml.optimization.keras)
 

@@ -16,6 +16,7 @@ from hls4ml.optimization.keras.reduction import reduce_model
 from hls4ml.optimization.scheduler import OptimizationScheduler
 
 np_config.enable_numpy_behavior()
+default_regularization_range = np.logspace(-6, -2, num=16).tolist()
 
 
 def optimize_model(
@@ -34,7 +35,7 @@ def optimize_model(
     validation_metric,
     increasing,
     rtol,
-    callbacks=[],
+    callbacks=None,
     ranking_metric='l1',
     local=False,
     verbose=False,
@@ -43,46 +44,59 @@ def optimize_model(
     directory=TMP_DIRECTORY,
     tuner='Bayesian',
     knapsack_solver='CBC_MIP',
-    regularization_range=np.logspace(-6, -2, num=16).tolist(),
+    regularization_range=default_regularization_range,
 ):
     '''
     Top-level function for optimizing a Keras model, given objectives
 
     Args:
     - model (keras.Model): Model to be optimized
-    - model_attributes (dict): Layer-wise model attributes, obtained from hls4ml.optimization.get_attributes_from_keras_model(...)
-    - objective (hls4ml.optimization.objectives.ObjectiveEstimator): Parameter, hardware or user-defined objective of optimization
-    - scheduler (hls4ml.optimization.schduler.OptimizationScheduler): Sparsity scheduler, choose between constant, polynomial and binary
+    - model_attributes (dict): Layer-wise model attributes,
+        obtained from hls4ml.optimization.get_attributes_from_keras_model(...)
+    - objective (hls4ml.optimization.objectives.ObjectiveEstimator):
+        Parameter, hardware or user-defined objective of optimization
+    - scheduler (hls4ml.optimization.schduler.OptimizationScheduler):
+        Sparsity scheduler, choose between constant, polynomial and binary
     - X_train (np.array): Training inputs
     - y_train (np.array): Training labels
     - X_val (np.array): Validation inputs
     - y_val (np.array): Validation labels
     - batch_size (int): Batch size during training
     - epochs (int): Maximum number of epochs to fine-tune model, in one iteration of pruning
-    - optimizer (keras.optimizers.Optimizer or equivalent-string description): Optimizer used during training
-    - loss_fn (keras.losses.Loss or equivalent loss description): Loss function used during training
-    - validation_metric (keras.metrics.Metric or equivalent loss description): Validation metric, used as a baseline
-    - increasing (boolean): If the metric improves with increased values; e.g. accuracy -> increasing = True, MSE -> increasing = False
-    - rtol (float): Relative tolerance; pruning stops when pruned_validation_metric < (or >) rtol * baseline_validation_metric
+    - optimizer (keras.optimizers.Optimizer or equivalent-string description):
+        Optimizer used during training
+    - loss_fn (keras.losses.Loss or equivalent loss description):
+        Loss function used during training
+    - validation_metric (keras.metrics.Metric or equivalent loss description):
+        Validation metric, used as a baseline
+    - increasing (boolean): If the metric improves with increased values;
+        e.g. accuracy -> increasing = True, MSE -> increasing = False
+    - rtol (float): Relative tolerance;
+        pruning stops when pruned_validation_metric < (or >) rtol * baseline_validation_metric
 
     Kwargs:
     - callbacks (list of keras.callbacks.Callback) Currently not supported, developed in future versions
-    - ranking_metric (string): Metric used for rannking weights and structures; currently supported l1, l2, saliency and Oracle
+    - ranking_metric (string): Metric used for rannking weights and structures;
+        currently supported l1, l2, saliency and Oracle
     - local (boolean): Layer-wise or global pruning
     - verbose (boolean): Display debug logs during model optimization
-    - rewinding_epochs (int): Number of epochs to retrain model without weight freezing, allows regrowth of previously pruned weights
-    - cutoff_bad_trials (int): After how many bad trials (performance below threshold), should model pruning / weight sharing stop
+    - rewinding_epochs (int): Number of epochs to retrain model without weight freezing,
+        allows regrowth of previously pruned weights
+    - cutoff_bad_trials (int): After how many bad trials (performance below threshold),
+        should model pruning / weight sharing stop
     - directory (string): Directory to store temporary results
     - tuner (str): Tuning alogorithm, choose between Bayesian, Hyperband and None
-    - knapsack_solver (str): Algorithm to solve Knapsack problem when optimizing; default usually works well; for very large networks, greedy algorithm might be more suitable
+    - knapsack_solver (str): Algorithm to solve Knapsack problem when optimizing;
+        default usually works well; for very large networks, greedy algorithm might be more suitable
     - regularization_range (list): List of suitable hyperparameters for weight decay
     '''
 
     if not isinstance(scheduler, OptimizationScheduler):
         raise Exception(
             'Scheduler must be an instance of from hls4ml.optimization.scheduler.OptimizationScheduler'
-            + 'If you provided string description (e.g. \'constant\'), please use an object instance (i.e. ConstantScheduler())'
-            'For a full list of supported schedulers and their description, refer to hls4ml.optimization.scheduler.'
+            'If you provided string description (e.g. \'constant\')'
+            'Please use an object instance (i.e. ConstantScheduler()).'
+            'For a full list of supported schedulers, refer to hls4ml.optimization.scheduler.'
         )
 
     if epochs <= rewinding_epochs:
@@ -164,7 +178,8 @@ def optimize_model(
     masked_backprop = MaskedBackprop(optimizable_model, loss_fn, model_attributes)
 
     # In certain cases, the model might underperform at the current sparsity level, but perform better at a higher sparsity
-    # Therefore, monitor the models performance over several sparsity levels and only stop pruning after high loss over several trials
+    # Therefore, monitor the models performance over several sparsity levels and
+    # Only stop pruning after high loss over several trials
     bad_trials = 0
     sparsity_conditions = True
     target_sparsity = scheduler.get_sparsity()
@@ -222,13 +237,11 @@ def optimize_model(
             # Evaluate on validation set and print epoch summary
             if verbose:
                 val_res = optimizable_model.evaluate(validation_dataset, verbose=0, return_dict=False)
-                print(
-                    f'Epoch: {epoch + 1} - Time: {time.time() - start_time}s - Average training loss: {round(epoch_loss_avg.result(), 3)}'
-                )
+                t = time.time() - start_time
+                avg_loss = round(epoch_loss_avg.result(), 3)
+                print(f'Epoch: {epoch + 1} - Time: {t}s - Average training loss: {avg_loss}')
                 print(f'Epoch: {epoch + 1} - learning_rate: {optimizable_model.optimizer.learning_rate.numpy()}')
-                print(
-                    f'Epoch: {epoch + 1} - Loss on validation set: {val_res[0]} - Performance on validation set: {val_res[1]}'
-                )
+                print(f'Epoch: {epoch + 1} - Validation loss: {val_res[0]} - Performance on validation set: {val_res[1]}')
 
         # Check if model works after pruning
         pruned_performance = optimizable_model.evaluate(validation_dataset, verbose=0, return_dict=False)[-1]

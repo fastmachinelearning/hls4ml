@@ -1,3 +1,6 @@
+import keras
+import pytest
+from packaging import version
 from qkeras import QActivation, QConv2D, QDense, quantized_bits
 from tensorflow.keras.layers import AveragePooling2D, BatchNormalization, Conv2D, Dense, Flatten, MaxPooling2D, ReLU, Softmax
 from tensorflow.keras.models import Sequential
@@ -12,6 +15,9 @@ Test verify the above property, by setting some zeros in the last layer and veri
 '''
 
 
+@pytest.mark.skipif(
+    version.parse(keras.__version__) > version.parse('2.12.0'), reason='Keras Surgeon only works until Keras 2.12'
+)
 def test_keras_model_reduction():
     model = Sequential()
     model.add(Conv2D(8, (3, 3), input_shape=(64, 64, 1), name='conv2d_1', padding='same'))
@@ -65,6 +71,9 @@ def test_keras_model_reduction():
     assert layer_sparsity['dense_3'] > 0
 
 
+@pytest.mark.skipif(
+    version.parse(keras.__version__) > version.parse('2.12.0'), reason='Keras Surgeon only works until Keras 2.12'
+)
 def test_qkeras_model_reduction():
     bits = 8
     activation = 'quantized_relu(4)'

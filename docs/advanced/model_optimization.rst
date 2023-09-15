@@ -3,7 +3,7 @@ hls4ml Optimization API
 ========================
 
 Pruning and weight sharing are effective techniques to reduce model footprint and computational requirements. The hls4ml Optimization API introduces hardware-aware pruning and weight sharing.
-By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization etc. 
+By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization etc.
 
 The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:
 
@@ -115,6 +115,6 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
 There are two more Vivado "optimizers" - VivadoFFEstimator, aimed at reducing register utilisation and VivadoMultiObjectiveEstimator, aimed at optimising BRAM and DSP utilisation.
 Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used before synthesing HLS, by modifying the config:
 .. code-block:: Python
-    hls_config = config_from_keras_model(optimized_model)     
+    hls_config = config_from_keras_model(optimized_model)
     hls_config['Model']['DenseResourceImplementation'] = 'Unrolled'
     # Any addition hls4ml config, such as strategy, reuse factor etc...

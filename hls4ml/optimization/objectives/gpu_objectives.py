@@ -58,7 +58,8 @@ class GPUFLOPEstimator(ObjectiveEstimator):
             )
             return [0]
 
-        # TODO - The below formulas underestimate FLOP savings [removing a filter in a lyer removes channels / neurons in subsequent layers]
+        # TODO - The below formulas underestimate FLOP savings
+        # Removing a filter in a layer removes channels / neurons in subsequent layers
         if structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
             if 'Dense' in layer_attributes.layer_type.__name__:
                 return [2 * layer_attributes.weight_shape[0] + 1]

@@ -16,26 +16,31 @@ class ObjectiveEstimator(ABC):
     '''
     Abstract class with methods for estimating the utilization and savings of a certain layer, with respect to some objective
     For each objective, an inherited class is written with the correct implementaton of the below methods
-    The objectives can be multi-dimensional, e.g. DSPs and BRAM [care needs to be taken when optimizing several objectives, especially if conflicting]
+    The objectives can be multi-dimensional, e.g. DSPs and BRAM
+    Care needs to be taken when optimizing several objectives, especially if conflicting
     '''
 
     @abstractmethod
     def is_layer_optimizable(self, layer_attributes):
         '''
         For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
-        Furthermore, it returns the type of optimization (structured, unstructured etc.) most suitable for minimising the objective(s).
+        Furthermore, it returns the type of optimization (structured, unstructured etc.)
+        Most suitable for minimising the objective(s).
 
         Args:
             - layer_attributes (hls4ml.optimiation.attributes.LayerAttributes)
 
         Return:
             - optimizable (boolean) - can optimizations be applied to this layer
-            - optimization_attributes (hls4ml.optimiation.attributes.OptimizationAttributes) - most suitable approach for optimization
+            - optimization_attributes (hls4ml.optimiation.attributes.OptimizationAttributes) -
+                Most suitable approach for optimization
 
         Examples:
             - Metric = Total weights, Layer = Dense, shape = (4, 4) -> return True, unstructured
-            - Metric = DSP, Layer = Dense, Precision = ap_fixed<8, 0> -> return False (Vivado doesn't use DSP when precision < 9)
-            - Metric = DSP, Layer = Dense, Precision = ap_fixed<16, 6> -> return True, pattern structure, both pruning and weight sharing
+            - Metric = DSP, Layer = Dense, Precision = ap_fixed<8, 0> -> return False
+                (Vivado doesn't use DSP when precision < 9)
+            - Metric = DSP, Layer = Dense, Precision = ap_fixed<16, 6> ->
+                return True, pattern structure, both pruning and weight sharing
         '''
         pass
 
@@ -65,7 +70,8 @@ class ObjectiveEstimator(ABC):
             - layer_attributes (hls4ml.optimiation.attributes.LayerAttributes)
 
         Return:
-            - savings (list, int) - savings achieved (one for every dimenson of objective) with OptimizationAttributes from layer_attributes
+            - savings (list, int) - savings achieved (one for every dimenson of objective)
+                                    With OptimizationAttributes from layer_attributes
 
         Example: Metric = Total weights, Layer = Dense, shape = (4, 4):
             - structure_type == unstructured -> return [1]
@@ -75,7 +81,8 @@ class ObjectiveEstimator(ABC):
 
 
 '''
-A class containing objective estimation with the goal of minimizing the number of non-zero weights in a layer [corresponds to unstructured pruning]
+A class containing objective estimation with the goal of minimizing
+The number of non-zero weights in a layer [corresponds to unstructured pruning]
 '''
 
 
@@ -113,11 +120,12 @@ class ParameterEstimator(ObjectiveEstimator):
         if not pruning:
             logging.warn(
                 'Pruning needs to be enabled to decrease the number of parameters. \
-                         It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
 
-        # In this case, pruning = True and weight_sharing = False, so calculate savings incurred by removing a group of weights
+        # In this case, pruning = True and weight_sharing = False,
+        # So calculate savings incurred by removing a group of weights
         if structure_type == SUPPORTED_STRUCTURES.UNSTRUCTURED:
             return [1]
         elif structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
