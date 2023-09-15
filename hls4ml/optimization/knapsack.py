@@ -15,8 +15,9 @@ def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs
         - implementation (string): Algorithm to solve Knapsack problem - dynamic programming, greedy, branch and bound
 
     Kwargs:
-        - time_limit (float): Limit (in seconds) after which the CBC or Branch & Bound should stop looking for a solution and return optimal so far
-        - scaling_factor (float): Scaling factor for floating points values in CBC or Branch & Bound (see function for details)
+        - time_limit (float): Limit (in seconds) after which the CBC or Branch & Bound should
+            stop looking for a solution and return optimal so far
+        - scaling_factor (float): Scaling factor for floating points values in CBC or B&B
 
     Return:
         - optimal_value (float): The optimal values of elements in the knapsack
@@ -47,8 +48,10 @@ def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs
                 - Time complexity: O(mn)
                 - Suitable for highly dimensional constraints or a very high number of items
 
-        - Most implementations require integer values of weights and capacities; for pruning & weight sharing this is never a problem
-            In case non-integer weights and capacities are requires, all of the values should be scaled by an appropriate scaling factor
+        - Most implementations require integer values of weights and capacities;
+            For pruning & weight sharing this is never a problem
+            In case non-integer weights and capacities are requires,
+            All of the values should be scaled by an appropriate scaling factor
     '''
     if implementation not in ('dynamic', 'greedy', 'branch_bound', 'CBC_MIP'):
         raise Exception('Unknown algorithm for solving Knapsack')
@@ -61,8 +64,9 @@ def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs
 
     if len(weights.shape) != 2:
         raise Exception(
-            'Current implementation of Knapsack assumes weight vector is 2-dimensional, to allow for multi-dimensional Knapsack problem. \
-                        If solve a one-dimensional Knapsack problem, extend dimensions of weights to a one-row matrix'
+            'Current implementation of Knapsack assumes weight vector is 2-dimensional,'
+            'to allow for multi-dimensional Knapsack problem. \
+            If solving a one-dimensional Knapsack problem, extend dimensions of weights to a one-row matrix'
         )
 
     if values.shape[0] != weights.shape[1]:
@@ -111,7 +115,8 @@ def __solve_1d_knapsack_dp(values, weights, capacity):
     Helper function to solve the 1-dimensional Knapsack problem exactly through dynamic programming
     The dynamic programming approach is only suitable for one-dimensional weight constraints
     Furthermore, it has a high computational complexity and it is not suitable for highly-dimensional arrays
-    NOTE: The weights and corresponding weight constraint need to be integers; if not, the they should be scaled and rounded beforehand
+    NOTE: The weights and corresponding weight constraint need to be integers;
+    If not, the they should be scaled and rounded beforehand
     '''
     assert len(weights.shape) == 1
 
@@ -167,8 +172,10 @@ def __solve_knapsack_greedy(values, weights, capacity):
         else:
             break
 
-    # The greedy algorithm can be sub-optimal; however, selecting the above elements or the next element that could not fit into the knapsack
-    # Will lead to solution that is at most (1/2) of the optimal solution; therefore, take whichever is higher and satisfies the constraints
+    # The greedy algorithm can be sub-optimal;
+    # However, selecting the above elements or the next element that could not fit into the knapsack
+    # Will lead to solution that is at most (1/2) of the optimal solution;
+    # Therefore, take whichever is higher and satisfies the constraints
     if values[i] > optimal and np.all(weights[:, i]) <= capacity:
         return values[i], [i]
     else:
@@ -177,16 +184,17 @@ def __solve_knapsack_greedy(values, weights, capacity):
 
 def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.float_info.max, scaling_factor=10e4):
     '''
-    Helper function to solve Knapsack problem using Branch and Bound; implemented using Google OR-Tools [weights & capacities need to be integers]
-    The algorithm explores the search space (a tree of all the posible combinations, 2^N nodes), but discards infeasible & sub-optimal solutions
+    Helper function to solve Knapsack problem using Branch and Bound;
+    Implemented using Google OR-Tools [weights & capacities need to be integers]
+    The algorithm explores the search space (a tree of all the posible combinations, 2^N nodes),
+    But discards infeasible & sub-optimal solutions
 
     Additional args:
-        - time_limit - Time limit (seconds) after which Branch & Bound search should stop and return a sub-optimal solution
-        - scaling_factor - Factor to scale floats in values arrays; OR-Tools requires all values & weights to be integers; so all of the values are scaled by a large number
+        - time_limit - Time limit in seconds
+            After which B&B search should stop and return a sub-optimal solution
+        - scaling_factor - Factor to scale floats in values arrays;
+            OR-Tools requires all values & weights to be integers;
     '''
-    # TODO - Should we make ortools a hard requirement in setup.cfg?
-    # If so, need to see if there are dependencies issues, when I installed a hard requirement was a protobuf version incompatible with tensorboard (MacOS X)
-    # Installed newer version of protobuf and then downgraded (to work with tensorboard) and ortools worked correctly
     try:
         from ortools.algorithms import pywrapknapsack_solver
     except ModuleNotFoundError:
@@ -204,11 +212,13 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
 
 def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_info.max, scaling_factor=10e4):
     '''
-    Helper function to solve Knapsack problem using the CBC MIP solver using Google OR-Tools [weights & capacities need to be integers]
+    Helper function to solve Knapsack problem using the CBC MIP solver using Google OR-Tools
 
     Additional args:
         - time_limit - Time limit (seconds) after which CBC solver should stop and return a sub-optimal solution
-        - scaling_factor - Factor to scale floats in values arrays; OR-Tools requires all values & weights to be integers; so all of the values are scaled by a large number
+        - scaling_factor - Factor to scale floats in values arrays;
+            OR-Tools requires all values & weights to be integers;
+            So all of the values are scaled by a large number
     '''
     try:
         from ortools.algorithms import pywrapknapsack_solver

@@ -14,7 +14,8 @@ Supported ranking metrics, for classifying redundant (groups of) weights
 
 1. l1 - groups of weights are ranked by their l1 norm
 2. l2 - groups of weights are ranked by their l2 norm
-3. oracle - abs(dL / dw * w), introduced by Molchanov et al. (2016) Pruning Convolutional Neural Networks for Resource Efficient Inference
+3. oracle - abs(dL / dw * w), introduced by Molchanov et al. (2016)
+    Pruning Convolutional Neural Networks for Resource Efficient Inference
 4. saliency - (d^2L / dw^2 * w)^2, introduced by Lecun et al. (1989) Optimal Brain Damage
 '''
 SUPPORTED_METRICS = ('l1', 'l2', 'oracle', 'saliency')

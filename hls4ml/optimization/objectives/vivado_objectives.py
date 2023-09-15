@@ -214,21 +214,24 @@ class VivadoFFEstimator(ObjectiveEstimator):
         ):
             return True, OptimizationAttributes(SUPPORTED_STRUCTURES.UNSTRUCTURED, pruning=True, weight_sharing=False)
 
-        # In io_parallel with Resource, weights are stored in BRAM but activation tensors in FFs, so structured pruning is the most suitable, it reduces the size out output before compile-time
+        # In io_parallel with Resource, weights are stored in BRAM but activation tensors in FFs,
+        # So structured pruning is the most suitable, it reduces the size out output before compile-time
         if (
             layer_attributes.args['hls4ml_attributes'].io_type == 'io_parallel'
             and layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'resource'
         ):
             return True, OptimizationAttributes(SUPPORTED_STRUCTURES.STRUCTURED, pruning=True, weight_sharing=False)
 
-        # In io_parallel with Latency, weights and activation tensors are all stored in FFs, so it is equivalent to unstructured, high sparsity pruning
+        # In io_parallel with Latency, weights and activation tensors are all stored in FFs,
+        # So it is equivalent to unstructured, high sparsity pruning
         if (
             layer_attributes.args['hls4ml_attributes'].io_type == 'io_parallel'
             and layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'latency'
         ):
             return True, OptimizationAttributes(SUPPORTED_STRUCTURES.UNSTRUCTURED, pruning=True, weight_sharing=False)
 
-    # TODO - This method is inaccurate (accross all cases); in general, estimating FFs is hard, but as long as it is consistent(ly wrong), it should not matter for the pruning
+    # TODO - This method is inaccurate (accross all cases); in general, estimating FFs is hard,
+    # But as long as it is consistent(ly wrong), it should not matter for the pruning
     @classmethod
     def layer_resources(self, layer_attributes):
         if not layer_attributes.weight_shape:
@@ -250,7 +253,8 @@ class VivadoFFEstimator(ObjectiveEstimator):
                 np.prod(layer_attributes.weight_shape) * layer_attributes.args['hls4ml_attributes'].weight_precision.width
             ]
 
-        # In io_parallel with Resource, weights are stored in BRAM but activation tensors in FFs, so FF ~ number_of_outputs x weight_precision
+        # In io_parallel with Resource, weights are stored in BRAM but activation tensors in FFs,
+        # So FF ~ number_of_outputs x weight_precision
         if (
             layer_attributes.args['hls4ml_attributes'].io_type == 'io_parallel'
             and layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'resource'
@@ -259,7 +263,8 @@ class VivadoFFEstimator(ObjectiveEstimator):
                 np.prod(layer_attributes.output_shape) * layer_attributes.args['hls4ml_attributes'].output_precision.width
             ]
 
-        # In io_parallel with Latency, weights and latency are all stored in FFs, so it is equivalent to the sum of the above two cases
+        # In io_parallel with Latency, weights and latency are all stored in FFs,
+        # So it is equivalent to the sum of the above two cases
         if (
             layer_attributes.args['hls4ml_attributes'].io_type == 'io_parallel'
             and layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'latency'
@@ -326,7 +331,8 @@ class VivadoFFEstimator(ObjectiveEstimator):
                     * layer_attributes.args['hls4ml_attributes'].weight_precision.width
                 ]
 
-        # In io_parallel with Resource, weights are stored in BRAM but activation tensors in FFs, so only structured pruning helps
+        # In io_parallel with Resource, weights are stored in BRAM but activation tensors in FFs,
+        # So only structured pruning helps
         if (
             layer_attributes.args['hls4ml_attributes'].io_type == 'io_parallel'
             and layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'resource'

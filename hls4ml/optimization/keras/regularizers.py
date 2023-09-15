@@ -24,13 +24,18 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
 
     Examples:
         - structure_type = unstructured: unstructured weight regularisation
-        - structure_type = structured: neuron regularization (group weights by row)
-        - structure_type = pattern: regularization on groups of every n-th weight (e.g. grouping by reuse factor in hls4ml)
-        - structure_type = block: regularisation on blocks within weight matrix (e.g. 4x4, 8x1 for certain SIMD processors)
+        - structure_type = structured: neuron regularization
+            (group weights by row)
+        - structure_type = pattern: regularization on groups of every n-th weight
+            (e.g. grouping by reuse factor in hls4ml)
+        - structure_type = block: regularisation on blocks within weight matrix
+            (e.g. 4x4, 8x1 for certain SIMD processors)
 
-        - consecutive_patterns is commonly encountered with optimization of BRAM utilization - e.g. while it is true that each
-          DSP pattern consumes one DSP, they likely use less than one BRAM block (e.g. if the BRAM width is 36 bit and weight width is 16)
-          In that case, we need to group several patterns together, so the entire block of patterns can be removed, thus saving DSP and BRAM
+        - consecutive_patterns is commonly encountered with optimization of BRAM utilization -
+            e.g. while it is true that each DSP pattern consumes one DSP,
+            They likely use less than one BRAM block (e.g. if the BRAM width is 36 bit and weight width is 16)
+            In that case, we need to group several patterns together,
+            So the entire block of patterns can be removed, thus saving DSP and BRAM
     '''
 
     def __init__(
@@ -111,7 +116,8 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
                 raise Exception(f'{self.__class__.__name__}: block sizes need to be fators of weight matrix dimensions')
 
             # TensorFlow has a built-in method for exctracting sub-tensors of given shape and stride
-            # This method is commonly used to perform im2col, docs: https://www.tensorflow.org/api_docs/python/tf/image/extract_patches
+            # This method is commonly used to perform im2col,
+            # Docs: https://www.tensorflow.org/api_docs/python/tf/image/extract_patches
             total_blocks = (weights.shape[0] * weights.shape[1]) // (self.block_shape[0] * self.block_shape[1])
             blocks = tf.reshape(
                 tf.image.extract_patches(
@@ -151,15 +157,18 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
         - norm (int): Norm type (l1 or l2)
         - structure_type (string): Type of regularisation - unstructured, structured, pattern
         - pattern_offset (int): Length of each pattern if structure_type == pattern
-        - weights (tf.Variable): Four-dimensional layer weight tensor, dimensionality (filter_width x filter_height x n_chan x n_filt)
+        - weights (tf.Variable): Four-dimensional layer weight tensor, dimensionality
+        (filter_width x filter_height x n_chan x n_filt)
 
     Return:
         - Regularizer penalty (tf.Variable): Penalty associated with layer weights
 
     Example use cases:
         - structure_type = unstructured: unstructured weight regularisation
-        - structure_type = structured: filter regularization (group weights of dimensionality filt_width x filt_height x n_chan)
-        - structure_type = pattern: regularization on groups of every n-th weight in flattened array (e.g. grouping by reuse factor in hls4ml)
+        - structure_type = structured: filter regularization
+            (group weights of dimensionality filt_width x filt_height x n_chan)
+        - structure_type = pattern: regularization on groups of every n-th weight in flattened array
+            (e.g. grouping by reuse factor in hls4ml)
     '''
 
     def __init__(

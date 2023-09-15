@@ -30,10 +30,10 @@ class hls4mlAttributes:
         if not isinstance(output_precision, (FixedPrecisionType, IntegerPrecisionType)):
             raise Exception('Layer weight precision is not in valid format')
 
-        if not strategy in ('Latency', 'latency', 'Resource', 'resource'):
+        if strategy not in ('Latency', 'latency', 'Resource', 'resource'):
             raise Exception('Unknown layer strategy')
 
-        if not io_type in ('io_parallel', 'io_stream'):
+        if io_type not in ('io_parallel', 'io_stream'):
             raise Exception('Unknown IO type')
 
         self.n_in = n_in
@@ -95,8 +95,10 @@ class LayerAttributes:
         - input_shape (tuple): Layer input shape
         - output_shape (tuple): Layer output shape
         - optimizable (bool): Should optimizations (pruning, weight sharing) be applied to this layer
-        - optimization_attributes (OptimizationAttributes): Type of optimization, optimization vs weight sharing, block shape and pattern offset
-        - args (dict): Additional information, e.g. hls4mlAttributes; dictionary so it can be generic enough for different platforms
+        - optimization_attributes (OptimizationAttributes): Type of optimization,
+            pruning or weight sharing, block shape and pattern offset
+        - args (dict): Additional information,
+            e.g. hls4mlAttributes; dictionary so it can be generic enough for different platforms
     '''
 
     def __init__(

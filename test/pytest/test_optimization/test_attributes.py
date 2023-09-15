@@ -49,7 +49,7 @@ def test_attributes():
     assert model_attributes['conv2d'].weight_shape == (3, 3, 3, 6)
     assert model_attributes['conv2d'].input_shape == (8, 8, 3)
     assert model_attributes['conv2d'].output_shape == (8, 8, 6)
-    assert model_attributes['conv2d'].optimizable == False
+    assert not model_attributes['conv2d'].optimizable
     assert model_attributes['conv2d'].args['hls4ml_attributes'].n_in == 9
     assert model_attributes['conv2d'].args['hls4ml_attributes'].n_out == 6
     assert model_attributes['conv2d'].args['hls4ml_attributes'].io_type == io_type
@@ -64,7 +64,7 @@ def test_attributes():
     assert model_attributes['flatten'].weight_shape == ()
     assert model_attributes['flatten'].input_shape == (8, 8, 6)
     assert model_attributes['flatten'].output_shape == (384,)
-    assert model_attributes['flatten'].optimizable == False
+    assert not model_attributes['flatten'].optimizable
 
     # Flatten is not optimizable so hls4mlAttributes (n_in, n_out, reuse factor etc.) will not be stored for it
     assert 'hls4ml_attributes' not in model_attributes['flatten'].args
@@ -75,7 +75,7 @@ def test_attributes():
     assert model_attributes['dense'].weight_shape == (384, 16)
     assert model_attributes['dense'].input_shape == (384,)
     assert model_attributes['dense'].output_shape == (16,)
-    assert model_attributes['dense'].optimizable == False
+    assert not model_attributes['dense'].optimizable
     assert model_attributes['dense'].args['hls4ml_attributes'].n_in == 384
     assert model_attributes['dense'].args['hls4ml_attributes'].n_out == 16
     assert model_attributes['dense'].args['hls4ml_attributes'].io_type == io_type
@@ -90,7 +90,7 @@ def test_attributes():
     assert model_attributes['relu'].weight_shape == ()
     assert model_attributes['relu'].input_shape == (16,)
     assert model_attributes['relu'].output_shape == (16,)
-    assert model_attributes['relu'].optimizable == False
+    assert not model_attributes['relu'].optimizable
 
     # ReLU is not optimizable so hls4mlAttributes (n_in, n_out, reuse factor etc.) will not be stored for it
     assert 'hls4ml_attributes' not in model_attributes['relu'].args

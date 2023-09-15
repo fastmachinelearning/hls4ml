@@ -90,6 +90,9 @@ class HyperOptimizationModel(kt.HyperModel):
         return model_to_prune
 
 
+default_regularization_range = np.logspace(-6, -2, num=16).tolist()
+
+
 def build_optimizable_model(
     model,
     attributes,
@@ -104,7 +107,7 @@ def build_optimizable_model(
     verbose=False,
     directory=TMP_DIRECTORY,
     tuner='Bayesian',
-    regularization_range=np.logspace(-6, -2, num=15).tolist(),
+    regularization_range=default_regularization_range,
 ):
     '''
     Function identifying optimizable layers and adding a regularization loss
@@ -128,10 +131,13 @@ def build_optimizable_model(
     - learning_rate_range (list): List of suitable hyperparameters for learning rate
 
     Notes:
-    - In general, the regularization and learning rate ranges do not need to be provided, as the implementation sets a generic enough range.
-      However, if the user has an idea on the possible range on hyperparameter ranges (eg. VGG-16 weight decay ~10^-5), the tuning will complete faster
-    - The default tuner is Bayesian & when coupled with the correct ranges of hyperparameters, it performs quite well, fast. However, older version of Keras Tuner had a crashing bug with Bayesian Tuner
-    - In general, the directory does not need to be specified. However, if pruning several models simultaneously, to avoid conflicting intermediate results, it is useful to specify directory
+    - In general, the regularization and learning rate ranges do not need to be provided,
+        as the implementation sets a generic enough range. if the user has an idea on the
+        possible range on hyperparameter ranges, the tuning will complete faster.
+    - The default tuner is Bayesian & when coupled with the correct ranges of hyperparameters,
+        it performs quite well, fast. However, older version of Keras Tuner had a crashing bug with it.
+    - In general, the directory does not need to be specified. However, if pruning several models simultaneously,
+        to avoid conflicting intermediate results, it is useful to specify directory.
     '''
     # User provided manual hyper-parameters for regularisation loss
     # TODO - Maybe we could extend this to be hyper-parameters per layer? or layer-type?

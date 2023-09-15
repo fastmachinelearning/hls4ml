@@ -38,7 +38,8 @@ def get_model_masks(
 
     If a layer supports both weight sharing and pruning, both the norm and variance of the group are calculated
     And the smaller one is considered; so if the norm is smaller, the group will be considered for pruning
-    Otherise, the group will be considered for weight sharing. Both the norm and variance are normalized, to avoid magnitude biases
+    Otherise, the group will be considered for weight sharing.
+    Both the norm and variance are normalized, to avoid magnitude biases.
 
     Args:
         - keras_model (keras.model) - Model to be masked
@@ -47,9 +48,12 @@ def get_model_masks(
         - objective (ObjectiveEstimator) - Objective to be minimized (e.g. DSP, FLOPs etc.)
         - metric (string) - Weight ranking metric - l1, l2, Oracle, saliency
         - local (boolean) - Equal layer-wise sparsity
-        - gradients (dict) - A layer-wise dictionary of weight gradients, needed for Oracle ranking
-        - hessians (dict) - A layer-wse dictionary of second gradients, needed for saliency ranking
-        - knapsack_solver (str) - Algorithm for solving Knapsack problem; recommended is to use default, unless dealing with highly dimensional problems, in which case greedy is better
+        - gradients (dict) - A layer-wise dictionary of weight gradients
+            (needed for Oracle ranking)
+        - hessians (dict) - A layer-wise dictionary of second gradients
+            (needed for saliency ranking)
+        - knapsack_solver (str) - Algorithm for solving Knapsack problem; recommended is to use default.
+            Unless dealing with highly dimensional problems, in which case greedy is better.
 
     Return:
         - masks (dict) - Layer-wise dictionary of binary tensors
@@ -86,10 +90,14 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
     for layer in keras_model.layers:
         # Care needs to be taken if layer_savings = 0
         # As long as the default attributes are used (from is_layer_optimizable(...)), this should never happen
-        # However, if the optimization attributes are manually changed it would be possible to select the structure type such that savings = 0
-        # In this case, the goal is to keep resource utilization under a certain threshold; and savings are equivalent to resources per single group
-        # Therefore, in the knapsack solver, zero-saving would remain unmasked; as it has a "weight" of zero, it is always stored in the knapsack
-        # So not masking a group without saving is as expected; however, if solved through greedy knaspack an exception will be thrown (division by zero)
+        # However, if the optimization attributes are manually changed,
+        # It would be possible to select the structure type such that savings = 0
+        # In this case, the goal is to keep resource utilization under a certain threshold;
+        # Savings are equivalent to resources per single group
+        # Therefore, in the knapsack solver, zero-saving would remain unmasked;
+        # As it has a "weight" of zero, it is always stored in the knapsack
+        # So not masking a group without saving is as expected;
+        # However, if solved through greedy knaspack an exception will be thrown (division by zero)
         if isinstance(layer, SUPPORTED_LAYERS) and model_attributes[layer.name].optimizable:
             layer_savings = objective.layer_savings(model_attributes[layer.name])
             layer_resources = objective.layer_resources(model_attributes[layer.name])
@@ -330,7 +338,8 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                     raise Exception('Block sizes need to be fators of weight matrix dimensions')
 
                 # TensorFlow has a built-in method for exctracting sub-tensors of given shape and stride
-                # This method is commonly used to perform im2col, docs: https://www.tensorflow.org/api_docs/python/tf/image/extract_patches
+                # This method is commonly used to perform im2col,
+                # Docs: https://www.tensorflow.org/api_docs/python/tf/image/extract_patches
                 total_blocks = (value.shape[0] * value.shape[1]) // (block_shape[0] * block_shape[1])
                 blocks_in_row = value.shape[1] // block_shape[1]
                 blocks = np.reshape(
@@ -411,13 +420,16 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
     total_resources = []
 
     # Iterate through all layers and create a list of all the optimizable groups (single weight, structure, pattern, block)
-    # Each entry contains the value associated with the group, alongside the layer it belongs to and its location in the layer
+    # Each entry contains the value associated with the group,
+    # Alongside the layer it belongs to and its location in the layer
     # The values is normalised w.r.t to the to largest element in the group, to avoid bias towards large layers
     # We also keep track of total model resources, with respect to the objective
-    # A detailed comment in the local masking function is given for considerations on exception of layer savings and how to address them
+    # A detailed comment in the local masking function is given for
+    # Considerations on exception of layer savings and how to address them
     for layer in keras_model.layers:
         # Optimizable should be always enabled if either pruning or weight sharing are enabled
-        # However, if the objectives are implemented incorrectly, it is possible to have optimizatons enabled without any types of optimization (pruning, weight sharing etc.) enabled
+        # However, if the objectives are implemented incorrectly,
+        # It is possible to have optimizatons enabled without any types of optimization (pruning, weight sharing) enabled
         layer_optimizable = model_attributes[layer.name].optimizable and (
             model_attributes[layer.name].optimization_attributes.weight_sharing
             or model_attributes[layer.name].optimization_attributes.pruning

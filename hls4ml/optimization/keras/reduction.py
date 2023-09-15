@@ -20,7 +20,6 @@ Return:
 
 
 def reduce_model(model):
-    # TODO - Should we make Keras Surgeon a hard requirement in setup.cfg? If so, needs to be installed from git, @bo3z fork
     try:
         from kerassurgeon import Surgeon
     except ModuleNotFoundError:

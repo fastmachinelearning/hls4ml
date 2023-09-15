@@ -51,7 +51,9 @@ class OptimizationScheduler(ABC):
 
 class ConstantScheduler(OptimizationScheduler):
     '''
-    Sparsity updated by a constant term, until (i) sparsity target reached (ii) optimization algorithm stops requesting state updates
+    Sparsity updated by a constant term, until
+        (i) sparsity target reached OR
+        (ii) optimization algorithm stops requesting state updates
     '''
 
     def __init__(self, initial_sparsity=0, final_sparsity=1.0, update_step=0.05):
@@ -66,9 +68,12 @@ class ConstantScheduler(OptimizationScheduler):
             return False, self.sparsity
 
     '''
-    In certain cases, a model might underperform at the current sparsity level, but perform better at a higher sparsity
-    In this case, constant sparsity (since it increments by a small amount every time), will simply jump to the next sparsity level
-    The model's performance over several sparsity levels optimization is stoped after high loss over several trials (see top level pruning/optimization function)
+    In certain cases, a model might underperform at the current sparsity level,
+    But perform better at a higher sparsity
+    In this case, constant sparsity (since it increments by a small amount every time),
+    Will simply jump to the next sparsity level
+    The model's performance over several sparsity levels optimization is tracked and S
+    Stopped after high loss over several trials (see top level pruning/optimization function)
 
     '''
 
@@ -108,9 +113,13 @@ class BinaryScheduler(OptimizationScheduler):
 
 class PolynomialScheduler(OptimizationScheduler):
     '''
-    Sparsity updated by at a polynomial decay, until (i) sparsity target reached (ii) optimization algorithm stops requesting state updates
-    For more information, see Zhu & Gupta (2016) - 'To prune, or not to prune: exploring the efficacy of pruning for model compression' and TensorFlow Model Optimization library
-    Note, the implementation is slightly different, as TensorFlow Prune API depends on the total number of epochs and update frequency
+    Sparsity updated by at a polynomial decay, until
+        (i) sparsity target reached OR
+        (ii) optimization algorithm stops requesting state updates
+    For more information, see Zhu & Gupta (2016) -
+        'To prune, or not to prune: exploring the efficacy of pruning for model compression'
+    Note, the implementation is slightly different,
+    Since TensorFlow Prune API depends on the total number of epochs and update frequency
     '''
 
     def __init__(self, maximum_steps, initial_sparsity=0, final_sparsity=1.0, decay_power=3):
@@ -132,7 +141,8 @@ class PolynomialScheduler(OptimizationScheduler):
     '''
     In certain cases, a model might underperform at the current sparsity level, but perform better at a higher sparsity
     In this case, polynomial sparsity, will simply jump to the next sparsity level
-    The model's performance over several sparsity levels optimization is stoped after high loss over several trials (see top level pruning/optimization function)
+    The model's performance over several sparsity levels optimization is tracked and
+    toped after high loss over several trials (see top level pruning/optimization function)
     '''
 
     def repair_step(self):
