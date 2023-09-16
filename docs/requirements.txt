@@ -7,7 +7,6 @@ pandas
 pyyaml
 seaborn
 setuptools_scm[toml]>=5
-six
 sphinx>=3.2.1
 sphinx_contributors
 sphinx_github_changelog

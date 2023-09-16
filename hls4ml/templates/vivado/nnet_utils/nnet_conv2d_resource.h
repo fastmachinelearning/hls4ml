@@ -16,12 +16,11 @@ void conv_2d_resource_cl(
     constexpr unsigned mult_n_out = CONFIG_T::n_filt;
     constexpr unsigned block_factor = DIV_ROUNDUP(mult_n_in * mult_n_out, CONFIG_T::reuse_factor);
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(mult_n_in * mult_n_out, CONFIG_T::reuse_factor);
-    constexpr unsigned multscale = multiplier_limit / mult_n_out;
+    constexpr unsigned multscale = block_factor / mult_n_out;
 
-    assert((multiplier_limit % mult_n_out == 0 || CONFIG_T::reuse_factor >= mult_n_in) &&
+    assert((block_factor % mult_n_out == 0 || CONFIG_T::reuse_factor >= mult_n_in) &&
            "The current Reuse Factor is not allowed");
-    assert((multiplier_limit == block_factor) &&
+    assert((CONFIG_T::reuse_factor <= CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan) &&
            "This function is correct only for RF <= FILT_HEIGHT * FILT_WIDTH * N_CHAN");
 
     data_T data_buf[CONFIG_T::n_pixels][mult_n_in];

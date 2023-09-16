@@ -5,7 +5,7 @@ stages:
 
 generator:
   stage: generate
-  image: python:3.7-alpine
+  image: python:3.8-alpine
   tags:
     - docker
   before_script:

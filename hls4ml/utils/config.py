@@ -5,7 +5,29 @@ import qkeras
 import hls4ml
 
 
-def create_config(output_dir='my-hls-test', project_name='myproject', backend='Vivado', **kwargs):
+def create_config(output_dir='my-hls-test', project_name='myproject', backend='Vivado', version='1.0.0', **kwargs):
+    """Create an initial configuration to guide the conversion process.
+
+    The resulting configuration will contain general information about the project (like project name and output directory)
+    as well as the backend-specific configuration (part numbers, clocks etc). Extra arguments of this function will be
+    passed to the backend's ``create_initial_config``. For the possible list of arguments, check the documentation of each
+    backend.
+
+    Args:
+        output_dir (str, optional): The output directory to which the generated project will be written.
+            Defaults to 'my-hls-test'.
+        project_name (str, optional): The name of the project, that will be used as a top-level function in HLS designs.
+            Defaults to 'myproject'.
+        backend (str, optional): The backend to use. Defaults to 'Vivado'.
+        version (str, optional): Optional string to version the generated project for backends that support it.
+            Defaults to '1.0.0'.
+
+    Raises:
+        Exception: Raised if unknown backend is specified.
+
+    Returns:
+        dict: The conversion configuration.
+    """
     backend_list = hls4ml.backends.get_available_backends()
     if backend.lower() not in backend_list:
         raise Exception(f'Unknown backend: {backend}')
@@ -18,6 +40,7 @@ def create_config(output_dir='my-hls-test', project_name='myproject', backend='V
     config['OutputDir'] = output_dir
     config['ProjectName'] = project_name
     config['Backend'] = backend.name
+    config['Version'] = version
     config.update(backend_config)
 
     return config

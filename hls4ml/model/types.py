@@ -5,7 +5,6 @@ The Precision types are given names for convenience (``NamedType``). Named types
 higher-dimensional tensors, which are defined as arrays or FIFO streams in the generated code.
 """
 
-import re
 from enum import Enum
 
 import numpy as np
@@ -46,7 +45,7 @@ class BinaryQuantizer(Quantizer):
 
     def __init__(self, bits=2):
         if bits == 1:
-            hls_type = IntegerPrecisionType(width=1, signed=False)
+            hls_type = XnorPrecisionType()
         elif bits == 2:
             hls_type = IntegerPrecisionType(width=2)
         else:
@@ -221,6 +220,10 @@ class PrecisionType:
         self.width = width
         self.signed = signed
 
+    def __eq__(self, other):
+        eq = self.width == other.width
+        eq = eq and self.signed == other.signed
+
 
 class IntegerPrecisionType(PrecisionType):
     """Arbitrary precision integer  data type.
@@ -313,16 +316,21 @@ class FixedPrecisionType(PrecisionType):
         return eq
 
 
-class XnorPrecisionType(IntegerPrecisionType):
+class XnorPrecisionType(PrecisionType):
     """
     Convenience class to differentiate 'regular' integers from BNN Xnor ones
     """
 
     def __init__(self):
         super().__init__(width=1, signed=False)
+        self.integer = 1
+
+    def __str__(self):
+        typestring = 'uint<1>'
+        return typestring
 
 
-class ExponentPrecisionType(IntegerPrecisionType):
+class ExponentPrecisionType(PrecisionType):
     """
     Convenience class to differentiate 'regular' integers from those which represent exponents,
     for QKeras po2 quantizers, for example.
@@ -330,6 +338,10 @@ class ExponentPrecisionType(IntegerPrecisionType):
 
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
+
+    def __str__(self):
+        typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
+        return typestring
 
 
 def find_minimum_width(data, signed=True):
@@ -540,7 +552,7 @@ class WeightVariable(Variable):
         if not self._iterator.finished:
             value = self._iterator[0]
             self._iterator.iternext()
-            return self.precision_fmt % value
+            return self.precision_fmt.format(value)
         else:
             raise StopIteration
 
@@ -548,26 +560,19 @@ class WeightVariable(Variable):
 
     def update_precision(self, new_precision):
         self.type.precision = new_precision
-        precision_str = str(self.type.precision)
-        if 'int' in precision_str:
-            self.precision_fmt = '%d'
-        else:
-            match = re.search('.+<(.+?)>', precision_str)
-            if match is not None:
-                precision_bits = match.group(1).split(',')
-                width_bits = int(precision_bits[0])
-                integer_bits = int(precision_bits[1])
-                fractional_bits = integer_bits - width_bits
-                lsb = 2**fractional_bits
-                if lsb < 1:
-                    # Use str to represent the float with digits, get the length
-                    # to right of decimal point
-                    decimal_spaces = len(str(lsb).split('.')[1])
-                else:
-                    decimal_spaces = len(str(2**integer_bits))
-                self.precision_fmt = f'%.{decimal_spaces}f'
+        if isinstance(new_precision, (IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType)):
+            self.precision_fmt = '{:.0f}'
+        elif isinstance(new_precision, FixedPrecisionType):
+            if new_precision.fractional > 0:
+                # Use str to represent the float with digits, get the length
+                # to right of decimal point
+                lsb = 2**-new_precision.fractional
+                decimal_spaces = len(str(lsb).split('.')[1])
+                self.precision_fmt = f'{{:{decimal_spaces}f}}'
             else:
-                self.precision_fmt = '%f'
+                self.precision_fmt = '{:.0f}'
+        else:
+            raise RuntimeError(f"Unexpected new precision type: {new_precision}")
 
 
 class CompressedWeightVariable(WeightVariable):
@@ -622,8 +627,8 @@ class CompressedWeightVariable(WeightVariable):
 
     def __next__(self):
         value = next(self._iterator)
-        value_fmt = self.precision_fmt % value[2]
-        return '{ %u, %u, %s }' % (value[1], value[0], value_fmt)
+        value_fmt = self.precision_fmt.format(value[2])
+        return f'{{{value[1]}, {value[0]}, {value_fmt}}}'
 
     next = __next__
 
@@ -660,8 +665,8 @@ class ExponentWeightVariable(WeightVariable):
 
     def __next__(self):
         value = next(self._iterator)
-        value_fmt = self.precision_fmt % value[1]
-        return '{%d, %s}' % (value[0], value_fmt)
+        value_fmt = self.precision_fmt.format(value[1])
+        return f'{{{value[0]}, {value_fmt}}}'
 
     next = __next__
 

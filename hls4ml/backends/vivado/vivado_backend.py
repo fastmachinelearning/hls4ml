@@ -96,6 +96,7 @@ class VivadoBackend(FPGABackend):
             'vivado:merge_batch_norm_quantized_tanh',
             'vivado:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
+            'vivado:xnor_pooling',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
