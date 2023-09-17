@@ -57,7 +57,7 @@ void compute_output_buffer_tr_1d(
     #pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to buffer
     nnet::kernel_shift_tr_1d<data_T, CONFIG_T>(in_elem, kernel_data);

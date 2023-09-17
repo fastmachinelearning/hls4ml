@@ -104,7 +104,7 @@ void compute_output_buffer_tr_2d(const data_T &in_elem,
     #pragma HLS ARRAY_PARTITION variable=output_buffer complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable = res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to the buffer
     nnet::shift_line_buffer_tr<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
