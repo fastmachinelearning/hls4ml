@@ -38,7 +38,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev38+g3158eca5
+                0.8.0.dev39+gbc6fc08d
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -198,36 +198,36 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 <h3>Getting started with hls4ml CLI (deprecated)<a class="headerlink" href="#getting-started-with-hls4ml-cli-deprecated" title="Permalink to this heading"></a></h3>
 <p>As an alternative to the recommended Python PI, the command-line interface is provided via the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> command.</p>
 <p>To follow this tutorial, you must first download our <code class="docutils literal notranslate"><span class="pre">example-models</span></code> repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/fastmachinelearning/example-models
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/fastmachinelearning/example-models
 </pre></div>
 </div>
 <p>Alternatively, you can clone the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> repository with submodules</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone --recurse-submodules https://github.com/fastmachinelearning/hls4ml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recurse-submodules<span class="w"> </span>https://github.com/fastmachinelearning/hls4ml
 </pre></div>
 </div>
 <p>The model files, along with other configuration parameters, are defined in the <code class="docutils literal notranslate"><span class="pre">.yml</span></code> files.
 Further information about <code class="docutils literal notranslate"><span class="pre">.yml</span></code> files can be found in <a class="reference internal" href="api/configuration.html"><span class="doc">Configuration</span></a> page.</p>
 <p>In order to create an example HLS project, first go to <code class="docutils literal notranslate"><span class="pre">example-models/</span></code> from the main directory:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> example-models/
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>example-models/
 </pre></div>
 </div>
 <p>And use this command to translate a Keras model:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hls4ml convert -c keras-config.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hls4ml<span class="w"> </span>convert<span class="w"> </span>-c<span class="w"> </span>keras-config.yml
 </pre></div>
 </div>
 <p>This will create a new HLS project directory with an implementation of a model from the <code class="docutils literal notranslate"><span class="pre">example-models/keras/</span></code> directory.
 To build the HLS project, do:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hls4ml build -p my-hls-test -a
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hls4ml<span class="w"> </span>build<span class="w"> </span>-p<span class="w"> </span>my-hls-test<span class="w"> </span>-a
 </pre></div>
 </div>
 <p>This will create a Vivado HLS project with your model implementation!</p>
 <p><strong>NOTE:</strong> For the last step, you can alternatively do the following to build the HLS project:</p>
-<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> my-hls-test
-vivado_hls -f build_prj.tcl
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>my-hls-test
+vivado_hls<span class="w"> </span>-f<span class="w"> </span>build_prj.tcl
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">vivado_hls</span></code> can be controlled with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vivado_hls -f build_prj.tcl <span class="s2">&quot;csim=1 synth=1 cosim=1 export=1 vsynth=1&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vivado_hls<span class="w"> </span>-f<span class="w"> </span>build_prj.tcl<span class="w"> </span><span class="s2">&quot;csim=1 synth=1 cosim=1 export=1 vsynth=1&quot;</span>
 </pre></div>
 </div>
 <p>Setting the additional parameters from <code class="docutils literal notranslate"><span class="pre">1</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> disables that step, but disabling <code class="docutils literal notranslate"><span class="pre">synth</span></code> also disables <code class="docutils literal notranslate"><span class="pre">cosim</span></code> and <code class="docutils literal notranslate"><span class="pre">export</span></code>.</p>
@@ -250,11 +250,11 @@ vivado_hls -f build_prj.tcl
 <section id="uninstalling">
 <h3>Uninstalling<a class="headerlink" href="#uninstalling" title="Permalink to this heading"></a></h3>
 <p>To uninstall <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip uninstall hls4ml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>uninstall<span class="w"> </span>hls4ml
 </pre></div>
 </div>
 <p>If installed with <code class="docutils literal notranslate"><span class="pre">conda</span></code>, remove the package with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda remove hls4ml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>remove<span class="w"> </span>hls4ml
 </pre></div>
 </div>
 </section>
