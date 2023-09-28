@@ -49,12 +49,10 @@ void conv_2d_encoded_cl(
     ac_int<CONFIG_T::filt_height * CONFIG_T::filt_width,false> pixel_idx[data_T::size / CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1); (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight: 
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-        if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
-            #pragma hls_pipeline_init_interval ce_reuse_factor
-        }
     ReadInputWidth: 
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
             //#pragma HLS LOOP_FLATTEN
@@ -78,12 +76,10 @@ void conv_2d_buffer_cl(
     static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency); (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight: 
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-        if(CONFIG_T::strategy == nnet::latency) {
-            #pragma hls_pipeline_init_interval ce_reuse_factor
-        }
     ReadInputWidth: 
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             //#pragma HLS LOOP_FLATTEN

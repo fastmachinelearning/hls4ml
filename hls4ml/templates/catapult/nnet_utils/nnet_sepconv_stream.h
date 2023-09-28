@@ -25,6 +25,9 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
 
+// Add dummy loop to which the pipeline pragma can be applied
+do {
+
     //#pragma HLS ARRAY_PARTITION variable=mult complete
 
     //#pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
@@ -47,8 +50,10 @@ ResetAccum:
     }
 
 // Accumulate multiplication result
+    #pragma hls_unroll
 Accum1:
     for (int ii = 0; ii < CONFIG_T::kernel_size; ii++) {
+    #pragma hls_unroll
     Accum2:
         for (int jj = 0; jj < CONFIG_T::n_chan; jj++) {
             int index = ii * CONFIG_T::n_chan + jj;
@@ -63,6 +68,8 @@ Result:
         //#pragma HLS UNROLL
         res[ires] = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[ires]);
     }
+} while (0);
+
 }
 
 #pragma hls_design inline

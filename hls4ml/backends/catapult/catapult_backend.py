@@ -168,10 +168,14 @@ class CatapultBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, tech='fpga', part='xcku115-flvb2104-2-i', asiclibs='nangate-45nm', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
+        config['Technology'] = tech
+        if tech == 'fpga':
+            config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
+        else:
+            config['ASICLibs'] = asiclibs if asiclibs is not None else 'nangate-45nm'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}

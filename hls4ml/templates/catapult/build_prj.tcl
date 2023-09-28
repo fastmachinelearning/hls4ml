@@ -35,36 +35,31 @@ proc report_time { op_name time_start time_end } {
   puts "***** ${op_name} COMPLETED IN ${time_h}h${time_m}m${time_s}s *****"
 }
 
-proc dump_table { } {
-  if { [solution get /STATE -checkpath 0] != "extract" } {
-    # silently return
-    return
-  }
-
-  puts "[string repeat {=} 20]"
-  puts "HLS4ML 'nnet' Layer Results"
-  array unset data
-  set layers {}
-  foreach {p v} [solution get /DATUM/FIELDS/area/FIELDS/extract/FIELDS/*/FIELDS/*/COLUMNS/total/VALUE -match glob -ret pv -checkpath 0] {
-    set layer [regsub {:inst} [lindex [split $p /] end-3] {}]
-    if { [string match {nnet::*} $layer] != 1 } { continue }
-    lappend layers $layer
-    set data($layer,Area) $v
-  }
-  foreach layer $layers {
-    foreach {field entry} {tm_latency_cycles Latency tm_thruput_cycles Thruput} {
-      foreach {p1 v1} [solution get /DATUM/FIELDS/timing/FIELDS/*/FIELDS/$layer/FIELDS/core/COLUMNS/tm_latency_cycles/VALUE  -match glob -ret pv] {
-        set data($layer,$entry) $v1
-      }
+proc setup_xilinx_part { part } {
+  # Map Xilinx PART into Catapult library names
+  set libname [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v]
+  if { [llength $libname] == 1 } {
+    set libpath [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret p]
+    if { [regexp {/CONFIG/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/.*} $libpath dummy rtltool vendor family speed part] } {
+      solution library add $libname -- -rtlsyntool $rtltool -vendor $vendor -family $family -speed $speed
+    } else {
+      solution library add $libname -- -rtlsyntool Vivado
     }
+  } else {
+    logfile message "Could not find specific Xilinx base library for part '$part'. Using KINTEX-u\n" warning
+    solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flvb2104-2-i
   }
-  puts ""
-  puts "[format {%-60s  %8s  %8s  %8s} Layer Area Latency Thruput]"
-  puts "[format {%-60s  %8s  %8s  %8s} [string repeat {-} 60] [string repeat {-} 8] [string repeat {-} 8] [string repeat {-} 8]]"
-  foreach layer $layers {
-    puts "[format {%-60s  %8.0f  %8d  %8d} $layer $data($layer,Area) $data($layer,Latency) $data($layer,Thruput)]"
+  solution library add Xilinx_RAMS
+  solution library add Xilinx_ROMS
+  solution library add Xilinx_FIFO
+}
+
+proc setup_asic_libs { args } {
+  foreach lib $args {
+    solution library add $lib -- -rtlsyntool DesignCompiler
   }
-  puts "\n"
+  solution library add ccs_sample_mem
+  solution library add ccs_sample_rom
 }
 
 options set Input/CppStandard {c++17}
@@ -76,24 +71,45 @@ if {$opt(reset)} {
   project new -name myproject_prj
 }
 
+#--------------------------------------------------------
+# Configure Catapult Options
+# downgrade HIER-10
+options set Message/ErrorOverride HIER-10 -remove
+solution options set Message/ErrorOverride HIER-10 -remove
+
+#--------------------------------------------------------
+# Configure Catapult Flows
 if { [info exists ::env(XILINX_PCL_CACHE)] } {
 options set /Flows/Vivado/PCL_CACHE $::env(XILINX_PCL_CACHE)
 solution options set /Flows/Vivado/PCL_CACHE $::env(XILINX_PCL_CACHE)
 }
 
-# downgrade HIER-10
-options set Message/ErrorOverride HIER-10 -remove
-solution options set Message/ErrorOverride HIER-10 -remove
+# Turn on HLS4ML flow (wrapped in a cache so that older Catapult installs still work)
+catch {flow package require /HLS4ML}
 
-solution file add firmware/myproject.cpp
-solution file add myproject_test.cpp -exclude true
-
-# Copy weights and tb_data
+# Turn on SCVerify flow
+flow package require /SCVerify
+# Ideally, the path to the weights/testbench data should be runtime configurable
+# instead of compile-time WEIGHTS_DIR macro. If the nnet_helpers.h load_ functions
+# are ever enhanced to take a path option then this setting can be used:
+#   flow package option set /SCVerify/INVOKE_ARGS {firmware/weights tb_data}
+# For now, copy weights and tb_data to the current directory
 logfile message "Copying weights text file(s)\n" warning
 file mkdir weights
 foreach i [glob -nocomplain firmware/weights/*.txt] {
   file copy -force $i weights
 }
+
+# Turn on VSCode flow
+flow package require /VSCode
+# To launch VSCode on the C++ HLS design:
+#   cd my-Catapult-test
+#   code Catapult.code-workspace
+
+#--------------------------------------------------------
+#    Start of HLS script
+solution file add firmware/myproject.cpp
+solution file add myproject_test.cpp -exclude true
 
 # Parse parameters.h to determine config info to control directives/pragmas
 set IOType io_stream
@@ -104,7 +120,7 @@ if { ![file exists firmware/parameters.h] } {
   while {![eof $pf]} {
     gets $pf line
     if { [string match {*io_type = nnet::io_stream*} $line] } {
-      set IoType io_stream
+      set IOType io_stream
       break
     }
   }
@@ -116,17 +132,6 @@ solution options set Architectural/DefaultRegisterThreshold 2050
 }
 directive set -RESET_CLEARS_ALL_REGS no
 
-flow package require /SCVerify
-# Ideally, the path to the weights/testbench data should be runtime configurable
-# instead of compile-time WEIGHTS_DIR macro. If the nnet_helpers.h load_ functions
-# are ever enhanced to take a path option then this setting can be used:
-#   flow package option set /SCVerify/INVOKE_ARGS {firmware/weights tb_data}
-
-flow package require /VSCode
-# To launch VSCode on the C++ HLS design:
-#   cd my-Catapult-test
-#   /wv/hlstools/vscode/LATEST/code Catapult.code-workspace
-
 go compile
 
 if {$opt(csim)} {
@@ -137,34 +142,25 @@ if {$opt(csim)} {
   report_time "C SIMULATION" $time_start $time_end
 }
 
+
+puts "***** SETTING TECHNOLOGY LIBRARIES *****"
+#hls-fpga-machine-learning insert techlibs
+# setup_xilinx_part xcku115-flvb2104-2-i
+
+#  solution library add amba
+
+# Constrain arrays to map to memory only over a certain size
+directive set -MEM_MAP_THRESHOLD [expr 2048 * 16 + 1]
+
+set hls_clock_period 5
+directive set -CLOCKS [list clk [list -CLOCK_PERIOD $hls_clock_period -CLOCK_EDGE rising -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high]]
+
 if {$opt(synth)} {
   puts "***** C/RTL SYNTHESIS *****"
   set time_start [clock clicks -milliseconds]
 
-
-  solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flvb2104-2-i
-  solution library add Xilinx_RAMS
-  solution library add Xilinx_ROMS
-  solution library add Xilinx_FIFO
-#  solution library add amba
-
-# Constrain arrays to map to memory only over a certain size
-  directive set -MEM_MAP_THRESHOLD [expr 2048 * 16 + 1]
-
-  set hls_clock_period 5
-  directive set -CLOCKS [list clk [list -CLOCK_PERIOD $hls_clock_period -CLOCK_EDGE rising -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high]]
-
   go assembly
 
-  # Specifically for io_stream
-  if { $IOType == "io_stream" } {
-    # Bug in Catapult - hls_resource inserted by catapult_writer.py not applied to static var. workaround is placed in build_prj.tcl
-    catch {directive set /myproject/layer*_out:cns -match glob -MAP_TO_MODULE ccs_ioport.ccs_pipe}
-
-    # Workaround for pipeline init interval for streaming dense() function - the conditional pragmas
-    # at nnet_utils/nnet_dense_stream.h:43 and 60 do not seem to be honored.
-#    catch {directive set /myproject/nnet::dense*/core/main -match glob -PIPELINE_INIT_INTERVAL 1}
-  }
   go architect
 
   go allocate
@@ -204,5 +200,7 @@ if {$opt(bitfile)} {
   puts "***** Option bitfile not supported yet *****"
 }
 
-dump_table
+if { [catch {flow package present /HLS4ML}] == 0 } {
+  flow run /HLS4ML/collect_reports
+}
 

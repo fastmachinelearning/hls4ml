@@ -32,10 +32,8 @@ void depthwise_conv_1d_encoded_cl(
     ac_int<CONFIG_T::filt_width,false> pixel_idx[data_T::size / CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
-    if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
-        constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
-        #pragma hls_pipeline_init_interval ce_reuse_factor
-    }
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1); (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
     ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
         //#pragma HLS LOOP_FLATTEN
         if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
@@ -55,10 +53,8 @@ void depthwise_conv_1d_buffer_cl(
 {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    if (CONFIG_T::strategy == nnet::latency) {
-        constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
-        #pragma hls_pipeline_init_interval ce_reuse_factor
-    }
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency); (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
     ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
         //#pragma HLS LOOP_FLATTEN
         if (CONFIG_T::strategy == nnet::latency) {
@@ -96,10 +92,8 @@ void pointwise_conv_1d_cl(
     //#pragma HLS ARRAY_PARTITION variable=weights complete
     //#pragma HLS ARRAY_PARTITION variable=biases complete
 
-    if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
-        constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
-        #pragma hls_pipeline_init_interval ce_reuse_factor
-    }
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1); (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
     ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
         if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
             //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor

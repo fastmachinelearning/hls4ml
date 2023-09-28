@@ -32,7 +32,7 @@ struct concat_config {
     static const unsigned n_elem2_1 = 10;
     static const unsigned n_elem2_2 = 10;
 
-    static const unsigned axis = -1;
+    static const int axis = -1;
 };
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>

@@ -16,6 +16,8 @@
 
 //hls-fpga-machine-learning insert bram
 
+#define CHECKPOINT 5000
+
 //hls-fpga-machine-learning insert declare weights
 
 namespace nnet {

@@ -25,13 +25,13 @@ void resize_nearest(
         
       #pragma hls_unroll
         ImageWidth: for (unsigned i = 0; i < CONFIG_T::width; i++) {
-            #pragma HLS UNROLL
+            //#pragma HLS UNROLL
             
             data_T  in_data = image.read();
             
             #pragma hls_unroll
             ImageChan: for (unsigned j = 0; j < CONFIG_T::n_chan; j++) {
-                #pragma HLS UNROLL
+                //#pragma HLS UNROLL
                 
                 data_in_row[i][j] = in_data[j];
             }
@@ -39,22 +39,22 @@ void resize_nearest(
         
         #pragma hls_unroll
         ResizeHeight: for (unsigned i = 0; i <ratio_height; i++) {
-            #pragma HLS UNROLL
+            //#pragma HLS UNROLL
             
             #pragma hls_unroll
             ImageWidth2: for (unsigned l = 0; l < CONFIG_T::width; l++) {
-                #pragma HLS UNROLL
+                //#pragma HLS UNROLL
                 
                 #pragma hls_unroll
                 ResizeWidth: for (unsigned j = 0; j < ratio_width; j++) {
-                    #pragma HLS UNROLL
+                    //#pragma HLS UNROLL
                 
                     data_T out_data;
                     //#pragma HLS DATA_PACK variable=out_data
                 
                     #pragma hls_unroll
                     ResizeChan: for (unsigned k = 0; k < CONFIG_T::n_chan; k++) {
-                        #pragma HLS UNROLL
+                        //#pragma HLS UNROLL
                     
                         out_data[k] = data_in_row[l][k];
                     }

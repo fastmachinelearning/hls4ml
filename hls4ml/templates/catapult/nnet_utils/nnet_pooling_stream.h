@@ -181,11 +181,13 @@ void compute_pool_buffer_2d(
     // Add pixel into line buffer, return pooling kernels
     nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
 
+    #pragma hls_unroll
     // Can compute pooling output
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
         FiltLoop: for(unsigned i_ic = 0; i_ic < CONFIG_T::n_filt; i_ic++) {
             //#pragma HLS PIPELINE
 
+            #pragma hls_unroll
             // Retrieve data for current channel
             PoolLoop: for(unsigned i_ihw = 0; i_ihw < CONFIG_T::pool_height * CONFIG_T::pool_width; i_ihw++) {
                 pool_window[i_ihw] = kernel_data[i_ihw * CONFIG_T::n_filt + i_ic]; 
@@ -230,6 +232,8 @@ void pooling2d_buffer_cl(
     static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::pool_height - 1,1)][CONFIG_T::n_filt];
     //#pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
+
+	#pragma hls_pipeline_init_interval 1
     ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
         ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             //#pragma HLS LOOP_FLATTEN
@@ -504,8 +508,9 @@ void global_pooling2d_cl(
 
     typename CONFIG_T::accum_t init = 0;
     if (CONFIG_T::pool_op == Max) {
-        init = hls::numeric_limits<typename CONFIG_T::accum_t>::min();
-    }
+        // init = hls::numeric_limits<typename CONFIG_T::accum_t>::min();
+		init.template set_val<AC_VAL_MIN>();
+	}
 
     PoolInitLoop: for (unsigned i_init = 0; i_init < CONFIG_T::n_filt; i_init++) {
         #pragma hls_unroll
@@ -560,8 +565,9 @@ void global_pooling1d_cl(
 
     typename CONFIG_T::accum_t init = 0;
     if (CONFIG_T::pool_op == Max) {
-        init = hls::numeric_limits<typename CONFIG_T::accum_t>::min();
-    }
+        // init = hls::numeric_limits<typename CONFIG_T::accum_t>::min();
+		init.template set_val<AC_VAL_MIN>();
+	}
 
     PoolInitLoop: for (unsigned i_init = 0; i_init < CONFIG_T::n_filt; i_init++) {
         #pragma hls_unroll

@@ -102,7 +102,8 @@ class CatapultWriter(Writer):
             return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
 
         elif mode == 'stream':
-            # Bug in Catapult - hls_resource inserted by catapult_writer.py not applied to static var. workaround is placed in build_prj.tcl
+            # Bug CAT-13501 in Catapult - hls_resource inserted by catapult_writer.py not applied to static var. workaround is placed in build_prj.tcl
+            #return f'#pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="ccs_ioport.ccs_pipe FIFO_DEPTH={depth}"'
             return f'// #pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="ccs_ioport.ccs_pipe FIFO_DEPTH={depth}"'
         else:
             return ''
@@ -115,6 +116,20 @@ class CatapultWriter(Writer):
         """
 
         filedir = os.path.dirname(os.path.abspath(__file__))
+
+        fout = open(f'{model.config.get_output_dir()}/firmware/layer_summary.txt', 'w')
+        input_shape = ""
+        for layer in model.get_layers():
+            shape = ""
+            for k, v in layer.get_output_variable().get_shape():
+                shape = shape + "[" + str(v) + "]"
+
+            if layer.attributes.layer.class_name != 'Input':
+                fout.write("Layer name: " + layer.name + " class_name: " + layer.attributes.layer.class_name + " input shape: " + input_shape + " output shape: " + shape + "\n")
+
+            input_shape = shape
+
+        fout.close()
 
         f = open(os.path.join(filedir, '../templates/catapult/firmware/myproject.cpp'))
         fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}.cpp', 'w')
@@ -653,8 +668,11 @@ class CatapultWriter(Writer):
         fout = open(dstpath,'w')
         for line in f.readlines():
             line = line.replace('myproject',model.config.get_project_name())
-            if 'set_part {xcku115-flvb2104-2-i}' in line:
-                line = 'set_part {{{}}}\n'.format(model.config.get_config_value('Part'))
+            if '#hls-fpga-machine-learning insert techlibs' in line:
+                if model.config.get_config_value('Part') != None:
+                    line = 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
+                elif model.config.get_config_value('ASICLibs') != None:
+                    line = 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
             elif 'set hls_clock_period 5' in line:
                 line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
