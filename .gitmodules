@@ -1,3 +1,12 @@
 [submodule "example-models"]
 	path = example-models
 	url = https://github.com/hls-fpga-machine-learning/example-models.git
+[submodule "ac_types"]
+	path = ac_types
+	url = https://github.com/hlslibs/ac_types.git
+[submodule "ac_math"]
+	path = ac_math
+	url = https://github.com/hlslibs/ac_math.git
+[submodule "ac_simutils"]
+	path = ac_simutils
+	url = https://github.com/hlslibs/ac_simutils.git

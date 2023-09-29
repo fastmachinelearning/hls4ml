@@ -1,0 +1,41 @@
+KerasJson: dense.json
+KerasH5:   dense_weights.h5
+OutputDir: my-Catapult-test
+ProjectName: myproject
+Part: xcku115-flvb2104-2-i
+XilinxPart: xcku115-flvb2104-2-i
+InputData: tb_data/tb_input_features.dat
+OutputPredictions: tb_data/tb_output_predictions.dat
+ClockPeriod: 5
+Backend: Catapult
+IOType: io_stream
+
+HLSConfig:
+    Model:
+      Precision: ac_fixed<16,6,true>
+      ReuseFactor: 1
+      Strategy: Latency
+    LayerName:
+      softmax:
+        Precision: ac_fixed<16,6,false>
+        Strategy: Stable
+        exp_table_t: ac_fixed<18,8,true>
+        inv_table_t: ac_fixed<18,4,true>
+        table_size: 1024
+      Dense1_input:
+        Precision:
+          result: ac_fixed<16,6,true>
+      relu1:
+        Precision:
+          result: ac_fixed<7,1,true>
+      Dense2_input:
+        Precision:
+          result: ac_fixed<16,6,true>
+      Dense1:
+        Precision:
+          bias: ac_fixed<6,1,true>
+          weight: ac_fixed<6,1,true>
+      Dense2:
+        Precision:
+          bias: ac_fixed<6,1,true>
+          weight: ac_fixed<6,1,true>
