@@ -19,8 +19,6 @@ generator:
 
 pytests:
   stage: trigger
-  tags:
-    - k8s-default
   trigger:
     include:
       - local: test/pytest/ci-template.yml
