@@ -28,7 +28,7 @@ from hls4ml.model.layers import (
     Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils.fixed_point_utils import ceil_log2
 
@@ -73,6 +73,12 @@ class VivadoBackend(FPGABackend):
             attrs = self.attribute_map.get(layer, [])
             # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
+            self.attribute_map[layer] = attrs
+
+        sep_conv_layers = [SeparableConv1D, SeparableConv2D]
+        for layer in sep_conv_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('dw_output', default=FixedPrecisionType(18, 8)))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -289,6 +295,15 @@ class VivadoBackend(FPGABackend):
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
+
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
         if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -334,6 +349,15 @@ class VivadoBackend(FPGABackend):
             'n_partitions', 1
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
 
     @layer_optimizer(DepthwiseConv2D)
     def init_depconv2d(self, layer):

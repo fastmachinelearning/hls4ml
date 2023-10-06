@@ -1,6 +1,14 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv2D, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import (
+    Conv1D,
+    Conv2D,
+    Conv2DBatchnorm,
+    DepthwiseConv1D,
+    DepthwiseConv2D,
+    SeparableConv1D,
+    SeparableConv2D,
+)
 
 # Shared multiplication template
 
@@ -52,13 +60,16 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+depthconv1d_function_template = (
+    'nnet::depthwise_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+)
 
 conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 
 
 class Conv1DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__(Conv1D)
+        super().__init__((Conv1D, DepthwiseConv1D))
         self.template = conv1d_config_template
         self.mult_template = conv_mult_config_template
 
@@ -104,6 +115,12 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+
+class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
+    def __init__(self):
+        super(Conv1DFunctionTemplate, self).__init__(DepthwiseConv1D, include_header=sepconv1d_include_list)
+        self.template = depthconv1d_function_template
 
 
 # Conv2D Templates
@@ -227,10 +244,12 @@ sepconv_config_template = """struct config{index} {{
 }};\n"""
 
 sepconv1d_function_template = (
-    'nnet::separable_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_1d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 sepconv2d_function_template = (
-    'nnet::separable_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_2d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
@@ -256,6 +275,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
 
         # Depthwise config
         params = self._default_config_params(node)
+        # Override bias and bias_t since these are zeros in depthwise step of SepConv1D
+        params['bias'] = params['zero_bias']
+        params['bias_t'] = params['zero_bias_t']
         params['n_filt'] = params['n_chan']  # In depthwise step n_chan == n_filt
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('depthwise').nzeros
@@ -341,6 +363,7 @@ class SeparableConv1DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name
@@ -468,6 +491,7 @@ class SeparableConv2DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name

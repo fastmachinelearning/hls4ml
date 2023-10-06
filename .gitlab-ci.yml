@@ -5,9 +5,9 @@ stages:
 
 generator:
   stage: generate
-  image: python:3.7-alpine
+  image: python:3.8-alpine
   tags:
-    - docker
+    - k8s-default
   before_script:
     - pip install pyyaml
   script:
