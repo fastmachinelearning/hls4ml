@@ -343,7 +343,7 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         # return summary statistics for matplotlib.axes.Axes.bxp
         # or histogram bin edges and heights
         data = []
-    outputs = _get_output(
+    outputs = _get_outputs(
         [layer for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], X, model.input
     )
     for layer_name, y in outputs.items():
@@ -545,10 +545,10 @@ def _is_ignored_layer(layer):
     return False
 
 
-def _get_output(layers, X, model_input):
-    """Get output of intermediate layers"""
-    partial_model = keras.models.Model(inputs=model_input, outputs=[layer.output for layer in layers])
-    y = partial_model.predict(X)
+def _get_outputs(layers, X, model_input):
+    """Get outputs of intermediate layers"""
+    partial_models = keras.models.Model(inputs=model_input, outputs=[layer.output for layer in layers])
+    y = partial_models.predict(X)
     return y
 
 
@@ -579,12 +579,12 @@ def get_ymodel_keras(keras_model, X):
         ):
             tmp_activation = layer.activation
             layer.activation = None
-            ymodel.update({layer.name: _get_output([layer], X, keras_model.input)})
+            ymodel.update({layer.name: _get_outputs([layer], X, keras_model.input)})
             layer.activation = tmp_activation
             name = layer.name + f"_{tmp_activation.__name__}"
         traced_layers.append(layer)
         layer_names.append(name)
-    outputs = _get_output(traced_layers, X, keras_model.input)
+    outputs = _get_outputs(traced_layers, X, keras_model.input)
     for name, output in zip(layer_names, outputs):
         ymodel[name] = output
     print("Done taking outputs for Keras model.")
