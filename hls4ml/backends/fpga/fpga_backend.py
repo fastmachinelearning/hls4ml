@@ -860,6 +860,63 @@ class FPGABackend(Backend):
 
         return generated_code
 
+    def generate_pointwise_conv1d_fn(self, layer_idx, reuse_factor=1):
+        """Generate a C++ function for a pointwise convolution layer.
+
+        Args:
+            layer_idx (int): Index of layer ('index' attribute).
+            reuse_factor (int): Number of partitions to divide the input into.
+
+        Returns:
+            str: Generated C++ function
+        """
+
+        generated_code = (
+            "template<class data_T, class res_T, typename CONFIG_T>\n"
+            "class pointwise_conv_{index} : public PointwiseConv1D<data_T, res_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void pointwise_conv(\n"
+            "    data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "    res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],\n"
+            "    typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],\n"
+            "    typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {{\n"
+            "    data_T data_tmp[CONFIG_T::reuse_factor][CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::reuse_factor];\n"
+            "    #pragma HLS ARRAY_PARTITION variable=data_tmp complete dim=0\n"
+            "    res_T res_tmp[CONFIG_T::reuse_factor][CONFIG_T::out_width * CONFIG_T::n_filt / CONFIG_T::reuse_factor];\n"
+            "    #pragma HLS ARRAY_PARTITION variable=res_tmp complete dim=0\n\n"
+            "RFInputLoop:\n"
+            "    for (int jj = 0; jj < CONFIG_T::reuse_factor; jj++) {{\n"
+            "    #pragma HLS UNROLL\n"
+            "    InnerInputLoop:\n"
+            "        for (int ii = 0; ii < CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::reuse_factor; ii++) {{\n"
+            "            #pragma HLS UNROLL\n"
+            "            data_tmp[jj][ii] = data[jj * CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::reuse_factor + ii];"
+            "\n"
+            "        }}\n"
+            "    }}\n\n"
+        ).format(index=layer_idx)
+        for i in range(reuse_factor):
+            generated_code += (
+                f"    pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[{i}], res_tmp[{i}], weights, biases);\n"
+            )
+
+        generated_code += (
+            "\n"
+            "RFOutputLoop:\n"
+            "    for (int jj = 0; jj < CONFIG_T::reuse_factor; jj++) {\n"
+            "    #pragma HLS UNROLL\n"
+            "    InnerOutputLoop:\n"
+            "        for (int ii = 0; ii < CONFIG_T::out_width * CONFIG_T::n_filt / CONFIG_T::reuse_factor; ii++) {\n"
+            "            #pragma HLS UNROLL\n"
+            "            res[jj * CONFIG_T::out_width * CONFIG_T::n_filt / CONFIG_T::reuse_factor + ii] = res_tmp[jj][ii];\n"
+            "        }\n"
+            "    }\n"
+            "}\n"
+            "};\n"
+        )
+
+        return generated_code
+
     @model_optimizer()
     def write_hls(self, model):
         self.writer.write_hls(model)
