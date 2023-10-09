@@ -15,30 +15,30 @@ io_type_options = ['io_parallel', 'io_stream']
 strides1d_options = [(1,), (2,)]
 strides2d_options = [(1, 1), (2, 2)]
 strategy_options = ['Latency', 'Resource']
-rf_options = [1, 2]
 
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('strides', strides1d_options)
-@pytest.mark.parametrize('rf', rf_options)
 @pytest.mark.parametrize(
-    'backend, io_type, strategy, conv_impl',
+    'backend, io_type, strategy, conv_impl, rf',
     [
-        ('Quartus', 'io_parallel', 'resource', 'LineBuffer'),
-        ('Vivado', 'io_parallel', 'resource', 'LineBuffer'),
-        ('Vitis', 'io_parallel', 'resource', 'LineBuffer'),
-        ('Vivado', 'io_parallel', 'latency', 'LineBuffer'),
-        ('Vitis', 'io_parallel', 'latency', 'LineBuffer'),
-        ('Vivado', 'io_parallel', 'latency', 'Pointwise'),
-        ('Vitis', 'io_parallel', 'latency', 'Pointwise'),
-        ('Vivado', 'io_stream', 'latency', 'LineBuffer'),
-        ('Vivado', 'io_stream', 'resource', 'LineBuffer'),
-        ('Vitis', 'io_stream', 'latency', 'LineBuffer'),
-        ('Vitis', 'io_stream', 'resource', 'LineBuffer'),
+        ('Quartus', 'io_parallel', 'resource', 'LineBuffer', 1),
+        ('Vivado', 'io_parallel', 'resource', 'LineBuffer', 1),
+        ('Vitis', 'io_parallel', 'resource', 'LineBuffer', 1),
+        ('Vivado', 'io_parallel', 'latency', 'LineBuffer', 1),
+        ('Vitis', 'io_parallel', 'latency', 'LineBuffer', 1),
+        ('Vivado', 'io_parallel', 'latency', 'Pointwise', 1),
+        ('Vivado', 'io_parallel', 'latency', 'Pointwise', 14),
+        ('Vitis', 'io_parallel', 'latency', 'Pointwise', 1),
+        ('Vitis', 'io_parallel', 'latency', 'Pointwise', 14),
+        ('Vivado', 'io_stream', 'latency', 'LineBuffer', 1),
+        ('Vivado', 'io_stream', 'resource', 'LineBuffer', 1),
+        ('Vitis', 'io_stream', 'latency', 'LineBuffer', 1),
+        ('Vitis', 'io_stream', 'resource', 'LineBuffer', 1),
     ],
 )
-def test_pointwiseconv1d(chans, padds, strides, rf, backend, io_type, strategy, conv_impl):
+def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, conv_impl, rf):
     model = tf.keras.models.Sequential()
     input_shape = (28, 3)
     model.add(
@@ -67,7 +67,7 @@ def test_pointwiseconv1d(chans, padds, strides, rf, backend, io_type, strategy, 
 
     output_dir = str(
         test_root_path
-        / f'hls4mlprj_pointwise1d_{chans}_{strides[0]}_{padds}_{rf}_{backend}_{io_type}_{strategy}_{conv_impl}'
+        / f'hls4mlprj_pointwise1d_{chans}_{strides[0]}_{padds}_{backend}_{io_type}_{strategy}_{conv_impl}_rf{rf}'
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
