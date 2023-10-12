@@ -2,12 +2,12 @@
   stage: test
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.4.base
   tags:
-    - docker
+    - k8s-default
   before_script:
     - source ~/.bashrc
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule init; git submodule update; fi
     - conda activate hls4ml-testing
-    - pip install .[profiling]
+    - pip install .[testing,sr]
   script:
     - cd test/pytest
     - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed

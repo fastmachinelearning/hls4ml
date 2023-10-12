@@ -301,7 +301,7 @@ def parse_keras_model(model_arch, reader):
                 act_layer['class_name'] = 'QActivation'
                 act_layer['config'] = {
                     'name': layer['name'] + '_' + act_details['class_name'],
-                    'activation': act_details['class_name'],
+                    'activation': act_details,
                 }
                 act_layer, output_shape = layer_handlers['QActivation'](act_layer, None, [output_shape], reader)
             else:

@@ -50,6 +50,40 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader):
     return layer, output_shape
 
 
+@keras_handler('QDepthwiseConv2D')
+def parse_qdepthwiseqconv_layer(keras_layer, input_names, input_shapes, data_reader):
+    layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
+
+    layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'depthwise')
+
+    if keras_layer['config']['bias_quantizer'] is not None:
+        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    else:
+        layer['bias_quantizer'] = None
+
+    return layer, output_shape
+
+
+@keras_handler('QSeparableConv1D', 'QSeparableConv2D')
+def parse_qsepconv_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert 'QSeparableConv' in keras_layer['class_name']
+
+    if '1D' in keras_layer['class_name']:
+        layer, output_shape = parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader)
+    elif '2D' in keras_layer['class_name']:
+        layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
+
+    layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'depthwise')
+    layer['pointwise_quantizer'] = get_quantizer_from_config(keras_layer, 'pointwise')
+
+    if keras_layer['config']['bias_quantizer'] is not None:
+        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    else:
+        layer['bias_quantizer'] = None
+
+    return layer, output_shape
+
+
 @keras_handler('QSimpleRNN', 'QLSTM', 'QGRU')
 def parse_qrnn_layer(keras_layer, input_names, input_shapes, data_reader):
     assert keras_layer['class_name'] in ['QSimpleRNN', 'QLSTM', 'QGRU']
@@ -58,6 +92,7 @@ def parse_qrnn_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     layer['recurrent_quantizer'] = get_quantizer_from_config(keras_layer, 'recurrent')
+
     if keras_layer['config']['bias_quantizer'] is not None:
         layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
     else:

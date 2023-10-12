@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
+from qkeras.qconvolutional import QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
@@ -388,7 +389,7 @@ def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qconv2dbn_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -399,6 +400,47 @@ def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.fixture(scope='module')
+def randX_10_32_32_3():
+    return np.random.rand(10, 32, 32, 3)
+
+
+# Currently only Vivado and Vitis is supported for io_stream.
+# Note, qkeras only supports 2d version of depthwise
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qdepthwiseconv2d(randX_10_32_32_3, backend, io_type):
+    '''
+    Test proper handling of QDepthwiseConv2D.
+    '''
+    X = randX_10_32_32_3
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QDepthwiseConv2D(
+            kernel_size=(3, 3),
+            input_shape=(32, 32, 3),
+            depthwise_quantizer='quantized_bits(6, 0, alpha=1)',
+            bias_quantizer='quantized_bits(4, 0, alpha=1)',
+            bias_initializer='he_normal',
+            activation='quantized_relu(3, 0)',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qdepthwiseconv2d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
@@ -539,3 +581,95 @@ def test_qgru(backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qseparableconv1d(backend, io_type):
+    '''
+    Test proper handling of QSeparableConv1D.
+    '''
+    x_in = Input((13, 20), name='input_layer')
+    x = QSeparableConv1D(
+        5,
+        3,
+        depthwise_quantizer=quantized_bits(8, 3, alpha=1),
+        pointwise_quantizer=quantized_bits(8, 3, alpha=1),
+        bias_quantizer=quantized_bits(8, 3, alpha=1),
+        name='qsepconv_1',
+    )(x_in)
+    model = Model(inputs=x_in, outputs=x)
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend=backend, default_precision='fixed<23,7>'
+    )
+
+    # Use 8 bits for input
+    config['LayerName']['input_layer']['Precision']['result'] = 'fixed<8,1>'
+    # default_precision is will be used for accum_t and result_t of the conv layer, so we don't need to set them here
+    # We need <15,4> for the result of depthwise step
+    config['LayerName']['qsepconv_1']['Precision']['dw_output'] = 'fixed<15,4>'
+
+    output_dir = str(test_root_path / f'hls4mlprj_qsepconv1d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        io_type=io_type,
+    )
+    hls_model.compile()
+
+    data = np.random.rand(100, 13, 20)
+    input_quantizer = quantized_bits(8, 0, alpha=1)
+    dataq = input_quantizer(data).numpy()
+
+    y_qkeras = model.predict(dataq)
+    y_hls4ml = hls_model.predict(dataq)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=0)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qseparableconv2d(backend, io_type):
+    '''
+    Test proper handling of QSeparableConv2D.
+    '''
+    x_in = Input((13, 21, 20), name='input_layer')
+    x = QSeparableConv2D(
+        5,
+        3,
+        depthwise_quantizer=quantized_bits(8, 3, alpha=1),
+        pointwise_quantizer=quantized_bits(8, 3, alpha=1),
+        bias_quantizer=quantized_bits(8, 3, alpha=1),
+        name='qsepconv_1',
+    )(x_in)
+    model = Model(inputs=x_in, outputs=x)
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend=backend, default_precision='fixed<23,7>'
+    )
+
+    # Use 8 bits for input
+    config['LayerName']['input_layer']['Precision']['result'] = 'fixed<8,1>'
+    # default_precision is will be used for accum_t and result_t of the conv layer, so we don't need to set them here
+    # We need <15,4> for the result of depthwise step
+    config['LayerName']['qsepconv_1']['Precision']['dw_output'] = 'fixed<15,4>'
+
+    output_dir = str(test_root_path / f'hls4mlprj_qsepconv2d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        io_type=io_type,
+    )
+    hls_model.compile()
+
+    data = np.random.rand(100, 13, 21, 20)
+    input_quantizer = quantized_bits(8, 0, alpha=1)
+    dataq = input_quantizer(data).numpy()
+
+    y_qkeras = model.predict(dataq)
+    y_hls4ml = hls_model.predict(dataq)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=0)
