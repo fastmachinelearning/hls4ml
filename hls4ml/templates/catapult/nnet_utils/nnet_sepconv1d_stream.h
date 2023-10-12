@@ -107,7 +107,7 @@ void pointwise_conv_1d_cl(
 }
 
 
-template<class data_T, class res_T, typename CONFIG_T>
+template<class data_T, class dw_res_T, class res_T, typename CONFIG_T>
 void separable_conv_1d_cl(
     ac_channel<data_T> &data,
     ac_channel<res_T>  &res,
@@ -118,13 +118,13 @@ void separable_conv_1d_cl(
 ) {
     //#pragma HLS DATAFLOW
 
-    ac_channel<data_T> depthwise_res;
+    ac_channel<dw_res_T> depthwise_res;
     unsigned res_depth = CONFIG_T::depthwise_config::out_width;
     //#pragma HLS STREAM variable=depthwise_res depth=res_depth
 
-    depthwise_conv_1d_cl<data_T, data_T, typename CONFIG_T::depthwise_config>(data, depthwise_res, depthwise_weights,
+    depthwise_conv_1d_cl<data_T, dw_res_T, typename CONFIG_T::depthwise_config>(data, depthwise_res, depthwise_weights,
                                                                               depthwise_biases);
-    pointwise_conv_1d_cl<data_T, res_T, typename CONFIG_T::pointwise_config>(depthwise_res, res, pointwise_weights, pointwise_biases);
+    pointwise_conv_1d_cl<dw_res_T, res_T, typename CONFIG_T::pointwise_config>(depthwise_res, res, pointwise_weights, pointwise_biases);
 }
 
 }

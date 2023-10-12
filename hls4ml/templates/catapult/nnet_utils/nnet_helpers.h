@@ -211,6 +211,28 @@ void save_output_array(ac_channel<data_T> &data, save_T *ptr, size_t layer_size)
     }
 }
 
+template<class data_T>
+void save_output_array(ac_channel<data_T> &data, float *ptr, size_t layer_size) {
+    for (size_t i = 0; i < layer_size / data_T::size; i++) {
+        data_T ctype = data.read();
+        for (size_t j = 0; j < data_T::size; j++) {
+            ptr[i * data_T::size + j] = ctype[j].to_double();
+        }
+        data.write(ctype);
+    }
+}
+
+template<class data_T>
+void save_output_array(ac_channel<data_T> &data, double *ptr, size_t layer_size) {
+    for (size_t i = 0; i < layer_size / data_T::size; i++) {
+        data_T ctype = data.read();
+        for (size_t j = 0; j < data_T::size; j++) {
+            ptr[i * data_T::size + j] = ctype[j].to_double();
+        }
+        data.write(ctype);
+    }
+}
+
 // We don't want to include save_T in this function because it will be inserted into myproject.cpp
 // so a workaround with element size is used
 template<class data_T>
@@ -220,9 +242,9 @@ void save_layer_output(data_T *data, const char *layer_name, size_t layer_size) 
     if (trace_outputs) {
         if (trace_outputs->count(layer_name) > 0) {
             if (trace_type_size == 4) {
-                save_output_array<data_T, float>(data, (float *) (*trace_outputs)[layer_name], layer_size);
+                save_output_array<data_T>(data, (float *) (*trace_outputs)[layer_name], layer_size);
             } else if (trace_type_size == 8) {
-                save_output_array<data_T, double>(data, (double *) (*trace_outputs)[layer_name], layer_size);
+                save_output_array<data_T>(data, (double *) (*trace_outputs)[layer_name], layer_size);
             } else {
                 std::cout << "Unknown trace type!" << std::endl;
             }
@@ -250,9 +272,9 @@ void save_layer_output(ac_channel<data_T> &data, const char *layer_name, size_t 
     if (trace_outputs) {
         if (trace_outputs->count(layer_name) > 0) {
             if (trace_type_size == 4) {
-                save_output_array<data_T, float>(data, (float *) (*trace_outputs)[layer_name], layer_size);
+                save_output_array<data_T>(data, (float *) (*trace_outputs)[layer_name], layer_size);
             } else if (trace_type_size == 8) {
-                save_output_array<data_T, double>(data, (double *) (*trace_outputs)[layer_name], layer_size);
+                save_output_array<data_T>(data, (double *) (*trace_outputs)[layer_name], layer_size);
             } else {
                 std::cout << "Unknown trace type!" << std::endl;
             }
@@ -268,7 +290,8 @@ void save_layer_output(ac_channel<data_T> &data, const char *layer_name, size_t 
         for (size_t i = 0; i < layer_size / data_T::size; i++) {
             data_T ctype = data.read();
             for (size_t j = 0; j < data_T::size; j++) {
-                out << float(ctype[j]) << " "; // We don't care about precision in text files
+                out << ctype[j].to_double();
+                out << " "; // We don't care about precision in text files
             }
             data.write(ctype);
         }
