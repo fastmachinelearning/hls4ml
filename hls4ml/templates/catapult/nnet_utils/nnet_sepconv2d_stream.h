@@ -17,7 +17,7 @@ void depthwise_conv_2d_encoded_cl(
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::filt_height == CONFIG_T::filt_width);
 
-    ac_channel<typename data_T::value_type> data_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
+    static ac_channel<typename data_T::value_type> data_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
 //  const int win_depth = CONFIG_T::filt_height * CONFIG_T::out_width;
 //  for (unsigned i_out = 0; i_out < CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan; i_out++) {
 //      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
