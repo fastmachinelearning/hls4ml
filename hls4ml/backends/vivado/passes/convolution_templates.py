@@ -56,8 +56,6 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {config_t} mult_config;
     template<unsigned K, unsigned S, unsigned W>
     using scale_index = nnet::{scale_index_type}<K, S, W>;
-    template<class data_T, class res_T, class CONFIG_T>
-    using pointwise_conv = nnet::{pointwise_fn}<data_T, res_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
