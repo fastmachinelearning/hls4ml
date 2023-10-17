@@ -350,6 +350,7 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
     outputs = _get_outputs(
         [layer for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], X, model.input
     )
+    outputs = dict(zip([layer.name for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], outputs))
     for layer_name, y in outputs.items():
         print(f"   {layer_name}")
         y = y.flatten()
