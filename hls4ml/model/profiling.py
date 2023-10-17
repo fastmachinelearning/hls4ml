@@ -10,7 +10,7 @@ import pandas
 import seaborn as sb
 
 from hls4ml.model.graph import ModelGraph
-from hls4ml.model.layers import GRU, LSTM
+from hls4ml.model.layers import GRU, LSTM, SeparableConv1D, SeparableConv2D
 
 try:
     import qkeras
@@ -184,6 +184,8 @@ def types_hlsmodel(model):
     for layer in model.get_layers():
         if isinstance(layer, GRU) or isinstance(layer, LSTM):
             suffix = ['w', 'rw', 'b', 'rb']
+        elif isinstance(layer, SeparableConv1D) or isinstance(layer, SeparableConv2D):
+            suffix = ['dw', 'pw', 'db', 'pb']
         else:
             suffix = ['w', 'b']
         for iw, weight in enumerate(layer.get_weights()):
@@ -225,6 +227,8 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
     for layer in model.get_layers():
         if isinstance(layer, GRU) or isinstance(layer, LSTM):
             suffix = ['w', 'rw', 'b', 'rb']
+        elif isinstance(layer, SeparableConv1D) or isinstance(layer, SeparableConv2D):
+            suffix = ['dw', 'pw', 'db', 'pb']
         else:
             suffix = ['w', 'b']
         name = layer.name
