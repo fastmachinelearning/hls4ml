@@ -363,6 +363,15 @@ class CatapultBackend(FPGABackend):
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
+
     @layer_optimizer(DepthwiseConv2D)
     def init_depconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):

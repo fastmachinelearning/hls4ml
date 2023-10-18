@@ -109,7 +109,6 @@ void separable_conv_1d_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
                               pointwise_weights[CONFIG_T::pointwise_config::n_chan * CONFIG_T::pointwise_config::n_filt],
                           typename CONFIG_T::depthwise_config::bias_t depthwise_biases[CONFIG_T::depthwise_config::n_chan],
                           typename CONFIG_T::pointwise_config::bias_t pointwise_biases[CONFIG_T::pointwise_config::n_filt]) {
-) {
     //#pragma HLS DATAFLOW
 
     ac_channel<dw_res_T> depthwise_res;
