@@ -27,6 +27,7 @@
 #include <cmath>
 #include "ac_fixed.h"
 #include "ac_std_float.h"
+#include <ac_math/ac_relu.h>
 #include <ac_math/ac_softmax_pwl.h>
 #include <ac_math/ac_tanh_pwl.h>
 #include <ac_math/ac_sigmoid_pwl.h>
@@ -84,8 +85,12 @@ void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
         datareg = data[ii];
+#ifndef USE_AC_MATH
         if (datareg > 0) res[ii] = datareg;
         else res[ii] = 0;
+#else
+        ac_math::ac_relu(datareg, res[ii]);
+#endif
     }
 }
 

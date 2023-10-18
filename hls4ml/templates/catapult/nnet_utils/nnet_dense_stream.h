@@ -26,6 +26,7 @@ void dense_wrapper(
 }
 
 #pragma hls_design
+#pragma hls_pipeline_init_interval 1
 template<class data_T, class res_T, typename CONFIG_T>
 void dense(
     ac_channel<data_T> &data_stream,

@@ -564,7 +564,7 @@ class WeightVariable(Variable):
                 # to right of decimal point
                 lsb = 2**-new_precision.fractional
                 decimal_spaces = len(str(lsb).split('.')[1])
-                self.precision_fmt = f'{{:{decimal_spaces}f}}'
+                self.precision_fmt = f'{{:.{decimal_spaces}f}}'
             else:
                 self.precision_fmt = '{:.0f}'
         else:

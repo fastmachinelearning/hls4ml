@@ -196,11 +196,18 @@ class CatapultBackend(FPGABackend):
         synth=True,
         cosim=False,
         validation=False,
+        vhdl=False,
+        verilog=True,
         export=False,
         vsynth=False,
         fifo_opt=False,
         bitfile=False,
+        ran_frame=5,
+        sw_opt=False,
+        power=False,
+        da=False
     ):
+        # print(f'ran_frame value: {ran_frame}')  # Add this line for debugging
         catapult_exe = 'catapult'
         if 'linux' in sys.platform:
             cmd = 'command -v ' + catapult_exe + ' > /dev/null'
@@ -217,8 +224,8 @@ class CatapultBackend(FPGABackend):
 
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile)
-        ccs_invoke = catapult_exe + ' -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
+        ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame} sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile, ran_frame=ran_frame, sw_opt=sw_opt, power=power, da=da, vhdl=vhdl, verilog=verilog)
+        ccs_invoke = catapult_exe + ' -product ultra -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
         print(ccs_invoke)
         os.system(ccs_invoke)
         os.chdir(curr_dir)
@@ -378,6 +385,15 @@ class CatapultBackend(FPGABackend):
             'n_partitions', 1
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
 
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
