@@ -7,16 +7,26 @@ array set opt {
   synth      1
   cosim      0
   validation 0
+  vhdl       0
+  verilog    1
   export     0
   vsynth     0
   bitfile    0
+  ran_frame  2
+  sw_opt     0
+  power      0
+  da         0
 }
 
 if { [info exists ::argv] } {
   foreach arg $::argv {
     foreach {optname optval} [split $arg '='] {}
     if { [info exists opt($optname)] } {
-      set opt($optname) [string is true -strict $optval]
+      if {[string is integer -strict $optval]} {
+        set opt($optname) $optval
+      } else {
+        set opt($optname) [string is true -strict $optval]
+      }
     }
   }
 }
@@ -55,14 +65,26 @@ proc setup_xilinx_part { part } {
 }
 
 proc setup_asic_libs { args } {
+  set do_saed 0
   foreach lib $args {
     solution library add $lib -- -rtlsyntool DesignCompiler
+    if { [lsearch -exact {saed32hvt_tt0p78v125c_beh saed32lvt_tt0p78v125c_beh saed32rvt_tt0p78v125c_beh} $lib] != -1 } {
+      set do_saed 1
+    }
   }
   solution library add ccs_sample_mem
   solution library add ccs_sample_rom
+  go libraries
+
+  # special exception for SAED32 for use in power estimation
+  if { $do_saed } {
+    # SAED32 selected - enable DC settings to access Liberty data for power estimation
+    source [application get /SYSTEM/ENV_MGC_HOME]/pkgs/siflibs/saed/setup_saedlib.tcl
+  }
 }
 
 options set Input/CppStandard {c++17}
+options set Input/CompilerFlags -DRANDOM_FRAMES=$opt(ran_frame)
 
 if {$opt(reset)} {
   project load myproject_prj.ccs
@@ -76,6 +98,17 @@ if {$opt(reset)} {
 # downgrade HIER-10
 options set Message/ErrorOverride HIER-10 -remove
 solution options set Message/ErrorOverride HIER-10 -remove
+
+if {$opt(vhdl)}    { 
+  options set Output/OutputVHDL true 
+} else {
+  options set Output/OutputVHDL false 
+}
+if {$opt(verilog)} {
+  options set Output/OutputVerilog true
+} else {
+  options set Output/OutputVerilog false
+}
 
 #--------------------------------------------------------
 # Configure Catapult Flows
@@ -188,6 +221,18 @@ if {$opt(export)} {
   set time_end [clock clicks -milliseconds]
   report_time "EXPORT IP" $time_start $time_end
 }
+if {$opt(sw_opt)} {
+  puts "***** Pre Power Optimization *****"
+  go switching
+  flow run /PowerAnalysis/report_pre_pwropt_Verilog
+  flow run /PowerAnalysis/report_pre_pwropt_VHDL
+  }
+
+if {$opt(power)} {
+  puts "***** Power Optimization *****"
+
+	go power
+  }
 
 if {$opt(vsynth)} {
   puts "***** VIVADO SYNTHESIS *****"
@@ -198,6 +243,11 @@ if {$opt(vsynth)} {
 }
 if {$opt(bitfile)} {
   puts "***** Option bitfile not supported yet *****"
+}
+
+if {$opt(da)} {
+  puts "***** Launching DA *****"
+  flow run /DesignAnalyzer/launch
 }
 
 if { [catch {flow package present /HLS4ML}] == 0 } {

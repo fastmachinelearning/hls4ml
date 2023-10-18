@@ -18,6 +18,10 @@
 
 #define CHECKPOINT 5000
 
+#ifndef RANDOM_FRAMES
+#define RANDOM_FRAMES 1
+#endif
+
 //hls-fpga-machine-learning insert declare weights
 
 namespace nnet {
@@ -32,6 +36,7 @@ CCS_MAIN(int argc, char *argv[])
   std::ifstream fin("tb_data/tb_input_features.dat");
   //load predictions from text file
   std::ifstream fpr("tb_data/tb_output_predictions.dat");
+  std::cout<<"Number of Frames Passed from the tcl= " << RANDOM_FRAMES << std::endl;
 
 #ifdef RTL_SIM
   std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";
@@ -89,15 +94,29 @@ CCS_MAIN(int argc, char *argv[])
     fin.close();
     fpr.close();
   } else {
-    std::cout << "INFO: Unable to open input/predictions file, using default input." << std::endl;
+    std::cout << "INFO: Unable to open input/predictions file, using so feeding random values" << std::endl;
 
-    //hls-fpga-machine-learning insert zero
+	if(RANDOM_FRAMES>0)
+	{
+	for (unsigned int k=0; k<RANDOM_FRAMES; k++){
+    //hls-fpga-machine-learning insert random
 
     //hls-fpga-machine-learning insert top-level-function
 
     //hls-fpga-machine-learning insert output
 
     //hls-fpga-machine-learning insert tb-output
+	}
+	}
+	else{
+	//hls-fpga-machine-learning insert zero
+
+    //hls-fpga-machine-learning insert top-level-function
+
+    //hls-fpga-machine-learning insert output
+
+    //hls-fpga-machine-learning insert tb-output
+	}
   }
 
   fout.close();

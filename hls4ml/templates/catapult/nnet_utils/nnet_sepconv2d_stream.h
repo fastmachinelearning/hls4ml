@@ -5,6 +5,7 @@
 #include "nnet_common.h"
 #include "nnet_conv2d_stream.h"
 #include "nnet_sepconv_stream.h"
+#include "nnet_types.h"
 
 namespace nnet {
 
@@ -125,7 +126,7 @@ ReadInputHeight:
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
+template <class data_T, class dw_res_T, class res_T, typename CONFIG_T>
 void separable_conv_2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
                           typename CONFIG_T::depthwise_config::weight_t
                               depthwise_weights[CONFIG_T::depthwise_config::filt_height *
@@ -136,14 +137,14 @@ void separable_conv_2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
                           typename CONFIG_T::pointwise_config::bias_t pointwise_biases[CONFIG_T::pointwise_config::n_filt]) {
     // #pragma HLS DATAFLOW
 
-    ac_channel<data_T> depthwise_res;
+    ac_channel<dw_res_T> depthwise_res;
     unsigned res_depth = CONFIG_T::depthwise_config::out_height * CONFIG_T::depthwise_config::out_width;
     // #pragma HLS STREAM variable=depthwise_res depth=res_depth
 
-    depthwise_conv_2d_cl<data_T, data_T, typename CONFIG_T::depthwise_config>(data, depthwise_res, depthwise_weights,
-                                                                              depthwise_biases);
-    pointwise_conv_2d_cl<data_T, res_T, typename CONFIG_T::pointwise_config>(depthwise_res, res, pointwise_weights,
-                                                                             pointwise_biases);
+    depthwise_conv_2d_cl<data_T, dw_res_T, typename CONFIG_T::depthwise_config>(data, depthwise_res, depthwise_weights,
+                                                                                depthwise_biases);
+    pointwise_conv_2d_cl<dw_res_T, res_T, typename CONFIG_T::pointwise_config>(depthwise_res, res, pointwise_weights,
+                                                                               pointwise_biases);
 }
 
 } // namespace nnet

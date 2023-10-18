@@ -11,6 +11,7 @@
 #include "ac_fixed.h"
 #include "ac_channel.h"
 #include <ac_std_float.h>
+#include <ac_math/ac_relu.h>
 #include <ac_math/ac_softmax_pwl.h>
 #include <ac_math/ac_tanh_pwl.h>
 #include <ac_math/ac_sigmoid_pwl.h>
@@ -70,8 +71,12 @@ void relu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         #pragma hls_unroll
         ReLUPackLoop: for (unsigned int j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
+#ifndef USE_AC_MATH
             if (in_data[j] > 0) out_data[j] = in_data[j];
             else out_data[j] = 0;
+#else
+            ac_math::ac_relu(in_data[j], out_data[j]);
+#endif
         }
 
         res.write(out_data);

@@ -250,10 +250,12 @@ sepconv_config_template = """struct config{index} {{
 }};\n"""
 
 sepconv1d_function_template = (
-    'nnet::separable_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_1d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 sepconv2d_function_template = (
-    'nnet::separable_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_2d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
@@ -279,6 +281,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
 
         # Depthwise config
         params = self._default_config_params(node)
+        # Override bias and bias_t since these are zeros in depthwise step of SepConv1D
+        params['bias'] = params['zero_bias']
+        params['bias_t'] = params['zero_bias_t']
         params['n_filt'] = params['n_chan']  # In depthwise step n_chan == n_filt
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('depthwise').nzeros
@@ -286,7 +291,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['weight_t'] = node.get_weights('depthwise').type
         params['fill_fn'] = 'FillConv1DBuffer'
 
-        if node.get_attr("unscaled"):
+        if node.get_attr('unscaled'):
             params['scale_index_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_type'] = 'scale_index_regular'
@@ -307,14 +312,11 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
-        params = self._default_config_params()
-        input_shape = self.get_input_variable().shape
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_width'] = '*'.join([str(k) for k in input_shape[:-1]])
-            params['n_chan'] = input_shape[-1]
+        params = self._default_config_params(node)
+        if node.get_attr('data_format') == 'channels_last':
+            params['in_width'] = node.get_output_variable().shape[0]
         else:
-            params['in_width'] = '*'.join([str(k) for k in input_shape[1:]])
-            params['n_chan'] = input_shape[0]
+            params['in_width'] = node.get_output_variable().shape[1]
 
         params['filt_width'] = 1
         params['stride_width'] = 1
@@ -326,7 +328,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['instructions'] = '0'
         params['fill_fn'] = 'FillConv1DBuffer'
 
-        if node.get_attr("unscaled"):
+        if node.get_attr('unscaled'):
             params['scale_index_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_type'] = 'scale_index_regular'
@@ -366,6 +368,7 @@ class SeparableConv1DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name
@@ -404,12 +407,12 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['weight_t'] = node.get_weights('depthwise').type
         params['fill_fn'] = 'FillConv2DBuffer'
 
-        if node.get_attr("unscaled_h"):
+        if node.get_attr('unscaled_h'):
             params['scale_index_height_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_height_type'] = 'scale_index_regular'
 
-        if node.get_attr("unscaled_w"):
+        if node.get_attr('unscaled_w'):
             params['scale_index_width_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
@@ -449,12 +452,12 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['instructions'] = '0'
         params['fill_fn'] = 'FillConv2DBuffer'
 
-        if node.get_attr("unscaled_h"):
+        if node.get_attr('unscaled_h'):
             params['scale_index_height_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_height_type'] = 'scale_index_regular'
 
-        if node.get_attr("unscaled_w"):
+        if node.get_attr('unscaled_w'):
             params['scale_index_width_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
@@ -493,6 +496,7 @@ class SeparableConv2DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name

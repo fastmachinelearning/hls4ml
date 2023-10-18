@@ -118,16 +118,84 @@ class CatapultWriter(Writer):
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         fout = open(f'{model.config.get_output_dir()}/firmware/layer_summary.txt', 'w')
+        outstr = ""
+        outstr = outstr + "{}".format("Layer Name").ljust(25)
+        outstr = outstr + "  {}".format("Layer Class").ljust(20)
+        outstr = outstr + "  {}".format("Input Type").ljust(40)
+        outstr = outstr + "  {}".format("Input Shape").ljust(15)
+        outstr = outstr + "  {}".format("Output Type").ljust(40)
+        outstr = outstr + "  {}".format("Output Shape").ljust(15)
+        #outstr = outstr + "  {}".format("Weight Type").ljust(24)
+        #outstr = outstr + "  {}".format("Bias Type").ljust(24)
+        outstr = outstr + "  {}".format("Filter Shape").ljust(15)
+        outstr = outstr + "  {}".format("Stride").ljust(10)
+        outstr = outstr + "  {}".format("IOType").ljust(15)
+        outstr = outstr + "  {}".format("Reuse").ljust(10)
+
+        fout.write(outstr + "\n")
+        #fout.write("{}".format("Layer Name").ljust(25) + "  {}".format("Layer Class").ljust(20) + "  {}".format("Input Shape").ljust(35) + "  {}".format("Output Shape").ljust(35) + "  {}".format("IOType").ljust(15) + "  {}".format("Reuse").ljust(10) + "\n")
+        #fout.write("{}".format("----------").ljust(25) + "  {}".format("-----------").ljust(20) + "  {}".format("-----------").ljust(35) + "  {}".format("------------").ljust(35) + "  {}".format("------").ljust(15) + "  {}".format("-----").ljust(10) + "\n")
         input_shape = ""
+        input_datatype = ""
         for layer in model.get_layers():
+            datatype = layer.get_output_variable().type.precision.definition_cpp() + " "
             shape = ""
+            # layer.get_output_variable().type.precision.width
+            # layer.get_output_variable().type.precision.integer
+            # layer.get_output_variable().type.precision.sign
             for k, v in layer.get_output_variable().get_shape():
                 shape = shape + "[" + str(v) + "]"
 
             if layer.attributes.layer.class_name != 'Input':
-                fout.write("Layer name: " + layer.name + " class_name: " + layer.attributes.layer.class_name + " input shape: " + input_shape + " output shape: " + shape + "\n")
+                my_class_name = layer.class_name
+                if layer.attributes.layer.class_name == 'Activation':
+                    my_class_name = layer.get_attr('activation')
+
+                filter_datatype = ""
+                #print(layer.weights.__dir__())
+                #layer_precision = layer.get_layer_precision()
+                #for wname, weights in layer.weights.items():
+                #    print(wname)
+                #    print(weights.type.name)
+                #    print(weights.type.precision.definition_cpp())
+                #    #print(weights.type.precision.__dir__())
+                #    print(weights.type.precision.width)
+                #    if 'ACFixed' in weights.type.precision.__class__:
+                #        print(weights.type.precision.integer)
+                #        print(weights.type.precision.signed)
+                #    print(weights.data_length)
+
+                filter = ""
+                filt_width = layer.get_attr('filt_width')
+                filt_height = layer.get_attr('filt_height')
+                if filt_width != None:
+                    filter = "[" + str(filt_width) + "]"
+                if filt_height != None:
+                    filter = filter + "[" + str(filt_height) + "]"
+
+                stride = ""
+                stride_width = layer.get_attr('stride_width')
+                if stride_width != None:
+                    stride = str(stride_width)
+
+                outstr = ""
+                outstr = outstr + "{}".format(layer.name).ljust(25)
+                outstr = outstr + "  {}".format(my_class_name).ljust(20)
+                outstr = outstr + "  {}".format(input_datatype).ljust(40)
+                outstr = outstr + "  {}".format(input_shape).ljust(15)
+                outstr = outstr + "  {}".format(datatype).ljust(40)
+                outstr = outstr + "  {}".format(shape).ljust(15)
+                #outstr = outstr + "  {}".format("weight type").ljust(24)
+                #outstr = outstr + "  {}".format("bias type").ljust(24)
+                outstr = outstr + "  {}".format(filter).ljust(15)
+                outstr = outstr + "  {}".format(stride).ljust(10)
+                outstr = outstr + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15)
+                outstr = outstr + "  {}".format(str(layer.model.config.get_reuse_factor(layer))).ljust(10)
+                fout.write(outstr + "\n")
+                #fout.write("{}".format(layer.name).ljust(25) + "  {}".format(my_class_name).ljust(20) + "  {}".format(input_shape).ljust(35) + "  {}".format(shape).ljust(35) + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15) + "  " + str(layer.model.config.get_reuse_factor(layer)) + "  Filter:" + filter + " Stride:" + stride + "\n")
 
             input_shape = shape
+            input_datatype = datatype
 
         fout.close()
 
@@ -499,13 +567,20 @@ class CatapultWriter(Writer):
                     offset += inp.size()
                 for out in model_outputs:
                     newline += '      ' + out.definition_cpp() + ';\n'
+            elif '//hls-fpga-machine-learning insert random' in line:
+                newline = line
+                for inp in model_inputs:
+                    newline += '    ' + inp.definition_cpp() + ';\n'
+                    newline += f'    nnet::fill_random<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
+                for out in model_outputs:
+                    newline += '    ' + out.definition_cpp() + ';\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model_inputs:
                     newline += '    ' + inp.definition_cpp() + ';\n'
                     newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
-                    newline += '    ' + out.definition_cpp() + ';\n'
+                    newline += '    ' + out.definition_cpp() + ';\n'        
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 

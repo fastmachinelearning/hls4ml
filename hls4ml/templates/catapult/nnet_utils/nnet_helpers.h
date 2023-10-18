@@ -131,7 +131,7 @@ void load_exponent_weights_from_txt(T *w, const char* fname) {
             std::replace(token.begin(), token.end(), ',', ' ');
             std::istringstream structss(token);
 
-            int sign;
+            double sign;
             double weight;
             if(!(structss >> sign >> weight)) {
                 std::cerr << "ERROR: Unable to parse file " << std::string(fname);
@@ -364,6 +364,23 @@ void fill_zero(ac_channel<data_T> &data) {
         data.write(data_pack);
     }
 }
+
+template<class data_T, size_t SIZE>
+void fill_random(ac_channel<data_T> &data) {
+	typedef typename data_T::value_type base_T;
+	base_T MAX_VALUE;
+    for (unsigned int i = 0; i < SIZE / data_T::size; i++) {
+        data_T data_pack;
+        for (unsigned int j = 0; j < data_T::size; j++) {
+            // Generate a random value (for example, between 0 and 1)
+            base_T random_value = (base_T)rand() / MAX_VALUE.template set_val<AC_VAL_MIN>();
+            data_pack[j] = random_value;
+        }
+        data.write(data_pack);
+    }
+    // std::cout << "Fill_Random AC_CHANNEL" << std::endl;
+}
+
 
 template <class dataType, unsigned int nrows>
 int read_file_1D(const char * filename, dataType data[nrows])
