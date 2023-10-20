@@ -47,7 +47,6 @@ register_flow(
 register_flow(
     'optimize',
     [
-        'fix_softmax_table_size',
         'eliminate_linear_activation',
         'fuse_consecutive_batch_normalization',
         'fuse_batch_normalization',

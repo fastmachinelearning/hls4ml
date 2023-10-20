@@ -59,3 +59,7 @@ class FixSoftmaxTableSize(OptimizerPass):
                     stacklevel=1,
                 )
             return False
+
+
+def register_softmax__table_size_fix(backend):
+    backend.register_pass('fix_softmax_table_size', FixSoftmaxTableSize)

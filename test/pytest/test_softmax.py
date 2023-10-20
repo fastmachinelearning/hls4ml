@@ -92,7 +92,3 @@ def test_softmax_skipped(backend, io_type):
     y_keras = model.layers[0](X).numpy()  # type: ignore
     y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)  # type: ignore
     np.testing.assert_allclose(y_hls4ml, y_keras, rtol=0, atol=2e-2)
-
-
-if __name__ == '__main__':
-    test_softmax('Quartus', 'stable', generate_data((8,)), '9,6', (8,), '9,6', 'io_parallel')
