@@ -253,7 +253,7 @@ sepconv2d_function_template = (
 )
 
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
-sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
+sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h', 'nnet_utils/nnet_sepconv2d.h']
 
 
 class SeparableConv1DConfigTemplate(LayerConfigTemplate):
