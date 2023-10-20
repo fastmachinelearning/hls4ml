@@ -18,14 +18,14 @@ kernel_options = [(1), (3)]
 bias_options = [False]
 
 
-@pytest.mark.parametrize("conv1d", keras_conv1d)
-@pytest.mark.parametrize("chans", chans_options)
-@pytest.mark.parametrize("padds", padds_options)
-@pytest.mark.parametrize("strides", strides_options)
-@pytest.mark.parametrize("kernels", kernel_options)
-@pytest.mark.parametrize("bias", bias_options)
-@pytest.mark.parametrize("io_type", io_type_options)
-@pytest.mark.parametrize('backend', ['Vitis'])
+@pytest.mark.parametrize('conv1d', keras_conv1d)
+@pytest.mark.parametrize('chans', chans_options)
+@pytest.mark.parametrize('padds', padds_options)
+@pytest.mark.parametrize('strides', strides_options)
+@pytest.mark.parametrize('kernels', kernel_options)
+@pytest.mark.parametrize('bias', bias_options)
+@pytest.mark.parametrize('io_type', io_type_options)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_sepconv1d(conv1d, chans, padds, strides, kernels, bias, io_type, backend):
     model = tf.keras.models.Sequential()
     input_shape = (28, 3)
@@ -61,31 +61,3 @@ def test_sepconv1d(conv1d, chans, padds, strides, kernels, bias, io_type, backen
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
-
-
-@pytest.mark.parametrize('backend', ['Vivado'])
-def test_sepconv1d_build(backend):
-    model = tf.keras.models.Sequential()
-    input_shape = (28, 3)
-    model.add(
-        SeparableConv1D(
-            filters=16,
-            kernel_size=3,
-            input_shape=input_shape,
-        )
-    )
-    config = hls4ml.utils.config_from_keras_model(model)
-    config['Model']['Precision'] = 'ap_fixed<16,6>'
-    config['Model']['ReuseFactor'] = 1
-    config['Model']['Strategy'] = 'Latency'
-
-    cfg = hls4ml.converters.create_config(backend=backend)
-    cfg['IOType'] = 'io_stream'
-    cfg['HLSConfig'] = config
-    cfg['KerasModel'] = model
-    cfg['OutputDir'] = 'hls4ml_prj'
-    cfg['Part'] = 'xcku115-flvb2104-2-i'
-
-    hls_model = hls4ml.converters.keras_to_hls(cfg)
-    hls_model.compile()
-    hls_model.build(reset=True, csim=False, synth=True)

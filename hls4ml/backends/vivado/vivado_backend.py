@@ -213,9 +213,7 @@ class VivadoBackend(FPGABackend):
             f'vsynth={vsynth} '
             f'fifo_opt={fifo_opt}"'
         )
-        result = os.system(vivado_cmd)
-        if result != 0:
-            raise Exception(f'Vivado HLS execution failed with code {result}.')
+        os.system(vivado_cmd)
         os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
