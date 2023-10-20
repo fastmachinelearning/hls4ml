@@ -333,7 +333,7 @@ class QuartusBackend(FPGABackend):
                 name=f'weight_{weight_types[i]}',
                 var_name=f'kernel_{weight_types[i]}_{{index}}',
                 data=weights_data[
-                    0: layer.get_attr('n_in'), i * layer.get_attr('n_out'): (i + 1) * layer.get_attr('n_out')
+                    0 : layer.get_attr('n_in'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,
@@ -342,7 +342,7 @@ class QuartusBackend(FPGABackend):
                 name=f'recurrent_weight_{weight_types[i]}',
                 var_name=f'recurrent_kernel_{weight_types[i]}_{{index}}',
                 data=rec_weights_data[
-                    0: layer.get_attr('n_out'), i * layer.get_attr('n_out'): (i + 1) * layer.get_attr('n_out')
+                    0 : layer.get_attr('n_out'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,
@@ -350,7 +350,7 @@ class QuartusBackend(FPGABackend):
             layer.add_weights_variable(
                 name=f'bias_{weight_types[i]}',
                 var_name=f'bias_{weight_types[i]}_{{index}}',
-                data=bias_data[i * layer.get_attr('n_out'): (i + 1) * (layer.get_attr('n_out'))],
+                data=bias_data[i * layer.get_attr('n_out') : (i + 1) * (layer.get_attr('n_out'))],
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,
             )
