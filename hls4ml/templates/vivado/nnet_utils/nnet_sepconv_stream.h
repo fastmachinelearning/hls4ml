@@ -16,11 +16,6 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
     typename CONFIG_T::accum_t mult[CONFIG_T::kernel_size * CONFIG_T::n_chan];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
 
-    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
-    #pragma HLS function_instantiate variable=weights
-
-    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-
     #pragma HLS ARRAY_PARTITION variable=mult complete
 
     #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
