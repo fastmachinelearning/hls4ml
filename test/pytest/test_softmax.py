@@ -8,7 +8,6 @@ from sklearn.metrics import accuracy_score
 import hls4ml
 
 test_root_path = Path(__file__).parent
-test_root_path = Path('/tmp/unit_test')
 
 
 @pytest.fixture()
@@ -40,9 +39,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
     model.compile()
 
-    f_type = (
-        f'ac_fixed<{table_bits},true,AC_RND,AC_SAT>' if backend == 'Quartus' else f'ap_fixed<{table_bits},AP_RND,AP_SAT>'
-    )
+    f_type = 'fixed<{table_bits},true,RND,SAT>'
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
     cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = f_type
