@@ -16,7 +16,7 @@ def generate_data(input_shape):
     shape = (5000, *input_shape)
     d = np.random.normal(0, 2, shape)
     modify_entries = np.random.randint(0, 1, shape) < 0.05
-    d[modify_entries] = d[modify_entries]*5+10
+    d[modify_entries] = d[modify_entries] * 5 + 10
     return np.clip(d, -32, 31)
 
 
@@ -73,7 +73,7 @@ def test_softmax_skipped(backend, io_type):
     X = np.random.rand(100, 10)
     dense = tf.keras.layers.Dense(14, input_shape=(10,), name='dense')
     softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
-    model = tf.keras.models.Sequential([dense,softmax])
+    model = tf.keras.models.Sequential([dense, softmax])
     model.compile()
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
