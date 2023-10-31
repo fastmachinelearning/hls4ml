@@ -8,15 +8,16 @@ from sklearn.metrics import accuracy_score
 import hls4ml
 
 test_root_path = Path(__file__).parent
-
-
-def normal_dist(shape):
-    return np.clip(np.random.normal(0, 8, shape), -32, 31)
+test_root_path = Path('/tmp/unit_test')
 
 
 @pytest.fixture()
 def generate_data(input_shape):
-    return normal_dist((1000, *input_shape))
+    shape = (5000, *input_shape)
+    d = np.random.normal(0, 2, shape)
+    modify_entries = np.random.randint(0, 1, shape) < 0.05
+    d[modify_entries] = d[modify_entries]*5+10
+    return np.clip(d, -32, 31)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
@@ -46,7 +47,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
     cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = f_type
     cfg['LayerName']['softmax']['exp_table_t'] = f_type
-    cfg['LayerName']['softmax_input']['Precision']['result'] = f'ap_fixed<{input_bits}>'
+    cfg['LayerName']['softmax_input']['Precision']['result'] = f'fixed<{input_bits}>'
 
     odir = str(
         test_root_path
@@ -70,9 +71,9 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(backend, io_type):
     X = np.random.rand(100, 10)
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Dense(14, input_shape=(10,), name='dense'))
-    model.add(tf.keras.layers.Activation(activation='softmax', name='softmax'))
+    dense = tf.keras.layers.Dense(14, input_shape=(10,), name='dense')
+    softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
+    model = tf.keras.models.Sequential([dense,softmax])
     model.compile()
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
@@ -89,6 +90,6 @@ def test_softmax_skipped(backend, io_type):
     assert len(hls_layers) == 2
 
     # Verify hls4ml output is equal to Dense output
-    y_keras = model.layers[0](X).numpy()  # type: ignore
-    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)  # type: ignore
-    np.testing.assert_allclose(y_hls4ml, y_keras, rtol=0, atol=2e-2)
+    y_keras_dense = dense(X).numpy()  # type: ignore
+    y_hls4ml = hls_model.predict(X).reshape(y_keras_dense.shape)  # type: ignore
+    np.testing.assert_allclose(y_hls4ml, y_keras_dense, rtol=0, atol=2e-2)
