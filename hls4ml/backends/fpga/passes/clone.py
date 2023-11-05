@@ -77,13 +77,17 @@ class CloneOutput(OptimizerPass):
                     attrs = {'size': np.prod(out_var.shape)}
                     idx = layer.inputs.index(output)
                     layer.inputs[idx] = output + '_cpy' + str(i)
-                clone_layer = model.make_node(
+
+                clone_layer: Clone = model.make_node(
                     Clone,
                     'clone_' + node.name,
                     attrs,
                     [output],
                     [output + '_cpy' + str(i + 1) for i in range(len(output_map[output]))],
                 )
+                for i in range(len(output_map[output])):
+                    key = output + '_cpy' + str(i + 1)
+                    clone_layer.attributes[key].type = node.attributes[node.name].type
                 model.insert_node(clone_layer)
                 transformed = True
 
