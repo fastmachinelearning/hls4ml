@@ -10,50 +10,46 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-def flat_distribution(shape):
-    return np.random.rand(*shape)
-
-
-def high_accuracy_distribution(shape):
-    '''Start with a flat distribution, then pick a random member of each row to amplify'''
-    x = np.random.rand(*shape)
-    imax = np.random.randint(0, shape[1], size=shape[0])
-    x[:, imax] *= 10
-    return x
-
-
 @pytest.fixture()
-def generate_data(function, input_shape):
-    return function((1000, *input_shape))
+def generate_data(input_shape):
+    shape = (5000, *input_shape)
+    d = np.random.normal(0, 2, shape)
+    modify_entries = np.random.randint(0, 1, shape) < 0.05
+    d[modify_entries] = d[modify_entries] * 5 + 10
+    return np.clip(d, -32, 31)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-@pytest.mark.parametrize('strategy', ['stable', 'argmax'])
+@pytest.mark.parametrize('strategy', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
-    'function,input_shape,io_type',
+    'input_bits,input_shape,table_bits,io_type',
     [
-        (flat_distribution, (8,), 'io_parallel'),
-        (high_accuracy_distribution, (8,), 'io_parallel'),
-        (flat_distribution, (8,), 'io_stream'),
-        (high_accuracy_distribution, (8,), 'io_stream'),
-        (flat_distribution, (8, 8, 3), 'io_stream'),
-        (high_accuracy_distribution, (8, 8, 3), 'io_stream'),
+        ('16,6', (8,), '18,8', 'io_parallel'),
+        ('16,6', (8,), '18,8', 'io_stream'),
+        ('16,6', (8,), '9,6', 'io_parallel'),
+        ('16,6', (8,), '9,6', 'io_stream'),
+        ('9,6', (8,), '18,8', 'io_parallel'),
+        ('9,6', (8,), '18,8', 'io_stream'),
+        ('16,6', (8, 8, 3), '18,8', 'io_stream'),
     ],
 )
-def test_softmax(backend, strategy, generate_data, input_shape, io_type, function):
+def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type):
     X = generate_data
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
     model.compile()
 
-    f_type = 'ac_fixed<18,8,true,AC_RND,AC_SAT>' if backend == 'Quartus' else 'ap_fixed<18,8,AP_RND,AP_SAT>'
+    table_type = f'fixed<{table_bits}, RND, SAT>'
+
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
     cfg['LayerName']['softmax']['Strategy'] = strategy
-    cfg['LayerName']['softmax']['inv_table_t'] = f_type
-    cfg['LayerName']['softmax']['exp_table_t'] = f_type
+    cfg['LayerName']['softmax']['inv_table_t'] = table_type
+    cfg['LayerName']['softmax']['exp_table_t'] = table_type
+    cfg['LayerName']['softmax_input']['Precision']['result'] = f'fixed<{input_bits}>'
 
-    odir = str(test_root_path / 'hls4mlprj_softmax_{}_{}_{}_{}_{}').format(
-        backend, io_type, strategy, function.__name__, str(input_shape)
+    odir = str(
+        test_root_path
+        / f'hls4mlprj_softmax_{backend}_{io_type}_{strategy}_{input_shape}_input-bits={input_bits}_table-bits={table_bits}'
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
@@ -73,9 +69,9 @@ def test_softmax(backend, strategy, generate_data, input_shape, io_type, functio
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(backend, io_type):
     X = np.random.rand(100, 10)
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Dense(14, input_shape=(10,), name='dense'))
-    model.add(tf.keras.layers.Activation(activation='softmax', name='softmax'))
+    dense = tf.keras.layers.Dense(14, input_shape=(10,), name='dense')
+    softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
+    model = tf.keras.models.Sequential([dense, softmax])
     model.compile()
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
@@ -92,7 +88,6 @@ def test_softmax_skipped(backend, io_type):
     assert len(hls_layers) == 2
 
     # Verify hls4ml output is equal to Dense output
-    y_keras = model.predict(X)
-    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
-    keras_trace = hls4ml.model.profiling.get_ymodel_keras(model, X)
-    np.testing.assert_allclose(y_hls4ml, keras_trace['dense'], rtol=0, atol=2e-2)
+    y_keras_dense = dense(X).numpy()  # type: ignore
+    y_hls4ml = hls_model.predict(X).reshape(y_keras_dense.shape)  # type: ignore
+    np.testing.assert_allclose(y_hls4ml, y_keras_dense, rtol=0, atol=2e-2)
