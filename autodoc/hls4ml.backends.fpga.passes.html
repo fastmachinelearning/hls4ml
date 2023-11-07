@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev50+g0d48affe
+                0.8.0.dev51+g27f935dc
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -407,6 +407,46 @@
 </dd></dl>
 
 </dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.fpga.passes.fix_softmax_table_size">
+<span id="hls4ml-backends-fpga-passes-fix-softmax-table-size-module"></span><h2>hls4ml.backends.fpga.passes.fix_softmax_table_size module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.fix_softmax_table_size" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.fix_softmax_table_size.</span></span><span class="sig-name descname"><span class="pre">FixSoftmaxTableSize</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.fix_softmax_table_size.register_softmax__table_size_fix">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.fix_softmax_table_size.</span></span><span class="sig-name descname"><span class="pre">register_softmax__table_size_fix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.fix_softmax_table_size.register_softmax__table_size_fix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </section>
 <section id="module-hls4ml.backends.fpga.passes.inplace_parallel_reshape">

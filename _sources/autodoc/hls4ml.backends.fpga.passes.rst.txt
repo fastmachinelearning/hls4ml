@@ -52,6 +52,14 @@ hls4ml.backends.fpga.passes.final\_reshape module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.fix\_softmax\_table\_size module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.fix_softmax_table_size
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.fpga.passes.inplace\_parallel\_reshape module
 -------------------------------------------------------------
 
