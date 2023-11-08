@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev51+g27f935dc
+                0.8.0.dev52+gd4e76558
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -148,11 +148,11 @@ Specifically, we’ll deploy a model on a <code class="docutils literal notransl
 </pre></div>
 </div>
 <p>After this command completes, we will need to package up the bitfile, hardware handoff, and Python driver to copy to the PS of the board.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>package
-cp<span class="w"> </span>hls4ml_prj_pynq/myproject_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper.bit<span class="w"> </span>package/hls4ml_nn.bit
-cp<span class="w"> </span>hls4ml_prj_pynq/myproject_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh<span class="w"> </span>package/hls4ml_nn.hwh
-cp<span class="w"> </span>hls4ml_prj_pynq/axi_stream_driver.py<span class="w"> </span>package/
-tar<span class="w"> </span>-czvf<span class="w"> </span>package.tar.gz<span class="w"> </span>-C<span class="w"> </span>package/<span class="w"> </span>.
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir -p package
+cp hls4ml_prj_pynq/myproject_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper.bit package/hls4ml_nn.bit
+cp hls4ml_prj_pynq/myproject_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh package/hls4ml_nn.hwh
+cp hls4ml_prj_pynq/axi_stream_driver.py package/
+tar -czvf package.tar.gz -C package/ .
 </pre></div>
 </div>
 <p>Then we can copy this package to the PS of the board and untar it.</p>

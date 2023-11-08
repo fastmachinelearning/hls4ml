@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev51+g27f935dc
+                0.8.0.dev52+gd4e76558
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -160,31 +160,31 @@
 <h3><a class="toc-backref" href="#id5" role="doc-backlink">2.1 Top Level Configuration</a><a class="headerlink" href="#top-level-configuration" title="Permalink to this heading"></a></h3>
 <p>Configuration files are YAML files in hls4ml (<code class="docutils literal notranslate"><span class="pre">*.yml</span></code>). An example configuration file is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml">here</a>.</p>
 <p>It looks like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Project section</span>
-<span class="nt">OutputDir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-hls-test</span>
-<span class="nt">ProjectName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myproject</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Project section</span><span class="w"></span>
+<span class="nt">OutputDir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-hls-test</span><span class="w"></span>
+<span class="nt">ProjectName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myproject</span><span class="w"></span>
 
-<span class="c1"># Model section (Keras model)</span>
-<span class="nt">KerasJson</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer.json</span>
-<span class="nt">KerasH5</span><span class="p">:</span><span class="w">   </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_weights.h5</span><span class="w"> </span><span class="c1">#You can also use h5 file from Keras&#39;s model.save() without supplying json file.</span>
-<span class="nt">InputData</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_input_features.dat</span>
-<span class="nt">OutputPredictions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_predictions.dat</span>
+<span class="c1"># Model section (Keras model)</span><span class="w"></span>
+<span class="nt">KerasJson</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer.json</span><span class="w"></span>
+<span class="nt">KerasH5</span><span class="p">:</span><span class="w">   </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_weights.h5</span><span class="w"> </span><span class="c1">#You can also use h5 file from Keras&#39;s model.save() without supplying json file.</span><span class="w"></span>
+<span class="nt">InputData</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_input_features.dat</span><span class="w"></span>
+<span class="nt">OutputPredictions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_predictions.dat</span><span class="w"></span>
 
-<span class="c1"># Backend section (Vivado backend)</span>
-<span class="nt">Part</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">xcku115-flvb2104-2-i</span>
-<span class="nt">ClockPeriod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-<span class="nt">IOType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">io_parallel</span><span class="w"> </span><span class="c1"># options: io_parallel/io_stream</span>
+<span class="c1"># Backend section (Vivado backend)</span><span class="w"></span>
+<span class="nt">Part</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">xcku115-flvb2104-2-i</span><span class="w"></span>
+<span class="nt">ClockPeriod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w"></span>
+<span class="nt">IOType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">io_parallel</span><span class="w"> </span><span class="c1"># options: io_parallel/io_stream</span><span class="w"></span>
 
-<span class="nt">HLSConfig</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">Model</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span>
-<span class="w">    </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-<span class="w">    </span><span class="nt">Strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Latency</span>
-<span class="w">  </span><span class="nt">LayerType</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">Dense</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-<span class="w">      </span><span class="nt">Strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Resource</span>
-<span class="w">      </span><span class="nt">Compression</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">HLSConfig</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">Model</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">Strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Latency</span><span class="w"></span>
+<span class="w">  </span><span class="nt">LayerType</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">Dense</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"></span>
+<span class="w">      </span><span class="nt">Strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Resource</span><span class="w"></span>
+<span class="w">      </span><span class="nt">Compression</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
 </pre></div>
 </div>
 <p>There are a number of configuration options that you have.  Let’s go through them.  You have basic setup parameters:</p>
@@ -213,51 +213,51 @@ Additionally, integers in fixed precision data type (<code class="docutils liter
 <h3><a class="toc-backref" href="#id6" role="doc-backlink">2.2 Per-Layer Configuration</a><a class="headerlink" href="#per-layer-configuration" title="Permalink to this heading"></a></h3>
 <p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
 <p>Under the <code class="docutils literal notranslate"><span class="pre">HLSConfig</span></code> heading, these can be set for the <code class="docutils literal notranslate"><span class="pre">Model</span></code>, per <code class="docutils literal notranslate"><span class="pre">LayerType</span></code>, per <code class="docutils literal notranslate"><span class="pre">LayerName</span></code>, and for named variables within the layer (for precision only). The most basic configuration may look like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">Model</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span>
-<span class="w">    </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">Model</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
 </pre></div>
 </div>
 <p>This configuration use <code class="docutils literal notranslate"><span class="pre">ap_fixed&lt;16,6&gt;</span></code> for every variable and a ReuseFactor of 1 throughout.</p>
 <p>Specify all <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers to use a different precision like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">Model</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span>
-<span class="w">    </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-<span class="w">  </span><span class="nt">LayerType</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">Dense</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;14,5&gt;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">Model</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">  </span><span class="nt">LayerType</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">Dense</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;14,5&gt;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>In this case, all variables in any <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers will be represented with <code class="docutils literal notranslate"><span class="pre">ap_fixed&lt;14,5&gt;</span></code> while any other layer types will use <code class="docutils literal notranslate"><span class="pre">ap_fixed&lt;16,6&gt;</span></code>.</p>
 <p>A specific layer can be targeted like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span>
-<span class="w">   </span><span class="nt">Model</span><span class="p">:</span>
-<span class="w">     </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span>
-<span class="w">     </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
-<span class="w">   </span><span class="nt">LayerName</span><span class="p">:</span>
-<span class="w">     </span><span class="nt">dense1</span><span class="p">:</span>
-<span class="w">       </span><span class="nt">Precision</span><span class="p">:</span>
-<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;14,2&gt;</span>
-<span class="w">         </span><span class="nt">bias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;14,4&gt;</span>
-<span class="w">         </span><span class="nt">result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span>
-<span class="w">       </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
-<span class="w">       </span><span class="nt">Strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Resource</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span><span class="w"></span>
+<span class="w">   </span><span class="nt">Model</span><span class="p">:</span><span class="w"></span>
+<span class="w">     </span><span class="nt">Precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span><span class="w"></span>
+<span class="w">     </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span><span class="w"></span>
+<span class="w">   </span><span class="nt">LayerName</span><span class="p">:</span><span class="w"></span>
+<span class="w">     </span><span class="nt">dense1</span><span class="p">:</span><span class="w"></span>
+<span class="w">       </span><span class="nt">Precision</span><span class="p">:</span><span class="w"></span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;14,2&gt;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">bias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;14,4&gt;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span><span class="w"></span>
+<span class="w">       </span><span class="nt">ReuseFactor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span><span class="w"></span>
+<span class="w">       </span><span class="nt">Strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Resource</span><span class="w"></span>
 </pre></div>
 </div>
 <p>In this case, the default model configuration will use <code class="docutils literal notranslate"><span class="pre">ap_fixed&lt;16,6&gt;</span></code> and a <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> of 16. The layer named <code class="docutils literal notranslate"><span class="pre">dense1</span></code> (defined in the user provided model architecture file) will instead use different precision for the <code class="docutils literal notranslate"><span class="pre">weight</span></code>, <code class="docutils literal notranslate"><span class="pre">bias</span></code>, and <code class="docutils literal notranslate"><span class="pre">result</span></code> (output) variables, a <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> of 12, and the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy (while the model default is <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy.</p>
 <p>More than one layer can have a configuration specified, e.g.:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">Model</span><span class="p">:</span>
-<span class="w">   </span><span class="l l-Scalar l-Scalar-Plain">...</span>
-<span class="w">  </span><span class="nt">LayerName</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">dense1</span><span class="p">:</span>
-<span class="w">       </span><span class="l l-Scalar l-Scalar-Plain">...</span>
-<span class="w">    </span><span class="nt">batchnormalization1</span><span class="p">:</span>
-<span class="w">       </span><span class="l l-Scalar l-Scalar-Plain">...</span>
-<span class="w">    </span><span class="nt">dense2</span><span class="p">:</span>
-<span class="w">       </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">Model</span><span class="p">:</span><span class="w"></span>
+<span class="w">   </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">  </span><span class="nt">LayerName</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dense1</span><span class="p">:</span><span class="w"></span>
+<span class="w">       </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">    </span><span class="nt">batchnormalization1</span><span class="p">:</span><span class="w"></span>
+<span class="w">       </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dense2</span><span class="p">:</span><span class="w"></span>
+<span class="w">       </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
 </pre></div>
 </div>
 <p>For more information on the optimization parameters and what they mean, you can visit the <a class="reference internal" href="../concepts.html"><span class="doc">Concepts</span></a> chapter.</p>
@@ -269,38 +269,38 @@ Additionally, integers in fixed precision data type (<code class="docutils liter
 <p><strong>NOTE</strong>: this section is developer-oriented.</p>
 <p>After you create your project, you have the opportunity to do more configuration if you so choose.</p>
 <p>In your project, the file <code class="docutils literal notranslate"><span class="pre">&lt;OutputDir&gt;/firmware/&lt;ProjectName&gt;.cpp</span></code> is your top level file.  It has the network architecture constructed for you.  An example is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp">here</a> and the important snippet is:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">layer2_t</span><span class="w"> </span><span class="n">layer2_out</span><span class="p">[</span><span class="n">N_LAYER_2</span><span class="p">];</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">layer2_t</span><span class="w"> </span><span class="n">layer2_out</span><span class="p">[</span><span class="n">N_LAYER_2</span><span class="p">];</span><span class="w"></span>
 <span class="cp">#pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0</span>
-<span class="n">nnet</span><span class="o">::</span><span class="n">dense_latency</span><span class="o">&lt;</span><span class="n">input_t</span><span class="p">,</span><span class="w"> </span><span class="n">layer2_t</span><span class="p">,</span><span class="w"> </span><span class="n">config2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span><span class="w"> </span><span class="n">layer2_out</span><span class="p">,</span><span class="w"> </span><span class="n">w2</span><span class="p">,</span><span class="w"> </span><span class="n">b2</span><span class="p">);</span>
+<span class="n">nnet</span><span class="o">::</span><span class="n">dense_latency</span><span class="o">&lt;</span><span class="n">input_t</span><span class="p">,</span><span class="w"> </span><span class="n">layer2_t</span><span class="p">,</span><span class="w"> </span><span class="n">config2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span><span class="w"> </span><span class="n">layer2_out</span><span class="p">,</span><span class="w"> </span><span class="n">w2</span><span class="p">,</span><span class="w"> </span><span class="n">b2</span><span class="p">);</span><span class="w"></span>
 
-<span class="n">layer3_t</span><span class="w"> </span><span class="n">layer3_out</span><span class="p">[</span><span class="n">N_LAYER_2</span><span class="p">];</span>
+<span class="n">layer3_t</span><span class="w"> </span><span class="n">layer3_out</span><span class="p">[</span><span class="n">N_LAYER_2</span><span class="p">];</span><span class="w"></span>
 <span class="cp">#pragma HLS ARRAY_PARTITION variable=layer3_out complete dim=0</span>
-<span class="n">nnet</span><span class="o">::</span><span class="n">relu</span><span class="o">&lt;</span><span class="n">layer2_t</span><span class="p">,</span><span class="w"> </span><span class="n">layer3_t</span><span class="p">,</span><span class="w"> </span><span class="n">relu_config3</span><span class="o">&gt;</span><span class="p">(</span><span class="n">layer2_out</span><span class="p">,</span><span class="w"> </span><span class="n">layer3_out</span><span class="p">);</span>
+<span class="n">nnet</span><span class="o">::</span><span class="n">relu</span><span class="o">&lt;</span><span class="n">layer2_t</span><span class="p">,</span><span class="w"> </span><span class="n">layer3_t</span><span class="p">,</span><span class="w"> </span><span class="n">relu_config3</span><span class="o">&gt;</span><span class="p">(</span><span class="n">layer2_out</span><span class="p">,</span><span class="w"> </span><span class="n">layer3_out</span><span class="p">);</span><span class="w"></span>
 
-<span class="n">layer4_t</span><span class="w"> </span><span class="n">layer4_out</span><span class="p">[</span><span class="n">N_LAYER_4</span><span class="p">];</span>
+<span class="n">layer4_t</span><span class="w"> </span><span class="n">layer4_out</span><span class="p">[</span><span class="n">N_LAYER_4</span><span class="p">];</span><span class="w"></span>
 <span class="cp">#pragma HLS ARRAY_PARTITION variable=layer4_out complete dim=0</span>
-<span class="n">nnet</span><span class="o">::</span><span class="n">dense_latency</span><span class="o">&lt;</span><span class="n">layer3_t</span><span class="p">,</span><span class="w"> </span><span class="n">layer4_t</span><span class="p">,</span><span class="w"> </span><span class="n">config4</span><span class="o">&gt;</span><span class="p">(</span><span class="n">layer3_out</span><span class="p">,</span><span class="w"> </span><span class="n">layer4_out</span><span class="p">,</span><span class="w"> </span><span class="n">w4</span><span class="p">,</span><span class="w"> </span><span class="n">b4</span><span class="p">);</span>
+<span class="n">nnet</span><span class="o">::</span><span class="n">dense_latency</span><span class="o">&lt;</span><span class="n">layer3_t</span><span class="p">,</span><span class="w"> </span><span class="n">layer4_t</span><span class="p">,</span><span class="w"> </span><span class="n">config4</span><span class="o">&gt;</span><span class="p">(</span><span class="n">layer3_out</span><span class="p">,</span><span class="w"> </span><span class="n">layer4_out</span><span class="p">,</span><span class="w"> </span><span class="n">w4</span><span class="p">,</span><span class="w"> </span><span class="n">b4</span><span class="p">);</span><span class="w"></span>
 
-<span class="n">nnet</span><span class="o">::</span><span class="n">sigmoid</span><span class="o">&lt;</span><span class="n">layer4_t</span><span class="p">,</span><span class="w"> </span><span class="n">result_t</span><span class="p">,</span><span class="w"> </span><span class="n">sigmoid_config5</span><span class="o">&gt;</span><span class="p">(</span><span class="n">layer4_out</span><span class="p">,</span><span class="w"> </span><span class="n">layer5_out</span><span class="p">);</span>
+<span class="n">nnet</span><span class="o">::</span><span class="n">sigmoid</span><span class="o">&lt;</span><span class="n">layer4_t</span><span class="p">,</span><span class="w"> </span><span class="n">result_t</span><span class="p">,</span><span class="w"> </span><span class="n">sigmoid_config5</span><span class="o">&gt;</span><span class="p">(</span><span class="n">layer4_out</span><span class="p">,</span><span class="w"> </span><span class="n">layer5_out</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>You can see, for the simple 1-layer DNN, the computation (<code class="docutils literal notranslate"><span class="pre">nnet::dense_latency</span></code>) and activation (<code class="docutils literal notranslate"><span class="pre">nnet::relu</span></code>/<code class="docutils literal notranslate"><span class="pre">nnet::sigmoid</span></code>) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. <code class="docutils literal notranslate"><span class="pre">config2</span></code>.</p>
 <p>In your project, the file <code class="docutils literal notranslate"><span class="pre">&lt;OutputDir&gt;/firmware/parameters.h</span></code> stores all the configuration options for each neural network library.
 An example is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h">here</a>. So for example, the detailed configuration options for an example DNN layer is:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">//hls-fpga-machine-learning insert layer-config</span>
-<span class="k">struct</span><span class="w"> </span><span class="nc">config2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">nnet</span><span class="o">::</span><span class="n">dense_config</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">N_INPUT_1_1</span><span class="p">;</span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">N_LAYER_2</span><span class="p">;</span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">io_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nnet</span><span class="o">::</span><span class="n">io_parallel</span><span class="p">;</span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">reuse_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_zeros</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_nonzeros</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">320</span><span class="p">;</span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">store_weights_in_bram</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">ap_fixed</span><span class="o">&lt;</span><span class="mi">16</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span><span class="w"> </span><span class="n">accum_t</span><span class="p">;</span>
-<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">model_default_t</span><span class="w"> </span><span class="n">bias_t</span><span class="p">;</span>
-<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">model_default_t</span><span class="w"> </span><span class="n">weight_t</span><span class="p">;</span>
-<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">ap_uint</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">index_t</span><span class="p">;</span>
-<span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">config2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">nnet</span><span class="o">::</span><span class="n">dense_config</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">N_INPUT_1_1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">N_LAYER_2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">io_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nnet</span><span class="o">::</span><span class="n">io_parallel</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">reuse_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_zeros</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_nonzeros</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">320</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">store_weights_in_bram</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">ap_fixed</span><span class="o">&lt;</span><span class="mi">16</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span><span class="w"> </span><span class="n">accum_t</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">model_default_t</span><span class="w"> </span><span class="n">bias_t</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">model_default_t</span><span class="w"> </span><span class="n">weight_t</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">ap_uint</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">index_t</span><span class="p">;</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
 </pre></div>
 </div>
 <p>It is at this stage that a user can even further configure their network HLS implementation in finer detail.</p>
