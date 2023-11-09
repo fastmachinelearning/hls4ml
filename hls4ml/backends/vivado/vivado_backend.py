@@ -374,9 +374,36 @@ class VivadoBackend(FPGABackend):
 
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
-        accum_t = layer.get_attr('accum_t')
-        accum_t.precision.fractional += extra_bits
-        accum_t.precision.integer += extra_bits
+        if 'inputs' in layer.attributes:
+            # Functional
+            input_layer_name = layer.attributes['inputs'][0]
+        else:
+            # Sequential
+            last_layer_name = None
+            for layer_name in layer.model.graph.keys():
+                if layer_name == layer.name:
+                    break
+                last_layer_name = layer_name
+            assert last_layer_name is not None, 'Could not find previous layer.'
+            input_layer_name = last_layer_name
+
+        input_layer = layer.model.graph[input_layer_name]
+        input_t = input_layer.attributes[input_layer.name].type
+        accum_t = layer.attributes['accum_t']
+        pool_op = layer.attributes['pool_op'].lower()
+        
+        accum_t.name = f'{layer.name}_accum'
+        # This was likely model_default
+        # Avoid override parameters for other by chance
+
+        if pool_op == 'max':
+            accum_t.precision = input_t.precision
+        else:
+            # Average pool
+            accum_t.precision.fractional = input_t.precision.fractional + extra_bits
+            accum_t.precision.integer = input_t.precision.integer + extra_bits
+            accum_t.precision.width = input_t.precision.width + extra_bits * 2
+            accum_t.precision.signed = input_t.precision.signed
 
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
