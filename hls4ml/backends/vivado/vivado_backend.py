@@ -391,7 +391,7 @@ class VivadoBackend(FPGABackend):
         input_t = input_layer.attributes[input_layer.name].type
         accum_t = layer.attributes['accum_t']
         pool_op = layer.attributes['pool_op'].lower()
-        
+
         accum_t.name = f'{layer.name}_accum'
         # This was likely model_default
         # Avoid override parameters for other by chance
