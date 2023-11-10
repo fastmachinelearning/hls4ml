@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tensorflow.keras.layers import BatchNormalization, Input
 from tensorflow.keras.models import Model, Sequential, model_from_json
-from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical, set_random_seed
 
 import hls4ml
 
@@ -486,6 +486,7 @@ def test_qsimplernn(backend):
     '''
     Test proper handling of QSimpleRNN.
     '''
+    set_random_seed(42)
     X = np.linspace(-0.5, 0.5, 5)
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
