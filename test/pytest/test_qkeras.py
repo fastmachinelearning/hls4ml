@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tensorflow.keras.layers import BatchNormalization, Input
 from tensorflow.keras.models import Model, Sequential, model_from_json
-from tensorflow.keras.utils import to_categorical, set_random_seed
+from tensorflow.keras.utils import set_random_seed, to_categorical
 
 import hls4ml
 
