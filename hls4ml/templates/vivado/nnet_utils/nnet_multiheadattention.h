@@ -16,6 +16,7 @@ struct multiheadattention_config {
     typedef float bias_t;
     typedef float weight_t;
     typedef float accum_t;
+    typedef ap_fixed<16, 8> multi_t;
 
     // Layer Sizes
     static const unsigned num_heads = 10;
@@ -33,7 +34,12 @@ struct multiheadattention_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
+
 template <int PackSize, class data_T> struct datapack { data_T data[PackSize]; };
+template<int PackSize, class data_T>
+struct datapack {
+    data_T data[PackSize];
+};
 
 template <class data_T, int size> void read_stream_array(hls::stream<data_T> data_in[size], data_T out[size]) {
     for (int k = 0; k < size; ++k) {
@@ -42,10 +48,32 @@ template <class data_T, int size> void read_stream_array(hls::stream<data_T> dat
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void matrixmul_transpose(hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> &Q,
-                         hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> &K,
-                         res_T QK[CONFIG_T::seq_len][CONFIG_T::seq_len]) // seq_Q, seq_K
+//////////////////
+//Dennis version//
+//////////////////
+//template<int PackSize, class data_T>
+//struct datapack {
+//    typename CONFIG_T::multi_t data[PackSize];
+//};
+//
+//template <class data_T,int size>
+//void read_stream_array(
+//	hls::stream<data_T>    data_in[size],
+//	typename CONFIG_T::multi_t out[size]
+//)
+//{
+//	for (int k=0; k<size; ++k){
+//	#pragma HLS UNROLL
+//		out[k] = data_in[k].read();
+//	}
+//}
+
+
+template<class data_T, class res_T, typename CONFIG_T>
+void matrixmul_transpose(
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> &Q,
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> &K,
+    res_T  QK[CONFIG_T::seq_len][CONFIG_T::seq_len]) // seq_Q, seq_K
 {
     const data_T dk = 1.0 / sqrt(CONFIG_T::head_dim_key);
     data_T QK_1;
