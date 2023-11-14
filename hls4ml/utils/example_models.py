@@ -156,6 +156,7 @@ def fetch_example_model(model_name, backend='Vivado'):
 
     if _config_is_available(model_name):
         config = _load_example_config(model_name)
+        config[model_config] = model_name  # Ensure that paths are correct
     else:
         config = _create_default_config(model_name, model_config, backend)
 
