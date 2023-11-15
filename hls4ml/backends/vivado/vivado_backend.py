@@ -178,7 +178,7 @@ class VivadoBackend(FPGABackend):
     def create_initial_config(self, part='xcvu13p-flga2577-2-e', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
+        config['Part'] = part
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
