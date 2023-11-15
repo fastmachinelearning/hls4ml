@@ -40,7 +40,7 @@ def main():
     )
     config_parser.add_argument('-p', '--project', help='Project name', default='myproject')
     config_parser.add_argument('-d', '--dir', help='Project output directory', default='my-hls-test')
-    config_parser.add_argument('-f', '--fpga', help='FPGA part', default='xcku115-flvb2104-2-i')
+    config_parser.add_argument('-f', '--fpga', help='FPGA part', default='xcvu13p-flga2577-2-e')
     config_parser.add_argument('-bo', '--board', help='Board used.', default='pynq-z2')
     config_parser.add_argument(
         '-ba', '--backend', help='Backend to use (Vivado, VivadoAccelerator, Quartus)', default='Vivado'
