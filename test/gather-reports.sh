@@ -1,7 +1,7 @@
 #!/bin/bash
 
 failed=0
-basedir=vivado_prj
+basedir=hls_prj
 full=0
 brief=0
 
