@@ -49,7 +49,7 @@ function print_usage {
    echo "      Prints this help message."
 }
 
-while getopts ":x:b:B:c:sr:g:t:d:y:p:h" opt; do
+while getopts ":x:b:B:c:sr:g:t:d:y:p:P:h" opt; do
    case "$opt" in
    x) part=$OPTARG
       ;;
