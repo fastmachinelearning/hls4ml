@@ -43,6 +43,8 @@ function print_usage {
    echo "      Output directory."
    echo "   -y FILE"
    echo "      YAML config file to take HLS config from. If specified, -r, -g and -t are ignored."
+   echo "   -P PYCMD"
+   echo "      python command. Default is 'python'."
    echo "   -h"
    echo "      Prints this help message."
 }
@@ -70,6 +72,8 @@ while getopts ":x:b:B:c:sr:g:t:d:y:p:h" opt; do
    y) yml=$OPTARG
       ;;
    p) precision=$OPTARG
+      ;;
+   P) pycmd=$OPTARG
       ;;
    h)
       print_usage
