@@ -10,7 +10,7 @@ rf=1
 strategy="Latency"
 type="ap_fixed<16,6>"
 yml=""
-basedir=vivado_prj
+basedir=hls_prj
 precision="float"
 sanitizer="[^A-Za-z0-9._]"
 
