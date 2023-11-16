@@ -20,21 +20,19 @@ clone_include_list = ['nnet_utils/nnet_stream.h']
 class CloneFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Clone, include_header=clone_include_list)
-        self.template = None  # to be filled once number of clones known
 
     def format(self, node):
         params = self._default_function_params(node)
         for i, _output in enumerate(node.outputs):
             params['output' + str(i + 1)] = node.variables[node.outputs[i]].name
 
-        if self.template is None:
-            self.template = (
-                'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, '
-                + ', '.join(['{output' + str(i + 1) + '}' for i in range(len(node.outputs))])
-                + ');'
-            )
+        template = (
+            'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, '
+            + ', '.join(['{output' + str(i + 1) + '}' for i in range(len(node.outputs))])
+            + ');'
+        )
 
-        return self.template.format(**params)
+        return template.format(**params)
 
 
 def register_clone(backend):
