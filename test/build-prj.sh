@@ -148,13 +148,13 @@ if [ "${parallel}" -gt 1 ]; then
    )
 else
    # Run sequentially
-   for dir in *-${hlsver}-${hlsver}/ ; do
+   for dir in *-${hlstool}-${hlsver}/ ; do
       run_hls "${hlscommand}" "${dir}" "${opt}"
    done
 fi
 
 # Check for build errors
-for dir in *-${vivadover}/ ; do
+for dir in *-${hlstool}-${hlsver}/ ; do
    check_status "${dir}" "${opt}"
 done
 
