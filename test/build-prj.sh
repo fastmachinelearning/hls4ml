@@ -55,7 +55,7 @@ function run_hls {
    opt=$3
    echo "Building project in ${dir} with options: ${opt}"
    cd ${dir}
-   cmd=${hlscommand}\" -f build_prj.tcl \"${opt}\" &> build_prj.log"
+   cmd="\"${hlscommand}\" -f build_prj.tcl \"${opt}\" &> build_prj.log"
    eval ${cmd}
    if [ $? -eq 1 ]; then
       touch BUILD_FAILED
