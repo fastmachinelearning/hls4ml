@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "firmware/myproject.h"
-#include "firmware/nnet_utils/nnet_helpers.h"
+#include "nnet_utils/nnet_helpers.h"
 // #include "firmware/parameters.h"
 
 #include <mc_scverify.h>

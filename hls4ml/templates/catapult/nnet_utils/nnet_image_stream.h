@@ -17,13 +17,13 @@ void resize_nearest(
     constexpr unsigned ratio_height = CONFIG_T::new_height / CONFIG_T::height;
     constexpr unsigned ratio_width = CONFIG_T::new_width / CONFIG_T::width;
     
-    
+    #pragma hls_pipeline_init_interval 1
     ImageHeight: for (unsigned h = 0; h < CONFIG_T::height; h++) {
         //#pragma HLS PIPELINE
     
         data_T data_in_row[CONFIG_T::width];
         
-      #pragma hls_unroll
+        // #pragma hls_unroll
         ImageWidth: for (unsigned i = 0; i < CONFIG_T::width; i++) {
             //#pragma HLS UNROLL
             
@@ -45,7 +45,7 @@ void resize_nearest(
             ImageWidth2: for (unsigned l = 0; l < CONFIG_T::width; l++) {
                 //#pragma HLS UNROLL
                 
-                #pragma hls_unroll
+                // #pragma hls_unroll
                 ResizeWidth: for (unsigned j = 0; j < ratio_width; j++) {
                     //#pragma HLS UNROLL
                 

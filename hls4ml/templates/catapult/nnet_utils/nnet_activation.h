@@ -561,7 +561,7 @@ void ac_softmax_pwl_wrapper(const ac_fixed<W1,I1,S1,Q1,O1> (&input)[K], ac_fixed
 {
   ac_fixed<W2,I2,false,Q2,O2> tmp[K];
   ac_math::ac_softmax_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP,K,W1,I1,S1,Q1,O1,W2,I2,Q2,O2>(input,tmp);
-  for (int x=0;x<K;x++) output[x]=tmp[x];
+  for (unsigned int x=0;x<K;x++) output[x]=tmp[x];
 }
 
 #pragma hls_design block

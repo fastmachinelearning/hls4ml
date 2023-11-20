@@ -258,6 +258,7 @@ void concatenate3d_1(
     }
 }
 
+#pragma hls_pipeline_init_interval 1
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_2(
     ac_channel<input1_T> &data1,
@@ -291,6 +292,8 @@ void concatenate3d_2(
     }
 }
 
+#pragma hls_design block
+#pragma hls_pipeline_init_interval 1
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d(
     ac_channel<input1_T> &data1,
@@ -306,6 +309,7 @@ void concatenate3d(
     }
 }
 
+#pragma hls_design block
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d_0(
     ac_channel<input1_T> &data1,

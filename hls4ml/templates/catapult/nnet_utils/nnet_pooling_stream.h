@@ -82,7 +82,7 @@ void compute_pool_encoded_2d(
 
     const unsigned sh_idx = pool_table_height[h_idx] * CONFIG_T::pool_width;
     const unsigned wp_idx = w_idx * (data_T::size / CONFIG_T::n_filt);
-
+    #pragma hls_unroll
     PixelLoop: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
         //#pragma HLS PIPELINE
 
@@ -90,12 +90,13 @@ void compute_pool_encoded_2d(
         if ((h_idx < nH) && (wp_idx + p < nW)) {
             filt_mask = sh_idx + pool_table_width[wp_idx + p] + 1;
         }
-
+        // #pragma hls_unroll
         CopyDataFilt: for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
             if (filt_mask > 0) data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + filt_mask.to_uint() - 1].write(in_elem[p * CONFIG_T::n_filt + c]);
         }
 
         if (filt_mask == CONFIG_T::pool_height * CONFIG_T::pool_width) {
+            #pragma hls_unroll
             FiltLoop: for(unsigned c = 0; c < CONFIG_T::n_filt; c++) {
                 PoolLoop: for(unsigned f = 0; f < CONFIG_T::pool_height * CONFIG_T::pool_width; f++) {
                     pool_window[f] = data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + f].read();
@@ -139,8 +140,8 @@ void pooling2d_encoded_cl(
 //      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
 //  }
 
-    constexpr int pack_factor = data_T::size / CONFIG_T::n_filt;
-
+    constexpr int pack_factor = (data_T::size / CONFIG_T::n_filt) * (res_T::size / CONFIG_T::n_filt == 1); (void)pack_factor;
+    #pragma hls_pipeline_init_interval pack_factor
     ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
         ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (pack_factor); i_iw++) {
             //#pragma HLS LOOP_FLATTEN

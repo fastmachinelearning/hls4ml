@@ -67,27 +67,27 @@ void zeropad2d_cl(
     ac_channel<res_T>  &res
 ) {
 
-    PadTop: for (unsigned int i = 0; i < CONFIG_T::pad_top; i++) {
-        PadTopWidth: for (unsigned int j = 0; j < CONFIG_T::out_width; j++) {
+    PadTop: for (unsigned i = 0; i < CONFIG_T::pad_top; i++) {
+        PadTopWidth: for (unsigned j = 0; j < CONFIG_T::out_width; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
     }
 
-    PadMain: for (unsigned int i = 0; i < CONFIG_T::in_height; i++) {
-        PadLeft: for (unsigned int j = 0; j < CONFIG_T::pad_left; j++) {
+    PadMain: for (unsigned i = 0; i < CONFIG_T::in_height; i++) {
+        PadLeft: for (unsigned j = 0; j < CONFIG_T::pad_left; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
 	    #pragma hls_pipeline_init_interval 1
-        CopyMain: for (unsigned int j = 0; j < CONFIG_T::in_width; j++) {
+        CopyMain: for (unsigned j = 0; j < CONFIG_T::in_width; j++) {
             fill_data<data_T, res_T, CONFIG_T>(data, res);
         }
-        PadRight: for (unsigned int j = 0; j < CONFIG_T::pad_right; j++) {
+        PadRight: for (unsigned j = 0; j < CONFIG_T::pad_right; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
     }
 
-    PadBottom: for (unsigned int i = 0; i < CONFIG_T::pad_bottom; i++) {
-        PadBottomWidth: for (unsigned int j = 0; j < CONFIG_T::out_width; j++) {
+    PadBottom: for (unsigned i = 0; i < CONFIG_T::pad_bottom; i++) {
+        PadBottomWidth: for (unsigned j = 0; j < CONFIG_T::out_width; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
     }

@@ -15,7 +15,7 @@ struct batchnorm_config {
 
     // Layer Sizes
     static const unsigned n_in = 10;
-    static const unsigned n_filt = -1;
+    static const int n_filt = -1;
     static const unsigned n_scale_bias = 10;
     
     // Resource reuse info
@@ -71,7 +71,7 @@ Result:
 struct batchnorm_quantized_tanh_config {
     // Layer Sizes
     static const unsigned n_in = 10;
-    static const unsigned n_filt = -1;
+    static const int n_filt = -1;
     static const unsigned n_scale_bias = 10;
     
     // Resource reuse info

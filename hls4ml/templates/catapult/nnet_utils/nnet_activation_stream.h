@@ -506,7 +506,7 @@ void hard_sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         res.write(out_data);
     }
 }
-
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void hard_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     //typename data_T::value_type slope = (typename data_T::value_type) 0.2;

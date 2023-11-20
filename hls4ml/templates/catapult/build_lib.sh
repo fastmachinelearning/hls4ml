@@ -11,7 +11,7 @@ fi
 LDFLAGS=
 
 # Pick up AC libraries from Catapult install first
-INCFLAGS="-I$MGC_HOME/shared/include -Ifirmware/ac_types/include -Ifirmware/ac_math/include -Ifirmware/ac_simutils/include"
+INCFLAGS="-I$MGC_HOME/shared/include -I$MGC_HOME/shared/include/nnet_utils -Ifirmware/ac_types/include -Ifirmware/ac_math/include -Ifirmware/ac_simutils/include"
 PROJECT=myproject
 LIB_STAMP=mystamp
 

@@ -122,8 +122,11 @@ hard_activ_config_template = """struct {type}_config{index} {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
 }};
+// really this allocation of pixels array ought to be in a .cpp file
+#ifndef INCLUDED_MC_TESTBENCH_H
 const {slope_t.name} {type}_config{index}::slope = {slope};
-const {shift_t.name} {type}_config{index}::shift = {shift};\n"""
+const {shift_t.name} {type}_config{index}::shift = {shift};
+#endif\n"""
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};

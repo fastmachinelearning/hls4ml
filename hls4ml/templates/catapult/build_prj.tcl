@@ -7,7 +7,7 @@ array set opt {
   synth      1
   cosim      0
   validation 0
-  vhdl       0
+  vhdl       1
   verilog    1
   export     0
   vsynth     0
@@ -16,6 +16,7 @@ array set opt {
   sw_opt     0
   power      0
   da         0
+  bup        0
 }
 
 if { [info exists ::argv] } {
@@ -74,6 +75,7 @@ proc setup_asic_libs { args } {
   }
   solution library add ccs_sample_mem
   solution library add ccs_sample_rom
+  solution library add hls4ml_lib
   go libraries
 
   # special exception for SAED32 for use in power estimation
@@ -85,6 +87,8 @@ proc setup_asic_libs { args } {
 
 options set Input/CppStandard {c++17}
 options set Input/CompilerFlags -DRANDOM_FRAMES=$opt(ran_frame)
+options set Input/SearchPath {$MGC_HOME/shared/include/nnet_utils} -append
+options set ComponentLibs/SearchPath {$MGC_HOME/shared/pkgs/ccs_hls4ml} -append
 
 if {$opt(reset)} {
   project load myproject_prj.ccs
@@ -134,7 +138,7 @@ foreach i [glob -nocomplain firmware/weights/*.txt] {
 }
 
 # Turn on VSCode flow
-flow package require /VSCode
+# flow package require /VSCode
 # To launch VSCode on the C++ HLS design:
 #   cd my-Catapult-test
 #   code Catapult.code-workspace
@@ -164,6 +168,15 @@ if { $IOType == "io_stream" } {
 solution options set Architectural/DefaultRegisterThreshold 2050
 }
 directive set -RESET_CLEARS_ALL_REGS no
+# Constrain arrays to map to memory only over a certain size
+directive set -MEM_MAP_THRESHOLD [expr 2048 * 16 + 1]
+# The following line gets modified by the backend writer
+set hls_clock_period 5
+
+go analyze
+
+# NORMAL TOP DOWN FLOW
+if { ! $opt(bup) } {
 
 go compile
 
@@ -175,17 +188,9 @@ if {$opt(csim)} {
   report_time "C SIMULATION" $time_start $time_end
 }
 
-
 puts "***** SETTING TECHNOLOGY LIBRARIES *****"
 #hls-fpga-machine-learning insert techlibs
-# setup_xilinx_part xcku115-flvb2104-2-i
 
-#  solution library add amba
-
-# Constrain arrays to map to memory only over a certain size
-directive set -MEM_MAP_THRESHOLD [expr 2048 * 16 + 1]
-
-set hls_clock_period 5
 directive set -CLOCKS [list clk [list -CLOCK_PERIOD $hls_clock_period -CLOCK_EDGE rising -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high]]
 
 if {$opt(synth)} {
@@ -203,6 +208,71 @@ if {$opt(synth)} {
   go extract
   set time_end [clock clicks -milliseconds]
   report_time "C/RTL SYNTHESIS" $time_start $time_end
+}
+
+# BOTTOM-UP FLOW
+} else {
+  # Start at 'go analyze'
+  go analyze
+
+  # Build the design bottom-up
+  directive set -CLOCKS [list clk [list -CLOCK_PERIOD $hls_clock_period -CLOCK_EDGE rising -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high]]
+
+  set blocks [solution get /HIERCONFIG/USER_HBS/*/RESOLVED_NAME -match glob -rec 1 -ret v -state analyze]
+  set bu_mappings {}
+  set top [lindex $blocks 0]
+  foreach block [lreverse [lrange $blocks 1 end]] {
+    go analyze
+    solution design set $block -top
+    go compile
+    solution library remove *
+    puts "***** SETTING TECHNOLOGY LIBRARIES *****"
+#hls-fpga-machine-learning insert techlibs
+    go extract
+    set block_soln "[solution get /TOP/name -checkpath 0].[solution get /VERSION -checkpath 0]"
+    lappend bu_mappings [solution get /CAT_DIR] /$top/$block "\[Block\] $block_soln"
+  }
+
+  # Move to top design
+  go analyze
+  solution design set $top -top
+  go compile
+
+  if {$opt(csim)} {
+    puts "***** C SIMULATION *****"
+    set time_start [clock clicks -milliseconds]
+    flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+    set time_end [clock clicks -milliseconds]
+    report_time "C SIMULATION" $time_start $time_end
+  }
+  foreach {d i l} $bu_mappings {
+    logfile message "solution options set ComponentLibs/SearchPath $d -append\n" info
+    solution options set ComponentLibs/SearchPath $d -append
+  }
+
+  # Add bottom-up blocks
+  puts "***** SETTING TECHNOLOGY LIBRARIES *****"
+  solution library remove *
+#hls-fpga-machine-learning insert techlibs
+  # need to revert back to go compile
+  go compile
+  foreach {d i l} $bu_mappings {
+    logfile message "solution library add [list $l]\n" info
+    eval solution library add [list $l]
+  }
+  go libraries
+
+  # Map to bottom-up blocks
+  foreach {d i l} $bu_mappings {
+    logfile message "directive set $i -MAP_TO_MODULE [list $l]\n" info
+    eval directive set $i -MAP_TO_MODULE [list $l]
+  }
+  go assembly
+  go architect
+  go allocate
+  go schedule
+  go dpfsm
+  go extract
 }
 
 project save

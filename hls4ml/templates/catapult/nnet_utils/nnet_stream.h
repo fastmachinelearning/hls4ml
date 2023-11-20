@@ -17,26 +17,30 @@ struct broadcast_config
 };
 
 #pragma hls_design block
+#pragma hls_pipeline_init_interval 1
 template<class data_T, class res_T, int N>
 void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<res_T> &res2) {
-    CloneLoop: for (int i = 0; i < N / data_T::size; i++) {
+    // CloneLoop: for (int i = 0; i < N / data_T::size; i++) {
         //#pragma HLS PIPELINE
-
+    #ifndef __SYNTHESIS__
+    while (data.available(1))
+    #endif
+    {
         data_T in_data = data.read();
-        res_T out_data1;
-        res_T out_data2;
+        res_T out_data;
+        // res_T out_data2;
         //#pragma HLS DATA_PACK variable=out_data1
         //#pragma HLS DATA_PACK variable=out_data2
 
         #pragma hls_unroll
         ClonePack: for (int j = 0; j < data_T::size; j++) {
             //#pragma HLS UNROLL
-            out_data1[j] = in_data[j];
-            out_data2[j] = in_data[j];
+            out_data[j] = in_data[j];
+            // out_data2[j] = in_data[j];
         }
 
-        res1.write(out_data1);
-        res2.write(out_data2);
+        res1.write(out_data);
+        res2.write(out_data);
     }
 }
 

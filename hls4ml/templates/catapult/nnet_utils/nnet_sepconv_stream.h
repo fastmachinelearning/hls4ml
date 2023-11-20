@@ -24,6 +24,7 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
+    #pragma hls_unroll
 
 // Add dummy loop to which the pipeline pragma can be applied
 do {
@@ -31,10 +32,10 @@ do {
     //#pragma HLS ARRAY_PARTITION variable=mult complete
 
     //#pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
+    #pragma hls_unroll
 
 // Do the matrix-multiply
 Product:
-    #pragma hls_unroll
     for (int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
         // #pragma HLS UNROLL
         mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
@@ -132,12 +133,14 @@ void compute_depthwise_output_encoded(
 
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
+    #pragma hls_unroll
 MultLoop:
     for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     #pragma hls_unroll
     CopyDataFilt:
         for (unsigned f = 0; f < CONFIG_T::kernel_size; f++) {
+        #pragma hls_unroll
         //#pragma HLS UNROLL
         CopyDataChan:
             for (unsigned c = 0; c < CONFIG_T::n_chan; c++) {

@@ -71,7 +71,7 @@ class CatapultWriter(Writer):
             os.makedirs(f"{model.config.get_output_dir()}/firmware/weights")
 
     @staticmethod
-    def _make_array_pragma(variable):
+    def _make_array_pragma(variable, model):
         """
         Layers in hls_model.py can specify output array partitioning through the `pragma` attribute.
         If `pragma` is a string: options are 'partition', 'reshape', or 'stream'.
@@ -102,9 +102,36 @@ class CatapultWriter(Writer):
             return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
 
         elif mode == 'stream':
-            # Bug CAT-13501 in Catapult - hls_resource inserted by catapult_writer.py not applied to static var. workaround is placed in build_prj.tcl
-            #return f'#pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="ccs_ioport.ccs_pipe FIFO_DEPTH={depth}"'
-            return f'// #pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="ccs_ioport.ccs_pipe FIFO_DEPTH={depth}"'
+            fifo = model.config.get_config_value("FIFO")
+            if fifo != None:
+                return f'#pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="{fifo}"'
+            else:
+                return ''
+        else:
+            return ''
+
+    @staticmethod
+    def _make_array_fifo_pragma(variable, model):
+        config = variable.pragma
+        if type(config) is tuple:
+            mode = config[0]
+            if mode in ['partition', 'reshape']:
+                typ = config[1]
+                if typ != 'complete':
+                    factor = config[2]
+            elif mode == 'stream':
+                depth = config[1]
+        else:
+            mode = config
+            typ = 'complete'
+            factor = 0
+
+        if mode == 'stream':
+            fifo = model.config.get_config_value("FIFO")
+            if fifo != None:
+                return f'// #pragma hls_fifo_depth {depth}'
+            else:
+                return ''
         else:
             return ''
 
@@ -267,9 +294,9 @@ class CatapultWriter(Writer):
 
                 if io_type == 'io_parallel':
                     for i in model_inputs:
-                        newline += indent + self._make_array_pragma(i) + '\n'
+                        newline += indent + self._make_array_pragma(i,model) + '\n'
                     for o in model_outputs:
-                        newline += indent + self._make_array_pragma(o) + '\n'
+                        newline += indent + self._make_array_pragma(o,model) + '\n'
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays
                     # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
                     newline += indent + '// #pragma HLS INTERFACE ap_vld port={},{} \n'.format(
@@ -296,12 +323,14 @@ class CatapultWriter(Writer):
                         if var not in model_inputs and var not in model_outputs:
                             def_cpp = var.definition_cpp()
                             if def_cpp is not None:
+                                if var.pragma:
+                                    newline += '    ' + self._make_array_fifo_pragma(var,model) + '\n'
                                 if io_type == 'io_serial' or io_type == 'io_stream':
                                     newline += '    static ' + def_cpp + '; \n'
                                 else:
                                     newline += '    ' + def_cpp + '; \n'
                                 if var.pragma:
-                                    newline += '    ' + self._make_array_pragma(var) + '\n'
+                                    newline += '    ' + self._make_array_pragma(var,model) + '\n'
                     func = layer.get_attr('function_cpp', None)
                     if func:
                         if not isinstance(func, (list, set)):
@@ -799,8 +828,15 @@ class CatapultWriter(Writer):
 
         headers = [os.path.basename(h) for h in glob.glob(srcpath + '*.h')]
 
+        if model.config.get_config_value('DontCopyNNET') != None:
+            h = 'nnet_code_gen.h'
+            copyfile(srcpath + h, dstpath + h)
+            return
+
         for h in headers:
             copyfile(srcpath + h, dstpath + h)
+
+        print("Copying NNET files to local firmware directory")
 
         # ac_types
         filedir = os.path.dirname(os.path.abspath(__file__))
