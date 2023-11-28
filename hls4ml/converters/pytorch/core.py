@@ -1,7 +1,7 @@
 from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
 
 
-@pytorch_handler('Linear')
+@pytorch_handler('Linear', 'QuantLinear')
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert 'Linear' in operation
 
@@ -29,7 +29,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     return layer, output_shape
 
 
-activation_layers = ['Softmax', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU', 'Sigmoid', 'Tanh']
+activation_layers = ['Softmax', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU', 'Sigmoid', 'Tanh','QuantReLU','QuantSigmoid','QuantTanh']
 
 
 @pytorch_handler(*activation_layers)

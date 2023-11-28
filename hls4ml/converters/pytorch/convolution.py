@@ -1,8 +1,25 @@
 from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
+from hls4ml.model.types import FixedPrecisionType
+import math
 
+def ConvUAQToAp_Fixed(bitwidth, scale_factor, zero_point):
+  """
+  parameters:
+  bitwidth: int
+  scale_factor: float
+  zero_point: float
+  
+  return:
+  int_bitwidth: int 
+  fract_bitwidth: int
+  """
+  fract_bitwidth = - math.log2(scale_factor)
+  int_bitwidth = bitwidth - fract_bitwidth 
+  
+  return (fract_bitwidth, int_bitwidth)
 
-@pytorch_handler('Conv1d')
+@pytorch_handler('Conv1d', 'QuantConv1d')
 def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert 'Conv1d' in operation
 
@@ -47,7 +64,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     return layer, output_shape
 
 
-@pytorch_handler('Conv2d')
+@pytorch_handler('Conv2d', 'QuantConv2d')
 def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert 'Conv2d' in operation
 
@@ -57,8 +74,16 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
-    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+    if "Quant" in operation:
+        layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
+        layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
+        width = class_object.quant_weight().bit_width
+        ap_fixed_params = ConvUAQToAp_Fixed(width, class_object.quant_weight().scale,0)
+        layer['precision'] = FixedPrecisionType(width=width, integer=ap_fixed_params[1], signed=True)
+    
+    else:
+        layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+        layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     # Input info
     (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(
         input_shapes[0], 'channels_first'

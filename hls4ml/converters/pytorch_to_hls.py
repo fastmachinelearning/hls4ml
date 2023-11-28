@@ -3,6 +3,16 @@ import torch
 
 from hls4ml.model import ModelGraph
 
+class CustomFXTracer(torch.fx.Tracer):
+
+    def is_leaf_module(self, m: torch.nn.Module, module_qualified_name: str) -> bool:
+        """
+        Custom Tracher class for hls4ml to define brevitas modules as leaf modules so they are not traced through by torch.FX
+        """
+        return (
+            (m.__module__.startswith("torch.nn") or m.__module__.startswith("torch.ao.nn") or m.__module__.startswith("brevitas.nn"))
+            and not isinstance(m, torch.nn.Sequential)
+        )    
 
 class PyTorchModelReader:
     """
@@ -24,6 +34,7 @@ class PyTorchModelReader:
 
         # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
         # have to snap that off to find the tensors
+        print (self.state_dict)
         if layer_name.split('_')[-1].isdigit() and len(layer_name.split('_')) > 1:
             layer_name = '_'.join(layer_name.split('_')[:-1])
 
@@ -140,9 +151,9 @@ def pytorch_to_hls(config):
     # dict of layer objects in non-traced form for access lateron
     children = {c[0]: c[1] for c in model.named_children()}
     # use symbolic_trace to get a full graph of the model
-    from torch.fx import symbolic_trace
 
-    traced_model = symbolic_trace(model)
+    tracer = CustomFXTracer()
+    traced_model = tracer.trace(model)
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten', 'Sequential']
 
@@ -160,8 +171,8 @@ def pytorch_to_hls(config):
     layer_counter = 0
 
     n_inputs = 0
-
-    for node in traced_model.graph.nodes:
+    print (traced_model)
+    for node in traced_model.nodes:
         # If part of a nn.Sequntial, the node name will start with an "_" which messes up the parsing
         if node.name[0] == '_':
             node.name = 'layer' + node.name

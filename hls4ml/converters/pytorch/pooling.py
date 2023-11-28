@@ -1,7 +1,7 @@
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 
-pooling_layers = ['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d']
+pooling_layers = ['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d', 'QuantMaxPool1d', 'QuantMaxPool2d'] #TODO add support for special quantized average pool layers
 
 
 @pytorch_handler(*pooling_layers)
@@ -85,18 +85,25 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
                 padding = [class_object.padding, class_object.padding]
 
         else:
-            if type(node.kwargs['stride']) is tuple:
+            if node.kwargs['stride'] is None:
+                if type(node.args[-1]) is tuple:
+                    layer['stride_height'] = node.args[-1][0]
+                    layer['stride_width'] = node.args[-1][0]
+                else:
+                    layer['stride_height'] = node.args[-1]
+                    layer['stride_width'] = node.args[-1]                
+            elif type(node.kwargs['stride']) is tuple:
                 layer['stride_height'] = node.kwargs['stride'][0]
                 layer['stride_width'] = node.kwargs['stride'][1]
             else:
                 layer['stride_height'] = node.kwargs['stride']
                 layer['stride_width'] = node.kwargs['stride']
-            if type(node.kwargs['kernel_size']) is tuple:
-                layer['pool_height'] = node.kwargs['kernel_size'][0]
-                layer['pool_width'] = node.kwargs['kernel_size'][1]
+            if type(node.args[-1]) is tuple:
+                layer['pool_height'] = node.args[-1][0]
+                layer['pool_width'] = node.args[-1][0]
             else:
-                layer['pool_height'] = node.kwargs['kernel_size']
-                layer['pool_width'] = node.kwargs['kernel_size']
+                layer['pool_height'] = node.args[-1]
+                layer['pool_width'] = node.args[-1]
 
             if type(node.kwargs['padding']) is tuple:
                 padding = node.kwargs['padding']
