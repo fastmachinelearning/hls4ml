@@ -472,7 +472,7 @@ class ModelGraph:
         for o in node.outputs:
             out_var = node.get_output_variable(output_name=o)
             if o in self.outputs:
-                out_var.type.name = 'result_t'
+                out_var.type.name = 'result_' + out_var.type.name
             self.output_vars[o] = out_var
         return node
 
@@ -609,7 +609,7 @@ class ModelGraph:
 
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:
-            variable.type.name = 'result_t'
+            variable.type.name = 'result_' + variable.type.name
         self.output_vars[out_name] = variable
 
     def get_output_variables(self):
