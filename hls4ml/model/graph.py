@@ -573,13 +573,24 @@ class ModelGraph:
             new_node (Layer): The new node
 
         """
-        prev_node = self.graph.get(old_node.inputs[0])
-        next_node = next((x for x in self.graph.values() if x.inputs[0] == old_node.outputs[0]), None)
-        if next_node is not None:
-            next_node.inputs[0] = new_node.outputs[0]
-        if prev_node is not None:
-            if new_node.inputs is None or len(new_node.inputs) == 0:  # Check if already rewired
-                new_node.inputs = [prev_node.outputs[0]]
+
+        assert len(new_node.inputs) == len(
+            old_node.inputs
+        ), f'{new_node.name} and {old_node.name} have different number of inputs'
+        assert len(new_node.outputs) == len(
+            old_node.outputs
+        ), f'{new_node.name} and {old_node.name} have different number of outputs'
+
+        repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node.outputs)}
+        repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node.inputs)})
+
+        for node in self.graph.values():
+            for i, n in enumerate(node.inputs):
+                if n in repl:
+                    node.inputs[i] = repl[n]
+            for i, n in enumerate(node.outputs):
+                if n in repl:
+                    node.outputs[i] = repl[n]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
         self._update_model_outputs()
