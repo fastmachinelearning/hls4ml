@@ -8,7 +8,9 @@ from hls4ml.optimization.keras.utils import get_last_layer_with_weights
 Function for removing zero neurons & filters from a model and rewiring the model graph
 This function is built on top of Keras Surgeon available at: https://github.com/BenWhetton/keras-surgeon
 Keras Surgeon is no longer under active development and does not work for TensorFlow 2.3+ and QKeras
-The baseline version was forked and updated, available at: https://github.com/bo3z/keras-surgeon
+The baseline version was forked and updated, available at: https://github.com/fastmachinelearning/keras-surgeon
+
+IMPORTANT: To use this funcionality please install separately from the above GitHub.
 
 Args:
     - model (keras.model): Input model
@@ -26,7 +28,7 @@ def reduce_model(model):
         raise Exception(
             'Keras Surgeon not installed. Unable to reduce model footprint '
             'Please install up-to-date Keras Surgeon compatible wit TensorFlow 2.3+ and QKeras '
-            'Installation from git: https://github.com/bo3z/keras-surgeon'
+            'Installation from git: https://github.com/fastmachinelearning/keras-surgeon'
         )
 
     # Initiate surgeon
