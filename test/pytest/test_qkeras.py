@@ -4,8 +4,17 @@ from pathlib import Path
 import numpy as np
 import pytest
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
+from qkeras.qconvolutional import QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
-from qkeras.quantizers import binary, quantized_bits, quantized_relu, quantized_sigmoid, quantized_tanh, ternary
+from qkeras.quantizers import (
+    binary,
+    quantized_bits,
+    quantized_po2,
+    quantized_relu,
+    quantized_sigmoid,
+    quantized_tanh,
+    ternary,
+)
 from qkeras.utils import _add_supported_quantized_objects
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
@@ -379,7 +388,7 @@ def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qconv2dbn_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -390,3 +399,174 @@ def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.fixture(scope='module')
+def randX_10_32_32_3():
+    return np.random.rand(10, 32, 32, 3)
+
+
+# Currently only Vivado and Vitis is supported for io_stream.
+# Note, qkeras only supports 2d version of depthwise
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qdepthwiseconv2d(randX_10_32_32_3, backend, io_type):
+    '''
+    Test proper handling of QDepthwiseConv2D.
+    '''
+    X = randX_10_32_32_3
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QDepthwiseConv2D(
+            kernel_size=(3, 3),
+            input_shape=(32, 32, 3),
+            depthwise_quantizer='quantized_bits(6, 0, alpha=1)',
+            bias_quantizer='quantized_bits(4, 0, alpha=1)',
+            bias_initializer='he_normal',
+            activation='quantized_relu(3, 0)',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qdepthwiseconv2d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_quantised_po2_bit_width(backend, io_type, strategy):
+    input_shape = 26
+    output_shape = 6
+    X = np.random.rand(100, input_shape)
+
+    # Set a high bit-width, so that we ensure HLS doesn't allocate 2**bits for the multiplication
+    # The biggest allowed bit-width in Vivado HLS is 65,536 (2**16)
+    keras_model = Sequential()
+    keras_model.add(
+        QDense(output_shape, input_shape=(input_shape,), name='dense', kernel_quantizer=quantized_po2(18, max_value=2**20))
+    )
+
+    # Set weights to same high random number
+    weights = keras_model.layers[0].get_weights()
+    weights[0] = (2**18) * np.random.rand(input_shape, output_shape)
+    keras_model.layers[0].set_weights(weights)
+
+    # Assert output is the same and bit-width is not over-allocated [it would throw a run-time error]
+    keras_model.compile()
+    y_keras = keras_model.predict(X)
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        keras_model, granularity='name', default_precision='ap_fixed<64, 32>', default_reuse_factor=1
+    )
+    hls_config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_quantised_po2_{backend}_{io_type}_{strategy}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+    y_hls = hls_model.predict(np.ascontiguousarray(X))
+
+    np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qseparableconv1d(backend, io_type):
+    '''
+    Test proper handling of QSeparableConv1D.
+    '''
+    x_in = Input((13, 20), name='input_layer')
+    x = QSeparableConv1D(
+        5,
+        3,
+        depthwise_quantizer=quantized_bits(8, 3, alpha=1),
+        pointwise_quantizer=quantized_bits(8, 3, alpha=1),
+        bias_quantizer=quantized_bits(8, 3, alpha=1),
+        name='qsepconv_1',
+    )(x_in)
+    model = Model(inputs=x_in, outputs=x)
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend=backend, default_precision='fixed<23,7>'
+    )
+
+    # Use 8 bits for input
+    config['LayerName']['input_layer']['Precision']['result'] = 'fixed<8,1>'
+    # default_precision is will be used for accum_t and result_t of the conv layer, so we don't need to set them here
+    # We need <15,4> for the result of depthwise step
+    config['LayerName']['qsepconv_1']['Precision']['dw_output'] = 'fixed<15,4>'
+
+    output_dir = str(test_root_path / f'hls4mlprj_qsepconv1d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        io_type=io_type,
+    )
+    hls_model.compile()
+
+    data = np.random.rand(100, 13, 20)
+    input_quantizer = quantized_bits(8, 0, alpha=1)
+    dataq = input_quantizer(data).numpy()
+
+    y_qkeras = model.predict(dataq)
+    y_hls4ml = hls_model.predict(dataq)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=0)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qseparableconv2d(backend, io_type):
+    '''
+    Test proper handling of QSeparableConv2D.
+    '''
+    x_in = Input((13, 21, 20), name='input_layer')
+    x = QSeparableConv2D(
+        5,
+        3,
+        depthwise_quantizer=quantized_bits(8, 3, alpha=1),
+        pointwise_quantizer=quantized_bits(8, 3, alpha=1),
+        bias_quantizer=quantized_bits(8, 3, alpha=1),
+        name='qsepconv_1',
+    )(x_in)
+    model = Model(inputs=x_in, outputs=x)
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend=backend, default_precision='fixed<23,7>'
+    )
+
+    # Use 8 bits for input
+    config['LayerName']['input_layer']['Precision']['result'] = 'fixed<8,1>'
+    # default_precision is will be used for accum_t and result_t of the conv layer, so we don't need to set them here
+    # We need <15,4> for the result of depthwise step
+    config['LayerName']['qsepconv_1']['Precision']['dw_output'] = 'fixed<15,4>'
+
+    output_dir = str(test_root_path / f'hls4mlprj_qsepconv2d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        io_type=io_type,
+    )
+    hls_model.compile()
+
+    data = np.random.rand(100, 13, 21, 20)
+    input_quantizer = quantized_bits(8, 0, alpha=1)
+    dataq = input_quantizer(data).numpy()
+
+    y_qkeras = model.predict(dataq)
+    y_hls4ml = hls_model.predict(dataq)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=0)

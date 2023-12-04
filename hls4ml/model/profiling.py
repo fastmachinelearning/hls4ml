@@ -10,6 +10,7 @@ import pandas
 import seaborn as sb
 
 from hls4ml.model.graph import ModelGraph
+from hls4ml.model.layers import GRU, LSTM, SeparableConv1D, SeparableConv2D
 
 try:
     import qkeras
@@ -172,7 +173,6 @@ def ap_fixed_WIFS(dtype):
 
 
 def types_hlsmodel(model):
-    suffix = ['w', 'b']
     data = {'layer': [], 'low': [], 'high': []}
     # Plot the default precision
     default_precision = model.config.model_precision['default']
@@ -182,6 +182,12 @@ def types_hlsmodel(model):
     data['high'].append(I - 1 if S else I)
 
     for layer in model.get_layers():
+        if isinstance(layer, GRU) or isinstance(layer, LSTM):
+            suffix = ['w', 'rw', 'b', 'rb']
+        elif isinstance(layer, SeparableConv1D) or isinstance(layer, SeparableConv2D):
+            suffix = ['dw', 'pw', 'db', 'pb']
+        else:
+            suffix = ['w', 'b']
         for iw, weight in enumerate(layer.get_weights()):
             wname = f'{layer.name}/{suffix[iw]}'
             T = weight.type
@@ -213,13 +219,18 @@ def activation_types_hlsmodel(model):
 
 
 def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
-    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x': [], 'layer': [], 'weight': []}
     elif fmt == 'summary':
         data = []
 
     for layer in model.get_layers():
+        if isinstance(layer, GRU) or isinstance(layer, LSTM):
+            suffix = ['w', 'rw', 'b', 'rb']
+        elif isinstance(layer, SeparableConv1D) or isinstance(layer, SeparableConv2D):
+            suffix = ['dw', 'pw', 'db', 'pb']
+        else:
+            suffix = ['w', 'b']
         name = layer.name
         for iw, weight in enumerate(layer.get_weights()):
             label = f'{name}/{suffix[iw]}'
@@ -336,21 +347,23 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         # return summary statistics for matplotlib.axes.Axes.bxp
         # or histogram bin edges and heights
         data = []
-
-    for layer in model.layers:
-        print(f"   {layer.name}")
-        if not isinstance(layer, keras.layers.InputLayer):
-            y = _get_output(layer, X, model.input).flatten()
-            y = abs(y[y != 0])
-            if len(y) == 0:
-                print(f'Activations for {layer.name} are only zeros, ignoring.')
-                continue
-            if fmt == 'longform':
-                data['x'].extend(y.tolist())
-                data['weight'].extend([layer.name for i in range(len(y))])
-            elif fmt == 'summary':
-                data.append(array_to_summary(y, fmt=plot))
-                data[-1]['weight'] = layer.name
+    outputs = _get_outputs(
+        [layer for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], X, model.input
+    )
+    outputs = dict(zip([layer.name for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], outputs))
+    for layer_name, y in outputs.items():
+        print(f"   {layer_name}")
+        y = y.flatten()
+        y = abs(y[y != 0])
+        if len(y) == 0:
+            print(f'Activations for {layer_name} are only zeros, ignoring.')
+            continue
+        if fmt == 'longform':
+            data['x'].extend(y.tolist())
+            data['weight'].extend([layer_name for i in range(len(y))])
+        elif fmt == 'summary':
+            data.append(array_to_summary(y, fmt=plot))
+            data[-1]['weight'] = layer_name
 
     if fmt == 'longform':
         data = pandas.DataFrame(data)
@@ -537,10 +550,10 @@ def _is_ignored_layer(layer):
     return False
 
 
-def _get_output(layer, X, model_input):
-    """Get output of partial model"""
-    partial_model = keras.models.Model(inputs=model_input, outputs=layer.output)
-    y = partial_model.predict(X)
+def _get_outputs(layers, X, model_input):
+    """Get outputs of intermediate layers"""
+    partial_models = keras.models.Model(inputs=model_input, outputs=[layer.output for layer in layers])
+    y = partial_models.predict(X)
     return y
 
 
@@ -555,37 +568,30 @@ def get_ymodel_keras(keras_model, X):
     Returns:
         dict: A dictionary in the form {"layer_name": ouput array of layer}.
     """
-
     ymodel = {}
-
+    traced_layers = []
+    layer_names = []
     for layer in keras_model.layers:
-        print(f"Processing {layer.name} in Keras model...")
-        if not _is_ignored_layer(layer):
-            # If the layer has activation integrated then separate them
-            # Note that if the layer is a standalone activation layer then skip this
-            if hasattr(layer, 'activation') and not (
-                isinstance(layer, keras.layers.Activation) or isinstance(layer, qkeras.qlayers.QActivation)
-            ):
-                if layer.activation:
-                    if layer.activation.__class__.__name__ == "linear":
-                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-
-                    else:
-                        temp_activation = layer.activation
-                        layer.activation = None
-                        # Get output for layer without activation
-                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-
-                        # Add the activation back
-                        layer.activation = temp_activation
-                        # Get ouput for activation
-                        ymodel[layer.name + f"_{temp_activation.__class__.__name__}"] = _get_output(
-                            layer, X, keras_model.input
-                        )
-                else:
-                    ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-            else:
-                ymodel[layer.name] = _get_output(layer, X, keras_model.input)
+        if _is_ignored_layer(layer):
+            continue
+        # If the layer has activation integrated then separate them
+        # Note that if the layer is a standalone activation layer then skip this
+        name = layer.name
+        if (
+            hasattr(layer, "activation")
+            and layer.activation.__name__ != "linear"
+            and not isinstance(layer, (keras.layers.Activation, qkeras.qlayers.QActivation))
+        ):
+            tmp_activation = layer.activation
+            layer.activation = None
+            ymodel.update({layer.name: _get_outputs([layer], X, keras_model.input)})
+            layer.activation = tmp_activation
+            name = layer.name + f"_{tmp_activation.__name__}"
+        traced_layers.append(layer)
+        layer_names.append(name)
+    outputs = _get_outputs(traced_layers, X, keras_model.input)
+    for name, output in zip(layer_names, outputs):
+        ymodel[name] = output
     print("Done taking outputs for Keras model.")
     return ymodel
 

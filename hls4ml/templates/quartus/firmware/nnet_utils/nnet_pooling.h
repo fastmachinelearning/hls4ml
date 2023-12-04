@@ -114,6 +114,7 @@ struct pooling1d_config {
     // Padding
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
+    static const bool count_pad = false;
 
     // Pooling function
     static const Pool_Op pool_op = Max;
@@ -147,6 +148,8 @@ FiltLoop:
                 if (inp_col + pool_col < CONFIG_T::pad_left || inp_col + pool_col >= (padded_width - CONFIG_T::pad_right)) {
                     // Add padding
                     pool[pool_col] = pad_val<data_T, CONFIG_T::pool_op>();
+                    if (CONFIG_T::count_pad)
+                        img_overlap++;
                 } else {
                     // Current element is from input image
                     pool[pool_col] = data[(inp_col + pool_col - CONFIG_T::pad_left) * CONFIG_T::n_filt + filt];
@@ -208,6 +211,7 @@ struct pooling2d_config {
     static const unsigned pad_bottom = 0;
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
+    static const bool count_pad = false;
 
     // Pooling function
     static const Pool_Op pool_op = Max;
@@ -256,6 +260,8 @@ FiltLoop:
                             inp_width + pool_row >= (padded_width - CONFIG_T::pad_right)) {
                             // Add padding
                             pool[pool_col * CONFIG_T::stride_width + pool_row] = pad_val<data_T, CONFIG_T::pool_op>();
+                            if (CONFIG_T::count_pad)
+                                img_overlap++;
                         } else {
                             // Current element is from input image
                             pool[pool_col * CONFIG_T::stride_width + pool_row] =

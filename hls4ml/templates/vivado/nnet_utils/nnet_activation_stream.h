@@ -450,7 +450,7 @@ HardSigmoidActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     HardSigmoidPackLoop:
         for (int j = 0; j < res_T::size; j++) {

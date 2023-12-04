@@ -26,6 +26,14 @@ class Template(OptimizerPass):
     def get_name(self):
         return self.name
 
+    def _default_params(self, node):
+        params = {}
+        params.update(node.attributes)
+        # Convert all bool attributes to lowercase strings
+        params = {key: str(val).lower() if isinstance(val, bool) else val for key, val in params.items()}
+
+        return params
+
 
 class LayerConfigTemplate(Template):
     def __init__(self, layer_class):
@@ -37,8 +45,7 @@ class LayerConfigTemplate(Template):
         super().__init__(name, layer_class, 'config_cpp')
 
     def _default_config_params(self, layer):
-        params = {}
-        params.update(layer.attributes)
+        params = self._default_params(layer)
         params['iotype'] = layer.model.config.get_config_value('IOType')
         params['reuse'] = layer.get_attr('reuse_factor')
 
@@ -59,8 +66,7 @@ class FunctionCallTemplate(Template):
             self.include_header = include_header
 
     def _default_function_params(self, layer):
-        params = {}
-        params.update(layer.attributes)
+        params = self._default_params(layer)
         params['config'] = f'config{layer.index}'
         params['input_t'] = layer.get_input_variable().type.name
         params['output_t'] = layer.get_output_variable().type.name

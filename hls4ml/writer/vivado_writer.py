@@ -212,11 +212,12 @@ class VivadoWriter(Writer):
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.get_attr('function_cpp', None)
                     if func:
-                        func = [func]
+                        if not isinstance(func, (list, set)):
+                            func = [func]
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
-                            newline += '// ' + layer.name + '\n'
+                            newline += '    // ' + layer.name + '\n'
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
@@ -604,6 +605,8 @@ class VivadoWriter(Writer):
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.write('variable clock_uncertainty\n')
         f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
+        f.write('variable version\n')
+        f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
         f.close()
 
         # build_prj.tcl

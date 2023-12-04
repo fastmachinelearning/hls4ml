@@ -1,6 +1,14 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv2D, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import (
+    Conv1D,
+    Conv2D,
+    Conv2DBatchnorm,
+    DepthwiseConv1D,
+    DepthwiseConv2D,
+    SeparableConv1D,
+    SeparableConv2D,
+)
 
 # Shared multiplication template
 
@@ -12,7 +20,7 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned resource_implementation = nnet::{dense_resource_implementation};
     template<class data_T, class res_T, class CONFIG_T>
     using dense_unrolled = nnet::{unrolled_function}<data_T, res_T, CONFIG_T>;
-    static const unsigned n_zeros = 0;
+    static const unsigned n_zeros = {nzeros};
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
@@ -36,6 +44,8 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned out_width = {out_width};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
+    static const unsigned multiplier_limit =
+        DIV_ROUNDUP(kernel_size * n_chan * n_filt, reuse_factor) - n_zeros / reuse_factor;
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
@@ -58,13 +68,16 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+depthconv1d_function_template = (
+    'nnet::depthwise_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+)
 
 conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 
 
 class Conv1DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__(Conv1D)
+        super().__init__((Conv1D, DepthwiseConv1D))
         self.template = conv1d_config_template
         self.mult_template = conv_mult_config_template
 
@@ -91,6 +104,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('weight').nzeros
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
@@ -113,6 +127,12 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+
+class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
+    def __init__(self):
+        super(Conv1DFunctionTemplate, self).__init__(DepthwiseConv1D, include_header=sepconv1d_include_list)
+        self.template = depthconv1d_function_template
 
 
 # Conv2D Templates
@@ -211,6 +231,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_height') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('weight').nzeros
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
@@ -255,10 +276,12 @@ sepconv_config_template = """struct config{index} {{
 }};\n"""
 
 sepconv1d_function_template = (
-    'nnet::separable_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_1d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 sepconv2d_function_template = (
-    'nnet::separable_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+    'nnet::separable_conv_2d_{data_format}<{input_t}, {dw_output_t}, {output_t}, {config}>('
+    '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
@@ -284,6 +307,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
 
         # Depthwise config
         params = self._default_config_params(node)
+        # Override bias and bias_t since these are zeros in depthwise step of SepConv1D
+        params['bias'] = params['zero_bias']
+        params['bias_t'] = params['zero_bias_t']
         params['n_filt'] = params['n_chan']  # In depthwise step n_chan == n_filt
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('depthwise').nzeros
@@ -291,7 +317,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['weight_t'] = node.get_weights('depthwise').type
         params['fill_fn'] = 'FillConv1DBuffer'
 
-        if node.get_attr("unscaled"):
+        if node.get_attr('unscaled'):
             params['scale_index_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_type'] = 'scale_index_regular'
@@ -306,6 +332,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_depthwise'
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_chan')
+        mult_params['nzeros'] = node.get_weights('depthwise').nzeros
         mult_params['weight_t'] = node.get_weights('depthwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
@@ -316,14 +343,11 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
-        params = self._default_config_params()
-        input_shape = self.get_input_variable().shape
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_width'] = '*'.join([str(k) for k in input_shape[:-1]])
-            params['n_chan'] = input_shape[-1]
+        params = self._default_config_params(node)
+        if node.get_attr('data_format') == 'channels_last':
+            params['in_width'] = node.get_output_variable().shape[0]
         else:
-            params['in_width'] = '*'.join([str(k) for k in input_shape[1:]])
-            params['n_chan'] = input_shape[0]
+            params['in_width'] = node.get_output_variable().shape[1]
 
         params['filt_width'] = 1
         params['stride_width'] = 1
@@ -335,7 +359,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['instructions'] = '0'
         params['fill_fn'] = 'FillConv1DBuffer'
 
-        if node.get_attr("unscaled"):
+        if node.get_attr('unscaled'):
             params['scale_index_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_type'] = 'scale_index_regular'
@@ -350,6 +374,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_pointwise'
         mult_params['n_in'] = node.get_attr('n_chan')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('pointwise').nzeros
         mult_params['weight_t'] = node.get_weights('pointwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
@@ -379,6 +404,7 @@ class SeparableConv1DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name
@@ -417,12 +443,12 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['weight_t'] = node.get_weights('depthwise').type
         params['fill_fn'] = 'FillConv2DBuffer'
 
-        if node.get_attr("unscaled_h"):
+        if node.get_attr('unscaled_h'):
             params['scale_index_height_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_height_type'] = 'scale_index_regular'
 
-        if node.get_attr("unscaled_w"):
+        if node.get_attr('unscaled_w'):
             params['scale_index_width_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
@@ -437,6 +463,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_depthwise'
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_height') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_chan')
+        mult_params['nzeros'] = node.get_weights('depthwise').nzeros
         mult_params['weight_t'] = node.get_weights('depthwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
@@ -465,12 +492,12 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['instructions'] = '0'
         params['fill_fn'] = 'FillConv2DBuffer'
 
-        if node.get_attr("unscaled_h"):
+        if node.get_attr('unscaled_h'):
             params['scale_index_height_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_height_type'] = 'scale_index_regular'
 
-        if node.get_attr("unscaled_w"):
+        if node.get_attr('unscaled_w'):
             params['scale_index_width_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
@@ -484,6 +511,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_pointwise'
         mult_params['n_in'] = node.get_attr('n_chan')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('pointwise').nzeros
         mult_params['weight_t'] = node.get_weights('pointwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
@@ -512,6 +540,7 @@ class SeparableConv2DFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['dw_output_t'] = node.get_attr('dw_output_t').name
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
         params['d'] = node.get_weights('depthwise').name
         params['p'] = node.get_weights('pointwise').name

@@ -28,7 +28,7 @@ from hls4ml.model.layers import (
     Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils.fixed_point_utils import ceil_log2
 
@@ -83,6 +83,10 @@ class VivadoBackend(FPGABackend):
             attrs.append(
                 ChoiceAttribute('dense_resource_implementation', choices=['standard', 'unrolled'], default='standard')
             )
+        sep_conv_layers = [SeparableConv1D, SeparableConv2D]
+        for layer in sep_conv_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('dw_output', default=FixedPrecisionType(18, 8)))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -102,6 +106,7 @@ class VivadoBackend(FPGABackend):
             'vivado:merge_batch_norm_quantized_tanh',
             'vivado:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
+            'vivado:xnor_pooling',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -111,6 +116,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_parallel_reshape',
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
+            'vivado:fix_softmax_table_size',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -178,10 +184,10 @@ class VivadoBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='xcvu13p-flga2577-2-e', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
+        config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
@@ -304,6 +310,14 @@ class VivadoBackend(FPGABackend):
 
         # TODO - Extend unrolled Dense Resource to separable Conv1D
         layer.set_attr('dense_resource_implementation', 'standard')
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
@@ -354,6 +368,14 @@ class VivadoBackend(FPGABackend):
 
         # TODO - Extend unrolled Dense Resource to separable Conv2D
         layer.set_attr('dense_resource_implementation', 'standard')
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
 
     @layer_optimizer(DepthwiseConv2D)
     def init_depconv2d(self, layer):
