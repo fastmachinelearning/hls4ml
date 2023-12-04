@@ -12,7 +12,8 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_trace(backend):
+@pytest.mark.parametrize('activation', ['relu', None])
+def test_trace(backend, activation):
     '''Test the tracing feature with a simple Keras model.'''
     model = tf.keras.models.Sequential()
     model.add(
@@ -20,6 +21,7 @@ def test_trace(backend):
             2,
             input_shape=(1,),
             name='Dense',
+            activation=activation,
             use_bias=True,
             kernel_initializer=tf.keras.initializers.RandomUniform(minval=1, maxval=10),
             bias_initializer='zeros',
@@ -48,6 +50,7 @@ def test_trace(backend):
     hls_model.compile()
     hls4ml_pred, hls4ml_trace = hls_model.trace(X_input)
     keras_trace = hls4ml.model.profiling.get_ymodel_keras(model, X_input)
-
-    np.testing.assert_allclose(hls4ml_trace['Dense'], keras_trace['Dense'], rtol=1e-2, atol=0.01)
+    assert keras_trace.keys() == hls4ml_trace.keys()
+    for key in hls4ml_trace.keys():
+        np.testing.assert_allclose(hls4ml_trace[key], keras_trace[key], rtol=1e-2, atol=0.01)
     np.testing.assert_allclose(hls4ml_pred, keras_prediction, rtol=1e-2, atol=0.01)

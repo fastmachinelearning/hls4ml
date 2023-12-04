@@ -559,14 +559,9 @@ class WeightVariable(Variable):
         if isinstance(new_precision, (IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType)):
             self.precision_fmt = '{:.0f}'
         elif isinstance(new_precision, FixedPrecisionType):
-            if new_precision.fractional > 0:
-                # Use str to represent the float with digits, get the length
-                # to right of decimal point
-                lsb = 2**-new_precision.fractional
-                decimal_spaces = len(str(lsb).split('.')[1])
-                self.precision_fmt = f'{{:{decimal_spaces}f}}'
-            else:
-                self.precision_fmt = '{:.0f}'
+            decimal_spaces = max(0, new_precision.fractional)
+            self.precision_fmt = f'{{:.{decimal_spaces}f}}'
+
         else:
             raise RuntimeError(f"Unexpected new precision type: {new_precision}")
 

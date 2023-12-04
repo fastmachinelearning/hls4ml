@@ -1,6 +1,6 @@
-============================
-Citation and Contributors
-============================
+===========================================
+Citation, Acknowledgments, and Contributors
+===========================================
 
 
 Citation
@@ -14,7 +14,7 @@ If you use this software in a publication, please cite the software
     title        = {fastmachinelearning/hls4ml},
     year         = 2023,
     publisher    = {Zenodo},
-    version      = {v0.7.1},
+    version      = {v0.8.0},
     doi          = {10.5281/zenodo.1201549},
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }
@@ -85,6 +85,34 @@ binary/ternary networks:
         pages = "015001",
         year = "2021"
     }
+
+Acknowledgments
+===============
+If you benefited from participating in our community, we ask that you please acknowledge the Fast Machine Learning collaboration, and particular individuals who helped you, in any publications.
+Please use the following text for this acknowledgment:
+
+  We acknowledge the Fast Machine Learning collective as an open community of multi-domain experts and collaborators. This community and \<names of individuals\>, in particular, were important for the development of this project.
+
+
+Funding
+=======
+We gratefully acknowledge previous and current support from the U.S. National Science Foundation (NSF) Harnessing the Data Revolution (HDR) Institute for `Accelerating AI Algorithms for Data Driven Discovery (A3D3) <https://a3d3.ai>`_ under Cooperative Agreement No. `OAC-2117997 <https://www.nsf.gov/awardsearch/showAward?AWD_ID=2117997>`_, U.S. Department of Energy (DOE) Office of Science, Office of Advanced Scientific Computing Research under the Real‐time Data Reduction Codesign at the Extreme Edge for Science (XDR) Project (`DE-FOA-0002501 <https://science.osti.gov/-/media/grants/pdf/foas/2021/SC_FOA_0002501.pdf>`_), DOE Office of Science, Office of High Energy Physics Early Career Research Program (`DE-SC0021187 <https://pamspublic.science.energy.gov/WebPAMSExternal/Interface/Common/ViewPublicAbstract.aspx?rv=df0ae4ab-a46e-481a-9acc-3856b6b041e5&rtc=24&PRoleId=10>`_, DE-0000247070), and the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (Grant No. `772369 <https://doi.org/10.3030/772369>`_).
+
+.. image:: https://github.com/fastmachinelearning/hls4ml/assets/4932543/d4b6e2a3-3537-4413-9809-8153a7d624d6
+    :height: 200
+    :align: center
+
+.. image:: https://github.com/fastmachinelearning/hls4ml/assets/4932543/16e77374-9829-40a8-800e-8d12018a7cb3
+    :height: 200
+    :align: center
+
+.. image:: https://github.com/fastmachinelearning/hls4ml/assets/4932543/de6ca6ea-4d1c-4c56-9d93-f759914bbbf9
+    :height: 200
+    :align: center
+
+.. image:: https://github.com/fastmachinelearning/hls4ml/assets/4932543/7a369971-a381-4bb8-932a-7162b173cbac
+    :height: 200
+    :align: center
 
 Contributors
 ============
