@@ -1,3 +1,4 @@
+# Skip Keras Surgeon tests for now, due to conflicting PyTest versions
 import keras
 import pytest
 from packaging import version
@@ -7,6 +8,9 @@ from tensorflow.keras.models import Sequential
 
 from hls4ml.optimization.keras.reduction import reduce_model
 from hls4ml.optimization.keras.utils import get_model_sparsity
+
+pytest.skip(allow_module_level=True)
+
 
 '''
 Set some neurons / filters to zero and verify that these are removed
