@@ -1,3 +1,5 @@
+import os
+
 from hls4ml import converters, report, utils  # noqa: F401
 
 try:
@@ -22,8 +24,5 @@ def reseed(newseed):
         torch.manual_seed(newseed)
     except ImportError:
         print('\nPyTorch seed not set')
-        seed = 42
 
-    import os
-
-    os.environ['RANDOM_SEED'] = f'{seed}'
+    os.environ['RANDOM_SEED'] = f'{newseed}'
