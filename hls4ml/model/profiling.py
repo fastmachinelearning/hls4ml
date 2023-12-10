@@ -272,9 +272,11 @@ def _keras_batchnorm(layer):
 def _keras_layer(layer):
     return layer.get_weights(), ['w', 'b']
 
+def _keras_lstm(layer):
+    return layer.get_weights(), ['w', 'u', 'b']
 
 keras_process_layer_map = defaultdict(
-    lambda: _keras_layer, {'BatchNormalization': _keras_batchnorm, 'QBatchNormalization': _keras_batchnorm}
+    lambda: _keras_layer, {'BatchNormalization': _keras_batchnorm, 'QBatchNormalization': _keras_batchnorm, 'LSTM': _keras_lstm, 'QLSTM': _keras_lstm}
 )
 
 
