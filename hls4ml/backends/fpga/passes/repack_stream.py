@@ -59,6 +59,8 @@ class ReshapeStream(OptimizerPass):
 
         # Insert new Repack node instead of Reshape
         repack_layer = model.make_node(Repack, 'repack_' + node.name, attrs, node.inputs.copy())
+        # As result_t attribute is not honored by type conversion, set it manually here
+        repack_layer.attributes[repack_layer.name].type = node.attributes[node.name].type
         model.replace_node(node, repack_layer)
 
         return True
