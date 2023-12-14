@@ -343,7 +343,7 @@ class ModelGraph:
         input_layers = inputs if inputs is not None else [layer_list[0]['name']]
         output_layers = outputs if outputs is not None else [layer_list[-1]['name']]
         self.inputs = self._find_output_variable_names(layer_list, input_layers)
-        if sorted(self.inputs) != sorted(input_layers):
+        if self.inputs != input_layers:
             raise RuntimeError(
                 "Currently only support the case when input variables and input layer names match\n"
                 + f"Input layers = {input_layers}, input_vars = {self.inputs}"
@@ -362,9 +362,12 @@ class ModelGraph:
             self.apply_flow(flow)
 
     def _find_output_variable_names(self, layer_list, layer_names):
-        """Given a list of all layers, and a list input/output names, find the names of the their outputs that will be used
+        """Given a list of all layers, and a list input/output names, find the names of their outputs that will be used
         as the name of the output variables."""
-        inout_nodes = [node for node in layer_list if node['name'] in layer_names]
+        inout_nodes = []
+        for layer_name in layer_names:
+            for node in layer_list:
+                if node['name'] == layer_name: inout_nodes.append(node)
         all_node_output_names = [node['outputs'] if 'outputs' in node else [node['name']] for node in inout_nodes]
         return [output for node_output_names in all_node_output_names for output in node_output_names]  # to flatten
 
