@@ -367,7 +367,8 @@ class ModelGraph:
         inout_nodes = []
         for layer_name in layer_names:
             for node in layer_list:
-                if node['name'] == layer_name: inout_nodes.append(node)
+                if node['name'] == layer_name:
+                    inout_nodes.append(node)
         all_node_output_names = [node['outputs'] if 'outputs' in node else [node['name']] for node in inout_nodes]
         return [output for node_output_names in all_node_output_names for output in node_output_names]  # to flatten
 
