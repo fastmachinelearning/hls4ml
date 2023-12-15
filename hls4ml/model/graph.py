@@ -471,7 +471,7 @@ class ModelGraph:
         node = layer_cls(self, name, attributes, inputs, outputs)
         for o in node.outputs:
             out_var = node.get_output_variable(output_name=o)
-            if o in self.outputs:
+            if len(self.outputs) == 1 and o in self.outputs:
                 out_var.type.name = 'result_t'
             self.output_vars[o] = out_var
         return node
@@ -608,7 +608,7 @@ class ModelGraph:
         return variables
 
     def register_output_variable(self, out_name, variable):
-        if out_name in self.outputs:
+        if len(self.outputs) == 1 and out_name in self.outputs:
             variable.type.name = 'result_t'
         self.output_vars[out_name] = variable
 
