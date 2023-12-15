@@ -8,7 +8,6 @@ from tensorflow import keras
 from hls4ml.converters import convert_from_keras_model
 
 test_root_path = Path(__file__).parent
-test_root_path = Path('/tmp/hls4mlprj_multiout_network')
 
 
 @pytest.fixture(scope='module')
