@@ -28,7 +28,10 @@ def test_merge(merge_layer, io_type, backend, swap_inputs):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
-    output_dir = str(test_root_path / f'hls4mlprj_merge_{"swap_inputs_" if swap_inputs else ""}{merge_layer.__name__.lower()}_{backend}_{io_type}')
+    output_dir = str(
+        test_root_path
+        / f'hls4mlprj_merge_{"swap_inputs_" if swap_inputs else ""}{merge_layer.__name__.lower()}_{backend}_{io_type}'
+    )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
