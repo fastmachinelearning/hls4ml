@@ -163,7 +163,21 @@ class QKerasPO2Quantizer(Quantizer):
             y = y.numpy()
         return y
 
+class BrevitasQuantizer(Quantizer):
+    """Wrapper around brevitas quantizers. Since we can get the already quantized tensors
+    directly from the brevitas QuantTensor objects, nothing needs to be done
 
+    Args: 
+        bits: bitwidth of the quantized tensor
+        hls_type: hls_type of the quantized tensor 
+    """
+
+    def __init__(self, bits, hls_type):
+        super().__init__(bits, hls_type)
+
+    def __call__(self, data):
+        return data 
+       
 # endregion
 
 # region Precision types

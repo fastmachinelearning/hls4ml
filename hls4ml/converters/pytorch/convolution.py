@@ -1,6 +1,6 @@
 from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
-from hls4ml.model.types import FixedPrecisionType
+from hls4ml.model.types import FixedPrecisionType, BrevitasQuantizer
 import math
 
 def ConvUAQToAp_Fixed(bitwidth, scale_factor, zero_point):
@@ -75,11 +75,22 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
     if "Quant" in operation:
-        layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
-        layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
-        width = class_object.quant_weight().bit_width
-        ap_fixed_params = ConvUAQToAp_Fixed(width, class_object.quant_weight().scale,0)
-        layer['precision'] = FixedPrecisionType(width=width, integer=ap_fixed_params[1], signed=True)
+
+        if class_object.is_weight_quant_enabled:
+            width = int(class_object.quant_weight().bit_width)
+            ap_fixed_params = ConvUAQToAp_Fixed(width, float(class_object.quant_weight().scale),0)
+            layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
+            layer['weight_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+        else:
+            layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+
+        if class_object.is_bias_quant_enabled:
+            width = int(class_object.quant_bias().bit_width)
+            ap_fixed_params = ConvUAQToAp_Fixed(width, float(class_object.quant_bias().scale),0)
+            layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
+            layer['bias_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+        else:
+            layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     
     else:
         layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
