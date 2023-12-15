@@ -362,9 +362,13 @@ class ModelGraph:
             self.apply_flow(flow)
 
     def _find_output_variable_names(self, layer_list, layer_names):
-        """Given a list of all layers, and a list input/output names, find the names of the their outputs that will be used
+        """Given a list of all layers, and a list input/output names, find the names of their outputs that will be used
         as the name of the output variables."""
-        inout_nodes = [node for node in layer_list if node['name'] in layer_names]
+        inout_nodes = []
+        for layer_name in layer_names:
+            for node in layer_list:
+                if node['name'] == layer_name:
+                    inout_nodes.append(node)
         all_node_output_names = [node['outputs'] if 'outputs' in node else [node['name']] for node in inout_nodes]
         return [output for node_output_names in all_node_output_names for output in node_output_names]  # to flatten
 
