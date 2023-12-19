@@ -362,9 +362,13 @@ class ModelGraph:
             self.apply_flow(flow)
 
     def _find_output_variable_names(self, layer_list, layer_names):
-        """Given a list of all layers, and a list input/output names, find the names of the their outputs that will be used
+        """Given a list of all layers, and a list input/output names, find the names of their outputs that will be used
         as the name of the output variables."""
-        inout_nodes = [node for node in layer_list if node['name'] in layer_names]
+        inout_nodes = []
+        for layer_name in layer_names:
+            for node in layer_list:
+                if node['name'] == layer_name:
+                    inout_nodes.append(node)
         all_node_output_names = [node['outputs'] if 'outputs' in node else [node['name']] for node in inout_nodes]
         return [output for node_output_names in all_node_output_names for output in node_output_names]  # to flatten
 
@@ -471,7 +475,7 @@ class ModelGraph:
         node = layer_cls(self, name, attributes, inputs, outputs)
         for o in node.outputs:
             out_var = node.get_output_variable(output_name=o)
-            if o in self.outputs:
+            if len(self.outputs) == 1 and o in self.outputs:
                 out_var.type.name = 'result_t'
             self.output_vars[o] = out_var
         return node
@@ -619,7 +623,7 @@ class ModelGraph:
         return variables
 
     def register_output_variable(self, out_name, variable):
-        if out_name in self.outputs:
+        if len(self.outputs) == 1 and out_name in self.outputs:
             variable.type.name = 'result_t'
         self.output_vars[out_name] = variable
 

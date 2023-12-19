@@ -20,21 +20,19 @@ clone_include_list = ['nnet_utils/nnet_stream.h']
 class CloneFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Clone, include_header=clone_include_list)
-        self.template = None  # to be filled once number of clones known
 
     def format(self, node):
         params = self._default_function_params(node)
         for i, _output in enumerate(node.outputs):
             params['output' + str(i + 1)] = node.variables[node.outputs[i]].name
 
-        if self.template is None:
-            self.template = (
-                'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, '
-                + ', '.join(['{output' + str(i + 1) + '}' for i in range(len(node.outputs))])
-                + ');'
-            )
+        template = (
+            'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, '
+            + ', '.join(['{output' + str(i + 1) + '}' for i in range(len(node.outputs))])
+            + ');'
+        )
 
-        return self.template.format(**params)
+        return template.format(**params)
 
 
 def register_clone(backend):
@@ -79,13 +77,17 @@ class CloneOutput(OptimizerPass):
                     attrs = {'size': np.prod(out_var.shape)}
                     idx = layer.inputs.index(output)
                     layer.inputs[idx] = output + '_cpy' + str(i)
-                clone_layer = model.make_node(
+
+                clone_layer: Clone = model.make_node(
                     Clone,
                     'clone_' + node.name,
                     attrs,
                     [output],
                     [output + '_cpy' + str(i + 1) for i in range(len(output_map[output]))],
                 )
+                for i in range(len(output_map[output])):
+                    key = output + '_cpy' + str(i + 1)
+                    clone_layer.attributes[key].type = node.attributes['result_t']
                 model.insert_node(clone_layer)
                 transformed = True
 
