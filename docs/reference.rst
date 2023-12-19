@@ -14,7 +14,7 @@ If you use this software in a publication, please cite the software
     title        = {fastmachinelearning/hls4ml},
     year         = 2023,
     publisher    = {Zenodo},
-    version      = {v0.8.0},
+    version      = {v0.8.1},
     doi          = {10.5281/zenodo.1201549},
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }
