@@ -2,7 +2,7 @@ exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pyte
 
 repos:
 - repo: https://github.com/psf/black
-  rev: 23.9.1
+  rev: 23.11.0
   hooks:
   - id: black
     language_version: python3
@@ -10,7 +10,7 @@ repos:
            '--skip-string-normalization']
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v4.5.0
   hooks:
   - id: check-added-large-files
   - id: check-case-conflict
@@ -24,13 +24,13 @@ repos:
   - id: trailing-whitespace
 
 - repo: https://github.com/PyCQA/isort
-  rev: 5.12.0
+  rev: 5.13.0
   hooks:
   - id: isort
     args: ["--profile", "black", --line-length=125]
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.14.0
+  rev: v3.15.0
   hooks:
   - id: pyupgrade
     args: ["--py36-plus"]

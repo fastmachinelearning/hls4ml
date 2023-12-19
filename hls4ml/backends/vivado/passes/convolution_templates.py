@@ -41,6 +41,8 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned out_width = {out_width};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
+    static const unsigned multiplier_limit =
+        DIV_ROUNDUP(kernel_size * n_chan * n_filt, reuse_factor) - n_zeros / reuse_factor;
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};

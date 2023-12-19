@@ -109,6 +109,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_parallel_reshape',
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
+            'vivado:fix_softmax_table_size',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -175,10 +176,10 @@ class VivadoBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='xcvu13p-flga2577-2-e', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
+        config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
