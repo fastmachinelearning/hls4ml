@@ -9,7 +9,8 @@ from hls4ml.converters import convert_from_keras_model
 test_root_path = Path(__file__).parent
 
 
-def test_repack_precision():
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+def test_repack_precision(backend: str):
     inp = keras.Input(shape=(3, 3), name='inp')
     out = keras.layers.Reshape((3, 3), name='reshape')(inp)
     out = keras.layers.Conv1D(2, 2, name='conv')(out)
@@ -24,7 +25,14 @@ def test_repack_precision():
     hls_config = {'Model': {'Precision': 'fixed<2,1>', 'ReuseFactor': 1}, 'LayerName': layer_conf}
 
     # Repack only happens in io_stream
-    model_hls = convert_from_keras_model(model, hls_config=hls_config, io_type='io_stream')
+    model_hls = convert_from_keras_model(
+        model,
+        backend=backend,
+        output_dir=str(test_root_path / f'hls4mlprj_repack_precision_{backend}'),
+        hls_config=hls_config,
+        io_type='io_stream',
+    )
+    model_hls.write()  # Not needed for this test, but useful for debugging
     assert 'repack_reshape' in model_hls.graph, 'repack_reshape not found in graph'
     repack_precision = model_hls.graph['repack_reshape'].attributes['result_t'].precision
     assert repack_precision.integer == 10, 'Precision mismatch'
@@ -33,7 +41,7 @@ def test_repack_precision():
     assert repack_precision.signed is True, 'Precision mismatch'
 
 
-@pytest.mark.parametrize('backend', ['vivado', 'vitis', 'quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 def test_repack(backend: str, strategy: str):
     inp1 = keras.Input(shape=(4,), name='inp1')
@@ -47,9 +55,9 @@ def test_repack(backend: str, strategy: str):
     model_hls = convert_from_keras_model(
         model,
         io_type='io_stream',
-        backend='Vivado',
+        backend=backend,
         hls_config=hls_config,
-        output_dir=str(test_root_path / f'{backend}_{strategy}'),
+        output_dir=str(test_root_path / f'hls4mlprj_repack_{backend}_{strategy}'),
     )
     model_hls.compile()
     inp_data = [
