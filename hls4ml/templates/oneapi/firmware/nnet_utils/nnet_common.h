@@ -38,30 +38,32 @@ template <class data_T, int NIN1, int NIN2> void merge(data_T data1[NIN1], data_
  * Use only when the input array is fully unrolled. Or, slice out a fully unrolled section
  * before applying and accumulate the result over the rolled dimension.
  * --- */
+template <class T, int N, class Op> T reduce(const T *x, Op op) {
+    static constexpr int leftN = pow2<floorlog2<N - 1>::val>::val > 0 ?
+                                 pow2<floorlog2<N - 1>::val>::val :
+                                 0;
+    static constexpr int rightN = N - leftN > 0 ? N - leftN : 0;
+    if constexpr (N == 1) {
+        return x[0];
+    }
+    else if constexpr (N == 2) {
+        return op(x[0], x[1]);
+    } else {
+        return op(reduce<T, leftN, Op>(x, op), reduce<T, rightN, Op>(x + leftN, op));
+    }
+}
+
+// alternate reduce - basic
 // template <class T, int N, class Op> T reduce(const T *x, Op op) {
-//     static constexpr int leftN = pow2<floorlog2<N - 1>::val>::val > 0 ? pow2<floorlog2<N - 1>::val>::val : 0;
-//     static constexpr int rightN = N - leftN > 0 ? N - leftN : 0;
 //     if (N == 1) {
 //         return x[0];
 //     }
-//     if (N == 2) {
-//         return op(x[0], x[1]);
+//     auto val = op(x[0], x[1]);
+//     for (int i = 2; i < N; i++) {
+//         val = op(val, x[i]);
 //     }
-//     return op(reduce<T, leftN, Op>(x, op), reduce<T, rightN, Op>(x + leftN, op));
+//     return val;
 // }
-
-// alternate reduce - basic
-template <class T, int N, class Op> T reduce(const T *x, Op op) {
-    if (N == 1) {
-        return x[0];
-    }
-    auto val = op(x[0], x[1]);
-    for (int i = 2; i < N; i++) {
-        val = op(val, x[i]);
-    }
-    return val;
-}
-
 
 template <class T> class Op_add {
   public:
