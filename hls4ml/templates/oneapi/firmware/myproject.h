@@ -5,18 +5,14 @@
 
 // This file defines the interface to the kernel
 
-
-using input_data_t = std::array<input_t, N_INPUT>;
-using output_data_t = std::array<result_t, N_RESULT>;
-
-class InPipeID;
-class OutPipeID;
-
+// currently this is fixed
 using PipeProps = decltype(sycl::ext::oneapi::experimental::properties(
     sycl::ext::intel::experimental::ready_latency<0>));
 
-using InPipe = sycl::ext::intel::experimental::pipe<InPipeID, input_data_t, 0, PipeProps>;
-using OutPipe = sycl::ext::intel::experimental::pipe<OutPipeID, output_data_t, 0, PipeProps>;
+// Need to declare the input and output pipes
+
+// hls-fpga-machine-learning insert inputs
+// hls-fpga-machine-learning insert outputs
 
 class MyProjectID;
 

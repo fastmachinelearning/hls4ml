@@ -8,13 +8,12 @@ void MyProject::operator()() const {
     // NETWORK INSTANTIATION
     // ****************************************
 
-    auto inputsArr = InPipe::read();
+// hls-fpga-machine-learning read in
 
 // hls-fpga-machine-learning insert layers
 
 // hls-fpga-machine-learning return
 
-    OutPipe::write(outData);
 }
 
 

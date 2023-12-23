@@ -57,6 +57,9 @@ int main(int argc, char **argv) {
     std::string iline;
     std::string pline;
 
+    // hls-fpga-machine-learning insert inputs
+    // hls-fpga-machine-learning insert results
+
     std::vector<input_data_t> inputs;
     std::vector<output_data_t> outputs;
 
