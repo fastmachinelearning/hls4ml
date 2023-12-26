@@ -359,12 +359,18 @@ class OneAPIWriter(Writer):
         dstpath = f'{model.config.get_output_dir()}/src/exception_handler.hpp'
         copyfile(srcpath, dstpath)
 
+        project_name = model.config.get_project_name()
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         if len(model_brams != 0):
             raise NotImplementedError("Weights on the interface is currently not supported")
+
+        if len(model_inputs) != 1 or len(model_outputs) != 1:
+            print("The testbench supports only single input arrays and single output arrays.")
+            print("Please modify it before using it.")
+            return
 
         if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
             os.mkdir(f'{model.config.get_output_dir()}/tb_data/')
@@ -387,13 +393,13 @@ class OneAPIWriter(Writer):
                 )
 
         with open(os.path.join(filedir, '../templates/oneapi/myproject_test_parallel.cpp')) as f, \
-             open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w') as fout:
+             open(f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w') as fout:
 
             for line in f.readlines():
                 indent = '   ' * (len(line) - len(line.lstrip(' ')))
 
                 if 'myproject' in line:
-                    newline = line.replace('myproject', model.config.get_project_name())
+                    newline = line.replace('myproject', project_name)
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
@@ -403,92 +409,27 @@ class OneAPIWriter(Writer):
                         newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
                 elif '// hls-fpga-machine-learning insert inputs':
                     newline = line
-                    for inp in model_inputs:
-                        newline += indent + f'std::vector<{inp.array_type}> {inp.name};\n'
-                        newline += indent + f'input_counts.push_back({inp.size_cpp()});\n'
+                    # there should really be only one input
+                    inp = model_inputs[0]
+                    newline += indent + f'std::vector<{inp.array_type}> inputs;\n'
+
                 elif '// hls-fpga-machine-learning insert results':
                     newline = line
-                    for out in model_outputs:
-                        newline += indent + f'std::vector<{out.array_type}> {out.name};\n'
-                        newline += indent + f'output_counts.push_back({out.size_cpp()});\n'
-                elif '// hls-fpga-machine-learning insert data' in line:
+                    # there should really be only one out
+                    out = model_outputs[0]
+                    newline += indent + f'std::vector<{out.array_type}> predictions;\n'
+                elif '// hls-fpga-machine-learning insert tb-input' in line:
                     newline = line
-                    newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
-                    newline += '      std::vector<float>::const_iterator in_end;\n'
-                    newline += '      inputs.emplace_back();\n'
-                    for inp in model.get_input_variables():
-                        newline += f'      in_end = in_begin + ({inp.size_cpp()});\n'
-                        newline += f'      std::copy(in_begin, in_end, inputs.back().{inp.member_name});\n'
-                        newline += '      in_begin = in_end;\n'
-                    newline += '      outputs.emplace_back();\n'
-                elif '// hls-fpga-machine-learning insert zero' in line:
-                    newline = line
-                    newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
-                    for inp in model.get_input_variables():
-                        newline += indent + '  inputs.emplace_back();\n'
-                        newline += indent + '  outputs.emplace_back();\n'
-                        newline += indent + f'  std::fill_n(inputs[i].{inp.member_name}, {inp.size_cpp()}, 0.0);\n'
-                    newline += indent + '}\n'
-
-                elif '// hls-fpga-machine-learning insert top-level-function' in line:
-                    newline = line
-                    newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
-                    newline += indent + f'  ihc_hls_enqueue(&outputs[i], {model.config.get_project_name()}, inputs[i]'
-                    if model_brams:
-                        bram_vars = ','.join([b.name for b in model_brams])
-                        newline += f', {bram_vars});\n'
-                    else:
-                        newline += ');\n'
-                    newline += indent + '}\n'
-                elif 'hls-fpga-machine-learning insert run' in line:
-                    newline = line
-                    newline += '    ' + f'ihc_hls_component_run_all({model.config.get_project_name()});\n'
-                elif '// hls-fpga-machine-learning insert predictions' in line:
-                    newline = line
-                    newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
-                    newline += indent + '  std::cout << predictions[j][i] << " ";\n'
-                    newline += indent + '}\n'
-                    newline += indent + 'std::cout << std::endl;\n'
+                    inp = model_inputs[0]
+                    newline += indent + f'{inp.pipe_name}::write(q, inputs[i]);\n'
                 elif '// hls-fpga-machine-learning insert tb-output' in line:
                     newline = line
-                    newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
-                    newline += indent + f'  fout << outputs[j].{outvar.member_name}[i] << " ";\n'
-                    newline += indent + '}\n'
-                    newline += indent + 'fout << std::endl;\n'
-                elif (
-                    '// hls-fpga-machine-learning insert output' in line
-                    or '// hls-fpga-machine-learning insert quantized' in line
-                ):
-                    newline = line
-                    newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
-                    newline += indent + f'  std::cout << outputs[j].{outvar.member_name}[i] << " ";\n'
-                    newline += indent + '}\n'
-                    newline += indent + 'std::cout << std::endl;\n'
+                    out = model_outputs[0]
+                    newline += indent + f'outputs[i] = {out.pipe_name}::read(q);\n' 
                 else:
                     newline = line
 
                 fout.write(newline)
-
-    def write_test_bench(self, model):
-        """Write the testbench
-
-        Args:
-            model (ModelGraph): the hls4ml model.
-        """
-        # TODO - This function only works with one model input
-        # (NOT one data point - it works as expected with multiple data points)
-
-        # copy the exception handler
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        srcpath = os.path.join(filedir, '../templates/oneapi/exception_handler.hpp')
-        dstpath = f'{model.config.get_output_dir()}/src/exception_handler.hpp'
-        copyfile(srcpath, dstpath)
-
-        io_type = model.config.get_config_value('IOType')
-        if io_type == 'io_parallel':
-            self.write_testbench_parallel(model)
-        elif io_type == 'io_stream':
-            self.write_testbench_stream(model)
 
     def write_bridge(self, model):
         """Write the Python-C++ bridge (myproject_bridge.cpp)
@@ -496,7 +437,90 @@ class OneAPIWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        pass
+        project_name = model.config.get_project_name()
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+        # model brambs aren't actually supported yet
+
+        io_type = model.config.get_config_value('IOType')
+        indent = '    '
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(filedir, '../templates/oneapi/myproject_bridge.cpp')) as f, \
+             open(f'{model.config.get_output_dir()}/src/{project_name}_bridge.cpp', 'w') as fout:
+
+            for line in f.readlines():
+                if 'MYPROJECT' in line:
+                    newline = line.replace('MYPROJECT', format(project_name.upper()))
+
+                elif 'myproject' in line:
+                    newline = line.replace('myproject', format(project_name))
+
+                elif 'MyProject' in line:
+                    newline = line.replace('MyProject', convert_to_pascal_case(project_name))
+
+                elif '// hls-fpga-machine-learning insert bram' in line:
+                    newline = line
+                    for bram in model_brams:
+                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
+                elif '// hls-fpga-machine-learning insert header' in line:
+                    dtype = line.split('#', 1)[1].strip()
+                    inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
+                    outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
+
+                    newline = ''
+                    newline += indent + inputs_str + ',\n'
+                    newline += indent + outputs_str + '\n'
+
+                elif '// hls-fpga-machine-learning insert wrapper' in line:
+                    dtype = line.split('#', 1)[1].strip()
+                    newline = ''
+                    for i in model_inputs:
+                        newline += indent + f'{i.definition_cpp(name_suffix="_input")};\n'
+                        newline += indent + f'nnet::convert_data<{dtype}, {i.type.name}, {i.size_cpp()}>({i.name}, {i.name}_input);\n'
+                        newline += indent + f'{i.pipe_name}::write(q, {i.name}_input);\n'
+
+                    newline += '\n'
+
+                    for o in model_outputs:
+                        newline += indent + '{var};\n'.format(var=o.definition_cpp(name_suffix='_ap'))
+
+                    newline += '\n'
+
+                    # input_vars = ','.join([i.name + '_input' for i in model_inputs])
+                    # bram_vars = ','.join([b.name for b in model_brams])
+                    # output_vars = ','.join([o.name + '_output' for o in model_outputs])
+
+                    # Concatenate the input, output, and bram variables. Filter out empty/null values
+                    all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
+
+                    top_level = indent + f'q.single_task({convert_to_pascal_case(project_name)}{{}});\n'
+                    newline += top_level
+
+                    newline += '\n'
+
+                    for o in model_outputs:
+                        newline += indent + f'{o.definition_cpp(name_suffix="_output")} = {o.pipe_name}::read(q);\n'
+                        newline += indent + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp}>({o.name}_output, {o.name});\n'
+                elif '// hls-fpga-machine-learning insert trace_outputs' in line:
+                    newline = ''
+                    for layer in model.get_layers():
+                        func = layer.get_attr('function_cpp')
+                        if func and model.config.trace_output and layer.get_attr('trace', False):
+                            vars = layer.get_variables()
+                            for var in vars:
+                                newline += (
+                                    indent
+                                    + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
+                                    + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
+                                )
+
+                else:
+                    newline = line
+                fout.write(newline)
+
 
     def write_build_script(self, model):
         """Write the build scripts (Makefile, build_lib.sh)

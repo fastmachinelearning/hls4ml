@@ -60,9 +60,6 @@ int main(int argc, char **argv) {
     // hls-fpga-machine-learning insert inputs
     // hls-fpga-machine-learning insert results
 
-    std::vector<input_data_t> inputs;
-    std::vector<output_data_t> outputs;
-
     if (fin.is_open() && fpr.is_open()) {
         std::vector<std::vector<float>> predictions;
         unsigned int num_iterations = 0;
@@ -84,45 +81,46 @@ int main(int argc, char **argv) {
             while (sspred >> current) {
                 pr.push_back(current);
             }
-            if (in.size() != N_INPUT_1_1) {
-                throw std::runtime_error("The input size does not match");
-            }
-            if (pr.size() != N_LAYER_11) {
-                throw std::runtime_error("The output size does not match");
-            }
 
             // hls-fpga-machine-learning insert data
             inputs.emplace_back();
+            if (in.size() != inputs[0].size()) {
+                throw std::runtime_error("The input size does not match");
+            }
+
             std::copy(in.cbegin(), in.cend(), inputs.back().begin());
+
             outputs.emplace_back();
-            predictions.push_back(std::move(pr));
+            if (pr.size() != outputs[0].size()) {
+                throw std::runtime_error("The output size does not match");
+            }
+            std::copy(pr.cbegin(), pr.cend(), predictions.back().begin());
+
         }
         // Do this separately to avoid vector reallocation
-        // hls-fpga-machine-learning insert top-level-function
         for(int i = 0; i < num_iterations; i++) {
-            InPipe::write(q, inputs[i]);
+            // hls-fpga-machine-learning insert tb-input
             q.single_task(MyProject{});  // once or once for each
         }
         q.wait();
 
         for (int j = 0; j < num_iterations; j++) {
             // hls-fpga-machine-learning insert tb-output
-            outputs[j] = OutPipe::read(q);
-            for(int i = 0; i < N_LAYER_11; i++) {
-              fout << outputs[j][i] << " ";
+            for(auto outval : outputs[j]) {
+              fout << outval << " ";
             }
             fout << std::endl;
             if (j % CHECKPOINT == 0) {
                 std::cout << "Predictions" << std::endl;
                 // hls-fpga-machine-learning insert predictions
-                for(int i = 0; i < N_LAYER_11; i++) {
-                  std::cout << predictions[j][i] << " ";
+                for(auto predval : predictions[j]) {
+                  std::cout << predval << " ";
                 }
                 std::cout << std::endl;
                 std::cout << "Quantized predictions" << std::endl;
                 // hls-fpga-machine-learning insert quantized
-                for(int i = 0; i < N_LAYER_11; i++) {
-                  std::cout << outputs[j][i] << " ";
+                for(auto outval : outputs[j]) {
+                  std::cout << outval << " ";
                 }
                 std::cout << std::endl;
             }
@@ -137,27 +135,26 @@ int main(int argc, char **argv) {
         for(int i = 0; i < num_iterations; i++) {
             inputs.emplace_back();
             outputs.emplace_back();
-            outputs.back().fill(0.0);
+            inputs.back().fill(0.0);
         }
 
         // hls-fpga-machine-learning insert top-level-function
         for(int i = 0; i < num_iterations; i++) {
-            InPipe::write(q, inputs[i]);
+            // hls-fpga-machine-learning insert tb-input
             q.single_task(MyProject{});
         }
         q.wait();
 
         for (int j = 0; j < num_iterations; j++) {
-            // hls-fpga-machine-learning insert output
-            outputs[j] = OutPipe::read(q);
-            for(int i = 0; i < N_LAYER_11; i++) {
-              std::cout << outputs[j][i] << " ";
+            // hls-fpga-machine-learning insert tb-output
+            for(auto outval : outputs[j]) {
+              std::cout << outval << " ";
             }
             std::cout << std::endl;
 
             // hls-fpga-machine-learning insert tb-output
-            for(int i = 0; i < N_LAYER_11; i++) {
-              fout << outputs[j][i] << " ";
+            for(auto outval : outputs[j]) {
+              fout << outval << " ";
             }
             fout << std::endl;
         }
