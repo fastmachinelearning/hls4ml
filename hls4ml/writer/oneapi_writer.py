@@ -62,7 +62,7 @@ class OneAPIWriter(Writer):
             layer (Layer): Instance of the layer to which the weights belong
             odir (str): Output directory
         """
-        with open(f"{odir}/firmware/weights/{var.name}.h", "w") as h_file:
+        with open(f"{odir}/src/firmware/weights/{var.name}.h", "w") as h_file:
 
             # meta data
             h_file.write(f"//Numpy array shape {var.shape}\n")
@@ -142,7 +142,7 @@ class OneAPIWriter(Writer):
             model_outputs = model.get_output_variables()
             model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
-            if len(model_brams != 0):
+            if len(model_brams) != 0:
                 raise NotImplementedError("Weights on the interface is currently not supported")
 
             io_type = model.config.get_config_value('IOType')
@@ -182,7 +182,7 @@ class OneAPIWriter(Writer):
                         if io_type != 'io_stream':
                             vars = layer.get_variables()
                             for var in vars:
-                                if var not in model_inputs and var not in model_outputs:
+                                if var not in model_inputs:
                                     def_cpp = var.definition_cpp()
                                     if def_cpp is not None:
                                         newline += '    ' + def_cpp + ';\n'
@@ -364,7 +364,7 @@ class OneAPIWriter(Writer):
         model_outputs = model.get_output_variables()
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
-        if len(model_brams != 0):
+        if len(model_brams) != 0:
             raise NotImplementedError("Weights on the interface is currently not supported")
 
         if len(model_inputs) != 1 or len(model_outputs) != 1:
@@ -392,11 +392,11 @@ class OneAPIWriter(Writer):
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
 
-        with open(os.path.join(filedir, '../templates/oneapi/myproject_test_parallel.cpp')) as f, \
+        with open(os.path.join(filedir, '../templates/oneapi/myproject_test.cpp')) as f, \
              open(f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w') as fout:
 
             for line in f.readlines():
-                indent = '   ' * (len(line) - len(line.lstrip(' ')))
+                indent = ' ' * (len(line) - len(line.lstrip('    ')))
 
                 if 'myproject' in line:
                     newline = line.replace('myproject', project_name)
@@ -407,17 +407,17 @@ class OneAPIWriter(Writer):
                     newline = line
                     for bram in model_brams:
                         newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
-                elif '// hls-fpga-machine-learning insert inputs':
+                elif '// hls-fpga-machine-learning insert inputs' in line:
                     newline = line
                     # there should really be only one input
                     inp = model_inputs[0]
                     newline += indent + f'std::vector<{inp.array_type}> inputs;\n'
 
-                elif '// hls-fpga-machine-learning insert results':
+                elif '// hls-fpga-machine-learning insert results' in line:
                     newline = line
                     # there should really be only one out
                     out = model_outputs[0]
-                    newline += indent + f'std::vector<{out.array_type}> predictions;\n'
+                    newline += indent + f'std::vector<{out.array_type}> outputs;\n'
                 elif '// hls-fpga-machine-learning insert tb-input' in line:
                     newline = line
                     inp = model_inputs[0]
@@ -425,7 +425,7 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning insert tb-output' in line:
                     newline = line
                     out = model_outputs[0]
-                    newline += indent + f'outputs[i] = {out.pipe_name}::read(q);\n' 
+                    newline += indent + f'outputs[j] = {out.pipe_name}::read(q);\n' 
                 else:
                     newline = line
 
@@ -494,7 +494,7 @@ class OneAPIWriter(Writer):
                     # output_vars = ','.join([o.name + '_output' for o in model_outputs])
 
                     # Concatenate the input, output, and bram variables. Filter out empty/null values
-                    all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
+                    # all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
 
                     top_level = indent + f'q.single_task({convert_to_pascal_case(project_name)}{{}});\n'
                     newline += top_level
@@ -539,7 +539,7 @@ class OneAPIWriter(Writer):
                 line = line.replace('myproject', model.config.get_project_name())
 
                 if 'set(FPGA_DEVICE' in line:
-                    line = f'    set(FPGA_DEVICE "{device}")'
+                    line = f'    set(FPGA_DEVICE "{device}")\n'
 
                 fout.write(line)
 
@@ -583,7 +583,7 @@ class OneAPIWriter(Writer):
         return 1024
 
     def __get_table_header(self, table_name, table_size):
-        table_header += f'static const typename CONFIG_T::table_t {table_name}[{table_size}] = {{'
+        table_header = f'static const typename CONFIG_T::table_t {table_name}[{table_size}] = {{'
         return table_header
 
     def __write_elu_table(self, model, path):

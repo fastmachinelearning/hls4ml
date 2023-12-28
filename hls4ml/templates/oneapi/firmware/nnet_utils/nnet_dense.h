@@ -5,6 +5,7 @@
 #include "nnet_helpers.h"
 #include "nnet_mult.h"
 #include <cstdint>
+#include <array>
 
 namespace nnet {
 
@@ -37,21 +38,21 @@ struct dense_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_gt(const data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+void dense_rf_gt(const std::array<data_T, CONFIG_T::n_in> data, std::array<res_T, CONFIG_T::n_out> res,
                  const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
                  const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
            "The current Reuse Factor is not allowed");
     assert((CONFIG_T::reuse_factor > CONFIG_T::n_in) && "This function is correct only for RF > N_IN");
     //#pragma ii CONFIG_T::reuse_factor
-    hls_register typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 Load:
     #pragma unroll
     for (int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
-    hls_register int out_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
-    hls_register int d_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
+    [[intel::fpga_register]] int out_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
+    [[intel::fpga_register]] int d_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
 
     #pragma unroll
     for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
@@ -66,7 +67,7 @@ Product1:
     #pragma nofusion
     #pragma speculated_iterations 0
     for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
-        hls_register typename CONFIG_T::accum_t tmp_acc[CONFIG_T::block_factor];
+        [[intel::fpga_register]] typename CONFIG_T::accum_t tmp_acc[CONFIG_T::block_factor];
     Product2:
         #pragma unroll
         for (int im = 0; im < CONFIG_T::block_factor; im++) {
@@ -78,7 +79,7 @@ Product1:
             tmp_acc[im] =
                 CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[data_index], weights[w_index]);
         }
-        hls_register typename CONFIG_T::accum_t mult[CONFIG_T::multiplier_limit];
+        [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::multiplier_limit];
     ResetMult:
         #pragma unroll
         for (int imult = 0; imult < CONFIG_T::multiplier_limit; imult++) {
@@ -105,14 +106,14 @@ Store:
     }
 }
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_lt(const data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+void dense_rf_lt(const std::array<data_T, CONFIG_T::n_in> data, std::array<res_T, CONFIG_T::n_out> res,
                  const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
                  const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
            "The current Reuse Factor is not allowed");
     assert((CONFIG_T::multiplier_limit == CONFIG_T::block_factor) && "This function is correct only for RF <= N_IN");
 
-    hls_register typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 InitAccum:
     #pragma unroll
     for (int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
@@ -122,7 +123,7 @@ ReuseLoop:
     #pragma nofusion
     #pragma speculated_iterations 0
     for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
-        hls_register typename CONFIG_T::accum_t mult[CONFIG_T::block_factor];
+        [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::block_factor];
     MultLoop:
         #pragma unroll
         for (int im = 0, in_index = ir; im < CONFIG_T::block_factor; im++) {
@@ -157,7 +158,7 @@ Result:
 }
 template <class data_T, class res_T, typename CONFIG_T>
 void dense_resource(
-    const data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+    const std::array<data_T, CONFIG_T::n_in> data, std::array<res_T, CONFIG_T::n_out> res,
     const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
     const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
