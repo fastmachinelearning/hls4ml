@@ -27,7 +27,7 @@ template <int W, int N> ap_int<W> avg(ap_int<W> (&x)[N]) {
     return tmp;
 }
 
-template <int W, int N> ap_int<W> avg(ap_uint<W> (&x)[N]) {
+template <int W, int N> ap_uint<W> avg(ap_uint<W> (&x)[N]) {
     // Use a wider accumulator than the input to avoid overflow
     ap_uint<W + ceillog2(N)> tmp = 0;
     for (int i = 0; i < N; i++) {
@@ -39,27 +39,27 @@ template <int W, int N> ap_int<W> avg(ap_uint<W> (&x)[N]) {
     return tmp;
 }
 
-template <int W, int I, int N, ap_q_mode Q, ap_o_mode O> ap_fixed<W, I, Q, O> avg(ap_fixed<W, I, Q, O> (&x)[N]) {
+template <int W, int I, int N, ap_q_mode Q, ap_o_mode O, int M> ap_fixed<W, I, Q, O, M> avg(ap_fixed<W, I, Q, O, M> (&x)[N]) {
     // Use a wider accumulator than the input to avoid overflow
-    ap_fixed<W + ceillog2(N), I + ceillog2(N), Q, O> tmp = 0;
+    ap_fixed<W + ceillog2(N), I + ceillog2(N), Q, O, M> tmp = 0;
     for (int i = 0; i < N; i++) {
         tmp += x[i];
     }
     tmp /= N;
     // Now cast back to original type
-    ap_fixed<W, I, Q, O> y = tmp;
+    ap_fixed<W, I, Q, O, M> y = tmp;
     return y;
 }
 
-template <int W, int I, int N, ap_q_mode Q, ap_o_mode O> ap_ufixed<W, I, Q, O> avg(ap_ufixed<W, I, Q, O> (&x)[N]) {
+template <int W, int I, int N, ap_q_mode Q, ap_o_mode O, int M> ap_ufixed<W, I, Q, O, M> avg(ap_ufixed<W, I, Q, O, M> (&x)[N]) {
     // Use a wider accumulator than the input to avoid overflow
-    ap_ufixed<W + ceillog2(N), I + ceillog2(N), Q, O> tmp = 0;
+    ap_ufixed<W + ceillog2(N), I + ceillog2(N), Q, O, M> tmp = 0;
     for (int i = 0; i < N; i++) {
         tmp += x[i];
     }
     tmp /= N;
     // Now cast back to original type
-    ap_ufixed<W, I, Q, O> y = tmp;
+    ap_ufixed<W, I, Q, O, M> y = tmp;
     return y;
 }
 
