@@ -47,7 +47,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['pad_left'] = pad_left
     layer['pad_right'] = pad_right
 
-    output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]  # Channel first as default
+    output_shape = [layer['n_filt'], layer['out_width']]  # Channel first as default
 
     return layer, output_shape
 
@@ -102,6 +102,6 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
         class_object.dilation[1],
     )
 
-    output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
+    output_shape = [layer['n_filt'], layer['out_height'], layer['out_width']]
 
     return layer, output_shape
