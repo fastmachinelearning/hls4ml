@@ -1,5 +1,6 @@
 import os
 from contextlib import contextmanager
+from warnings import warn
 
 import numpy as np
 
@@ -73,6 +74,7 @@ class QuartusBackend(FPGABackend):
             'quartus:inplace_stream_flatten',
             'quartus:skip_softmax',
             'quartus:fix_softmax_table_size',
+            'quartus:process_fixed_point_quantizer_layer',
             'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
@@ -265,7 +267,17 @@ class QuartusBackend(FPGABackend):
         n_in, n_out = self.get_layer_mult_size(layer)
         self.set_target_reuse_factor(layer)
         self.set_closest_reuse_factor(layer, n_in, n_out)
-        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # Not overriding user parallelization factor, if already set and user has not specified a value
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        layer_pf = layer.get_attr('parallelization_factor', None)
+        chosen_pf = user_pf or layer_pf or 1
+        if user_pf is not None and layer_pf is not None:
+            if user_pf != layer_pf:
+                warn(
+                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
+                )
+        layer.set_attr('parallelization', chosen_pf)
 
         # impl_filt_width determines the filter size post-Winograd transformation
         layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
@@ -295,7 +307,17 @@ class QuartusBackend(FPGABackend):
         n_in, n_out = self.get_layer_mult_size(layer)
         self.set_target_reuse_factor(layer)
         self.set_closest_reuse_factor(layer, n_in, n_out)
-        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # Not overriding user parallelization factor, if already set and user has not specified a value
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        layer_pf = layer.get_attr('parallelization_factor', None)
+        chosen_pf = user_pf or layer_pf or 1
+        if user_pf is not None and layer_pf is not None:
+            if user_pf != layer_pf:
+                warn(
+                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
+                )
+        layer.set_attr('parallelization', chosen_pf)
 
         # impl_filt_width & impl_filt_height determine the filter size post-Winograd transformation
         layer.set_attr('impl_filt_height', layer.get_attr('filt_height'))
