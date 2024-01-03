@@ -22,6 +22,6 @@ jobs:
       with:
         pre-build-command: "git config --system --add safe.directory '*'"
         docs-folder: "docs/"
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: docs/_build/html
