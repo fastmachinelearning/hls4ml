@@ -914,11 +914,11 @@ class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         if len(inp.shape) == 2:  # 1D -> width + chan
-            shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
-            dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            shape = [self.get_attr('out_width'), self.get_attr('n_chan')] if self.get_attr('data_format') == 'channels_last' else [self.get_attr('n_chan'), self.get_attr('out_width')]
+            dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}'] if self.get_attr('data_format') == 'channels_last' else [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
         elif len(inp.shape) == 3:  # 2D -> height + width + chan
-            shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')] if self.get_attr('data_format') == 'channels_last' else [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}'] if self.get_attr('data_format') == 'channels_last'  else [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 
@@ -1366,6 +1366,7 @@ layer_map = {
     'Resize': Resize,
     'UpSampling1D': Resize,
     'UpSampling2D': Resize,
+    'Upsample': Resize,
     'Transpose': Transpose,
     'Embedding': Embedding,
     'SimpleRNN': SimpleRNN,

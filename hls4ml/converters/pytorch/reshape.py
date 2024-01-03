@@ -1,6 +1,7 @@
 import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.utils import parse_data_format
 
 reshape_layers = ['View']
 
@@ -104,5 +105,32 @@ def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, 
         input_shapes[0][0:start_dim] + [np.prod(input_shapes[0][start_dim:end_dim])] + input_shapes[0][end_dim:]
     )
     output_shape = layer['target_shape']
+
+    return layer, output_shape
+
+
+@pytorch_handler('Upsample')
+def handle_upsample(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+
+    assert operation == 'Upsample'
+    layer = {}
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+    layer['class_name'] = 'Upsample'
+    layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
+    
+    # Input info
+    (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(
+        input_shapes[0], 'channels_first'
+    )  # K
+
+    layer['height_factor'] = int(class_object.scale_factor)
+    layer['width_factor'] = int(class_object.scale_factor)
+    layer['algorithm'] = class_object.mode
+
+    layer['out_height'] = layer['in_height'] * layer['height_factor']
+    layer['out_width'] = layer['in_width'] * layer['width_factor']
+
+    output_shape = [layer['n_chan'], layer['out_height'], layer['out_width']]
 
     return layer, output_shape
