@@ -69,7 +69,7 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
      - ``N/A``
      - ``in development``
      - ``supported``
-     - ``supported``
+     - ``in development``
      - ``supported``
      - ``N/A``
    * - GNN (GarNet)
