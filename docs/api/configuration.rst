@@ -116,14 +116,6 @@ The Catapult backend also provides these options:
 
 In addition to the new configuration options, the Catapult backend build() method has the following additional switches:
 
-.. code-block:: python
-
-
-hls_model.build(csim=True,synth=True,cosim=False,vhdl=False,verilog=True,ran_frame=5,sw_opt=False,power=False,da=False,bup=False)
-
-
-where:
-
 
 * **csim**\ - (True|False) - run C++ model execution
 * **synth**\ - (True|False) - perform Catapult HLS synthesis
