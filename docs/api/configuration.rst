@@ -109,24 +109,25 @@ For Vivado backend the options are:
   Additionally, integers in fixed precision data type (\ ``ap_int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.
 
 The Catapult backend also provides these options:
+
 * **Technology**\ : specifies either 'fpga' or 'asic'
 * **ASICLibs**\ : the list of ASIC libraries to load, for example: saed32rvt_tt0p78v125c_beh
 * **FIFO**\ : specifies the name of the FIFO interconnect component to use
 
 In addition to the new configuration options, the Catapult backend build() method has the following additional switches:
 
-   hls_model.build(csim=True,synth=True,cosim=False,vhdl=False,verilog=True,ran_frame=5,sw_opt=False,power=False,da=False,bup=False)
-   where:
-      csim - run C++ model execution
-      synth - perform Catapult HLS synthesis
-      cosim - enable SCVerify C-vs-RTL verification after HLS is done
-      vhdl  - enable VHDL RTL netlist generation
-      verilog - enable Verilog RTL netlist generation
-      ran_frame - if no InputData and OutputPredictions provided, simulate the network with random feature data for ran_frame frames
-      sw_opt - run power estimation on the pre-power RTL netlist
-      power - run Catapult Power Optimization on the RTL
-      da - invoke Catapult Design Analyzer
-      bup - perform HLS in a bottom-up fashion
+hls_model.build(csim=True,synth=True,cosim=False,vhdl=False,verilog=True,ran_frame=5,sw_opt=False,power=False,da=False,bup=False)
+where:
+csim - (True|False) - run C++ model execution
+synth - (True|False) - perform Catapult HLS synthesis
+cosim - (True|False) - enable SCVerify C-vs-RTL verification after HLS is done
+vhdl  - (True|False) - enable VHDL RTL netlist generation
+verilog - (True|False) - enable Verilog RTL netlist generation
+ran_frame - (integer) - if no InputData and OutputPredictions provided, simulate the network with random feature data for ran_frame frames
+sw_opt - (True|False) - run power estimation on the pre-power RTL netlist
+power - (True|False) - run Catapult Power Optimization on the RTL
+da - (True|False) - invoke Catapult Design Analyzer
+bup - (True|False) - perform HLS in a bottom-up fashion
 
 
 2.2 Per-Layer Configuration
