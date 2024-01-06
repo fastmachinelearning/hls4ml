@@ -118,16 +118,16 @@ In addition to the new configuration options, the Catapult backend build() metho
 
 hls_model.build(csim=True,synth=True,cosim=False,vhdl=False,verilog=True,ran_frame=5,sw_opt=False,power=False,da=False,bup=False)
 where:
-csim - (True|False) - run C++ model execution
-synth - (True|False) - perform Catapult HLS synthesis
-cosim - (True|False) - enable SCVerify C-vs-RTL verification after HLS is done
-vhdl  - (True|False) - enable VHDL RTL netlist generation
-verilog - (True|False) - enable Verilog RTL netlist generation
-ran_frame - (integer) - if no InputData and OutputPredictions provided, simulate the network with random feature data for ran_frame frames
-sw_opt - (True|False) - run power estimation on the pre-power RTL netlist
-power - (True|False) - run Catapult Power Optimization on the RTL
-da - (True|False) - invoke Catapult Design Analyzer
-bup - (True|False) - perform HLS in a bottom-up fashion
+* **csim**\ - (True|False) - run C++ model execution
+* **synth**\ - (True|False) - perform Catapult HLS synthesis
+* **cosim**\ - (True|False) - enable SCVerify C-vs-RTL verification after HLS is done
+* **vhdl**\  - (True|False) - enable VHDL RTL netlist generation
+* **verilog**\ - (True|False) - enable Verilog RTL netlist generation
+* **ran_frame**\ - (integer) - if no InputData and OutputPredictions provided, simulate the network with random feature data for ran_frame frames
+* **sw_opt**\ - (True|False) - run power estimation on the pre-power RTL netlist
+* **power**\ - (True|False) - run Catapult Power Optimization on the RTL
+* **da**\ - (True|False) - invoke Catapult Design Analyzer
+* **bup**\ - (True|False) - perform HLS in a bottom-up fashion
 
 
 2.2 Per-Layer Configuration
