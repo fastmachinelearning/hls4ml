@@ -114,7 +114,6 @@ The Catapult backend also provides these options:
 * **FIFO**\ : specifies the name of the FIFO interconnect component to use
 
 In addition to the new configuration options, the Catapult backend build() method has the following additional switches:
-.. code-block:: python
 
    hls_model.build(csim=True,synth=True,cosim=False,vhdl=False,verilog=True,ran_frame=5,sw_opt=False,power=False,da=False,bup=False)
    where:
