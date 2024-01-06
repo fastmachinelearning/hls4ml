@@ -70,6 +70,7 @@ It looks like this:
    OutputPredictions: keras/KERAS_3layer_predictions.dat
 
    # Backend section (Vivado backend)
+   Backend: Vivado
    Part: xcvu13p-flga2577-2-e
    ClockPeriod: 5
    IOType: io_parallel # options: io_parallel/io_stream
@@ -106,6 +107,28 @@ For Vivado backend the options are:
   * **Strategy**\ : Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" strategy. An example of using larger reuse factor can be found `here. <https://github.com/fastmachinelearning/models/tree/master/keras/KERAS_dense>`__
   * **Precision**\ : this defines the precsion of your inputs, outputs, weights and biases. It is denoted by ``ap_fixed<X,Y>``\ , where ``Y`` is the number of bits representing the signed number above the binary point (i.e. the integer part), and ``X`` is the total number of bits.
   Additionally, integers in fixed precision data type (\ ``ap_int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.
+
+The Catapult backend also provides these options:
+* **Technology**\ : specifies either 'fpga' or 'asic'
+* **ASICLibs**\ : the list of ASIC libraries to load, for example: saed32rvt_tt0p78v125c_beh
+* **FIFO**\ : specifies the name of the FIFO interconnect component to use
+
+In addition to the new configuration options, the Catapult backend build() method has the following additional switches:
+.. code-block:: python
+
+   hls_model.build(csim=True,synth=True,cosim=False,vhdl=False,verilog=True,ran_frame=5,sw_opt=False,power=False,da=False,bup=False)
+   where:
+      csim - run C++ model execution
+      synth - perform Catapult HLS synthesis
+      cosim - enable SCVerify C-vs-RTL verification after HLS is done
+      vhdl  - enable VHDL RTL netlist generation
+      verilog - enable Verilog RTL netlist generation
+      ran_frame - if no InputData and OutputPredictions provided, simulate the network with random feature data for ran_frame frames
+      sw_opt - run power estimation on the pre-power RTL netlist
+      power - run Catapult Power Optimization on the RTL
+      da - invoke Catapult Design Analyzer
+      bup - perform HLS in a bottom-up fashion
+
 
 2.2 Per-Layer Configuration
 ---------------------------

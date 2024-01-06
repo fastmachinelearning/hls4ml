@@ -32,6 +32,7 @@ HLS backends:
 
 * Vivado HLS
 * Intel HLS
+* Catapult HLS (beta)
 * Vitis HLS (experimental)
 
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
@@ -45,11 +46,13 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
      - (Q)ONNX
      - Vivado HLS
      - Intel HLS
+     - Catapult HLS
      - Vitis HLS
    * - MLP
      - ``supported``
      - ``limited``
      - ``in development``
+     - ``supported``
      - ``supported``
      - ``supported``
      - ``experimental``
@@ -59,6 +62,7 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
      - ``in development``
      - ``supported``
      - ``supported``
+     - ``supported``
      - ``experimental``
    * - RNN (LSTM)
      - ``supported``
@@ -66,9 +70,11 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
      - ``in development``
      - ``supported``
      - ``supported``
+     - ``supported``
      - ``N/A``
    * - GNN (GarNet)
      - ``supported``
+     - ``N/A``
      - ``N/A``
      - ``N/A``
      - ``N/A``
@@ -81,6 +87,7 @@ Other feature notes:
 * ``hls4ml`` is tested on Linux, and supports
    * Vivado HLS versions 2018.2 to 2020.1
    * Intel HLS versions 20.1 to 21.4
+   * Catapult HLS versions 2024.1 (beta)
    * Vitis HLS versions 2020.2 to 2022.2 (experimentally)
 * Windows and macOS are not supported
 * BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package

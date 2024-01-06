@@ -207,7 +207,8 @@ class CatapultBackend(FPGABackend):
         ran_frame=5,
         sw_opt=False,
         power=False,
-        da=False
+        da=False,
+        bup=False
     ):
         # print(f'ran_frame value: {ran_frame}')  # Add this line for debugging
         catapult_exe = 'catapult'
@@ -226,7 +227,7 @@ class CatapultBackend(FPGABackend):
 
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame} sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile, ran_frame=ran_frame, sw_opt=sw_opt, power=power, da=da, vhdl=vhdl, verilog=verilog)
+        ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame} sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog} bup={bup}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile, ran_frame=ran_frame, sw_opt=sw_opt, power=power, da=da, vhdl=vhdl, verilog=verilog, bup=bup)
         ccs_invoke = catapult_exe + ' -product ultra -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
         print(ccs_invoke)
         os.system(ccs_invoke)
