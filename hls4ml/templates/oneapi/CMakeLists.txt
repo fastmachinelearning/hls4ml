@@ -20,7 +20,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 ### Customize these build variables
 ###############################################################################
 set(SOURCE_FILES src/firmware/myproject.cpp src/myproject_test.cpp)
+set(LIBRARY_FILES src/firmware/myproject.cpp src/myproject_bridge.cpp)
+set(LIB_STAMP mystamp)
 set(TARGET_NAME myproject)
+set(LIBRARY_NAME myproject-${LIB_STAMP})
 
 # Use cmake -DFPGA_DEVICE=<board-support-package>:<board-variant> to choose a
 # different device. Here are a few device examples (this list is not
@@ -62,6 +65,7 @@ set(SIMULATOR_TARGET fpga_sim)
 set(REPORT_TARGET report)
 set(FPGA_TARGET fpga)
 set(IP_EXPORT_TARGET fpga_ip_export)
+set(LIBRARY_TARGET lib)
 
 # Set the names of the generated files per makefile target
 set(EMULATOR_OUTPUT_NAME ${TARGET_NAME}.${EMULATOR_TARGET})
@@ -111,6 +115,16 @@ set(FPGA_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -reu
 # get rid of this once host pipes work properly
 set(IP_EXPORT_COMPILE_FLAGS -DFPGA_HARDWARE)
 set(IP_EXPORT_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -fsycl-link=early -fsycl-device-code-split=per_kernel)
+
+###############################################################################
+### FPGA Emulator library
+###############################################################################
+add_library(${LIBRARY_TARGET} SHARED ${LIBRARY_FILES})
+target_compile_options(${LIBRARY_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
+target_compile_options(${LIBRARY_TARGET} PRIVATE ${EMULATOR_COMPILE_FLAGS})
+target_link_libraries(${LIBRARY_TARGET} ${COMMON_LINK_FLAGS})
+target_link_libraries(${LIBRARY_TARGET} ${EMULATOR_LINK_FLAGS})
+set_target_properties(${LIBRARY_TARGET} PROPERTIES OUTPUT_NAME ${LIBRARY_NAME})
 
 ###############################################################################
 ### FPGA Emulator

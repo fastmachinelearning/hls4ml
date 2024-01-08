@@ -479,7 +479,7 @@ class OneAPIWriter(Writer):
                     newline = ''
                     for i in model_inputs:
                         newline += indent + f'{i.definition_cpp(name_suffix="_input")};\n'
-                        newline += indent + f'nnet::convert_data<{dtype}, {i.type.name}, {i.size_cpp()}>({i.name}, {i.name}_input);\n'
+                        newline += indent + f'nnet::convert_data<{dtype}, {i.type.name}, {i.size_cpp()}>({i.name}, {i.name}_input.data());\n'
                         newline += indent + f'{i.pipe_name}::write(q, {i.name}_input);\n'
 
                     newline += '\n'
@@ -503,7 +503,7 @@ class OneAPIWriter(Writer):
 
                     for o in model_outputs:
                         newline += indent + f'{o.definition_cpp(name_suffix="_output")} = {o.pipe_name}::read(q);\n'
-                        newline += indent + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp}>({o.name}_output, {o.name});\n'
+                        newline += indent + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp()}>({o.name}_output.data(), {o.name});\n'
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                     newline = ''
                     for layer in model.get_layers():
@@ -537,6 +537,7 @@ class OneAPIWriter(Writer):
 
             for line in f.readlines():
                 line = line.replace('myproject', model.config.get_project_name())
+                line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
                 if 'set(FPGA_DEVICE' in line:
                     line = f'    set(FPGA_DEVICE "{device}")\n'
