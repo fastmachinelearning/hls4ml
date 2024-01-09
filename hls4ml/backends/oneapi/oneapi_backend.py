@@ -1,5 +1,5 @@
-import os
-from contextlib import contextmanager
+import subprocess
+from pathlib import Path
 
 import numpy as np
 
@@ -9,17 +9,8 @@ from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
-#from hls4ml.report import parse_oneapi_report
 
-
-@contextmanager
-def chdir(newdir):
-    prevdir = os.getcwd()
-    os.chdir(os.path.expanduser(newdir))
-    try:
-        yield
-    finally:
-        os.chdir(prevdir)
+# from hls4ml.report import parse_oneapi_report
 
 
 class OneAPIBackend(FPGABackend):
@@ -133,6 +124,31 @@ class OneAPIBackend(FPGABackend):
         config['HLSConfig'] = {}
 
         return config
+
+    def compile(self, model):
+        """Compile the generated project that can be linked into Python runtime.
+
+        Args:
+            model (ModelGraph): Model to compile.
+
+        Raises:
+            Exception: If the project failed to compile
+
+        Returns:
+            string: Returns the name of the compiled library.
+        """
+        outdir = Path(Path.cwd(), model.config.get_output_dir())
+        builddir = outdir / 'build'
+        builddir.mkdir(exist_ok=True)
+        try:
+            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
+        except subprocess.CalledProcessError:
+            raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
+        subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
+        subprocess.run('make lib', shell=True, cwd=builddir, check=True)
+
+        lib_name = builddir / f'lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
+        return lib_name
 
     def build(self, model, synth=True, fpgasynth=False, log_level=1, cont_if_large_area=False):
         """

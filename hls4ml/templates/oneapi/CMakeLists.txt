@@ -31,8 +31,8 @@ set(LIBRARY_NAME myproject-${LIB_STAMP})
 #   intel_s10sx_pac:pac_s10
 #   intel_s10sx_pac:pac_s10_usm
 #   intel_a10gx_pac:pac_a10
-# Note that depending on your installation, you may need to specify the full 
-# path to the board support package (BSP), this usually is in your install 
+# Note that depending on your installation, you may need to specify the full
+# path to the board support package (BSP), this usually is in your install
 # folder.
 #
 # You can also specify a device family (E.g. "Arria10" or "Stratix10") or a
@@ -42,7 +42,7 @@ if(NOT DEFINED FPGA_DEVICE)
 endif()
 
 # Use cmake -DUSER_FPGA_FLAGS=<flags> to set extra flags for FPGA backend
-# compilation. 
+# compilation.
 set(USER_FPGA_FLAGS -Wno-unused-label ${USER_FPGA_FLAGS})
 
 # Use cmake -DUSER_FLAGS=<flags> to set extra flags for general compilation.
@@ -97,6 +97,8 @@ else()
 endif()
 
 set(COMMON_COMPILE_FLAGS -fsycl -fintelfpga -Wall ${WIN_FLAG} ${QACTYPES} ${USER_FLAGS})
+# for debugging need to do this. Not sure why
+# set(COMMON_LINK_FLAGS -v -L/opt/intel/oneapi/compiler/2024.0/opt/oclfpga/host/linux64/lib -fsycl -fintelfpga ${QACTYPES} ${USER_FLAGS})
 set(COMMON_LINK_FLAGS -fsycl -fintelfpga ${QACTYPES} ${USER_FLAGS})
 
 # A SYCL ahead-of-time (AoT) compile processes the device code in two stages.
@@ -210,7 +212,7 @@ function(getCompileCommands common_compile_flags special_compile_flags common_li
         # Get the relative path to the source and object files
         file(RELATIVE_PATH CURRENT_SOURCE_FILE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/${source})
         file(RELATIVE_PATH OBJ_FILE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${target}.dir/${source}.${OBJ_EXTENSION})
-        
+
         # Creating a string that contains the compile command
         # Start by the compiler invocation
         set(COMPILE_COMMAND "${COMPILE_COMMAND}${CMAKE_CXX_COMPILER}")
@@ -254,7 +256,7 @@ function(getCompileCommands common_compile_flags special_compile_flags common_li
     # Add all the specific link flags
     foreach(FLAG ${special_link_flags})
         set(LINK_COMMAND "${LINK_COMMAND} ${FLAG}")
-    endforeach()    
+    endforeach()
 
     # Add the output file
     set(LINK_COMMAND "${LINK_COMMAND} -o ${output_name}")
