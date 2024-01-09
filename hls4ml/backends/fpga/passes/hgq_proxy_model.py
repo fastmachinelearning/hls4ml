@@ -4,7 +4,7 @@ from hls4ml.backends import Backend
 from hls4ml.backends.template import FunctionCallTemplate
 from hls4ml.model.layers import Layer
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
+from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer, UnaryLUT
 from hls4ml.model.types import Source
 
 
@@ -40,7 +40,6 @@ def generate_mask_fn(
 template<typename input_t, typename output_t>
 void {name}(input_t *inp, output_t *out) {{
     #pragma HLS INLINE
-    #pragma HLS PIPELINE
 
 {body}
 }}
@@ -84,6 +83,25 @@ class ProcessFixedPointQuantizerCall(FunctionCallTemplate):
         return self.template.format(**params)
 
 
+class ProcessUnaryLUTCall(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(UnaryLUT, include_header=[])
+        self.template = 'nnet::unary_lut<{input_t}, {output_t}, {config}>({input}, {output}, {table});'
+        self.include_header = [
+            'nnet_utils/nnet_activation.h',
+            'nnet_utils/nnet_activation_stream.h',
+        ]
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        node.attributes['result_t'].precision = node.attributes['table_t'].precision
+        params['config'] = f'unary_lut_config{node.index}'
+        params['table'] = node.get_weights('table').name
+
+        return self.template.format(**params)
+
+
 def register_hgq_proxy_model(backend: Backend):
     backend.register_pass('process_fixed_point_quantizer_layer', ProcessFixedPointQuantizerLayer)
     backend.register_template(ProcessFixedPointQuantizerCall)
+    backend.register_template(ProcessUnaryLUTCall)

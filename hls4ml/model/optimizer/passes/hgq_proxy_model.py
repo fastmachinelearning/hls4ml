@@ -23,6 +23,20 @@ class FixedPointQuantizer(Layer):
         self.mask_kbi = self.attributes.get('mask_kbi', None)
 
 
+class UnaryLUT(Layer):
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+        self.set_attr('n_in', inp.size())
+        self.table = self.attributes['table']
+        self.table_size = self.attributes['table_size']
+
+        table_t = to_hls4ml_fixed(self.attributes['table_t'])
+        self.add_weights_variable(name='table', var_name='table{index}', precision=table_t, data=self.table)
+
+
 def to_hls4ml_fixed(fixed: str):
     matched = re_parse_fixed.match(re_purge_prefix.sub('', fixed))
     assert matched is not None, f'Cannot parse {fixed}'
@@ -125,4 +139,5 @@ class EnforceProxyModelEmbeddedConfig(OptimizerPass):
 
 def register_hgq_proxy_model():
     register_layer('FixedPointQuantizer', FixedPointQuantizer)
+    register_layer('UnaryLUT', UnaryLUT)
     register_pass('enforce_proxy_model_embedded_config', EnforceProxyModelEmbeddedConfig)
