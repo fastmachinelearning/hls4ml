@@ -152,7 +152,6 @@ int main(int argc, char **argv) {
             }
             std::cout << std::endl;
 
-            // hls-fpga-machine-learning insert tb-output
             for(auto outval : outputs[j]) {
               fout << outval << " ";
             }
