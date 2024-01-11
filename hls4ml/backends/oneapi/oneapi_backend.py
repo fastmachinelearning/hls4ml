@@ -150,22 +150,31 @@ class OneAPIBackend(FPGABackend):
         lib_name = builddir / f'lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
         return lib_name
 
-    def build(self, model, synth=True, fpgasynth=False, log_level=1, cont_if_large_area=False):
+    def build(self, model, build_type='fpga_emu', run=False):
         """
         Builds the project using Intel DPC++ (oneAPI) compiler.
 
         Args:
             model (ModelGraph): The model to build
-            synth, optional: Whether to run HLS synthesis
-            fpgasynth, optional:  Whether to run FPGA synthesis (oneAPI Compile)
-            log_level, optional: Logging level to be displayed during HLS synthesis (0, 1, 2)
-            cont_if_large_area: Instruct the HLS compiler to continue synthesis if the estimated resource usage exceeds
-                device resources
+            build_type, optional: What to build (e.g. fpga_emu, fpga_sim, fpga, report)
+            run, optional: Whether to run the testbench
         Errors raise exceptions
         """
 
         # Check software needed is present
-        pass
+        outdir = Path(Path.cwd(), model.config.get_output_dir())
+        builddir = outdir / 'build'
+        builddir.mkdir(exist_ok=True)
+        try:
+            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
+        except subprocess.CalledProcessError:
+            raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
+        subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
+        subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
+
+        if run and build_type in ('fpga_emu', 'fpga_sim', 'fpga'):
+            executable = builddir / f'{model.config.get_project_name()}.{build_type}'
+            subprocess.run(f'{str(executable)}', shell=True, cwd=builddir, check=True)
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
