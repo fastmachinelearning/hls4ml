@@ -160,7 +160,7 @@ class OneAPIWriter(Writer):
                     newline = line
                     if io_type == 'io_parallel':
                         for inp in model_inputs:
-                            newline += indent + f'auto {inp.name} = {inp.pipe_name}::read();\n' 
+                            newline += indent + f'auto {inp.name} = {inp.pipe_name}::read();\n'
                     else:
                         raise NotImplementedError("Only io_parallel is currently supported with oneAPI")
 
@@ -203,7 +203,7 @@ class OneAPIWriter(Writer):
                     newline = line
                     if io_type == 'io_parallel':
                         for out in model_outputs:
-                            newline += indent + f'{out.pipe_name}::write({out.name});\n' 
+                            newline += indent + f'{out.pipe_name}::write({out.name});\n'
                     else:
                         raise NotImplementedError("Only io_parallel is currently supported with oneAPI")
 
@@ -425,7 +425,7 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning insert tb-output' in line:
                     newline = line
                     out = model_outputs[0]
-                    newline += indent + f'outputs[j] = {out.pipe_name}::read(q);\n' 
+                    newline += indent + f'outputs[j] = {out.pipe_name}::read(q);\n'
                 else:
                     newline = line
 
@@ -484,25 +484,14 @@ class OneAPIWriter(Writer):
 
                     newline += '\n'
 
-                    for o in model_outputs:
-                        newline += indent + '{var};\n'.format(var=o.definition_cpp(name_suffix='_ap'))
-
-                    newline += '\n'
-
-                    # input_vars = ','.join([i.name + '_input' for i in model_inputs])
-                    # bram_vars = ','.join([b.name for b in model_brams])
-                    # output_vars = ','.join([o.name + '_output' for o in model_outputs])
-
-                    # Concatenate the input, output, and bram variables. Filter out empty/null values
-                    # all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
-
-                    top_level = indent + f'q.single_task({convert_to_pascal_case(project_name)}{{}});\n'
-                    newline += top_level
+                    newline += indent + f'q.single_task({convert_to_pascal_case(project_name)}{{}});\n'
+                    newline += indent + 'q.wait();\n'
 
                     newline += '\n'
 
                     for o in model_outputs:
                         newline += indent + f'{o.definition_cpp(name_suffix="_output")} = {o.pipe_name}::read(q);\n'
+                        newline += indent + f'for (auto val : {o.name}_output) std::cout << val.to_double() << std::endl;\n'
                         newline += indent + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp()}>({o.name}_output.data(), {o.name});\n'
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                     newline = ''

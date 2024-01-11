@@ -107,7 +107,9 @@ set(COMMON_LINK_FLAGS -fsycl -fintelfpga ${QACTYPES} ${USER_FLAGS})
 # 2. The "link" stage invokes the compiler's FPGA backend before linking. For
 #    this reason, FPGA backend flags must be passed as link flags in CMake.
 set(EMULATOR_COMPILE_FLAGS -DFPGA_EMULATOR)
+set(LIBRARY_COMPILE_FLAGS -DFPGA_EMULATOR)
 set(EMULATOR_LINK_FLAGS )
+set(LIBRARY_LINK_FLAGS -L$ENV{FPGA_VARS_DIR}/host/linux64/lib)
 set(REPORT_COMPILE_FLAGS -DFPGA_HARDWARE)
 set(REPORT_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -fsycl-link=early)
 set(SIMULATOR_COMPILE_FLAGS -Xssimulation -DFPGA_SIMULATOR)
@@ -123,9 +125,9 @@ set(IP_EXPORT_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS}
 ###############################################################################
 add_library(${LIBRARY_TARGET} SHARED ${LIBRARY_FILES})
 target_compile_options(${LIBRARY_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
-target_compile_options(${LIBRARY_TARGET} PRIVATE ${EMULATOR_COMPILE_FLAGS})
+target_compile_options(${LIBRARY_TARGET} PRIVATE ${LIBRARY_COMPILE_FLAGS})
 target_link_libraries(${LIBRARY_TARGET} ${COMMON_LINK_FLAGS})
-target_link_libraries(${LIBRARY_TARGET} ${EMULATOR_LINK_FLAGS})
+target_link_libraries(${LIBRARY_TARGET} ${LIBRARY_LINK_FLAGS})
 set_target_properties(${LIBRARY_TARGET} PROPERTIES OUTPUT_NAME ${LIBRARY_NAME})
 
 ###############################################################################

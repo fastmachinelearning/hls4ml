@@ -740,7 +740,9 @@ class ModelGraph:
         n_outputs = len(self.get_output_variables())
 
         curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir() + '/firmware')
+        newdir = self.config.get_output_dir() + '/firmware' if os.path.exists(self.config.get_output_dir() + '/firmware') \
+            else self.config.get_output_dir() + '/src/firmware'
+        os.chdir(newdir)
 
         output = []
         if n_samples == 1 and n_inputs == 1:
