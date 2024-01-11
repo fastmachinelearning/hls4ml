@@ -3,45 +3,63 @@ import numpy as np
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 from hls4ml.converters.utils import parse_data_format
 
-reshape_layers = ['View']
+reshape_layers = ["View"]
 
 
 @pytorch_handler(*reshape_layers)
-def parse_reshape_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-    assert operation == 'View'
+def parse_reshape_layer(
+    operation,
+    layer_name,
+    input_names,
+    input_shapes,
+    node,
+    class_object,
+    data_reader,
+    config,
+):
+    assert operation == "View"
 
     layer = {}
-    layer['class_name'] = 'Reshape'
-    layer['name'] = layer_name
-    layer['inputs'] = input_names
+    layer["class_name"] = "Reshape"
+    layer["name"] = layer_name
+    layer["inputs"] = input_names
 
-    layer['target_shape'] = [int(i) for i in node.args[1:]]
+    layer["target_shape"] = [int(i) for i in node.args[1:]]
     # View can have -1 as one as the dimensions,
     # leaving it to us to deduce it from the other dimensions and the overall size
-    if -1 in layer['target_shape']:
+    if -1 in layer["target_shape"]:
         size = np.prod(input_shapes[0][1:])
-        for i in range(0, len(layer['target_shape'])):
-            if layer['target_shape'][i] == -1:
-                cl = layer['target_shape'][:]
+        for i in range(0, len(layer["target_shape"])):
+            if layer["target_shape"][i] == -1:
+                cl = layer["target_shape"][:]
                 cl.remove(-1)
-                layer['target_shape'][i] = int(size / np.prod(cl))
+                layer["target_shape"][i] = int(size / np.prod(cl))
 
-    output_shape = input_shapes[0][:1] + layer['target_shape']
+    output_shape = input_shapes[0][:1] + layer["target_shape"]
 
     return layer, output_shape
 
 
-@pytorch_handler('squeeze')
-def parse_squeeze_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-    assert operation == 'squeeze'
+@pytorch_handler("squeeze")
+def parse_squeeze_layer(
+    operation,
+    layer_name,
+    input_names,
+    input_shapes,
+    node,
+    class_object,
+    data_reader,
+    config,
+):
+    assert operation == "squeeze"
 
     layer = {}
-    layer['class_name'] = 'Reshape'
-    layer['name'] = layer_name
+    layer["class_name"] = "Reshape"
+    layer["name"] = layer_name
 
     if len(node.args) > 1 or len(node.kwargs) > 0:  # 'dim' argument is specified
         output_shape = [i for i in input_shapes[0]]
-        squeeze_dim = node.kwargs.get('dim', None)
+        squeeze_dim = node.kwargs.get("dim", None)
         if squeeze_dim is None:
             squeeze_dim = node.args[1]
         if isinstance(squeeze_dim, tuple):
@@ -52,47 +70,65 @@ def parse_squeeze_layer(operation, layer_name, input_names, input_shapes, node, 
     else:
         output_shape = [i for i in input_shapes[0] if i != 1]
 
-    layer['target_shape'] = output_shape.copy()
-    if layer['target_shape'][0] is None:
-        del layer['target_shape'][0]
+    layer["target_shape"] = output_shape.copy()
+    if layer["target_shape"][0] is None:
+        del layer["target_shape"][0]
 
     return layer, output_shape
 
 
-@pytorch_handler('unsqueeze')
-def parse_unsqueeze_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-    assert operation == 'unsqueeze'
+@pytorch_handler("unsqueeze")
+def parse_unsqueeze_layer(
+    operation,
+    layer_name,
+    input_names,
+    input_shapes,
+    node,
+    class_object,
+    data_reader,
+    config,
+):
+    assert operation == "unsqueeze"
 
     layer = {}
-    layer['class_name'] = 'Reshape'
-    layer['name'] = layer_name
-    layer['inputs'] = input_names
+    layer["class_name"] = "Reshape"
+    layer["name"] = layer_name
+    layer["inputs"] = input_names
 
     # Unlike in 'squeeze' in 'unsqueeze', dim argument must exist
     output_shape = [i for i in input_shapes[0]]
     if len(node.args) > 1:  # Specified as unsqueeze(x, n)
         squeeze_dim = node.args[1]
     else:  # Specified as unsqueeze(x, dim=n)
-        squeeze_dim = node.kwargs['dim']
+        squeeze_dim = node.kwargs["dim"]
     # insert() will add an element before the index, unsqueeze expects the location
     index = output_shape.index(output_shape[squeeze_dim])  # + 1
     output_shape.insert(index, 1)
 
-    layer['target_shape'] = output_shape.copy()
-    if layer['target_shape'][0] is None:
-        del layer['target_shape'][0]
+    layer["target_shape"] = output_shape.copy()
+    if layer["target_shape"][0] is None:
+        del layer["target_shape"][0]
 
     return layer, output_shape
 
 
-@pytorch_handler('Flatten')
-def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-    assert operation == 'Flatten'
+@pytorch_handler("Flatten")
+def parse_flatten_layer(
+    operation,
+    layer_name,
+    input_names,
+    input_shapes,
+    node,
+    class_object,
+    data_reader,
+    config,
+):
+    assert operation == "Flatten"
 
     layer = {}
-    layer['class_name'] = 'Reshape'
-    layer['name'] = layer_name
-    layer['inputs'] = input_names
+    layer["class_name"] = "Reshape"
+    layer["name"] = layer_name
+    layer["inputs"] = input_names
 
     start_dim = class_object.start_dim
     end_dim = class_object.end_dim
@@ -101,36 +137,46 @@ def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, 
     else:
         end_dim = end_dim + 1
 
-    layer['target_shape'] = (
-        input_shapes[0][0:start_dim] + [np.prod(input_shapes[0][start_dim:end_dim])] + input_shapes[0][end_dim:]
+    layer["target_shape"] = (
+        input_shapes[0][0:start_dim]
+        + [np.prod(input_shapes[0][start_dim:end_dim])]
+        + input_shapes[0][end_dim:]
     )
-    output_shape = layer['target_shape']
+    output_shape = layer["target_shape"]
 
     return layer, output_shape
 
 
-@pytorch_handler('Upsample')
-def handle_upsample(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-
-    assert operation == 'Upsample'
+@pytorch_handler("Upsample")
+def handle_upsample(
+    operation,
+    layer_name,
+    input_names,
+    input_shapes,
+    node,
+    class_object,
+    data_reader,
+    config,
+):
+    assert operation == "Upsample"
     layer = {}
-    layer['name'] = layer_name
-    layer['inputs'] = input_names
-    layer['class_name'] = 'Upsample'
-    layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
-    
+    layer["name"] = layer_name
+    layer["inputs"] = input_names
+    layer["class_name"] = "Upsample"
+    layer["data_format"] = "channels_first"  # Pytorch default (can't change)
+
     # Input info
-    (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(
-        input_shapes[0], 'channels_first'
+    (layer["in_height"], layer["in_width"], layer["n_chan"]) = parse_data_format(
+        input_shapes[0], "channels_first"
     )  # K
 
-    layer['height_factor'] = int(class_object.scale_factor)
-    layer['width_factor'] = int(class_object.scale_factor)
-    layer['algorithm'] = class_object.mode
+    layer["height_factor"] = int(class_object.scale_factor)
+    layer["width_factor"] = int(class_object.scale_factor)
+    layer["algorithm"] = class_object.mode
 
-    layer['out_height'] = layer['in_height'] * layer['height_factor']
-    layer['out_width'] = layer['in_width'] * layer['width_factor']
+    layer["out_height"] = layer["in_height"] * layer["height_factor"]
+    layer["out_width"] = layer["in_width"] * layer["width_factor"]
 
-    output_shape = [layer['n_chan'], layer['out_height'], layer['out_width']]
+    output_shape = [layer["n_chan"], layer["out_height"], layer["out_width"]]
 
     return layer, output_shape
