@@ -74,7 +74,7 @@ def parse_yaml_config(config_file):
         KerasH5: my_keras_model.h5
         OutputDir: my-hls-test
         ProjectName: myproject
-        Part: xcku115-flvb2104-2-i
+        Part: xcvu13p-flga2577-2-e
         ClockPeriod: 5
         IOType: io_stream
         HLSConfig:
