@@ -491,7 +491,6 @@ class OneAPIWriter(Writer):
 
                     for o in model_outputs:
                         newline += indent + f'{o.definition_cpp(name_suffix="_output")} = {o.pipe_name}::read(q);\n'
-                        newline += indent + f'for (auto val : {o.name}_output) std::cout << val.to_double() << std::endl;\n'
                         newline += indent + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp()}>({o.name}_output.data(), {o.name});\n'
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                     newline = ''
