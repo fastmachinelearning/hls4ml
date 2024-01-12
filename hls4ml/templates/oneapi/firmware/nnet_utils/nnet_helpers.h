@@ -2,13 +2,13 @@
 #define NNET_HELPERS_H
 
 #include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <cmath>
 #include <sstream>
-#include <cstdio>
-#include <cstdlib>
 
 namespace nnet {
 
@@ -30,48 +30,39 @@ extern size_t trace_type_size;
 
 // constexpr int ceillog2(int x) { return (x <= 2) ? 1 : 1 + ceillog2((x + 1) / 2); }
 // replace with template metaprogramming
-template<int n> struct ceillog2
-{
+template <int n> struct ceillog2 {
     enum { val = 1 + ceillog2<((n + 1) / 2)>::val };
 };
 
-template<> struct ceillog2<2>
-{
+template <> struct ceillog2<2> {
     enum { val = 1 };
 };
 
-template<> struct ceillog2<1>
-{
+template <> struct ceillog2<1> {
     enum { val = 0 };
 };
-
 
 // constexpr int floorlog2(int x) { return (x < 2) ? 0 : 1 + floorlog2(x / 2); }
 // replace with template metaprogramming
-template<int n> struct floorlog2
-{
+template <int n> struct floorlog2 {
     enum { val = 1 + floorlog2<(n / 2)>::val };
 };
 
-template<> struct floorlog2<1>
-{
+template <> struct floorlog2<1> {
     enum { val = 0 };
 };
 
-template<> struct floorlog2<0>
-{
+template <> struct floorlog2<0> {
     enum { val = 0 };
 };
 
 // constexpr int pow2(int x) { return x == 0 ? 1 : 2 * pow2(x - 1); }
 // replace with template metaprogramming
-template<int n> struct pow2
-{
+template <int n> struct pow2 {
     enum { val = 2 * pow2<(n - 1)>::val };
 };
 
-template<> struct pow2<0>
-{
+template <> struct pow2<0> {
     enum { val = 1 };
 };
 
@@ -80,7 +71,6 @@ template <class data_T, class save_T> void save_output_array(data_T *data, save_
         ptr[i] = static_cast<save_T>(data[i].to_double());
     }
 }
-
 
 // We don't want to include save_T in this function because it will be inserted into myproject.cpp
 // so a workaround with element size is used

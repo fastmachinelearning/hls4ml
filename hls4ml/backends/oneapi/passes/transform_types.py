@@ -1,16 +1,13 @@
-from hls4ml.backends.fpga.fpga_types import (
-    ACTypeConverter,
-    HLSTypeConverter,
-    StaticWeightVariableConverter,
-)
+from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter, StaticWeightVariableConverter
 from hls4ml.backends.oneapi.oneapi_types import (
     OneAPIArrayVariableConverter,
     OneAPIInplaceArrayVariableConverter,
-    OneAPIInterfaceVariableConverter
+    OneAPIInterfaceVariableConverter,
 )
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.model.types import InplaceTensorVariable
 from hls4ml.utils.string_utils import convert_to_pascal_case
+
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
@@ -28,15 +25,21 @@ class TransformTypes(GlobalOptimizerPass):
                 raise NotImplementedError("io_stream is not yet implemented for oneAPI")
             elif io_type == 'io_parallel':
                 if out_name in node.model.inputs:
-                    new_var = self.interface_var_converter.convert(var, pragma='intel::fpga_register',
-                                                                   pipe_name=f'{convert_to_pascal_case(var.name)}Pipe',
-                                                                   pipe_id=f'{convert_to_pascal_case(var.name)}PipeID',
-                                                                   array_type=f'{var.name}_array_t')
+                    new_var = self.interface_var_converter.convert(
+                        var,
+                        pragma='intel::fpga_register',
+                        pipe_name=f'{convert_to_pascal_case(var.name)}Pipe',
+                        pipe_id=f'{convert_to_pascal_case(var.name)}PipeID',
+                        array_type=f'{var.name}_array_t',
+                    )
                 elif out_name in node.model.outputs:
-                    new_var = self.interface_var_converter.convert(var, pragma='intel::fpga_register',
-                                                                   pipe_name=f'{convert_to_pascal_case(var.name)}Pipe',
-                                                                   pipe_id=f'{convert_to_pascal_case(var.name)}PipeID',
-                                                                   array_type=f'{var.name}_array_t')
+                    new_var = self.interface_var_converter.convert(
+                        var,
+                        pragma='intel::fpga_register',
+                        pipe_name=f'{convert_to_pascal_case(var.name)}Pipe',
+                        pipe_id=f'{convert_to_pascal_case(var.name)}PipeID',
+                        array_type=f'{var.name}_array_t',
+                    )
                 elif isinstance(var, InplaceTensorVariable):
                     new_var = self.inplace_array_var_converter.convert(var, pragma='')
                 else:

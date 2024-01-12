@@ -1,10 +1,10 @@
 #include <algorithm>
 #include <cctype>
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <exception>
 
 #include "firmware/myproject.h"
 #include "firmware/parameters.h"
@@ -17,34 +17,29 @@
 
 #define CHECKPOINT 5000
 
-
 int main(int argc, char **argv) {
 
 #if FPGA_SIMULATOR
     auto selector = sycl::ext::intel::fpga_simulator_selector_v;
 #elif FPGA_HARDWARE
     auto selector = sycl::ext::intel::fpga_selector_v;
-#else  // #if FPGA_EMULATOR
+#else // #if FPGA_EMULATOR
     auto selector = sycl::ext::intel::fpga_emulator_selector_v;
 #endif
 
-    sycl::queue q(selector, fpga_tools::exception_handler,
-                  sycl::property::queue::enable_profiling{});
+    sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
 
     auto device = q.get_device();
 
     // make sure the device supports USM host allocations
     if (!device.has(sycl::aspect::usm_host_allocations)) {
-      std::cerr << "This design must either target a board that supports USM "
-                   "Host/Shared allocations, or IP Component Authoring. "
-                << std::endl;
-      std::terminate();
+        std::cerr << "This design must either target a board that supports USM "
+                     "Host/Shared allocations, or IP Component Authoring. "
+                  << std::endl;
+        std::terminate();
     }
 
-    std::cout << "Running on device: "
-              << device.get_info<sycl::info::device::name>().c_str()
-              << std::endl;
-
+    std::cout << "Running on device: " << device.get_info<sycl::info::device::name>().c_str() << std::endl;
 
     // load input data from text file
     std::ifstream fin("tb_data/tb_input_features.dat");
@@ -95,32 +90,31 @@ int main(int argc, char **argv) {
                 throw std::runtime_error("The output size does not match");
             }
             std::copy(pr.cbegin(), pr.cend(), predictions.back().begin());
-
         }
         // Do this separately to avoid vector reallocation
-        for(int i = 0; i < num_iterations; i++) {
+        for (int i = 0; i < num_iterations; i++) {
             // hls-fpga-machine-learning insert tb-input
-            q.single_task(MyProject{});  // once or once for each
+            q.single_task(MyProject{}); // once or once for each
         }
         q.wait();
 
         for (int j = 0; j < num_iterations; j++) {
             // hls-fpga-machine-learning insert tb-output
-            for(auto outval : outputs[j]) {
-              fout << outval << " ";
+            for (auto outval : outputs[j]) {
+                fout << outval << " ";
             }
             fout << std::endl;
             if (j % CHECKPOINT == 0) {
                 std::cout << "Predictions" << std::endl;
                 // hls-fpga-machine-learning insert predictions
-                for(auto predval : predictions[j]) {
-                  std::cout << predval << " ";
+                for (auto predval : predictions[j]) {
+                    std::cout << predval << " ";
                 }
                 std::cout << std::endl;
                 std::cout << "Quantized predictions" << std::endl;
                 // hls-fpga-machine-learning insert quantized
-                for(auto outval : outputs[j]) {
-                  std::cout << outval << " ";
+                for (auto outval : outputs[j]) {
+                    std::cout << outval << " ";
                 }
                 std::cout << std::endl;
             }
@@ -132,14 +126,14 @@ int main(int argc, char **argv) {
         std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations
                   << " invocations." << std::endl;
         // hls-fpga-machine-learning insert zero
-        for(int i = 0; i < num_iterations; i++) {
+        for (int i = 0; i < num_iterations; i++) {
             inputs.emplace_back();
             outputs.emplace_back();
             inputs.back().fill(0.0);
         }
 
         // hls-fpga-machine-learning insert top-level-function
-        for(int i = 0; i < num_iterations; i++) {
+        for (int i = 0; i < num_iterations; i++) {
             // hls-fpga-machine-learning insert tb-input
             q.single_task(MyProject{});
         }
@@ -147,13 +141,13 @@ int main(int argc, char **argv) {
 
         for (int j = 0; j < num_iterations; j++) {
             // hls-fpga-machine-learning insert tb-output
-            for(auto outval : outputs[j]) {
-              std::cout << outval << " ";
+            for (auto outval : outputs[j]) {
+                std::cout << outval << " ";
             }
             std::cout << std::endl;
 
-            for(auto outval : outputs[j]) {
-              fout << outval << " ";
+            for (auto outval : outputs[j]) {
+                fout << outval << " ";
             }
             fout << std::endl;
         }

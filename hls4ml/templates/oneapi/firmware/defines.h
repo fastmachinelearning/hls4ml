@@ -1,12 +1,12 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
-#include <sycl/sycl.hpp>
-#include <sycl/ext/intel/ac_types/ac_int.hpp>
+#include <array>
 #include <sycl/ext/intel/ac_types/ac_fixed.hpp>
 #include <sycl/ext/intel/ac_types/ac_fixed_math.hpp>
+#include <sycl/ext/intel/ac_types/ac_int.hpp>
 #include <sycl/ext/intel/fpga_extensions.hpp>
-#include <array>
+#include <sycl/sycl.hpp>
 
 // Include nnet::array - a custom array-like struct, mainly used with io_stream
 #include "nnet_utils/nnet_types.h"

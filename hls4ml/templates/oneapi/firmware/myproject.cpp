@@ -8,12 +8,9 @@ void MyProject::operator()() const {
     // NETWORK INSTANTIATION
     // ****************************************
 
-// hls-fpga-machine-learning read in
+    // hls-fpga-machine-learning read in
 
-// hls-fpga-machine-learning insert layers
+    // hls-fpga-machine-learning insert layers
 
-// hls-fpga-machine-learning return
-
+    // hls-fpga-machine-learning return
 }
-
-

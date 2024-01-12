@@ -740,8 +740,11 @@ class ModelGraph:
         n_outputs = len(self.get_output_variables())
 
         curr_dir = os.getcwd()
-        newdir = self.config.get_output_dir() + '/firmware' if os.path.exists(self.config.get_output_dir() + '/firmware') \
+        newdir = (
+            self.config.get_output_dir() + '/firmware'
+            if os.path.exists(self.config.get_output_dir() + '/firmware')
             else self.config.get_output_dir() + '/src/firmware'
+        )
         os.chdir(newdir)
 
         output = []

@@ -1,11 +1,10 @@
 #ifndef NNET_COMMON_H_
 #define NNET_COMMON_H_
 
-
 #include "nnet_helpers.h"
-#include <sycl/ext/intel/ac_types/ac_int.hpp>
 #include <sycl/ext/intel/ac_types/ac_fixed.hpp>
 #include <sycl/ext/intel/ac_types/ac_fixed_math.hpp>
+#include <sycl/ext/intel/ac_types/ac_int.hpp>
 
 typedef ac_fixed<16, 6> table_default_t;
 
@@ -39,14 +38,11 @@ template <class data_T, int NIN1, int NIN2> void merge(data_T data1[NIN1], data_
  * before applying and accumulate the result over the rolled dimension.
  * --- */
 template <class T, int N, class Op> T reduce(const T *x, Op op) {
-    static constexpr int leftN = pow2<floorlog2<N - 1>::val>::val > 0 ?
-                                 pow2<floorlog2<N - 1>::val>::val :
-                                 0;
+    static constexpr int leftN = pow2<floorlog2<N - 1>::val>::val > 0 ? pow2<floorlog2<N - 1>::val>::val : 0;
     static constexpr int rightN = N - leftN > 0 ? N - leftN : 0;
     if constexpr (N == 1) {
         return x[0];
-    }
-    else if constexpr (N == 2) {
+    } else if constexpr (N == 2) {
         return op(x[0], x[1]);
     } else {
         return op(reduce<T, leftN, Op>(x, op), reduce<T, rightN, Op>(x + leftN, op));

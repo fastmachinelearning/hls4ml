@@ -9,10 +9,10 @@
 
 using namespace sycl;
 
-#define PRINTF(format, ...)                                    \
-  {                                                            \
-    static const CL_CONSTANT char _format[] = format;          \
-    ext::oneapi::experimental::printf(_format, ##__VA_ARGS__); \
-  }
+#define PRINTF(format, ...)                                                                                                 \
+    {                                                                                                                       \
+        static const CL_CONSTANT char _format[] = format;                                                                   \
+        ext::oneapi::experimental::printf(_format, ##__VA_ARGS__);                                                          \
+    }
 
 #endif
