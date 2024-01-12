@@ -19,6 +19,9 @@ array set opt {
   bup        0
 }
 
+# Get pathname to this script to use as dereference path for relative file pathnames
+set sfd [file dirname [info script]]
+
 if { [info exists ::argv] } {
   foreach arg $::argv {
     foreach {optname optval} [split $arg '='] {}
@@ -126,16 +129,8 @@ catch {flow package require /HLS4ML}
 
 # Turn on SCVerify flow
 flow package require /SCVerify
-# Ideally, the path to the weights/testbench data should be runtime configurable
-# instead of compile-time WEIGHTS_DIR macro. If the nnet_helpers.h load_ functions
-# are ever enhanced to take a path option then this setting can be used:
-#   flow package option set /SCVerify/INVOKE_ARGS {firmware/weights tb_data}
-# For now, copy weights and tb_data to the current directory
-logfile message "Copying weights text file(s)\n" warning
-file mkdir weights
-foreach i [glob -nocomplain firmware/weights/*.txt] {
-  file copy -force $i weights
-}
+#  flow package option set /SCVerify/INVOKE_ARGS {$sfd/firmware/weights $sfd/tb_data/tb_input_features.dat $sfd/tb_data/tb_output_predictions.dat}
+#hls-fpga-machine-learning insert invoke_args
 
 # Turn on VSCode flow
 # flow package require /VSCode

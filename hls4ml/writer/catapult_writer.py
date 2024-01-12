@@ -742,7 +742,7 @@ class CatapultWriter(Writer):
         fout.close()
 
     def write_build_script(self, model):
-        """Write the TCL/Shell build scripts (build_prj.tcl, build_lib.sh)
+        """Write the TCL/Shell build scripts (build_prj.tcl, build_lib.sh, build_prj_bup.tcl, build_prj_bup.yml)
 
         Args:
             model (ModelGraph): the hls4ml model.
@@ -777,8 +777,37 @@ class CatapultWriter(Writer):
                     line = 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
                 elif model.config.get_config_value('ASICLibs') != None:
                     line = 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
+            elif '#hls-fpga-machine-learning insert invoke_args' in line:
+                    line = 'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions'))
             elif 'set hls_clock_period 5' in line:
                 line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
+            fout.write(line)
+        f.close()
+        fout.close()
+
+        # build_prj_bup.tcl
+        srcpath = os.path.join(filedir, '../templates/catapult/build_prj_bup.tcl')
+        dstpath = f'{model.config.get_output_dir()}/build_prj_bup.tcl'
+        copyfile(srcpath, dstpath)
+
+        # build_prj_bup.yml
+        srcpath = os.path.join(filedir, '../templates/catapult/build_prj_bup.yml')
+        dstpath = f'{model.config.get_output_dir()}/build_prj_bup.yml'
+        # copyfile(srcpath, dstpath)
+        f = open(srcpath,'r')
+        fout = open(dstpath,'w')
+        for line in f.readlines():
+            line = line.replace('myproject',model.config.get_project_name())
+            indent = line[:len(line)-len(line.lstrip())]
+            if '#hls-fpga-machine-learning insert techlibs' in line:
+                if model.config.get_config_value('Part') != None:
+                    line = indent+'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
+                elif model.config.get_config_value('ASICLibs') != None:
+                    line = indent+'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
+            elif '#hls-fpga-machine-learning insert invoke_args' in line:
+                    line = indent+'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions'))
+            elif 'set hls_clock_period 5' in line:
+                line = indent+'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
         f.close()
         fout.close()

@@ -6,6 +6,12 @@
 #include <algorithm>
 #include <map>
 
+static std::string s_weights_dir = "weights";
+
+const char *get_weights_dir() {
+  return s_weights_dir.c_str();
+}
+
 //hls-fpga-machine-learning insert bram
 
 //hls-fpga-machine-learning insert declare weights

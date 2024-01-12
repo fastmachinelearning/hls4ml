@@ -13,12 +13,15 @@
 #include <sstream>
 #include "ac_channel.h"
 
+extern const char *get_weights_dir();
+
 namespace nnet {
 
 #ifndef __SYNTHESIS__
 
+
 #ifndef WEIGHTS_DIR
-#define WEIGHTS_DIR "weights"
+#define WEIGHTS_DIR get_weights_dir()
 #endif
 
 template<class T, size_t SIZE>

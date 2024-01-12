@@ -8,6 +8,12 @@
 #include <stdlib.h>
 #include <vector>
 
+static std::string s_weights_dir;
+
+const char *get_weights_dir() {
+  return s_weights_dir.c_str();  
+}
+
 #include "firmware/myproject.h"
 #include "nnet_utils/nnet_helpers.h"
 // #include "firmware/parameters.h"
@@ -32,6 +38,21 @@ namespace nnet {
 
 CCS_MAIN(int argc, char *argv[])
 {
+  if (argc < 4) {
+    std::cerr << "Error - too few arguments" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " <weights_dir> <tb_input_features> <tb_output_predictions>" << std::endl;
+    std::cerr << "Where:    <weights_dir>           - string pathname to directory containing wN.txt and bN.txt files" << std::endl;
+    std::cerr << "          <tb_input_features>     - string pathname to tb_input_features.dat" << std::endl;
+    std::cerr << "          <tb_output_predictions> - string pathname to tb_output_predictions.dat" << std::endl;
+    CCS_RETURN(-1);
+  }
+  s_weights_dir = argv[1];
+  std::string tb_in(argv[2]);
+  std::string tb_out(argv[3]);
+  std::cout << "  Weights directory: " << s_weights_dir << std::endl;
+  std::cout << "  Test Feature Data: " << tb_in << std::endl;
+  std::cout << "  Test Predictions : " << tb_out << std::endl;
+
   //load input data from text file
   std::ifstream fin("tb_data/tb_input_features.dat");
   //load predictions from text file
