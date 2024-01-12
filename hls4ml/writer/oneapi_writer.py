@@ -97,7 +97,10 @@ class OneAPIWriter(Writer):
                 nbanks = int(2 ** np.ceil(np.log2(block_factor)) / 2)
                 var_width = int(np.ceil(var.type.precision.width / 8))
                 bwidth = self.next_pow2(var_width)
-                weight_header += f'[[intel::bankwidth({bwidth}), intel::numbanks({nbanks}), intel::max_replicates(1), intel::fpga_memory("BLOCK_RAM")]]'
+                weight_header += (
+                    f'[[intel::bankwidth({bwidth}), intel::numbanks({nbanks}), '
+                    'intel::max_replicates(1), intel::fpga_memory("BLOCK_RAM")]]'
+                )
             if var.storage.lower() == 'bram':
                 weight_header += 'static '
             else:
@@ -223,12 +226,12 @@ class OneAPIWriter(Writer):
         ) as fout:
             model_inputs = model.get_input_variables()
             model_outputs = model.get_output_variables()
-            model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+            # model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
-            # io_parallel and io_stream instantiate the top-level function differently
-            io_type = model.config.get_config_value('IOType')
-            indent = '    '
-            brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
+            # io_parallel and io_stream instantiate the top-level function differently (io_stream not yet supported)
+            # io_type = model.config.get_config_value('IOType')
+            # indent = '    '
+            # brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
 
             for line in f.readlines():
                 if 'MYPROJECT' in line:
@@ -392,7 +395,7 @@ class OneAPIWriter(Writer):
             f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w'
         ) as fout:
             for line in f.readlines():
-                indent = ' ' * (len(line) - len(line.lstrip('    ')))
+                indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
                 if 'myproject' in line:
                     newline = line.replace('myproject', project_name)
@@ -439,7 +442,7 @@ class OneAPIWriter(Writer):
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
         # model brambs aren't actually supported yet
 
-        io_type = model.config.get_config_value('IOType')
+        # io_type = model.config.get_config_value('IOType')
         indent = '    '
 
         filedir = os.path.dirname(os.path.abspath(__file__))
@@ -477,7 +480,8 @@ class OneAPIWriter(Writer):
                         newline += indent + f'{i.definition_cpp(name_suffix="_input")};\n'
                         newline += (
                             indent
-                            + f'nnet::convert_data<{dtype}, {i.type.name}, {i.size_cpp()}>({i.name}, {i.name}_input.data());\n'
+                            + f'nnet::convert_data<{dtype}, {i.type.name}, {i.size_cpp()}>({i.name}, {i.name}_input.data());'
+                            + '\n'
                         )
                         newline += indent + f'{i.pipe_name}::write(q, {i.name}_input);\n'
 
@@ -492,7 +496,8 @@ class OneAPIWriter(Writer):
                         newline += indent + f'{o.definition_cpp(name_suffix="_output")} = {o.pipe_name}::read(q);\n'
                         newline += (
                             indent
-                            + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp()}>({o.name}_output.data(), {o.name});\n'
+                            + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp()}>'
+                            + f'({o.name}_output.data(), {o.name});\n'
                         )
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                     newline = ''
