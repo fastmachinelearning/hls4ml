@@ -2,7 +2,7 @@ import glob
 import os
 import tarfile
 from collections import OrderedDict
-from shutil import copyfile, copytree, rmtree
+from shutil import copyfile
 
 import numpy as np
 import yaml
