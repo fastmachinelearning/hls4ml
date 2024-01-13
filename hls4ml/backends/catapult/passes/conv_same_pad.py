@@ -4,7 +4,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 class InsertZeroPaddingBeforeConv1D(OptimizerPass):
     name = 'insert_zero_padding_before_conv1d'
-    
+
     def match(self, node):
         is_match = (
             isinstance(node, (Conv1D, SeparableConv1D))
@@ -16,7 +16,7 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
     def transform(self, model, node):
         if model.config.get_config_value('IOType') != 'io_stream':
             return False
-        
+
         # Get the padding parameters from Conv1D layer
         pad_left = node.get_attr('pad_left')
         pad_right = node.get_attr('pad_right')
@@ -65,7 +65,7 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
     def transform(self, model, node):
         if model.config.get_config_value('IOType') != 'io_stream':
             return False
-        
+
         # Get the padding parameters from Conv2D layer
         pad_top = node.get_attr('pad_top')
         pad_bottom = node.get_attr('pad_bottom')

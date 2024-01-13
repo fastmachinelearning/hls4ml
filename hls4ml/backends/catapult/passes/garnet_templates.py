@@ -68,7 +68,7 @@ garnet_include_list = ['nnet_utils/nnet_garnet.h']
 class GarNetConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(GarNet)
-        self.template = (garnet_config_template, )
+        self.template = (garnet_config_template,)
 
     def get_transforms_config(self, node, params):
         params['n_in_features'] = node.attributes['n_in_features']
@@ -87,14 +87,14 @@ class GarNetConfigTemplate(LayerConfigTemplate):
         params['n_vertices'] = node.attributes['n_vertices']
         params['n_vertices_width'] = int(np.log2(params['n_vertices']))
         params['distance_width'] = 12
-        params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
+        params['distance_nint'] = min(4, params['distance_width'] - 6)  # this is tuned
         params['log2_reuse'] = int(np.log2(params['reuse']))
 
         # Define default precisions for various internal arrays (can be overridden from the config file)
         # We always give 10 digits for the subintegral part
         fwidth = 10
         # Integral precision for aggr_t depends on how large the temporary sum for weighed feature mean will be
-        aggr_intw = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3 # safety factor 2**3
+        aggr_intw = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3  # safety factor 2**3
         aggr_w = aggr_intw + fwidth
         # edge_weight_aggr_t does not need the safety factor
         ew_aggr_intw = aggr_intw - 3

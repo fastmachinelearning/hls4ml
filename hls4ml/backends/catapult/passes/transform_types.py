@@ -1,11 +1,11 @@
 from hls4ml.backends.fpga.fpga_types import (
     ACTypeConverter,
-    HLSTypeConverter,
-    StaticWeightVariableConverter,
     CatapultArrayVariableConverter,
     CatapultInplaceArrayVariableConverter,
     CatapultInplaceStreamVariableConverter,
     CatapultStreamVariableConverter,
+    HLSTypeConverter,
+    StaticWeightVariableConverter,
 )
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.model.types import InplaceTensorVariable

@@ -2,7 +2,6 @@ from copy import copy
 
 import numpy as np
 
-from hls4ml.backends.fpga.fpga_layers import PointwiseConv1D, PointwiseConv2D
 from hls4ml.backends.catapult.passes.convolution_templates import (
     Conv1DConfigTemplate,
     Conv1DFunctionTemplate,
@@ -12,6 +11,7 @@ from hls4ml.backends.catapult.passes.convolution_templates import (
     conv2d_config_template,
     conv_mult_config_template,
 )
+from hls4ml.backends.fpga.fpga_layers import PointwiseConv1D, PointwiseConv2D
 from hls4ml.model.layers import register_layer
 from hls4ml.model.optimizer import OptimizerPass
 

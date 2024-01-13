@@ -103,8 +103,8 @@ class CatapultWriter(Writer):
 
         elif mode == 'stream':
             fifo = model.config.get_config_value("FIFO")
-            if fifo != None:
-                return f'#pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="{fifo}"'
+            if fifo is not None:
+                return f'#pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="{fifo}" // depth="{depth}"'
             else:
                 return ''
         else:
@@ -128,7 +128,7 @@ class CatapultWriter(Writer):
 
         if mode == 'stream':
             fifo = model.config.get_config_value("FIFO")
-            if fifo != None:
+            if fifo is not None:
                 return f'// #pragma hls_fifo_depth {depth}'
             else:
                 return ''
@@ -152,16 +152,16 @@ class CatapultWriter(Writer):
         outstr = outstr + "  {}".format("Input Shape").ljust(15)
         outstr = outstr + "  {}".format("Output Type").ljust(40)
         outstr = outstr + "  {}".format("Output Shape").ljust(15)
-        #outstr = outstr + "  {}".format("Weight Type").ljust(24)
-        #outstr = outstr + "  {}".format("Bias Type").ljust(24)
+        # outstr = outstr + "  {}".format("Weight Type").ljust(24)
+        # outstr = outstr + "  {}".format("Bias Type").ljust(24)
         outstr = outstr + "  {}".format("Filter Shape").ljust(15)
         outstr = outstr + "  {}".format("Stride").ljust(10)
         outstr = outstr + "  {}".format("IOType").ljust(15)
         outstr = outstr + "  {}".format("Reuse").ljust(10)
 
         fout.write(outstr + "\n")
-        #fout.write("{}".format("Layer Name").ljust(25) + "  {}".format("Layer Class").ljust(20) + "  {}".format("Input Shape").ljust(35) + "  {}".format("Output Shape").ljust(35) + "  {}".format("IOType").ljust(15) + "  {}".format("Reuse").ljust(10) + "\n")
-        #fout.write("{}".format("----------").ljust(25) + "  {}".format("-----------").ljust(20) + "  {}".format("-----------").ljust(35) + "  {}".format("------------").ljust(35) + "  {}".format("------").ljust(15) + "  {}".format("-----").ljust(10) + "\n")
+        # fout.write("{}".format("Layer Name").ljust(25) + "  {}".format("Layer Class").ljust(20) + "  {}".format("Input Shape").ljust(35) + "  {}".format("Output Shape").ljust(35) + "  {}".format("IOType").ljust(15) + "  {}".format("Reuse").ljust(10) + "\n")
+        # fout.write("{}".format("----------").ljust(25) + "  {}".format("-----------").ljust(20) + "  {}".format("-----------").ljust(35) + "  {}".format("------------").ljust(35) + "  {}".format("------").ljust(15) + "  {}".format("-----").ljust(10) + "\n")
         input_shape = ""
         input_datatype = ""
         for layer in model.get_layers():
@@ -170,7 +170,7 @@ class CatapultWriter(Writer):
             # layer.get_output_variable().type.precision.width
             # layer.get_output_variable().type.precision.integer
             # layer.get_output_variable().type.precision.sign
-            for k, v in layer.get_output_variable().get_shape():
+            for _k, v in layer.get_output_variable().get_shape():
                 shape = shape + "[" + str(v) + "]"
 
             if layer.attributes.layer.class_name != 'Input':
@@ -178,10 +178,10 @@ class CatapultWriter(Writer):
                 if layer.attributes.layer.class_name == 'Activation':
                     my_class_name = layer.get_attr('activation')
 
-                filter_datatype = ""
-                #print(layer.weights.__dir__())
-                #layer_precision = layer.get_layer_precision()
-                #for wname, weights in layer.weights.items():
+                # filter_datatype = ""
+                # print(layer.weights.__dir__())
+                # layer_precision = layer.get_layer_precision()
+                # for wname, weights in layer.weights.items():
                 #    print(wname)
                 #    print(weights.type.name)
                 #    print(weights.type.precision.definition_cpp())
@@ -195,31 +195,31 @@ class CatapultWriter(Writer):
                 filter = ""
                 filt_width = layer.get_attr('filt_width')
                 filt_height = layer.get_attr('filt_height')
-                if filt_width != None:
+                if filt_width is not None:
                     filter = "[" + str(filt_width) + "]"
-                if filt_height != None:
+                if filt_height is not None:
                     filter = filter + "[" + str(filt_height) + "]"
 
                 stride = ""
                 stride_width = layer.get_attr('stride_width')
-                if stride_width != None:
+                if stride_width is not None:
                     stride = str(stride_width)
 
                 outstr = ""
-                outstr = outstr + "{}".format(layer.name).ljust(25)
-                outstr = outstr + "  {}".format(my_class_name).ljust(20)
-                outstr = outstr + "  {}".format(input_datatype).ljust(40)
-                outstr = outstr + "  {}".format(input_shape).ljust(15)
-                outstr = outstr + "  {}".format(datatype).ljust(40)
-                outstr = outstr + "  {}".format(shape).ljust(15)
-                #outstr = outstr + "  {}".format("weight type").ljust(24)
-                #outstr = outstr + "  {}".format("bias type").ljust(24)
-                outstr = outstr + "  {}".format(filter).ljust(15)
-                outstr = outstr + "  {}".format(stride).ljust(10)
+                outstr = outstr + f"{layer.name}".ljust(25)
+                outstr = outstr + f"  {my_class_name}".ljust(20)
+                outstr = outstr + f"  {input_datatype}".ljust(40)
+                outstr = outstr + f"  {input_shape}".ljust(15)
+                outstr = outstr + f"  {datatype}".ljust(40)
+                outstr = outstr + f"  {shape}".ljust(15)
+                # outstr = outstr + "  {}".format("weight type").ljust(24)
+                # outstr = outstr + "  {}".format("bias type").ljust(24)
+                outstr = outstr + f"  {filter}".ljust(15)
+                outstr = outstr + f"  {stride}".ljust(10)
                 outstr = outstr + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15)
-                outstr = outstr + "  {}".format(str(layer.model.config.get_reuse_factor(layer))).ljust(10)
+                outstr = outstr + f"  {str(layer.model.config.get_reuse_factor(layer))}".ljust(10)
                 fout.write(outstr + "\n")
-                #fout.write("{}".format(layer.name).ljust(25) + "  {}".format(my_class_name).ljust(20) + "  {}".format(input_shape).ljust(35) + "  {}".format(shape).ljust(35) + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15) + "  " + str(layer.model.config.get_reuse_factor(layer)) + "  Filter:" + filter + " Stride:" + stride + "\n")
+                # fout.write("{}".format(layer.name).ljust(25) + "  {}".format(my_class_name).ljust(20) + "  {}".format(input_shape).ljust(35) + "  {}".format(shape).ljust(35) + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15) + "  " + str(layer.model.config.get_reuse_factor(layer)) + "  Filter:" + filter + " Stride:" + stride + "\n")
 
             input_shape = shape
             input_datatype = datatype
@@ -239,7 +239,7 @@ class CatapultWriter(Writer):
             # Add headers to weights and biases
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert header' in line:
+            elif '// hls-fpga-machine-learning insert header' in line:
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
@@ -251,7 +251,7 @@ class CatapultWriter(Writer):
                     newline += ',\n' + brams_str
                 newline += '\n'
 
-            elif '//hls-fpga-machine-learning insert load weights' in line:
+            elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
@@ -268,8 +268,8 @@ class CatapultWriter(Writer):
                                 w.type.name, w.data_length, w.name, w.name
                             )
 
-            #Add Interface Synthesis resource pragmas
-            elif '//hls-fpga-machine-learning insert IFSynPragmas' in line:
+            # Add Interface Synthesis resource pragmas
+            elif '// hls-fpga-machine-learning insert IFSynPragmas' in line:
                 newline = line
                 all_inputs = [i.name for i in model_inputs]
                 all_outputs = [o.name for o in model_outputs]
@@ -279,13 +279,16 @@ class CatapultWriter(Writer):
                 if io_type == 'io_serial' or io_type == 'io_stream':
                     # Eventually this will be amba.ccs_axi4stream_in and amba.ccs_axi4stream_out
                     for dut_input in all_inputs:
-                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_in_wait"\n'.format(name=dut_input)
+                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_in_wait"\n'.format(
+                            name=dut_input
+                        )
                     for dut_output in all_outputs:
-                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_out_wait"\n'.format(name=dut_output)
-
+                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_out_wait"\n'.format(
+                            name=dut_output
+                        )
 
             # Add input/output type
-            elif '//hls-fpga-machine-learning insert IO' in line:
+            elif '// hls-fpga-machine-learning insert IO' in line:
                 newline = line
                 all_inputs = [i.name for i in model_inputs]
                 all_outputs = [o.name for o in model_outputs]
@@ -294,9 +297,9 @@ class CatapultWriter(Writer):
 
                 if io_type == 'io_parallel':
                     for i in model_inputs:
-                        newline += indent + self._make_array_pragma(i,model) + '\n'
+                        newline += indent + self._make_array_pragma(i, model) + '\n'
                     for o in model_outputs:
-                        newline += indent + self._make_array_pragma(o,model) + '\n'
+                        newline += indent + self._make_array_pragma(o, model) + '\n'
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays
                     # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
                     newline += indent + '// #pragma HLS INTERFACE ap_vld port={},{} \n'.format(
@@ -314,7 +317,7 @@ class CatapultWriter(Writer):
                         newline += indent + '// #pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
                     newline += indent + '// #pragma HLS DATAFLOW \n'
 
-            elif '//hls-fpga-machine-learning insert layers' in line:
+            elif '// hls-fpga-machine-learning insert layers' in line:
                 io_type = model.config.get_config_value("IOType")
                 newline = line + '\n'
                 for layer in model.get_layers():
@@ -324,13 +327,13 @@ class CatapultWriter(Writer):
                             def_cpp = var.definition_cpp()
                             if def_cpp is not None:
                                 if var.pragma:
-                                    newline += '    ' + self._make_array_fifo_pragma(var,model) + '\n'
+                                    newline += '    ' + self._make_array_fifo_pragma(var, model) + '\n'
                                 if io_type == 'io_serial' or io_type == 'io_stream':
                                     newline += '    static ' + def_cpp + '; \n'
                                 else:
                                     newline += '    ' + def_cpp + '; \n'
                                 if var.pragma:
-                                    newline += '    ' + self._make_array_pragma(var,model) + '\n'
+                                    newline += '    ' + self._make_array_pragma(var, model) + '\n'
                     func = layer.get_attr('function_cpp', None)
                     if func:
                         if not isinstance(func, (list, set)):
@@ -381,7 +384,7 @@ class CatapultWriter(Writer):
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert header' in line:
+            elif '// hls-fpga-machine-learning insert header' in line:
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
@@ -411,7 +414,7 @@ class CatapultWriter(Writer):
 
         for line in f.readlines():
             # Insert numbers
-            if '//hls-fpga-machine-learning insert numbers' in line:
+            if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
 
                 defines_list = []
@@ -424,7 +427,7 @@ class CatapultWriter(Writer):
 
                 newline += ''.join(defines_list)
 
-            elif '//hls-fpga-machine-learning insert layer-precision' in line:
+            elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
                 all_precision = OrderedDict()
                 for layer in model.get_layers():
@@ -454,19 +457,19 @@ class CatapultWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/parameters.h', 'w')
 
         for line in f.readlines():
-            if '//hls-fpga-machine-learning insert includes' in line:
+            if '// hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
                     newline += '#include "%s"\n' % include
 
-            elif '//hls-fpga-machine-learning insert weights' in line:
+            elif '// hls-fpga-machine-learning insert weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
                         if w.storage.lower() != 'bram':
                             newline += f'#include "weights/{w.name}.h"\n'
 
-            elif "//hls-fpga-machine-learning insert layer-config" in line:
+            elif "// hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
                 for layer in model.get_layers():
                     config = layer.get_attr('config_cpp', None)
@@ -557,18 +560,18 @@ class CatapultWriter(Writer):
             # Insert numbers
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert bram' in line:
+            elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
 
-            elif '//hls-fpga-machine-learning insert declare weights' in line:
+            elif '// hls-fpga-machine-learning insert declare weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        newline += w.definition_cpp() +";\n"
+                        newline += w.definition_cpp() + ";\n"
 
-            elif '//hls-fpga-machine-learning insert load weights' in line:
+            elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
@@ -585,7 +588,7 @@ class CatapultWriter(Writer):
                                 w.type.name, w.data_length, w.name, w.name
                             )
 
-            elif '//hls-fpga-machine-learning insert data' in line:
+            elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
                 offset = 0
                 for inp in model_inputs:
@@ -596,21 +599,21 @@ class CatapultWriter(Writer):
                     offset += inp.size()
                 for out in model_outputs:
                     newline += '      ' + out.definition_cpp() + ';\n'
-            elif '//hls-fpga-machine-learning insert random' in line:
+            elif '// hls-fpga-machine-learning insert random' in line:
                 newline = line
                 for inp in model_inputs:
                     newline += '    ' + inp.definition_cpp() + ';\n'
                     newline += f'    nnet::fill_random<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
                     newline += '    ' + out.definition_cpp() + ';\n'
-            elif '//hls-fpga-machine-learning insert zero' in line:
+            elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model_inputs:
                     newline += '    ' + inp.definition_cpp() + ';\n'
                     newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
-                    newline += '    ' + out.definition_cpp() + ';\n'        
-            elif '//hls-fpga-machine-learning insert top-level-function' in line:
+                    newline += '    ' + out.definition_cpp() + ';\n'
+            elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
                 input_vars = ','.join([i.name for i in model_inputs])
@@ -623,14 +626,14 @@ class CatapultWriter(Writer):
                 top_level = indent + f'{model.config.get_project_name()}({all_vars});\n'
 
                 newline += top_level
-            elif '//hls-fpga-machine-learning insert predictions' in line:
+            elif '// hls-fpga-machine-learning insert predictions' in line:
                 newline = line
                 for out in model_outputs:
                     newline += indent + f'for(int i = 0; i < {out.size_cpp()}; i++) {{\n'
                     newline += indent + '  std::cout << pr[i] << " ";\n'
                     newline += indent + '}\n'
                     newline += indent + 'std::cout << std::endl;\n'
-            elif '//hls-fpga-machine-learning insert tb-output' in line:
+            elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 for out in model_outputs:
                     newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
@@ -673,16 +676,16 @@ class CatapultWriter(Writer):
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
-            elif '//hls-fpga-machine-learning insert bram' in line:
+            elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
-            elif '//hls-fpga-machine-learning insert declare weights' in line:
+            elif '// hls-fpga-machine-learning insert declare weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        newline += w.definition_cpp() +";\n"
-            elif '//hls-fpga-machine-learning insert header' in line:
+                        newline += w.definition_cpp() + ";\n"
+            elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
                 inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
                 outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
@@ -690,7 +693,7 @@ class CatapultWriter(Writer):
                 newline = ''
                 newline += indent + inputs_str + ',\n'
                 newline += indent + outputs_str + '\n'
-            elif '//hls-fpga-machine-learning insert wrapper' in line:
+            elif '// hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
                 for i in model_inputs:
@@ -721,7 +724,7 @@ class CatapultWriter(Writer):
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(
                         o.type.name, dtype, o.size_cpp(), o.name, o.name
                     )
-            elif '//hls-fpga-machine-learning insert trace_outputs' in line:
+            elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
                     func = layer.get_attr('function_cpp', None)
@@ -750,35 +753,23 @@ class CatapultWriter(Writer):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        ### # project.tcl
-        ### f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
-        ### f.write('variable project_name\n')
-        ### f.write(f'set project_name "{model.config.get_project_name()}"\n')
-        ### f.write('variable backend\n')
-        ### f.write('set backend "catapult"\n')
-        ### f.write('variable part\n')
-        ### f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
-        ### f.write('variable clock_period\n')
-        ### f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
-        ### f.write('variable version\n')
-        ### f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
-        ### f.close()
-
         # build_prj.tcl
         srcpath = os.path.join(filedir, '../templates/catapult/build_prj.tcl')
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         # copyfile(srcpath, dstpath)
-        f = open(srcpath,'r')
-        fout = open(dstpath,'w')
+        f = open(srcpath)
+        fout = open(dstpath, 'w')
         for line in f.readlines():
-            line = line.replace('myproject',model.config.get_project_name())
+            line = line.replace('myproject', model.config.get_project_name())
             if '#hls-fpga-machine-learning insert techlibs' in line:
-                if model.config.get_config_value('Part') != None:
+                if model.config.get_config_value('Part') is not None:
                     line = 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
-                elif model.config.get_config_value('ASICLibs') != None:
+                elif model.config.get_config_value('ASICLibs') is not None:
                     line = 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
             elif '#hls-fpga-machine-learning insert invoke_args' in line:
-                    line = 'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions'))
+                line = 'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(
+                    model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions')
+                )
             elif 'set hls_clock_period 5' in line:
                 line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
@@ -794,38 +785,28 @@ class CatapultWriter(Writer):
         srcpath = os.path.join(filedir, '../templates/catapult/build_prj_bup.yml')
         dstpath = f'{model.config.get_output_dir()}/build_prj_bup.yml'
         # copyfile(srcpath, dstpath)
-        f = open(srcpath,'r')
-        fout = open(dstpath,'w')
+        f = open(srcpath)
+        fout = open(dstpath, 'w')
         for line in f.readlines():
-            line = line.replace('myproject',model.config.get_project_name())
-            indent = line[:len(line)-len(line.lstrip())]
+            line = line.replace('myproject', model.config.get_project_name())
+            indent = line[: len(line) - len(line.lstrip())]
             if '#hls-fpga-machine-learning insert techlibs' in line:
-                if model.config.get_config_value('Part') != None:
-                    line = indent+'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
-                elif model.config.get_config_value('ASICLibs') != None:
-                    line = indent+'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
+                if model.config.get_config_value('Part') is not None:
+                    line = indent + 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
+                elif model.config.get_config_value('ASICLibs') is not None:
+                    line = indent + 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
             elif '#hls-fpga-machine-learning insert invoke_args' in line:
-                    line = indent+'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions'))
+                line = (
+                    indent
+                    + 'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(
+                        model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions')
+                    )
+                )
             elif 'set hls_clock_period 5' in line:
-                line = indent+'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
+                line = indent + 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
         f.close()
         fout.close()
-
-        ### # catapult_synth.tcl
-        ### srcpath = os.path.join(filedir, '../templates/catapult/catapult_synth.tcl')
-        ### dstpath = f'{model.config.get_output_dir()}/catapult_synth.tcl'
-        ### # copyfile(srcpath, dstpath)
-        ### f = open(srcpath,'r')
-        ### fout = open(dstpath,'w')
-        ### for line in f.readlines():
-        ###     line = line.replace('myproject', model.config.get_project_name())
-        ###     if '-part' in line:
-        ###         line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('Part'))
-
-        ###     fout.write(line)
-        ### f.close()
-        ### fout.close()
 
         # build_lib.sh
         f = open(os.path.join(filedir, '../templates/catapult/build_lib.sh'))
@@ -857,7 +838,7 @@ class CatapultWriter(Writer):
 
         headers = [os.path.basename(h) for h in glob.glob(srcpath + '*.h')]
 
-        if model.config.get_config_value('DontCopyNNET') != None:
+        if model.config.get_config_value('DontCopyNNET') is not None:
             h = 'nnet_code_gen.h'
             copyfile(srcpath + h, dstpath + h)
             return
@@ -870,38 +851,38 @@ class CatapultWriter(Writer):
         # ac_types
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        srcpath = os.path.join(filedir,'../../ac_types/')
-        dstpath = '{}/firmware/ac_types/'.format(model.config.get_output_dir())
+        srcpath = os.path.join(filedir, '../../ac_types/')
+        dstpath = f'{model.config.get_output_dir()}/firmware/ac_types/'
 
         if os.path.exists(srcpath):
-          if os.path.exists(dstpath):
-              rmtree(dstpath)
+            if os.path.exists(dstpath):
+                rmtree(dstpath)
 
-          copytree(srcpath, dstpath)
+            copytree(srcpath, dstpath)
 
         # ac_math
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        srcpath = os.path.join(filedir,'../../ac_math/')
-        dstpath = '{}/firmware/ac_math/'.format(model.config.get_output_dir())
+        srcpath = os.path.join(filedir, '../../ac_math/')
+        dstpath = f'{model.config.get_output_dir()}/firmware/ac_math/'
 
         if os.path.exists(srcpath):
-          if os.path.exists(dstpath):
-              rmtree(dstpath)
+            if os.path.exists(dstpath):
+                rmtree(dstpath)
 
-          copytree(srcpath, dstpath)
+            copytree(srcpath, dstpath)
 
         # ac_simutils
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        srcpath = os.path.join(filedir,'../../ac_simutils/')
-        dstpath = '{}/firmware/ac_simutils/'.format(model.config.get_output_dir())
+        srcpath = os.path.join(filedir, '../../ac_simutils/')
+        dstpath = f'{model.config.get_output_dir()}/firmware/ac_simutils/'
 
         if os.path.exists(srcpath):
-          if os.path.exists(dstpath):
-              rmtree(dstpath)
+            if os.path.exists(dstpath):
+                rmtree(dstpath)
 
-          copytree(srcpath, dstpath)
+            copytree(srcpath, dstpath)
 
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))

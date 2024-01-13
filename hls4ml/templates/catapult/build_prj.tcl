@@ -106,10 +106,10 @@ if {$opt(reset)} {
 options set Message/ErrorOverride HIER-10 -remove
 solution options set Message/ErrorOverride HIER-10 -remove
 
-if {$opt(vhdl)}    { 
-  options set Output/OutputVHDL true 
+if {$opt(vhdl)}    {
+  options set Output/OutputVHDL true
 } else {
-  options set Output/OutputVHDL false 
+  options set Output/OutputVHDL false
 }
 if {$opt(verilog)} {
   options set Output/OutputVerilog true
@@ -318,4 +318,3 @@ if {$opt(da)} {
 if { [catch {flow package present /HLS4ML}] == 0 } {
   flow run /HLS4ML/collect_reports
 }
-

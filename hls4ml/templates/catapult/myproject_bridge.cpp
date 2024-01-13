@@ -8,19 +8,17 @@
 
 static std::string s_weights_dir = "weights";
 
-const char *get_weights_dir() {
-  return s_weights_dir.c_str();
-}
+const char *get_weights_dir() { return s_weights_dir.c_str(); }
 
-//hls-fpga-machine-learning insert bram
+// hls-fpga-machine-learning insert bram
 
-//hls-fpga-machine-learning insert declare weights
+// hls-fpga-machine-learning insert declare weights
 
 namespace nnet {
-    bool trace_enabled = false;
-    std::map<std::string, void *> *trace_outputs = NULL;
-    size_t trace_type_size = sizeof(double);
-}
+  bool trace_enabled = false;
+  std::map<std::string, void *> *trace_outputs = NULL;
+  size_t trace_type_size = sizeof(double);
+} // namespace nnet
 
 extern "C" {
 
@@ -33,7 +31,7 @@ void allocate_trace_storage(size_t element_size) {
     nnet::trace_enabled = true;
     nnet::trace_outputs = new std::map<std::string, void *>;
     nnet::trace_type_size = element_size;
-    //hls-fpga-machine-learning insert trace_outputs
+    // hls-fpga-machine-learning insert trace_outputs
 }
 
 void free_trace_storage() {
@@ -58,18 +56,17 @@ void collect_trace_output(struct trace_data *c_trace_outputs) {
 
 // Wrapper of top level function for Python bridge
 void myproject_float(
-    //hls-fpga-machine-learning insert header #float
+    // hls-fpga-machine-learning insert header #float
 ) {
-    
-    //hls-fpga-machine-learning insert wrapper #float
+
+    // hls-fpga-machine-learning insert wrapper #float
 }
 
 void myproject_double(
-    //hls-fpga-machine-learning insert header #double
+    // hls-fpga-machine-learning insert header #double
 ) {
-    //hls-fpga-machine-learning insert wrapper #double
+    // hls-fpga-machine-learning insert wrapper #double
 }
-
 }
 
 #endif
