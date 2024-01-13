@@ -768,7 +768,7 @@ class CatapultWriter(Writer):
                 tb_in_file = model.config.get_config_value('InputData')
                 tb_out_file = model.config.get_config_value('OutputPredictions')
                 invoke_args = f'$sfd/firmware/weights $sfd/tb_data/{tb_in_file} $sfd/tb_data/{tb_out_file}'
-                line = f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"'
+                line = f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"\n'
             elif 'set hls_clock_period 5' in line:
                 line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
@@ -798,7 +798,7 @@ class CatapultWriter(Writer):
                 tb_in_file = model.config.get_config_value('InputData')
                 tb_out_file = model.config.get_config_value('OutputPredictions')
                 invoke_args = f'$sfd/firmware/weights $sfd/tb_data/{tb_in_file} $sfd/tb_data/{tb_out_file}'
-                line = indent + f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"'
+                line = indent + f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"\n'
             elif 'set hls_clock_period 5' in line:
                 line = indent + 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
