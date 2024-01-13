@@ -56,7 +56,7 @@ catapult_solution:
         solution library add ccs_sample_mem
         solution library add ccs_sample_rom
         solution library add hls4ml_lib
-      
+
         # special exception for SAED32 for use in power estimation
         if { $do_saed } {
           go libraries
@@ -77,47 +77,46 @@ catapult_solution:
       options set Input/CompilerFlags -DRANDOM_FRAMES=$opt(ran_frame)
       options set Input/SearchPath {$MGC_HOME/shared/include/nnet_utils} -append
       options set ComponentLibs/SearchPath {$MGC_HOME/shared/pkgs/ccs_hls4ml} -append
-      
+      #
       #--------------------------------------------------------
       # Configure Catapult Options
       # downgrade HIER-10
       options set Message/ErrorOverride HIER-10 -remove
       solution options set Message/ErrorOverride HIER-10 -remove
-      
-      if {$opt(vhdl)}    { 
-        options set Output/OutputVHDL true 
+      #
+      if {$opt(vhdl)}    {
+        options set Output/OutputVHDL true
       } else {
-        options set Output/OutputVHDL false 
+        options set Output/OutputVHDL false
       }
       if {$opt(verilog)} {
         options set Output/OutputVerilog true
       } else {
         options set Output/OutputVerilog false
       }
-      
+      #
       #--------------------------------------------------------
       # Configure Catapult Flows
       if { [info exists ::env(XILINX_PCL_CACHE)] } {
         options set /Flows/Vivado/PCL_CACHE $::env(XILINX_PCL_CACHE)
         solution options set /Flows/Vivado/PCL_CACHE $::env(XILINX_PCL_CACHE)
       }
-      
+      #
       # Turn on SCVerify flow
       flow package require /SCVerify
-      #  flow package option set /SCVerify/INVOKE_ARGS {$sfd/firmware/weights $sfd/tb_data/tb_input_features.dat $sfd/tb_data/tb_output_predictions.dat}
       #hls-fpga-machine-learning insert invoke_args
-      
+      #
       # Turn on VSCode flow
       # flow package require /VSCode
       # To launch VSCode on the C++ HLS design:
       #   cd my-Catapult-test
       #   code Catapult.code-workspace
-      
+      #
       #--------------------------------------------------------
       #    Start of HLS script
       solution file add [file join $sfd firmware/myproject.cpp]
       solution file add [file join $sfd myproject_test.cpp] -exclude true
-      
+      #
       # Parse parameters.h to determine config info to control directives/pragmas
       set IOType io_stream
       if { ![file exists [set parameters_file [file join $sfd firmware/parameters.h]]] } {
@@ -145,7 +144,7 @@ catapult_solution:
       set hls_clock_period 5
       # Apply the CLOCKs directive
       directive set -CLOCKS [list clk [list -CLOCK_PERIOD $hls_clock_period -CLOCK_EDGE rising -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high]]
-      
+      #
       # Run default flow in shell mode
       if {! [gui exists]} {
         go compile
@@ -194,11 +193,11 @@ catapult_solution:
     type: top
     script: |
       project save
-      
+      #
       if {$opt(cosim) || $opt(validation)} {
         flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
       }
-      
+      #
       if {$opt(export)} {
         puts "***** EXPORT IP *****"
         set time_start [clock clicks -milliseconds]
@@ -209,7 +208,7 @@ catapult_solution:
         set time_end [clock clicks -milliseconds]
         report_time "EXPORT IP" $time_start $time_end
       }
-      
+      #
       if {!$opt(power) && $opt(vsynth)} {
         puts "***** VIVADO SYNTHESIS *****"
         set time_start [clock clicks -milliseconds]
@@ -220,7 +219,7 @@ catapult_solution:
       if {$opt(bitfile)} {
         puts "***** Option bitfile not supported yet *****"
       }
-      
+      #
       if { [catch {flow package present /HLS4ML}] == 0 } {
         flow run /HLS4ML/collect_reports
       }

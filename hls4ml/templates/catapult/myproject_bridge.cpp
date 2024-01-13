@@ -15,9 +15,9 @@ const char *get_weights_dir() { return s_weights_dir.c_str(); }
 // hls-fpga-machine-learning insert declare weights
 
 namespace nnet {
-  bool trace_enabled = false;
-  std::map<std::string, void *> *trace_outputs = NULL;
-  size_t trace_type_size = sizeof(double);
+bool trace_enabled = false;
+std::map<std::string, void *> *trace_outputs = NULL;
+size_t trace_type_size = sizeof(double);
 } // namespace nnet
 
 extern "C" {

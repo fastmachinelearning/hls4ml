@@ -196,10 +196,10 @@ def parse_catapult_report(hls_dir):
             next(f)
             result = next(f).split()
 
-        timing_report['WNS']  = float(result[0])
-        timing_report['TNS']  = float(result[1])
-        timing_report['WHS']  = float(result[4])
-        timing_report['THS']  = float(result[5])
+        timing_report['WNS'] = float(result[0])
+        timing_report['TNS'] = float(result[1])
+        timing_report['WHS'] = float(result[4])
+        timing_report['THS'] = float(result[5])
         timing_report['WPWS'] = float(result[8])
         timing_report['TPWS'] = float(result[9])
 

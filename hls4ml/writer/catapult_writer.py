@@ -104,7 +104,9 @@ class CatapultWriter(Writer):
         elif mode == 'stream':
             fifo = model.config.get_config_value("FIFO")
             if fifo is not None:
-                return f'#pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="{fifo}" // depth="{depth}"'
+                retstr = f'#pragma hls_resource {variable.name}:cns variables="{variable.name}"'
+                retstr += f' map_to_module="{fifo}" // depth="{depth}"'
+                return retstr
             else:
                 return ''
         else:
@@ -113,6 +115,7 @@ class CatapultWriter(Writer):
     @staticmethod
     def _make_array_fifo_pragma(variable, model):
         config = variable.pragma
+        factor = ''
         if type(config) is tuple:
             mode = config[0]
             if mode in ['partition', 'reshape']:
@@ -129,7 +132,7 @@ class CatapultWriter(Writer):
         if mode == 'stream':
             fifo = model.config.get_config_value("FIFO")
             if fifo is not None:
-                return f'// #pragma hls_fifo_depth {depth}'
+                return f'// #pragma hls_fifo_depth {depth} {factor}'
             else:
                 return ''
         else:
@@ -160,8 +163,6 @@ class CatapultWriter(Writer):
         outstr = outstr + "  {}".format("Reuse").ljust(10)
 
         fout.write(outstr + "\n")
-        # fout.write("{}".format("Layer Name").ljust(25) + "  {}".format("Layer Class").ljust(20) + "  {}".format("Input Shape").ljust(35) + "  {}".format("Output Shape").ljust(35) + "  {}".format("IOType").ljust(15) + "  {}".format("Reuse").ljust(10) + "\n")
-        # fout.write("{}".format("----------").ljust(25) + "  {}".format("-----------").ljust(20) + "  {}".format("-----------").ljust(35) + "  {}".format("------------").ljust(35) + "  {}".format("------").ljust(15) + "  {}".format("-----").ljust(10) + "\n")
         input_shape = ""
         input_datatype = ""
         for layer in model.get_layers():
@@ -219,7 +220,6 @@ class CatapultWriter(Writer):
                 outstr = outstr + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15)
                 outstr = outstr + f"  {str(layer.model.config.get_reuse_factor(layer))}".ljust(10)
                 fout.write(outstr + "\n")
-                # fout.write("{}".format(layer.name).ljust(25) + "  {}".format(my_class_name).ljust(20) + "  {}".format(input_shape).ljust(35) + "  {}".format(shape).ljust(35) + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15) + "  " + str(layer.model.config.get_reuse_factor(layer)) + "  Filter:" + filter + " Stride:" + stride + "\n")
 
             input_shape = shape
             input_datatype = datatype
@@ -279,13 +279,11 @@ class CatapultWriter(Writer):
                 if io_type == 'io_serial' or io_type == 'io_stream':
                     # Eventually this will be amba.ccs_axi4stream_in and amba.ccs_axi4stream_out
                     for dut_input in all_inputs:
-                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_in_wait"\n'.format(
-                            name=dut_input
-                        )
+                        newline += f'#pragma hls_resource {dut_input}:rsc variables="{dut_input}"'
+                        newline += ' map_to_module="ccs_ioport.ccs_in_wait"\n'
                     for dut_output in all_outputs:
-                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_out_wait"\n'.format(
-                            name=dut_output
-                        )
+                        newline += f'#pragma hls_resource {dut_output}:rsc variables="{dut_output}"'
+                        newline += ' map_to_module="ccs_ioport.ccs_out_wait"\n'
 
             # Add input/output type
             elif '// hls-fpga-machine-learning insert IO' in line:
@@ -767,9 +765,10 @@ class CatapultWriter(Writer):
                 elif model.config.get_config_value('ASICLibs') is not None:
                     line = 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
             elif '#hls-fpga-machine-learning insert invoke_args' in line:
-                line = 'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(
-                    model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions')
-                )
+                tb_in_file = model.config.get_config_value('InputData')
+                tb_out_file = model.config.get_config_value('OutputPredictions')
+                invoke_args = f'$sfd/firmware/weights $sfd/tb_data/{tb_in_file} $sfd/tb_data/{tb_out_file}'
+                line = f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"'
             elif 'set hls_clock_period 5' in line:
                 line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
@@ -796,12 +795,10 @@ class CatapultWriter(Writer):
                 elif model.config.get_config_value('ASICLibs') is not None:
                     line = indent + 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
             elif '#hls-fpga-machine-learning insert invoke_args' in line:
-                line = (
-                    indent
-                    + 'flow package option set /SCVerify/INVOKE_ARGS "$sfd/firmware/weights $sfd/tb_data/{} $sfd/tb_data/{}"'.format(
-                        model.config.get_config_value('InputData'), model.config.get_config_value('OutputPredictions')
-                    )
-                )
+                tb_in_file = model.config.get_config_value('InputData')
+                tb_out_file = model.config.get_config_value('OutputPredictions')
+                invoke_args = f'$sfd/firmware/weights $sfd/tb_data/{tb_in_file} $sfd/tb_data/{tb_out_file}'
+                line = indent + f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"'
             elif 'set hls_clock_period 5' in line:
                 line = indent + 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
