@@ -61,7 +61,7 @@ void pointwise_conv_2d_latency_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in
     #pragma HLS ARRAY_PARTITION variable=res complete dim=0
     #pragma HLS ARRAY_PARTITION variable=pointwise_biases complete dim=0
     #pragma HLS ARRAY_PARTITION variable=pointwise_weights complete dim=0
-    
+
     for (int h = 0; h < CONFIG_T::in_height; h++) {
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
         for (int w = 0; w < CONFIG_T::in_width; w++) {
