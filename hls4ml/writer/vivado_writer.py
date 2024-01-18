@@ -7,7 +7,6 @@ from shutil import copyfile, copytree, rmtree
 import numpy as np
 import yaml
 
-from hls4ml.backends import get_backend
 from hls4ml.writer.writers import Writer
 
 config_filename = 'hls4ml_config.yml'
@@ -172,7 +171,7 @@ class VivadoWriter(Writer):
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
-                    if model.config.model_strategy.lower() == 'resource':
+                    if model.config.pipeline_style.lower() == 'dataflow':
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
@@ -197,11 +196,12 @@ class VivadoWriter(Writer):
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.get_attr('function_cpp', None)
                     if func:
-                        func = [func]
+                        if not isinstance(func, (list, set)):
+                            func = [func]
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
-                            newline += '// ' + layer.name + '\n'
+                            newline += '    // ' + layer.name + '\n'
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
@@ -240,7 +240,6 @@ class VivadoWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
@@ -274,12 +273,19 @@ class VivadoWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-
             # Insert numbers
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
-                numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
-                newline += ''.join(numbers)
+
+                defines_list = []
+                for layer in model.get_layers():
+                    defines = ''
+                    for k, v in layer.get_output_variable().get_shape():
+                        defines += f'#define {k} {v}\n'
+
+                    defines_list.append(defines)
+
+                newline += ''.join(defines_list)
 
             elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
@@ -311,7 +317,6 @@ class VivadoWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/parameters.h', 'w')
 
         for line in f.readlines():
-
             if '// hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
@@ -496,7 +501,6 @@ class VivadoWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
@@ -585,6 +589,8 @@ class VivadoWriter(Writer):
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.write('variable clock_uncertainty\n')
         f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
+        f.write('variable version\n')
+        f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
         f.close()
 
         # build_prj.tcl

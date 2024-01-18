@@ -4,7 +4,7 @@ from contextlib import contextmanager
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.model.attributes import ConfigurableAttribute
+from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
@@ -39,6 +39,8 @@ class QuartusBackend(FPGABackend):
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('table_size', default=1024))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -60,6 +62,7 @@ class QuartusBackend(FPGABackend):
             'quartus:merge_batch_norm_quantized_tanh',
             'quartus:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
+            'quartus:xnor_pooling',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -69,6 +72,7 @@ class QuartusBackend(FPGABackend):
             'quartus:inplace_parallel_reshape',
             'quartus:inplace_stream_flatten',
             'quartus:skip_softmax',
+            'quartus:fix_softmax_table_size',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -131,7 +135,6 @@ class QuartusBackend(FPGABackend):
         return config
 
     def build(self, model, synth=True, fpgasynth=False, log_level=1, cont_if_large_area=False):
-
         """
         Builds the project using Intel HLS compiler.
 
@@ -312,16 +315,6 @@ class QuartusBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        index_t = IntegerPrecisionType(width=1, signed=False)
-        layer.set_attr('index_t', index_t)
-
-        if 'table_t' not in layer.attributes:
-            layer.set_attr(
-                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8))
-            )
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
-
         # We don't use RF yet
         if True:  # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
@@ -366,15 +359,5 @@ class QuartusBackend(FPGABackend):
     def init_simple_rnn(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
-
-        index_t = IntegerPrecisionType(width=1, signed=False)
-        layer.set_attr('index_t', index_t)
-
-        if 'table_t' not in layer.attributes:
-            layer.set_attr(
-                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8))
-            )
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
 
         # TODO - Consider setting and using RF

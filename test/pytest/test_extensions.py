@@ -133,7 +133,8 @@ def test_extensions(tmp_path, backend_id):
     ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
     # Add the pass into the main optimization flow
     optimize_flow = [flow for flow in ip_flow.requires if ':optimize' in flow][0]
-    backend.register_pass('remove_duplicate_reverse', RemoveDuplicateReverse, flow=optimize_flow)
+    optmizer_name = f'{backend_id.lower()}:remove_duplicate_reverse'
+    backend.register_pass(optmizer_name, RemoveDuplicateReverse, flow=optimize_flow)
 
     # Register template passes for the given backend
     backend.register_template(HReverseConfigTemplate)
@@ -171,6 +172,9 @@ def test_extensions(tmp_path, backend_id):
     hres = hmodel.predict(x.astype('float32'))
 
     # Check if the optimizer pass was applied
-    assert f'{backend_id.lower()}:remove_duplicate_reverse' in hmodel._applied_flows[0][optimize_flow]
+    assert optmizer_name in hmodel._applied_flows[0][optimize_flow]
+
+    # Remove flow from
+    hls4ml.model.flow.update_flow(optimize_flow, remove_optimizers=[optmizer_name])
 
     np.testing.assert_array_equal(kres, hres)

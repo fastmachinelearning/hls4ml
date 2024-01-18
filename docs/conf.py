@@ -72,9 +72,8 @@ extensions = [
     'sphinx_github_changelog',
 ]
 
-# Note: to build locally, you will need to set the ACTIONS_RUNTIME_TOKEN
+# Note: to build locally, you will need to set the SPHINX_GITHUB_CHANGELOG_TOKEN
 # environment variable to a personal access token with repo scope
-sphinx_github_changelog_token = os.environ["ACTIONS_RUNTIME_TOKEN"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -117,3 +116,12 @@ html_theme_options = {
     'includehidden': True,
     'titles_only': False,
 }
+
+html_context = {
+    'display_github': True,  # Integrate GitHub
+    'github_user': 'fastmachinelearning',  # Username
+    'github_repo': "hls4ml",  # Repo name
+    'github_version': 'main',  # Version
+    'conf_py_path': '/docs/',  # Path in the checkout to the docs root
+}
+html_favicon = 'img/hls4ml_logo.svg'

@@ -5,12 +5,12 @@ stages:
 
 generator:
   stage: generate
-  image: python:3.7-alpine
-  tags: 
-    - docker
+  image: python:3.8-alpine
+  tags:
+    - k8s-default
   before_script:
     - pip install pyyaml
-  script: 
+  script:
     - cd test/pytest
     - python generate_ci_yaml.py
   artifacts:

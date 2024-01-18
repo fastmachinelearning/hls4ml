@@ -1,9 +1,9 @@
 import numpy as np
 
-from hls4ml.model.types import FixedPrecisionType
 from hls4ml.backends.fpga.fpga_types import APTypeConverter
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import GarNet, GarNetStack
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
+from hls4ml.model.types import FixedPrecisionType
 
 # GarNet templates
 
@@ -56,16 +56,19 @@ const config{index}::aggregator_distance_weights_t (&config{index}::aggregator_d
 const config{index}::aggregator_distance_biases_t (&config{index}::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
 const config{index}::output_transform_weights_t (&config{index}::output_transform_weights)[{output_transform_weights_size}] = {output_transform_weights};
 const config{index}::output_transform_biases_t (&config{index}::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
-"""
+"""  # noqa: E501
 
-garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+garnet_function_template = (
+    'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+)
 
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
+
 
 class GarNetConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(GarNet)
-        self.template = (garnet_config_template, )
+        self.template = (garnet_config_template,)
 
     def get_transforms_config(self, node, params):
         params['n_in_features'] = node.attributes['n_in_features']
@@ -75,8 +78,8 @@ class GarNetConfigTemplate(LayerConfigTemplate):
 
         for wname, weights in node.weights.items():
             params[wname] = weights.name
-            params['{}_t'.format(wname)] = weights.type.name
-            params['{}_size'.format(wname)] = weights.data_length
+            params[f'{wname}_t'] = weights.type.name
+            params[f'{wname}_size'] = weights.data_length
 
     def format(self, node):
         params = self._default_config_params(node)
@@ -84,14 +87,14 @@ class GarNetConfigTemplate(LayerConfigTemplate):
         params['n_vertices'] = node.attributes['n_vertices']
         params['n_vertices_width'] = int(np.log2(params['n_vertices']))
         params['distance_width'] = 12
-        params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
+        params['distance_nint'] = min(4, params['distance_width'] - 6)  # this is tuned
         params['log2_reuse'] = int(np.log2(params['reuse']))
 
-        ## Define default precisions for various internal arrays (can be overridden from the config file)
+        # Define default precisions for various internal arrays (can be overridden from the config file)
         # We always give 10 digits for the subintegral part
         fwidth = 10
         # Integral precision for aggr_t depends on how large the temporary sum for weighed feature mean will be
-        aggr_intw = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3 # safety factor 2**3
+        aggr_intw = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3  # safety factor 2**3
         aggr_w = aggr_intw + fwidth
         # edge_weight_aggr_t does not need the safety factor
         ew_aggr_intw = aggr_intw - 3
@@ -104,14 +107,15 @@ class GarNetConfigTemplate(LayerConfigTemplate):
             ('edge_weight', FixedPrecisionType(10, 0, signed=False)),
             ('edge_weight_aggr', FixedPrecisionType(ew_aggr_w, ew_aggr_intw, signed=False)),
             ('aggr', FixedPrecisionType(aggr_w, aggr_intw)),
-            ('norm', FixedPrecisionType(norm_w, norm_intw, signed=False))
+            ('norm', FixedPrecisionType(norm_w, norm_intw, signed=False)),
         ]
         precision_converter = APTypeConverter()
         for vname, default_precision in vspecs:
-            params['{}_t'.format(vname)], type_name = node.model.config.get_precision(node, var=vname)
+            params[f'{vname}_t'], type_name = node.model.config.get_precision(node, var=vname)
             if type_name.endswith('default_t'):
-                params['{}_t'.format(vname)] = precision_converter.convert(default_precision).definition_cpp()
-
+                params[f'{vname}_t'] = precision_converter.convert(default_precision).definition_cpp()
+            else:
+                params[f'{vname}_t'] = precision_converter.convert(params[f'{vname}_t']).definition_cpp()
         params['output_t'] = node.get_output_variable().type.name
 
         if node.attributes['collapse'] in ['mean', 'max']:
@@ -124,6 +128,7 @@ class GarNetConfigTemplate(LayerConfigTemplate):
         self.get_transforms_config(node, params)
 
         return self.template[0].format(**params)
+
 
 class GarNetFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -147,6 +152,7 @@ class GarNetFunctionTemplate(FunctionCallTemplate):
             params['impl'] = ''
 
         return self.template.format(**params)
+
 
 # GarNetStack Templates
 
@@ -195,10 +201,13 @@ const config{index}::sublayer_t<{il}>::input_transform_biases_t (&config{index}:
 const config{index}::sublayer_t<{il}>::aggregator_distance_weights_t (&config{index}::sublayer_t<{il}>::aggregator_distance_weights)[{aggregator_distance_weights_size}] = {aggregator_distance_weights};
 const config{index}::sublayer_t<{il}>::aggregator_distance_biases_t (&config{index}::sublayer_t<{il}>::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
 const config{index}::sublayer_t<{il}>::output_transform_biases_t (&config{index}::sublayer_t<{il}>::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
-"""
+"""  # noqa: E501
 
 garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_sublayer_config_template)
-garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+garnet_stack_function_template = (
+    'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+)
+
 
 class GarNetStackConfigTemplate(GarNetConfigTemplate):
     def __init__(self):
@@ -221,8 +230,8 @@ class GarNetStackConfigTemplate(GarNetConfigTemplate):
 
             for wname, weights in node._sublayer_weights[il].items():
                 sub_params[wname] = weights.name
-                sub_params['{}_t'.format(wname)] = weights.type.name
-                sub_params['{}_size'.format(wname)] = weights.data_length
+                sub_params[f'{wname}_t'] = weights.type.name
+                sub_params[f'{wname}_size'] = weights.data_length
 
             if il != node.attributes['n_sublayers'] - 1:
                 sub_params['next'] = il + 1

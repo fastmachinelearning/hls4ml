@@ -77,6 +77,7 @@ class QuartusWriter(Writer):
         rf = int(layer.get_attr('reuse_factor', 1))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
 
+        weight_size = 0
         if isinstance(layer, (Conv2D, Conv2DBatchnorm)):
             weight_size = (
                 layer.get_attr('impl_filt_height')
@@ -171,7 +172,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n) {\n'
@@ -190,7 +192,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'\
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n) {\n'
@@ -276,7 +279,7 @@ class QuartusWriter(Writer):
                         newline += indent + f'  {out.type.name} tmp = {out.name}.read();\n'
                         newline += indent + f'  {out.name}_stream.write(tmp);\n'
                         newline += indent + '}\n'
-                        newline += '}\n'
+                    newline += '}\n'
                 else:
                     newline = line
                     newline += indent + 'return outputs;\n'
@@ -329,7 +332,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n);\n'
@@ -349,7 +353,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n);\n'
@@ -404,12 +409,19 @@ class QuartusWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-
             # Insert numbers
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
-                numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
-                newline += ''.join(numbers)
+
+                defines_list = []
+                for layer in model.get_layers():
+                    defines = ''
+                    for k, v in layer.get_output_variable().get_shape():
+                        defines += f'#define {k} {v}\n'
+
+                    defines_list.append(defines)
+
+                newline += ''.join(defines_list)
 
             elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
@@ -441,7 +453,6 @@ class QuartusWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/parameters.h', 'w')
 
         for line in f.readlines():
-
             if '// hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
@@ -751,7 +762,6 @@ class QuartusWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
 
@@ -873,7 +883,6 @@ class QuartusWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/Makefile', 'w')
 
         for line in f.readlines():
-
             line = line.replace('myproject', model.config.get_project_name())
 
             if 'DEVICE   :=' in line:
@@ -1045,7 +1054,6 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-
             in_val = (
                 i * (MAX_VALUE - MIN_VALUE) / float(table_size)
                 + (MAX_VALUE - MIN_VALUE) / (float(table_size) * 2)

@@ -4,19 +4,19 @@ Configuration
 
 
 
-We currently support two ways of setting hls4ml's model configuration. This page documents both methods' usage. 
+We currently support two ways of setting hls4ml's model configuration. This page documents both methods' usage.
 
 
-.. contents:: \ 
+.. contents:: \
 
 
-**NOTE:** 
+**NOTE:**
 
 
-* 
+*
   One important part of ``hls4ml`` to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training.
 
-* 
+*
   For developers, you might also want to checkout this section: `Detailed configuration in converted hls codes <#detailed-configuration-in-converted-hls-codes>`_.
 
 ----
@@ -70,34 +70,34 @@ It looks like this:
    OutputPredictions: keras/KERAS_3layer_predictions.dat
 
    # Backend section (Vivado backend)
-   Part: xcku115-flvb2104-2-i
+   Part: xcvu13p-flga2577-2-e
    ClockPeriod: 5
    IOType: io_parallel # options: io_parallel/io_stream
-   
+
    HLSConfig:
      Model:
        Precision: ap_fixed<16,6>
        ReuseFactor: 1
-       Strategy: Latency 
+       Strategy: Latency
      LayerType:
        Dense:
          ReuseFactor: 2
          Strategy: Resource
          Compression: True
 
-There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters: 
+There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters:
 
 
 * **OutputDir**\ : the output directory where you want your HLS project to appear
 * **ProjectName**\ : the name of the HLS project IP that is produced
-* **KerasJson/KerasH5**\ : for Keras, the model architecture and weights are stored in a ``json`` and ``h5`` file.  The path to those files are required here. 
+* **KerasJson/KerasH5**\ : for Keras, the model architecture and weights are stored in a ``json`` and ``h5`` file.  The path to those files are required here.
   We also support keras model's file obtained just from ``model.save()``. In this case you can just supply the ``h5`` file in ``KerasH5:`` field.
-* **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`__. We also support ``npy`` data files. We welcome suggestions on more input data types to support. 
+* **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`__. We also support ``npy`` data files. We welcome suggestions on more input data types to support.
 
 The backend-specific section of the configuration depends on the backend. You can get a starting point for the necessary settings using, for example `hls4ml.templates.get_backend('Vivado').create_initial_config()`.
 For Vivado backend the options are:
 
-* **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
+* **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex UltraScale+ VU13P FPGA
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
 * **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines the type of data structure used for inputs, intermediate activations between layers, and outputs. For ``io_parallel``, arrays are used that, in principle, can be fully unrolled and are typically implemented in RAMs. For ``io_stream``, HLS streams are used, which are a more efficient/scalable mechanism to represent data that are produced and consumed in a sequential manner. Typically, HLS streams are implemented with FIFOs instead of RAMs. For more information see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
@@ -147,7 +147,7 @@ A specific layer can be targeted like this:
          ReuseFactor: 16
        LayerName:
          dense1:
-           Precision: 
+           Precision:
              weight: ap_fixed<14,2>
              bias: ap_fixed<14,4>
              result: ap_fixed<16,6>

@@ -5,7 +5,7 @@ import numpy as np
 
 from hls4ml.backends import FPGABackend
 from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute
+from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
     GRU,
@@ -28,7 +28,7 @@ from hls4ml.model.layers import (
     Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils.fixed_point_utils import ceil_log2
 
@@ -51,6 +51,8 @@ class VivadoBackend(FPGABackend):
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
             attrs.append(ConfigurableAttribute('static', value_type=bool, default=True))
+            attrs.append(ConfigurableAttribute('table_size', default=1024))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
             self.attribute_map[layer] = attrs
 
         # Add ParallelizationFactor to Conv1D/2D
@@ -73,6 +75,12 @@ class VivadoBackend(FPGABackend):
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
+        sep_conv_layers = [SeparableConv1D, SeparableConv2D]
+        for layer in sep_conv_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('dw_output', default=FixedPrecisionType(18, 8)))
+            self.attribute_map[layer] = attrs
+
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
@@ -90,6 +98,7 @@ class VivadoBackend(FPGABackend):
             'vivado:merge_batch_norm_quantized_tanh',
             'vivado:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
+            'vivado:xnor_pooling',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -99,6 +108,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_parallel_reshape',
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
+            'vivado:fix_softmax_table_size',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -165,10 +175,10 @@ class VivadoBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='xcvu13p-flga2577-2-e', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
+        config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
@@ -210,9 +220,9 @@ class VivadoBackend(FPGABackend):
         return parse_vivado_report(model.config.get_output_dir())
 
     def _validate_conv_strategy(self, layer):
-        if layer.model.config.model_strategy.lower() != 'resource':
-            print(f'WARNING: Cannot use "Latency" model strategy for {layer.name} layer. Switching to "Resource" strategy.')
-            layer.model.config.model_strategy = 'Resource'
+        if layer.model.config.pipeline_style.lower() != 'dataflow':
+            print(f'WARNING: Layer {layer.name} requires "dataflow" pipeline style. Switching to "dataflow" pipeline style.')
+            layer.model.config.pipeline_style = 'dataflow'
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
@@ -285,6 +295,15 @@ class VivadoBackend(FPGABackend):
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
+
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
         if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -330,6 +349,15 @@ class VivadoBackend(FPGABackend):
             'n_partitions', 1
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
 
     @layer_optimizer(DepthwiseConv2D)
     def init_depconv2d(self, layer):
@@ -393,46 +421,30 @@ class VivadoBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        index_t = IntegerPrecisionType(width=1, signed=False)
-
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
         if layer.model.config.is_resource_strategy(layer):
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
-            layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
             layer.set_attr('strategy', 'resource')
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr('index_t', index_t)
+        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        index_t = IntegerPrecisionType(width=1, signed=False)
-
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
         if layer.model.config.is_resource_strategy(layer):
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
-            layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
             layer.set_attr('strategy', 'resource')
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr('index_t', index_t)
+        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):
