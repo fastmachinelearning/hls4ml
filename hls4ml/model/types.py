@@ -300,7 +300,7 @@ class FixedPrecisionType(PrecisionType):
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
-        typestring = '{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
+        typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
 
     def __eq__(self, other):
@@ -682,3 +682,4 @@ class Source:
 
 
 # endregion
+
