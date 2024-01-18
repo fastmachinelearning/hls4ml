@@ -293,7 +293,7 @@ def parse_keras_model(model_arch, reader):
             )
         )
         layer_list.append(layer)
-        if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers:  # + qkeras_layers:
+        if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers and layer['activation'] != "linear":  # + qkeras_layers:
             act_layer = {}
             # Workaround for QKeras activations passed as an argument
             if isinstance(layer['activation'], dict):
@@ -334,3 +334,4 @@ def keras_to_hls(config):
     print('Creating HLS model')
     hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
     return hls_model
+

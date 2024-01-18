@@ -68,16 +68,16 @@ class VivadoAcceleratorConfig:
         if out_axi_t not in ['float', 'double']:
             self.output_type = self._next_factor8_type(config.backend.convert_precision_string(out_axi_t))
 
-        if self.input_type == 'float':
+        if str(self.input_type) == 'float':
             self.input_bitwidth = 32
-        elif self.input_type == 'double':
+        elif str(self.input_type) == 'double':
             self.input_bitwidth = 64
         else:
             self.input_bitwidth = config.backend.convert_precision_string(inp_axi_t).width
 
-        if out_axi_t == 'float':
+        if str(out_axi_t) == 'float':
             self.output_bitwidth = 32
-        elif out_axi_t == 'double':
+        elif str(out_axi_t) == 'double':
             self.output_bitwidth = 64
         else:
             self.output_bitwidth = config.backend.convert_precision_string(out_axi_t).width
@@ -160,3 +160,4 @@ class VivadoAcceleratorConfig:
             return '../templates/vivado_accelerator/' + 'alveo/' + '/tcl_scripts/' + tcl_script
         else:
             return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
+
