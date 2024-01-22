@@ -62,6 +62,7 @@ class QuartusBackend(FPGABackend):
             'quartus:merge_batch_norm_quantized_tanh',
             'quartus:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
+            'quartus:xnor_pooling',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -71,6 +72,7 @@ class QuartusBackend(FPGABackend):
             'quartus:inplace_parallel_reshape',
             'quartus:inplace_stream_flatten',
             'quartus:skip_softmax',
+            'quartus:fix_softmax_table_size',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 

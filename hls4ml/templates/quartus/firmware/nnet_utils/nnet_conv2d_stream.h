@@ -69,7 +69,7 @@ template <class data_T, typename CONFIG_T>
 void shift_line_buffer_2d(
     const data_T &in_elem,
     nnet::shift_reg<typename data_T::value_type, CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right>
-        line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan],
+        line_buffer[MAX(CONFIG_T::filt_height - 1, 1)][CONFIG_T::n_chan],
     typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan]) {
 // For every channel, insert the incoming pixel at end of the shift buffer
 UpdateBuffer:
