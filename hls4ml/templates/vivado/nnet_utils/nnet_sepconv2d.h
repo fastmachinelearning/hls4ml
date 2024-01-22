@@ -20,7 +20,7 @@ void depthwise_conv_2d_cl(
     const int out_height = CONFIG_T::out_height;
     const int out_width = CONFIG_T::out_width;
 
-    #pragma HLS ARRAY_PARTITION variable=res type=complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=res complete dim=0
     #pragma HLS ARRAY_PARTITION variable=depthwise_biases complete dim=0
     #pragma HLS ARRAY_PARTITION variable=depthwise_weights complete dim=0
 
