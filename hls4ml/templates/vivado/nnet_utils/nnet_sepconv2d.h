@@ -20,6 +20,10 @@ void depthwise_conv_2d_cl(
     const int out_height = CONFIG_T::out_height;
     const int out_width = CONFIG_T::out_width;
 
+    #pragma HLS ARRAY_PARTITION variable=res complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=depthwise_biases complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=depthwise_weights complete dim=0
+
     for (int h = 0; h < in_height - filt_height + 1; h++) {
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
         for (int w = 0; w < in_width - filt_width + 1; w++) {
