@@ -54,21 +54,23 @@ void conv_2d_cl(
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void pointwise_conv_2d_latency_cl(
-    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
-    res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
-    typename CONFIG_T::weight_t pointwise_weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t pointwise_biases[CONFIG_T::n_filt])
-{
+void pointwise_conv_2d_latency_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+                                  res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
+                                  typename CONFIG_T::weight_t pointwise_weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
+                                  typename CONFIG_T::bias_t pointwise_biases[CONFIG_T::n_filt]) {
+    #pragma HLS ARRAY_PARTITION variable=res complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=pointwise_biases complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=pointwise_weights complete dim=0
+
     for (int h = 0; h < CONFIG_T::in_height; h++) {
-		#pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
         for (int w = 0; w < CONFIG_T::in_width; w++) {
-			#pragma HLS UNROLL
+            #pragma HLS UNROLL
             for (int f = 0; f < CONFIG_T::n_filt; f++) {
-				#pragma HLS UNROLL
+                #pragma HLS UNROLL
                 res_T sum = pointwise_biases[f];
                 for (int c = 0; c < CONFIG_T::n_chan; c++) {
-					#pragma HLS UNROLL
+                    #pragma HLS UNROLL
                     int data_idx = (h * CONFIG_T::in_width * CONFIG_T::n_chan) + (w * CONFIG_T::n_chan) + c;
                     int weight_idx = c * CONFIG_T::n_filt + f;
                     sum += data[data_idx] * pointwise_weights[weight_idx];
@@ -92,7 +94,7 @@ void pointwise_conv_2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width *
     // Nothing special to be done for io_parallel implementation
     if (CONFIG_T::strategy == nnet::latency) {
         // conv_2d_latency_cl misbehaves in separable_conv_2d_cl, maybe something to do with 1x1 kernel?
-        //conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        // conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
         pointwise_conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         conv_2d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
