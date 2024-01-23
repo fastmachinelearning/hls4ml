@@ -61,14 +61,10 @@ class Layer:
     def expected_attributes(cls):
         """Returns the expected attributes of a class."""
         all_attributes = []
-        for base_cls in reversed(
-            cls.mro()
-        ):  # Iterate over all base classes in the hierarchy
+        for base_cls in reversed(cls.mro()):  # Iterate over all base classes in the hierarchy
             if cls == base_cls:  # Skip adding attributes from self
                 continue
-            if hasattr(
-                base_cls, "_expected_attributes"
-            ):  # Only consider classes with '_expected_attributes' defined
+            if hasattr(base_cls, "_expected_attributes"):  # Only consider classes with '_expected_attributes' defined
                 all_attributes.extend(base_cls._expected_attributes)
         if "_expected_attributes" in cls.__dict__:
             # Add new attributes defined in the class
@@ -114,9 +110,7 @@ class Layer:
             if config_key.endswith("_t") and isinstance(
                 config_value, str
             ):  # TODO maybe move this to __setitem__ of AttributeDict?
-                precision = self.model.config.backend.convert_precision_string(
-                    config_value
-                )
+                precision = self.model.config.backend.convert_precision_string(config_value)
                 config_value = NamedType(self.name + "_" + config_key, precision)
             self.attributes[config_key] = config_value
 
@@ -171,9 +165,7 @@ class Layer:
                 if isinstance(attr, TypeAttribute):
                     self.set_attr(
                         attr_name,
-                        self._wrap_precision_to_type(
-                            self.name + "_" + attr_name, attr.default
-                        ),
+                        self._wrap_precision_to_type(self.name + "_" + attr_name, attr.default),
                     )
                 else:
                     self.set_attr(attr_name, attr.default)
@@ -190,15 +182,9 @@ class Layer:
         return NamedType(name=name, precision=precision)
 
     def _set_accum_t(self):
-        has_accum_t = any(
-            a
-            for a in self.expected_attributes
-            if a.name == "accum_t" and isinstance(a, TypeAttribute)
-        )
+        has_accum_t = any(a for a in self.expected_attributes if a.name == "accum_t" and isinstance(a, TypeAttribute))
         if has_accum_t:
-            accum_t = NamedType(
-                *reversed(self.model.config.get_precision(self, "accum"))
-            )
+            accum_t = NamedType(*reversed(self.model.config.get_precision(self, "accum")))
             self.set_attr("accum_t", accum_t)
 
     def get_input_node(self, input_name=None):
@@ -207,9 +193,7 @@ class Layer:
                 input_name = self.inputs[0]
             else:
                 return None
-        nodes = [
-            node for node in self.model.graph.values() if input_name in node.outputs
-        ]
+        nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
         if len(nodes) == 0:
             return None
         else:
@@ -403,9 +387,7 @@ class Input(Layer):
             default_type_name = f"input{self.index}_t"
         type_name = self.attributes.get("type_name", default_type_name)
         precision, _ = self.model.config.get_precision(self, var="result")
-        self.add_output_variable(
-            shape, dims, var_name=self.name, type_name=type_name, precision=precision
-        )
+        self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
 
 class Reshape(Layer):
@@ -423,9 +405,7 @@ class Reshape(Layer):
             if shape_node:
                 target_shape = shape_node.value[1:]
             else:
-                raise RuntimeError(
-                    "Reshape for ONNX requires the target shape to be a second input."
-                )
+                raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
 
         # remove Nones -- is this ever triggered?
         if target_shape[0] is None:
@@ -659,24 +639,16 @@ class Conv2DBatchnorm(Conv2D):
     def initialize(self):
         super().initialize()
         folded_weights, folded_bias = self._get_folded_weights()
-        if self.model.config.is_resource_strategy(
-            self
-        ) and self.model.config.backend.name in [
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in [
             "Vivado",
             "VivadoAccelerator",
         ]:
-            self.weights["weight"].data_unquantized = np.transpose(
-                folded_weights, axes=[3, 0, 1, 2]
-            )
-            self.weights["weight"].data = self.get_attr("weight_quantizer")(
-                self.weights["weight"].data_unquantized
-            )
+            self.weights["weight"].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
+            self.weights["weight"].data = self.get_attr("weight_quantizer")(self.weights["weight"].data_unquantized)
 
         else:
             self.weights["weight"].data_unquantized = folded_weights
-            self.weights["weight"].data = self.get_attr("weight_quantizer")(
-                folded_weights
-            )
+            self.weights["weight"].data = self.get_attr("weight_quantizer")(folded_weights)
         self.weights["bias"].data_unquantized = folded_bias
         bias_q = self.get_attr("bias_quantizer")
         if bias_q is not None:
@@ -998,12 +970,8 @@ class HardActivation(Activation):
 
     def initialize(self):
         super().initialize()
-        slope_prec = self.get_attr(
-            "slope_prec", FixedPrecisionType(width=16, integer=0, signed=False)
-        )
-        shift_prec = self.get_attr(
-            "shift_prec", FixedPrecisionType(width=1, integer=0, signed=False)
-        )
+        slope_prec = self.get_attr("slope_prec", FixedPrecisionType(width=16, integer=0, signed=False))
+        shift_prec = self.get_attr("shift_prec", FixedPrecisionType(width=1, integer=0, signed=False))
         index = self.get_attr("index")
         slope_t = NamedType(f"slope{index}_t", precision=slope_prec)
         shift_t = NamedType(f"shift{index}_t", precision=shift_prec)
@@ -1161,9 +1129,7 @@ class Transpose(Layer):
         self.set_attr("dim", f"{len(inp.shape)}d")
 
         if len(perm) > 3:
-            raise Exception(
-                "ERROR: Transpose of tensors with rank > 3 is not yet supported."
-            )
+            raise Exception("ERROR: Transpose of tensors with rank > 3 is not yet supported.")
 
         # ONNX double transpose specific, sometimes ONNX injects
         # useless double transpose layers when converting
@@ -1321,17 +1287,13 @@ class LSTM(Layer):
 
         # recurrent weights
         recurrent_weight = self.get_attr("recurrent_weight_data")
-        self.add_weights_variable(
-            name="recurrent_weight", var_name="wr{index}", data=recurrent_weight
-        )
+        self.add_weights_variable(name="recurrent_weight", var_name="wr{index}", data=recurrent_weight)
 
         # biases
         self.add_weights_variable(name="bias", var_name="b{index}")
 
         recurrent_bias = np.zeros(recurrent_weight.shape[1])
-        self.add_weights_variable(
-            name="recurrent_bias", var_name="br{index}", data=recurrent_bias
-        )
+        self.add_weights_variable(name="recurrent_bias", var_name="br{index}", data=recurrent_bias)
 
 
 class GRU(Layer):
@@ -1432,9 +1394,7 @@ class GarNet(Layer):
 
         else:
             quantize = self.get_attr("quantizer") is not None
-            kernel, bias = self._make_input_transform_weights(
-                n_propagate, n_aggregators, n_out_features, quantize=quantize
-            )
+            kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=quantize)
 
             self._add_variable(
                 "input_transform_weights",
@@ -1478,39 +1438,25 @@ class GarNet(Layer):
 
         self._output_features = self.attributes["n_out_features"]
 
-    def _make_input_transform_weights(
-        self, n_propagate, n_aggregators, n_out_features, quantize=False, sublayer=""
-    ):
+    def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, quantize=False, sublayer=""):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
         output_transform_kernel = self.get_attr(
             f"Fout{sublayer}_kernel_data"
         )  # [(n_aggregators, n_propagate), n_out_features]
-        output_transform_kernel = output_transform_kernel.reshape(
-            (n_aggregators, n_propagate, n_out_features)
-        )
+        output_transform_kernel = output_transform_kernel.reshape((n_aggregators, n_propagate, n_out_features))
         if quantize:
-            output_transform_kernel = self.get_attr("quantizer")(
-                output_transform_kernel
-            )
+            output_transform_kernel = self.get_attr("quantizer")(output_transform_kernel)
 
-        input_transform_kernel = self.get_attr(
-            f"FLR{sublayer}_kernel_data"
-        )  # [n_in_features, n_propagate]
+        input_transform_kernel = self.get_attr(f"FLR{sublayer}_kernel_data")  # [n_in_features, n_propagate]
         if quantize:
             input_transform_kernel = self.get_attr("quantizer")(input_transform_kernel)
-        data = np.dot(
-            input_transform_kernel, output_transform_kernel
-        )  # [n_in_features, n_aggregators, n_out_features]
+        data = np.dot(input_transform_kernel, output_transform_kernel)  # [n_in_features, n_aggregators, n_out_features]
         kernel = data.transpose((2, 1, 0))
 
-        input_transform_bias = self.get_attr(
-            f"FLR{sublayer}_bias_data"
-        )  # [n_propagate]
+        input_transform_bias = self.get_attr(f"FLR{sublayer}_bias_data")  # [n_propagate]
         if quantize:
             input_transform_bias = self.get_attr("quantizer")(input_transform_bias)
-        data = np.dot(
-            input_transform_bias, output_transform_kernel
-        )  # [n_aggregators, n_out_features]
+        data = np.dot(input_transform_bias, output_transform_kernel)  # [n_aggregators, n_out_features]
         bias = data.transpose((1, 0))
 
         return kernel, bias
@@ -1535,9 +1481,7 @@ class GarNet(Layer):
                 saturation_mode="AP_SAT",
             )
 
-        self.add_weights_variable(
-            name=name, var_name=var_name, data=data, precision=precision
-        )
+        self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
 
 
 class GarNetStack(GarNet):

@@ -138,9 +138,7 @@ def parse_flatten_layer(
         end_dim = end_dim + 1
 
     layer["target_shape"] = (
-        input_shapes[0][0:start_dim]
-        + [np.prod(input_shapes[0][start_dim:end_dim])]
-        + input_shapes[0][end_dim:]
+        input_shapes[0][0:start_dim] + [np.prod(input_shapes[0][start_dim:end_dim])] + input_shapes[0][end_dim:]
     )
     output_shape = layer["target_shape"]
 
@@ -166,9 +164,7 @@ def handle_upsample(
     layer["data_format"] = "channels_first"  # Pytorch default (can't change)
 
     # Input info
-    (layer["in_height"], layer["in_width"], layer["n_chan"]) = parse_data_format(
-        input_shapes[0], "channels_first"
-    )  # K
+    (layer["in_height"], layer["in_width"], layer["n_chan"]) = parse_data_format(input_shapes[0], "channels_first")  # K
 
     layer["height_factor"] = int(class_object.scale_factor)
     layer["width_factor"] = int(class_object.scale_factor)
