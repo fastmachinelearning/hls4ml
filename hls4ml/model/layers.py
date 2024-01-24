@@ -773,7 +773,6 @@ class Activation(Layer):
         self.add_output_variable(shape, dims)
         self.set_attr('n_in', self.get_input_variable().size())
 
-
 class ParametrizedActivation(Activation):
     def _get_act_function_name(self):
         act = self.get_attr('activation').lower()
@@ -1324,6 +1323,7 @@ layer_map = {
     'Activation': Activation,
     'QActivation': Activation,
     'LeakyReLU': ParametrizedActivation,
+    'QLeakyReLU': ParametrizedActivation,
     'ThresholdedReLU': ParametrizedActivation,
     'ELU': ParametrizedActivation,
     'PReLU': PReLU,

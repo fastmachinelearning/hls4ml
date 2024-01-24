@@ -208,6 +208,10 @@ def parse_keras_model(model_arch, reader):
     ]
     # Recurrent layers
     recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
+    # QActivation layers
+    qactivation_layers = [
+        'QLeakyReLU'
+    ]
     # All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -263,7 +267,6 @@ def parse_keras_model(model_arch, reader):
                 input_shapes = [output_shape]
 
         keras_class = keras_layer['class_name']
-
         if keras_class in skip_layers:
             if 'inbound_nodes' in keras_layer:
                 name = keras_layer['config']['name']
@@ -293,7 +296,7 @@ def parse_keras_model(model_arch, reader):
             )
         )
         layer_list.append(layer)
-        if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers and layer['activation'] != "linear":  # + qkeras_layers:
+        if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers + qactivation_layers and layer['activation'] != "linear":  # + qkeras_layers:
             act_layer = {}
             # Workaround for QKeras activations passed as an argument
             if isinstance(layer['activation'], dict):
