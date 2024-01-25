@@ -201,5 +201,5 @@ if __name__ == '__main__':
     if not os.path.exists(layerdir):
         os.mkdir(layerdir)
     os.rename(pyfile, layerdir + '/' + pyfile)
-    os.rename(hlsfile, layerdir + '/' + hlsfile)
+    os.rename(hlsfile, layerdir + '/nnet_' + hlsfile)
     os.rename('__init__.py', layerdir + '/' + "__init__.py")
