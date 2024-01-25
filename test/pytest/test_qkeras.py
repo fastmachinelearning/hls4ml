@@ -272,6 +272,7 @@ def randX_1000_1():
         (quantized_relu(8, 4)),
         (quantized_relu(10)),
         (quantized_relu(10, 5)),
+        (quantized_relu(10, 5, negative_slope=0.25)),
     ],
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
