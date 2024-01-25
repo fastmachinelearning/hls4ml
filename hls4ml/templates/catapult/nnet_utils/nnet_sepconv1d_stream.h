@@ -8,17 +8,17 @@
 
 namespace nnet {
 
-template<class data_T, class res_T, typename CONFIG_T>
-void depthwise_conv_1d_encoded_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_chan]) {
+template <class data_T, class res_T, typename CONFIG_T>
+void depthwise_conv_1d_encoded_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
+                                  typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan],
+                                  typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
     ac_channel<typename data_T::value_type> data_window[CONFIG_T::filt_width * CONFIG_T::n_chan];
-//  const int win_depth = CONFIG_T::out_width;
-//  for (unsigned i_out = 0; i_out < CONFIG_T::filt_width * CONFIG_T::n_chan; i_out++) {
-//      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
-//  }
+    //  const int win_depth = CONFIG_T::out_width;
+    //  for (unsigned i_out = 0; i_out < CONFIG_T::filt_width * CONFIG_T::n_chan; i_out++) {
+    //      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
+    //  }
 
     //#pragma HLS ARRAY_PARTITION variable=CONFIG_T::pixels complete
 
@@ -26,12 +26,14 @@ void depthwise_conv_1d_encoded_cl(ac_channel<data_T> &data, ac_channel<res_T>  &
     //#pragma HLS DATA_PACK variable=res_pack
     unsigned outputs_ready = 0;
 
-    ac_int<CONFIG_T::filt_width,false> pixel_idx[data_T::size / CONFIG_T::n_chan];
+    ac_int<CONFIG_T::filt_width, false> pixel_idx[data_T::size / CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1); (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor =
+        CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
-ReadInputWidth: 
+ReadInputWidth:
     for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
         //#pragma HLS LOOP_FLATTEN
         if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
@@ -43,15 +45,16 @@ ReadInputWidth:
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void depthwise_conv_1d_buffer_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_chan]) {
+template <class data_T, class res_T, typename CONFIG_T>
+void depthwise_conv_1d_buffer_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
+                                 typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan],
+                                 typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency); (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency);
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
-ReadInputWidth: 
+ReadInputWidth:
     for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
         //#pragma HLS LOOP_FLATTEN
         if (CONFIG_T::strategy == nnet::latency) {
@@ -76,19 +79,21 @@ void depthwise_conv_1d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void pointwise_conv_1d_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt]) {
+template <class data_T, class res_T, typename CONFIG_T>
+void pointwise_conv_1d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
+                          typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
+                          typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::filt_width == 1);
 
     //#pragma HLS ARRAY_PARTITION variable=weights complete
     //#pragma HLS ARRAY_PARTITION variable=biases complete
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1); (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor =
+        CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
-ReadInputWidth: 
+ReadInputWidth:
     for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
         if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
             //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
@@ -101,11 +106,11 @@ ReadInputWidth:
     }
 }
 
-template<class data_T, class dw_res_T, class res_T, typename CONFIG_T>
-void separable_conv_1d_cl(ac_channel<data_T> &data, ac_channel<res_T>  &res,
-                          typename CONFIG_T::depthwise_config::weight_t 
+template <class data_T, class dw_res_T, class res_T, typename CONFIG_T>
+void separable_conv_1d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
+                          typename CONFIG_T::depthwise_config::weight_t
                               depthwise_weights[CONFIG_T::depthwise_config::filt_width * CONFIG_T::depthwise_config::n_chan],
-                          typename CONFIG_T::pointwise_config::weight_t 
+                          typename CONFIG_T::pointwise_config::weight_t
                               pointwise_weights[CONFIG_T::pointwise_config::n_chan * CONFIG_T::pointwise_config::n_filt],
                           typename CONFIG_T::depthwise_config::bias_t depthwise_biases[CONFIG_T::depthwise_config::n_chan],
                           typename CONFIG_T::pointwise_config::bias_t pointwise_biases[CONFIG_T::pointwise_config::n_filt]) {

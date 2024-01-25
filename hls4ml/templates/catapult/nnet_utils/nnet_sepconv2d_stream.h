@@ -1,11 +1,11 @@
 #ifndef NNET_SEPARABLE_CONV2D_STREAM_H_
 #define NNET_SEPARABLE_CONV2D_STREAM_H_
 
-#include <ac_channel.h>
 #include "nnet_common.h"
 #include "nnet_conv2d_stream.h"
 #include "nnet_sepconv_stream.h"
 #include "nnet_types.h"
+#include <ac_channel.h>
 
 namespace nnet {
 
@@ -17,11 +17,12 @@ void depthwise_conv_2d_encoded_cl(
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::filt_height == CONFIG_T::filt_width);
 
-    static ac_channel<typename data_T::value_type> data_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
-//  const int win_depth = CONFIG_T::filt_height * CONFIG_T::out_width;
-//  for (unsigned i_out = 0; i_out < CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan; i_out++) {
-//      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
-//  }
+    static ac_channel<typename data_T::value_type>
+        data_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
+    //  const int win_depth = CONFIG_T::filt_height * CONFIG_T::out_width;
+    //  for (unsigned i_out = 0; i_out < CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan; i_out++) {
+    //      #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
+    //  }
 
     // #pragma HLS ARRAY_PARTITION variable=CONFIG_T::pixels complete
 
@@ -29,10 +30,12 @@ void depthwise_conv_2d_encoded_cl(
     // PRAGMA_DATA_PACK(res_pack)
     unsigned outputs_ready = 0;
 
-    ac_int<CONFIG_T::filt_height * CONFIG_T::filt_width,false> pixel_idx[data_T::size / CONFIG_T::n_chan];
+    ac_int<CONFIG_T::filt_height * CONFIG_T::filt_width, false> pixel_idx[data_T::size / CONFIG_T::n_chan];
     // #pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1); (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor =
+        CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
@@ -61,16 +64,17 @@ void depthwise_conv_2d_buffer_cl(
                                                                                     [CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency); (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency);
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             //#pragma HLS LOOP_FLATTEN
-            //if (CONFIG_T::strategy == nnet::latency) {
-            //    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-            //}
+            // if (CONFIG_T::strategy == nnet::latency) {
+            //     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+            // }
             if (CONFIG_T::filt_height > 1) {
                 compute_depthwise_output_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
             } else {
@@ -108,7 +112,9 @@ void pointwise_conv_2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
     // #pragma HLS ARRAY_PARTITION variable=weights complete
     // #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1); (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor =
+        CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {

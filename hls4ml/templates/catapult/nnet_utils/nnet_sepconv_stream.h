@@ -1,10 +1,10 @@
 #ifndef NNET_SEPARABLE_CONV_STREAM_H_
 #define NNET_SEPARABLE_CONV_STREAM_H_
 
-#include <ac_channel.h>
-#include <ac_assert.h>
 #include "nnet_common.h"
 #include "nnet_conv_stream.h"
+#include <ac_assert.h>
+#include <ac_channel.h>
 
 namespace nnet {
 
@@ -22,55 +22,55 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
     // #pragma HLS function_instantiate variable=weights
 
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
     #pragma hls_unroll
 
-// Add dummy loop to which the pipeline pragma can be applied
-do {
+    // Add dummy loop to which the pipeline pragma can be applied
+    do {
 
-    //#pragma HLS ARRAY_PARTITION variable=mult complete
+        //#pragma HLS ARRAY_PARTITION variable=mult complete
 
-    //#pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
-    #pragma hls_unroll
+        //#pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
+        #pragma hls_unroll
 
-// Do the matrix-multiply
-Product:
-    for (int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
-        // #pragma HLS UNROLL
-        mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
-            data[ii], weights[ii]);
-    }
-
-// Initialize accumulator with input biases
-    #pragma hls_unroll
-ResetAccum:
-    for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
-        //#pragma HLS UNROLL
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
-    }
-
-// Accumulate multiplication result
-    #pragma hls_unroll
-Accum1:
-    for (int ii = 0; ii < CONFIG_T::kernel_size; ii++) {
-    #pragma hls_unroll
-    Accum2:
-        for (int jj = 0; jj < CONFIG_T::n_chan; jj++) {
-            int index = ii * CONFIG_T::n_chan + jj;
-            acc[jj] += mult[index];
+    // Do the matrix-multiply
+    Product:
+        for (int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
+            // #pragma HLS UNROLL
+            mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
+                data[ii], weights[ii]);
         }
-    }
 
-// Cast to "res_t" type
+    // Initialize accumulator with input biases
     #pragma hls_unroll
-Result:
-    for (int ires = 0; ires < CONFIG_T::n_chan; ires++) {
-        //#pragma HLS UNROLL
-        res[ires] = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[ires]);
-    }
-} while (0);
+    ResetAccum:
+        for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
+            //#pragma HLS UNROLL
+            acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        }
 
+    // Accumulate multiplication result
+    #pragma hls_unroll
+    Accum1:
+        for (int ii = 0; ii < CONFIG_T::kernel_size; ii++) {
+        #pragma hls_unroll
+        Accum2:
+            for (int jj = 0; jj < CONFIG_T::n_chan; jj++) {
+                int index = ii * CONFIG_T::n_chan + jj;
+                acc[jj] += mult[index];
+            }
+        }
+
+    // Cast to "res_t" type
+    #pragma hls_unroll
+    Result:
+        for (int ires = 0; ires < CONFIG_T::n_chan; ires++) {
+            //#pragma HLS UNROLL
+            res[ires] = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[ires]);
+        }
+    } while (0);
 }
 
 #pragma hls_design inline
@@ -128,10 +128,11 @@ void compute_depthwise_output_encoded(
     const data_T &in_elem, ac_channel<typename data_T::value_type> data_window[CONFIG_T::kernel_size * CONFIG_T::n_chan],
     ac_channel<res_T> &res, res_T &res_pack, unsigned &outputs_ready,
     typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-    typename CONFIG_T::bias_t biases[CONFIG_T::n_chan], ac_int<CONFIG_T::kernel_size,false> *pixel_idx) {
+    typename CONFIG_T::bias_t biases[CONFIG_T::n_chan], ac_int<CONFIG_T::kernel_size, false> *pixel_idx) {
     //#pragma HLS INLINE
 
-    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
+    (void)ce_reuse_factor;
     #pragma hls_pipeline_init_interval ce_reuse_factor
     #pragma hls_unroll
 MultLoop:
@@ -169,7 +170,7 @@ void pointwise_mult_buffer(const data_T &data_pack, ac_channel<res_T> &res_strea
     //#pragma HLS ARRAY_PARTITION variable=res complete
 
     res_T res_pack;
-    //PRAGMA_DATA_PACK(res_pack)
+    // PRAGMA_DATA_PACK(res_pack)
 
     #pragma hls_unroll
 InitData:
@@ -219,7 +220,7 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, ac_channel<res_T>
     //#pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
-    //PRAGMA_DATA_PACK(res_pack)
+    // PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to buffer
     nnet::kernel_shift_1d<data_T, CONFIG_T>(in_elem, kernel_data);
@@ -286,7 +287,7 @@ void compute_depthwise_output_buffer_2d(const data_T &in_elem,
     //#pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
-    //PRAGMA_DATA_PACK(res_pack)
+    // PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to buffer
     nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);

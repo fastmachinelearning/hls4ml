@@ -43,7 +43,7 @@
 #-  regulations governing limitations on product liability.
 #-
 #-  THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
-#-  PART OF THIS FILE AT ALL TIMES. 
+#-  PART OF THIS FILE AT ALL TIMES.
 #- ************************************************************************
 
 
@@ -63,7 +63,6 @@
 #ifndef __SIM_AP_SHIFT_REG_H__
 #define __SIM_AP_SHIFT_REG_H__
 
-
 /*
  * This file contains a C++ model of shift register.
  * It defines C level simulation model.
@@ -79,33 +78,28 @@
 //////////////////////////////////////////////
 // C level simulation model for ap_shift_reg
 //////////////////////////////////////////////
-template<typename __SHIFT_T__, unsigned int __SHIFT_DEPTH__ = 32>
-class ap_shift_reg
-{
+template <typename __SHIFT_T__, unsigned int __SHIFT_DEPTH__ = 32> class ap_shift_reg {
   public:
     /// Constructors
     ap_shift_reg() {
-      #pragma hls_unroll yes
-      for (unsigned int i=0; i < __SHIFT_DEPTH__; i++) {
-        __SHIFT_T__ dummy;
-        Array[i] = dummy; // uninitialize so Catapult does not add a reset
-      }
+        #pragma hls_unroll yes
+        for (unsigned int i = 0; i < __SHIFT_DEPTH__; i++) {
+            __SHIFT_T__ dummy;
+            Array[i] = dummy; // uninitialize so Catapult does not add a reset
+        }
     }
-    ap_shift_reg(const char* name) { }
+    ap_shift_reg(const char *name) {}
     /// Destructor
-    virtual ~ap_shift_reg() { }
+    virtual ~ap_shift_reg() {}
 
   private:
     /// Make copy constructor and assignment operator private
-    ap_shift_reg(const ap_shift_reg< __SHIFT_T__, __SHIFT_DEPTH__ >& shreg)
-    {
+    ap_shift_reg(const ap_shift_reg<__SHIFT_T__, __SHIFT_DEPTH__> &shreg) {
         for (unsigned i = 0; i < __SHIFT_DEPTH__; ++i)
             Array[i] = shreg.Array[i];
     }
 
-    ap_shift_reg& operator = (const ap_shift_reg< __SHIFT_T__,
-        __SHIFT_DEPTH__ >& shreg)
-    {
+    ap_shift_reg &operator=(const ap_shift_reg<__SHIFT_T__, __SHIFT_DEPTH__> &shreg) {
         for (unsigned i = 0; i < __SHIFT_DEPTH__; ++i)
             Array[i] = shreg.Array[i];
         return *this;
@@ -113,29 +107,24 @@ class ap_shift_reg
 
   public:
     // Shift the queue, push to back and read from a given address.
-    __SHIFT_T__ shift(__SHIFT_T__ DataIn,
-        unsigned int Addr = __SHIFT_DEPTH__ - 1, bool Enable = true)
-    {
+    __SHIFT_T__ shift(__SHIFT_T__ DataIn, unsigned int Addr = __SHIFT_DEPTH__ - 1, bool Enable = true) {
 #ifndef __SYNTHESIS__
-        assert(Addr < __SHIFT_DEPTH__ &&
-            "Out-of-bound shift is found in ap_shift_reg.");
+        assert(Addr < __SHIFT_DEPTH__ && "Out-of-bound shift is found in ap_shift_reg.");
 #endif
         __SHIFT_T__ ret = Array[Addr];
         if (Enable) {
             #pragma hls_unroll yes
             for (unsigned int i = __SHIFT_DEPTH__ - 1; i > 0; --i)
-                Array[i] = Array[i-1];
+                Array[i] = Array[i - 1];
             Array[0] = DataIn;
         }
         return ret;
     }
 
     // Read from a given address.
-    __SHIFT_T__ read(unsigned int Addr = __SHIFT_DEPTH__ - 1) const
-    {
+    __SHIFT_T__ read(unsigned int Addr = __SHIFT_DEPTH__ - 1) const {
 #ifndef __SYNTHESIS__
-        assert(Addr < __SHIFT_DEPTH__ &&
-            "Out-of-bound read is found in ap_shift_reg.");
+        assert(Addr < __SHIFT_DEPTH__ && "Out-of-bound read is found in ap_shift_reg.");
 #endif
         return Array[Addr];
     }
@@ -147,5 +136,3 @@ class ap_shift_reg
 #endif //__cplusplus
 
 #endif //__SIM_AP_SHIFT_REG_H__
-
-

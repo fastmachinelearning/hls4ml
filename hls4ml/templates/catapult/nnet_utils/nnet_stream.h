@@ -6,34 +6,34 @@
 
 namespace nnet {
 
-struct broadcast_config
-{
-  static const unsigned in_height = 1;
-  static const unsigned in_width = 1;
-  static const unsigned in_chan = 3;
-  static const unsigned out_height = 2;
-  static const unsigned out_width = 2;
-  static const unsigned out_chan = 3;
+struct broadcast_config {
+    static const unsigned in_height = 1;
+    static const unsigned in_width = 1;
+    static const unsigned in_chan = 3;
+    static const unsigned out_height = 2;
+    static const unsigned out_width = 2;
+    static const unsigned out_chan = 3;
 };
 
 #pragma hls_design block
 #pragma hls_pipeline_init_interval 1
-template<class data_T, class res_T, int N>
+template <class data_T, class res_T, int N>
 void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<res_T> &res2) {
-    // CloneLoop: for (int i = 0; i < N / data_T::size; i++) {
-        //#pragma HLS PIPELINE
-    #ifndef __SYNTHESIS__
+// CloneLoop: for (int i = 0; i < N / data_T::size; i++) {
+//#pragma HLS PIPELINE
+#ifndef __SYNTHESIS__
     while (data.available(1))
-    #endif
+#endif
     {
         data_T in_data = data.read();
         res_T out_data;
-        // res_T out_data2;
-        //#pragma HLS DATA_PACK variable=out_data1
-        //#pragma HLS DATA_PACK variable=out_data2
+    // res_T out_data2;
+    //#pragma HLS DATA_PACK variable=out_data1
+    //#pragma HLS DATA_PACK variable=out_data2
 
-        #pragma hls_unroll
-        ClonePack: for (int j = 0; j < data_T::size; j++) {
+    #pragma hls_unroll
+    ClonePack:
+        for (int j = 0; j < data_T::size; j++) {
             //#pragma HLS UNROLL
             out_data[j] = in_data[j];
             // out_data2[j] = in_data[j];
@@ -45,8 +45,7 @@ void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<
 }
 
 #pragma hls_design block
-template<class data_T, class res_T, int N>
-void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, int N> void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     if (data_T::size == res_T::size) {
         for (int i = 0; i < N / data_T::size; i++) {
             //#pragma HLS PIPELINE
@@ -111,11 +110,13 @@ void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 }
 
 #pragma hls_design block
-template<class data_T, class res_T, typename CONFIG_T>
+template <class data_T, class res_T, typename CONFIG_T>
 void broadcast_stream_1x1xC(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     assert(CONFIG_T::in_height == 1 && CONFIG_T::in_width == 1 && CONFIG_T::in_chan == CONFIG_T::out_chan);
-    int n_dupl = (CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::out_chan) / (CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::in_chan);
-    BroadcastLoop: for (int i = 0; i < CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::in_chan / data_T::size; i++) {
+    int n_dupl = (CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::out_chan) /
+                 (CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::in_chan);
+BroadcastLoop:
+    for (int i = 0; i < CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::in_chan / data_T::size; i++) {
         //#pragma HLS PIPELINE
         data_T in_data = data.read();
         for (int j = 0; j < n_dupl; j++) {
@@ -133,32 +134,34 @@ void broadcast_stream_1x1xC(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 }
 
 #pragma hls_design block
-template<class data_T, class res_T, typename CONFIG_T>
+template <class data_T, class res_T, typename CONFIG_T>
 void broadcast_stream_HxWx1(ac_channel<data_T> &data, ac_channel<res_T> &res) {
-    assert(CONFIG_T::in_chan == 1 && CONFIG_T::in_height == CONFIG_T::out_height && CONFIG_T::in_width == CONFIG_T::out_width);
-    BroadcastLoop: for (int i = 0; i < CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::in_chan / data_T::size; i++) {
+    assert(CONFIG_T::in_chan == 1 && CONFIG_T::in_height == CONFIG_T::out_height &&
+           CONFIG_T::in_width == CONFIG_T::out_width);
+BroadcastLoop:
+    for (int i = 0; i < CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::in_chan / data_T::size; i++) {
         //#pragma HLS PIPELINE
         data_T in_data = data.read();
-	res_T out_data;
+        res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
-   #pragma hls_unroll
-	for (int k = 0; k < res_T::size; k++) {
+        #pragma hls_unroll
+        for (int k = 0; k < res_T::size; k++) {
             //#pragma HLS UNROLL
-	    out_data[k] = in_data[0];
-	}
-	res.write(out_data);
+            out_data[k] = in_data[0];
+        }
+        res.write(out_data);
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
+template <class data_T, class res_T, typename CONFIG_T>
 void broadcast_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
-    if(CONFIG_T::in_height == 1 && CONFIG_T::in_width == 1 && CONFIG_T::in_chan == CONFIG_T::out_chan) {
-	broadcast_stream_1x1xC<data_T, res_T, CONFIG_T>(data, res);
-    }
-    else if(CONFIG_T::in_chan == 1 && CONFIG_T::in_height == CONFIG_T::out_height && CONFIG_T::in_width == CONFIG_T::out_width) {
+    if (CONFIG_T::in_height == 1 && CONFIG_T::in_width == 1 && CONFIG_T::in_chan == CONFIG_T::out_chan) {
+        broadcast_stream_1x1xC<data_T, res_T, CONFIG_T>(data, res);
+    } else if (CONFIG_T::in_chan == 1 && CONFIG_T::in_height == CONFIG_T::out_height &&
+               CONFIG_T::in_width == CONFIG_T::out_width) {
         broadcast_stream_HxWx1<data_T, res_T, CONFIG_T>(data, res);
     }
 }
-}
+} // namespace nnet
 
 #endif
