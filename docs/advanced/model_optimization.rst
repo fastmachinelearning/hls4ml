@@ -1,6 +1,6 @@
-========================
-hls4ml Optimization API
-========================
+=================================
+Hardware-aware Optimization API
+=================================
 
 Pruning and weight sharing are effective techniques to reduce model footprint and computational requirements. The hls4ml Optimization API introduces hardware-aware pruning and weight sharing.
 By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization etc.
@@ -8,6 +8,7 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:
 
 .. code-block:: Python
+
     from sklearn.metrics import accuracy_score
     from tensorflow.keras.optimizers import Adam
     from tensorflow.keras.metrics import CategoricalAccuracy
@@ -71,7 +72,9 @@ In a similar manner, it is possible to target GPU FLOPs or Vivado DSPs. However,
 Instead, it is the sparsity of the target resource. As an example: Starting with a network utilizing 512 DSPs and a final sparsity of 50%; the optimized network will use 256 DSPs.
 
 To optimize GPU FLOPs, the code is similar to above:
+
 .. code-block:: Python
+
     from hls4ml.optimization.objectives.gpu_objectives import GPUFLOPEstimator
 
     # Optimize model
@@ -91,7 +94,9 @@ To optimize GPU FLOPs, the code is similar to above:
     print(optimized_model.summary())
 
 Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
+
 .. code-block:: Python
+
     from hls4ml.utils.config import config_from_keras_model
     from hls4ml.optimization.objectives.vivado_objectives import VivadoDSPEstimator
 
@@ -121,7 +126,9 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
 
 There are two more Vivado "optimizers" - VivadoFFEstimator, aimed at reducing register utilisation and VivadoMultiObjectiveEstimator, aimed at optimising BRAM and DSP utilisation.
 Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used before synthesing HLS, by modifying the config:
+
 .. code-block:: Python
+
     hls_config = config_from_keras_model(optimized_model)
     hls_config['Model']['DenseResourceImplementation'] = 'Unrolled'
     # Any addition hls4ml config, such as strategy, reuse factor etc...

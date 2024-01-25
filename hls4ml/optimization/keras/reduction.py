@@ -4,24 +4,23 @@ from tensorflow.keras.models import Sequential
 
 from hls4ml.optimization.keras.utils import get_last_layer_with_weights
 
-'''
-Function for removing zero neurons & filters from a model and rewiring the model graph
-This function is built on top of Keras Surgeon available at: https://github.com/BenWhetton/keras-surgeon
-Keras Surgeon is no longer under active development and does not work for TensorFlow 2.3+ and QKeras
-The baseline version was forked and updated, available at: https://github.com/fastmachinelearning/keras-surgeon
-
-IMPORTANT: To use this funcionality please install separately from the above GitHub.
-
-Args:
-    - model (keras.model): Input model
-
-Return:
-    - reduced (keras.model): Modified model, with redundant structures removed
-
-    '''
-
 
 def reduce_model(model):
+    '''
+    Function for removing zero neurons & filters from a model and rewiring the model graph
+    This function is built on top of Keras Surgeon available at: https://github.com/BenWhetton/keras-surgeon
+    Keras Surgeon is no longer under active development and does not work for TensorFlow 2.3+ and QKeras
+    The baseline version was forked and updated, available at: https://github.com/fastmachinelearning/keras-surgeon
+
+    IMPORTANT: To use this funcionality please install separately from the above GitHub.
+
+    Args:
+        model (keras.model): Input model
+
+    Returns:
+        reduced (keras.model): Modified model, with redundant structures removed
+
+    '''
     try:
         from kerassurgeon import Surgeon
     except ModuleNotFoundError:

@@ -11,14 +11,14 @@ class hls4mlAttributes:
     A class for storing hls4ml information of a single layer
 
     Args:
-    - n_in (int): Number of inputs (rows) for Dense matrix multiplication
-    - n_out (int): Number of outputs (cols) for Dense matrix multiplication
-    - io_type (string): io_parallel or io_stream
-    - strategy (string): Resource or Latency
-    - weight_precision (FixedPrecisionType): Layer weight precision
-    - output_precision (FixedPrecisionType): Layer output precision
-    - reuse_factor (int): Layer reuse factor
-    - parallelization_factor (int): Layer parallelization factor - [applicable to io_parallel Conv2D]
+        n_in (int): Number of inputs (rows) for Dense matrix multiplication
+        n_out (int): Number of outputs (cols) for Dense matrix multiplication
+        io_type (string): io_parallel or io_stream
+        strategy (string): Resource or Latency
+        weight_precision (FixedPrecisionType): Layer weight precision
+        output_precision (FixedPrecisionType): Layer output precision
+        reuse_factor (int): Layer reuse factor
+        parallelization_factor (int): Layer parallelization factor - [applicable to io_parallel Conv2D]
     '''
 
     def __init__(
@@ -51,12 +51,12 @@ class OptimizationAttributes:
     A class for storing layer optimization attributes
 
     Args:
-        - structure_type (enum): Targeted structure - unstructured, structured, pattern, block
-        - pruning (boolean): Should pruning be applied to the layer
-        - weight_sharing (boolean): Should weight sharing be applied to the layer
-        - block_shape (tuple): Block shape if structure_type == block
-        - pattern_offset (int): Length of each pattern if structure_type == pattern
-        - consecutive_patterns (int): How many consecutive patterns are grouped together if structure_type == pattern
+        structure_type (enum): Targeted structure - unstructured, structured, pattern, block
+        pruning (boolean): Should pruning be applied to the layer
+        weight_sharing (boolean): Should weight sharing be applied to the layer
+        block_shape (tuple): Block shape if structure_type == block
+        pattern_offset (int): Length of each pattern if structure_type == pattern
+        consecutive_patterns (int): How many consecutive patterns are grouped together if structure_type == pattern
 
     Notes:
         - In the case of hls4ml, pattern_offset is equivalent to the number of weights processed in parallel
@@ -88,16 +88,16 @@ class LayerAttributes:
     A class for storing layer information
 
     Args:
-        - name (string): Layer name
-        - layer_type (keras.Layer): Layer type (e.g. Dense, Conv2D etc.)
-        - inbound_layers (list): List of parent nodes, identified by name
-        - weight_shape (tuple): Layer weight shape
-        - input_shape (tuple): Layer input shape
-        - output_shape (tuple): Layer output shape
-        - optimizable (bool): Should optimizations (pruning, weight sharing) be applied to this layer
-        - optimization_attributes (OptimizationAttributes): Type of optimization,
+        name (string): Layer name
+        layer_type (keras.Layer): Layer type (e.g. Dense, Conv2D etc.)
+        inbound_layers (list): List of parent nodes, identified by name
+        weight_shape (tuple): Layer weight shape
+        input_shape (tuple): Layer input shape
+        output_shape (tuple): Layer output shape
+        optimizable (bool): Should optimizations (pruning, weight sharing) be applied to this layer
+        optimization_attributes (OptimizationAttributes): Type of optimization,
             pruning or weight sharing, block shape and pattern offset
-        - args (dict): Additional information,
+        args (dict): Additional information,
             e.g. hls4mlAttributes; dictionary so it can be generic enough for different platforms
     '''
 
@@ -147,10 +147,10 @@ def get_attributes_from_keras_model(model):
     Per-layer pruning sype (structured, pattern etc.), depend on the pruning objective and are inserted later
 
     Args:
-        - model (keras.model): Model to extract attributes from
+        model (keras.model): Model to extract attributes from
 
-    Return:
-        - model_attributes (dict): Each key corresponds to a layer name, values are instances of LayerAttribute
+    Returns:
+        model_attributes (dict): Each key corresponds to a layer name, values are instances of LayerAttribute
     '''
     is_sequential = model.__class__.__name__ == 'Sequential'
     model_attributes = {}
@@ -188,11 +188,11 @@ def get_attributes_from_keras_model_and_hls4ml_config(model, config):
     Per-layer pruning sype (structured, pruning etc.), depend on the pruning objective and are inserted later
 
     Args:
-        - model (keras.model): Model to extract attributes from
-        - config (dict): hls4ml dictionary
+        model (keras.model): Model to extract attributes from
+        config (dict): hls4ml dictionary
 
-    Return:
-        - model_attributes (dict): Each key corresponds to a layer name, values are LayerAttribute instances
+    Returns:
+        model_attributes (dict): Each key corresponds to a layer name, values are LayerAttribute instances
     '''
 
     # Extract Keras attributes

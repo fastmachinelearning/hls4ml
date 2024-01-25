@@ -7,7 +7,7 @@ from hls4ml.optimization.attributes import OptimizationAttributes
 from hls4ml.optimization.config import SUPPORTED_STRUCTURES
 
 '''
-Pruning & weight sharing are formulated as an optimization problem, with the aim of minimising some metric
+Pruning & weight sharing are formulated as an optimization problem, with the aim of minimizing some metric
 Metrics can include: total number of weights, DSP utilization, latency, FLOPs etc.
 '''
 
@@ -15,7 +15,7 @@ Metrics can include: total number of weights, DSP utilization, latency, FLOPs et
 class ObjectiveEstimator(ABC):
     '''
     Abstract class with methods for estimating the utilization and savings of a certain layer, with respect to some objective
-    For each objective, an inherited class is written with the correct implementaton of the below methods
+    For each objective, an inherited class is written with the correct implementation of the below methods
     The objectives can be multi-dimensional, e.g. DSPs and BRAM
     Care needs to be taken when optimizing several objectives, especially if conflicting
     '''
@@ -25,14 +25,14 @@ class ObjectiveEstimator(ABC):
         '''
         For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
         Furthermore, it returns the type of optimization (structured, unstructured etc.)
-        Most suitable for minimising the objective(s).
+        Most suitable for minimizing the objective(s).
 
         Args:
-            - layer_attributes (hls4ml.optimiation.attributes.LayerAttributes)
+            layer_attributes (hls4ml.optimization.attributes.LayerAttributes): Layer attributes
 
-        Return:
-            - optimizable (boolean) - can optimizations be applied to this layer
-            - optimization_attributes (hls4ml.optimiation.attributes.OptimizationAttributes) -
+        Returns:
+            optimizable (boolean): can optimizations be applied to this layer
+            optimization_attributes (hls4ml.optimization.attributes.OptimizationAttributes):
                 Most suitable approach for optimization
 
         Examples:
@@ -50,12 +50,13 @@ class ObjectiveEstimator(ABC):
         For a given layer, how many units of the metric are used, given a generic weight matrix
 
         Args:
-            - layer_attributes (hls4ml.optimiation.attributes.LayerAttributes)
+            layer_attributes (hls4ml.optimization.attributes.LayerAttributes): Layer attributes
 
-        Return:
-            - resources (list, int) - total resources (w.r.t every dimension of the objective) used
+        Returns:
+            resources (list, int): total resources (w.r.t every dimension of the objective) used
 
-        Example: Metric = Total weights, Layer = Dense, shape = (4, 4) -> return [16] [regardless of layer sparsity]
+        Example:
+            Metric = Total weights, Layer = Dense, shape = (4, 4) -> return [16] [regardless of layer sparsity]
         '''
         pass
 
@@ -67,26 +68,26 @@ class ObjectiveEstimator(ABC):
         For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable
 
         Args:
-            - layer_attributes (hls4ml.optimiation.attributes.LayerAttributes)
+            layer_attributes (hls4ml.optimization.attributes.LayerAttributes): Layer attributes
 
-        Return:
-            - savings (list, int) - savings achieved (one for every dimenson of objective)
-                                    With OptimizationAttributes from layer_attributes
+        Returns:
+            savings (list, int): savings achieved (one for every dimension of objective)
+                With OptimizationAttributes from layer_attributes
 
-        Example: Metric = Total weights, Layer = Dense, shape = (4, 4):
+        Example:
+            Metric = Total weights, Layer = Dense, shape = (4, 4):
             - structure_type == unstructured -> return [1]
             - structure_type == structured -> return [4]
         '''
         pass
 
 
-'''
-A class containing objective estimation with the goal of minimizing
-The number of non-zero weights in a layer [corresponds to unstructured pruning]
-'''
-
-
 class ParameterEstimator(ObjectiveEstimator):
+    '''
+    A class containing objective estimation with the goal of minimizing
+    The number of non-zero weights in a layer [corresponds to unstructured pruning]
+    '''
+
     @classmethod
     def is_layer_optimizable(self, layer_attributes):
         if not layer_attributes.weight_shape:
