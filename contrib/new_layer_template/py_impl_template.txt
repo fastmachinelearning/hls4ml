@@ -15,7 +15,7 @@ from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 # from hls4ml.backends import backend
 from hls4ml import backends
 
-from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import get_weights_data, keras_handler, parse_default_keras_layer
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute, WeightAttribute
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
@@ -32,7 +32,7 @@ class Layername(hls4ml.model.layers.Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        getweights
+        addweights
 
 # Templates
 layername_config = """struct config{index} : nnet::layername_config {{
@@ -88,6 +88,7 @@ class LayernameFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
 # Parser for converter
+@keras_handler('Layernamelong')
 def parse_layername_layer(keras_layer, input_names, input_shapes, data_reader):
     assert 'Layernamelong' in keras_layer['class_name']
 
@@ -98,6 +99,9 @@ def parse_layername_layer(keras_layer, input_names, input_shapes, data_reader):
     for dim in input_shapes[0][1:]:
         in_size *= dim
     layer['n_in'] = in_size
+
+    getweights
+
     outdim
 attrdef
 

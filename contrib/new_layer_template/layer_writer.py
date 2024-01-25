@@ -58,15 +58,10 @@ def pythonWriter(filedir, config):
                         newline += dindent + f'{attrtype}(\'{att}\'),\n'
             newline = newline[:-2] + '\n'
         # Input output shape missing
-        elif 'getweights' in line:
+        elif 'addweights' in line:
             newline = ''
             for att in config["attrlist"]['WeightAttribute']:
-                newline += (
-                    dindent
-                    + f'{att} = self.model.get_weights_data(self.name, \'{att}\')\n'
-                    + dindent
-                    + f'self.add_weights_variable(name=\'{att}\', var_name=\'{att}{{index}}\', data={att}) \n'
-                )
+                newline += dindent + f'self.add_weights_variable(name=\'{att}\', var_name=\'{att}{{index}}\') \n'
 
         # Struct config template
         elif 'structtemplate' in line:
@@ -112,6 +107,11 @@ def pythonWriter(filedir, config):
                 for j in attrdef:
                     newline += indent + j + '\n'
             newline = line.replace('attrdef', newline)
+
+        elif 'getweights' in line:
+            newline = ''
+            for att in config["attrlist"]['WeightAttribute']:
+                newline += indent + f'layer[\'{att}_data\'] = get_weights_data(data_reader, layer[\'name\'], \'{att}\') \n'
 
         # Just copy line
         else:
