@@ -13,13 +13,13 @@ def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs
         - weights (np.array, int): An matrix, each row represents the weights of every item, in a given knapsack
         - capacity (np.array, int): A one-dimensional array, each entry is the maximum weights of a Knapsack
         - implementation (string): Algorithm to solve Knapsack problem - dynamic programming, greedy, branch and bound
-
-    Kwargs:
         - time_limit (float): Limit (in seconds) after which the CBC or Branch & Bound should
             stop looking for a solution and return optimal so far
         - scaling_factor (float): Scaling factor for floating points values in CBC or B&B
 
-    Return:
+    Returns:
+        tuple containing
+
         - optimal_value (float): The optimal values of elements in the knapsack
         - selected_items (list): A list of indices, corresponding to the selected elements
 

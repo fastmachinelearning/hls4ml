@@ -18,17 +18,19 @@ _add_supported_quantized_objects(co)
 class HyperOptimizationModel(kt.HyperModel):
     '''
     Helper class for Keras Tuner
-
-    Args:
-        - model (keras.Model): Baseline model
-        - attributes (dict): Layer-wise dictionary of attributes
-        - optimizer (keras.optimizers.Optimizer or equvialent string description): Model optimizer
-        - loss_fn (keras.losses.Loss or equivalent string description): Model loss function
-        - validation_metric (keras.metrics.Metric or equivalent string description): Model validation metric
-        - regularization_range (list): List of suitable hyperparameters for weight decay
     '''
 
     def __init__(self, model, attributes, optimizer, loss_fn, validation_metric, regularization_range):
+        """Create new instance of HyperOptimizationModel
+
+        Args:
+            model (keras.Model): Baseline model
+            attributes (dict): Layer-wise dictionary of attributes
+            optimizer (keras.optimizers.Optimizer or equivalent string description): Model optimizer
+            loss_fn (keras.losses.Loss or equivalent string description): Model loss function
+            validation_metric (keras.metrics.Metric or equivalent string description): Model validation metric
+            regularization_range (list): List of suitable hyperparameters for weight decay
+        """
         self.model = model
         self.attributes = attributes
         self.optimizer = optimizer
@@ -112,32 +114,33 @@ def build_optimizable_model(
     '''
     Function identifying optimizable layers and adding a regularization loss
 
-    Args:
-    - model (keras.Model): Model to be optimized
-    - attributes (dict): Layer-wise model attributes, obtained from hls4ml.optimization.get_attributes_from_keras_model(...)
-    - optimizer (keras.optimizers.Optimizer): Optimizer used during training
-    - loss_fn (keras.losses.Loss): Loss function used during training
-    - validation_metric (keras.metrics.Metric): Validation metric, used as a baseline
-    - train_dataset (tf.Dataset): Training inputs and labels, in the form of an iterable TF Dataset
-    - validation_dataset (tf.Dataset): Validation inputs and labels, in the form of an iterable TF Dataset
-    - batch_size (int): Batch size during training
-    - epochs (int): Maximum number of epochs to fine-tune model, in one iteration of pruning
-
-    Kwargs:
-    - verbose (bool): Whether to log tuner outputs to the console
-    - directory (string): Directory to store tuning results
-    - tuner (str): Tuning alogorithm, choose between Bayesian and Hyperband
-    - regularization_range (list): List of suitable hyperparameters for weight decay
-    - learning_rate_range (list): List of suitable hyperparameters for learning rate
-
     Notes:
     - In general, the regularization and learning rate ranges do not need to be provided,
-        as the implementation sets a generic enough range. if the user has an idea on the
-        possible range on hyperparameter ranges, the tuning will complete faster.
+    as the implementation sets a generic enough range. if the user has an idea on the
+    possible range on hyperparameter ranges, the tuning will complete faster.
     - The default tuner is Bayesian & when coupled with the correct ranges of hyperparameters,
-        it performs quite well, fast. However, older version of Keras Tuner had a crashing bug with it.
+    it performs quite well, fast. However, older version of Keras Tuner had a crashing bug with it.
     - In general, the directory does not need to be specified. However, if pruning several models simultaneously,
-        to avoid conflicting intermediate results, it is useful to specify directory.
+    to avoid conflicting intermediate results, it is useful to specify directory.
+
+    Args:
+        model (keras.Model): Model to be optimized
+        attributes (dict): Layer-wise model attributes, obtained from hls4ml.optimization.get_attributes_from_keras_model()
+        optimizer (keras.optimizers.Optimizer): Optimizer used during training
+        loss_fn (keras.losses.Loss): Loss function used during training
+        validation_metric (keras.metrics.Metric): Validation metric, used as a baseline
+        train_dataset (tf.Dataset): Training inputs and labels, in the form of an iterable TF Dataset
+        validation_dataset (tf.Dataset): Validation inputs and labels, in the form of an iterable TF Dataset
+        batch_size (int): Batch size during training
+        epochs (int): Maximum number of epochs to fine-tune model, in one iteration of pruning
+        verbose (bool): Whether to log tuner outputs to the console
+        directory (string): Directory to store tuning results
+        tuner (str): Tuning algorithm, choose between Bayesian and Hyperband
+        regularization_range (list): List of suitable hyperparameters for weight decay
+        learning_rate_range (list): List of suitable hyperparameters for learning rate
+
+    Returns:
+        keras.Model: Model prepared for optimization
     '''
     # User provided manual hyper-parameters for regularisation loss
     # TODO - Maybe we could extend this to be hyper-parameters per layer? or layer-type?
@@ -239,7 +242,10 @@ def remove_custom_regularizers(model):
     This makes it possible to load the model in a different environment without hls4ml installed
 
     Args:
-        - model (keras.Model): Baseline model
+        model (keras.Model): Baseline model
+
+    Returns:
+        keras.Model: Model without custom regularizers
     '''
     weights = model.get_weights()
     for layer in model.layers:

@@ -8,13 +8,13 @@ def get_model_gradients(model, loss_fn, X, y):
     Calculate model gradients with respect to weights
 
     Args:
-        - model (keras.model): Input model
-        - loss_fn (keras.losses.Loss): Model loss function
-        - X (np.array): Input data
-        - y (np.array): Output data
+        model (keras.model): Input model
+        loss_fn (keras.losses.Loss): Model loss function
+        X (np.array): Input data
+        y (np.array): Output data
 
-    Return:
-        - grads (dict): Per-layer gradients of loss with respect to weights
+    Returns:
+        grads (dict): Per-layer gradients of loss with respect to weights
     '''
     grads = {}
     # While persistent GradientTape slows down execution,
@@ -33,17 +33,18 @@ def get_model_gradients(model, loss_fn, X, y):
 @tf.function
 def get_model_hessians(model, loss_fn, X, y):
     '''
-    Calculate the second derivatives of the loss with repsect to model weights
-    Note, only diagonal elements of the Hessian are computed
+    Calculate the second derivatives of the loss with repsect to model weights.
+
+    Note, only diagonal elements of the Hessian are computed.
 
     Args:
-        - model (keras.model): Input model
-        - loss_fn (keras.losses.Loss): Model loss function
-        - X (np.array): Input data
-        - y (np.array): Output data
+        model (keras.model): Input model
+        loss_fn (keras.losses.Loss): Model loss function
+        X (np.array): Input data
+        y (np.array): Output data
 
-    Return:
-        - grads (dict): Per-layer second derivatives of loss with respect to weights
+    Returns:
+        grads (dict): Per-layer second derivatives of loss with respect to weights
     '''
     grads = {}
     with tf.GradientTape(persistent=True) as tape:
@@ -64,7 +65,9 @@ def get_model_sparsity(model):
     Args:
         - model (keras.model): Model to be evaluated
 
-    Return:
+    Returns:
+        tuple containing
+
         - sparsity (float): Model sparsity, as a percentage of zero weights w.r.t to total number of model weights
         - layers (dict): Key-value dictionary; each key is a layer name and the associated value is the layer's sparsity
 
@@ -92,14 +95,16 @@ def get_model_sparsity(model):
 def get_last_layer_with_weights(model):
     '''
     Finds the last layer with weights
-    The last layer with weights determined the output shape, so, pruning is sometimes not applicable to it
-    As an example, consider a network with 16 - 32 - 5 neurons - the last layer's neuron (5) cannot be removed
-    Since they map to the data labels
-    Args:
-        - model (keras.model): Input model
 
-    Return:
-        - idx (int): Index location of last layer with params
+    The last layer with weights determined the output shape, so, pruning is sometimes not applicable to it.
+    As an example, consider a network with 16 - 32 - 5 neurons - the last layer's neuron (5) cannot be removed
+    since they map to the data labels
+
+    Args:
+        model (keras.model): Input model
+
+    Returns:
+        idx (int): Index location of last layer with params
     '''
     for idx, layer in reversed(list(enumerate(model.layers))):
         if hasattr(layer, 'kernel'):

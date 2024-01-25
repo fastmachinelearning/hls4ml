@@ -21,27 +21,37 @@ class OptimizationScheduler(ABC):
     @abstractmethod
     def update_step(self):
         '''
-        Increments the current sparsity, according to the rule, examples:
+        Increments the current sparsity, according to the rule.
+
+        Examples:
             - ConstantScheduler, sparsity = 0.5, increment = 0.05 -> sparsity = 0.55
             - BinaryScheduler, sparsity = 0.5, target = 1.0 -> sparsity = 0.75
 
-        Return:
+        Returns:
+            tuple containing
+
             - updated (boolean) - Has the sparsity changed? If not, the optimization algorithm can stop
             - sparsity (float) - Updated sparsity
+
         '''
         pass
 
     @abstractmethod
     def repair_step(self):
         '''
-        Method used when the neural architecture does not meet satisfy performance requirement for a given sparsity
-        Then, the target sparsity is decreased according to the rule, examples:
+        Method used when the neural architecture does not meet satisfy performance requirement for a given sparsity.
+        Then, the target sparsity is decreased according to the rule.
+
+        Examples:
             - ConstantScheduler, sparsity = 0.5, increment = 0.05 -> sparsity = 0.55 [see ConstantScheduler for explanation]
             - BinaryScheduler, sparsity = 0.75, target = 1.0, previous = 0.5 -> sparsity = (0.5 + 0.75) / 2 = 0.625
 
-        Return:
+        Returns:
+            tuple containing
+
             - updated (boolean) - Has the sparsity changed? If not, the optimization algorithm can stop
             - sparsity (float) - Updated sparsity
+
         '''
         pass
 
@@ -116,10 +126,17 @@ class PolynomialScheduler(OptimizationScheduler):
     Sparsity updated by at a polynomial decay, until
         (i) sparsity target reached OR
         (ii) optimization algorithm stops requesting state updates
+
     For more information, see Zhu & Gupta (2016) -
         'To prune, or not to prune: exploring the efficacy of pruning for model compression'
-    Note, the implementation is slightly different,
-    Since TensorFlow Prune API depends on the total number of epochs and update frequency
+
+    Note, the implementation is slightly different, since TensorFlow Prune API depends on the total number of
+    epochs and update frequency.
+
+    In certain cases, a model might underperform at the current sparsity level, but perform better at a higher sparsity.
+    In this case, polynomial sparsity will simply jump to the next sparsity level
+    The model's performance over several sparsity levels optimization is tracked and
+    toped after high loss over several trials (see top level pruning/optimization function)
     '''
 
     def __init__(self, maximum_steps, initial_sparsity=0, final_sparsity=1.0, decay_power=3):
@@ -137,13 +154,6 @@ class PolynomialScheduler(OptimizationScheduler):
             return True, self.sparsity
         else:
             return False, self.sparsity
-
-    '''
-    In certain cases, a model might underperform at the current sparsity level, but perform better at a higher sparsity
-    In this case, polynomial sparsity, will simply jump to the next sparsity level
-    The model's performance over several sparsity levels optimization is tracked and
-    toped after high loss over several trials (see top level pruning/optimization function)
-    '''
 
     def repair_step(self):
         return self.update_step()

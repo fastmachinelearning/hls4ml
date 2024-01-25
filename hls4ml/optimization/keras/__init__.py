@@ -50,45 +50,43 @@ def optimize_model(
     Top-level function for optimizing a Keras model, given objectives
 
     Args:
-    - model (keras.Model): Model to be optimized
-    - model_attributes (dict): Layer-wise model attributes,
-        obtained from hls4ml.optimization.get_attributes_from_keras_model(...)
-    - objective (hls4ml.optimization.objectives.ObjectiveEstimator):
-        Parameter, hardware or user-defined objective of optimization
-    - scheduler (hls4ml.optimization.schduler.OptimizationScheduler):
-        Sparsity scheduler, choose between constant, polynomial and binary
-    - X_train (np.array): Training inputs
-    - y_train (np.array): Training labels
-    - X_val (np.array): Validation inputs
-    - y_val (np.array): Validation labels
-    - batch_size (int): Batch size during training
-    - epochs (int): Maximum number of epochs to fine-tune model, in one iteration of pruning
-    - optimizer (keras.optimizers.Optimizer or equivalent-string description):
-        Optimizer used during training
-    - loss_fn (keras.losses.Loss or equivalent loss description):
-        Loss function used during training
-    - validation_metric (keras.metrics.Metric or equivalent loss description):
-        Validation metric, used as a baseline
-    - increasing (boolean): If the metric improves with increased values;
-        e.g. accuracy -> increasing = True, MSE -> increasing = False
-    - rtol (float): Relative tolerance;
-        pruning stops when pruned_validation_metric < (or >) rtol * baseline_validation_metric
+        model (keras.Model): Model to be optimized
+        model_attributes (dict): Layer-wise model attributes,
+            obtained from hls4ml.optimization.get_attributes_from_keras_model(...)
+        objective (hls4ml.optimization.objectives.ObjectiveEstimator):
+            Parameter, hardware or user-defined objective of optimization
+        scheduler (hls4ml.optimization.scheduler.OptimizationScheduler):
+            Sparsity scheduler, choose between constant, polynomial and binary
+        X_train (np.array): Training inputs
+        y_train (np.array): Training labels
+        X_val (np.array): Validation inputs
+        y_val (np.array): Validation labels
+        batch_size (int): Batch size during training
+        epochs (int): Maximum number of epochs to fine-tune model, in one iteration of pruning
+        optimizer (keras.optimizers.Optimizer or equivalent-string description): Optimizer used during training
+        loss_fn (keras.losses.Loss or equivalent loss description): Loss function used during training
+        validation_metric (keras.metrics.Metric or equivalent loss description): Validation metric, used as a baseline
+        increasing (boolean): If the metric improves with increased values;
+            e.g. accuracy -> increasing = True, MSE -> increasing = False
+        rtol (float): Relative tolerance;
+            pruning stops when pruned_validation_metric < (or >) rtol * baseline_validation_metric
+        callbacks (list of keras.callbacks.Callback) Currently not supported, developed in future versions
+        ranking_metric (string): Metric used for ranking weights and structures;
+            currently supported l1, l2, saliency and Oracle
+        local (boolean): Layer-wise or global pruning
+        verbose (boolean): Display debug logs during model optimization
+        rewinding_epochs (int): Number of epochs to retrain model without weight freezing,
+            allows regrowth of previously pruned weights
+        cutoff_bad_trials (int): After how many bad trials (performance below threshold),
+            should model pruning / weight sharing stop
+        directory (string): Directory to store temporary results
+        tuner (str): Tuning algorithm, choose between Bayesian, Hyperband and None
+        knapsack_solver (str): Algorithm to solve Knapsack problem when optimizing;
+            default usually works well; for very large networks, greedy algorithm might be more suitable
+        regularization_range (list): List of suitable hyperparameters for weight decay
 
-    Kwargs:
-    - callbacks (list of keras.callbacks.Callback) Currently not supported, developed in future versions
-    - ranking_metric (string): Metric used for rannking weights and structures;
-        currently supported l1, l2, saliency and Oracle
-    - local (boolean): Layer-wise or global pruning
-    - verbose (boolean): Display debug logs during model optimization
-    - rewinding_epochs (int): Number of epochs to retrain model without weight freezing,
-        allows regrowth of previously pruned weights
-    - cutoff_bad_trials (int): After how many bad trials (performance below threshold),
-        should model pruning / weight sharing stop
-    - directory (string): Directory to store temporary results
-    - tuner (str): Tuning alogorithm, choose between Bayesian, Hyperband and None
-    - knapsack_solver (str): Algorithm to solve Knapsack problem when optimizing;
-        default usually works well; for very large networks, greedy algorithm might be more suitable
-    - regularization_range (list): List of suitable hyperparameters for weight decay
+    Returns:
+        keras.Model: Optimized model
     '''
 
     if not isinstance(scheduler, OptimizationScheduler):
@@ -213,7 +211,7 @@ def optimize_model(
 
         # Mask gradients
         # Before training the model at the next sparsity level, reset internal states
-        # Furthemore, modern optimizers (e.g. Adam) accumulate gradients during backprop
+        # Furthermore, modern optimizers (e.g. Adam) accumulate gradients during backprop
         # Therefore, even if the gradient for a weight is zero, it might be updated, due to previous gradients
         # Avoid this by resetting the internal variables of an optimizer
         optimizable_model.reset_metrics()
@@ -329,7 +327,7 @@ class MaskedBackprop:
             - y (tf.Tensor): Output data
             - s (float): Sparsity
 
-        Return:
+        Returns:
             - loss (tf.Varilable): Model loss with input X and output y
         '''
         grads = []

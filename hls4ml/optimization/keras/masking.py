@@ -42,22 +42,24 @@ def get_model_masks(
     Both the norm and variance are normalized, to avoid magnitude biases.
 
     Args:
-        - keras_model (keras.model) - Model to be masked
-        - model_attributes (dict) - A layer-wise dictionary of LayerAttributes classes
-        - sparsity (float) - Desired sparsity, with respect to the objective
-        - objective (ObjectiveEstimator) - Objective to be minimized (e.g. DSP, FLOPs etc.)
-        - metric (string) - Weight ranking metric - l1, l2, Oracle, saliency
-        - local (boolean) - Equal layer-wise sparsity
-        - gradients (dict) - A layer-wise dictionary of weight gradients
+        keras_model (keras.model): Model to be masked
+        model_attributes (dict): A layer-wise dictionary of LayerAttributes classes
+        sparsity (float): Desired sparsity, with respect to the objective
+        objective (ObjectiveEstimator): Objective to be minimized (e.g. DSP, FLOPs etc.)
+        metric (string): Weight ranking metric - l1, l2, Oracle, saliency
+        local (boolean): Equal layer-wise sparsity
+        gradients (dict): A layer-wise dictionary of weight gradients
             (needed for Oracle ranking)
-        - hessians (dict) - A layer-wise dictionary of second gradients
+        hessians (dict): A layer-wise dictionary of second gradients
             (needed for saliency ranking)
-        - knapsack_solver (str) - Algorithm for solving Knapsack problem; recommended is to use default.
+        knapsack_solver (str): Algorithm for solving Knapsack problem; recommended is to use default.
             Unless dealing with highly dimensional problems, in which case greedy is better.
 
-    Return:
-        - masks (dict) - Layer-wise dictionary of binary tensors
-        - offsets (dict) - Layer-wise dictionary of offsets for every weight
+    Returns:
+        tuple containing
+
+        - masks (dict): Layer-wise dictionary of binary tensors
+        - offsets (dict): Layer-wise dictionary of offsets for every weight
     '''
 
     if metric not in SUPPORTED_METRICS:

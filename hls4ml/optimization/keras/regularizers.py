@@ -10,25 +10,25 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
     A flexible regularizer for Dense layers, simultaneously penalizing high values and variance
 
     Args:
-        - alpha (float): Sparse penalty; a higher value pushes more weights towards zero
-        - beta (float): Variance penalty; a higer value reduces variance between a group of weights
-        - norm (int): Norm type (l1 or l2)
-        - structure_type (string): Type of regularisation - unstructured, structured, pattern, block
-        - block_shape (tuple): Block shape if structure_type == block
-        - pattern_offset (int): Length of each pattern if structure_type == pattern
-        - consecutive_patterns (int): How many consecutive patterns should be considered
-        - weights (tf.Variable): Two-dimensional layer weight tensor, dimensionality (M x N)
+        alpha (float): Sparse penalty; a higher value pushes more weights towards zero
+        beta (float): Variance penalty; a higher value reduces variance between a group of weights
+        norm (int): Norm type (l1 or l2)
+        structure_type (string): Type of regularization - unstructured, structured, pattern, block
+        block_shape (tuple): Block shape if structure_type == block
+        pattern_offset (int): Length of each pattern if structure_type == pattern
+        consecutive_patterns (int): How many consecutive patterns should be considered
+        weights (tf.Variable): Two-dimensional layer weight tensor, dimensionality (M x N)
 
-    Return:
-        - Regularizer penalty (tf.Variable): Penalty associated with layer weights
+    Returns:
+        Regularizer penalty (tf.Variable): Penalty associated with layer weights
 
     Examples:
-        - structure_type = unstructured: unstructured weight regularisation
+        - structure_type = unstructured: unstructured weight regularization
         - structure_type = structured: neuron regularization
             (group weights by row)
         - structure_type = pattern: regularization on groups of every n-th weight
             (e.g. grouping by reuse factor in hls4ml)
-        - structure_type = block: regularisation on blocks within weight matrix
+        - structure_type = block: regularization on blocks within weight matrix
             (e.g. 4x4, 8x1 for certain SIMD processors)
 
         - consecutive_patterns is commonly encountered with optimization of BRAM utilization -
@@ -78,7 +78,7 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
             return sparse_penalty + variance_penalty
 
         if self.structure_type == SUPPORTED_STRUCTURES.PATTERN:
-            # This is equivalent to penalising all the weights processed by the same DSP block in hls4ml.
+            # This is equivalent to penalizing all the weights processed by the same DSP block in hls4ml.
             # The matrix is transposed, according to Resource strategy and reshaped into (pattern_offset, pattern_number)
             # Pattern offset corresponds to the number of patterns is equivalent to RF
             if (np.prod(weights.shape)) % self.pattern_offset != 0:
@@ -115,7 +115,7 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
             if (weights.shape[0] % self.block_shape[0]) != 0 or (weights.shape[1] % self.block_shape[1] != 0):
                 raise Exception(f'{self.__class__.__name__}: block sizes need to be fators of weight matrix dimensions')
 
-            # TensorFlow has a built-in method for exctracting sub-tensors of given shape and stride
+            # TensorFlow has a built-in method for extracting sub-tensors of given shape and stride
             # This method is commonly used to perform im2col,
             # Docs: https://www.tensorflow.org/api_docs/python/tf/image/extract_patches
             total_blocks = (weights.shape[0] * weights.shape[1]) // (self.block_shape[0] * self.block_shape[1])
@@ -149,22 +149,22 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
 @tf.keras.utils.register_keras_serializable(name='Conv2DRegularizer')
 class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
     '''
-    A flexible regulariser for Conv2D layers, simultaneously performing pruning and clustering
+    A flexible regularizer for Conv2D layers, simultaneously performing pruning and clustering
 
     Args:
-        - alpha (float): Sparse penalty; a higher value pushes more weights towards zero
-        - beta (float): Variance penalty; a higer value reduces variance between a group of weights
-        - norm (int): Norm type (l1 or l2)
-        - structure_type (string): Type of regularisation - unstructured, structured, pattern
-        - pattern_offset (int): Length of each pattern if structure_type == pattern
-        - weights (tf.Variable): Four-dimensional layer weight tensor, dimensionality
-        (filter_width x filter_height x n_chan x n_filt)
+        alpha (float): Sparse penalty; a higher value pushes more weights towards zero
+        beta (float): Variance penalty; a higher value reduces variance between a group of weights
+        norm (int): Norm type (l1 or l2)
+        structure_type (string): Type of regularization - unstructured, structured, pattern
+        pattern_offset (int): Length of each pattern if structure_type == pattern
+        weights (tf.Variable): Four-dimensional layer weight tensor, dimensionality
+            (filter_width x filter_height x n_chan x n_filt)
 
-    Return:
-        - Regularizer penalty (tf.Variable): Penalty associated with layer weights
+    Returns:
+        Regularizer penalty (tf.Variable): Penalty associated with layer weights
 
     Example use cases:
-        - structure_type = unstructured: unstructured weight regularisation
+        - structure_type = unstructured: unstructured weight regularization
         - structure_type = structured: filter regularization
             (group weights of dimensionality filt_width x filt_height x n_chan)
         - structure_type = pattern: regularization on groups of every n-th weight in flattened array
