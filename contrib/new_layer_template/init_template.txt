@@ -21,4 +21,3 @@ if 'Layername' not in get_supported_keras_layers():
 	p = Path(__file__).parent / 'nnet_layername.h'
 	backend.register_source(p)
 	print("Layername layer registered in hls4ml")
-

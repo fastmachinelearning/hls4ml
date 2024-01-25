@@ -592,10 +592,7 @@ def get_ymodel_keras(keras_model, X):
             and layer.activation is not None
             and not isinstance(layer, (keras.layers.Activation, qkeras.qlayers.QActivation))
             # and layer.activation.__name__ != "linear"
-            
-            
         ):
-
             tmp_activation = layer.activation
             layer.activation = None
             ymodel.update({layer.name: _get_outputs([layer], X, keras_model.input)})
@@ -639,7 +636,6 @@ def _dist_diff(ymodel, ysim):
     diff = {}
 
     for key in list(ysim.keys()):
-
         flattened_ysim = ysim[key].flatten()
         flattened_ymodel = np.array(ymodel[key]).flatten()
 
@@ -702,4 +698,3 @@ def compare(keras_model, hls_model, X, plot_type="dist_diff"):
         f = _dist_diff(ymodel, ysim)
 
     return f
-

@@ -9,7 +9,7 @@ import numpy as np
 
 import sys
 
-import hls4ml 
+import hls4ml
 from hls4ml.model.attributes import Attribute
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 # from hls4ml.backends import backend
@@ -27,16 +27,16 @@ class Layername(hls4ml.model.layers.Layer):
     ]
     def initialize(self):
         inp = self.get_input_variable()
-        
+
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
         getweights
-       
+
 # Templates
 layername_config = """struct config{index} : nnet::layername_config {{
-    
+
     structtemplate
 
 
@@ -44,7 +44,7 @@ layername_config = """struct config{index} : nnet::layername_config {{
     static const unsigned reuse_factor = {reuse_factor};
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
-    
+
 }};\n"""
 
 functemp
@@ -81,7 +81,7 @@ class LayernameFunctionTemplate(FunctionCallTemplate):
         params['res_t'] = node.get_output_variable().type.name
         params['data'] = node.get_input_variable().name
         params['res'] = node.get_output_variable().name
-        
+
         otherparms
 
         # params = self._default_function_params(node)
@@ -102,5 +102,3 @@ def parse_layername_layer(keras_layer, input_names, input_shapes, data_reader):
 attrdef
 
     return layer, [shape for shape in input_shapes[0]]
-
-

@@ -209,9 +209,7 @@ def parse_keras_model(model_arch, reader):
     # Recurrent layers
     recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
     # QActivation layers
-    qactivation_layers = [
-        'QLeakyReLU'
-    ]
+    qactivation_layers = ['QLeakyReLU']
     # All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -296,7 +294,11 @@ def parse_keras_model(model_arch, reader):
             )
         )
         layer_list.append(layer)
-        if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers + qactivation_layers and layer['activation'] != "linear":  # + qkeras_layers:
+        if (
+            'activation' in layer
+            and layer['class_name'] not in activation_layers + recurrent_layers + qactivation_layers
+            and layer['activation'] != "linear"
+        ):  # + qkeras_layers:
             act_layer = {}
             # Workaround for QKeras activations passed as an argument
             if isinstance(layer['activation'], dict):
@@ -337,4 +339,3 @@ def keras_to_hls(config):
     print('Creating HLS model')
     hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
     return hls_model
-

@@ -160,4 +160,3 @@ class VivadoAcceleratorConfig:
             return '../templates/vivado_accelerator/' + 'alveo/' + '/tcl_scripts/' + tcl_script
         else:
             return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
-

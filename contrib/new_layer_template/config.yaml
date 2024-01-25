@@ -25,7 +25,7 @@ Pyconfig:
   - gamma
   - beta
   - epsilon
-  attrdef:  | 
+  attrdef:  |
     if len(input_shapes[0]) == 2:
         layer['n_filt'] = -1
     elif len(input_shapes[0]) == 3:

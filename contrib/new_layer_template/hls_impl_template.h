@@ -20,43 +20,38 @@
 #ifndef NNET_LAYERNAME_H_
 #define NNET_LAYERNAME_H_
 
+#include "ap_fixed.h"
+#include "hls_math.h"
+#include "hls_stream.h"
 #include "nnet_common.h"
 #include "nnet_dense.h"
-#include "hls_stream.h"
-#include "hls_math.h"
-#include "ap_fixed.h"
 //#include <math.h>
 
 namespace nnet {
 
-struct layername_config
-{
+struct layername_config {
     // Internal data type definitions (replaced by the types in the python description of the layer)
     deftypedef
-    
-    // Add here default values for layer attributes and variables needed in function implementation (accessible through the CONFIG_T namespace)
 
-    static const unsigned n_in = 10;
+        // Add here default values for layer attributes and variables needed in function implementation (accessible through
+        // the CONFIG_T namespace)
+
+        static const unsigned n_in = 10;
     exampledef
-    
-    // Resource reuse info
-    static const unsigned io_type = io_parallel;
+
+        // Resource reuse info
+        static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
 
     // Example of function taken from the nnet_common.h header file
-    //template<class x_T, class y_T>
-    //using product = nnet::product::mult<x_T, y_T>;
+    // template<class x_T, class y_T>
+    // using product = nnet::product::mult<x_T, y_T>;
 };
 
-template<class data_T, class res_T, typename CONFIG_T>
-void layername(
-    data_T    data[CONFIG_T::n_in],
-    res_T     res[CONFIG_T::n_in],
-    arglist
-)
-{   
+template <class data_T, class res_T, typename CONFIG_T>
+void layername(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in], arglist) {
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     // #pragma HLS function_instantiate variable=eps
 
@@ -72,12 +67,6 @@ void layername(
     ////////////////INSERT FUNCTION HERE
 }
 
-
-}
-
-
-
-
-
+} // namespace nnet
 
 #endif

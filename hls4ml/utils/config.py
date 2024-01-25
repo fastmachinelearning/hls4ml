@@ -80,7 +80,7 @@ def _get_precision_from_quantizer(quantizer):
         overflow = "AP_SAT"
         if quantizer['class_name'] in ('quantized_relu', 'quantized_relu_po2'):
             signed = True
-            #integer -= 1
+            # integer -= 1
         elif quantizer['class_name'] == 'quantized_tanh':
             overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
             integer = 1
@@ -361,4 +361,3 @@ def config_from_onnx_model(
     config['Model'] = model_config
 
     return config
-
