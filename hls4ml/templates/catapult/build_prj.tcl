@@ -273,7 +273,12 @@ if {$opt(synth)} {
 project save
 
 if {$opt(cosim) || $opt(validation)} {
-  flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
+  if {$opt(verilog)} {
+    flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
+  }
+  if {$opt(vhdl)} {
+    flow run /SCVerify/launch_make ./scverify/Verify_rtl_vhdl_msim.mk {} SIMTOOL=msim sim
+  }
 }
 
 if {$opt(export)} {
@@ -289,15 +294,18 @@ if {$opt(export)} {
 if {$opt(sw_opt)} {
   puts "***** Pre Power Optimization *****"
   go switching
-  flow run /PowerAnalysis/report_pre_pwropt_Verilog
-  flow run /PowerAnalysis/report_pre_pwropt_VHDL
+  if {$opt(verilog)} {
+    flow run /PowerAnalysis/report_pre_pwropt_Verilog
   }
+  if {$opt(vhdl)} {
+    flow run /PowerAnalysis/report_pre_pwropt_VHDL
+  }
+}
 
 if {$opt(power)} {
   puts "***** Power Optimization *****"
-
-	go power
-  }
+  go power
+}
 
 if {$opt(vsynth)} {
   puts "***** VIVADO SYNTHESIS *****"
@@ -306,6 +314,7 @@ if {$opt(vsynth)} {
   set time_end [clock clicks -milliseconds]
   report_time "VIVADO SYNTHESIS" $time_start $time_end
 }
+
 if {$opt(bitfile)} {
   puts "***** Option bitfile not supported yet *****"
 }
