@@ -1,3 +1,4 @@
+import math
 from copy import deepcopy
 
 import numpy as np
@@ -70,53 +71,57 @@ class InferPrecisionTypes(OptimizerPass):
 
         return ['result_t']
 
-    def _infer_common_precision(self, node, types_to_infer, n_ops):
+    def _infer_common_precision(self, node, types_to_infer, n_ops, use_given_weights=False):
+        '''The option, use_given_weights, allows you to tailor for the given weights, in particular, zero bias'''
         inferred_types = []
 
         input_precision = node.get_input_variable().type.precision
         input_width = input_precision.width
         input_integers = input_precision.integer
+        input_signed = input_precision.signed
 
         if 'weight_t' in types_to_infer:
             weight_quantizer = node.get_attr('weight_quantizer', None)
             if weight_quantizer is not None:
-                weight_width = weight_quantizer.bits
-                weight_integers = weight_quantizer.hls_type.integer
                 node.types['weight_t'].name = node.name + '_weight_t'
                 node.types['weight_t'].precision = weight_quantizer.hls_type
             else:
                 self._infer_default_type(node, 'weight_t')
-                weight_width = node.types['weight_t'].precision.width
-                weight_integers = node.types['weight_t'].precision.integer
             node.weights['weight'].update_precision(node.types['weight_t'].precision)
-
             inferred_types.append('weight_t')
-        else:
-            weight_width = node.types['weight_t'].precision.width
-            weight_integers = node.types['weight_t'].precision.integer
+
+        weight_width = node.types['weight_t'].precision.width
+        weight_integers = node.types['weight_t'].precision.integer
+        weight_signed = node.types['weight_t'].precision.signed
 
         if 'bias_t' in types_to_infer:
             bias_quantizer = node.get_attr('bias_quantizer', None)
             if bias_quantizer is not None:
-                bias_width = bias_quantizer.bits
-                bias_integers = bias_quantizer.hls_type.integer
                 node.types['bias_t'].name = node.name + '_bias_t'
                 node.types['bias_t'].precision = bias_quantizer.hls_type
             else:
                 self._infer_default_type(node, 'bias_t')
-                bias_width = node.types['bias_t'].precision.width
-                bias_integers = node.types['bias_t'].precision.integer
             node.weights['bias'].update_precision(node.types['bias_t'].precision)
-
             inferred_types.append('bias_t')
-        else:
-            bias_width = node.types['bias_t'].precision.width
-            bias_integers = node.types['bias_t'].precision.integer
 
-        new_type = FixedPrecisionType(
-            width=int(max(np.ceil(input_width + weight_width + np.log2(n_ops)), bias_width) + 1),
-            integer=int(max(np.ceil(input_integers + weight_integers + np.log2(n_ops)), bias_integers) + 1),
-        )
+        bias_width = node.types['bias_t'].precision.width
+        bias_integers = node.types['bias_t'].precision.integer
+        bias_signed = node.types['bias_t'].precision.signed
+        no_bias = node.weights['bias'].nonzeros == 0 and use_given_weights  # no bias
+
+        # using math.ceil instead of np.ceil because it returns an int
+        bitwidth = weight_width + input_width + math.ceil(np.log2(n_ops))
+        integers = weight_integers + input_integers + math.ceil(np.log2(n_ops))
+        signed = weight_signed or input_signed
+
+        frac = bitwidth - integers
+
+        if not no_bias:
+            integers = max(integers + (bias_signed and not signed), bias_integers + (signed and not bias_signed)) + 1
+            bitwidth = integers + max(frac, bias_width - bias_integers)
+            signed = signed or bias_signed
+
+        new_type = FixedPrecisionType(bitwidth, integers, signed)
 
         if 'accum_t' in types_to_infer:
             node.types['accum_t'].name = node.name + '_accum_t'
@@ -133,7 +138,7 @@ class InferPrecisionTypes(OptimizerPass):
         return inferred_types
 
     def _infer_dense_precision(self, node, types_to_infer):
-        n_ops = node.get_attr('n_in') * node.get_attr('n_out')
+        n_ops = node.get_attr('n_in')
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
     def _infer_conv_precision(self, node, types_to_infer):
