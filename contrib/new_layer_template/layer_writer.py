@@ -70,6 +70,8 @@ def pythonWriter(filedir, config):
                 newline += indent + f'typedef {{{att}_t.name}} {att}_t;\n'
             assert len(config["attrlist"]['Attribute']) == len(config["genattrtypes"])
             for i, att in enumerate(config["attrlist"]['Attribute']):
+                if config["genattrtypes"][i] == 'str':
+                    config["genattrtypes"][i] = 'std::string'
                 newline += indent + f'typedef {config["genattrtypes"][i]} {att}_t;\n'
             newline += indent + 'static const unsigned n_in = {n_in};'
 
@@ -147,7 +149,8 @@ def hlsWriter(filedir, hlsconfig, pyconfig):
         elif 'arglist' in line:
             newline = ''
             for att in pyconfig["otherargs"]:
-                newline += indent + f'typename CONFIG_T::{att}_t {att};\n'
+                newline += indent + f'typename CONFIG_T::{att}_t {att},\n'
+            newline = newline[:-2] + '\n'
         else:
             newline = line
         fout.write(newline)
