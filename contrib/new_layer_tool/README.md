@@ -18,6 +18,7 @@ The `config.yaml` file is structured in the following way:
 * `Pyconfig`: all the configuration for the "Python side" of the implementation:
 	* `layername`: name of the layer used for naming the output folder and files, classes and functions;
 	* `layerlongname`: "official" name of the layer used in Tensorflow, e.g. `Addons>InstanceNormalization` in the tensorflow_addons library;
+	* `outputshape`: 1D shape of the output (if `0` the output shape is equal to the input one);
 	* `attrlist`: all variables used in the building and computation of the layer:
 		* `Attribute`: general attributes;
 		* `WeightAttribute`: name of the weights;
