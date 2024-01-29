@@ -31,8 +31,10 @@ class ObjectiveEstimator(ABC):
             layer_attributes (hls4ml.optimization.attributes.LayerAttributes): Layer attributes
 
         Returns:
-            optimizable (boolean): can optimizations be applied to this layer
-            optimization_attributes (hls4ml.optimization.attributes.OptimizationAttributes):
+            tuple containing
+
+            - optimizable (boolean): can optimizations be applied to this layer
+            - optimization_attributes (hls4ml.optimization.attributes.OptimizationAttributes):
                 Most suitable approach for optimization
 
         Examples:
