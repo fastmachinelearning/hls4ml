@@ -6,7 +6,7 @@ from hls4ml.optimization.keras import optimize_model
 default_regularization_range = np.logspace(-6, -2, num=16).tolist()
 
 
-def optimize_keras_for_hls4ml(
+def optimize_keras_model_for_hls4ml(
     keras_model,
     hls_config,
     objective,
