@@ -100,9 +100,9 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
     from hls4ml.utils.config import config_from_keras_model
     from hls4ml.optimization.objectives.vivado_objectives import VivadoDSPEstimator
 
-    # Note the change from optimize_model to optimize_keras_for_hls4ml
-    # The function optimize_keras_for_hls4ml acts as a wrapper for the function, parsing hls4ml config to model attributes
-    from hls4ml.optimization import optimize_keras_for_hls4ml
+    # Note the change from optimize_model to optimize_keras_model_for_hls4ml
+    # The function optimize_keras_model_for_hls4ml acts as a wrapper for the function, parsing hls4ml config to model attributes
+    from hls4ml.optimization import optimize_keras_model_for_hls4ml
 
     # Create hls4ml config
     default_reuse_factor = 4
@@ -113,7 +113,7 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
 
     # Optimize model
     # Note the change from ParameterEstimator to VivadoDSPEstimator
-    optimized_model = optimize_keras_for_hls4ml(
+    optimized_model = optimize_keras_model_for_hls4ml(
         baseline_model, model_attributes, VivadoDSPEstimator, scheduler,
         X_train, y_train, X_val, y_val, batch_size, epochs,
         optimizer, loss_fn, metric, increasing, rtol
