@@ -10,6 +10,7 @@ Subpackages
    hls4ml.backends
    hls4ml.converters
    hls4ml.model
+   hls4ml.optimization
    hls4ml.report
    hls4ml.utils
    hls4ml.writer

@@ -1,0 +1,29 @@
+hls4ml.optimization.objectives package
+======================================
+
+Submodules
+----------
+
+hls4ml.optimization.objectives.gpu\_objectives module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.optimization.objectives.gpu_objectives
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.objectives.vivado\_objectives module
+--------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.objectives.vivado_objectives
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.optimization.objectives
+   :members:
+   :undoc-members:
+   :show-inheritance:

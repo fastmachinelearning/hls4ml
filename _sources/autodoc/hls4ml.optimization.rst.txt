@@ -1,0 +1,54 @@
+hls4ml.optimization package
+===========================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hls4ml.optimization.keras
+   hls4ml.optimization.objectives
+
+Submodules
+----------
+
+hls4ml.optimization.attributes module
+-------------------------------------
+
+.. automodule:: hls4ml.optimization.attributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.config module
+---------------------------------
+
+.. automodule:: hls4ml.optimization.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.knapsack module
+-----------------------------------
+
+.. automodule:: hls4ml.optimization.knapsack
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.scheduler module
+------------------------------------
+
+.. automodule:: hls4ml.optimization.scheduler
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.optimization
+   :members:
+   :undoc-members:
+   :show-inheritance:

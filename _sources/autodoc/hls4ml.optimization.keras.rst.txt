@@ -1,0 +1,61 @@
+hls4ml.optimization.keras package
+=================================
+
+Submodules
+----------
+
+hls4ml.optimization.keras.builder module
+----------------------------------------
+
+.. automodule:: hls4ml.optimization.keras.builder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.keras.config module
+---------------------------------------
+
+.. automodule:: hls4ml.optimization.keras.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.keras.masking module
+----------------------------------------
+
+.. automodule:: hls4ml.optimization.keras.masking
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.keras.reduction module
+------------------------------------------
+
+.. automodule:: hls4ml.optimization.keras.reduction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.keras.regularizers module
+---------------------------------------------
+
+.. automodule:: hls4ml.optimization.keras.regularizers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.keras.utils module
+--------------------------------------
+
+.. automodule:: hls4ml.optimization.keras.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.optimization.keras
+   :members:
+   :undoc-members:
+   :show-inheritance:
