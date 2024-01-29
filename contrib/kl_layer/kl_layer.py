@@ -6,6 +6,7 @@
 
     The HLS part is in contrib/kl_layer/kl_layer.h
 """
+
 from pathlib import Path
 
 import numpy as np
