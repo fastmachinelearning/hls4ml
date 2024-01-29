@@ -591,7 +591,7 @@ def get_ymodel_keras(keras_model, X):
             hasattr(layer, "activation")
             and layer.activation is not None
             and not isinstance(layer, (keras.layers.Activation, qkeras.qlayers.QActivation))
-            # and layer.activation.__name__ != "linear"
+            and layer.activation.__name__ != "linear"
         ):
             tmp_activation = layer.activation
             layer.activation = None
