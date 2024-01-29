@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 from qkeras.qlayers import QActivation
@@ -5,6 +7,8 @@ from qkeras.quantizers import quantized_relu
 from tensorflow.keras.models import Sequential
 
 import hls4ml
+
+test_root_path = Path(__file__).parent
 
 
 def randX(batch_size, N):
@@ -44,7 +48,8 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name')
     output_dir = str(
-        'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}_{}'.format(
+        test_root_path
+        / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}_{}'.format(
             quantizer.__class__.__name__, quantizer.bits, quantizer.integer, backend, io_type
         )
     )
