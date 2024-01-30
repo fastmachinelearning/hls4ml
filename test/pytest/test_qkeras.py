@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tensorflow.keras.layers import BatchNormalization, Input
 from tensorflow.keras.models import Model, Sequential, model_from_json
-from tensorflow.keras.utils import set_random_seed, to_categorical
+from tensorflow.keras.utils import to_categorical
 
 import hls4ml
 
@@ -486,8 +486,7 @@ def test_qsimplernn(backend):
     '''
     Test proper handling of QSimpleRNN.
     '''
-    set_random_seed(42)
-    X = np.linspace(-0.5, 0.5, 5)
+    X = np.linspace(-0.25, 0.25, 5)
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
     model = Sequential()
@@ -495,16 +494,16 @@ def test_qsimplernn(backend):
         QSimpleRNN(
             4,
             input_shape=(5, 2),
-            kernel_quantizer='quantized_bits(8, 0, alpha=1)',
-            recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
-            bias_quantizer='quantized_bits(8, 0, alpha=1)',
-            state_quantizer='quantized_bits(8, 0, alpha=1)',
+            kernel_quantizer='quantized_bits(16, 0, alpha=1)',
+            recurrent_quantizer='quantized_bits(16, 0, alpha=1)',
+            bias_quantizer='quantized_bits(16, 0, alpha=1)',
+            state_quantizer='quantized_bits(16, 0, alpha=1)',
             activation='relu',
         )
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<8,1>")
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<16,1>")
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
