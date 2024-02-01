@@ -285,6 +285,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('depthwise').nzeros
         params['index'] = str(node.index) + '_depthwise'
         params['weight_t'] = node.get_weights('depthwise').type
+        params['bias_t'] = node.get_weights('zero_bias').type
         params['fill_fn'] = 'FillConv1DBuffer'
 
         if node.get_attr('unscaled'):
