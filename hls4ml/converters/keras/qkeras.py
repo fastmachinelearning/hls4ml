@@ -3,7 +3,8 @@ from qkeras.quantizers import get_quantizer
 from hls4ml.converters.keras.convolution import parse_conv1d_layer, parse_conv2d_layer
 from hls4ml.converters.keras.core import parse_batchnorm_layer, parse_dense_layer
 from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
-from hls4ml.model.types import FixedPrecisionType, QKerasBinaryQuantizer, QKerasPO2Quantizer, QKerasQuantizer
+from hls4ml.model.quantizers import QKerasBinaryQuantizer, QKerasPO2Quantizer, QKerasQuantizer
+from hls4ml.model.types import FixedPrecisionType
 
 
 def get_quantizer_from_config(keras_layer, quantizer_var):

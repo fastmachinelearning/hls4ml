@@ -349,17 +349,17 @@ class Input(Layer):
 
 
 class Constant(Layer):
+    # one could consider making this a weight attribute, but given it's transient nature, I am not sure it helps
     _expected_attributes = [
         Attribute('value', value_type=np.ndarray),
     ]
 
     def initialize(self):
         value = self.attributes['value']
-        self.value = value  # note, this is unquantized; Only here for easier access
         shape = list(value.shape)
         if not shape:
             shape = (1,)
-            self.value = np.array([self.value])
+            self.set_attr('value', np.array([value]))
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
         self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("precision"))
 
@@ -455,7 +455,6 @@ class Conv(Layer):
     """
 
     def initialize(self):
-        # use negative indexing because it is not clear if batch dimension is always stripped
         if self.attributes['n_dim'] == 1:
             # this is 1D convolution
             shape = [self.attributes['out_width'], self.attributes['n_filt']]
@@ -932,6 +931,7 @@ class BatchNormalization(Layer):
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
 
+# TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
 class ApplyAlpha(BatchNormalization):
     '''A custom layer to scale the output of a QDense layer which used 'alpha != 1'
     Inference computation uses BatchNormalization methods'''
@@ -941,6 +941,7 @@ class ApplyAlpha(BatchNormalization):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
+        self.set_attr('n_in', inp.size())
 
         scale = self.get_attr('scale_data')
         scale_quantizer = self.get_attr('scale_quantizer')

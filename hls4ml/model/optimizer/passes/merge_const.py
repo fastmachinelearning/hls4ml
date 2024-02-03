@@ -1,8 +1,8 @@
 import numpy as np
 
-from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
 from hls4ml.model.layers import ApplyAlpha, Constant, Merge
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.quantizers import QuantNodeQuantizer
 
 _base_attributes = ('Trace', 'reuse_factor', 'n_in')
 

@@ -88,7 +88,7 @@ def test_tfc_2w2a(tfc_2w2a_model, backend):
     model = tfc_2w2a_model
 
     ishape = (1, 1, 28, 28)
-    X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
+    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
@@ -111,7 +111,7 @@ def test_cnv_2w2a(cnv_2w2a_model, backend):
     model = cnv_2w2a_model
 
     ishape = (1, 32, 32, 3)
-    X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
+    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
@@ -137,7 +137,7 @@ def test_jet_tagging(jettagging_model, backend):
     # Execute QONNX model inference
     # TODO make the test bigger
     ishape = (1, 16)
-    X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
+    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
