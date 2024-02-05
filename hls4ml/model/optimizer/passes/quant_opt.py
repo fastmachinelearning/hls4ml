@@ -31,10 +31,14 @@ class QuantConstantParameters(OptimizerPass):
     """Remove Constant from the Qaunt node parameters (but not input[0])"""
 
     def match(self, node):
-        is_match = isinstance(node, Quant) and (
-            (node.get_input_node(node.inputs[1]) and isinstance(node.get_input_node(node.inputs[1]), Constant))
-            or (node.get_input_node(node.inputs[2]) and isinstance(node.get_input_node(node.inputs[2]), Constant))
-            or (node.get_input_node(node.inputs[3]) and isinstance(node.get_input_node(node.inputs[3]), Constant))
+        is_match = (
+            isinstance(node, Quant)
+            and len(node.inputs) == 4
+            and (
+                (node.get_input_node(node.inputs[1]) and isinstance(node.get_input_node(node.inputs[1]), Constant))
+                or (node.get_input_node(node.inputs[2]) and isinstance(node.get_input_node(node.inputs[2]), Constant))
+                or (node.get_input_node(node.inputs[3]) and isinstance(node.get_input_node(node.inputs[3]), Constant))
+            )
         )
 
         return is_match
@@ -67,6 +71,10 @@ class QuantConstantParameters(OptimizerPass):
                 node.inputs[3] = ''
                 model.remove_node(bitwidth_node, rewire=False)
 
+        node.inputs = [inp for inp in node.inputs if inp]
+        if len(node.inputs) != 1:
+            raise RuntimeError("hls4ml only supports constant scale, zeropt, and bitwidth values")
+
         return True
 
 
@@ -83,10 +91,8 @@ class QuantToActivation(OptimizerPass):
 
         is_match = (
             isinstance(node, Quant)
+            and len(node.inputs) == 1
             and not isinstance(node.get_input_node(node.inputs[0]), Constant)
-            and not node.get_input_node(node.inputs[1])
-            and not node.get_input_node(node.inputs[2])
-            and not node.get_input_node(node.inputs[3])
         )
 
         # Only match if the scale is power of 2 and the zero-point is 0s
@@ -142,11 +148,7 @@ class FuseQuantWithConstant(OptimizerPass):
     def match(self, node):
         # only matches after the other inputs are already folded
         is_match = (
-            isinstance(node, Quant)
-            and isinstance(node.get_input_node(node.inputs[0]), Constant)
-            and not node.get_input_node(node.inputs[1])
-            and not node.get_input_node(node.inputs[2])
-            and not node.get_input_node(node.inputs[3])
+            isinstance(node, Quant) and len(node.inputs) == 1 and isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
         # Only match if the scale is power of 2 and the zero-point is 0s
@@ -197,7 +199,7 @@ class FuseQuantWithConstant(OptimizerPass):
 
 class QuantToAlphaActivationAlpha(OptimizerPass):
     """
-    This is for the case when scale is not 1 or zeropt is not 0. It is a a 1:3 transformation of
+    This is for the case when scale is not power-of-2 or zeropt is not 0. It is a a 1:3 transformation of
     a Quant to an ApplyAlpha (to scale), Activatio, ApplyAlpho (to rescale).
 
     NOTE:  It needs to be scheduled after QuantToActivation (or we need to make the match criteria stricter)
@@ -207,10 +209,8 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         # only matches after the other inputs are already folded
         is_match = (
             isinstance(node, Quant)
+            and len(node.inputs) == 1
             and not isinstance(node.get_input_node(node.inputs[0]), Constant)
-            and not node.get_input_node(node.inputs[1])
-            and not node.get_input_node(node.inputs[2])
-            and not node.get_input_node(node.inputs[3])
         )
         return is_match
 
@@ -265,7 +265,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
 class ConstQuantToConstAlpha(OptimizerPass):
     """
-    This is for the case when scale is not 1 or zeropt is not 0. It is a a 1:3 transformation of
+    This is for the case when scale is not power-of-2 or zeropt is not 0. It is a a 1:3 transformation of
     a Quant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to unscale), but an input
     consts allows for optimization, so the ApplyAlpha (to scale), Activation are
     optimized away right away.
@@ -274,11 +274,7 @@ class ConstQuantToConstAlpha(OptimizerPass):
     def match(self, node):
         # only matches after the other inputs are already folded
         is_match = (
-            isinstance(node, Quant)
-            and isinstance(node.get_input_node(node.inputs[0]), Constant)
-            and not node.get_input_node(node.inputs[1])
-            and not node.get_input_node(node.inputs[2])
-            and not node.get_input_node(node.inputs[3])
+            isinstance(node, Quant) and len(node.inputs) == 1 and isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
         if is_match:  # to make sure this is a quant node with inputs
@@ -291,10 +287,6 @@ class ConstQuantToConstAlpha(OptimizerPass):
         """
         Change Constant + Quant node to Constant, ApplyAlpha
         """
-
-        # Do the Activation as in the simple case
-
-        n_in = node.get_input_variable().size()
 
         rounding_mode = node.get_attr('rounding_mode')
         narrow = node.get_attr('narrow')
@@ -318,7 +310,6 @@ class ConstQuantToConstAlpha(OptimizerPass):
         const_node.initialize()
 
         attributes_rescale = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes_rescale.update({'n_in': n_in, 'n_out': n_in, 'n_filt': -1})
 
         rescale = scale
         rebias = -bias * scale

@@ -6,8 +6,6 @@ from hls4ml.model.quantizers import QuantNodeQuantizer
 
 _base_attributes = ('Trace', 'reuse_factor', 'n_in')
 
-# TODO This doesn't yet support quantization in the constants
-
 
 class MergeTwoConstants(OptimizerPass):
     """Merge of two constants makes another constant"""
@@ -23,15 +21,18 @@ class MergeTwoConstants(OptimizerPass):
 
     def transform(self, model, node):
         """
-        Merge of two constants makes another constant
+        Merge of two constants makes another constant.
+
+        Note:  full precision is used in the calculation, and precision is not propagated.
+        The precision
         """
         const_node0 = node.get_input_node(node.inputs[0])
         const_node1 = node.get_input_node(node.inputs[1])
 
-        val0 = const_node0.value
-        val1 = const_node1.value
+        val0 = const_node0.attributes['value']
+        val1 = const_node1.attributes['value']
 
-        op = node.attributes["op"]
+        op = node.attributes['op']
         if op in ('add', 'sum'):
             new_val = val0 + val1
         elif op == 'sub':
@@ -47,16 +48,18 @@ class MergeTwoConstants(OptimizerPass):
         elif op == 'min':
             new_val = np.minimum(val0, val1)
         else:
-            raise RuntimeError(f"Unexpected op_type: {op}")
+            raise RuntimeError(f'Unexpected op_type: {op}')
 
-        quantizer = node.get_attr("quantizer")  # None if not defined
+        quantizer = node.get_attr('quantizer')  # None if not defined
+        const_node0.set_attr('quantizer', quantizer)  # overwrite the quantizer
         if quantizer:
-            const_node0.set_attr("quantizer", quantizer)
-        const_node0.set_attr("value", new_val)
+            const_node0.set_attr('quantizer', quantizer)
 
-        quant_precision = node.get_attr("quant_precision")
+        const_node0.set_attr('value', new_val)
+
+        quant_precision = node.get_attr('quant_precision')
         if quant_precision:
-            const_node0.set_attr("quant_precision", quant_precision)
+            const_node0.set_attr('quant_precision', quant_precision)
 
         # reinitialize (which also runs quantization if quantizer exists)
         const_node0.initialize()
@@ -75,7 +78,7 @@ class MergeToApplyAlpha(OptimizerPass):
     def match(self, node):
         is_match = (
             isinstance(node, Merge)
-            and node.attributes["op"] in ("add", "sum", "sub", "mul")  # Div is separate
+            and node.attributes['op'] in ('add', 'sum', 'sub', 'mul')  # Div is separate
             and (
                 isinstance(node.get_input_node(node.inputs[0]), Constant)
                 != isinstance(node.get_input_node(node.inputs[1]), Constant)
@@ -103,21 +106,21 @@ class MergeToApplyAlpha(OptimizerPass):
         bias_precision = None
         bias_quantizer = None
 
-        op = node.attributes["op"]
+        op = node.attributes['op']
         if op in ('add', 'sum'):
             scale = np.array(1)
-            bias = const_node.value
-            bias_precision = const_node.get_attr("quant_precision")
-            bias_quantizer = const_node.get_attr("quantizer")
+            bias = const_node.attribute['value']
+            bias_precision = const_node.get_attr('quant_precision')
+            bias_quantizer = const_node.get_attr('quantizer')
         elif op == 'sub':
             if node1const:
                 scale = np.array(1)
-                bias = -const_node.value
+                bias = -const_node.attribute['value']
             else:
                 scale = np.array(-1)
-                bias = const_node.value
-            bias_precision = const_node.get_attr("quant_precision")
-            bias_quantizer = const_node.get_attr("quantizer")
+                bias = const_node.attribute['value']
+            bias_precision = const_node.get_attr('quant_precision')
+            bias_quantizer = const_node.get_attr('quantizer')
             if bias_precision and not bias_precision.signed:
                 # need to add a bit
                 bias_precision.signed = 1
@@ -126,10 +129,10 @@ class MergeToApplyAlpha(OptimizerPass):
                 bias_quantizer = QuantNodeQuantizer(bias_precision)
 
         elif op == 'mul':
-            scale = const_node.value
+            scale = const_node.attribute['value']
             bias = np.array(0)
-            scale_precision = const_node.get_attr("quant_precision")
-            scale_quantizer = const_node.get_attr("quantizer")
+            scale_precision = const_node.get_attr('quant_precision')
+            scale_quantizer = const_node.get_attr('quantizer')
 
         # because C++ doesn't do broadcasting, we may have to change the shapes of the scale and bias
         if scale.shape != tuple(input_shape) and np.squeeze(scale).shape != tuple(input_shape):
@@ -140,20 +143,20 @@ class MergeToApplyAlpha(OptimizerPass):
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update(
             {
-                "scale_data": scale,
-                "bias_data": bias,
-                "n_in": n_in,
-                "n_out": n_in,
-                "n_filt": -1,
-                "scale_precision": scale_precision,
-                "scale_quantizer": scale_quantizer,
-                "bias_precision": bias_precision,
-                "bias_quantizer": bias_quantizer,
+                'scale_data': scale,
+                'bias_data': bias,
+                'n_in': n_in,
+                'n_out': n_in,
+                'n_filt': -1,
+                'scale_precision': scale_precision,
+                'scale_quantizer': scale_quantizer,
+                'bias_precision': bias_precision,
+                'bias_quantizer': bias_quantizer,
             }
         )
 
         bn_layer = model.make_node(
-            ApplyAlpha, f"bn_{node.name}", attributes, [node.inputs[input_node_idx]], [x for x in node.outputs]
+            ApplyAlpha, f'bn_{node.name}', attributes, [node.inputs[input_node_idx]], [x for x in node.outputs]
         )
 
         model.remove_node(const_node, rewire=False)
@@ -172,7 +175,7 @@ class MergeToApplyAlphaDiv(OptimizerPass):
     def match(self, node):
         is_match = (
             isinstance(node, Merge)
-            and node.attributes["op"] == 'div'
+            and node.attributes['op'] == 'div'
             and isinstance(node.get_input_node(node.inputs[1]), Constant)
         )  # only second can be const
 
@@ -182,7 +185,7 @@ class MergeToApplyAlphaDiv(OptimizerPass):
         input_shape = node.get_input_variable().shape
         n_in = np.prod(input_shape)
         const_node = node.get_input_node(node.inputs[1])
-        scale = 1 / const_node.value
+        scale = 1 / const_node.attribute['value']
         bias = np.array(0)
 
         # because C++ doesn't do broadcasting, we may have to change the shapes of the scale and bias
@@ -192,9 +195,9 @@ class MergeToApplyAlphaDiv(OptimizerPass):
             bias = np.broadcast_to(bias, input_shape)
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update({"scale_data": scale, "bias_data": bias, "n_in": n_in, "n_out": n_in, "n_filt": -1})
+        attributes.update({'scale_data': scale, 'bias_data': bias, 'n_in': n_in, 'n_out': n_in, 'n_filt': -1})
 
-        bn_layer = model.make_node(ApplyAlpha, f"bn_{node.name}", attributes, [node.inputs[0]], [x for x in node.outputs])
+        bn_layer = model.make_node(ApplyAlpha, f'bn_{node.name}', attributes, [node.inputs[0]], [x for x in node.outputs])
 
         model.remove_node(const_node, rewire=False)
         model.replace_node(node, bn_layer)

@@ -48,12 +48,13 @@ class ConvToConvXD(OptimizerPass):
         """Convert Conv with constant to a Conv1D or Conv2D layer"""
 
         weight_node = node.get_input_node(node.inputs[1])
-        weight_precision = weight_node.get_attr("quant_precision")
+        weight_precision = weight_node.get_attr('quant_precision')
+        weight_data = weight_node.attributes['value']
         bias_node = None
         bias_precision = None
         if len(node.inputs) == 3:
             bias_node = node.get_input_node(node.inputs[2])
-            bias_precision = bias_node.get_attr("quant_precision")
+            bias_precision = bias_node.get_attr('quant_precision')
 
         # creating the attributes
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
@@ -61,24 +62,24 @@ class ConvToConvXD(OptimizerPass):
         # The ConvxD nodes expect the weight data to be in a different format, not (M, k1.., C)
         if node.attributes['n_dim'] == 1:
             newtype = Conv1D
-            attributes["weight_data"] = np.transpose(weight_node.value, (1, 2, 0))
+            attributes['weight_data'] = np.transpose(weight_data, (1, 2, 0))
         else:
             newtype = Conv2D
-            attributes["weight_data"] = np.transpose(weight_node.value, (1, 2, 3, 0))
-        attributes["weight_precision"] = weight_precision
-        attributes["weight_quantizer"] = weight_node.get_attr("quantizer")
+            attributes['weight_data'] = np.transpose(weight_data, (1, 2, 3, 0))
+        attributes['weight_precision'] = weight_precision
+        attributes['weight_quantizer'] = weight_node.get_attr('quantizer')
 
         if bias_node:
-            attributes["bias_data"] = bias_node.value
-            attributes["bias_precision"] = bias_precision
-            attributes["bias_quantizer"] = bias_node.get_attr("quantizer")
+            attributes['bias_data'] = bias_node.attributes['value']
+            attributes['bias_precision'] = bias_precision
+            attributes['bias_quantizer'] = bias_node.get_attr('quantizer')
         else:
-            attributes["bias_data"] = np.zeros(attributes['n_filt'])
-            attributes["bias_precision"] = IntegerPrecisionType(1, False)
+            attributes['bias_data'] = np.zeros(attributes['n_filt'])
+            attributes['bias_precision'] = IntegerPrecisionType(1, False)
 
         # making new node
         new_node = model.make_node(
-            newtype, f"{newtype.__name__}_{node.name}", attributes, [node.inputs[0]], [x for x in node.outputs]
+            newtype, f'{newtype.__name__}_{node.name}', attributes, [node.inputs[0]], [x for x in node.outputs]
         )
 
         # removing and replacing old nodes

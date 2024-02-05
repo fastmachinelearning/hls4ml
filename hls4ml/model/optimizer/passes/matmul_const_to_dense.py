@@ -26,30 +26,32 @@ class MatmulConstToDense(OptimizerPass):
         const_node = node.get_input_node(node.inputs[1])
         other_var = node.get_input_variable(node.inputs[0])
 
-        weight_precision = const_node.get_attr("quant_precision")
-        weight_quantizer = const_node.get_attr("quantizer")
+        weight_data = const_node.attributes['value']
+        weight_precision = const_node.get_attr('quant_precision')
+        weight_quantizer = const_node.get_attr('quantizer')
 
         in_shape = other_var.shape
         n_in = np.prod(in_shape)
-        out_shape = list(in_shape[:-1]) + [const_node.value.shape[-1]]
+        out_shape = list(in_shape[:-1]) + [weight_data.shape[-1]]
         n_out = np.prod(out_shape)
 
         # creating the attributes
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update(
             {
-                "weight_data": const_node.value,
-                "weight_precision": weight_precision,
-                "weight_quantizer": weight_quantizer,
-                "bias_data": np.zeros(out_shape),
-                "bias_precision": IntegerPrecisionType(1, False),
-                "n_in": n_in,
-                "n_out": n_out,
+                'weight_data': weight_data,
+                'weight_precision': weight_precision,
+                'weight_quantizer': weight_quantizer,
+                'bias_data': np.zeros(out_shape),
+                'bias_precision': IntegerPrecisionType(1, False),
+                'have_bias': False,
+                'n_in': n_in,
+                'n_out': n_out,
             }
         )
 
         # making new node
-        new_dense = model.make_node(Dense, f"Dense_{node.name}", attributes, [node.inputs[0]], [x for x in node.outputs])
+        new_dense = model.make_node(Dense, f'Dense_{node.name}', attributes, [node.inputs[0]], [x for x in node.outputs])
 
         # removing and replacing old nodes
         model.remove_node(const_node, rewire=False)
