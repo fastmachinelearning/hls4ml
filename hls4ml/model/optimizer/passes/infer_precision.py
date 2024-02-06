@@ -3,11 +3,15 @@ from copy import deepcopy
 
 import numpy as np
 
-from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.optimizer import ConfigurableOptimizerPass
 from hls4ml.model.types import FixedPrecisionType, UnspecifiedPrecisionType
 
 
-class InferPrecisionTypes(OptimizerPass):
+class InferPrecisionTypes(ConfigurableOptimizerPass):
+    def __init__(self):
+        # The option, infer_no_bias, allows you to tailor for the given weights, in particular, zero bias
+        self.infer_no_bias = False
+
     def match(self, node):
         for layer_type in node.types.values():
             if isinstance(layer_type.precision, UnspecifiedPrecisionType):
@@ -71,8 +75,7 @@ class InferPrecisionTypes(OptimizerPass):
 
         return ['result_t']
 
-    def _infer_common_precision(self, node, types_to_infer, n_ops, use_given_weights=False):
-        '''The option, use_given_weights, allows you to tailor for the given weights, in particular, zero bias'''
+    def _infer_common_precision(self, node, types_to_infer, n_ops):
         inferred_types = []
 
         input_precision = node.get_input_variable().type.precision
@@ -107,7 +110,7 @@ class InferPrecisionTypes(OptimizerPass):
         bias_width = node.types['bias_t'].precision.width
         bias_integers = node.types['bias_t'].precision.integer
         bias_signed = node.types['bias_t'].precision.signed
-        no_bias = node.weights['bias'].nonzeros == 0 and use_given_weights  # no bias
+        no_bias = node.weights['bias'].nonzeros == 0 and self.infer_no_bias  # no bias
 
         # using math.ceil instead of np.ceil because it returns an int
         bitwidth = weight_width + input_width + math.ceil(np.log2(n_ops))
