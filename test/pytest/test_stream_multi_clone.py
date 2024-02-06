@@ -1,10 +1,7 @@
-import os
-import random
 from pathlib import Path
 
 import numpy as np
 import pytest
-import tensorflow as tf
 from keras.layers import Add, Dense
 from tensorflow import keras
 
@@ -15,13 +12,6 @@ test_root_path = Path(__file__).parent
 
 @pytest.fixture(scope='module')
 def model():
-    seed = 42
-    os.environ['RANDOM_SEED'] = f'{seed}'
-    np.random.seed(seed)
-    tf.random.set_seed(seed)
-    tf.get_logger().setLevel('ERROR')
-    random.seed(seed)
-
     inp = keras.Input(shape=(10,))
     x = Dense(10)(inp)
     y = Dense(10)(inp)
@@ -35,8 +25,7 @@ def model():
 
 @pytest.fixture(scope='module')
 def data():
-    rng = np.random.RandomState(42)
-    X = rng.normal(0, 1, (1000, 10))
+    X = np.random.normal(0, 1, (1000, 10))
     X = np.clip(X, -16, 15)
     return X
 
