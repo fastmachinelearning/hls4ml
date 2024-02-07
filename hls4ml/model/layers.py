@@ -22,6 +22,7 @@ from hls4ml.model.types import (
     IntegerPrecisionType,
     NamedType,
     TensorVariable,
+    UnspecifiedPrecisionType,
     WeightVariable,
     find_minimum_width,
 )
@@ -361,7 +362,12 @@ class Constant(Layer):
             shape = (1,)
             self.set_attr('value', np.array([value]))
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
-        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("precision"))
+        quantizer = self.get_attr('quantizer')
+
+        # Should the else clause below be None or UnspecifiedPrecisionType
+        precision = quantizer.hls_type if quantizer is not None else UnspecifiedPrecisionType()
+
+        self.add_output_variable(shape, dims, var_name=self.name, precision=precision)
 
 
 class Quant(Layer):  # The QONNX quantization layer
@@ -901,6 +907,7 @@ class BatchNormOnnx(Layer):
         self.add_output_variable(shape, dims)
 
 
+# TODO:  We currently seem to ignore the quantizers to mean, variance, etc.
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -943,19 +950,22 @@ class ApplyAlpha(BatchNormalization):
         self.add_output_variable(shape, dims)
         self.set_attr('n_in', inp.size())
 
+        # precision values are ignored if quantizer is not None
         scale = self.get_attr('scale_data')
         scale_quantizer = self.get_attr('scale_quantizer')
+        scale_precision = self.get_attr('scale_precision')
         bias = self.get_attr('bias_data')
         bias_quantizer = self.get_attr('bias_quantizer')
+        bias_precision = self.get_attr('bias_precision')
 
-        self.add_weights(scale, quantizer=scale_quantizer)
-        self.add_bias(bias, quantizer=bias_quantizer)
+        self.add_weights(scale, quantizer=scale_quantizer, precision=scale_precision)
+        self.add_bias(bias, quantizer=bias_quantizer, precision=bias_precision)
 
-    def add_weights(self, scale, quantizer=None):
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
+    def add_weights(self, scale, quantizer=None, precision=None):
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer, precision=precision)
 
-    def add_bias(self, bias, quantizer=None):
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
+    def add_bias(self, bias, quantizer=None, precision=None):
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer, precision=precision)
 
 
 class Merge(Layer):

@@ -102,7 +102,7 @@ class QKerasQuantizer(Quantizer):
             self.bits = 1
             self.hls_type = XnorPrecisionType()
         else:
-            print("Unsupported quantizer: " + config['class_name'])
+            print('Unsupported quantizer: ' + config['class_name'])
             self.bits = 16
             self.hls_type = FixedPrecisionType(width=16, integer=6, signed=True)
 
@@ -177,8 +177,8 @@ class QuantNodeQuantizer(Quantizer):
 
     def __init__(self, precision):
         super().__init__(precision.width, precision)
-        if not isinstance(precision, FixedPrecisionType):
-            raise TypeError("QuantNodeQuantizer is only defined for FixedPrecisionType")
+        if not isinstance(precision, (FixedPrecisionType, IntegerPrecisionType)):
+            raise TypeError('QuantNodeQuantizer is only defined for FixedPrecisionType and IntegerPrecisionType')
 
     def __call__(self, data):
         """Apply the quantization on the data"""
@@ -216,7 +216,7 @@ class QuantNodeQuantizer(Quantizer):
             int(0)
         """
         if saturation_mode not in (SaturationMode.SAT_SYM, SaturationMode.SAT):
-            raise ValueError(f"Saturation mode {saturation_mode} not supported. Only AP_SAT_SYM, AP_SAT supported")
+            raise ValueError(f'Saturation mode {saturation_mode} not supported. Only AP_SAT_SYM, AP_SAT supported')
         if signed and saturation_mode == SaturationMode.SAT_SYM:
             value = -(2 ** (bit_width - 1)) + 1
         elif signed:
@@ -253,9 +253,9 @@ class QuantNodeQuantizer(Quantizer):
         to the corresponding numpy functions."""
         if mode == RoundingMode.RND_CONV:
             return np.round
-        # elif mode_string == "CEIL":   # not supported
+        # elif mode_string == 'CEIL':   # not supported
         #     return np.ceil
         elif mode == RoundingMode.TRN:
             return np.floor
         else:
-            raise ValueError(f"Rounding mode {mode} not supported.")
+            raise ValueError(f'Rounding mode {mode} not supported.')

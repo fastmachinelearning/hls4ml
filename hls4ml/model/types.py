@@ -81,7 +81,6 @@ class IntegerPrecisionType(PrecisionType):
 
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
-        self.integer = width
         self.fractional = 0
 
     def __str__(self):
@@ -95,6 +94,22 @@ class IntegerPrecisionType(PrecisionType):
         eq = eq and self.integer == other.integer
         eq = eq and self.fractional == other.fractional
         return eq
+
+    @property
+    def integer(self):
+        return self.width
+
+    @property
+    def rounding_mode(self):
+        return RoundingMode.TRN
+
+    @property
+    def saturation_mode(self):
+        return SaturationMode.WRAP
+
+    @property
+    def saturation_bits(self):
+        return None
 
 
 class FixedPrecisionType(PrecisionType):
@@ -114,10 +129,14 @@ class FixedPrecisionType(PrecisionType):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         super().__init__(width=width, signed=signed)
         self.integer = integer
-        self.fractional = width - integer
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
+
+    # make this a property to avoid inconsistencies
+    @property
+    def fractional(self):
+        self.width - self.integer
 
     @property
     def rounding_mode(self):

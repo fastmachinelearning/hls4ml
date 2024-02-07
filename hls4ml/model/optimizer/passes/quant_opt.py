@@ -131,7 +131,7 @@ class QuantToActivation(OptimizerPass):
         precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update({'activation': 'linear', 'quant_precision': precision, 'quantizer': quantizer})
+        attributes.update({'activation': 'linear', 'quantizer': quantizer})
 
         new_node = model.make_node(Activation, f'{node.name}_act', attributes, [node.inputs[0]], [x for x in node.outputs])
         new_node.get_output_variable().type.precision = precision
@@ -187,7 +187,6 @@ class FuseQuantWithConstant(OptimizerPass):
         precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
 
         const_node = node.get_input_node(node.inputs[0])
-        const_node.set_attr('quant_precision', precision)
         const_node.set_attr('quantizer', quantizer)
         const_node.get_output_variable().type.precision = precision
 
@@ -229,7 +228,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         precision, quantizer = _calculate_precision_quantizer(bitwidth, bitwidth, signed, narrow, rounding_mode)
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update({'activation': 'linear', 'quant_precision': precision, 'quantizer': quantizer})
+        attributes.update({'activation': 'linear', 'quantizer': quantizer})
 
         new_node = model.make_node(Activation, f'{node.name}_act', attributes, [node.inputs[0]], [x for x in node.outputs])
         new_node.get_output_variable().type.precision = precision
@@ -303,7 +302,6 @@ class ConstQuantToConstAlpha(OptimizerPass):
         # caclucate the new value
         new_val = const_node.get_attr('value') / scale + bias
         const_node.set_attr('value', new_val)
-        const_node.set_attr('quant_precision', precision)
         const_node.set_attr('quantizer', quantizer)
 
         # reinitialize (which also runs quantization if quantizer exists)

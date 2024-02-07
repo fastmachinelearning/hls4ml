@@ -2,6 +2,7 @@ import numpy as np
 
 from hls4ml.model.layers import Constant, Conv, Conv1D, Conv2D
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.quantizers import QuantNodeQuantizer
 from hls4ml.model.types import IntegerPrecisionType
 
 # these are attributes to copy
@@ -48,13 +49,10 @@ class ConvToConvXD(OptimizerPass):
         """Convert Conv with constant to a Conv1D or Conv2D layer"""
 
         weight_node = node.get_input_node(node.inputs[1])
-        weight_precision = weight_node.get_attr('quant_precision')
         weight_data = weight_node.attributes['value']
         bias_node = None
-        bias_precision = None
         if len(node.inputs) == 3:
             bias_node = node.get_input_node(node.inputs[2])
-            bias_precision = bias_node.get_attr('quant_precision')
 
         # creating the attributes
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
@@ -66,16 +64,16 @@ class ConvToConvXD(OptimizerPass):
         else:
             newtype = Conv2D
             attributes['weight_data'] = np.transpose(weight_data, (1, 2, 3, 0))
-        attributes['weight_precision'] = weight_precision
         attributes['weight_quantizer'] = weight_node.get_attr('quantizer')
 
         if bias_node:
             attributes['bias_data'] = bias_node.attributes['value']
-            attributes['bias_precision'] = bias_precision
             attributes['bias_quantizer'] = bias_node.get_attr('quantizer')
+            attributes['have_bias'] = True
         else:
             attributes['bias_data'] = np.zeros(attributes['n_filt'])
-            attributes['bias_precision'] = IntegerPrecisionType(1, False)
+            attributes['bias_quantizer'] = QuantNodeQuantizer(IntegerPrecisionType(1, False))
+            attributes['have_bias'] = False
 
         # making new node
         new_node = model.make_node(

@@ -1,7 +1,9 @@
 import numpy as np
 
-from hls4ml.model.layers import BatchNormalization, BatchNormOnnx, Constant
+from hls4ml.model.layers import ApplyAlpha, BatchNormalization, BatchNormOnnx, Constant
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.quantizers import QuantNodeQuantizer
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType
 
 _base_attributes = ('Trace', 'reuse_factor', 'epsilon', 'n_in', 'n_filt')
 
@@ -17,49 +19,55 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
     def transform(self, model, node):
         """
         Remove Constant from the BatchNormalization node parameters (but not input[0])
+
+        TODO:  Currently the quantizers are not actually used by the underlying layer.
         """
 
         if not (len(node.inputs) == 5 and all(node.inputs)):
-            raise ValueError(f"All {len.node.inputs} BatchNormOnnnx inputs need to be defined")
+            raise ValueError(f'All {len.node.inputs} BatchNormOnnnx inputs need to be defined')
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
 
         gamma_node = node.get_input_node(node.inputs[1])
         if not isinstance(gamma_node, Constant):
-            raise TypeError("Only consant gammas supported")
-        gamma = gamma_node.value
+            raise TypeError('Only consant gammas supported')
+        gamma = gamma_node.attributes['value']
         attributes['gamma_data'] = gamma
+        attributes['gamma_quantizer'] = gamma_node.get_attr['quantizer']
+
         node.inputs[1] = ''
         model.remove_node(gamma_node, rewire=False)
 
         beta_node = node.get_input_node(node.inputs[2])
         if not isinstance(beta_node, Constant):
-            raise TypeError("Only consant betas supported")
-        beta = beta_node.value
+            raise TypeError('Only consant betas supported')
+        beta = beta_node.attributes['value']
         attributes['beta_data'] = beta
+        attributes['beta_quantizer'] = beta_node.get_attr['quantizer']
         node.inputs[2] = ''
         model.remove_node(beta_node, rewire=False)
 
         moving_mean_node = node.get_input_node(node.inputs[3])
         if not isinstance(moving_mean_node, Constant):
-            raise TypeError("Only consant moving_means supported")
-        moving_mean = moving_mean_node.value
+            raise TypeError('Only consant moving_means supported')
+        moving_mean = moving_mean_node.attributes['value']
         attributes['mean_data'] = moving_mean
+        attributes['mean_quantizer'] = moving_mean_node.get_attr['quantizer']
         node.inputs[3] = ''
         model.remove_node(moving_mean_node, rewire=False)
 
         moving_variance_node = node.get_input_node(node.inputs[4])
         if not isinstance(moving_variance_node, Constant):
-            raise TypeError("Only consant moving_variances supported")
-        moving_variance = moving_variance_node.value
+            raise TypeError('Only consant moving_variances supported')
+        moving_variance = moving_variance_node.attributes['value']
         attributes['variance_data'] = moving_variance
+        attributes['variance_quantizer'] = moving_variance_node.get_attr['quantizer']
         node.inputs[4] = ''
         model.remove_node(moving_variance_node, rewire=False)
 
-        # scale = gamma / np.sqrt(moving_variance + node.get_attr('epsilon'))
-        # bias = beta - gamma * moving_mean / np.sqrt(moving_variance + node.get_attr('epsilon'))
-        # attributes["scale_data"] = scale
-        # attributes["bias_data"] = bias
+        node.inputs = [inp for inp in node.inputs if inp]
+        if len(node.inputs) != 1:
+            raise RuntimeError('The QONNX batchnomr had unexpected inputs.')
 
         new_node = model.make_node(BatchNormalization, node.name, attributes, [node.inputs[0]], [x for x in node.outputs])
 
@@ -78,7 +86,6 @@ class ConstantBatchNormFusion(OptimizerPass):
             isinstance(node, BatchNormalization)
             and not any(node.inputs[1:])
             and isinstance(node.get_input_node(node.inputs[0]), Constant)
-            and not node.get_input_node(node.inputs[0]).get_attr("quant_precision")
         )
         return is_match
 
@@ -88,13 +95,48 @@ class ConstantBatchNormFusion(OptimizerPass):
         """
         const_node = node.get_input_node(node.inputs[0])
 
-        new_val = const_node.value * node.weights["scale"].data_unquantized + node.weights["bias"].data_unquantized
-        const_node.set_attr("value", new_val)
-        const_node.set_attr("quantizer", node.get_attr("quantizer"))  # None if not defined
-        const_node.set_attr("quant_precision", node.get_attr("quant_precision"))
+        const_prec = const_node.get_output_variable().type.precision
 
-        # reinitialize (which also runs quantization if quantizer exists)
-        const_node.initialize()
+        new_val = const_node.value * node.weights['scale'].data_unquantized + node.weights['bias'].data_unquantized
+
+        const_node.set_attr('value', new_val)
+        const_node.set_attr('quantizer', node.get_attr('quantizer'))  # None if not defined
+
+        if isinstance(node.get_output_variable().type.precision, UnspecifiedPrecisionType):
+            if isinstance(const_prec, UnspecifiedPrecisionType):
+                pass  # leave it as is
+            else:
+                const_node.get_output_variable().type.precision = UnspecifiedPrecisionType()  # default
+                # propagate precision
+                scale_q = node.get_attr('scale_quantizer')
+                bias_q = node.get_attr('bias_quantizer')
+                if scale_q and bias_q:
+                    # propagate precsion
+                    scale_prec = scale_q.hls_type
+                    bias_prec = bias_q.hls_type
+                    if scale_prec not in (IntegerPrecisionType, FixedPrecisionType) or bias_prec not in (
+                        IntegerPrecisionType,
+                        FixedPrecisionType,
+                    ):
+                        print("Warning:  output type not propagated for constant merge")
+                    else:
+                        signed_prod = const_prec.signed or scale_prec.signed
+                        w_prod = const_prec.width + scale_prec.width
+                        i_prod = const_prec.integer + scale_prec.integer
+                        signed = signed_prod or bias_prec.signed
+                        i_tot = (
+                            max(
+                                i_prod + (bias_prec.signed and not signed_prod),
+                                bias_prec.ingeter + (signed_prod and not bias_prec.signed),
+                            )
+                            + 1
+                        )
+                        w_tot = i_tot + max(w_prod - i_prod, bias_prec.width - bias_prec.integer)
+                        new_prec = FixedPrecisionType(w_tot, i_tot, signed)
+                        const_node.set_attr('quantizer', QuantNodeQuantizer(new_prec))
+                        const_node.get_output_variable().type.precision = new_prec
+        else:
+            const_node.get_output_variable().type.precision = node.get_output_variable().type.precision
 
         # remove the batch norm node
         model.remove_node(node, rewire=True)
@@ -103,17 +145,21 @@ class ConstantBatchNormFusion(OptimizerPass):
 
 
 class FuseConsecutiveBatchNormalization(OptimizerPass):
-    '''
+    """
     OptimizerPass to merge consecutive BatchNormalization layers,
     only if the earlier one does not have quantization specified
-    '''
+
+    Note:  Consider restricting this to ApplyAlpha.  Batch Normalization quantization seems to be ignored.
+
+    Note:  This optimizer may not be safe if weights are updateable. May need to turn off.
+    """
 
     def match(self, node):
         prev_node = node.get_input_node(node.inputs[0])
         basic_match = (
-            isinstance(node, BatchNormalization)
-            and isinstance(prev_node, BatchNormalization)
-            and not prev_node.get_attr("quant_precision")
+            isinstance(node, ApplyAlpha)
+            and isinstance(prev_node, ApplyAlpha)
+            and isinstance(prev_node.get_output_variable().type.precision, UnspecifiedPrecisionType)
         )
 
         # check for compatibility to merge
@@ -123,12 +169,12 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
             s1 = node.weights['scale'].data_unquantized
             b1 = node.weights['bias'].data_unquantized
             scale_compatible = (
-                (prev_node.get_attr("scale_quantizer") is None and node.get_attr("scale_quantizer") is None)
+                (prev_node.get_attr('scale_quantizer') is None and node.get_attr('scale_quantizer') is None)
                 or (s0 == np.ones_like(s0)).all()
                 or (s1 == np.ones_like(s1)).all()
             )
             bias_compatible = (
-                (prev_node.get_attr("bias_quantizer") is None and node.get_attr("bias_quantizer") is None)
+                (prev_node.get_attr('bias_quantizer') is None and node.get_attr('bias_quantizer') is None)
                 or (b0 == np.zeros_like(b0)).all()
                 or (b1 == np.zeros_like(b1)).all()
             )
@@ -139,31 +185,57 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
     def transform(self, model, node):
         prev_node = node.get_input_node(node.inputs[0])
 
+        prev_map = prev_node.get_output_use_map()
+        if len(prev_map[prev_node.outputs[0]]) > 1:
+            return False
+
+        # # Not sure why this part is needed
+        # node_map = node.get_output_use_map()
+        # if len(node_map[node.outputs[0]]) > 1:
+        #     return False
+
         s0 = prev_node.weights['scale'].data_unquantized
         b0 = prev_node.weights['bias'].data_unquantized
         s1 = node.weights['scale'].data_unquantized
         b1 = node.weights['bias'].data_unquantized
 
         s_quantizer = (
-            node.get_attr("scale_quantizer") if (s0 == np.ones_like(s0)).all() else prev_node.get_attr("scale_quantizer")
+            node.get_attr('scale_quantizer') if (s0 == np.ones_like(s0)).all() else prev_node.get_attr('scale_quantizer')
         )
         b_quantizer = (
-            node.get_attr("bias_quantizer") if (b0 == np.zeros_like(b0)).all() else prev_node.get_attr("bias_quantizer")
+            node.get_attr('bias_quantizer') if (b0 == np.zeros_like(b0)).all() else prev_node.get_attr('bias_quantizer')
         )
 
-        node.set_attr("scale_quantizer", s_quantizer)
-        node.set_attr("bias_quantizer", b_quantizer)
-        if s_quantizer:
-            node.set_attr("scale_precision", s_quantizer.hls_type)
-        if b_quantizer:
-            node.set_attr("bias_precision", b_quantizer.hls_type)
+        node.set_attr('scale_quantizer', s_quantizer)
+        node.set_attr('bias_quantizer', b_quantizer)
 
         scale_new = s0 * s1
         bias_new = s1 * b0 + b1
 
+        # Not sure if this setting of this is useful
+        s_prec = None
+        if s_quantizer is None and (scale_new == np.ones_like(scale_new)).all():
+            if (
+                isinstance(prev_node.weights['scale'].type, IntegerPrecisionType)
+                and isinstance(node.weights['scale'].type, IntegerPrecisionType)
+                and prev_node.weights['scale'].type.width == 1
+                and node.weights['scale'].type.width == 1
+            ):
+                s_prec = node.weights['scale'].type
+
+        b_prec = None
+        if b_quantizer is None and (bias_new == np.zeros_like(bias_new)).all():
+            if (
+                isinstance(prev_node.weights['bias'].type, IntegerPrecisionType)
+                and isinstance(node.weights['bias'].type, IntegerPrecisionType)
+                and prev_node.weights['bias'].type.width == 1
+                and node.weights['bias'].type.width == 1
+            ):
+                b_prec = node.weights['bias'].type
+
         # call function so that quantizer would be called if needed
-        node.add_weights_variable(name='scale', var_name='s{index}', data=scale_new)
-        node.add_weights_variable(name='bias', var_name='b{index}', data=bias_new)
+        node.add_weights_variable(name='scale', var_name='s{index}', data=scale_new, quantizer=s_quantizer, precision=s_prec)
+        node.add_weights_variable(name='bias', var_name='b{index}', data=bias_new, quantizer=b_quantizer, precision=b_prec)
 
         model.remove_node(prev_node, rewire=True)
         return True

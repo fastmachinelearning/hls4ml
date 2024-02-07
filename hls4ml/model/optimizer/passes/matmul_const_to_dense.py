@@ -2,6 +2,7 @@ import numpy as np
 
 from hls4ml.model.layers import Constant, Dense, MatMul
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.quantizers import QuantNodeQuantizer
 from hls4ml.model.types import IntegerPrecisionType
 
 _base_attributes = ('Trace', 'reuse_factor', 'weight', 'weight_t', 'bias', 'bias_t')
@@ -27,7 +28,6 @@ class MatmulConstToDense(OptimizerPass):
         other_var = node.get_input_variable(node.inputs[0])
 
         weight_data = const_node.attributes['value']
-        weight_precision = const_node.get_attr('quant_precision')
         weight_quantizer = const_node.get_attr('quantizer')
 
         in_shape = other_var.shape
@@ -40,10 +40,9 @@ class MatmulConstToDense(OptimizerPass):
         attributes.update(
             {
                 'weight_data': weight_data,
-                'weight_precision': weight_precision,
                 'weight_quantizer': weight_quantizer,
                 'bias_data': np.zeros(out_shape),
-                'bias_precision': IntegerPrecisionType(1, False),
+                'bias_quantizer': QuantNodeQuantizer(IntegerPrecisionType(1, False)),
                 'have_bias': False,
                 'n_in': n_in,
                 'n_out': n_out,
