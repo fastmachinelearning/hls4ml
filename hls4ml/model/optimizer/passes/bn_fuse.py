@@ -2,10 +2,19 @@ import numpy as np
 
 from hls4ml.model.layers import BatchNormalization, Conv1D, Conv2D, Dense
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import UnspecifiedPrecisionType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType
 
 
 class FuseBatchNormalization(OptimizerPass):
+    """
+    OptimizerPass to merge BatchNormalization layers,
+    only if the earlier one does not have quantization specified
+
+    Note:  Consider restricting this to ApplyAlpha.  Batch Normalization quantization seems to be ignored.
+
+    Note:  This optimizer may not be safe if weights are updateable. May need to turn off.
+    """
+
     def match(self, node):
         prev_node = node.get_input_node(node.inputs[0])
         basic_match = (
@@ -51,13 +60,59 @@ class FuseBatchNormalization(OptimizerPass):
         bn_scale = node.weights['scale']
         bn_bias = node.weights['bias']
 
+        # only merge if the types are integer or fixed
+        if (
+            not isinstance(parent_weight.type, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(parent_bias.type, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(bn_scale.type, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(bn_bias.type, (IntegerPrecisionType, FixedPrecisionType))
+        ):
+            return False
+
         fused_weight = bn_scale.data * parent_weight.data
         fused_bias = bn_scale.data * parent_bias.data + bn_bias.data
 
+        w_quantizer = (
+            node.get_attr('scale_quantizer')
+            if (parent_weight.data == np.ones_like(parent_weight.data)).all()
+            else parent_node.get_attr('weight_quantizer')
+        )
+        b_quantizer = (
+            node.get_attr('bias_quantizer')
+            if (parent_bias.data == np.zeros_like(parent_bias.data)).all()
+            else parent_node.get_attr('bias_quantizer')
+        )
+
+        node.set_attr('weight_quantizer', w_quantizer)
+        node.set_attr('bias_quantizer', b_quantizer)
+
+        # Not sure if this setting of this is useful
+        w_prec = None
+        if w_quantizer is None and (fused_weight == np.ones_like(fused_weight)).all():
+            if (
+                isinstance(parent_weight.type, IntegerPrecisionType)
+                and isinstance(bn_scale.type, IntegerPrecisionType)
+                and parent_weight.type.width == 1
+                and bn_scale.type.width == 1
+            ):
+                w_prec = node.weights['scale'].type
+
+        b_prec = None
+        if b_quantizer is None and (fused_bias == np.zeros_like(fused_bias)).all():
+            if (
+                isinstance(parent_bias.type, IntegerPrecisionType)
+                and isinstance(bn_bias.type, IntegerPrecisionType)
+                and parent_bias.type.width == 1
+                and bn_bias.type.width == 1
+            ):
+                b_prec = node.weights['bias'].type
+
+        # call function so that quantizer would be called if needed
+        node.add_weights_variable(
+            name='weight', var_name='w{index}', data=fused_weight, quantizer=w_quantizer, precision=w_prec
+        )
+        node.add_weights_variable(name='bias', var_name='b{index}', data=fused_bias, quantizer=b_quantizer, precision=b_prec)
+
         model.remove_node(node, rewire=True)
-        parent_weight.data = fused_weight
-        parent_bias.data = fused_bias
-        if not parent_node.get_attr('use_bias', True):
-            parent_bias.update_precision(bn_bias.type.precision)
 
         return True

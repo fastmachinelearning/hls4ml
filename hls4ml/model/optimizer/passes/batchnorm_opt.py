@@ -194,6 +194,15 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         # if len(node_map[node.outputs[0]]) > 1:
         #     return False
 
+        # only merge if the types are integer or fixed
+        if (
+            not isinstance(prev_node.weights['scale'].type, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(prev_node.weights['bias'].type, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(node.weights['scale'].type, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(node.weights['bias'].type, (IntegerPrecisionType, FixedPrecisionType))
+        ):
+            return False
+
         s0 = prev_node.weights['scale'].data_unquantized
         b0 = prev_node.weights['bias'].data_unquantized
         s1 = node.weights['scale'].data_unquantized
@@ -238,4 +247,24 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         node.add_weights_variable(name='bias', var_name='b{index}', data=bias_new, quantizer=b_quantizer, precision=b_prec)
 
         model.remove_node(prev_node, rewire=True)
+        return True
+
+
+class RemoveNopBatchNormalization(OptimizerPass):
+    """
+    OptimizerPass to remove batch normalizations that do nothing (scale 1, bias 0)
+
+    Note:  This optimizer may not be safe if weights are updateable.
+    """
+
+    def match(self, node):
+        if isinstance(node, BatchNormalization):
+            s0 = node.weights['scale'].data_unquantized
+            b0 = node.weights['bias'].data_unquantized
+            return (s0 == np.ones_like(s0)).all() and (b0 == np.zeros_like(b0)).all()
+        else:
+            return False
+
+    def transform(self, model, node):
+        model.remove_node(node, rewire=True)
         return True

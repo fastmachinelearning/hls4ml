@@ -215,8 +215,10 @@ class QuantNodeQuantizer(Quantizer):
             >>> min_int(signed=False, saturation_mode='AP_SAT_SYM', bit_width=8)
             int(0)
         """
-        if saturation_mode not in (SaturationMode.SAT_SYM, SaturationMode.SAT):
-            raise ValueError(f'Saturation mode {saturation_mode} not supported. Only AP_SAT_SYM, AP_SAT supported')
+        if saturation_mode not in (SaturationMode.SAT_SYM, SaturationMode.SAT, SaturationMode.WRAP):
+            raise ValueError(
+                f'Saturation mode {saturation_mode} not supported. Only AP_SAT_SYM, AP_SAT supported, WRAP partially'
+            )
         if signed and saturation_mode == SaturationMode.SAT_SYM:
             value = -(2 ** (bit_width - 1)) + 1
         elif signed:

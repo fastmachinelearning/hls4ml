@@ -91,9 +91,11 @@ class MergeToApplyAlpha(OptimizerPass):
         if node1const:
             const_node = node1
             input_node_idx = 0
+            const_node_idx = 1
         else:
             const_node = node.get_input_node(node.inputs[0])
             input_node_idx = 1
+            const_node_idx = 0
 
         input_shape = node.get_input_variable(node.inputs[input_node_idx]).shape
         n_in = np.prod(input_shape)
@@ -108,14 +110,14 @@ class MergeToApplyAlpha(OptimizerPass):
         if op in ('add', 'sum'):
             scale = np.array(1)
             scale_precision = IntegerPrecisionType(1, False)
-            bias = const_node.attribute['value']
+            bias = const_node.attributes['value']
             bias_quantizer = const_node.get_attr('quantizer')
         elif op == 'sub':
             bias_quantizer = const_node.get_attr('quantizer')
             if node1const:
                 scale = np.array(1)
                 scale_precision = IntegerPrecisionType(1, False)
-                bias = -const_node.attribute['value']
+                bias = -const_node.attributes['value']
                 if (
                     bias_quantizer is not None
                     and isinstance(bias_quantizer.hls_type, (IntegerPrecisionType, FixedPrecisionType))
@@ -134,10 +136,10 @@ class MergeToApplyAlpha(OptimizerPass):
             else:
                 scale = np.array(-1)
                 scale_precision = IntegerPrecisionType(2, True)
-                bias = const_node.attribute['value']
+                bias = const_node.attributes['value']
 
         elif op == 'mul':
-            scale = const_node.attribute['value']
+            scale = const_node.attributes['value']
             scale_quantizer = const_node.get_attr('quantizer')
             bias = np.array(0)
             bias_precision = IntegerPrecisionType(1, False)
@@ -168,6 +170,7 @@ class MergeToApplyAlpha(OptimizerPass):
         )
 
         model.remove_node(const_node, rewire=False)
+        del node.inputs[const_node_idx]
         model.replace_node(node, aa_layer)
 
         return True
@@ -193,7 +196,7 @@ class MergeToApplyAlphaDiv(OptimizerPass):
         input_shape = node.get_input_variable().shape
         n_in = np.prod(input_shape)
         const_node = node.get_input_node(node.inputs[1])
-        scale = 1 / const_node.attribute['value']
+        scale = 1 / const_node.attributes['value']
         scale_quantizer = const_node.get_attr('quantizer')
         if scale_quantizer:
             scale_precision = scale_quantizer.hls_type

@@ -54,6 +54,7 @@ class MatmulConstToDense(OptimizerPass):
 
         # removing and replacing old nodes
         model.remove_node(const_node, rewire=False)
+        del node.inputs[1]
         model.replace_node(node, new_dense)
 
         return True

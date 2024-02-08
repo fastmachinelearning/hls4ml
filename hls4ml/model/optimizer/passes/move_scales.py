@@ -16,7 +16,7 @@ class ScaleDownMatMul(OptimizerPass):
     def match(self, node):
         '''
         Check to see if we have a MatMul with at least one input ApplyAlpha.
-        Note, if both are this optimition runs twice.
+        Note, if both are this optimizer runs twice.
         '''
         is_match = (
             isinstance(node, MatMul)
@@ -85,7 +85,7 @@ class ScaleDownMatMul(OptimizerPass):
             try:
                 np.broadcast_to(scale, output.shape)  # check size compatibility
                 newscale = scale
-                newbias = inp[other_idx].value * bias
+                newbias = inp[other_idx].attributes['value'] * bias
                 np.broadcast_to(newbias, output.shape)
                 can_propagate = True
             except ValueError:

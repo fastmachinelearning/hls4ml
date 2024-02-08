@@ -69,6 +69,7 @@ register_flow(
         'eliminate_linear_activation',
         'fuse_consecutive_batch_normalization',
         'fuse_batch_normalization',
+        'remove_nop_batch_normalization',
         'replace_multidimensional_dense_with_conv',
         'infer_precision_types',
         'set_precision_concat',
