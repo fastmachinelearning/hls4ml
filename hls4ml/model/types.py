@@ -237,13 +237,12 @@ class IntegerPrecisionType(PrecisionType):
 
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
-        self.integer = width
-        self.fractional = 0
 
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
+    # Does this need to make sure other is also an IntegerPrecisionType? I could see a match between Fixed and Integer
     def __eq__(self, other):
         eq = self.width == other.width
         eq = eq and self.signed == other.signed
@@ -251,6 +250,26 @@ class IntegerPrecisionType(PrecisionType):
         eq = eq and self.integer == other.integer
         eq = eq and self.fractional == other.fractional
         return eq
+
+    @property
+    def integer(self):
+        return self.width
+
+    @property
+    def fractional(self):
+        return 0
+
+    @property
+    def rounding_mode(self):
+        return RoundingMode.TRN
+
+    @property
+    def saturation_mode(self):
+        return SaturationMode.WRAP
+
+    @property
+    def saturation_bits(self):
+        return None
 
 
 class FixedPrecisionType(PrecisionType):
@@ -270,10 +289,13 @@ class FixedPrecisionType(PrecisionType):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         super().__init__(width=width, signed=signed)
         self.integer = integer
-        self.fractional = width - integer
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
+
+    @property
+    def fractional(self):
+        return self.width - self.integer
 
     @property
     def rounding_mode(self):
@@ -281,7 +303,9 @@ class FixedPrecisionType(PrecisionType):
 
     @rounding_mode.setter
     def rounding_mode(self, mode):
-        if isinstance(mode, str):
+        if mode is None:
+            self._rounding_mode = RoundingMode.TRN
+        elif isinstance(mode, str):
             self._rounding_mode = RoundingMode.from_string(mode)
         else:
             self._rounding_mode = mode
@@ -292,7 +316,9 @@ class FixedPrecisionType(PrecisionType):
 
     @saturation_mode.setter
     def saturation_mode(self, mode):
-        if isinstance(mode, str):
+        if mode is None:
+            self._saturation_mode = SaturationMode.WRAP
+        elif isinstance(mode, str):
             self._saturation_mode = SaturationMode.from_string(mode)
         else:
             self._saturation_mode = mode
