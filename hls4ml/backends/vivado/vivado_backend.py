@@ -376,8 +376,9 @@ class VivadoBackend(FPGABackend):
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
         accum_t = layer.get_attr('accum_t')
-        accum_t.precision.fractional += extra_bits
-        accum_t.precision.integer += extra_bits
+        accum_t.precision.width += extra_bits * 2
+        if isinstance(accum_t.precision, FixedPrecisionType):
+            accum_t.precision.integer += extra_bits
 
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
