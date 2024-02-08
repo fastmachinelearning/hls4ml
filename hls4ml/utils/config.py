@@ -79,8 +79,13 @@ def _get_precision_from_quantizer(quantizer):
         rnd = "AP_RND_CONV"
         overflow = "AP_SAT"
         if quantizer['class_name'] in ('quantized_relu', 'quantized_relu_po2'):
-            signed = True
-            # integer -= 1
+            if quantizer['config']['negative_slope'] != 0.0:
+                print(quantizer)
+                signed = True
+                # integer -= 1
+            else:
+                signed = False
+                integer -= 1
         elif quantizer['class_name'] == 'quantized_tanh':
             overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
             integer = 1
