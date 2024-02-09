@@ -68,9 +68,9 @@ class VivadoAcceleratorConfig:
         if out_axi_t not in ['float', 'double']:
             self.output_type = self._next_factor8_type(config.backend.convert_precision_string(out_axi_t))
 
-        if str(self.input_type) == 'float':
+        if self.input_type == 'float':
             self.input_bitwidth = 32
-        elif str(self.input_type) == 'double':
+        elif self.input_type == 'double':
             self.input_bitwidth = 64
         else:
             self.input_bitwidth = config.backend.convert_precision_string(inp_axi_t).width

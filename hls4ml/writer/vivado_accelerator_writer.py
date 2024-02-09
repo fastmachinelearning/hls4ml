@@ -38,14 +38,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
                 newline += f'static const unsigned N_OUT = {out.size()};\n'
                 if self.vivado_accelerator_config.get_interface() == 'axi_stream':
-                    if 'fixed' in str(inp_axi_t):
-                        newline += f'typedef ap_{inp_axi_t} T_in;\n'
-                    else:
-                        newline += f'typedef {inp_axi_t} T_in;\n'
-                    if 'fixed' in str(out_axi_t):
-                        newline += f'typedef ap_{out_axi_t} T_out;\n'
-                    else:
-                        newline += f'typedef {out_axi_t} T_out;\n'
+                    newline += f'typedef {inp_axi_t} T_in;\n'
+                    newline += f'typedef {out_axi_t} T_out;\n'
                     newline += (
                         'typedef struct in_struct {\n'
                         + indent
