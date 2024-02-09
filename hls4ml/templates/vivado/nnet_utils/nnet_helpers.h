@@ -47,6 +47,82 @@ template <class T, size_t SIZE> void load_weights_from_txt(T *w, const char *fna
     }
 }
 
+template <class T, size_t DIM_1, size_t DIM_2> void load_weights_from_txt(T w[DIM_1][DIM_2], const char *fname) {
+
+    std::string full_path = std::string(WEIGHTS_DIR) + "/" + std::string(fname);
+    std::ifstream infile(full_path.c_str(), std::ios::binary);
+
+    if (infile.fail()) {
+        std::cerr << "ERROR: file " << std::string(fname) << " does not exist" << std::endl;
+        exit(1);
+    }
+
+    std::string line;
+    if (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        std::string token;
+
+        size_t i = 0;
+        size_t j = 0;
+        size_t tot = 0;
+        while (std::getline(iss, token, ',')) {
+            std::istringstream(token) >> w[i][j];
+            j++;
+            if (j == DIM_2) {
+                j = 0;
+                i++;
+            }
+            tot++;
+        }
+
+        if (DIM_1 * DIM_2 != tot) {
+            std::cerr << "ERROR: Expected " << DIM_1 * DIM_2 << " values";
+            std::cerr << " but read only " << tot << " values" << std::endl;
+        }
+    }
+}
+
+template <class T, size_t DIM_1, size_t DIM_2, size_t DIM_3>
+void load_weights_from_txt(T w[DIM_1][DIM_2][DIM_3], const char *fname) {
+
+    std::string full_path = std::string(WEIGHTS_DIR) + "/" + std::string(fname);
+    std::ifstream infile(full_path.c_str(), std::ios::binary);
+
+    if (infile.fail()) {
+        std::cerr << "ERROR: file " << std::string(fname) << " does not exist" << std::endl;
+        exit(1);
+    }
+
+    std::string line;
+    if (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        std::string token;
+
+        size_t i = 0;
+        size_t j = 0;
+        size_t k = 0;
+        size_t tot = 0;
+        while (std::getline(iss, token, ',')) {
+            std::istringstream(token) >> w[i][j][k];
+            k++;
+            if (k == DIM_3) {
+                k = 0;
+                j++;
+                if (j == DIM_2) {
+                    j = 0;
+                    i++;
+                }
+            }
+            tot++;
+        }
+
+        if (DIM_1 * DIM_2 * DIM_3 != tot) {
+            std::cerr << "ERROR: Expected " << DIM_1 * DIM_2 * DIM_3 << " values";
+            std::cerr << " but read only " << tot << " values" << std::endl;
+        }
+    }
+}
+
 template <class T, size_t SIZE> void load_compressed_weights_from_txt(T *w, const char *fname) {
 
     std::string full_path = std::string(WEIGHTS_DIR) + "/" + std::string(fname);
