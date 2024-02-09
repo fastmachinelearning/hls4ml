@@ -1,23 +1,6 @@
-from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
+from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler, convert_uaq_to_apfixed
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 from hls4ml.model.types import FixedPrecisionType, BrevitasQuantizer
-import math
-
-def ConvUAQToAp_Fixed(bitwidth, scale_factor, zero_point):
-  """
-  parameters:
-  bitwidth: int
-  scale_factor: float
-  zero_point: float
-  
-  return:
-  int_bitwidth: int 
-  fract_bitwidth: int
-  """
-  fract_bitwidth = - math.log2(scale_factor)
-  int_bitwidth = bitwidth - fract_bitwidth 
-  
-  return (fract_bitwidth, int_bitwidth)
 
 @pytorch_handler('Conv1d', 'QuantConv1d')
 def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
@@ -29,8 +12,25 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv1D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
-    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+    if "Quant" in operation:
+        if class_object.is_weight_quant_enabled:
+            width = int(class_object.quant_weight().bit_width)
+            ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
+            layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
+            layer['weight_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+        else:
+            layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+
+        if class_object.is_bias_quant_enabled:
+            width = int(class_object.quant_bias().bit_width)
+            ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_bias().scale))
+            layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
+            layer['bias_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+        else:
+            layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+    else:
+        layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+        layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     # Input info
     (layer['in_width'], layer['n_chan']) = parse_data_format(
         input_shapes[0], 'channels_first'
@@ -75,10 +75,9 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
     if "Quant" in operation:
-
         if class_object.is_weight_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
-            ap_fixed_params = ConvUAQToAp_Fixed(width, float(class_object.quant_weight().scale),0)
+            ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
             layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
             layer['weight_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
         else:
@@ -86,12 +85,11 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
 
         if class_object.is_bias_quant_enabled:
             width = int(class_object.quant_bias().bit_width)
-            ap_fixed_params = ConvUAQToAp_Fixed(width, float(class_object.quant_bias().scale),0)
+            ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_bias().scale))
             layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
             layer['bias_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
         else:
             layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
-    
     else:
         layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
         layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
@@ -109,7 +107,6 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['dilation'] = class_object.dilation[0]
     layer['pad_top'] = layer['pad_bottom'] = class_object.padding[0]
     layer['pad_left'] = layer['pad_right'] = class_object.padding[1]
-
     if all(x == 0 for x in class_object.padding):  # No padding, i.e., 'VALID' padding in Keras/Tensorflow
         layer['padding'] = 'valid'
     else:  # Only 'valid' and 'same' padding are available in Keras

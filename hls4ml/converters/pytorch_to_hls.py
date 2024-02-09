@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import math
 
 from hls4ml.model import ModelGraph
 
@@ -78,6 +79,21 @@ def get_weights_data(data_reader, layer_name, var_name):
     else:
         return (*data,)
 
+def convert_uaq_to_apfixed(bitwidth, scale_factor):
+  """
+  parameters:
+  bitwidth: int
+  scale_factor: float
+  zero_point: float
+  
+  return:
+  int_bitwidth: int 
+  fract_bitwidth: int
+  """
+  fract_bitwidth = - math.log2(scale_factor)
+  int_bitwidth = bitwidth - fract_bitwidth 
+  
+  return (fract_bitwidth, int_bitwidth)
 
 # ----------------------Layer handling--------------------- #
 layer_handlers = {}

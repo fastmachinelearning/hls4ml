@@ -100,12 +100,26 @@ class QuantModel(Module):
         out = self.relu1(self.conv1(x))
         return out
 
+class LinearModel(Module):
+    def __init__(self):
+        super(LinearModel, self).__init__()
+        self.conv1 = qnn.QuantLinear(4, 4, bias=False, weight_quant=Int8WeightPerTensorFixedPoint)
+        #self.conv1 = qnn.QuantConv2d(3, 6, 5, bias=True, weight_bit_width=4)
+        #self.relu1 = nn.ReLU()
+        self.relu1 = qnn.QuantReLU()
+
+    def forward(self, x):
+        out = self.relu1(self.conv1(x))
+        return out
+
 quant_weight_lenet = QuantWeightLeNet()
 
-model = QuantModel()
+#model = QuantModel()
+model = LinearModel()
 
 
-x = torch.randn(3,6,5)
+#x = torch.randn(3,6,5)
+x = torch.tensor([1.,2.,3.,4.])
 
 quant_linear = qnn.QuantLinear(2, 4, weight_quant=Int8WeightPerTensorFixedPoint, bias=False)
 print(f"Weight QuantTensor Linear:\n {quant_linear.quant_weight()}")
@@ -132,7 +146,7 @@ io_type = 'io_parallel'
 
 hls_model = convert_from_pytorch_model(
     model,
-    (None, 3,6,5),
+    (None, 4),
     hls_config=config,
     output_dir=output_dir,
     backend=backend,
