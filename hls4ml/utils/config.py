@@ -80,9 +80,7 @@ def _get_precision_from_quantizer(quantizer):
         overflow = "AP_SAT"
         if quantizer['class_name'] in ('quantized_relu', 'quantized_relu_po2'):
             if quantizer['config']['negative_slope'] != 0.0:
-                print(quantizer)
                 signed = True
-                # integer -= 1
             else:
                 signed = False
                 integer -= 1

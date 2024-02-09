@@ -208,8 +208,7 @@ def parse_keras_model(model_arch, reader):
     ]
     # Recurrent layers
     recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
-    # QActivation layers
-    qactivation_layers = ['QLeakyReLU']
+
     # All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -296,7 +295,7 @@ def parse_keras_model(model_arch, reader):
         layer_list.append(layer)
         if (
             'activation' in layer
-            and layer['class_name'] not in activation_layers + recurrent_layers + qactivation_layers
+            and layer['class_name'] not in activation_layers + recurrent_layers
             and layer['activation'] != "linear"
         ):  # + qkeras_layers:
             act_layer = {}

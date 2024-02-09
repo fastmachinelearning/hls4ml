@@ -1324,7 +1324,6 @@ layer_map = {
     'Activation': Activation,
     'QActivation': Activation,
     'LeakyReLU': ParametrizedActivation,
-    'QLeakyReLU': ParametrizedActivation,
     'ThresholdedReLU': ParametrizedActivation,
     'ELU': ParametrizedActivation,
     'PReLU': PReLU,
