@@ -37,8 +37,7 @@ def randX_1000_1():
 def test_quantizer(randX_1000_1, quantizer, backend, io_type):
     '''
     Test a single quantizer as an Activation function.
-    Checks the type inference through the conversion is correct without just
-    using the same logic.
+    Using numpy's assert_allclose to check that the differnce between the converted layer and qkeras' is lower than of 10^-5.
     '''
     X = randX_1000_1
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
