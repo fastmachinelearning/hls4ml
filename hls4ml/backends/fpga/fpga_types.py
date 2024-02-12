@@ -172,7 +172,7 @@ class ExponentTypeConverter(TypeDefinition, TypePrecisionConverter):
 class PackedTypeConverter(TypeDefinition, TypePrecisionConverter):
     def definition_cpp(self):
         n_elem_expr = '/' if self.unpack else '*'
-        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(
+        return 'typedef array<{precision}, {n_elem}> {name};\n'.format(
             name=self.name,
             precision=self.precision.definition_cpp(),
             n_elem=str(self.n_elem) + n_elem_expr + str(self.n_pack),

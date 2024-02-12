@@ -43,7 +43,7 @@ class OneAPIInterfaceVariableDefinition(VariableDefinition):
 
     def declare_cpp(self, pipe_min_size=0, indent=''):
         lines = indent + f'class {self.pipe_id};\n'
-        lines += indent + f'using {self.array_type} = std::array<{self.type.name}, {self.size_cpp()}>;\n'
+        lines += indent + f'using {self.array_type} = array<{self.type.name}, {self.size_cpp()}>;\n'
         lines += indent + (
             f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
             + f'{self.array_type}, {pipe_min_size}, PipeProps>;\n'

@@ -7,6 +7,8 @@
 #include <cstddef>
 #include <cstdio>
 
+using nnet::array;
+
 // hls-fpga-machine-learning insert numbers
 
 // hls-fpga-machine-learning insert layer-precision
