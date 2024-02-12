@@ -8,6 +8,7 @@ from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType
 _base_attributes = ('Trace', 'reuse_factor', 'n_in')
 
 
+# This should generally not happen because of qonnx cleaning
 class MergeTwoConstants(OptimizerPass):
     """Merge of two constants makes another constant"""
 
@@ -237,6 +238,7 @@ class MergeToApplyAlphaDiv(OptimizerPass):
         bn_layer = model.make_node(ApplyAlpha, f'bn_{node.name}', attributes, [node.inputs[0]], [x for x in node.outputs])
 
         model.remove_node(const_node, rewire=False)
+        del node.inputs[1]
         model.replace_node(node, bn_layer)
 
         return True

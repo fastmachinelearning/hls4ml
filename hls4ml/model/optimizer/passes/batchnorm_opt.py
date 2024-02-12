@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.model.layers import ApplyAlpha, BatchNormalization, BatchNormOnnx, Constant
+from hls4ml.model.layers import BatchNormalization, BatchNormOnnx, Constant
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import QuantNodeQuantizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType
@@ -33,7 +33,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
             raise TypeError('Only consant gammas supported')
         gamma = gamma_node.attributes['value']
         attributes['gamma_data'] = gamma
-        attributes['gamma_quantizer'] = gamma_node.get_attr['quantizer']
+        attributes['gamma_quantizer'] = gamma_node.get_attr('quantizer')
 
         node.inputs[1] = ''
         model.remove_node(gamma_node, rewire=False)
@@ -43,7 +43,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
             raise TypeError('Only consant betas supported')
         beta = beta_node.attributes['value']
         attributes['beta_data'] = beta
-        attributes['beta_quantizer'] = beta_node.get_attr['quantizer']
+        attributes['beta_quantizer'] = beta_node.get_attr('quantizer')
         node.inputs[2] = ''
         model.remove_node(beta_node, rewire=False)
 
@@ -52,7 +52,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
             raise TypeError('Only consant moving_means supported')
         moving_mean = moving_mean_node.attributes['value']
         attributes['mean_data'] = moving_mean
-        attributes['mean_quantizer'] = moving_mean_node.get_attr['quantizer']
+        attributes['mean_quantizer'] = moving_mean_node.get_attr('quantizer')
         node.inputs[3] = ''
         model.remove_node(moving_mean_node, rewire=False)
 
@@ -61,13 +61,13 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
             raise TypeError('Only consant moving_variances supported')
         moving_variance = moving_variance_node.attributes['value']
         attributes['variance_data'] = moving_variance
-        attributes['variance_quantizer'] = moving_variance_node.get_attr['quantizer']
+        attributes['variance_quantizer'] = moving_variance_node.get_attr('quantizer')
         node.inputs[4] = ''
         model.remove_node(moving_variance_node, rewire=False)
 
         node.inputs = [inp for inp in node.inputs if inp]
         if len(node.inputs) != 1:
-            raise RuntimeError('The QONNX batchnomr had unexpected inputs.')
+            raise RuntimeError('The QONNX batchnorm had unexpected inputs.')
 
         new_node = model.make_node(BatchNormalization, node.name, attributes, [node.inputs[0]], [x for x in node.outputs])
 
@@ -76,6 +76,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         return True
 
 
+# Most likely this case is removed by qonnx cleaning
 class ConstantBatchNormFusion(OptimizerPass):
     """
     Merge BatchNorm into Const (after parameters have already been merged in BatchNormalization)
@@ -149,7 +150,7 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
     OptimizerPass to merge consecutive BatchNormalization layers,
     only if the earlier one does not have quantization specified
 
-    Note:  Consider restricting this to ApplyAlpha.  Batch Normalization quantization seems to be ignored.
+    Note:  Consider restricting this to ApplyAlpha.  Batch Normalization-style quantization seems to be ignored.
 
     Note:  This optimizer may not be safe if weights are updateable. May need to turn off.
     """
@@ -157,8 +158,8 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
     def match(self, node):
         prev_node = node.get_input_node(node.inputs[0])
         basic_match = (
-            isinstance(node, ApplyAlpha)
-            and isinstance(prev_node, ApplyAlpha)
+            isinstance(node, BatchNormalization)
+            and isinstance(prev_node, BatchNormalization)
             and isinstance(prev_node.get_output_variable().type.precision, UnspecifiedPrecisionType)
         )
 
