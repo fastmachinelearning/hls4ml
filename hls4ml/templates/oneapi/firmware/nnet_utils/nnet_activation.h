@@ -2,7 +2,6 @@
 #define NNET_ACTIVATION_H_
 
 #include "nnet_common.h"
-#include <array>
 
 namespace nnet {
 
@@ -24,11 +23,10 @@ struct activ_config {
 // *************************************************
 //       LINEAR Activation -- See Issue 53
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void linear(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void linear(const data_T &data, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         res[ii] = datareg;
     }
 }
@@ -36,11 +34,10 @@ void linear(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CO
 // *************************************************
 //       RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void relu(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void relu(const data_T &data, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         if (datareg > 0)
             res[ii] = datareg;
         else
@@ -48,11 +45,10 @@ void relu(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONF
     }
 }
 
-template <class data_T, class res_T, int MAX_INT, typename CONFIG_T>
-void relu_max(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, int MAX_INT, typename CONFIG_T> void relu_max(const data_T &data, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         if (datareg < 0)
             res[ii] = 0;
         else if (datareg > MAX_INT)
@@ -62,27 +58,24 @@ void relu_max(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, 
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void relu6(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void relu6(const data_T &data, res_T &res) {
     relu_max<data_T, res_T, 6, CONFIG_T>(data, res);
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void relu1(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void relu1(const data_T &data, res_T &res) {
     relu_max<data_T, res_T, 1, CONFIG_T>(data, res);
 }
 
 // *************************************************
 //       Sigmoid Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void sigmoid(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void sigmoid(const data_T &data, res_T &res) {
     static const int MAX_VALUE = 8;
 #include "activation_tables/sigmoid_table.tb"
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        [[intel::fpga_register]] data_T absoluteValue;
-        [[intel::fpga_register]] res_T temp2;
+        [[intel::fpga_register]] typename data_T::value_type absoluteValue;
+        [[intel::fpga_register]] typename res_T::value_type temp2;
         if (data[ii] < 0) {
             absoluteValue = -data[ii];
         } else {
@@ -91,7 +84,7 @@ void sigmoid(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, C
         int index = (absoluteValue * (CONFIG_T::table_size / MAX_VALUE)).to_int();
         if (absoluteValue > MAX_VALUE)
             index = CONFIG_T::table_size - 1;
-        temp2 = (res_T)sigmoid_table[index];
+        temp2 = static_cast<typename res_T::value_type>(sigmoid_table[index]);
         if (data[ii] < 0) {
             res[ii] = 1 - temp2;
         } else {
@@ -127,18 +120,19 @@ template <class data_T, typename CONFIG_T> inline unsigned softmax_latency_idx_f
     return y.to_uint();
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softmax_stable(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(const data_T &data, res_T &res) {
 // Look-up tables
 #include "activation_tables/exp_table.tb"
 #include "activation_tables/invert_table.tb"
 
     // Find maximum
-    Op_max<data_T> op_max;
-    [[intel::fpga_register]] data_T x_max = reduce<data_T, CONFIG_T::n_in, Op_max<data_T>>(data.data(), op_max);
+    Op_max<typename data_T::value_type> op_max;
+    [[intel::fpga_register]] auto x_max =
+        reduce<typename data_T::value_type, CONFIG_T::n_in, Op_max<typename data_T::value_type>>(data.data(), op_max);
 
     // For the diffs, use the same type as the input but force rounding and saturation
-    [[intel::fpga_register]] ac_fixed<data_T::width, data_T::i_width, true, AC_RND, AC_SAT> d_xi_xmax[CONFIG_T::n_in];
+    [[intel::fpga_register]] ac_fixed<data_T::value_type::width, data_T::value_type::i_width, true, AC_RND, AC_SAT>
+        d_xi_xmax[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         d_xi_xmax[i] = data[i] - x_max;
@@ -148,7 +142,7 @@ void softmax_stable(const std::array<data_T, CONFIG_T::n_in> &data, std::array<r
     [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = exp_table[softmax_stable_idx_from_real_val<data_T, CONFIG_T>(d_xi_xmax[i])];
+        exp_res[i] = exp_table[softmax_stable_idx_from_real_val<typename data_T::value_type, CONFIG_T>(d_xi_xmax[i])];
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree
@@ -166,8 +160,7 @@ void softmax_stable(const std::array<data_T, CONFIG_T::n_in> &data, std::array<r
 }
 
 // TODO - Improve accuracy
-template <class data_T, class res_T, typename CONFIG_T>
-void softmax_latency(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(const data_T &data, res_T &res) {
 #include "activation_tables/exp_table_latency.tb"
 #include "activation_tables/invert_table_latency.tb"
 
@@ -175,7 +168,7 @@ void softmax_latency(const std::array<data_T, CONFIG_T::n_in> &data, std::array<
     [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = exp_table_latency[softmax_latency_idx_from_real_val<data_T, CONFIG_T>(data[i])];
+        exp_res[i] = exp_table_latency[softmax_latency_idx_from_real_val<typename data_T::value_type, CONFIG_T>(data[i])];
     }
 
     // Explicitly sum the results with an adder tree.
@@ -192,8 +185,7 @@ void softmax_latency(const std::array<data_T, CONFIG_T::n_in> &data, std::array<
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softmax_legacy(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softmax_legacy(const data_T &data, res_T &res) {
 #include "activation_tables/exp_table_legacy.tb"
 #include "activation_tables/invert_table_legacy.tb"
 
@@ -234,14 +226,13 @@ NN_Outer:
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softmax_argmax(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softmax_argmax(const data_T &data, res_T &res) {
     #pragma unroll
     for (int i = 0; i < CONFIG_T::n_in; i++) {
-        res[i] = (res_T)0;
+        res[i] = static_cast<typename res_T::value_type>(0);
     }
 
-    [[intel::fpga_register]] data_T maximum = data[0];
+    [[intel::fpga_register]] auto maximum = data[0];
     [[intel::fpga_register]] int idx = 0;
 
     #pragma ii 1
@@ -252,11 +243,10 @@ void softmax_argmax(const std::array<data_T, CONFIG_T::n_in> &data, std::array<r
         }
     }
 
-    res[idx] = (res_T)1;
+    res[idx] = static_cast<typename res_T::value_type>(1);
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-inline void softmax(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> inline void softmax(const data_T &data, res_T &res) {
     switch (CONFIG_T::implementation) {
     case softmax_implementation::stable:
         softmax_stable<data_T, res_T, CONFIG_T>(data, res);
@@ -279,16 +269,15 @@ inline void softmax(const std::array<data_T, CONFIG_T::n_in> &data, std::array<r
 // *************************************************
 //       TanH Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void dense_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void dense_tanh(const data_T &data, res_T &res) {
     static const int MAX_VALUE = 4;
 // Initialize the lookup table
 #include "activation_tables/tanh_table.tb"
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        [[intel::fpga_register]] data_T temp;
-        [[intel::fpga_register]] res_T temp2;
+        [[intel::fpga_register]] typename data_T::value_type temp;
+        [[intel::fpga_register]] typename res_T::value_type temp2;
         if (data[ii] < 0) {
             temp = -data[ii];
         } else {
@@ -297,7 +286,7 @@ void dense_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T
         ac_int<16> index = (temp * (CONFIG_T::table_size / MAX_VALUE)).to_int();
         if (temp > MAX_VALUE)
             index = CONFIG_T::table_size - 1;
-        temp2 = (res_T)tanh_table[index];
+        temp2 = static_cast<typename res_T::value_type>(tanh_table[index]);
         if (data[ii] < 0) {
             res[ii] = -temp2;
         } else {
@@ -309,8 +298,7 @@ void dense_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T
 // *************************************************
 //       Hard sigmoid Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void hard_sigmoid(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void hard_sigmoid(const data_T &data, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto datareg = CONFIG_T::slope * data[ii] + CONFIG_T::shift;
@@ -322,8 +310,7 @@ void hard_sigmoid(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void hard_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void hard_tanh(const data_T &data, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto sigmoid = CONFIG_T::slope * data[ii] + CONFIG_T::shift;
@@ -339,10 +326,10 @@ void hard_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T,
 //       Leaky RELU Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(data_T data[CONFIG_T::n_in], data_T alpha, res_T res[CONFIG_T::n_in]) {
+void leaky_relu(const data_T &data, typename data_T::value_type alpha, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         if (datareg > 0)
             res[ii] = datareg;
         else
@@ -354,10 +341,10 @@ void leaky_relu(data_T data[CONFIG_T::n_in], data_T alpha, res_T res[CONFIG_T::n
 //       Thresholded RELU Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(data_T data[CONFIG_T::n_in], data_T theta, res_T res[CONFIG_T::n_in]) {
+void thresholded_relu(const data_T &data, typename data_T::value_type theta, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         if (datareg > theta)
             res[ii] = datareg;
         else
@@ -368,8 +355,7 @@ void thresholded_relu(data_T data[CONFIG_T::n_in], data_T theta, res_T res[CONFI
 // *************************************************
 //       Softplus Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void softplus(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softplus(const data_T &data, res_T &res) {
 // Initialize the lookup table
 #include "activation_tables/softplus_table.tb"
     // Index into the lookup table based on data
@@ -381,15 +367,14 @@ void softplus(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, 
             index = 0;
         if (index > CONFIG_T::table_size - 1)
             index = CONFIG_T::table_size - 1;
-        res[ii] = (res_T)softplus_table[index];
+        res[ii] = static_cast<typename res_T::value_type>(softplus_table[index]);
     }
 }
 
 // *************************************************
 //       Softsign Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void softsign(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softsign(const data_T &data, res_T &res) {
     static const int MAX_VALUE = 8;
 // Initialize the lookup table
 #include "activation_tables/softsign_table.tb"
@@ -397,8 +382,8 @@ void softsign(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, 
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        [[intel::fpga_register]] data_T temp;
-        [[intel::fpga_register]] res_T temp2;
+        [[intel::fpga_register]] typename data_T::value_type temp;
+        [[intel::fpga_register]] typename res_T::value_type temp2;
         if (data[ii] < 0) {
             temp = -data[ii];
         } else {
@@ -407,7 +392,7 @@ void softsign(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, 
         ac_int<16> index = (temp * CONFIG_T::table_size / MAX_VALUE).to_int();
         if (temp > MAX_VALUE)
             index = CONFIG_T::table_size - 1;
-        temp2 = (res_T)softsign_table[index];
+        temp2 = static_cast<typename res_T::value_type>(softsign_table[index]);
         if (data[ii] < 0) {
             res[ii] = -temp2;
         } else {
@@ -419,14 +404,13 @@ void softsign(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, 
 // *************************************************
 //       ELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(const std::array<data_T, CONFIG_T::n_in> &data, const res_T alpha, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void elu(const data_T &data, const res_T alpha, res_T &res) {
 // Initialize the lookup table
 #include "activation_tables/elu_table.tb"
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         if (datareg >= 0) {
             res[ii] = datareg;
         } else {
@@ -438,24 +422,22 @@ void elu(const std::array<data_T, CONFIG_T::n_in> &data, const res_T alpha, std:
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void elu(const data_T &data, res_T &res) {
     elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
 //       SELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void selu(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void selu(const data_T &data, res_T &res) {
 // Initialize the lookup table
 #include "activation_tables/selu_table.tb"
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         if (datareg >= 0) {
-            res[ii] = res_T(1.0507009873554804934193349852946) * datareg;
+            res[ii] = static_cast<typename res_T::value_type>(1.0507009873554804934193349852946) * datareg;
         } else {
             ac_int<16> index = (datareg * CONFIG_T::table_size / -8).to_int();
             if (index > CONFIG_T::table_size - 1)
@@ -468,11 +450,10 @@ void selu(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONF
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void prelu(data_T data[CONFIG_T::n_in], const data_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
+template <class data_T, class res_T, typename CONFIG_T> void prelu(const data_T &data, const data_T &alpha, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
+        auto datareg = data[ii];
         if (datareg > 0)
             res[ii] = datareg;
         else
@@ -483,30 +464,28 @@ void prelu(data_T data[CONFIG_T::n_in], const data_T alpha[CONFIG_T::n_in], res_
 // *************************************************
 //       Binary TanH Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void binary_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void binary_tanh(const data_T &data, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = data[ii];
-        res_T cache;
+        auto datareg = data[ii];
+        typename res_T::value_type cache;
         if (datareg > 0)
             cache = 1;
         else
             cache = -1;
 
-        res[ii] = (res_T)cache;
+        res[ii] = cache;
     }
 }
 
 // *************************************************
 //       Ternary TanH Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void ternary_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_in> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void ternary_tanh(const data_T &data, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_T datareg = 2 * data[ii];
-        res_T cache;
+        auto datareg = 2 * data[ii];
+        typename res_T::value_type cache;
         if (datareg > 1)
             cache = 1;
         else if (datareg > -1 && datareg <= 1)
@@ -514,7 +493,7 @@ void ternary_tanh(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res
         else
             cache = -1;
 
-        res[ii] = (res_T)cache;
+        res[ii] = cache;
     }
 }
 

@@ -410,13 +410,13 @@ class OneAPIWriter(Writer):
                     newline = line
                     # there should really be only one input
                     inp = model_inputs[0]
-                    newline += indent + f'std::vector<{inp.array_type}> inputs;\n'
+                    newline += indent + f'std::vector<{inp.type}> inputs;\n'
 
                 elif '// hls-fpga-machine-learning insert results' in line:
                     newline = line
                     # there should really be only one out
                     out = model_outputs[0]
-                    newline += indent + f'std::vector<{out.array_type}> outputs;\n'
+                    newline += indent + f'std::vector<{out.type}> outputs;\n'
                 elif '// hls-fpga-machine-learning insert tb-input' in line:
                     newline = line
                     inp = model_inputs[0]

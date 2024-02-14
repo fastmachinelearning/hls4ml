@@ -4,7 +4,6 @@
 #include "nnet_common.h"
 #include "nnet_helpers.h"
 #include "nnet_mult.h"
-#include <array>
 #include <cstdint>
 
 namespace nnet {
@@ -38,7 +37,7 @@ struct dense_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_gt(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_out> &res,
+void dense_rf_gt(const data_T &data, res_T &res,
                  const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
                  const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
@@ -76,8 +75,8 @@ Product1:
                 continue;
             int data_index = d_index[ir][im];
             // Modified this
-            tmp_acc[im] =
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[data_index], weights[w_index]);
+            tmp_acc[im] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t>::product(
+                data[data_index], weights[w_index]);
         }
         [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::multiplier_limit];
     ResetMult:
@@ -102,11 +101,11 @@ Product1:
 Store:
     #pragma unroll
     for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
-        res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]); // acc[jj];
+        res[ires] = cast<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(acc[ires]); // acc[jj];
     }
 }
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_lt(const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_out> &res,
+void dense_rf_lt(const data_T &data, res_T &res,
                  const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
                  const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
@@ -131,8 +130,8 @@ ReuseLoop:
             if (ir + CONFIG_T::reuse_factor * im >= CONFIG_T::n_in * CONFIG_T::n_out)
                 continue;
             // Modified this
-            mult[im] =
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]);
+            mult[im] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t>::product(
+                data[in_index], weights[w_index]);
             in_index += CONFIG_T::reuse_factor;
             if (in_index >= CONFIG_T::n_in)
                 in_index = ir;
@@ -153,12 +152,12 @@ ReuseLoop:
 Result:
     #pragma unroll
     for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
-        res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        res[ires] = cast<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(acc[ires]);
     }
 }
 template <class data_T, class res_T, typename CONFIG_T>
 void dense_resource(
-    const std::array<data_T, CONFIG_T::n_in> &data, std::array<res_T, CONFIG_T::n_out> &res,
+    const data_T &data, res_T &res,
     const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
     const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
