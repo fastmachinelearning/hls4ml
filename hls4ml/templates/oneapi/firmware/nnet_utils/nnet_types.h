@@ -1,11 +1,14 @@
 #ifndef NNET_TYPES_H_
 #define NNET_TYPES_H_
 
+#include <array>
 #include <assert.h>
 #include <cstddef>
 #include <cstdio>
 
 namespace nnet {
+
+template <class T, std::size_t N> using array = std::array<T, N>;
 
 /*
  * HLS Shift Register Implementation

@@ -10,8 +10,6 @@
 // Include nnet::array - a custom array-like struct, mainly used with io_stream
 #include "nnet_utils/nnet_types.h"
 
-using std::array;
-
 // hls-fpga-machine-learning insert numbers
 
 // hls-fpga-machine-learning insert layer-precision

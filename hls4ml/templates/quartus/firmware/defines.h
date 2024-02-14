@@ -36,8 +36,6 @@ template <typename T> using stream_out = ihc::stream_out<T>;
 // Include nnet::array - a custom array-like struct, mainly used with io_stream
 #include "nnet_utils/nnet_types.h"
 
-using nnet::array;
-
 // hls-fpga-machine-learning insert numbers
 
 // hls-fpga-machine-learning insert layer-precision
