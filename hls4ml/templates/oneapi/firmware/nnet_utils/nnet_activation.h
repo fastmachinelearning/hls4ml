@@ -404,7 +404,8 @@ template <class data_T, class res_T, typename CONFIG_T> void softsign(const data
 // *************************************************
 //       ELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T> void elu(const data_T &data, const res_T alpha, res_T &res) {
+template <class data_T, class res_T, typename CONFIG_T>
+void elu(const data_T &data, const typename res_T::value_type alpha, res_T &res) {
 // Initialize the lookup table
 #include "activation_tables/elu_table.tb"
     // Index into the lookup table based on data
