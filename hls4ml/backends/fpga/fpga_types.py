@@ -42,6 +42,10 @@ class APFixedPrecisionDefinition(PrecisionDefinition):
             self._saturation_mode_cpp(self.saturation_mode),
             self.saturation_bits,
         ]
+        if args[2] == 'AP_TRN' and args[3] == 'AP_WRAP' and args[4] == 0:
+            # This is the default, so we won't write the full definition for brevity
+            args[2] = args[3] = args[4] = None
+
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
@@ -71,6 +75,10 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self._saturation_mode_cpp(self.saturation_mode),
             self.saturation_bits,
         ]
+        if args[3] == 'AC_TRN' and args[4] == 'AC_WRAP' and args[5] == 0:
+            # This is the default, so we won't write the full definition for brevity
+            args[3] = args[4] = args[5] = None
+
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = f'ac_fixed<{args}>'
         return typestring

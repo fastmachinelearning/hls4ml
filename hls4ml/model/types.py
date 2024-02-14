@@ -86,14 +86,11 @@ class IntegerPrecisionType(PrecisionType):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
-    # Does this need to make sure other is also an IntegerPrecisionType? I could see a match between Fixed and Integer
     def __eq__(self, other):
-        eq = self.width == other.width
-        eq = eq and self.signed == other.signed
-        # These are probably unnecessary
-        eq = eq and self.integer == other.integer
-        eq = eq and self.fractional == other.fractional
-        return eq
+        if isinstance(other, IntegerPrecisionType):
+            return super().__eq__(other)
+
+        return False
 
     @property
     def integer(self):
@@ -167,21 +164,33 @@ class FixedPrecisionType(PrecisionType):
         else:
             self._saturation_mode = mode
 
+    @property
+    def saturation_bits(self):
+        return self._saturation_bits
+
+    @saturation_bits.setter
+    def saturation_bits(self, bits):
+        if bits is None:
+            self._saturation_bits = 0
+        else:
+            self._saturation_bits = bits
+
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
-        args = ','.join([str(arg) for arg in args if arg is not None])
+        args = ','.join([str(arg) for arg in args])
         typestring = '{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
 
     def __eq__(self, other):
-        eq = self.width == other.width
-        eq = eq and self.integer == other.integer
-        eq = eq and self.fractional == other.fractional
-        eq = eq and self.signed == other.signed
-        eq = eq and self.rounding_mode == other.rounding_mode
-        eq = eq and self.saturation_mode == other.saturation_mode
-        eq = eq and self.saturation_bits == other.saturation_bits
-        return eq
+        if isinstance(other, FixedPrecisionType):
+            eq = super().__eq__(other)
+            eq = eq and self.integer == other.integer
+            eq = eq and self.rounding_mode == other.rounding_mode
+            eq = eq and self.saturation_mode == other.saturation_mode
+            eq = eq and self.saturation_bits == other.saturation_bits
+            return eq
+
+        return False
 
 
 class XnorPrecisionType(PrecisionType):
