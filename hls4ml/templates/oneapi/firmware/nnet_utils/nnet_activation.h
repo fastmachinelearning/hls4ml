@@ -235,8 +235,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_argmax(cons
     [[intel::fpga_register]] auto maximum = data[0];
     [[intel::fpga_register]] int idx = 0;
 
-    #pragma ii 1
-    for (int i = 1; i < CONFIG_T::n_in; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 1; i < CONFIG_T::n_in; i++) {
         if (data[i] > maximum) {
             maximum = data[i];
             idx = i;
