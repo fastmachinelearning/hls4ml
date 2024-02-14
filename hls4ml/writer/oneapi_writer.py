@@ -410,13 +410,13 @@ class OneAPIWriter(Writer):
                     newline = line
                     # there should really be only one input
                     inp = model_inputs[0]
-                    newline += indent + f'std::vector<{inp.type}> inputs;\n'
+                    newline += indent + f'std::vector<{inp.type.name}> inputs;\n'
 
                 elif '// hls-fpga-machine-learning insert results' in line:
                     newline = line
                     # there should really be only one out
                     out = model_outputs[0]
-                    newline += indent + f'std::vector<{out.type}> outputs;\n'
+                    newline += indent + f'std::vector<{out.type.name}> outputs;\n'
                 elif '// hls-fpga-machine-learning insert tb-input' in line:
                     newline = line
                     inp = model_inputs[0]
@@ -480,8 +480,8 @@ class OneAPIWriter(Writer):
                         newline += indent + f'{i.definition_cpp(name_suffix="_input")};\n'
                         newline += (
                             indent
-                            + f'nnet::convert_data<{dtype}, {i.type.name}, {i.size_cpp()}>({i.name}, {i.name}_input.data());'
-                            + '\n'
+                            + f'nnet::convert_data<{dtype}, typename {i.type.name}::value_type, {i.size_cpp()}>'
+                            + f'({i.name}, {i.name}_input.data());\n'
                         )
                         newline += indent + f'{i.pipe_name}::write(q, {i.name}_input);\n'
 
@@ -496,7 +496,7 @@ class OneAPIWriter(Writer):
                         newline += indent + f'{o.definition_cpp(name_suffix="_output")} = {o.pipe_name}::read(q);\n'
                         newline += (
                             indent
-                            + f'nnet::convert_data_back<{o.type.name}, {dtype}, {o.size_cpp()}>'
+                            + f'nnet::convert_data_back<typename {o.type.name}::value_type, {dtype}, {o.size_cpp()}>'
                             + f'({o.name}_output.data(), {o.name});\n'
                         )
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
