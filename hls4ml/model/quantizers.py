@@ -1,5 +1,7 @@
 """
-Quantizers are used to apply a quantization on data.
+This module contains definitions of hls4ml quantizer classes. These classes apply a quantization function on the
+provided data. The quantization function may be defined locally or taken from a library in which case the classes
+behave like simple wrappers.
 """
 
 import numpy as np
