@@ -20,18 +20,18 @@ void im2col_2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     // im2col can be unrolled fully, since number of parallel executions = filt_h x filt_w x n_chann ~ O(100) and very little
     // DSP usage
 
-    hls_register int index = 0;
+    [[intel::fpga_register]] int index = 0;
 
 FiltHeightLoop:
     #pragma unroll
     for (int kernel_row = 0; kernel_row < CONFIG_T::impl_filt_height; kernel_row++) {
-        hls_register int input_row =
+        [[intel::fpga_register]] int input_row =
             -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
 
     FiltWidthLoop:
         #pragma unroll
         for (int kernel_col = 0; kernel_col < CONFIG_T::impl_filt_width; kernel_col++) {
-            hls_register int input_col =
+            [[intel::fpga_register]] int input_col =
                 -CONFIG_T::pad_left + kernel_col * CONFIG_T::dilation_width + col * CONFIG_T::stride_width;
 
         ChannelLoop:
@@ -73,10 +73,11 @@ HeightLoop:
             // See Intel's HLS - Loop Best Practices
             // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
 
-            hls_register data_T data_col[CONFIG_T::impl_filt_height * CONFIG_T::impl_filt_width * CONFIG_T::n_chan];
+            [[intel::fpga_register]] data_T
+                data_col[CONFIG_T::impl_filt_height * CONFIG_T::impl_filt_width * CONFIG_T::n_chan];
             im2col_2d_cl<data_T, CONFIG_T>(data, data_col, i, j);
 
-            hls_register res_T res_col[CONFIG_T::n_filt];
+            [[intel::fpga_register]] res_T res_col[CONFIG_T::n_filt];
             dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
 
         // Unroll fully, since
@@ -158,9 +159,9 @@ HeightLoop:
             #pragma unroll
             for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
                 // Get current 4x4 tile
-                hls_register data_T T[16];
-                hls_register typename CONFIG_T::accum_t D[16];
-                hls_register uint8_t p = 0;
+                [[intel::fpga_register]] data_T T[16];
+                [[intel::fpga_register]] typename CONFIG_T::accum_t D[16];
+                [[intel::fpga_register]] uint8_t p = 0;
 
                 #pragma unroll
                 for (int r = row - (int)CONFIG_T::pad_top; r < row + 4 - (int)CONFIG_T::pad_top; r++) {
@@ -179,10 +180,10 @@ HeightLoop:
 
                 #pragma unroll
                 for (int filter = 0; filter < CONFIG_T::n_filt; filter++) {
-                    hls_register int filter_offset = 16 * (CONFIG_T::n_chan * filter + channel);
+                    [[intel::fpga_register]] int filter_offset = 16 * (CONFIG_T::n_chan * filter + channel);
 
                     // Hadamard product between transformed input tile and kernel
-                    hls_register typename CONFIG_T::accum_t Y[16];
+                    [[intel::fpga_register]] typename CONFIG_T::accum_t Y[16];
                     #pragma unroll
                     for (int i = 0; i < 16; i++) {
                         Y[i] = static_cast<typename CONFIG_T::accum_t>(D[i] * weights[filter_offset + i]);
@@ -215,14 +216,14 @@ void im2col_2d_pointwise_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width
                             data_T data_col[CONFIG_T::n_chan], const int row, const int col) {
     // pointwise_im2col can be unrolled fully, only one loop with n_chan iterations
 
-    hls_register int index = 0;
+    [[intel::fpga_register]] int index = 0;
 
 ChannelLoop:
     #pragma unroll
     for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
 
-        hls_register int input_row = -CONFIG_T::pad_top + row * CONFIG_T::stride_height;
-        hls_register int input_col = -CONFIG_T::pad_left + col * CONFIG_T::stride_width;
+        [[intel::fpga_register]] int input_row = -CONFIG_T::pad_top + row * CONFIG_T::stride_height;
+        [[intel::fpga_register]] int input_col = -CONFIG_T::pad_left + col * CONFIG_T::stride_width;
 
         if (input_row >= 0 && input_row < CONFIG_T::in_height && input_col >= 0 && input_col < CONFIG_T::in_width) {
             data_col[index++] =
@@ -256,10 +257,10 @@ HeightLoop:
             // See Intel's HLS - Loop Best Practices
             // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
 
-            hls_register data_T data_col[CONFIG_T::n_chan];
+            [[intel::fpga_register]] data_T data_col[CONFIG_T::n_chan];
             im2col_2d_pointwise_cl<data_T, CONFIG_T>(data, data_col, row, col);
 
-            hls_register res_T res_col[CONFIG_T::n_filt];
+            [[intel::fpga_register]] res_T res_col[CONFIG_T::n_filt];
             dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
 
         FiltLoop:

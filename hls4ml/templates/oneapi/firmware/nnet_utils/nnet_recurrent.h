@@ -104,18 +104,18 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     static constexpr int recurrent_unroll_factor = CONFIG_T::n_units / CONFIG_T::reuse_factor;
     // A matrix containing the values of matrix product between input (x) and weights (weights), for update, reset and
     // candidate state gates, for each of the units
-    hls_register typename CONFIG_T::accum_t mat_mul_x_w[3 * CONFIG_T::n_units];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t mat_mul_x_w[3 * CONFIG_T::n_units];
     nnet::dense_resource<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config_x>(x, mat_mul_x_w, weights,
                                                                                                bias);
 
     // A matrix containing the values of matrix product between previou state (h) and recurrent weights (recurrent_weights),
     // for update, reset and candidate state gates, for each of the units
-    hls_register typename CONFIG_T::accum_t mat_mul_h_wr[3 * CONFIG_T::n_units];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t mat_mul_h_wr[3 * CONFIG_T::n_units];
     nnet::dense_resource<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config_h>(
         h, mat_mul_h_wr, recurrent_weights, recurrent_bias);
 
     // A vector containing both the values of z(t) and r(t) for every state
-    hls_register typename CONFIG_T::accum_t z_r[2 * CONFIG_T::n_units];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t z_r[2 * CONFIG_T::n_units];
 
     // Add the individual vectors from the multiplication of mat_mul_x_w = Wx*x(t) and mat_mul_h_wr = Wh*h(t-1)
     // Unrolled fully, no DSPs used
@@ -125,12 +125,12 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     }
 
     // Activation on z(t) and r(t)
-    hls_register typename CONFIG_T::accum_t z_r_act[2 * CONFIG_T::n_units];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t z_r_act[2 * CONFIG_T::n_units];
     CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
                                        typename CONFIG_T::ACT_CONFIG_RECURRENT_T>::activation(z_r, z_r_act);
 
     // A matrix containing the values of Hadamard product between r(t) = z_r_act[n_units:2*n_units] and h(t-1) = h
-    hls_register typename CONFIG_T::accum_t hadamard_r_h[CONFIG_T::n_units];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t hadamard_r_h[CONFIG_T::n_units];
     #pragma unroll recurrent_unroll_factor
     for (int i = 0; i < (CONFIG_T::n_units); i++) {
         hadamard_r_h[i] = z_r_act[i + CONFIG_T::n_units] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
@@ -145,7 +145,7 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     }
 
     // Activation on candidate state
-    hls_register typename CONFIG_T::accum_t h_cand_act[CONFIG_T::n_units];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t h_cand_act[CONFIG_T::n_units];
     CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
                                   typename CONFIG_T::ACT_CONFIG_T>::activation(h_cand, h_cand_act);
 
@@ -163,8 +163,8 @@ void gru(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_outputs * CONFIG_T::
          const typename CONFIG_T::bias_t bias[3 * CONFIG_T::n_units],
          const typename CONFIG_T::bias_t recurrent_bias[3 * CONFIG_T::n_units]) {
 
-    hls_register data_T x[CONFIG_T::n_in];
-    hls_register res_T h[CONFIG_T::n_units];
+    [[intel::fpga_register]] data_T x[CONFIG_T::n_in];
+    [[intel::fpga_register]] res_T h[CONFIG_T::n_units];
 
     #pragma unroll
     for (int i = 0; i < CONFIG_T::n_units; i++) {
@@ -233,17 +233,17 @@ void simple_rnn_cell(data_T inputs[CONFIG_T::n_in], res_T hidden_state[CONFIG_T:
                      const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
                      const typename CONFIG_T::bias_t bias[CONFIG_T::n_out]) {
     // Weight multiplication
-    typename CONFIG_T::accum_t afterW[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t afterW[CONFIG_T::n_out] [[intel::fpga_register]];
     multiply_W<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(
         inputs, afterW, kernel);
 
     // Bias addition
-    typename CONFIG_T::accum_t afterBias[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t afterBias[CONFIG_T::n_out] [[intel::fpga_register]];
     add_bias<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::bias_t, CONFIG_T::n_out>(
         afterW, afterBias, bias);
 
     // Hidden state
-    typename CONFIG_T::accum_t hiddenCand[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t hiddenCand[CONFIG_T::n_out] [[intel::fpga_register]];
     multiply_U<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_out>(hidden_state, hiddenCand,
                                                                                                  rec_kernel);
 
@@ -261,10 +261,10 @@ void simple_rnn(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], res_T res[C
                 const typename CONFIG_T::weight_t kernel[CONFIG_T::n_in * CONFIG_T::n_out],
                 const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
                 const typename CONFIG_T::bias_t bias[CONFIG_T::n_out]) {
-    res_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
-    res_T hidden_state_temp[CONFIG_T::n_out] hls_register;
-    res_T h[CONFIG_T::n_out] hls_register;
-    data_T in[CONFIG_T::n_in] hls_register;
+    res_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] [[intel::fpga_register]];
+    res_T hidden_state_temp[CONFIG_T::n_out] [[intel::fpga_register]];
+    res_T h[CONFIG_T::n_out] [[intel::fpga_register]];
+    data_T in[CONFIG_T::n_in] [[intel::fpga_register]];
 
 // Set initially hidden state (output) to zero
 INIT_LOOP:
@@ -360,39 +360,39 @@ void lstm_cell(data_T inputs[CONFIG_T::n_in], res_T hidden_state[CONFIG_T::n_out
                const typename CONFIG_T::bias_t BC[CONFIG_T::n_out], const typename CONFIG_T::bias_t BO[CONFIG_T::n_out]) {
 
     // Internals definitions
-    typename CONFIG_T::accum_t i_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t i_afterBias[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_afterBias[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_afterBias[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_afterBias[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t i_afterW[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t i_afterBias[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t c_afterW[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t c_afterBias[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t o_afterW[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t o_afterBias[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t f_afterW[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t f_afterBias[CONFIG_T::n_out] [[intel::fpga_register]];
 
     // Hidden state Gate candidates, intermediate variables
-    typename CONFIG_T::accum_t i_hiddenCand[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_hiddenCand[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_hiddenCand[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_hiddenCand[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t i_hiddenCand[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t f_hiddenCand[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t c_hiddenCand[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t o_hiddenCand[CONFIG_T::n_out] [[intel::fpga_register]];
 
     // After addition, intermediate variables
-    typename CONFIG_T::accum_t i_afterAdd[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_afterAdd[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_afterAdd[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_afterAdd[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t i_afterAdd[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t f_afterAdd[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t c_afterAdd[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t o_afterAdd[CONFIG_T::n_out] [[intel::fpga_register]];
 
     // Gate outputs
-    typename CONFIG_T::accum_t gate_i[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_f[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_c[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_o[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_ic[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_forget[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t h[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t gate_i[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t gate_f[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t gate_c[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t gate_o[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t gate_ic[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t gate_forget[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t h[CONFIG_T::n_out] [[intel::fpga_register]];
 
     // Intermediate variable cell calculation
-    typename CONFIG_T::accum_t cell_act_multp[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t cell_act_add[CONFIG_T::n_out] hls_register;
+    typename CONFIG_T::accum_t cell_act_multp[CONFIG_T::n_out] [[intel::fpga_register]];
+    typename CONFIG_T::accum_t cell_act_add[CONFIG_T::n_out] [[intel::fpga_register]];
 
     //-----------Gate I Calculations
     // Weight multiplication
@@ -518,13 +518,13 @@ void lstm(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], res_T res[CONFIG_
           const typename CONFIG_T::weight_t RWO[CONFIG_T::n_out * CONFIG_T::n_out],
           const typename CONFIG_T::bias_t BI[CONFIG_T::n_out], const typename CONFIG_T::bias_t BF[CONFIG_T::n_out],
           const typename CONFIG_T::bias_t BC[CONFIG_T::n_out], const typename CONFIG_T::bias_t BO[CONFIG_T::n_out]) {
-    res_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
-    res_T hidden_state_temp[CONFIG_T::n_out] hls_register;
-    res_T cell_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
-    res_T cell_state_temp[CONFIG_T::n_out] hls_register;
-    res_T h[CONFIG_T::n_out] hls_register;
-    res_T c[CONFIG_T::n_out] hls_register;
-    data_T in[CONFIG_T::n_in] hls_register;
+    res_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] [[intel::fpga_register]];
+    res_T hidden_state_temp[CONFIG_T::n_out] [[intel::fpga_register]];
+    res_T cell_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] [[intel::fpga_register]];
+    res_T cell_state_temp[CONFIG_T::n_out] [[intel::fpga_register]];
+    res_T h[CONFIG_T::n_out] [[intel::fpga_register]];
+    res_T c[CONFIG_T::n_out] [[intel::fpga_register]];
+    data_T in[CONFIG_T::n_in] [[intel::fpga_register]];
 
 // Set initially hidden state (output) to zero
 INIT_LOOP:

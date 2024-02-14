@@ -12,13 +12,12 @@ enum class conv1d_implementation { combination, im2col, winograd };
 //      im2col - General-purpose 1D Convolution algorithm
 // ****************************************************************
 
-template <class data_T, typename CONFIG_T>
-void im2col_1d_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
-                  data_T data_col[CONFIG_T::impl_filt_width * CONFIG_T::n_chan], const int col) {
+template <class data_T, class data_col_T, typename CONFIG_T>
+void im2col_1d_cl(const data_T &data, data_col_T &data_col, const int col) {
     // im2col can be unrolled fully, since number of parallel executions = filt_w x n_chann ~ O(100) and very little DSP
     // usage
 
-    hls_register int index = 0;
+    [[intel::fpga_register]] int index = 0;
 
 KernelLoop:
     #pragma unroll
@@ -26,7 +25,7 @@ KernelLoop:
     ChannelLoop:
         #pragma unroll
         for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
-            hls_register int index_data =
+            [[intel::fpga_register]] int index_data =
                 (col * CONFIG_T::stride_width + kernel_col - CONFIG_T::pad_left) * CONFIG_T::n_chan + channel;
             if (index_data >= 0 && index_data < CONFIG_T::in_width * CONFIG_T::n_chan) {
                 data_col[index++] = data[index_data];
@@ -39,7 +38,7 @@ KernelLoop:
 
 template <class data_T, class res_T, typename CONFIG_T>
 void conv_1d_im2col_cl(
-    data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
+    const data_T &data, res_T &res,
     const typename CONFIG_T::weight_t weights[CONFIG_T::impl_filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     // im2col performs no filter transformations; therefore, filter size remains constant
@@ -47,6 +46,9 @@ void conv_1d_im2col_cl(
 
     // Unroll factor for loop traversing input image, derived from parallelisation_factor
     static constexpr int pf = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
+
+    using data_col_T = array<typename data_T::value_type, CONFIG_T::impl_filt_width * CONFIG_T::n_chan>;
+    using res_col_T = array<typename res_T::value_type, CONFIG_T::n_filt>;
 
 ColLoop:
     #pragma unroll pf
@@ -56,11 +58,11 @@ ColLoop:
         // See Intel's HLS - Loop Best Practices
         // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
 
-        hls_register data_T data_col[CONFIG_T::impl_filt_width * CONFIG_T::n_chan];
-        im2col_1d_cl<data_T, CONFIG_T>(data, data_col, i);
+        [[intel::fpga_register]] data_col_T data_col;
+        im2col_1d_cl<data_T, data_col_T, CONFIG_T>(data, data_col, i);
 
-        hls_register res_T res_col[CONFIG_T::n_filt];
-        dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+        [[intel::fpga_register]] res_col_T res_col;
+        dense_resource<data_col_T, res_col_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
 
     // Unroll fully, since
     // (1) n_filt is usually low in io_parallel (< 32)
@@ -88,7 +90,7 @@ inline void winograd_transform_input_tile_3x1_kernel(const data_T I[4], res_T D[
 
 template <class data_T, class res_T, typename CONFIG_T>
 void winograd_conv1d_3x1_kernel_cl(
-    data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
+    const data_T &data, res_T &res,
     const typename CONFIG_T::weight_t weights[CONFIG_T::impl_filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     // Ensure Winograd conditions are met
@@ -106,7 +108,7 @@ void winograd_conv1d_3x1_kernel_cl(
         int offset = CONFIG_T::n_filt * i;
         #pragma unroll
         for (int f = 0; f < CONFIG_T::n_filt; f++) {
-            res[offset + f] = static_cast<res_T>(biases[f]);
+            res[offset + f] = static_cast<typename res_T::value_type>(biases[f]);
         }
     }
 
@@ -117,8 +119,8 @@ WidthLoop:
         #pragma unroll
         for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
             // Get current 4x1 tile
-            hls_register data_T T[16];
-            hls_register uint8_t p = 0;
+            [[intel::fpga_register]] typename data_T::value_type T[16];
+            [[intel::fpga_register]] uint8_t p = 0;
 
             #pragma unroll
             for (int c = col - (int)CONFIG_T::pad_left; c < col + 4 - (int)CONFIG_T::pad_left; c++) {
@@ -130,24 +132,25 @@ WidthLoop:
             }
 
             // Transform input tile
-            hls_register typename CONFIG_T::accum_t D[4];
-            winograd_transform_input_tile_3x1_kernel<data_T, typename CONFIG_T::accum_t>(T, D);
+            [[intel::fpga_register]] typename CONFIG_T::accum_t D[4];
+            winograd_transform_input_tile_3x1_kernel<typename data_T::value_type, typename CONFIG_T::accum_t>(T, D);
 
             #pragma unroll
             for (int filter = 0; filter < CONFIG_T::n_filt; filter++) {
-                hls_register int filter_offset = 4 * (CONFIG_T::n_chan * filter + channel);
+                [[intel::fpga_register]] int filter_offset = 4 * (CONFIG_T::n_chan * filter + channel);
 
                 // Hadamard product between transformed input tile and kernel
-                hls_register typename CONFIG_T::accum_t Y[4];
+                [[intel::fpga_register]] typename CONFIG_T::accum_t Y[4];
                 #pragma unroll
                 for (int i = 0; i < 4; i++) {
                     Y[i] = static_cast<typename CONFIG_T::accum_t>(D[i] * weights[filter_offset + i]);
                 }
 
                 // Explicitly transform intermediate result Z = A'YA and save to output
-                res[CONFIG_T::n_filt * col + filter] += static_cast<res_T>(Y[0] + Y[1] + Y[2]);
+                res[CONFIG_T::n_filt * col + filter] += static_cast<typename res_T::value_type>(Y[0] + Y[1] + Y[2]);
                 if ((col + 1) < CONFIG_T::out_width)
-                    res[CONFIG_T::n_filt * (col + 1) + filter] += static_cast<res_T>(Y[1] - Y[2] - Y[3]);
+                    res[CONFIG_T::n_filt * (col + 1) + filter] +=
+                        static_cast<typename res_T::value_type>(Y[1] - Y[2] - Y[3]);
             }
         }
     }
@@ -157,17 +160,17 @@ WidthLoop:
 //       1D Convolution for 1x1 kernels using optimized im2col
 // ****************************************************************
 
-template <class data_T, typename CONFIG_T>
-void im2col_1d_pointwise_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], data_T data_col[CONFIG_T::n_chan],
-                            const int col) {
+template <class data_T, class data_col_T, typename CONFIG_T>
+void im2col_1d_pointwise_cl(const data_T &data, data_col_T &data_col, const int col) {
     // pointwise_im2col can be unrolled fully, only one loop with n_chan iterations
 
-    hls_register int index = 0;
+    [[intel::fpga_register]] int index = 0;
 
 ChannelLoop:
     #pragma unroll
     for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
-        hls_register int index_data = (col * CONFIG_T::stride_width - CONFIG_T::pad_left) * CONFIG_T::n_chan + channel;
+        [[intel::fpga_register]] int index_data =
+            (col * CONFIG_T::stride_width - CONFIG_T::pad_left) * CONFIG_T::n_chan + channel;
         if (index_data >= 0 && index_data < CONFIG_T::in_width * CONFIG_T::n_chan) {
             data_col[index++] = data[index_data];
         } else {
@@ -177,14 +180,16 @@ ChannelLoop:
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void pointwise_conv_1d_resource_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
-                                   res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
+void pointwise_conv_1d_resource_cl(const data_T &data, res_T &res,
                                    const typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
                                    const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::filt_width == 1);
 
     // Unroll factor for loop traversing input image, derived from parallelisation_factor
     static constexpr int pf = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
+
+    using data_col_T = array<typename data_T::value_type, CONFIG_T::n_chan>;
+    using res_col_T = array<typename res_T::value_type, CONFIG_T::n_filt>;
 
 ColLoop:
     #pragma unroll pf
@@ -194,11 +199,11 @@ ColLoop:
         // See Intel's HLS - Loop Best Practices
         // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
 
-        hls_register data_T data_col[CONFIG_T::n_chan];
-        im2col_1d_pointwise_cl<data_T, CONFIG_T>(data, data_col, col);
+        [[intel::fpga_register]] data_col_T data_col;
+        im2col_1d_pointwise_cl<data_T, data_col_T, CONFIG_T>(data, data_col, col);
 
-        hls_register res_T res_col[CONFIG_T::n_filt];
-        dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+        [[intel::fpga_register]] res_T res_col;
+        dense_resource<data_col_T, res_col_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
 
     // Unroll fully, since
     // (1) n_filt is usually low in io_parallel (< 32)
@@ -216,7 +221,7 @@ ColLoop:
 // ****************************************************************
 template <class data_T, class res_T, typename CONFIG_T>
 void conv_1d_resource_cl(
-    data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
+    const data_T &data, res_T &res,
     const typename CONFIG_T::weight_t weights[CONFIG_T::impl_filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     static constexpr bool winograd_conditions =

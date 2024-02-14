@@ -7,7 +7,7 @@ namespace nnet {
 
 // Returns the maximum value from an array of size N
 template <typename T, int N> T max(T x[N]) {
-    hls_register T y = x[0];
+    [[intel::fpga_register]] T y = x[0];
 
     // Due to loop dependencies, pipelining & unrolling is not possible
     // Explictily disabling pipeline significantly reduces resource usage
@@ -22,7 +22,7 @@ template <typename T, int N> T max(T x[N]) {
 
 // Returns the mean value of an array of size N
 template <typename T, int N> T avg(T (&x)[N]) {
-    hls_register T y = 0;
+    [[intel::fpga_register]] T y = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
     // Explictily disabling pipeline significantly reduces resource usage
@@ -38,7 +38,7 @@ template <typename T, int N> T avg(T (&x)[N]) {
 // Returns the mean value of an array of size N
 // Overload of the above function; using a wider accumulator than the input to avoid overflow
 template <int W, int N> ac_int<W, true> avg(ac_int<W, true> (&x)[N]) {
-    hls_register ac_int<W + ceillog2(N), true> tmp = 0;
+    [[intel::fpga_register]] ac_int<W + ceillog2(N), true> tmp = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
     // Explictily disabling pipeline significantly reduces resource usage
@@ -57,7 +57,7 @@ template <int W, int N> ac_int<W, true> avg(ac_int<W, true> (&x)[N]) {
 // Returns the mean value of an array of size N
 // Overload of the above function; using a wider accumulator than the input to avoid overflow
 template <int W, int I, int N> ac_fixed<W, I, true> avg(ac_fixed<W, I, true> (&x)[N]) {
-    hls_register ac_fixed<W + ceillog2(N), I + ceillog2(N), true> tmp = 0;
+    [[intel::fpga_register]] ac_fixed<W + ceillog2(N), I + ceillog2(N), true> tmp = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
     // Explictily disabling pipeline significantly reduces resource usage
@@ -136,10 +136,10 @@ FiltLoop:
         #pragma unroll
         #pragma disable_loop_pipelining
         for (int inp_col = 0; inp_col < padded_width; inp_col += CONFIG_T::stride_width) {
-            hls_register data_T pool[CONFIG_T::pool_width];
+            [[intel::fpga_register]] data_T pool[CONFIG_T::pool_width];
 
             // Keep track of number of pixels in image vs padding region; needed for rescaling Average Pooling
-            hls_register unsigned img_overlap = 0;
+            [[intel::fpga_register]] unsigned img_overlap = 0;
 
         PoolWidthLoop:
             #pragma unroll
@@ -178,7 +178,7 @@ FiltLoop:
     #pragma unroll
     #pragma disable_loop_pipelining
     for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
-        hls_register data_T pool[CONFIG_T::n_in];
+        [[intel::fpga_register]] data_T pool[CONFIG_T::n_in];
 
     InputWidthLoop:
         #pragma unroll
@@ -241,10 +241,10 @@ FiltLoop:
             #pragma unroll
             #pragma disable_loop_pipelining
             for (int inp_width = 0; inp_width < padded_width; inp_width += CONFIG_T::stride_width) {
-                hls_register data_T pool[CONFIG_T::pool_height * CONFIG_T::pool_width];
+                [[intel::fpga_register]] data_T pool[CONFIG_T::pool_height * CONFIG_T::pool_width];
 
                 // Keep track of number of pixels in image vs padding region; needed for rescaling Average Pooling
-                hls_register unsigned img_overlap = 0;
+                [[intel::fpga_register]] unsigned img_overlap = 0;
 
             PoolHeightLoop:
                 #pragma unroll
@@ -301,7 +301,7 @@ FiltLoop:
     #pragma unroll
     #pragma disable_loop_pipelining
     for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
-        hls_register data_T pool[CONFIG_T::in_height * CONFIG_T::in_width];
+        [[intel::fpga_register]] data_T pool[CONFIG_T::in_height * CONFIG_T::in_width];
 
     InputLoop:
         #pragma unroll

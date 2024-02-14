@@ -12,7 +12,7 @@ void dense_compressed(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
                       const typename CONFIG_T::weight_t weights[CONFIG_T::n_nonzeros],
                       const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
 
-    hls_register typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 
 InitAccum:
     #pragma unroll
@@ -20,8 +20,8 @@ InitAccum:
         acc[i] = (typename CONFIG_T::accum_t)(biases[i]);
     }
 
-    hls_register int out_index[CONFIG_T::reuse_factor][CONFIG_T::compressed_block_factor];
-    hls_register data_T inputs[CONFIG_T::reuse_factor][CONFIG_T::compressed_block_factor];
+    [[intel::fpga_register]] int out_index[CONFIG_T::reuse_factor][CONFIG_T::compressed_block_factor];
+    [[intel::fpga_register]] data_T inputs[CONFIG_T::reuse_factor][CONFIG_T::compressed_block_factor];
 
     #pragma unroll
     for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
@@ -36,7 +36,7 @@ ReuseLoop:
     #pragma nofusion
     #pragma speculated_iterations 0
     for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
-        hls_register typename CONFIG_T::accum_t mult[CONFIG_T::compressed_block_factor];
+        [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::compressed_block_factor];
     CompressedMultLoop:
         #pragma unroll
         for (int im = 0; im < CONFIG_T::compressed_block_factor; im++) {
@@ -49,7 +49,7 @@ ReuseLoop:
                 inputs[is][im] = inputs[is + 1][im];
             }
         }
-        hls_register typename CONFIG_T::accum_t tmp_acc[CONFIG_T::n_out];
+        [[intel::fpga_register]] typename CONFIG_T::accum_t tmp_acc[CONFIG_T::n_out];
     ResetMult:
         #pragma unroll
         for (int tacc = 0; tacc < CONFIG_T::n_out; tacc++) {
