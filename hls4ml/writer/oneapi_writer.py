@@ -154,14 +154,23 @@ class OneAPIWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # oneAPI pipes need to be declared and passed as template parameters
+                elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
+                    newline = line
+                    if io_type == 'io_stream':
+                        for layer in model.get_layers():
+                            vars = layer.get_variables()
+                            for var in vars:
+                                if var not in model_inputs and var not in model_outputs:
+                                    newline += var.declare_cpp()
+
                 # Read in inputs
                 elif '// hls-fpga-machine-learning read in' in line:
                     newline = line
                     if io_type == 'io_parallel':
                         for inp in model_inputs:
                             newline += indent + f'auto {inp.name} = {inp.pipe_name}::read();\n'
-                    else:
-                        raise NotImplementedError("Only io_parallel is currently supported with oneAPI")
+                    # for streaming we don't need to read it in
 
                 # Insert weights
                 elif '// hls-fpga-machine-learning insert weights' in line:
@@ -171,11 +180,18 @@ class OneAPIWriter(Writer):
                             if w not in model_brams:
                                 newline += f'#include "weights/{w.name}.h"\n'
 
+                # Insert task sequences
+                elif '// hls-fpga-machine-learning declare task sequences' in line:
+                    newline = line
+                    if io_type == 'io_stream':  # only need this for io_stream
+                        for layer in model.get_layers():
+                            ts = layer.get_attr('tast_sequence_cpp')
+                            if ts:
+                                newline += '    ' + ts + '\n'
+
                 # Neural net instantiation
                 elif '// hls-fpga-machine-learning insert layers' in line:
                     newline = line + '\n'
-                    model_inputs = model.get_input_variables()
-                    model_outputs = model.get_output_variables()
                     for layer in model.get_layers():
                         if io_type != 'io_stream':
                             vars = layer.get_variables()
@@ -184,7 +200,11 @@ class OneAPIWriter(Writer):
                                     def_cpp = var.definition_cpp()
                                     if def_cpp is not None:
                                         newline += '    ' + def_cpp + ';\n'
-                        func = layer.get_attr('function_cpp', None)
+                        func = (
+                            layer.get_attr('function_cpp')
+                            if io_type == 'io_parallel'
+                            else layer.get_attr('stream_function_cpp')
+                        )
                         if func:
                             newline += '    ' + func + '\n'
                             if model.config.trace_output and layer.get_attr('trace', False):
@@ -202,8 +222,7 @@ class OneAPIWriter(Writer):
                     if io_type == 'io_parallel':
                         for out in model_outputs:
                             newline += indent + f'{out.pipe_name}::write({out.name});\n'
-                    else:
-                        raise NotImplementedError("Only io_parallel is currently supported with oneAPI")
+                    # don't need to add anything in io_stream
 
                 # Just copy line
                 else:

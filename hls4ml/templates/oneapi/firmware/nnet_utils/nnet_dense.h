@@ -63,9 +63,7 @@ Load:
         }
     }
 Product1:
-    #pragma nofusion
-    #pragma speculated_iterations 0
-    for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
+    [[intel::nofusion, intel::speculated_iterations(0)]] for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
         [[intel::fpga_register]] typename CONFIG_T::accum_t tmp_acc[CONFIG_T::block_factor];
     Product2:
         #pragma unroll
@@ -119,9 +117,7 @@ InitAccum:
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
 ReuseLoop:
-    #pragma nofusion
-    #pragma speculated_iterations 0
-    for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
+    [[intel::nofusion, intel::speculated_iterations(0)]] for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
         [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::block_factor];
     MultLoop:
         #pragma unroll

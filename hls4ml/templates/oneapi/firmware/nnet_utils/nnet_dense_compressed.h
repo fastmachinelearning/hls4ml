@@ -33,9 +33,7 @@ InitAccum:
         }
     }
 ReuseLoop:
-    #pragma nofusion
-    #pragma speculated_iterations 0
-    for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
+    [[intel::nofusion, intel::speculated_iterations(0)]] for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
         [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::compressed_block_factor];
     CompressedMultLoop:
         #pragma unroll

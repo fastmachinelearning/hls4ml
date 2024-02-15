@@ -129,9 +129,7 @@ EluActLoop:
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void elu() {
-    elu<data_pipe, res_pipe, CONFIG_T>(data, 1.0, res);
-}
+template <class data_pipe, class res_pipe, typename CONFIG_T> void elu() { elu<data_pipe, res_pipe, CONFIG_T>(1.0); }
 
 // *************************************************
 //       SeLU Activation
@@ -452,19 +450,19 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_argma
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax() {
     switch (CONFIG_T::implementation) {
     case softmax_implementation::latency:
-        softmax_latency<data_pipe, res_pipe, CONFIG_T>(data, res);
+        softmax_latency<data_pipe, res_pipe, CONFIG_T>();
         break;
     case softmax_implementation::stable:
-        softmax_stable<data_pipe, res_pipe, CONFIG_T>(data, res);
+        softmax_stable<data_pipe, res_pipe, CONFIG_T>();
         break;
     case softmax_implementation::legacy:
-        softmax_legacy<data_pipe, res_pipe, CONFIG_T>(data, res);
+        softmax_legacy<data_pipe, res_pipe, CONFIG_T>();
         break;
     case softmax_implementation::argmax:
-        softmax_argmax<data_pipe, res_pipe, CONFIG_T>(data, res);
+        softmax_argmax<data_pipe, res_pipe, CONFIG_T>();
         break;
     default:
-        softmax_stable<data_pipe, res_pipe, CONFIG_T>(data, res);
+        softmax_stable<data_pipe, res_pipe, CONFIG_T>();
         break;
     }
 }

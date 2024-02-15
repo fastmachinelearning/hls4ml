@@ -1,4 +1,5 @@
 from hls4ml.backends.backend import get_backend
+from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Activation, BatchNormalization, Dense, HardActivation, ParametrizedActivation, PReLU, Softmax
 
@@ -35,8 +36,11 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
-# dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
-dense_include_list = ['nnet_utils/nnet_dense.h']
+dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}<{input_pipe}, {output_pipe}, {config}>> {name};'
+
+dense_stream_function_template = '{name}.async({w}, {b});'
+
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 
 
 class DenseConfigTemplate(LayerConfigTemplate):
@@ -59,6 +63,30 @@ class DenseFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Dense, include_header=dense_include_list)
         self.template = dense_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['w'] = node.get_weights('weight').name
+        params['b'] = node.get_weights('bias').name
+
+        return self.template.format(**params)
+
+
+class DenseTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__(Dense)
+        self.template = dense_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+
+        return self.template.format(**params)
+
+
+class DenseStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Dense)
+        self.template = dense_stream_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -148,8 +176,11 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 
-# activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
-activ_include_list = ['nnet_utils/nnet_activation.h']
+activ_task_sequence_template = 'task_sequence<nnet::{activation}<{input_pipe}, {output_pipe}, {config}>> {name};'
+activ_stream_function_template = '{name}.async();'
+param_activ_stream_function_template = '{name}.async({param});'
+
+activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
 
 
 class ActivationConfigTemplate(LayerConfigTemplate):
@@ -190,7 +221,7 @@ class ActivationFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
-        params['config'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
 
         return self.template.format(**params)
 
@@ -204,7 +235,7 @@ class ParametrizedActivationFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['activation'] = node._get_act_function_name()
         params['param'] = node.get_attr('activ_param', 1.0)
-        params['config'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
 
         return self.template.format(**params)
 
@@ -218,6 +249,50 @@ class PReLUFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
         params['param'] = node.get_weights('alpha').name
-        params['config'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
 
+        return self.template.format(**params)
+
+
+class ActivationTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__((Activation, ParametrizedActivation, PReLU, HardActivation, Softmax, ParametrizedActivation, PReLU))
+        self.template = activ_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['activation'] = node.get_attr('activation').lower()
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
+        return self.template.format(**params)
+
+
+class ActivationStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__((Activation, HardActivation, Softmax))
+        self.template = activ_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        return self.template.format(**params)
+
+
+class ParametrizedActivationStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__(ParametrizedActivation)
+        self.template = param_activ_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['param'] = node.get_attr('activ_param', 1.0)
+        return self.template.format(**params)
+
+
+class PReLUActivationStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__(PReLU)
+        self.template = param_activ_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['param'] = node.get_weights('alpha').name
         return self.template.format(**params)

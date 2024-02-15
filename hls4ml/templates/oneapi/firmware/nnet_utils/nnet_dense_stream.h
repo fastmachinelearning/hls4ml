@@ -13,8 +13,8 @@ void dense_resource(const typename CONFIG_T::weight_t weights[CONFIG_T::n_in * C
                     const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
 
     [[intel::fpga_register]] typename res_pipe::value_type res;
-    [[intel::fpga_register]] auto data = data_pipe::read()
-        dense_resource<typename data_pipe::value_type, typename res_pipe::value_type, CONFIG_T>(data, res, weights, biases);
+    [[intel::fpga_register]] auto data = data_pipe::read();
+    dense_resource<typename data_pipe::value_type, typename res_pipe::value_type, CONFIG_T>(data, res, weights, biases);
     res_pipe::write(res);
 }
 
