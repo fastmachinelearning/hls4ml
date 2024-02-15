@@ -68,6 +68,8 @@ class PrecisionType:
         eq = self.width == other.width
         eq = eq and self.signed == other.signed
 
+        return eq
+
 
 class IntegerPrecisionType(PrecisionType):
     """Arbitrary precision integer  data type.
