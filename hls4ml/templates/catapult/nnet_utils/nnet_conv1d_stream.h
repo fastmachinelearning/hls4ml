@@ -78,6 +78,7 @@ ReadInputWidth:
     }
 }
 
+#pragma hls_design
 template <class data_T, class res_T, typename CONFIG_T>
 void conv_1d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
                 typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],

@@ -807,7 +807,7 @@ EluActLoop:
 }
 
 #else
-
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res) {
 EluActLoop:

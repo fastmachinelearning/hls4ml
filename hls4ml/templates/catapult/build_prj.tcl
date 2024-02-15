@@ -51,11 +51,14 @@ proc report_time { op_name time_start time_end } {
 
 proc setup_xilinx_part { part } {
   # Map Xilinx PART into Catapult library names
+  set part_sav $part
   set libname [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v]
+  puts "Library Name: $libname"
   if { [llength $libname] == 1 } {
     set libpath [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret p]
+    puts "Library Path: $libpath"
     if { [regexp {/CONFIG/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/.*} $libpath dummy rtltool vendor family speed part] } {
-      solution library add $libname -- -rtlsyntool $rtltool -vendor $vendor -family $family -speed $speed
+      solution library add $libname -- -rtlsyntool $rtltool -vendor $vendor -family $family -speed $speed -part $part_sav
     } else {
       solution library add $libname -- -rtlsyntool Vivado
     }
@@ -67,6 +70,7 @@ proc setup_xilinx_part { part } {
   solution library add Xilinx_ROMS
   solution library add Xilinx_FIFO
 }
+
 
 proc setup_asic_libs { args } {
   set do_saed 0
