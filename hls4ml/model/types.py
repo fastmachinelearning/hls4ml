@@ -110,7 +110,7 @@ class IntegerPrecisionType(PrecisionType):
 
     @property
     def saturation_bits(self):
-        return None
+        return 0
 
 
 class FixedPrecisionType(PrecisionType):
