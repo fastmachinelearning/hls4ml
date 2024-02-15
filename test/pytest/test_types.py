@@ -12,7 +12,7 @@ from hls4ml.model.types import (
 )
 
 
-def test_precision_type_creation():
+def test_precision_type_creation(capsys):
     int_type = IntegerPrecisionType(width=1, signed=False)
     xnr_type = XnorPrecisionType()
 
@@ -50,9 +50,10 @@ def test_precision_type_creation():
     # Circumvent the type wrapping that happens in the backend
     fp_type.__class__ = type('ACFixedPrecisionType', (type(fp_type), ACFixedPrecisionDefinition), {})
     fp_cpp = fp_type.definition_cpp()
-    assert (
-        fp_cpp == 'ac_fixed<12,6,true,AC_TRN,AC_SAT_SYM,1>'
-    )  # Should include the whole type definition, including rounding
+    assert fp_cpp == 'ac_fixed<12,6,true,AC_TRN,AC_SAT_SYM>'  # Should include the whole type definition, including rounding
+    # The invalid saturation bit setting should produce a warning
+    captured = capsys.readouterr()
+    assert 'WARNING: Invalid setting of saturation bits' in captured.out
     # Reset to default
     fp_type.saturation_mode = 'WRAP'
     fp_type.saturation_bits = 0
