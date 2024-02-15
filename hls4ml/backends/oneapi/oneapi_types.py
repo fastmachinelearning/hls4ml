@@ -11,7 +11,10 @@ from hls4ml.utils.string_utils import convert_to_pascal_case
 
 class OneAPIArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
+        if self.pragma and not isinstance(self.pragma, tuple):
+            return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
+        else:
+            return f'{self.type.name} {self.name}{name_suffix}'
 
 
 class OneAPIInplaceArrayVariableDefinition(VariableDefinition):
@@ -71,7 +74,10 @@ class OneAPIInplaceArrayVariableConverter(AggregratedArrayVariableConverter):
 
 class OneAPIInterfaceVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
+        if self.pragma and not isinstance(self.pragma, tuple):
+            return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
+        else:
+            return f'{self.type.name} {self.name}{name_suffix}'
 
     def declare_cpp(self, pipe_min_size=0, indent=''):
         lines = indent + f'class {self.pipe_id};\n'

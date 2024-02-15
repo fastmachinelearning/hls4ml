@@ -9,15 +9,16 @@ namespace nnet {
 // *************************************************
 //       Linear Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void linear() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void linear_stream() {
 LinearActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     LinearPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             out_data[j] = in_data[j];
         }
 
@@ -28,15 +29,16 @@ LinearActLoop:
 // *************************************************
 //       ReLU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void relu() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void relu_stream() {
 ReLUActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     ReLUPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             if (in_data[j] > 0)
                 out_data[j] = in_data[j];
             else
@@ -52,17 +54,20 @@ ReLUActLoop:
 // *************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T>
 void leaky_relu(const typename data_pipe::value_type::value_type alpha) {
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
 LeakyReLUActLoop:
-    [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (int i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                                  i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     LeakyReLUPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             if (in_data[j] > 0)
                 out_data[j] = in_data[j];
             else
@@ -79,13 +84,14 @@ LeakyReLUActLoop:
 template <class data_pipe, class res_pipe, typename CONFIG_T>
 void thresholded_relu(const typename data_pipe::value_type::value_type theta) {
 ThresholdedReLUActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     ThresholdedReLUPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             if (in_data[j] > theta)
                 out_data[j] = in_data[j];
             else
@@ -103,17 +109,20 @@ template <class data_pipe, class res_pipe, typename CONFIG_T>
 void elu(const typename data_pipe::value_type::value_type alpha) {
 #include "activation_tables/elu_table.tb"
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
 EluActLoop:
-    [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (int i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                                  i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     EluPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             [[intel::fpga_register]] typename data_pipe::value_type::value_type datareg = in_data[j];
             if (datareg >= 0) {
                 out_data[j] = datareg;
@@ -129,22 +138,25 @@ EluActLoop:
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void elu() { elu<data_pipe, res_pipe, CONFIG_T>(1.0); }
+template <class data_pipe, class res_pipe, typename CONFIG_T> void elu_stream() {
+    elu_stream<data_pipe, res_pipe, CONFIG_T>(1.0);
+}
 
 // *************************************************
 //       SeLU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void selu() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void selu_stream() {
 #include "activation_tables/selu_table.tb"
 
 SeluActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     SeluPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             [[intel::fpga_register]] typename data_pipe::value_type::value_type datareg = in_data[j];
             if (datareg >= 0) {
                 out_data[j] = typename data_pipe::value_type::value_type(1.0507009873554804934193349852946) * datareg;
@@ -165,21 +177,24 @@ SeluActLoop:
 // *************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T>
 void prelu(const typename data_pipe::value_type::value_type alpha[CONFIG_T::n_in]) {
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
 PReLUActLoop:
-    [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (int i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                                  i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     PReLUPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             if (in_data[j] > 0)
                 out_data[j] = in_data[j];
             else
-                out_data[j] = alpha[i * res_pipe::value_type::size + j] * in_data[j];
+                out_data[j] = alpha[i * std::tuple_size<typename res_pipe::value_type>{} + j] * in_data[j];
         }
 
         res_pipe::write(out_data);
@@ -189,17 +204,18 @@ PReLUActLoop:
 // *************************************************
 //       Softplus Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void softplus() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void softplus_stream() {
 #include "activation_tables/softplus_table.tb"
 
 SoftplusActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     SoftplusPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             [[intel::fpga_register]] int data_round = (in_data[j] * CONFIG_T::table_size / 16).to_int();
             [[intel::fpga_register]] int index = data_round + 8 * CONFIG_T::table_size / 16;
             if (index < 0)
@@ -216,19 +232,20 @@ SoftplusActLoop:
 // *************************************************
 //       Softsign Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void softsign() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void softsign_stream() {
 #include "activation_tables/softsign_table.tb"
 
     static const int MAX_VALUE = 8;
 
 SoftsignActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     SoftsignPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             [[intel::fpga_register]] typename data_pipe::value_type::value_type absValue;
             ;
             if (in_data[j] < 0) {
@@ -254,44 +271,48 @@ SoftsignActLoop:
 //       Softmax Activation
 // *************************************************
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_stable() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_stable_stream() {
 #include "activation_tables/exp_table.tb"
 #include "activation_tables/invert_table.tb"
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
-    [[intel::fpga_register]] typename data_pipe::value_type::value_type data_array[data_pipe::value_type::size];
+    [[intel::fpga_register]]
+    typename data_pipe::value_type::value_type data_array[std::tuple_size<typename data_pipe::value_type>{}];
 
 SoftmaxArrayLoop:
-    [[intel::initiation_interval(pipeline)]] for (unsigned i = 0; i < CONFIG_T::n_in / data_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (unsigned i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename data_pipe::value_type>{};
+                                                  i++) {
         auto in_pack = data_pipe::read();
 
     SoftmaxArrayPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < data_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename data_pipe::value_type>{}; j++) {
             data_array[j] = in_pack[j];
         }
 
         // Find the max and compute all delta(x_i, x_max)
         Op_max<typename data_pipe::value_type::value_type> op_max;
         [[intel::fpga_register]] typename data_pipe::value_type::value_type x_max =
-            reduce<typename data_pipe::value_type::value_type, data_pipe::value_type::size,
+            reduce<typename data_pipe::value_type::value_type, std::tuple_size<typename data_pipe::value_type>{},
                    Op_max<typename data_pipe::value_type::value_type>>(data_array, op_max);
 
         // For the diffs, use the same type as the input but force rounding and saturation
         [[intel::fpga_register]] ac_fixed<data_pipe::value_type::value_type::width,
                                           data_pipe::value_type::value_type::i_width, true, AC_RND, AC_SAT>
-            d_xi_xmax[data_pipe::value_type::size];
+            d_xi_xmax[std::tuple_size<typename data_pipe::value_type>{}];
         #pragma unroll
-        for (unsigned j = 0; j < data_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename data_pipe::value_type>{}; j++) {
             d_xi_xmax[j] = data_array[j] - x_max;
         }
 
         // Calculate all the e^x's
-        [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[data_pipe::value_type::size];
+        [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[std::tuple_size<typename data_pipe::value_type>{}];
         #pragma unroll
-        for (unsigned j = 0; j < data_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename data_pipe::value_type>{}; j++) {
             exp_res[j] = exp_table[softmax_stable_idx_from_real_val<typename data_pipe::value_type::value_type, CONFIG_T>(
                 d_xi_xmax[j])];
         }
@@ -300,8 +321,8 @@ SoftmaxArrayLoop:
         // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
         Op_add<typename CONFIG_T::exp_table_t> op_add;
         [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_sum =
-            reduce<typename CONFIG_T::exp_table_t, data_pipe::value_type::size, Op_add<typename CONFIG_T::exp_table_t>>(
-                exp_res, op_add);
+            reduce<typename CONFIG_T::exp_table_t, std::tuple_size<typename data_pipe::value_type>{},
+                   Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
 
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
             invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
@@ -309,7 +330,7 @@ SoftmaxArrayLoop:
 
     SoftmaxInvPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < res_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
 
             // TODO - Find Quartus-equivalent pragma
             // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
@@ -321,23 +342,26 @@ SoftmaxArrayLoop:
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_latency() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_latency_stream() {
 #include "activation_tables/exp_table_latency.tb"
 #include "activation_tables/invert_table_latency.tb"
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
     // Calculate all the e^x's
-    [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[data_pipe::value_type::size];
+    [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[std::tuple_size<typename data_pipe::value_type>{}];
 
 SoftmaxExpLoop:
-    [[intel::initiation_interval(pipeline)]] for (unsigned i = 0; i < CONFIG_T::n_in / data_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (unsigned i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename data_pipe::value_type>{};
+                                                  i++) {
         auto in_pack = data_pipe::read();
 
     SoftmaxExpPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < data_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename data_pipe::value_type>{}; j++) {
             exp_res[j] =
                 exp_table_latency[softmax_latency_idx_from_real_val<typename data_pipe::value_type::value_type, CONFIG_T>(
                     in_pack[j])];
@@ -356,7 +380,7 @@ SoftmaxExpLoop:
         typename res_pipe::value_type out_pack;
     SoftmaxInvPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < res_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
@@ -365,32 +389,34 @@ SoftmaxExpLoop:
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_legacy() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_legacy_stream() {
 #include "activation_tables/exp_table_legacy.tb"
 #include "activation_tables/invert_table_legacy.tb"
 
     // Index into the lookup table based on data for exponentials
-    [[intel::fpga_register]] typename CONFIG_T::table_t exp_res[data_pipe::value_type::size];
+    [[intel::fpga_register]] typename CONFIG_T::table_t exp_res[std::tuple_size<typename data_pipe::value_type>{}];
     [[intel::fpga_register]] typename CONFIG_T::table_t exp_diff_res;
-    [[intel::fpga_register]] typename data_pipe::value_type::value_type data_cache[data_pipe::value_type::size];
+    [[intel::fpga_register]]
+    typename data_pipe::value_type::value_type data_cache[std::tuple_size<typename data_pipe::value_type>{}];
 
 SoftmaxInitLoop:
-    [[intel::initiation_interval(1)]] for (unsigned s = 0; s < CONFIG_T::n_in / data_pipe::value_type::size; s++) {
+    [[intel::initiation_interval(1)]] for (unsigned s = 0;
+                                           s < CONFIG_T::n_in / std::tuple_size<typename data_pipe::value_type>{}; s++) {
         auto in_pack = data_pipe::read();
 
     SoftmaxInitPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < data_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename data_pipe::value_type>{}; j++) {
             data_cache[j] = in_pack[j];
             exp_res[j] = 0;
         }
 
     SoftmaxExpLoop:
         #pragma unroll
-        for (int i = 0; i < data_pipe::value_type::size; i++) {
+        for (int i = 0; i < std::tuple_size<typename data_pipe::value_type>{}; i++) {
         SoftmaxExpInner:
             #pragma unroll
-            for (int j = 0; j < data_pipe::value_type::size; j++) {
+            for (int j = 0; j < std::tuple_size<typename data_pipe::value_type>{}; j++) {
                 if (i == j) {
                     exp_diff_res = 1;
                 } else {
@@ -409,7 +435,7 @@ SoftmaxInitLoop:
         typename res_pipe::value_type out_pack;
     SoftmaxInvPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < res_pipe::value_type::size; j++) {
+        for (unsigned j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             int exp_res_index = (exp_res[j] * CONFIG_T::table_size / 64).to_int();
             if (exp_res_index < 0)
                 exp_res_index = 0;
@@ -422,20 +448,21 @@ SoftmaxInitLoop:
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_argmax() {
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_argmax_stream() {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
         #pragma unroll
-        for (int i = 0; i < res_pipe::value_type::size; i++) {
+        for (int i = 0; i < std::tuple_size<typename res_pipe::value_type>{}; i++) {
             out_data[i] = static_cast<typename res_pipe::value_type::value_type>(0);
         }
 
         [[intel::fpga_register]] typename data_pipe::value_type::value_type maximum = in_data[0];
         [[intel::fpga_register]] int idx = 0;
 
-        [[intel::initiation_interval(1)]] for (int i = 1; i < res_pipe::value_type::size; i++) {
+        [[intel::initiation_interval(1)]] for (int i = 1; i < std::tuple_size<typename res_pipe::value_type>{}; i++) {
             if (in_data[i] > maximum) {
                 maximum = in_data[i];
                 idx = i;
@@ -447,22 +474,22 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_argma
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_stream() {
     switch (CONFIG_T::implementation) {
     case softmax_implementation::latency:
-        softmax_latency<data_pipe, res_pipe, CONFIG_T>();
+        softmax_latency_stream<data_pipe, res_pipe, CONFIG_T>();
         break;
     case softmax_implementation::stable:
-        softmax_stable<data_pipe, res_pipe, CONFIG_T>();
+        softmax_stable_stream<data_pipe, res_pipe, CONFIG_T>();
         break;
     case softmax_implementation::legacy:
-        softmax_legacy<data_pipe, res_pipe, CONFIG_T>();
+        softmax_legacy_stream<data_pipe, res_pipe, CONFIG_T>();
         break;
     case softmax_implementation::argmax:
-        softmax_argmax<data_pipe, res_pipe, CONFIG_T>();
+        softmax_argmax_stream<data_pipe, res_pipe, CONFIG_T>();
         break;
     default:
-        softmax_stable<data_pipe, res_pipe, CONFIG_T>();
+        softmax_stable_stream<data_pipe, res_pipe, CONFIG_T>();
         break;
     }
 }
@@ -470,22 +497,25 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax() {
 // *************************************************
 //       TanH Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void dense_tanh() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void dense_tanh_stream() {
 #include "activation_tables/tanh_table.tb"
     static const int MAX_VALUE = 4;
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
 TanHActLoop:
-    [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (int i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                                  i++) {
 
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     TanHPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             [[intel::fpga_register]] typename data_pipe::value_type::value_type absoluteValue;
 
             if (in_data[j] < 0)
@@ -512,21 +542,24 @@ TanHActLoop:
 // *************************************************
 //       Sigmoid Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void sigmoid() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void sigmoid_stream() {
 #include "activation_tables/sigmoid_table.tb"
     static const int MAX_VALUE = 8;
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
 SigmoidActLoop:
-    [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (int i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                                  i++) {
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     SigmoidPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             [[intel::fpga_register]] typename data_pipe::value_type::value_type absoluteValue;
 
             if (in_data[j] < 0)
@@ -554,20 +587,23 @@ SigmoidActLoop:
 //       Hard sigmoid Activation
 // *************************************************
 // Note - Theano and Tensorflow might have different definitions for hard sigmoid; could provide two implementations
-template <class data_pipe, class res_pipe, typename CONFIG_T> void hard_sigmoid() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void hard_sigmoid_stream() {
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
 HardSigmoidActLoop:
-    [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (int i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                                  i++) {
 
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     HardSigmoidPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             [[intel::fpga_register]] auto datareg = CONFIG_T::slope * in_data[j] + CONFIG_T::shift;
             if (datareg > 1)
                 datareg = 1;
@@ -580,20 +616,23 @@ HardSigmoidActLoop:
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T> void hard_tanh() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void hard_tanh_stream() {
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_pipe::value_type::size, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = data_pipe::value_type::size / multiplier_limit;
+    constexpr unsigned multiplier_limit =
+        DIV_ROUNDUP(std::tuple_size<typename data_pipe::value_type>{}, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = std::tuple_size<typename data_pipe::value_type>{} / multiplier_limit;
 
 HardSigmoidActLoop:
-    [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(pipeline)]] for (int i = 0;
+                                                  i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                                  i++) {
 
         auto in_data = data_pipe::read();
         typename res_pipe::value_type out_data;
 
     HardSigmoidPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             auto sigmoid = CONFIG_T::slope * in_data[j] + CONFIG_T::shift;
             if (sigmoid > 1)
                 sigmoid = 1;
@@ -609,16 +648,17 @@ HardSigmoidActLoop:
 // *************************************************
 //       Binary TanH Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void binary_tanh() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void binary_tanh_stream() {
 BinaryTanHActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
 
         [[intel::fpga_register]] auto in_data = data_pipe::read();
         [[intel::fpga_register]] typename res_pipe::value_type out_data;
 
     BinaryTanHPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             if (in_data[j] > 0)
                 out_data[j] = static_cast<typename res_pipe::value_type::value_type>(1);
             else
@@ -632,16 +672,17 @@ BinaryTanHActLoop:
 // *************************************************
 //       Ternary TanH Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void ternary_tanh() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void ternary_tanh_stream() {
 TernaryTanHActLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / res_pipe::value_type::size; i++) {
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename res_pipe::value_type>{};
+                                           i++) {
 
         [[intel::fpga_register]] auto in_data = data_pipe::read();
         [[intel::fpga_register]] typename res_pipe::value_type out_data;
 
     TernaryTanHPackLoop:
         #pragma unroll
-        for (int j = 0; j < res_pipe::value_type::size; j++) {
+        for (int j = 0; j < std::tuple_size<typename res_pipe::value_type>{}; j++) {
             if (in_data[j] > 1)
                 out_data[j] = static_cast<typename res_pipe::value_type::value_type>(1);
             else if (in_data[j] <= -1)

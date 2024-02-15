@@ -214,7 +214,6 @@ class OneAPIWriter(Writer):
                                         var.type.name, var.name, layer.name, var.size_cpp()
                                     )
                                 newline += '#endif\n'
-                            newline += '\n'
 
                 # Write the output
                 elif '// hls-fpga-machine-learning return' in line:

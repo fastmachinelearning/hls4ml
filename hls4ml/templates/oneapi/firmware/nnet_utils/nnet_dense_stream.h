@@ -9,8 +9,8 @@ namespace nnet {
 
 // Note:  DataPack logic removed, at least in the initial version
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void dense_resource(const typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
-                    const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+void dense_resource_stream(const typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
+                           const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
 
     [[intel::fpga_register]] typename res_pipe::value_type res;
     [[intel::fpga_register]] auto data = data_pipe::read();

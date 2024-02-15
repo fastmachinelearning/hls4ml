@@ -36,7 +36,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
-dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}<{input_pipe}, {output_pipe}, {config}>> {name};'
+dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 
 dense_stream_function_template = '{name}.async({w}, {b});'
 
@@ -176,7 +176,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 
-activ_task_sequence_template = 'task_sequence<nnet::{activation}<{input_pipe}, {output_pipe}, {config}>> {name};'
+activ_task_sequence_template = 'task_sequence<nnet::{activation}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 activ_stream_function_template = '{name}.async();'
 param_activ_stream_function_template = '{name}.async({param});'
 
