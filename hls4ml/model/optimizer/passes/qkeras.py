@@ -3,7 +3,8 @@ import tensorflow as tf
 
 from hls4ml.model.layers import BatchNormalization, register_layer
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, QKerasPO2Quantizer
+from hls4ml.model.quantizers import QKerasPO2Quantizer
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 
 
 class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
