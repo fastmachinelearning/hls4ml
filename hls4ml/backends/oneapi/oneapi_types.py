@@ -1,6 +1,7 @@
 '''
 This package includes oneAPI-specific customizations to the variable types
 '''
+
 import numpy as np
 
 from hls4ml.backends.fpga.fpga_types import PackedType, VariableDefinition
