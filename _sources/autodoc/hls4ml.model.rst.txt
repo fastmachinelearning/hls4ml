@@ -45,6 +45,14 @@ hls4ml.model.profiling module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.quantizers module
+------------------------------
+
+.. automodule:: hls4ml.model.quantizers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.types module
 -------------------------
 

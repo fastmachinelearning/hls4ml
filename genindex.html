@@ -37,7 +37,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev7+g38665f90
+                0.9.0.dev8+g74647e59
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -261,7 +261,7 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BiasAdd">BiasAdd (class in hls4ml.model.layers)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.BinaryQuantizer">BinaryQuantizer (class in hls4ml.model.types)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer">BinaryQuantizer (class in hls4ml.model.quantizers)</a>
 </li>
       <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.BinaryScheduler">BinaryScheduler (class in hls4ml.optimization.scheduler)</a>
 </li>
@@ -793,6 +793,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend">FPGABackend (class in hls4ml.backends.fpga.fpga_backend)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.fractional">fractional (hls4ml.model.types.FixedPrecisionType property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType.fractional">(hls4ml.model.types.IntegerPrecisionType property)</a>
+</li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.RoundingMode.from_string">from_string() (hls4ml.model.types.RoundingMode class method)</a>
 
       <ul>
@@ -1844,6 +1850,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.model.quantizers
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#module-hls4ml.model.quantizers">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.model.types
 
       <ul>
@@ -2261,6 +2274,8 @@
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D">InsertZeroPaddingBeforeConv1D (class in hls4ml.backends.vivado.passes.conv_same_pad)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D">InsertZeroPaddingBeforeConv2D (class in hls4ml.backends.vivado.passes.conv_same_pad)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType.integer">integer (hls4ml.model.types.IntegerPrecisionType property)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType">IntegerPrecisionType (class in hls4ml.model.types)</a>
 </li>
@@ -2700,6 +2715,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#module-hls4ml.model.profiling">hls4ml.model.profiling</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#module-hls4ml.model.quantizers">hls4ml.model.quantizers</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#module-hls4ml.model.types">hls4ml.model.types</a>
 </li>
         <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization">hls4ml.optimization</a>
@@ -3051,17 +3068,17 @@
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.QKerasBinaryQuantizer">QKerasBinaryQuantizer (class in hls4ml.model.types)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QKerasBinaryQuantizer">QKerasBinaryQuantizer (class in hls4ml.model.quantizers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha">QKerasFactorizeAlpha (class in hls4ml.model.optimizer.passes.qkeras)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.QKerasPO2Quantizer">QKerasPO2Quantizer (class in hls4ml.model.types)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QKerasPO2Quantizer">QKerasPO2Quantizer (class in hls4ml.model.quantizers)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.QKerasQuantizer">QKerasQuantizer (class in hls4ml.model.types)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QKerasQuantizer">QKerasQuantizer (class in hls4ml.model.quantizers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput">QuantizeDenseOutput (class in hls4ml.backends.fpga.passes.bn_quant)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Quantizer">Quantizer (class in hls4ml.model.types)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.Quantizer">Quantizer (class in hls4ml.model.quantizers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusArrayVariableConverter">QuartusArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
@@ -3216,7 +3233,11 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.RoundingMode.RND_ZERO">RND_ZERO (hls4ml.model.types.RoundingMode attribute)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.rounding_mode">rounding_mode (hls4ml.model.types.FixedPrecisionType property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType.rounding_mode">(hls4ml.model.types.IntegerPrecisionType property)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.RoundingMode">RoundingMode (class in hls4ml.model.types)</a>
 </li>
   </ul></td>
@@ -3233,8 +3254,18 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.SaturationMode.SAT_ZERO">SAT_ZERO (hls4ml.model.types.SaturationMode attribute)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.saturation_mode">saturation_mode (hls4ml.model.types.FixedPrecisionType property)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.saturation_bits">saturation_bits (hls4ml.model.types.FixedPrecisionType property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType.saturation_bits">(hls4ml.model.types.IntegerPrecisionType property)</a>
 </li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.saturation_mode">saturation_mode (hls4ml.model.types.FixedPrecisionType property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType.saturation_mode">(hls4ml.model.types.IntegerPrecisionType property)</a>
+</li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.SaturationMode">SaturationMode (class in hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SeparableConv1D">SeparableConv1D (class in hls4ml.model.layers)</a>
@@ -3263,12 +3294,12 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds">set_thresholds() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat">SetPrecisionConcat (class in hls4ml.model.optimizer.passes.precision_merge)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SimpleRNN">SimpleRNN (class in hls4ml.model.layers)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.recurrent_templates.SimpleRNNConfigTemplate">SimpleRNNConfigTemplate (class in hls4ml.backends.quartus.passes.recurrent_templates)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.recurrent_templates.SimpleRNNFunctionTemplate">SimpleRNNFunctionTemplate (class in hls4ml.backends.quartus.passes.recurrent_templates)</a>
@@ -3323,7 +3354,7 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable">TensorVariable (class in hls4ml.model.types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TernaryQuantizer">TernaryQuantizer (class in hls4ml.model.types)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.TernaryQuantizer">TernaryQuantizer (class in hls4ml.model.quantizers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TernaryTanh">TernaryTanh (class in hls4ml.model.layers)</a>
 </li>
