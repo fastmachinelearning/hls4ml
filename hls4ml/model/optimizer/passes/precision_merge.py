@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import FixedPrecisionType
+from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
 
 def get_concat_type(itype1, itype2):
@@ -8,9 +8,9 @@ def get_concat_type(itype1, itype2):
     if itype1.signed ^ itype2.signed:  # XOR
         newint += 1
         newwidth += 1
-    newrmode = itype1.rounding_mode if itype1.rounding_mode is not None else itype2.rounding_mode
-    newsmode = itype1.saturation_mode if itype1.saturation_mode is not None else itype2.saturation_mode
-    newsbits = itype1.saturation_bits if itype1.saturation_bits is not None else itype2.saturation_bits
+    newrmode = itype1.rounding_mode if itype1.rounding_mode != RoundingMode.TRN else itype2.rounding_mode
+    newsmode = itype1.saturation_mode if itype1.saturation_mode != SaturationMode.WRAP else itype2.saturation_mode
+    newsbits = itype1.saturation_bits if itype1.saturation_bits != 0 else itype2.saturation_bits
 
     newtype = FixedPrecisionType(newwidth, newint, itype1.signed or itype2.signed, newrmode, newsmode, newsbits)
     return newtype
