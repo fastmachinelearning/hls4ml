@@ -34,6 +34,7 @@ register_flow(
     'convert',
     [
         'channels_last_converter',
+        'remove_transpose_before_flatten',
         'fuse_bias_add',
         'remove_useless_transpose',
         'expand_layer_group',
