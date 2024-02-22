@@ -1,10 +1,10 @@
 from hls4ml.backends.backend import get_backend
-from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.backends.catapult.passes.core_templates import (
     batchnorm_config_template,
     batchnorm_function_template,
     batchnorm_include_list,
 )
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.optimizer.passes.qkeras import ApplyAlpha
 
 
