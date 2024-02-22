@@ -846,19 +846,19 @@ class CatapultWriter(Writer):
         print("Copying NNET files to local firmware directory")
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        for pkg in ('ac_types','ac_math','ac_simutils'):
+        for pkg in ('ac_types', 'ac_math', 'ac_simutils'):
             dstpath = f'{model.config.get_output_dir()}/firmware/{pkg}/'
 
             # backward compatibility, look in root dir
-            srcpath = os.path.join(filedir, '../../'+pkg+'/')
+            srcpath = os.path.join(filedir, '../../' + pkg + '/')
             if not os.path.exists(srcpath):
                 # look next in Catapult-specific templates
-                srcpath = os.path.join(filedir, '../templates/catapult/'+pkg+'/')
+                srcpath = os.path.join(filedir, '../templates/catapult/' + pkg + '/')
 
             if os.path.exists(srcpath):
                 if os.path.exists(dstpath):
                     rmtree(dstpath)
-                print("... copying AC "+pkg+" headers from "+srcpath)
+                print("... copying AC " + pkg + " headers from " + srcpath)
                 copytree(srcpath, dstpath)
             else:
                 print("... skipping copy of " + pkg + " headers - assumed to located in Catapult install tree")
