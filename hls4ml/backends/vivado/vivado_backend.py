@@ -375,19 +375,8 @@ class VivadoBackend(FPGABackend):
 
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
-        if 'inputs' in layer.attributes:
-            # Functional
-            input_layer_name = layer.attributes['inputs'][0]
-        else:
-            # Sequential
-            last_layer_name = None
-            for layer_name in layer.model.graph.keys():
-                if layer_name == layer.name:
-                    break
-                last_layer_name = layer_name
-            assert last_layer_name is not None, 'Could not find previous layer.'
-            input_layer_name = last_layer_name
 
+        input_layer_name = layer.inputs[0]
         input_layer = layer.model.graph[input_layer_name]
         input_t = input_layer.attributes[input_layer.name].type
         accum_t = layer.attributes['accum_t']
