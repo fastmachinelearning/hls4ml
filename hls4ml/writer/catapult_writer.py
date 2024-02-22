@@ -845,41 +845,23 @@ class CatapultWriter(Writer):
 
         print("Copying NNET files to local firmware directory")
 
-        # ac_types
         filedir = os.path.dirname(os.path.abspath(__file__))
+        for pkg in ('ac_types','ac_math','ac_simutils'):
+            dstpath = f'{model.config.get_output_dir()}/firmware/{pkg}/'
 
-        srcpath = os.path.join(filedir, '../../ac_types/')
-        dstpath = f'{model.config.get_output_dir()}/firmware/ac_types/'
+            # backward compatibility, look in root dir
+            srcpath = os.path.join(filedir, '../../'+pkg+'/')
+            if not os.path.exists(srcpath):
+                # look next in Catapult-specific templates
+                srcpath = os.path.join(filedir, '../templates/catapult/'+pkg+'/')
 
-        if os.path.exists(srcpath):
-            if os.path.exists(dstpath):
-                rmtree(dstpath)
-
-            copytree(srcpath, dstpath)
-
-        # ac_math
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        srcpath = os.path.join(filedir, '../../ac_math/')
-        dstpath = f'{model.config.get_output_dir()}/firmware/ac_math/'
-
-        if os.path.exists(srcpath):
-            if os.path.exists(dstpath):
-                rmtree(dstpath)
-
-            copytree(srcpath, dstpath)
-
-        # ac_simutils
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        srcpath = os.path.join(filedir, '../../ac_simutils/')
-        dstpath = f'{model.config.get_output_dir()}/firmware/ac_simutils/'
-
-        if os.path.exists(srcpath):
-            if os.path.exists(dstpath):
-                rmtree(dstpath)
-
-            copytree(srcpath, dstpath)
+            if os.path.exists(srcpath):
+                if os.path.exists(dstpath):
+                    rmtree(dstpath)
+                print("... copying AC "+pkg+" headers from "+srcpath)
+                copytree(srcpath, dstpath)
+            else:
+                print("... skipping copy of " + pkg + " headers - assumed to located in Catapult install tree")
 
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
