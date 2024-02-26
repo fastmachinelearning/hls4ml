@@ -112,6 +112,10 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
 
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 
+batchnorm_task_sequence_template = 'task_sequence<nnet::normalize_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+
+batchnorm_stream_function_template = '{name}.async({scale}, {bias});'
+
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
 
@@ -134,6 +138,30 @@ class BatchNormalizationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(BatchNormalization, include_header=batchnorm_include_list)
         self.template = batchnorm_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['scale'] = node.get_weights('scale').name
+        params['bias'] = node.get_weights('bias').name
+
+        return self.template.format(**params)
+
+
+class BatchNormalizationTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__(BatchNormalization)
+        self.template = batchnorm_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+
+        return self.template.format(**params)
+
+
+class BatchNormalizationStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__(BatchNormalization)
+        self.template = batchnorm_stream_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
