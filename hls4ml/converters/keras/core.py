@@ -62,6 +62,10 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
 
     if layer['class_name'] != 'Activation':
         layer['activation'] = layer['class_name']
+
+    if layer['activation'] == 'elu':
+        layer['class_name'] = 'ELU'  # always use ELU type for elu, even if passed as activation
+
     if layer['class_name'] == 'LeakyReLU':
         layer['activ_param'] = keras_layer['config'].get('alpha', 0.3)
     elif layer['class_name'] == 'ThresholdedReLU':
