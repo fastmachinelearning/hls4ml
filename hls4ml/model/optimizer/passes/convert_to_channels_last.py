@@ -144,23 +144,38 @@ class RemoveTransposeBeforeFlatten(OptimizerPass):
         if node.model.config.get_config_value('IOType') != 'io_parallel':
             return False
 
+        if hasattr(node, '_channels_last_keep_transpose') and node._channels_last_keep_transpose:
+            return False
+
         if isinstance(node, Reshape):
             input_node = node.get_input_node()
             output_nodes = node.get_output_nodes()
-            if len(node.get_attr('target_shape')) == 1 and isinstance(input_node, Transpose) \
-                and len(output_nodes) == 1 and isinstance(output_nodes[0], Dense):
+            if (
+                len(node.get_attr('target_shape')) == 1
+                and isinstance(input_node, Transpose)
+                and len(output_nodes) == 1
+                and isinstance(output_nodes[0], Dense)
+            ):
                 return True
-        
+
         return False
-    
+
     def transform(self, model, node):
         transpose_node = node.get_input_node()
         dense_node = node.get_output_nodes()[0]
         input_shape = transpose_node.get_output_variable().shape
 
+        if len(input_shape) == 2:  # Usually after Conv1D
+            tran_axis = [1, 0, 2]
+        elif len(input_shape) == 3:  # Usually after Conv2D
+            tran_axis = [1, 2, 0, 3]
+        else:  # In this case we bail
+            node._channels_last_keep_transpose = True
+            return False
+
         weight_var = dense_node.get_weights('weight')
         # Transpose the weights to achieve the same computation with transposed input
-        weight_data_t = weight_var.data.reshape(*input_shape, -1).transpose(1, 2, 0, 3)
+        weight_data_t = weight_var.data.reshape(*input_shape, -1).transpose(*tran_axis)
         weight_data_t = weight_data_t.reshape(-1, weight_data_t.shape[-1])
         new_weight_var = WeightVariable(
             var_name=weight_var.name,
@@ -168,9 +183,9 @@ class RemoveTransposeBeforeFlatten(OptimizerPass):
             precision=weight_var.type.precision,
             quantizer=weight_var.quantizer,
             data=weight_data_t,
-            index=dense_node.index
+            index=dense_node.index,
         )
-        
+
         # Update the weight variable of the node
         dense_node.set_attr('weight', new_weight_var)
 
