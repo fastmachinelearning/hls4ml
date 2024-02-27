@@ -288,12 +288,12 @@ void conv_2d_resource_cl(const data_T &data, res_T &res,
         // Winograd's minimal filtering algorithm not applicable to stride != 1
         CONFIG_T::stride_height == 1 && CONFIG_T::stride_width == 1 &&
 
-            // Intel HLS will fail to pipeline the entire component if the Winograd loop only runs once
-            CONFIG_T::out_height > 2 && CONFIG_T::out_width > 2 &&
+        // Intel HLS will fail to pipeline the entire component if the Winograd loop only runs once
+        CONFIG_T::out_height > 2 && CONFIG_T::out_width > 2 &&
 
-            // Verify user opted for Winograd
-            CONFIG_T::implementation == nnet::conv2d_implementation::combination ||
-        CONFIG_T::implementation == nnet::conv2d_implementation::winograd;
+        // Verify user opted for Winograd
+        (CONFIG_T::implementation == nnet::conv2d_implementation::combination ||
+         CONFIG_T::implementation == nnet::conv2d_implementation::winograd);
 
     if (CONFIG_T::filt_height == 3 && CONFIG_T::filt_width == 3 && winograd_conditions) {
         winograd_conv2d_3x3_kernel_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);

@@ -52,8 +52,7 @@ void conv_1d_im2col_cl(
 
 ColLoop:
     #pragma unroll pf
-    #pragma ii CONFIG_T::reuse_factor
-    for (int i = 0; i < CONFIG_T::out_width; i++) {
+    [[intel::initiation_interval(CONFIG_T::reuse_factor)]] for (int i = 0; i < CONFIG_T::out_width; i++) {
         // Loop variables should always be declared in the deepest scope available
         // See Intel's HLS - Loop Best Practices
         // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
@@ -193,8 +192,7 @@ void pointwise_conv_1d_resource_cl(const data_T &data, res_T &res,
 
 ColLoop:
     #pragma unroll pf
-    #pragma ii CONFIG_T::reuse_factor
-    for (int col = 0; col < CONFIG_T::out_width; col++) {
+    [[intel::initiation_interval(CONFIG_T::reuse_factor)]] for (int col = 0; col < CONFIG_T::out_width; col++) {
         // Loop variables should always be declared in the deepest scope available
         // See Intel's HLS - Loop Best Practices
         // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
@@ -228,12 +226,12 @@ void conv_1d_resource_cl(
         // Winograd's minimal filtering algorithm not applicable to stride != 1
         CONFIG_T::stride_width == 1 &&
 
-            // Intel HLS will fail to pipeline the entire component if the Winograd loop only runs once
-            CONFIG_T::out_width > 2 &&
+        // Intel HLS will fail to pipeline the entire component if the Winograd loop only runs once
+        CONFIG_T::out_width > 2 &&
 
-            // Verify user opted for Winograd
-            CONFIG_T::implementation == nnet::conv1d_implementation::combination ||
-        CONFIG_T::implementation == nnet::conv1d_implementation::winograd;
+        // Verify user opted for Winograd
+        (CONFIG_T::implementation == nnet::conv1d_implementation::combination ||
+         CONFIG_T::implementation == nnet::conv1d_implementation::winograd);
 
     if (CONFIG_T::filt_width == 3 && winograd_conditions) {
         winograd_conv1d_3x1_kernel_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);

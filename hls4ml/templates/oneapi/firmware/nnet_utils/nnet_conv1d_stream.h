@@ -15,9 +15,8 @@ namespace nnet {
  *
  * Values from shift_buffer are inserted into kernel_window, updating the values to be convolved
  */
-template <class data_T, typename CONFIG_T>
-void kernel_shift_1d(typename data_T::value_type shift_buffer[CONFIG_T::n_chan],
-                     typename data_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::n_chan]) {
+template <class data_T, class data_window_T, typename CONFIG_T>
+void kernel_shift_1d(typename data_T::value_type shift_buffer[CONFIG_T::n_chan], data_window_T &kernel_window) {
 /*
  * Manually shift kernel_window by one step to the left
  * Not possible to use nnet::shift_reg<T, N> as the kernel window is convolved with the kernel weights using dense matrix
@@ -83,14 +82,16 @@ UpdateBuffer:
  * the line buffer (3) Matrix mulitplication - performs dense matrix multiplication between the current input window and
  * kernel weights (4) Counter housekeeping - keeps track of current pixel and stride
  */
-template <class data_T, class res_T, typename CONFIG_T>
+template <class data_T, class data_window_T, class res_pipe, typename CONFIG_T>
 void compute_output_buffer_1d(
-    const data_T &in_elem, stream<res_T> &res_stream,
+    const data_T &in_elem,
     nnet::shift_reg<typename data_T::value_type, CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right>
         line_buffer[CONFIG_T::n_chan],
-    typename data_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::n_chan],
+    data_window_T &kernel_window,
     const typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan * CONFIG_T::n_filt],
     const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+
+    using res_T = typename ExtractPipeType<res_pipe>::value_type;
     // Thresholds
     static constexpr int lShiftX = CONFIG_T::filt_width - 1;
 
@@ -105,14 +106,13 @@ void compute_output_buffer_1d(
     nnet::shift_line_buffer_1d<data_T, CONFIG_T>(in_elem, line_buffer, shift_buffer);
 
     // Step 2 - Kernel shift
-    nnet::kernel_shift_1d<data_T, CONFIG_T>(shift_buffer, kernel_window);
+    nnet::kernel_shift_1d<data_T, data_window_T, CONFIG_T>(shift_buffer, kernel_window);
 
     // Check to see if we have a full kernel
     if ((sX - lShiftX) == 0 && pX > (lShiftX - 1)) {
         // Step 3 - Dense matrix multiplication
-        [[intel::fpga_register]] typename res_T::value_type res_out[CONFIG_T::n_filt];
-        dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-            kernel_window, res_out, weights, biases);
+        [[intel::fpga_register]] res_T res_out;
+        dense_resource<data_window_T, res_T, typename CONFIG_T::mult_config>(kernel_window, res_out, weights, biases);
 
         // Write result to output stream
         [[intel::fpga_register]] res_T res_pack;
@@ -121,7 +121,7 @@ void compute_output_buffer_1d(
         for (int channel = 0; channel < CONFIG_T::n_filt; channel++) {
             res_pack[channel] = res_out[channel];
         }
-        res_stream.write(res_pack);
+        res_pipe::write(res_pack);
     }
 
     // Reached end of image
@@ -135,35 +135,42 @@ void compute_output_buffer_1d(
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void conv_1d_cl(stream<data_T> &data, stream<res_T> &res,
-                const typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-                const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+template <class data_pipe, class res_pipe, typename CONFIG_T>
+void conv_1d_cl_stream(const typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                       const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using data_element_T = typename data_arr_T::value_type;
+    using data_window_T = array<data_element_T, CONFIG_T::filt_width * CONFIG_T::n_chan>;
+
     // Line buffer and kernel window
-    [[intel::fpga_register]] static nnet::shift_reg<typename data_T::value_type,
+    [[intel::fpga_register]] static nnet::shift_reg<data_element_T,
                                                     CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right>
         line_buffer[CONFIG_T::n_chan];
-    [[intel::fpga_register]] static typename data_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::n_chan];
+    [[intel::fpga_register]] static data_window_T kernel_window;
 
     // An array of length CONFIG_T::n_chan, with elements set to zero (padding for each channel)
-    static const data_T padds(0);
+    constexpr auto padds = zero_array<data_arr_T>();
 
 // Input image left-side padding
 PaddingLeftWidth:
     for (int col = 0; col < CONFIG_T::pad_left; col++) {
-        compute_output_buffer_1d<data_T, res_T, CONFIG_T>(padds, res, line_buffer, kernel_window, weights, biases);
+        compute_output_buffer_1d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window, weights,
+                                                                                biases);
     }
 
 // Read input image
 ReadInputWidth:
     for (int col = 0; col < CONFIG_T::in_width; col++) {
-        compute_output_buffer_1d<data_T, res_T, CONFIG_T>(data.read(), res, line_buffer, kernel_window, weights, biases);
+        compute_output_buffer_1d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(data_pipe::read(), line_buffer,
+                                                                                kernel_window, weights, biases);
     }
 
 // Input image right-side padding
 PaddingRightWidth:
     for (int col = 0; col < CONFIG_T::pad_right; col++) {
-        compute_output_buffer_1d<data_T, res_T, CONFIG_T>(padds, res, line_buffer, kernel_window, weights, biases);
+        compute_output_buffer_1d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window, weights,
+                                                                                biases);
     }
 }
 

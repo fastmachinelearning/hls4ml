@@ -11,6 +11,16 @@ namespace nnet {
 // Define the pipe type that we use
 template <class T, std::size_t N> using array = std::array<T, N>;
 
+// T should be an array
+template <class T> constexpr T zero_array() {
+    T ar;
+    #pragma unroll
+    for (auto &a : ar) {
+        a[0] = 0;
+    }
+    return ar;
+}
+
 // This is a helper to extract the value_type of a pipe
 template <typename T> struct ExtractPipeType { typedef T value_type; };
 
