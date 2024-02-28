@@ -424,40 +424,27 @@ class OneAPIWriter(Writer):
                     newline = line
                     for bram in model_brams:
                         newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
-                elif '// hls-fpga-machine-learning insert inputs' in line:
-                    newline = line
-                    # there should really be only one input
-                    inp = model_inputs[0]
-                    newline += indent + f'std::vector<{inp.type.name}> inputs;\n'
-
-                elif '// hls-fpga-machine-learning insert results' in line:
-                    newline = line
-                    # there should really be only one out
-                    out = model_outputs[0]
-                    newline += indent + f'std::vector<{out.type.name}> outputs;\n'
-                elif '// hls-fpga-machine-learning insert tb-input' in line:
-                    newline = line
-                    inp = model_inputs[0]
-                    newline += indent + f'{inp.pipe_name}::write(q, inputs[i]);\n'
                 elif '// hls-fpga-machine-learning insert zero' in line:
                     newline = line
                     inp = model_inputs[0]
                     newline += indent + f'float vals[{inp.size_cpp()}]; \n'
                     newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
-                    newline += indent + indent + 'vals[j] = 0.0; \n'
+                    newline += indent + '    vals[j] = 0.0; \n'
                     newline += indent + '}\n'
                     newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
-
+                elif '// hls-fpga-machine-learning insert data' in line:
+                    newline = line
+                    inp = model_inputs[0]
+                    newline += indent + f'float vals[{inp.size_cpp()}]; \n'
+                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
+                    newline += indent + '    vals[j] = in[j]; \n'
+                    newline += indent + '}\n'
+                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
                     newline += indent + f'float outputs[{out.size_cpp()}];\n'
                     newline += indent + f'nnet::convert_data_back<{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
-
-                elif '// hls-fpga-machine-learning insert tb-output' in line:
-                    newline = line
-                    out = model_outputs[0]
-                    newline += indent + f'outputs[j] = {out.pipe_name}::read(q);\n'
                 else:
                     newline = line
 
@@ -510,28 +497,17 @@ class OneAPIWriter(Writer):
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
                     for i in model_inputs:
-                        newline += indent + f'{i.definition_cpp(name_suffix="_input")};\n'
-                        newline += (
-                            indent
-                            + f'nnet::convert_data<{dtype}, typename {i.type.name}::value_type, {i.size_cpp()}>'
-                            + f'({i.name}, {i.name}_input.data());\n'
-                        )
-                        newline += indent + f'{i.pipe_name}::write(q, {i.name}_input);\n'
-
-                    newline += '\n'
+                        newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     newline += indent + f'q.single_task({convert_to_pascal_case(project_name)}{{}});\n'
-                    newline += indent + 'q.wait();\n'
-
-                    newline += '\n'
 
                     for o in model_outputs:
-                        newline += indent + f'{o.definition_cpp(name_suffix="_output")} = {o.pipe_name}::read(q);\n'
                         newline += (
-                            indent
-                            + f'nnet::convert_data_back<typename {o.type.name}::value_type, {dtype}, {o.size_cpp()}>'
-                            + f'({o.name}_output.data(), {o.name});\n'
+                            indent + f'nnet::convert_data_back<{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
                         )
+                    newline += '\n'
+                    newline += indent + 'q.wait();\n'
+
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                     newline = ''
                     for layer in model.get_layers():

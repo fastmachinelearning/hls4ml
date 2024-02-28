@@ -53,13 +53,11 @@ int main(int argc, char **argv) {
     std::string pline;
 
     if (fin.is_open() && fpr.is_open()) {
-        // hls-fpga-machine-learning insert inputs
-        // hls-fpga-machine-learning insert results
         std::vector<std::vector<float>> predictions;
-        unsigned int num_iterations = 0;
-        for (; std::getline(fin, iline) && std::getline(fpr, pline); num_iterations++) {
-            if (num_iterations % CHECKPOINT == 0) {
-                std::cout << "Processing input " << num_iterations << std::endl;
+        unsigned int iteration = 0;
+        for (; std::getline(fin, iline) && std::getline(fpr, pline); iteration++) {
+            if (iteration % CHECKPOINT == 0) {
+                std::cout << "Processing input " << iteration << std::endl;
             }
 
             std::vector<float> in;
@@ -77,42 +75,27 @@ int main(int argc, char **argv) {
             }
 
             // hls-fpga-machine-learning insert data
-            inputs.emplace_back();
-            if (in.size() != inputs[0].size()) {
-                throw std::runtime_error("The input size does not match");
-            }
 
-            std::copy(in.cbegin(), in.cend(), inputs.back().begin());
+            q.single_task(MyProject{});
 
-            outputs.emplace_back();
-            if (pr.size() != outputs[0].size()) {
-                throw std::runtime_error("The output size does not match");
-            }
+            // hls-fpga-machine-learning convert output
+
             std::copy(pr.cbegin(), pr.cend(), predictions.back().begin());
-        }
-        // Do this separately to avoid vector reallocation
-        for (int i = 0; i < num_iterations; i++) {
-            // hls-fpga-machine-learning insert tb-input
-            q.single_task(MyProject{}); // once or once for each
-        }
-        q.wait();
 
-        for (int j = 0; j < num_iterations; j++) {
-            // hls-fpga-machine-learning insert tb-output
-            for (auto outval : outputs[j]) {
+            for (auto outval : outputs) {
                 fout << outval << " ";
             }
             fout << std::endl;
-            if (j % CHECKPOINT == 0) {
+            if (iteration % CHECKPOINT == 0) {
                 std::cout << "Predictions" << std::endl;
                 // hls-fpga-machine-learning insert predictions
-                for (auto predval : predictions[j]) {
+                for (auto predval : pr) {
                     std::cout << predval << " ";
                 }
                 std::cout << std::endl;
                 std::cout << "Quantized predictions" << std::endl;
                 // hls-fpga-machine-learning insert quantized
-                for (auto outval : outputs[j]) {
+                for (auto outval : outputs) {
                     std::cout << outval << " ";
                 }
                 std::cout << std::endl;
@@ -129,10 +112,6 @@ int main(int argc, char **argv) {
         for (int i = 0; i < num_iterations; i++) {
             // hls-fpga-machine-learning insert zero
             q.single_task(MyProject{});
-        }
-        q.wait();
-
-        for (int j = 0; j < num_iterations; j++) {
             // hls-fpga-machine-learning convert output
             for (auto outval : outputs) {
                 std::cout << outval << " ";
@@ -145,6 +124,7 @@ int main(int argc, char **argv) {
             fout << std::endl;
         }
     }
+    q.wait();
 
     fout.close();
     std::cout << "INFO: Saved inference results to file: " << RESULTS_LOG << std::endl;

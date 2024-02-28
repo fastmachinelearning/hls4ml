@@ -12,20 +12,6 @@
 
 namespace nnet {
 
-// I think this can be removed
-template <class srcType, class dstType, size_t SIZE> void convert_data(srcType *src, dstType *dst) {
-    for (size_t i = 0; i < SIZE; i++) {
-        dst[i] = dstType(src[i]);
-    }
-}
-
-// I think this can be removed
-template <class srcType, class dstType, size_t SIZE> void convert_data_back(srcType *src, dstType *dst) {
-    for (size_t i = 0; i < SIZE; i++) {
-        dst[i] = static_cast<dstType>(src[i].to_double());
-    }
-}
-
 template <class srcType, class dest_pipe, size_t SIZE> void convert_data(sycl::queue &q, srcType *src) {
     constexpr auto dstTypeSize = std::tuple_size<typename ExtractPipeType<dest_pipe>::value_type>{};
     for (size_t i = 0; i < SIZE / dstTypeSize; i++) {
