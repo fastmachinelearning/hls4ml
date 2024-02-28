@@ -15,10 +15,9 @@ namespace nnet {
  *
  * Values from shift_buffer are inserted into kernel_window, updating the values to be convolved
  */
-template <class data_T, typename CONFIG_T>
-void kernel_shift_2d(
-    typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan],
-    typename data_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::filt_height * CONFIG_T::n_chan]) {
+template <class data_T, class data_window_T, typename CONFIG_T>
+void kernel_shift_2d(typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan],
+                     data_window_T &kernel_window) {
 /*
  * Manually shift kernel_window by one step to the left
  * Not possible to use nnet::shift_reg<T, N> as the kernel window is convolved with the kernel weights using dense matrix
@@ -110,39 +109,33 @@ LineBufferDataIn:
  * the line buffer (3) Matrix mulitplication - performs dense matrix multiplication between the current input window and
  * kernel weights (4) Counter housekeeping - keeps track of current pixel and stride
  */
-template <class data_T, class res_T, typename CONFIG_T>
+template <class data_T, class data_window_T, class res_pipe, typename CONFIG_T>
 void compute_output_buffer_2d(
-    const data_T &in_elem, stream<res_T> &res_stream,
+    const data_T &in_elem,
     nnet::shift_reg<typename data_T::value_type, CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right>
         line_buffer[MAX(CONFIG_T::filt_height - 1, 1)][CONFIG_T::n_chan],
-    typename data_T::value_type kernel_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],
+    data_window_T &kernel_window,
     const typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+    const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt], int &pX, int &pY, int &sX, int &sY) {
+
+    using res_T = typename ExtractPipeType<res_pipe>::value_type;
+
     // Thresholds
-    static constexpr int lShiftX = CONFIG_T::filt_width - 1;
-    static constexpr int lShiftY = CONFIG_T::filt_height - 1;
-
-    // X, Y position pixels
-    static int pX = 0;
-    static int pY = 0;
-
-    // X, Y strides
-    static int sX = 0;
-    static int sY = 0;
+    constexpr int lShiftX = CONFIG_T::filt_width - 1;
+    constexpr int lShiftY = CONFIG_T::filt_height - 1;
 
     // Step 1 - Shift line buffer
     [[intel::fpga_register]] typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan];
     nnet::shift_line_buffer_2d<data_T, CONFIG_T>(in_elem, line_buffer, shift_buffer);
 
     // Step 2 - Kernel shift
-    nnet::kernel_shift_2d<data_T, CONFIG_T>(shift_buffer, kernel_window);
+    nnet::kernel_shift_2d<data_T, data_window_T, CONFIG_T>(shift_buffer, kernel_window);
 
     // Check to see if we have a full kernel
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > (lShiftY - 1) && pX > (lShiftX - 1)) {
         // Step 3 - Dense matrix multiplication
-        [[intel::fpga_register]] typename res_T::value_type res_out[CONFIG_T::n_filt];
-        dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-            kernel_window, res_out, weights, biases);
+        [[intel::fpga_register]] res_T res_out;
+        dense_resource<data_window_T, res_T, typename CONFIG_T::mult_config>(kernel_window, res_out, weights, biases);
 
         // Write result to output stream
         [[intel::fpga_register]] res_T res_pack;
@@ -151,7 +144,7 @@ void compute_output_buffer_2d(
         for (int channel = 0; channel < CONFIG_T::n_filt; channel++) {
             res_pack[channel] = res_out[channel];
         }
-        res_stream.write(res_pack);
+        res_pipe::write(res_pack);
     }
 
     // Reached end of image
@@ -174,61 +167,74 @@ void compute_output_buffer_2d(
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void conv_2d_cl(stream<data_T> &data, stream<res_T> &res,
-                const typename CONFIG_T::weight_t
-                    weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-                const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+template <class data_pipe, class res_pipe, typename CONFIG_T>
+void conv_2d_cl_stream(const typename CONFIG_T::weight_t
+                           weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                       const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using data_element_T = typename data_arr_T::value_type;
+    using data_window_T = array<data_element_T, CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan>;
 
     // Line buffer and kernel window
-    [[intel::fpga_register]] static nnet::shift_reg<typename data_T::value_type,
-                                                    CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right>
+    [[intel::fpga_register]] nnet::shift_reg<data_element_T, CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right>
         line_buffer[MAX(CONFIG_T::filt_height - 1, 1)][CONFIG_T::n_chan];
-    [[intel::fpga_register]] static
-        typename data_T::value_type kernel_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
+    [[intel::fpga_register]] data_window_T kernel_window;
 
     // An array of length CONFIG_T::n_chan, with elements set to zero (padding for each channel)
-    static const data_T padds(0);
+    constexpr auto padds = zero_array<data_arr_T>();
+
+    // move former static variables outside the function calls
+    // X position pixel
+    int pX = 0;
+    // Y position pixel
+    int pY = 0;
+    // X strides
+    int sX = 0;
+    // Y strides
+    int sY = 0;
 
 // Padding above input image
 PaddingTopHeight:
-    #pragma loop_coalesce 2
-    for (int row = 0; row < CONFIG_T::pad_top; row++) {
+    [[intel::loop_coalesce(2)]] for (int row = 0; row < CONFIG_T::pad_top; row++) {
     PaddingTopWidth:
         for (int col = 0; col < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; col++) {
-            compute_output_buffer_2d<data_T, res_T, CONFIG_T>(padds, res, line_buffer, kernel_window, weights, biases);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
+                                                                                    weights, biases, pX, pY, sX, sY);
         }
     }
 
 ReadInputHeight:
-    #pragma loop_coalesce 2
-    for (int row = 0; row < CONFIG_T::in_height; row++) {
+    [[intel::loop_coalesce(2)]] for (int row = 0; row < CONFIG_T::in_height; row++) {
     // Input image left-side padding
     PaddingLeftWidth:
         for (int col = 0; col < CONFIG_T::pad_left; col++) {
-            compute_output_buffer_2d<data_T, res_T, CONFIG_T>(padds, res, line_buffer, kernel_window, weights, biases);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
+                                                                                    weights, biases, pX, pY, sX, sY);
         }
 
     // Read input image
     ReadInputWidth:
         for (int col = 0; col < CONFIG_T::in_width; col++) {
-            compute_output_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), res, line_buffer, kernel_window, weights, biases);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
+                data_pipe::read(), line_buffer, kernel_window, weights, biases, pX, pY, sX, sY);
         }
 
     // Input image right-side padding
     PaddingRightWidth:
         for (int col = 0; col < CONFIG_T::pad_right; col++) {
-            compute_output_buffer_2d<data_T, res_T, CONFIG_T>(padds, res, line_buffer, kernel_window, weights, biases);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
+                                                                                    weights, biases, pX, pY, sX, sY);
         }
     }
 
 // Padding below input image
 PaddingBottomHeight:
-    #pragma loop_coalesce 2
-    for (int row = 0; row < CONFIG_T::pad_bottom; row++) {
+    [[intel::loop_coalesce(2)]] for (int row = 0; row < CONFIG_T::pad_bottom; row++) {
     PaddingBottomWidth:
         for (int col = 0; col < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; col++) {
-            compute_output_buffer_2d<data_T, res_T, CONFIG_T>(padds, res, line_buffer, kernel_window, weights, biases);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
+                                                                                    weights, biases, pX, pY, sX, sY);
         }
     }
 }

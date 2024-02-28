@@ -92,6 +92,7 @@ void compute_output_buffer_1d(
     const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt], int &pX, int &sX) {
 
     using res_T = typename ExtractPipeType<res_pipe>::value_type;
+
     // Thresholds
     constexpr int lShiftX = CONFIG_T::filt_width - 1;
 

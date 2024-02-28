@@ -68,8 +68,7 @@ HeightLoop:
     for (int i = 0; i < CONFIG_T::out_height; i++) {
     WidthLoop:
         #pragma unroll pfc
-        #pragma ii CONFIG_T::reuse_factor
-        for (int j = 0; j < CONFIG_T::out_width; j++) {
+        [[intel::initiation_interval(CONFIG_T::reuse_factor)]] for (int j = 0; j < CONFIG_T::out_width; j++) {
             // Loop variables should always be declared in the deepest scope available
             // See Intel's HLS - Loop Best Practices
             // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
@@ -214,7 +213,7 @@ HeightLoop:
 //       2D Convolution for 1x1 kernels using optimized im2col
 // ****************************************************************
 
-template <class data_T, class data_col_Ttypename CONFIG_T>
+template <class data_T, class data_col_T, typename CONFIG_T>
 void im2col_2d_pointwise_cl(const data_T &data, data_col_T &data_col, const int row, const int col) {
     // pointwise_im2col can be unrolled fully, only one loop with n_chan iterations
 
@@ -255,8 +254,7 @@ HeightLoop:
     for (int row = 0; row < CONFIG_T::out_height; row++) {
     WidthLoop:
         #pragma unroll pfc
-        #pragma ii CONFIG_T::reuse_factor
-        for (int col = 0; col < CONFIG_T::out_width; col++) {
+        [[intel::initiation_interval(CONFIG_T::reuse_factor)]] for (int col = 0; col < CONFIG_T::out_width; col++) {
             // Loop variables should always be declared in the deepest scope available
             // See Intel's HLS - Loop Best Practices
             // https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html
