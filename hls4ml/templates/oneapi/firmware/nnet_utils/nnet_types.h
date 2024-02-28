@@ -16,7 +16,7 @@ template <class T> constexpr T zero_array() {
     T ar;
     #pragma unroll
     for (auto &a : ar) {
-        a[0] = 0;
+        a = 0;
     }
     return ar;
 }

@@ -439,6 +439,21 @@ class OneAPIWriter(Writer):
                     newline = line
                     inp = model_inputs[0]
                     newline += indent + f'{inp.pipe_name}::write(q, inputs[i]);\n'
+                elif '// hls-fpga-machine-learning insert zero' in line:
+                    newline = line
+                    inp = model_inputs[0]
+                    newline += indent + f'float vals[{inp.size_cpp()}]; \n'
+                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
+                    newline += indent + indent + 'vals[j] = 0.0; \n'
+                    newline += indent + '}\n'
+                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+
+                elif '// hls-fpga-machine-learning convert output' in line:
+                    newline = line
+                    out = model_outputs[0]
+                    newline += indent + f'float outputs[{out.size_cpp()}];\n'
+                    newline += indent + f'nnet::convert_data_back<{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
+
                 elif '// hls-fpga-machine-learning insert tb-output' in line:
                     newline = line
                     out = model_outputs[0]

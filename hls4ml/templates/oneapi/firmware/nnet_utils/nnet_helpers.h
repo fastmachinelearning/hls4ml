@@ -12,15 +12,38 @@
 
 namespace nnet {
 
+// I think this can be removed
 template <class srcType, class dstType, size_t SIZE> void convert_data(srcType *src, dstType *dst) {
     for (size_t i = 0; i < SIZE; i++) {
         dst[i] = dstType(src[i]);
     }
 }
 
+// I think this can be removed
 template <class srcType, class dstType, size_t SIZE> void convert_data_back(srcType *src, dstType *dst) {
     for (size_t i = 0; i < SIZE; i++) {
         dst[i] = static_cast<dstType>(src[i].to_double());
+    }
+}
+
+template <class srcType, class dest_pipe, size_t SIZE> void convert_data(sycl::queue &q, srcType *src) {
+    constexpr auto dstTypeSize = std::tuple_size<typename ExtractPipeType<dest_pipe>::value_type>{};
+    for (size_t i = 0; i < SIZE / dstTypeSize; i++) {
+        typename ExtractPipeType<dest_pipe>::value_type ctype;
+        for (size_t j = 0; j < dstTypeSize; j++) {
+            ctype[j] = src[i * dstTypeSize + j];
+        }
+        dest_pipe::write(q, ctype);
+    }
+}
+
+template <class src_pipe, class dstType, size_t SIZE> void convert_data_back(sycl::queue &q, dstType *dst) {
+    constexpr auto srcTypeSize = std::tuple_size<typename ExtractPipeType<src_pipe>::value_type>{};
+    for (size_t i = 0; i < SIZE / srcTypeSize; i++) {
+        auto ctype = src_pipe::read(q);
+        for (size_t j = 0; j < srcTypeSize; j++) {
+            dst[i * srcTypeSize + j] = ctype[j].to_double();
+        }
     }
 }
 

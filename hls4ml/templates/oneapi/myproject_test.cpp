@@ -52,10 +52,9 @@ int main(int argc, char **argv) {
     std::string iline;
     std::string pline;
 
-    // hls-fpga-machine-learning insert inputs
-    // hls-fpga-machine-learning insert results
-
     if (fin.is_open() && fpr.is_open()) {
+        // hls-fpga-machine-learning insert inputs
+        // hls-fpga-machine-learning insert results
         std::vector<std::vector<float>> predictions;
         unsigned int num_iterations = 0;
         for (; std::getline(fin, iline) && std::getline(fpr, pline); num_iterations++) {
@@ -125,28 +124,22 @@ int main(int argc, char **argv) {
         const unsigned int num_iterations = 10;
         std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations
                   << " invocations." << std::endl;
-        // hls-fpga-machine-learning insert zero
-        for (int i = 0; i < num_iterations; i++) {
-            inputs.emplace_back();
-            outputs.emplace_back();
-            inputs.back().fill(0.0);
-        }
 
         // hls-fpga-machine-learning insert top-level-function
         for (int i = 0; i < num_iterations; i++) {
-            // hls-fpga-machine-learning insert tb-input
+            // hls-fpga-machine-learning insert zero
             q.single_task(MyProject{});
         }
         q.wait();
 
         for (int j = 0; j < num_iterations; j++) {
-            // hls-fpga-machine-learning insert tb-output
-            for (auto outval : outputs[j]) {
+            // hls-fpga-machine-learning convert output
+            for (auto outval : outputs) {
                 std::cout << outval << " ";
             }
             std::cout << std::endl;
 
-            for (auto outval : outputs[j]) {
+            for (auto outval : outputs) {
                 fout << outval << " ";
             }
             fout << std::endl;

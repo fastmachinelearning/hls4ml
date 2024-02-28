@@ -80,7 +80,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         conv_params = self._default_config_params(node)
         conv_params['dilation'] = node.get_attr('dilation', 1)
         if conv_params['dilation'] != 1:
-            raise Exception('dilation != 1 not supported yet')
+            raise RuntimeError('dilation != 1 not supported yet')
         conv_params['config_t'] = f'config{node.index}_mult'
         conv_config = self.template.format(**conv_params)
 
@@ -103,7 +103,7 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise Exception('channels_first not supported on Quartus')
+            raise RuntimeError('channels_first not supported on Quartus')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -118,7 +118,9 @@ class Conv1DTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-
+        if node.get_attr('data_format') == 'channels_first':
+            raise RuntimeError('channels_first not supported on Quartus')
+        params['data_format'] = 'cl'
         return self.template.format(**params)
 
 
@@ -191,7 +193,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         conv_params = self._default_config_params(node)
         conv_params['dilation'] = node.get_attr('dilation', 1)
         if conv_params['dilation'] != 1:
-            raise Exception('dilation != 1 not supported yet')
+            raise RuntimeError('dilation != 1 not supported yet')
         conv_params['config_t'] = f'config{node.index}_mult'
         conv_config = self.template.format(**conv_params)
 
@@ -214,7 +216,7 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise Exception('channels_first not supported for Quartus')
+            raise RuntimeError('channels_first not supported for Quartus')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -229,7 +231,9 @@ class Conv2DTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-
+        if node.get_attr('data_format') == 'channels_first':
+            raise RuntimeError('channels_first not supported on Quartus')
+        params['data_format'] = 'cl'
         return self.template.format(**params)
 
 

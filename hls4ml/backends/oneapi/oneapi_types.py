@@ -82,9 +82,6 @@ class OneAPIInterfaceVariableDefinition(VariableDefinition):
 
     def declare_cpp(self, pipe_min_size=0, indent=''):
         lines = indent + f'class {self.pipe_id};\n'
-        lines += (
-            indent + f'using {self.type.name} = nnet::array<{self.type.precision.definition_cpp()}, {self.size_cpp()}>;\n'
-        )
         lines += indent + (
             f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
             + f'{self.type.name}, {pipe_min_size}, PipeProps>;\n'
@@ -107,7 +104,6 @@ class OneAPIStreamVariableDefinition(VariableDefinition):
 
     def declare_cpp(self, indent=''):
         lines = indent + f'class {self.pipe_id};\n'
-        # lines += indent + f'using {self.name} = nnet::array<{self.type.name}, {self.size_cpp()}>;\n'
         lines += indent + (
             f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
             + f'{self.type.name}, {self.pragma[-1]}>;\n'
