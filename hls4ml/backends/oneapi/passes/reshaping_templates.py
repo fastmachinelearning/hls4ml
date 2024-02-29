@@ -1,5 +1,8 @@
+import numpy as np
+
+from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import Resize, Transpose, ZeroPadding1D, ZeroPadding2D
+from hls4ml.model.layers import Reshape, Resize, Transpose, ZeroPadding1D, ZeroPadding2D
 
 # ZeroPadding templates
 
@@ -134,5 +137,51 @@ class TransposeFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['dim'] = node.get_attr('dim')
+
+        return self.template.format(**params)
+
+
+# Reshape template (only used in streaming)
+reshape_task_sequence_template = 'task_sequence<nnet::repack_stream<{input_pipe}, {output_pipe}, {size}>> {name};'
+reshape_stream_function_template = '{name}.async();'
+reshape_include_list = ['nnet_utils/nnet_stream.h']
+
+
+class ReshapeConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(Reshape)
+
+    def format(self, node):
+        return ''
+
+
+class ReshapeFunctionTemplate(FunctionCallTemplate):
+    """Only used to add the include list"""
+
+    def __init__(self):
+        super().__init__(Reshape, include_header=reshape_include_list)
+
+    def format(self, node):
+        return ''
+
+
+class ReshapeTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__(Reshape)
+        self.template = reshape_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['size'] = np.prod(node.get_output_variable().shape)
+        return self.template.format(**params)
+
+
+class ReshapeStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Reshape)
+        self.template = reshape_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
 
         return self.template.format(**params)

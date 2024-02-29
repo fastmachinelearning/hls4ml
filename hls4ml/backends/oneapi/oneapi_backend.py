@@ -7,7 +7,7 @@ from hls4ml.backends import FPGABackend
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.optimizer import layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 
 # from hls4ml.report import parse_oneapi_report
@@ -38,7 +38,7 @@ class OneAPIBackend(FPGABackend):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
-        streaming_passes = ['oneapi:reshape_stream', 'oneapi:clone_output']
+        streaming_passes = ['oneapi:clone_output']
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
 
         oneapi_types = [
@@ -54,6 +54,7 @@ class OneAPIBackend(FPGABackend):
             'oneapi:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
             'oneapi:xnor_pooling',
+            'oneapi:generate_conv_im2col',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -61,39 +62,18 @@ class OneAPIBackend(FPGABackend):
             'oneapi:remove_final_reshape',
             'oneapi:optimize_pointwise_conv',
             'oneapi:inplace_parallel_reshape',
-            'oneapi:inplace_stream_flatten',
             'oneapi:skip_softmax',
             'oneapi:fix_softmax_table_size',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
-        templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
         writer_passes = ['make_stamp', 'oneapi:write_hls']
 
         self._writer_flow = register_flow('write', writer_passes, requires=['oneapi:ip'], backend=self.name)
 
-        all_passes = get_backend_passes(self.name)
-
-        extras = [
-            # Ideally this should be empty
-            opt_pass
-            for opt_pass in all_passes
-            if opt_pass
-            not in initializers
-            + streaming_passes
-            + oneapi_types
-            + quantization_passes
-            + templates
-            + optimization_passes
-            + writer_passes
-        ]
-
-        if len(extras) > 0:
-            extras_flow = register_flow('extras', extras, requires=[init_flow], backend=self.name)
-        else:
-            extras_flow = None
+        extras_flow = None
 
         ip_flow_requirements = [
             'optimize',

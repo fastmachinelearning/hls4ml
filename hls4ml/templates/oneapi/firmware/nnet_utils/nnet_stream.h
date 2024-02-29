@@ -12,69 +12,81 @@ struct broadcast_config {
     static const unsigned n_dupl = 2;
 };
 
-template <class data_T, class res_T, int N>
-void clone_stream(stream<data_T> &data, stream<res_T> &res1, stream<res_T> &res2) {
+template <class data_pipe, class res1_pipe, class res2_pipe, int N> void clone_stream() {
+    using data_T = typename ExtractPipeType<data_pipe>::value_type;
+    using res1_T = typename ExtractPipeType<res1_pipe>::value_type;
+    using res2_T = typename ExtractPipeType<res2_pipe>::value_type;
+    constexpr auto datasize = std::tuple_size<data_T>{};
 CloneLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < N / data_T::size; i++) {
-        data_T in_data = data.read();
-        res_T out_data1;
-        res_T out_data2;
+    [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
+        data_T in_data = data_pipe::read();
+        res1_T out_data1;
+        res2_T out_data2;
 
     ClonePack:
         #pragma unroll
-        for (int j = 0; j < data_T::size; j++) {
+        for (int j = 0; j < datasize; j++) {
             out_data1[j] = in_data[j];
             out_data2[j] = in_data[j];
         }
 
-        res1.write(out_data1);
-        res2.write(out_data2);
+        res1_pipe::write(out_data1);
+        res2_pipe::write(out_data2);
     }
 }
 
-template <class data_T, class res_T, int N>
-void clone_stream(stream<data_T> &data, stream<res_T> &res1, stream<res_T> &res2, stream<res_T> &res3) {
+template <class data_pipe, class res1_pipe, class res2_pipe, class res3_pipe, int N> void clone_stream() {
+    using data_T = typename ExtractPipeType<data_pipe>::value_type;
+    using res1_T = typename ExtractPipeType<res1_pipe>::value_type;
+    using res2_T = typename ExtractPipeType<res2_pipe>::value_type;
+    using res3_T = typename ExtractPipeType<res3_pipe>::value_type;
+    constexpr auto datasize = std::tuple_size<data_T>{};
 CloneLoop:
-    [[intel::initiation_interval(1)]] for (int i = 0; i < N / data_T::size; i++) {
-        data_T in_data = data.read();
-        res_T out_data1;
-        res_T out_data2;
-        res_T out_data3;
+    [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
+        data_T in_data = data_pipe::read();
+        res1_T out_data1;
+        res2_T out_data2;
+        res3_T out_data3;
 
     ClonePack:
         #pragma unroll
-        for (int j = 0; j < data_T::size; j++) {
+        for (int j = 0; j < datasize; j++) {
             out_data1[j] = in_data[j];
             out_data2[j] = in_data[j];
             out_data3[j] = in_data[j];
         }
 
-        res1.write(out_data1);
-        res2.write(out_data2);
-        res3.write(out_data3);
+        res1_pipe::write(out_data1);
+        res2_pipe::write(out_data2);
+        res3_pipe::write(out_data3);
     }
 }
 
-template <class data_T, class res_T, int N> void repack_stream(stream<data_T> &data, stream<res_T> &res) {
-    if (data_T::size == res_T::size) {
-        [[intel::initiation_interval(1)]] for (int i = 0; i < N / data_T::size; i++) {
+template <class data_pipe, class res_pipe, int N> void repack_stream() {
+    using data_T = typename ExtractPipeType<data_pipe>::value_type;
+    using res_T = typename ExtractPipeType<res_pipe>::value_type;
+    constexpr auto datasize = std::tuple_size<data_T>{};
+    constexpr auto ressize = std::tuple_size<res_T>{};
 
-            data_T in_data = data.read();
+    if (datasize == ressize) {
+        [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
+
+            data_T in_data = data_pipe::read();
             res_T out_data;
 
             #pragma unroll
-            for (int j = 0; j < data_T::size; j++) {
+            for (int j = 0; j < datasize; j++) {
                 out_data[j] = in_data[j];
             }
 
-            res.write(out_data);
+            res_pipe::write(out_data);
         }
-    } else if (data_T::size > res_T::size) {
-        constexpr unsigned pack_diff = data_T::size / res_T::size;
+    } else if (datasize > ressize) {
+        constexpr unsigned pack_diff = datasize / ressize;
 
-        for (int i = 0; i < N / data_T::size; i++) {
+        for (int i = 0; i < N / datasize; i++) {
 
-            data_T in_data = data.read();
+            data_T in_data = data_pipe::read();
             res_T out_data;
 
             [[intel::initiation_interval(1)]] for (int j = 0; j < pack_diff; j++) {
@@ -82,27 +94,27 @@ template <class data_T, class res_T, int N> void repack_stream(stream<data_T> &d
                 res_T out_data;
 
                 #pragma unroll
-                for (int k = 0; k < res_T::size; k++) {
-                    out_data[k] = in_data[j * res_T::size + k];
+                for (int k = 0; k < ressize; k++) {
+                    out_data[k] = in_data[j * ressize + k];
                 }
-                res.write(out_data);
+                res_pipe::write(out_data);
             }
         }
-    } else { // data_T::size < res_T::size
+    } else { // datasize < ressize
         res_T out_data;
-        constexpr unsigned pack_diff = res_T::size / data_T::size;
+        constexpr unsigned pack_diff = ressize / datasize;
         unsigned pack_cnt = 0;
-        [[intel::initiation_interval(1)]] for (int i = 0; i < N / data_T::size; i++) {
+        [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
 
-            data_T in_data = data.read();
+            data_T in_data = data_pipe::read();
 
             #pragma unroll
-            for (int j = 0; j < data_T::size; j++) {
-                out_data[pack_cnt * data_T::size + j] = in_data[j];
+            for (int j = 0; j < datasize; j++) {
+                out_data[pack_cnt * datasize + j] = in_data[j];
             }
 
             if (pack_cnt == pack_diff - 1) {
-                res.write(out_data);
+                res_pipe::write(out_data);
                 pack_cnt = 0;
             } else {
                 pack_cnt++;
