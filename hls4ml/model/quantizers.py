@@ -1,8 +1,7 @@
 """
-Quantizer for the Quant node, after scale and zeropoint hafe been extracted
-(unless scale is a power of 2, if doing special case po2)
-
-This is based on the sample implementation in finn-base
+This module contains definitions of hls4ml quantizer classes. These classes apply a quantization function on the
+provided data. The quantization function may be defined locally or taken from a library in which case the classes
+behave like simple wrappers.
 """
 
 import numpy as np
