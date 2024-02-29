@@ -13,6 +13,7 @@ down as needed so that we can do integer or fixed-point calculations. When the Q
 and Linear nodes are immediately merged into the Constant.
 
 """
+
 import math  # prefer to use math.ceil for scalar values
 
 import numpy as np
@@ -67,7 +68,7 @@ class QuantConstantParameters(OptimizerPass):
                 bitwidth = bitwidth_node.get_attr('value')
                 if bitwidth.size != 1:
                     raise RuntimeError('Only scalar bitwidth values are supporeted by the Quant node')
-                node.set_attr('bitwidth', bitwidth)
+                node.set_attr('bitwidth', bitwidth[0])
                 node.inputs[3] = ''
                 model.remove_node(bitwidth_node, rewire=False)
 
