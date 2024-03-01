@@ -108,6 +108,7 @@ catapult_solution:
       #   code Catapult.code-workspace
       #--------------------------------------------------------
       #    Start of HLS script
+      set design_top myproject
       solution file add [file join $sfd firmware/myproject.cpp]
       solution file add [file join $sfd myproject_test.cpp] -exclude true
       # Parse parameters.h to determine config info to control directives/pragmas

@@ -61,8 +61,8 @@ class CatapultWriter(Writer):
         h_file.write("\n#endif\n")
         h_file.close()
 
-    def write_project_dir(self, model):
-        """Write the base project directory
+    def write_output_dir(self, model):
+        """Write the base output directory
 
         Args:
             model (ModelGraph): the hls4ml model.
@@ -759,6 +759,7 @@ class CatapultWriter(Writer):
         fout = open(dstpath, 'w')
         for line in f.readlines():
             line = line.replace('myproject', model.config.get_project_name())
+            line = line.replace('CATAPULT_DIR', model.config.get_project_dir())
             if '#hls-fpga-machine-learning insert techlibs' in line:
                 if model.config.get_config_value('Part') is not None:
                     line = 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
@@ -767,7 +768,11 @@ class CatapultWriter(Writer):
             elif '#hls-fpga-machine-learning insert invoke_args' in line:
                 tb_in_file = model.config.get_config_value('InputData')
                 tb_out_file = model.config.get_config_value('OutputPredictions')
-                invoke_args = f'$sfd/firmware/weights $sfd/tb_data/{tb_in_file} $sfd/tb_data/{tb_out_file}'
+                invoke_args = f'$sfd/firmware/weights'
+                if tb_in_file is not None:
+                    invoke_args = invoke_args + ' $sfd/tb_data/{tb_in_file}'
+                if tb_out_file is not None:
+                    invoke_args = invoke_args + ' $sfd/tb_data/{tb_out_file}'
                 line = f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"\n'
             elif 'set hls_clock_period 5' in line:
                 line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
@@ -788,6 +793,7 @@ class CatapultWriter(Writer):
         fout = open(dstpath, 'w')
         for line in f.readlines():
             line = line.replace('myproject', model.config.get_project_name())
+            line = line.replace('CATAPULT_DIR', model.config.get_project_dir())
             indent = line[: len(line) - len(line.lstrip())]
             if '#hls-fpga-machine-learning insert techlibs' in line:
                 if model.config.get_config_value('Part') is not None:
@@ -797,7 +803,11 @@ class CatapultWriter(Writer):
             elif '#hls-fpga-machine-learning insert invoke_args' in line:
                 tb_in_file = model.config.get_config_value('InputData')
                 tb_out_file = model.config.get_config_value('OutputPredictions')
-                invoke_args = f'$sfd/firmware/weights $sfd/tb_data/{tb_in_file} $sfd/tb_data/{tb_out_file}'
+                invoke_args = f'$sfd/firmware/weights'
+                if tb_in_file is not None:
+                    invoke_args = invoke_args + ' $sfd/tb_data/{tb_in_file}'
+                if tb_out_file is not None:
+                    invoke_args = invoke_args + ' $sfd/tb_data/{tb_out_file}'
                 line = indent + f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"\n'
             elif 'set hls_clock_period 5' in line:
                 line = indent + 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
@@ -846,19 +856,19 @@ class CatapultWriter(Writer):
         print("Copying NNET files to local firmware directory")
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        for pkg in ('ac_types', 'ac_math', 'ac_simutils'):
+        for pkg in ('ac_types','ac_math','ac_simutils'):
             dstpath = f'{model.config.get_output_dir()}/firmware/{pkg}/'
 
             # backward compatibility, look in root dir
-            srcpath = os.path.join(filedir, '../../' + pkg + '/')
+            srcpath = os.path.join(filedir, '../../'+pkg+'/')
             if not os.path.exists(srcpath):
                 # look next in Catapult-specific templates
-                srcpath = os.path.join(filedir, '../templates/catapult/' + pkg + '/')
+                srcpath = os.path.join(filedir, '../templates/catapult/'+pkg+'/')
 
             if os.path.exists(srcpath):
                 if os.path.exists(dstpath):
                     rmtree(dstpath)
-                print("... copying AC " + pkg + " headers from " + srcpath)
+                print("... copying AC "+pkg+" headers from "+srcpath)
                 copytree(srcpath, dstpath)
             else:
                 print("... skipping copy of " + pkg + " headers - assumed to located in Catapult install tree")
@@ -928,7 +938,7 @@ class CatapultWriter(Writer):
 
     def write_hls(self, model):
         print('Writing HLS project')
-        self.write_project_dir(model)
+        self.write_output_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
         self.write_weights(model)

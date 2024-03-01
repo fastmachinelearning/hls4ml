@@ -98,10 +98,10 @@ options set Input/SearchPath {$MGC_HOME/shared/include/nnet_utils} -append
 options set ComponentLibs/SearchPath {$MGC_HOME/shared/pkgs/ccs_hls4ml} -append
 
 if {$opt(reset)} {
-  project load myproject_prj.ccs
+  project load CATAPULT_DIR.ccs
   go new
 } else {
-  project new -name myproject_prj
+  project new -name CATAPULT_DIR
 }
 
 #--------------------------------------------------------
@@ -144,15 +144,16 @@ flow package require /SCVerify
 
 #--------------------------------------------------------
 #    Start of HLS script
-solution file add firmware/myproject.cpp
-solution file add myproject_test.cpp -exclude true
+set design_top myproject
+solution file add $sfd/firmware/myproject.cpp
+solution file add $sfd/myproject_test.cpp -exclude true
 
 # Parse parameters.h to determine config info to control directives/pragmas
 set IOType io_stream
-if { ![file exists firmware/parameters.h] } {
+if { ![file exists $sfd/firmware/parameters.h] } {
   logfile message "Could not locate firmware/parameters.h. Unable to determine network configuration.\n" warning
 } else {
-  set pf [open "firmware/parameters.h" "r"]
+  set pf [open "$sfd/firmware/parameters.h" "r"]
   while {![eof $pf]} {
     gets $pf line
     if { [string match {*io_type = nnet::io_stream*} $line] } {

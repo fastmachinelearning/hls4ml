@@ -39,7 +39,9 @@ def _parse_build_script(script_path):
         for line in f.readlines():
             if 'project new' in line:
                 prj_dir = line.split()[-1]
-                top_func_name = line.split()[-1].strip('_prj')
+            if 'set design_top' in line:
+                top_func_name = line.split()[-1]
+
 
     return prj_dir, top_func_name
 

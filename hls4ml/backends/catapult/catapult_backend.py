@@ -234,10 +234,11 @@ class CatapultBackend(FPGABackend):
                 raise Exception('Catapult HLS installation not found. Make sure "catapult" is on PATH.')
 
         curr_dir = os.getcwd()
+        # this execution moves into the hls4ml-generated "output_dir" and runs the build_prj.tcl script.
         os.chdir(model.config.get_output_dir())
-        ccs_args = f'"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation}"'
-        ccs_args += f'" export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame}"'
-        ccs_args += f'" sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog} bup={bup}"'
+        ccs_args = f'"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation}'
+        ccs_args += f' export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame}'
+        ccs_args += f' sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog} bup={bup}"'
         ccs_invoke = catapult_exe + ' -product ultra -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
         print(ccs_invoke)
         os.system(ccs_invoke)
