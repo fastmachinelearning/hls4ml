@@ -93,7 +93,7 @@ def test_tfc_2w2a(tfc_2w2a_model, backend):
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
     # Convert QONNX model, compile, and run inference
-    config = hls4ml.utils.config_from_onnx_model(model)
+    config = hls4ml.utils.config_from_onnx_model(model, backend=backend)
     # Some hand-derived config
     config['LayerName'] = {}
     config['LayerName']['global_in'] = {'Precision': 'ap_fixed<16,2>'}
@@ -116,7 +116,7 @@ def test_cnv_2w2a(cnv_2w2a_model, backend):
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
     # Convert QONNX model, compile, and run inference
-    config = hls4ml.utils.config_from_onnx_model(model, default_precision='fixed<32,16>')
+    config = hls4ml.utils.config_from_onnx_model(model, backend=backend, default_precision='fixed<32,16>')
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
         output_dir=str(test_root_path / f'hls4mlprj_qonnx_cnv-2w2a_{backend}'),
@@ -142,7 +142,7 @@ def test_jet_tagging(jettagging_model, backend):
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
     # Convert QONNX model, compile, and run inference
-    config = hls4ml.utils.config_from_onnx_model(model)
+    config = hls4ml.utils.config_from_onnx_model(model, backend=backend)
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model, output_dir=str(test_root_path / f'hls4mlprj_qonnx_jettag_{backend}'), backend=backend, hls_config=config

@@ -162,25 +162,22 @@ def get_out_layer_name(graph):
     return [node.name for node in graph.node if node.output[0] in output_index_list]
 
 
-def onnx_to_hls(config):
-    """Convert onnx model to hls model from configuration.
+def parse_onnx_model(onnx_model):
+    """Parses the onnx model, both for configuration building and general processing.
 
     Args:
-        config (dict): ONNX configuration from yaml file or passed through API.
+        onnx_model: an ONNX model object.
 
     Raises:
         Exception: Raised if an unsupported operation is found in the ONNX model.
 
     Returns:
-        ModelGraph: hls4ml model object
+        layer_list (list):  The onnx layers
+        input_layers (list):  The input layers
+        output_layers (list):  The output layers
     """
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
-
-    # Extract model architecture
-    print('Interpreting Model ...')
-
-    onnx_model = onnx.load(config['OnnxModel']) if isinstance(config['OnnxModel'], str) else config['OnnxModel']
 
     # We don't infer the shapes because the qonnx package preprocessing does it.
 
@@ -256,6 +253,29 @@ def onnx_to_hls(config):
         sanitize_layer_name(layer)
         print(f"Layer name: {layer['name']}, layer type: {layer['class_name']}, current shape: {input_shapes}")
         layer_list.append(layer)
+
+    return layer_list, input_layers, output_layers
+
+
+def onnx_to_hls(config):
+    """Convert onnx model to hls model from configuration.
+
+    Args:
+        config (dict): ONNX configuration from yaml file or passed through API.
+
+    Raises:
+        Exception: Raised if an unsupported operation is found in the ONNX model.
+
+    Returns:
+        ModelGraph: hls4ml model object
+    """
+
+    # Extract model architecture
+    print('Interpreting Model ...')
+
+    onnx_model = onnx.load(config['OnnxModel']) if isinstance(config['OnnxModel'], str) else config['OnnxModel']
+
+    layer_list, input_layers, output_layers = parse_onnx_model(onnx_model)
 
     #################
     # Generate HLS
