@@ -66,6 +66,10 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         return []
 
+    def _get_default_precision(self, node):
+        model_config = node.model.config
+        return model_config.backend.convert_precision_string(model_config.model_precision['default'])
+
     def _infer_default_type(self, node, type_name):
         model_config = node.model.config
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
@@ -324,11 +328,12 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                 + 1
             )
             new_width = new_int + max(input_1.fractional, input_2.fractional)
-
+            out_precision = FixedPrecisionType(new_width, new_int, new_signed)
         elif op == 'multiply':
             new_signed = input_1.signed or input_2.signed
             new_int = input_1.integer + input_2.integer
             new_width = input_1.width + input_2.width
+            out_precision = FixedPrecisionType(new_width, new_int, new_signed)
         elif op in ('maximum', 'minimum'):
             new_signed = input_1.signed or input_2.signed
 
@@ -343,8 +348,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
             new_width = max(input_1.fractional, input_2.fractional) + max(input_1_integer, input_2_integer)
             new_int = max(input_1_integer, input_2_integer)
+            out_precision = FixedPrecisionType(new_width, new_int, new_signed)
+        else:
+            print(f'Warning: not propagating weights for type {op}')
+            out_precision = self._get_default_precision(node)
 
-        out_precision = FixedPrecisionType(new_width, new_int, new_signed)
         node.types['result_t'].name = node.name + '_result_t'
         node.types['result_t'].precision = out_precision
 

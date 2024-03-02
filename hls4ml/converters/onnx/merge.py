@@ -2,13 +2,25 @@ from hls4ml.converters.onnx_to_hls import get_onnx_attribute, onnx_handler
 
 merge_layers = ['Add', 'Sub', 'Mul', 'Div', 'Average', 'Max', 'Min', 'Concat', 'Sum']
 
+op_map = {
+    'Add': 'add',
+    'Sub': 'subtract',
+    'Mul': 'multiply',
+    'Div': 'divide',
+    'Average': 'average',
+    'Max': 'maximum',
+    'Min': 'minimum',
+    'Sum': 'add',
+    'Concat': 'concat',
+}
+
 
 @onnx_handler(*merge_layers)
 def parse_merge_layer(node, input_names, input_shapes, graph):
     layer = {}
     layer['class_name'] = node.op_type
     layer['name'] = node.name
-    layer['op'] = layer['class_name'].lower()
+    layer['op'] = op_map[node.op_type]
     layer['inputs'] = input_names
     layer['outputs'] = list(node.output)
 

@@ -35,19 +35,19 @@ class MergeTwoConstants(OptimizerPass):
         val1 = const_node1.attributes['value']
 
         op = node.attributes['op']
-        if op in ('add', 'sum'):
+        if op == 'add':
             new_val = val0 + val1
-        elif op == 'sub':
+        elif op == 'subtract':
             new_val = val0 - val1
-        elif op == 'mul':
+        elif op == 'multiply':
             new_val = val0 * val1
-        elif op == 'div':
+        elif op == 'divide':
             new_val = val0 / val1
         elif op == 'average':
             new_val = np.mean(np.array([val0, val1]), axis=0)
-        elif op == 'max':
+        elif op == 'maximum':
             new_val = np.maximum(val0, val1)
-        elif op == 'min':
+        elif op == 'minimum':
             new_val = np.minimum(val0, val1)
         else:
             raise RuntimeError(f'Unexpected op_type: {op}')
@@ -76,7 +76,7 @@ class MergeToApplyAlpha(OptimizerPass):
     def match(self, node):
         is_match = (
             isinstance(node, Merge)
-            and node.attributes['op'] in ('add', 'sum', 'sub', 'mul')  # Div is separate
+            and node.attributes['op'] in ('add', 'subtract', 'multiply')  # Div is separate
             and (
                 isinstance(node.get_input_node(node.inputs[0]), Constant)
                 != isinstance(node.get_input_node(node.inputs[1]), Constant)
@@ -108,12 +108,12 @@ class MergeToApplyAlpha(OptimizerPass):
         bias_quantizer = None
 
         op = node.attributes['op']
-        if op in ('add', 'sum'):
+        if op == 'add':
             scale = np.array(1)
             scale_precision = IntegerPrecisionType(1, False)
             bias = const_node.attributes['value']
             bias_quantizer = const_node.get_attr('quantizer')
-        elif op == 'sub':
+        elif op == 'subtract':
             bias_quantizer = const_node.get_attr('quantizer')
             if node1const:
                 scale = np.array(1)
@@ -139,7 +139,7 @@ class MergeToApplyAlpha(OptimizerPass):
                 scale_precision = IntegerPrecisionType(2, True)
                 bias = const_node.attributes['value']
 
-        elif op == 'mul':
+        elif op == 'multiply':
             scale = const_node.attributes['value']
             scale_quantizer = const_node.get_attr('quantizer')
             bias = np.array(0)
@@ -187,7 +187,7 @@ class MergeToApplyAlphaDiv(OptimizerPass):
     def match(self, node):
         is_match = (
             isinstance(node, Merge)
-            and node.attributes['op'] == 'div'
+            and node.attributes['op'] == 'divide'
             and isinstance(node.get_input_node(node.inputs[1]), Constant)
         )  # only second can be const
 
