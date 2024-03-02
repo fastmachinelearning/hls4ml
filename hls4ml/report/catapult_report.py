@@ -42,7 +42,6 @@ def _parse_build_script(script_path):
             if 'set design_top' in line:
                 top_func_name = line.split()[-1]
 
-
     return prj_dir, top_func_name
 
 

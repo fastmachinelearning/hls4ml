@@ -894,7 +894,7 @@ class CatapultWriter(Writer):
         f = open(path, 'w')
 
         for line in contents:
-            if '//hls4ml insert code' in line:
+            if '// hls4ml insert code' in line:
                 newline = line
                 for layer in model.get_layers():
                     for generated_code in layer.code.values():

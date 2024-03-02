@@ -12,6 +12,7 @@ array set opt {
   export     0
   vsynth     0
   bitfile    0
+  fifo_opt   0
   ran_frame  2
   sw_opt     0
   power      0

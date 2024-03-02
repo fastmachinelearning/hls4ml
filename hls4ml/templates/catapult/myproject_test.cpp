@@ -55,19 +55,21 @@ CCS_MAIN(int argc, char *argv[]) {
     std::ifstream fpr;
     bool use_random = false;
     if (argc == 2) {
-      std::cout << "No testbench files provided - Using random input data" << std::endl;
-      use_random = true;
+        std::cout << "No testbench files provided - Using random input data" << std::endl;
+        use_random = true;
     } else {
-      tb_in = argv[2];
-      tb_out = argv[3];
-      std::cout << "  Test Feature Data: " << tb_in << std::endl;
-      std::cout << "  Test Predictions : " << tb_out << std::endl;
+        tb_in = argv[2];
+        tb_out = argv[3];
+        std::cout << "  Test Feature Data: " << tb_in << std::endl;
+        std::cout << "  Test Predictions : " << tb_out << std::endl;
 
-      // load input data from text file
-      fin.open(tb_in);
-      // load predictions from text file
-      fpr.open(tb_out);
-      if (!fin.is_open() || !fpr.is_open()) { use_random = true; }
+        // load input data from text file
+        fin.open(tb_in);
+        // load predictions from text file
+        fpr.open(tb_out);
+        if (!fin.is_open() || !fpr.is_open()) {
+            use_random = true;
+        }
     }
 
     std::cout << "Number of Frames Passed from the tcl= " << RANDOM_FRAMES << std::endl;
@@ -89,7 +91,7 @@ CCS_MAIN(int argc, char *argv[]) {
     std::string pline;
     int e = 0;
 
-    if (! use_random ) {
+    if (!use_random) {
         while (std::getline(fin, iline) && std::getline(fpr, pline)) {
             if (e % CHECKPOINT == 0)
                 std::cout << "Processing input " << e << std::endl;
@@ -125,10 +127,14 @@ CCS_MAIN(int argc, char *argv[]) {
 
             // hls-fpga-machine-learning insert tb-output
         }
-        if (fin.is_open()) { fin.close(); }
-        if (fpr.is_open()) { fpr.close(); }
+        if (fin.is_open()) {
+            fin.close();
+        }
+        if (fpr.is_open()) {
+            fpr.close();
+        }
     } else {
-        std::cout << "INFO: Unable to open input/predictions file, using so feeding random values" << std::endl;
+        std::cout << "INFO: Unable to open input/predictions file(s) so feeding random values" << std::endl;
 
         if (RANDOM_FRAMES > 0) {
             for (unsigned int k = 0; k < RANDOM_FRAMES; k++) {
