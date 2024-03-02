@@ -64,7 +64,7 @@ class HLSConfig:
         if self.get_config_value('ProjectDir') is not None:
             return self.get_config_value('ProjectDir')
         else:
-            return self.get_config_value('ProjectName')+'_prj'
+            return self.get_config_value('ProjectName') + '_prj'
 
     def get_output_dir(self):
         return self.get_config_value('OutputDir')
