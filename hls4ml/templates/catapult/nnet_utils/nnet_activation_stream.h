@@ -32,8 +32,7 @@ namespace nnet {
 // *************************************************
 // Adding this to work around problem with Catapult and SR model where the output channel appears to be inout
 #pragma hls_design block
-template <class data_T, class res_T, typename CONFIG_T>
-void linear(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void linear(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 #pragma hls_pipeline_init_interval 1
 LinearActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
@@ -58,8 +57,7 @@ LinearActLoop:
 //       RELU Activation
 // *************************************************
 #pragma hls_design block
-template <class data_T, class res_T, typename CONFIG_T>
-void relu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void relu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 #pragma hls_pipeline_init_interval 1
 ReLUActLoop:
     for (unsigned int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
@@ -92,8 +90,7 @@ ReLUActLoop:
 // *************************************************
 #ifndef USE_AC_MATH
 
-template <class data_T, class res_T, typename CONFIG_T>
-void sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -135,8 +132,7 @@ SigmoidActLoop:
 
 #else
 
-template <class data_T, class res_T, typename CONFIG_T>
-void sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 SigmoidActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         data_T in_data = data.read();
@@ -399,8 +395,7 @@ SoftmaxInitLoop:
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     assert(CONFIG_T::axis == -1);
 
     switch (CONFIG_T::implementation) {
@@ -419,8 +414,7 @@ void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 #else
 
 #pragma hls_design block
-template <class data_T, class res_T, typename CONFIG_T>
-void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     typename data_T::value_type data_cache[data_T::size];
     typename res_T::value_type res_cache[res_T::size];
 #pragma hls_pipeline_init_interval 1
@@ -456,8 +450,7 @@ SoftmaxInitLoop:
 
 #ifndef USE_AC_MATH
 
-template <class data_T, class res_T, typename CONFIG_T>
-void tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -499,8 +492,7 @@ TanHActLoop:
 
 #else
 
-template <class data_T, class res_T, typename CONFIG_T>
-void tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 #pragma hls_pipeline_init_interval 1
 TanHActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
@@ -523,8 +515,7 @@ TanHActLoop:
 //       Hard sigmoid Activation
 // *************************************************
 
-template <class data_T, class res_T, typename CONFIG_T>
-void hard_sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void hard_sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     typename data_T::value_type slope = (typename data_T::value_type)0.2;
     typename data_T::value_type shift = (typename data_T::value_type)0.5;
 
@@ -558,8 +549,7 @@ HardSigmoidActLoop:
 // *************************************************
 
 #pragma hls_design block
-template <class data_T, class res_T, typename CONFIG_T>
-void hard_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void hard_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 // typename data_T::value_type slope = (typename data_T::value_type) 0.2;
 // typename data_T::value_type shift = (typename data_T::value_type) 0.5;
 
@@ -651,8 +641,7 @@ ThresholdedReLUActLoop:
 
 #ifndef USE_AC_MATH
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softplus(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softplus(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -693,8 +682,7 @@ SoftplusActLoop:
 
 #else
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softplus(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softplus(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 SoftplusActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         data_T in_data = data.read();
@@ -716,8 +704,7 @@ SoftplusActLoop:
 
 #ifndef USE_AC_MATH
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softsign(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softsign(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -758,8 +745,7 @@ SoftsignActLoop:
 
 #else
 
-template <class data_T, class res_T, typename CONFIG_T>
-void softsign(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void softsign(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 SoftsignActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         data_T in_data = data.read();
@@ -850,8 +836,7 @@ EluActLoop:
 
 #ifndef USE_AC_MATH
 
-template <class data_T, class res_T, typename CONFIG_T>
-void selu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void selu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -895,8 +880,7 @@ SeluActLoop:
 
 #else
 
-template <class data_T, class res_T, typename CONFIG_T>
-void selu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void selu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 SeluActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         data_T in_data = data.read();
@@ -943,8 +927,7 @@ PReLUActLoop:
 // *************************************************
 //       Binary TanH Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void binary_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void binary_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 #pragma hls_pipeline_init_interval 1
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
@@ -970,8 +953,7 @@ PReLUActLoop:
 // *************************************************
 //       Ternary TanH Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void ternary_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void ternary_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 #pragma hls_pipeline_init_interval 1
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {

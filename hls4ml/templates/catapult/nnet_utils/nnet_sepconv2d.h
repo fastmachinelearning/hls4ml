@@ -20,12 +20,12 @@ void depthwise_conv_2d_cl(
     const int out_height = CONFIG_T::out_height;
     const int out_width = CONFIG_T::out_width;
 
-//    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
-//    #pragma hls_pipeline_init_interval ce_reuse_factor
-//    #pragma hls_preserve_loop yes
-//    #pragma hls_unroll //yet to finalize on this
+    //    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    //    #pragma hls_pipeline_init_interval ce_reuse_factor
+    //    #pragma hls_preserve_loop yes
+    //    #pragma hls_unroll //yet to finalize on this
 
-//    do {
+    //    do {
 
     //#pragma HLS ARRAY_PARTITION variable=res complete dim=0
     //#pragma HLS ARRAY_PARTITION variable=depthwise_biases complete dim=0
@@ -59,7 +59,7 @@ void depthwise_conv_2d_cl(
             }
         }
     }
-//    } while (false);
+    //    } while (false);
 }
 
 template <class data_T, class dw_res_T, class res_T, typename CONFIG_T>
