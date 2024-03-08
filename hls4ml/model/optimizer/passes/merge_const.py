@@ -5,8 +5,6 @@ from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import QuantNodeQuantizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType
 
-_base_attributes = ('Trace', 'reuse_factor', 'n_in')
-
 
 # This should generally not happen because of qonnx cleaning
 class MergeTwoConstants(OptimizerPass):
@@ -56,11 +54,9 @@ class MergeTwoConstants(OptimizerPass):
         const_node0.set_attr('quantizer', quantizer)  # overwrite the quantizer
         if quantizer:
             const_node0.set_attr('quantizer', quantizer)
-
+            const_node0.types['result_t'] = quantizer.hls_type
+            const_node0.get_output_variable().type.precision = quantizer.hls_type
         const_node0.set_attr('value', new_val)
-
-        # reinitialize (which also runs quantization if quantizer exists)
-        const_node0.initialize()
 
         model.remove_node(const_node1, rewire=False)
 
@@ -151,23 +147,26 @@ class MergeToApplyAlpha(OptimizerPass):
         if bias.shape != tuple(input_shape) and np.squeeze(bias).shape != tuple(input_shape):
             bias = np.broadcast_to(bias, input_shape)
 
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update(
-            {
-                'scale_data': scale,
-                'bias_data': bias,
-                'n_in': n_in,
-                'n_out': n_in,
-                'n_filt': -1,
-                'scale_precision': scale_precision,
-                'scale_quantizer': scale_quantizer,
-                'bias_precision': bias_precision,
-                'bias_quantizer': bias_quantizer,
-            }
-        )
+        attributes = {
+            'scale_data': scale,
+            'bias_data': bias,
+            'n_in': n_in,
+            'n_out': n_in,
+            'n_filt': -1,
+            'scale_precision': scale_precision,
+            'scale_quantizer': scale_quantizer,
+            'bias_precision': bias_precision,
+            'bias_quantizer': bias_quantizer,
+        }
+
+        # get the configuration name
+        config = model.config.get_layer_config(node)
+        new_name = f'bn_{node.name}'
+        model.config.set_name_config(new_name, config)
+        model.config.parse_name_config(new_name, config)
 
         aa_layer = model.make_node(
-            ApplyAlpha, f'bn_{node.name}', attributes, [node.inputs[input_node_idx]], [x for x in node.outputs]
+            ApplyAlpha, new_name, attributes, [node.inputs[input_node_idx]], [x for x in node.outputs]
         )
 
         model.remove_node(const_node, rewire=False)
@@ -222,20 +221,23 @@ class MergeToApplyAlphaDiv(OptimizerPass):
         if bias.shape != tuple(input_shape) and np.squeeze(bias).shape != tuple(input_shape):
             bias = np.broadcast_to(bias, input_shape)
 
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update(
-            {
-                'scale_data': scale,
-                'bias_data': bias,
-                'scale_quantizer': scale_quantizer,
-                'bias_precision': bias_precision,
-                'n_in': n_in,
-                'n_out': n_in,
-                'n_filt': -1,
-            }
-        )
+        attributes = {
+            'scale_data': scale,
+            'bias_data': bias,
+            'scale_quantizer': scale_quantizer,
+            'bias_precision': bias_precision,
+            'n_in': n_in,
+            'n_out': n_in,
+            'n_filt': -1,
+        }
 
-        bn_layer = model.make_node(ApplyAlpha, f'bn_{node.name}', attributes, [node.inputs[0]], [x for x in node.outputs])
+        # get the configuration name
+        config = model.config.get_layer_config(node)
+        new_name = f'bn_{node.name}'
+        model.config.set_name_config(new_name, config)
+        model.config.parse_name_config(new_name, config)
+
+        bn_layer = model.make_node(ApplyAlpha, new_name, attributes, [node.inputs[0]], [x for x in node.outputs])
 
         model.remove_node(const_node, rewire=False)
         del node.inputs[1]

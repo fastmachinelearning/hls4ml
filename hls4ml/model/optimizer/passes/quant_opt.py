@@ -14,6 +14,7 @@ and Linear nodes are immediately merged into the Constant.
 
 """
 
+import copy
 import math  # prefer to use math.ceil for scalar values
 
 import numpy as np
@@ -24,8 +25,6 @@ from hls4ml.model.quantizers import QuantNodeQuantizer
 from hls4ml.model.types import FixedPrecisionType
 
 _ALSO_MATCH_PO2 = True
-
-_base_attributes = ('Trace', 'reuse_factor')
 
 
 class QuantConstantParameters(OptimizerPass):
@@ -131,11 +130,17 @@ class QuantToActivation(OptimizerPass):
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
 
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update({'activation': 'linear', 'quantizer': quantizer})
+        attributes = {'activation': 'linear', 'quantizer': quantizer}
 
-        new_node = model.make_node(Activation, f'{node.name}_act', attributes, [node.inputs[0]], [x for x in node.outputs])
-        new_node.get_output_variable().type.precision = precision
+        # update the configuration
+        config = model.config.get_layer_config(node)
+        prec_config = config.setdefault('Precision', {})
+        prec_config['result'] = str(precision)
+        new_name = f'{node.name}_act'
+        model.config.set_name_config(new_name, config)
+        model.config.parse_name_config(new_name, config)
+
+        new_node = model.make_node(Activation, new_name, attributes, [node.inputs[0]], [x for x in node.outputs])
         model.replace_node(node, new_node)
 
         return True
@@ -189,7 +194,10 @@ class FuseQuantWithConstant(OptimizerPass):
 
         const_node = node.get_input_node(node.inputs[0])
         const_node.set_attr('quantizer', quantizer)
+        const_node.set_attr('result_t', precision)
         const_node.get_output_variable().type.precision = precision
+
+        # Should we update the configuration to reflect the new precision? I don't think it's necessary
 
         # remove the Quant node
         model.remove_node(node, rewire=True)
@@ -228,11 +236,18 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, bitwidth, signed, narrow, rounding_mode)
 
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update({'activation': 'linear', 'quantizer': quantizer})
+        activation_attributes = {'activation': 'linear', 'quantizer': quantizer}
 
-        new_node = model.make_node(Activation, f'{node.name}_act', attributes, [node.inputs[0]], [x for x in node.outputs])
-        new_node.get_output_variable().type.precision = precision
+        # update the configuration
+        config = model.config.get_layer_config(node)
+        act_config = copy.deepcopy(config)
+        prec_config = act_config.setdefault('Precision', {})
+        prec_config['result'] = str(precision)
+        act_name = f'{node.name}_act'
+        model.config.set_name_config(act_name, act_config)
+        model.config.parse_name_config(act_name, act_config)
+
+        new_node = model.make_node(Activation, act_name, activation_attributes, [node.inputs[0]], [x for x in node.outputs])
         model.replace_node(node, new_node)
 
         # but now add the ApplyAlhpas before and after
@@ -240,16 +255,25 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         scale = node.get_attr('scale')
         bias = node.get_attr('zeropt')
 
-        attributes_scale = {k: node.attributes.get(k, None) for k in _base_attributes}
+        attributes_scale = {}
+        attributes_rescale = {}
 
-        attributes_rescale = {k: node.attributes.get(k, None) for k in _base_attributes}
+        scale_config = copy.deepcopy(config)
+        scale_name = f'{node.name}_scale'
+        model.config.set_name_config(scale_name, scale_config)
+        model.config.parse_name_config(scale_name, scale_config)
+
+        rescale_config = config  # no need to deep copy the last
+        rescale_name = f'{node.name}_rescale'
+        model.config.set_name_config(rescale_name, rescale_config)
+        model.config.parse_name_config(rescale_name, rescale_config)
 
         firstscale = 1 / scale
         firstbias = bias
         attributes_scale['scale_data'] = firstscale
         attributes_scale['bias_data'] = firstbias
 
-        scale_node = model.make_node(ApplyAlpha, node.name + '_scale', attributes_scale, [node.inputs[0]])
+        scale_node = model.make_node(ApplyAlpha, scale_name, attributes_scale, [node.inputs[0]])
         model.insert_node(scale_node)
 
         rescale = scale
@@ -257,7 +281,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         attributes_rescale['scale_data'] = rescale
         attributes_rescale['bias_data'] = rebias
 
-        rescale_node = model.make_node(ApplyAlpha, node.name + '_rescale', attributes_rescale, [new_node.outputs[0]])
+        rescale_node = model.make_node(ApplyAlpha, rescale_name, attributes_rescale, [new_node.outputs[0]])
         model.insert_node(rescale_node)
 
         return True
@@ -305,10 +329,15 @@ class ConstQuantToConstAlpha(OptimizerPass):
         const_node.set_attr('value', new_val)
         const_node.set_attr('quantizer', quantizer)
 
-        # reinitialize (which also runs quantization if quantizer exists)
-        const_node.initialize()
+        const_node.types['result_t'].precision = precision
+        const_node.get_output_variable().type.precision = precision
 
-        attributes_rescale = {k: node.attributes.get(k, None) for k in _base_attributes}
+        attributes_rescale = {}
+
+        rescale_config = copy.deepcopy(model.config.get_layer_config(node))
+        rescale_name = f'{node.name}_rescale'
+        model.config.set_name_config(rescale_name, rescale_config)
+        model.config.parse_name_config(rescale_name, rescale_config)
 
         rescale = scale
         rebias = -bias * scale
@@ -316,7 +345,7 @@ class ConstQuantToConstAlpha(OptimizerPass):
         attributes_rescale['bias_data'] = rebias
 
         rescale_node = model.make_node(
-            ApplyAlpha, node.name + '_rescale', attributes_rescale, [x for x in node.inputs], [x for x in node.outputs]
+            ApplyAlpha, rescale_name, attributes_rescale, [x for x in node.inputs], [x for x in node.outputs]
         )
         model.replace_node(node, rescale_node)
 

@@ -2,13 +2,9 @@ import numpy as np
 
 from hls4ml.model.layers import Constant, Conv, Conv1D, Conv2D
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.quantizers import QuantNodeQuantizer
-from hls4ml.model.types import IntegerPrecisionType
 
 # these are attributes to copy
 _base_attributes = (
-    'Trace',
-    'reuse_factor',
     'in_width',
     'out_width',
     'n_chan',
@@ -25,7 +21,6 @@ _base_attributes = (
     'filt_height',
     'stride_height',
     'dilation_height',
-    'strategy',
     'data_format',
 )
 
@@ -69,16 +64,19 @@ class ConvToConvXD(OptimizerPass):
         if bias_node:
             attributes['bias_data'] = bias_node.attributes['value']
             attributes['bias_quantizer'] = bias_node.get_attr('quantizer')
-            attributes['have_bias'] = True
+            attributes['use_bias'] = True
         else:
             attributes['bias_data'] = np.zeros(attributes['n_filt'])
-            attributes['bias_quantizer'] = QuantNodeQuantizer(IntegerPrecisionType(1, False))
-            attributes['have_bias'] = False
+            attributes['use_bias'] = False
+
+        # get the configuration name
+        config = model.config.get_layer_config(node)
+        new_name = f'{newtype.__name__}_{node.name}'
+        model.config.set_name_config(new_name, config)
+        model.config.parse_name_config(new_name, config)
 
         # making new node
-        new_node = model.make_node(
-            newtype, f'{newtype.__name__}_{node.name}', attributes, [node.inputs[0]], [x for x in node.outputs]
-        )
+        new_node = model.make_node(newtype, new_name, attributes, [node.inputs[0]], [x for x in node.outputs])
 
         # removing and replacing old nodes
         if bias_node:

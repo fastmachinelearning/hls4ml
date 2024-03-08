@@ -15,6 +15,9 @@ class EliminateLinearActivation(OptimizerPass):
         return True
 
 
+_safe_parents = (Dense, Conv1D, Conv2D, BatchNormalization, Activation)
+
+
 class MergeLinearActivation(OptimizerPass):
     '''
     For many objects it's safe to change the output precision independently of the calculation.
@@ -26,7 +29,7 @@ class MergeLinearActivation(OptimizerPass):
         '''
         if isinstance(node, Activation) and node.get_attr('activation') == 'linear':
             parent = node.get_input_node(node.inputs[0])
-            safe_parent = isinstance(parent, (Dense, Conv1D, Conv2D, BatchNormalization))
+            safe_parent = isinstance(parent, _safe_parents)
             return safe_parent and isinstance(parent.get_output_variable().type.precision, UnspecifiedPrecisionType)
         else:
             return False
@@ -35,6 +38,7 @@ class MergeLinearActivation(OptimizerPass):
         prev_node = node.get_input_node(node.inputs[0])
         quantizer = node.get_attr("quantizer")
         prev_node.set_attr("quantizer", quantizer)
-        prev_node.update_output_precision(quantizer.hls_type)
+        prev_node.types['result_t'] = quantizer.hls_type
+        prev_node.get_output_variable().type.precision = quantizer.hls_type
         model.remove_node(node)
         return True

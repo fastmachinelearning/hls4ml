@@ -2,10 +2,6 @@ import numpy as np
 
 from hls4ml.model.layers import Constant, Dense, MatMul
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.quantizers import QuantNodeQuantizer
-from hls4ml.model.types import IntegerPrecisionType
-
-_base_attributes = ('Trace', 'reuse_factor', 'weight', 'weight_t', 'bias', 'bias_t')
 
 
 class MatmulConstToDense(OptimizerPass):
@@ -30,27 +26,29 @@ class MatmulConstToDense(OptimizerPass):
         weight_data = const_node.attributes['value']
         weight_quantizer = const_node.get_attr('quantizer')
 
+        # get the configuration name
+        config = model.config.get_layer_config(node)
+        new_name = f'Dense_{node.name}'
+        model.config.set_name_config(new_name, config)
+        model.config.parse_name_config(new_name, config)
+
         in_shape = other_var.shape
         n_in = np.prod(in_shape)
         out_shape = list(in_shape[:-1]) + [weight_data.shape[-1]]
         n_out = np.prod(out_shape)
 
         # creating the attributes
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update(
-            {
-                'weight_data': weight_data,
-                'weight_quantizer': weight_quantizer,
-                'bias_data': np.zeros(out_shape),
-                'bias_quantizer': QuantNodeQuantizer(IntegerPrecisionType(1, False)),
-                'have_bias': False,
-                'n_in': n_in,
-                'n_out': n_out,
-            }
-        )
+        attributes = {
+            'weight_data': weight_data,
+            'weight_quantizer': weight_quantizer,
+            'bias_data': np.zeros(out_shape),
+            'use_bias': False,
+            'n_in': n_in,
+            'n_out': n_out,
+        }
 
         # making new node
-        new_dense = model.make_node(Dense, f'Dense_{node.name}', attributes, [node.inputs[0]], [x for x in node.outputs])
+        new_dense = model.make_node(Dense, new_name, attributes, [node.inputs[0]], [x for x in node.outputs])
 
         # removing and replacing old nodes
         model.remove_node(const_node, rewire=False)

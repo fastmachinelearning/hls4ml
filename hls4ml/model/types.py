@@ -115,26 +115,6 @@ class IntegerPrecisionType(PrecisionType):
     def saturation_bits(self):
         return 0
 
-    @property
-    def integer(self):
-        return self.width
-
-    @property
-    def fractional(self):
-        return 0
-
-    @property
-    def rounding_mode(self):
-        return RoundingMode.TRN
-
-    @property
-    def saturation_mode(self):
-        return SaturationMode.WRAP
-
-    @property
-    def saturation_bits(self):
-        return None
-
 
 class FixedPrecisionType(PrecisionType):
     """Arbitrary precision fixed-point data type.
@@ -158,10 +138,6 @@ class FixedPrecisionType(PrecisionType):
         self.saturation_bits = saturation_bits
 
     # make this a property to avoid inconsistencies
-
-    @property
-    def fractional(self):
-        return self.width - self.integer
 
     @property
     def fractional(self):
@@ -231,6 +207,7 @@ class XnorPrecisionType(PrecisionType):
         super().__init__(width=1, signed=False)
         self.integer = 1
 
+    # TODO:  this should really be a specific type
     def __str__(self):
         typestring = 'uint<1>'
         return typestring
@@ -245,6 +222,7 @@ class ExponentPrecisionType(PrecisionType):
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
 
+    # TODO:  this should really be a specific type, not int
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring

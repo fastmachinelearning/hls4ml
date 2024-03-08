@@ -29,13 +29,13 @@ class FuseBatchNormalization(OptimizerPass):
             b1 = node.weights['bias'].data_unquantized
             scale_compatible = (
                 (prev_node.get_attr('weight_quantizer') is None and node.get_attr('scale_quantizer') is None)
-                or (s0 == np.ones_like(s0)).all()
-                or (s1 == np.ones_like(s1)).all()
+                or ((s0 == np.ones_like(s0)).all() and prev_node.get_attr('weight_quantizer') is None)
+                or ((s1 == np.ones_like(s1)).all() and node.get_attr('scale_quantizer') is None)
             )
             bias_compatible = (
                 (prev_node.get_attr('bias_quantizer') is None and node.get_attr('bias_quantizer') is None)
-                or (b0 == np.zeros_like(b0)).all()
-                or (b1 == np.zeros_like(b1)).all()
+                or ((b0 == np.zeros_like(b0)).all() and prev_node.get_attr('bias_quantizer') is None)
+                or ((b1 == np.zeros_like(b1)).all() and node.get_attr('bias_quantizer') is None)
             )
             return scale_compatible and bias_compatible
 
@@ -60,12 +60,14 @@ class FuseBatchNormalization(OptimizerPass):
         bn_scale = node.weights['scale']
         bn_bias = node.weights['bias']
 
+        allowed_precisions = (IntegerPrecisionType, FixedPrecisionType, UnspecifiedPrecisionType)
+
         # only merge if the types are integer or fixed
         if (
-            not isinstance(parent_weight.type, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(parent_bias.type, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(bn_scale.type, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(bn_bias.type, (IntegerPrecisionType, FixedPrecisionType))
+            not isinstance(parent_weight.type.precision, allowed_precisions)
+            or not isinstance(parent_bias.type.precision, allowed_precisions)
+            or not isinstance(bn_scale.type.precision, allowed_precisions)
+            or not isinstance(bn_bias.type.precision, allowed_precisions)
         ):
             return False
 
@@ -74,44 +76,21 @@ class FuseBatchNormalization(OptimizerPass):
 
         w_quantizer = (
             node.get_attr('scale_quantizer')
-            if (parent_weight.data == np.ones_like(parent_weight.data)).all()
+            if node.get_attr('scale_quantizer') is not None
             else parent_node.get_attr('weight_quantizer')
         )
         b_quantizer = (
             node.get_attr('bias_quantizer')
-            if (parent_bias.data == np.zeros_like(parent_bias.data)).all()
+            if node.get_attr('bias_quantizer') is not None
             else parent_node.get_attr('bias_quantizer')
         )
 
         node.set_attr('weight_quantizer', w_quantizer)
         node.set_attr('bias_quantizer', b_quantizer)
 
-        # Not sure if this setting of this is useful
-        w_prec = None
-        if w_quantizer is None and (fused_weight == np.ones_like(fused_weight)).all():
-            if (
-                isinstance(parent_weight.type, IntegerPrecisionType)
-                and isinstance(bn_scale.type, IntegerPrecisionType)
-                and parent_weight.type.width == 1
-                and bn_scale.type.width == 1
-            ):
-                w_prec = node.weights['scale'].type
-
-        b_prec = None
-        if b_quantizer is None and (fused_bias == np.zeros_like(fused_bias)).all():
-            if (
-                isinstance(parent_bias.type, IntegerPrecisionType)
-                and isinstance(bn_bias.type, IntegerPrecisionType)
-                and parent_bias.type.width == 1
-                and bn_bias.type.width == 1
-            ):
-                b_prec = node.weights['bias'].type
-
         # call function so that quantizer would be called if needed
-        node.add_weights_variable(
-            name='weight', var_name='w{index}', data=fused_weight, quantizer=w_quantizer, precision=w_prec
-        )
-        node.add_weights_variable(name='bias', var_name='b{index}', data=fused_bias, quantizer=b_quantizer, precision=b_prec)
+        node.add_weights_variable(name='weight', var_name='w{index}', data=fused_weight, quantizer=w_quantizer)
+        node.add_weights_variable(name='bias', var_name='b{index}', data=fused_bias, quantizer=b_quantizer)
 
         model.remove_node(node, rewire=True)
 

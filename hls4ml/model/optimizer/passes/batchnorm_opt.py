@@ -5,7 +5,7 @@ from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import QuantNodeQuantizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType
 
-_base_attributes = ('Trace', 'reuse_factor', 'epsilon', 'n_in', 'n_filt')
+_base_attributes = ('epsilon', 'n_in', 'n_filt')
 
 
 class BatchNormOnnxConstantParameters(OptimizerPass):
