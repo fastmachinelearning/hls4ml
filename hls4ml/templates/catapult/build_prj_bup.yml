@@ -29,7 +29,7 @@ catapult_solution:
       }
       proc setup_xilinx_part { part } {
         # Map Xilinx PART into Catapult library names
-        set libname [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v]
+        set libname [lindex [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v] 0]
         if { [llength $libname] == 1 } {
           set libpath [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret p]
           if { [regexp {/CONFIG/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/.*} $libpath dummy rtltool vendor family speed part] } {
@@ -180,8 +180,15 @@ catapult_solution:
     type: top
     script: |
       set design [solution get -name]
-      directive set "$design/layer5_out:cns/FIFO_DEPTH" 1
-      directive set "$design/layer2_out:cns/FIFO_DEPTH" 1
+      # FIFO interconnect between layers
+      foreach ch_fifo [directive get -match glob -checkpath 0 -ret p $design/*_out:cns/FIFO_DEPTH] {
+        directive set -match glob "$ch_fifo" 1
+      }
+      # For bypass paths - the depth will likely need to be larger than 1
+      foreach ch_fifo [directive get -match glob -checkpath 0 -ret p $design/*_cpy*:cns/FIFO_DEPTH] {
+        logfile message "Bypass FIFO '$ch_fifo' depth set to 1 - larger value may be required to prevent deadlock\n" warning
+        directive set -match glob "$ch_fifo" 1
+      }
   go-extract:
     type: top
     script: |
