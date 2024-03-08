@@ -42,7 +42,8 @@ int compute_multiplier_limit_conv2d(typename CONFIG_T::weight_t weights[CONFIG_T
         }                 // end output width loop
     }                     // end output height loop
 
-    return ceil(float(n_mult) / float(CONFIG_T::reuse_factor));
+    //return ceil(float(n_mult) / float(CONFIG_T::reuse_factor));
+    return (n_mult + CONFIG_T::reuse_factor - 1) / CONFIG_T::reuse_factor;
 
 } // end compute_n_mult
 
