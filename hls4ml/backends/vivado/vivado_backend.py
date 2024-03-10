@@ -68,13 +68,21 @@ class VivadoBackend(FPGABackend):
 
         # Add ConvImplementation to Convolution+Pooling layers
         cnn_layers = [Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Pooling1D, Pooling2D]
-
         for layer in cnn_layers:
             attrs = self.attribute_map.get(layer, [])
             # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
+        # Add implementation of Dense Resource for all layers that use Dense for matrix mult
+        # Handle different implementations of Resource strategy; only makes a difference if strategy == Resource
+        # Standard -> nnet_dense_resource.h
+        # Unrolled -> Code generation, ignoring zero DSPs and optimizing zero-filled BRAM blocks
+        for layer in [Dense] + cnn_layers + rnn_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(
+                ChoiceAttribute('dense_resource_implementation', choices=['standard', 'unrolled'], default='standard')
+            )
         sep_conv_layers = [SeparableConv1D, SeparableConv2D]
         for layer in sep_conv_layers:
             attrs = self.attribute_map.get(layer, [])
@@ -118,6 +126,7 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
             'vivado:generate_conv_im2col',
+            'vivado:generate_unrolled_dense_resource',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -248,6 +257,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))
+        layer.set_attr('dense_resource_implementation', layer.model.config.get_dense_resource_implementation(layer).lower())
 
     # TODO consolidate these functions into a single `init_conv`
     @layer_optimizer(Conv1D)
@@ -279,6 +289,9 @@ class VivadoBackend(FPGABackend):
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # TODO - Extend unrolled Dense Resource to Conv1D kernels
+        layer.set_attr('dense_resource_implementation', 'standard')
+
         self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv1D)
@@ -295,6 +308,8 @@ class VivadoBackend(FPGABackend):
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # TODO - Extend unrolled Dense Resource to separable Conv1D
+        layer.set_attr('dense_resource_implementation', 'standard')
         # Set the output type of the depthwise phase
         dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
         dw_out_name = layer.name + '_dw_out_t'
@@ -330,9 +345,10 @@ class VivadoBackend(FPGABackend):
             )
         else:
             closest_pf = chosen_pf
-        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
 
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+        layer.set_attr('dense_resource_implementation', layer.model.config.get_dense_resource_implementation(layer).lower())
 
         self._validate_conv_strategy(layer)
 
@@ -350,6 +366,8 @@ class VivadoBackend(FPGABackend):
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # TODO - Extend unrolled Dense Resource to separable Conv2D
+        layer.set_attr('dense_resource_implementation', 'standard')
         # Set the output type of the depthwise phase
         dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
         dw_out_name = layer.name + '_dw_out_t'
@@ -372,6 +390,9 @@ class VivadoBackend(FPGABackend):
             'n_partitions', 1
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        # TODO - Extend unrolled Dense Resource to depthwise Conv2D
+        layer.set_attr('dense_resource_implementation', 'standard')
 
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
@@ -432,6 +453,9 @@ class VivadoBackend(FPGABackend):
 
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
+        # TODO - Extend unrolled Dense Resource to recurrent kernels
+        layer.set_attr('dense_resource_implementation', 'standard')
+
     @layer_optimizer(GRU)
     def init_gru(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
@@ -446,6 +470,9 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
 
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
+
+        # TODO - Extend unrolled Dense Resource to recurrent kernels
+        layer.set_attr('dense_resource_implementation', 'standard')
 
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):
