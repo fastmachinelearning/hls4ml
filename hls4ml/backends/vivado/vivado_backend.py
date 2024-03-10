@@ -1,5 +1,6 @@
 import os
 import sys
+from warnings import warn
 
 import numpy as np
 
@@ -109,6 +110,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
             'vivado:fix_softmax_table_size',
+            'vivado:process_fixed_point_quantizer_layer',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -264,7 +266,17 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
 
         out_width = layer.get_output_variable().shape[0]
-        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+
+        # Not overriding user parallelization factor, if already set and user has not specified a value
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        layer_pf = layer.get_attr('parallelization_factor', None)
+        chosen_pf = user_pf or layer_pf or 1
+        if user_pf is not None and layer_pf is not None:
+            if user_pf != layer_pf:
+                warn(
+                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
+                )
+
         valid_pf = self.get_valid_conv_partition_splits(1, out_width)
         if chosen_pf not in valid_pf:
             closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
@@ -276,6 +288,7 @@ class VivadoBackend(FPGABackend):
         else:
             closest_pf = chosen_pf
         layer.set_attr('n_partitions', out_width // closest_pf)
+        layer.set_attr('parallelization_factor', closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
@@ -319,7 +332,17 @@ class VivadoBackend(FPGABackend):
 
         out_height = layer.get_output_variable().shape[0]
         out_width = layer.get_output_variable().shape[1]
-        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+
+        # Not overriding user parallelization factor, if already set and user has not specified a value
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        layer_pf = layer.get_attr('parallelization_factor', None)
+        chosen_pf = user_pf or layer_pf or 1
+        if user_pf is not None and layer_pf is not None:
+            if user_pf != layer_pf:
+                warn(
+                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
+                )
+
         valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
         if chosen_pf not in valid_pf:
             closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
@@ -331,6 +354,7 @@ class VivadoBackend(FPGABackend):
         else:
             closest_pf = chosen_pf
         layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+        layer.set_attr('parallelization_factor', closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
@@ -375,10 +399,27 @@ class VivadoBackend(FPGABackend):
 
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
+
+        input_layer_name = layer.inputs[0]
+        input_layer = layer.model.graph[input_layer_name]
+        input_t = input_layer.attributes[input_layer.name].type
+        accum_t = layer.attributes['accum_t']
+        pool_op = layer.attributes['pool_op'].lower()
+
+        accum_t.name = f'{layer.name}_accum'
+        # This was likely model_default
+        # Avoid override parameters for other by chance
+
         accum_t = layer.get_attr('accum_t')
-        accum_t.precision.width += extra_bits * 2
-        if isinstance(accum_t.precision, FixedPrecisionType):
-            accum_t.precision.integer += extra_bits
+
+        if pool_op == 'max':
+            accum_t.precision = input_t.precision
+        else:
+            # Average pool
+            if isinstance(accum_t.precision, FixedPrecisionType):
+                accum_t.precision.integer = input_t.precision.integer + extra_bits
+            accum_t.precision.width = input_t.precision.width + extra_bits * 2
+            accum_t.precision.signed = input_t.precision.signed
 
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
