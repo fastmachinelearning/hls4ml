@@ -34,8 +34,10 @@ from hls4ml.model.types import (
     ExponentPrecisionType,
     FixedPrecisionType,
     IntegerPrecisionType,
+    PrecisionType,
     RoundingMode,
     SaturationMode,
+    UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
 from hls4ml.writer import get_writer
@@ -290,8 +292,11 @@ class FPGABackend(Backend):
 
     @classmethod
     def convert_precision_string(cls, precision):
-        if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
+        if isinstance(precision, PrecisionType):
             return precision
+
+        if precision.lower() == 'auto':
+            return cls._convert_auto_type(precision)
 
         if precision.startswith('ac_'):
             return cls._convert_ac_type(precision)
@@ -365,6 +370,13 @@ class FPGABackend(Backend):
             return FixedPrecisionType(width, integer, signed, round_mode, sat_mode)
         elif 'int' in precision:
             return IntegerPrecisionType(width, signed)
+
+    @classmethod
+    def _convert_auto_type(cls, precision):
+        '''
+        Convert a "auto" precision string into the UnspecifiedPrecisionType
+        '''
+        return UnspecifiedPrecisionType()
 
     def product_type(self, data_T, weight_T):
         '''
