@@ -1,6 +1,7 @@
 import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.utils import parse_data_format
 
 reshape_layers = ['View']
 
@@ -104,5 +105,48 @@ def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, 
         input_shapes[0][0:start_dim] + [np.prod(input_shapes[0][start_dim:end_dim])] + input_shapes[0][end_dim:]
     )
     output_shape = layer['target_shape']
+
+    return layer, output_shape
+
+
+@pytorch_handler('Upsample', 'UpsamplingNearest2d', 'UpsamplingBilinear2d')
+def handle_upsample(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+
+    assert operation in ['Upsample', 'UpsamplingNearest2d', 'UpsamplingBilinear2d']
+    layer = {}
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+    layer['class_name'] = 'Resize'
+    layer['data_format'] = 'channels_first'
+
+    input_shape = parse_data_format(input_shapes[0], 'channels_first')
+    if len(input_shape) == 2:
+        layer['in_height'] = 1
+        layer['in_width'], layer['n_chan'] = input_shape
+
+        layer['out_height'] = 1
+        layer['out_width'] = int(layer['in_width'] * class_object.scale_factor)
+
+        output_shape = [input_shapes[0][0], layer['n_chan'], layer['out_width']]
+    elif len(input_shape) == 3:
+        layer['in_height'], layer['in_width'], layer['n_chan'] = input_shape
+
+        scale_factor = class_object.scale_factor
+        if isinstance(scale_factor, tuple):
+            scale_height = scale_factor[0]
+            scale_width = scale_factor[1]
+        else:
+            scale_height = scale_factor
+            scale_width = scale_factor
+
+        layer['out_height'] = int(layer['in_height'] * scale_height)
+        layer['out_width'] = int(layer['in_width'] * scale_width)
+
+        output_shape = [layer['n_chan'], layer['out_height'], layer['out_width']]
+    else:
+        raise Exception(f'Parsing "Upsample" with {len(input_shape)}-dimensional tensors is not yet supported.')
+
+    layer['algorithm'] = class_object.mode
+    layer['align_corners'] = bool(class_object.align_corners)
 
     return layer, output_shape
