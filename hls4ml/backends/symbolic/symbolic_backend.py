@@ -42,6 +42,7 @@ class SymbolicExpressionBackend(FPGABackend):
         self,
         part='xcvu9p-flga2577-2-e',
         clock_period=5,
+        clock_uncertainty='12.5%',
         io_type='io_parallel',
         compiler='vivado_hls',
         hls_include_path=None,
@@ -51,6 +52,7 @@ class SymbolicExpressionBackend(FPGABackend):
 
         config['Part'] = part if part is not None else 'xcvu9p-flga2577-2-e'
         config['ClockPeriod'] = clock_period
+        config['ClockUncertainty'] = clock_uncertainty
         config['IOType'] = io_type
         config['Compiler'] = compiler if compiler is not None else 'vivado_hls'
         if not all([hls_include_path, hls_libs_path]):
