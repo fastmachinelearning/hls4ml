@@ -91,6 +91,11 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         else:
             params['fill_fn'] = 'FillConv1DBuffer'
 
+        if node.get_attr('filt_width') == 1 and node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['pointwise_fn'] = f'pointwise_conv_{node.index}'
+        else:
+            params['pointwise_fn'] = 'PointwiseConv1D'
+
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
