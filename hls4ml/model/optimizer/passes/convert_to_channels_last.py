@@ -2,8 +2,9 @@
 # Based on https://github.com/fastmachinelearning/qonnx/blob/
 # 12c96a3ded06beacab08e0f554e4ed014476c0aa/src/qonnx/transformation/channels_last.py
 
-from hls4ml.model.layers import Concatenate, Input, Reshape
+from hls4ml.model.layers import Concatenate, Dense, Input, Reshape, Transpose
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.types import WeightVariable
 
 
 class ChannelsLastConverter(OptimizerPass):
@@ -132,4 +133,63 @@ class ChannelsLastConverter(OptimizerPass):
                 model.insert_node(transpose_node)
 
         node.channels_last_converted = True
+        return True
+
+
+class RemoveTransposeBeforeFlatten(OptimizerPass):
+    '''After the channels last conversion, model may have a sequence: Transpose -> Flatten -> Dense.
+    In this case we can remove the expensive transpose and instead transpose the weights of the Dense layer.'''
+
+    def match(self, node):
+        if node.model.config.get_config_value('IOType') != 'io_parallel':
+            return False
+
+        if hasattr(node, '_channels_last_keep_transpose') and node._channels_last_keep_transpose:
+            return False
+
+        if isinstance(node, Reshape):
+            input_node = node.get_input_node()
+            output_nodes = node.get_output_nodes()
+            if (
+                len(node.get_attr('target_shape')) == 1
+                and isinstance(input_node, Transpose)
+                and len(output_nodes) == 1
+                and isinstance(output_nodes[0], Dense)
+            ):
+                return True
+
+        return False
+
+    def transform(self, model, node):
+        transpose_node = node.get_input_node()
+        dense_node = node.get_output_nodes()[0]
+        input_shape = transpose_node.get_output_variable().shape
+
+        if len(input_shape) == 2:  # Usually after Conv1D
+            tran_axis = [1, 0, 2]
+        elif len(input_shape) == 3:  # Usually after Conv2D
+            tran_axis = [1, 2, 0, 3]
+        else:  # In this case we bail
+            node._channels_last_keep_transpose = True
+            return False
+
+        weight_var = dense_node.get_weights('weight')
+        # Transpose the weights to achieve the same computation with transposed input
+        weight_data_t = weight_var.data.reshape(*input_shape, -1).transpose(*tran_axis)
+        weight_data_t = weight_data_t.reshape(-1, weight_data_t.shape[-1])
+        new_weight_var = WeightVariable(
+            var_name=weight_var.name,
+            type_name=weight_var.type.name,
+            precision=weight_var.type.precision,
+            quantizer=weight_var.quantizer,
+            data=weight_data_t,
+            index=dense_node.index,
+        )
+
+        # Update the weight variable of the node
+        dense_node.set_attr('weight', new_weight_var)
+
+        # Get rid of the Transpose node
+        model.remove_node(transpose_node)
+
         return True
