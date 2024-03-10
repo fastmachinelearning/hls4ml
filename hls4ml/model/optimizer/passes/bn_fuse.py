@@ -89,8 +89,8 @@ class FuseBatchNormalization(OptimizerPass):
         node.set_attr('bias_quantizer', b_quantizer)
 
         # call function so that quantizer would be called if needed
-        node.add_weights_variable(name='weight', var_name='w{index}', data=fused_weight, quantizer=w_quantizer)
-        node.add_weights_variable(name='bias', var_name='b{index}', data=fused_bias, quantizer=b_quantizer)
+        parent_node.add_weights_variable(name='weight', var_name='w{index}', data=fused_weight, quantizer=w_quantizer)
+        parent_node.add_weights_variable(name='bias', var_name='b{index}', data=fused_bias, quantizer=b_quantizer)
 
         model.remove_node(node, rewire=True)
 
