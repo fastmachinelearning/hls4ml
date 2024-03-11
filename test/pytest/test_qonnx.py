@@ -88,7 +88,9 @@ def test_tfc_2w2a(tfc_2w2a_model, backend):
     model = tfc_2w2a_model
 
     ishape = (1, 1, 28, 28)
-    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape).astype(np.float32)
+    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape)
+    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
@@ -105,15 +107,20 @@ def test_tfc_2w2a(tfc_2w2a_model, backend):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_cnv_2w2a(cnv_2w2a_model, backend):
+    """
+    This tests a convolution model. Note:  the batch normalizations weights not quantized, so it
+    is difficult to make this match perfectly. It is also a slow test.
+    """
     model = cnv_2w2a_model
 
     ishape = (1, 32, 32, 3)
-    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape).astype(np.float32)
+    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape)
+    X = (np.round(X * 2**6) * 2**-6).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
     # Convert QONNX model, compile, and run inference
-    config = hls4ml.utils.config_from_onnx_model(model, backend=backend, default_precision='fixed<32,16>')
+    config = hls4ml.utils.config_from_onnx_model(model, backend=backend, default_precision='fixed<32,6>')
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
         output_dir=str(test_root_path / f'hls4mlprj_qonnx_cnv-2w2a_{backend}'),
@@ -134,12 +141,13 @@ def test_jet_tagging(jettagging_model, backend):
     # Execute QONNX model inference
     # TODO make the test bigger
     ishape = (1, 16)
-    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape).astype(np.float32)
+    X = np.random.uniform(low=-1, high=+1, size=np.prod(ishape)).reshape(ishape)
+    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
     # Convert QONNX model, compile, and run inference
-    config = hls4ml.utils.config_from_onnx_model(model, backend=backend)
+    config = hls4ml.utils.config_from_onnx_model(model, backend=backend, default_precision='fixed<32,16>')
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model, output_dir=str(test_root_path / f'hls4mlprj_qonnx_jettag_{backend}'), backend=backend, hls_config=config
