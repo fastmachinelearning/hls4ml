@@ -197,10 +197,10 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
 
         # only merge if the types are integer or fixed
         if (
-            not isinstance(prev_node.weights['scale'].type, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(prev_node.weights['bias'].type, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(node.weights['scale'].type, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(node.weights['bias'].type, (IntegerPrecisionType, FixedPrecisionType))
+            not isinstance(prev_node.weights['scale'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(prev_node.weights['bias'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(node.weights['scale'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
+            or not isinstance(node.weights['bias'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
         ):
             return False
 
