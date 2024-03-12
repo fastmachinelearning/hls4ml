@@ -1,26 +1,30 @@
-from hls4ml.converters.onnx_to_hls import (
-    compute_pads_1d,
-    compute_pads_2d,
-    get_onnx_attribute,
-    get_onnx_input_name,
-    onnx_handler,
-)
-from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
+import numpy as np
+
+from hls4ml.converters.onnx_to_hls import get_onnx_attribute, onnx_handler
 
 pool_operations = ['AveragePool', 'MaxPool']
 
 
 @onnx_handler(*pool_operations)
-def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
+def parse_pool_layer(node, input_names, input_shapes, graph):
     layer = {}
     layer['name'] = node.name
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = input_names
+    layer['outputs'] = list(node.output)
+    if node.domain != 'qonnx.custom_op.channels_last':
+        raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
     layer['class_name'] = node.op_type
-    layer['data_format'] = 'channels_first'  # Default ONNX
+    layer['data_format'] = 'channels_last'  # Default QONNX
 
     info = layer['class_name'].replace('Pool', '')
     strides = get_onnx_attribute(node, 'strides')
     kernel_shape = get_onnx_attribute(node, 'kernel_shape')
+    pads = get_onnx_attribute(node, 'pads')
+    layer['pads'] = pads
+    dilations = get_onnx_attribute(node, 'dilations')
+    if dilations is None:
+        dilations = [1] * len(kernel_shape)
+    layer['dilations'] = dilations
 
     if len(input_shapes[0]) == 3:  # 1D
         layer['class_name'] = info + 'Pooling1D'
@@ -31,70 +35,50 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['pool_width'] = kernel_shape[0]
         layer['stride_width'] = strides[0]
 
-        # Padding
-        pads = compute_pads_1d(node, layer)
-        layer['pad_left'] = pads[0]
-        layer['pad_right'] = pads[1]
-
-        if all(x == 0 for x in pads):  # No padding, i.e., 'VALID' padding
-            layer['padding'] = 'valid'
-        else:
-            layer['padding'] = 'same'
-
-        (layer['n_out'], _, _) = compute_padding_1d(
-            layer['padding'], layer['n_in'], layer['stride_width'], layer['pool_width']
+        # formula from ONNX Operators.md documentation
+        layer['n_out'] = int(
+            np.floor((layer['n_in'] + np.sum(pads) - ((kernel_shape[0] - 1) * dilations[0] + 1)) / strides[0] + 1)
         )
-
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
 
     elif len(input_shapes[0]) == 4:  # 2D
         layer['class_name'] = info + 'Pooling2D'
 
-        layer['n_filt'] = input_shapes[0][1]
-        layer['in_height'] = input_shapes[0][2]
-        layer['in_width'] = input_shapes[0][3]
+        layer['n_filt'] = input_shapes[0][3]
+        layer['in_height'] = input_shapes[0][1]
+        layer['in_width'] = input_shapes[0][2]
 
         layer['stride_height'] = strides[0]
         layer['stride_width'] = strides[1]
         layer['pool_height'] = layer['filt_height'] = kernel_shape[0]
         layer['pool_width'] = layer['filt_width'] = kernel_shape[1]
 
-        pads = compute_pads_2d(node, layer)
         layer['pad_top'] = pads[0]
         layer['pad_bottom'] = pads[2]
         layer['pad_left'] = pads[1]
         layer['pad_right'] = pads[3]
 
-        if all(x == 0 for x in pads):  # No padding, i.e., 'VALID' padding in Keras/Tensorflow
-            layer['padding'] = 'valid'
-        else:  # Only 'valid' and 'same' padding are available in Keras
-            layer['padding'] = 'same'
-
-        (layer['out_height'], layer['out_width'], _, _, _, _) = compute_padding_2d(
-            layer['padding'],
-            layer['in_height'],
-            layer['in_width'],
-            layer['stride_height'],
-            layer['stride_width'],
-            layer['filt_height'],
-            layer['filt_width'],
+        # formula from ONNX Operators.md documentation
+        layer['out_height'] = int(
+            np.floor((layer['in_height'] + pads[0] + pads[2] - ((kernel_shape[0] - 1) * dilations[0] + 1)) / strides[0] + 1)
+        )
+        layer['out_width'] = int(
+            np.floor((layer['in_width'] + pads[1] + pads[3] - ((kernel_shape[1] - 1) * dilations[1] + 1)) / strides[1] + 1)
         )
 
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
-
-    return layer, output_shape
+    return layer
 
 
 global_pooling_layers = ['GlobalMaxPool', 'GlobalAveragePool']
 
 
 @onnx_handler(*global_pooling_layers)
-def parse_global_pooling_layer(reader, node, inputs_map, input_shapes, graph, config):
+def parse_global_pooling_layer(node, input_names, input_shapes, graph):
     layer = {}
     layer['name'] = node.name
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = input_names
+    layer['outputs'] = list(node.output)
     layer['class_name'] = node.op_type
-    layer['data_format'] = 'channels_first'
+    layer['data_format'] = 'channels_last'  # default QONNX
 
     # Sonme default parameters for global pooling
     layer['n_out'] = 1
@@ -116,6 +100,4 @@ def parse_global_pooling_layer(reader, node, inputs_map, input_shapes, graph, co
         layer['in_height'] = input_shapes[0][2]
         layer['in_width'] = input_shapes[0][3]
 
-    output_shape = [input_shapes[0][0], layer['n_filt']] + [1] * (len(input_shapes[0]) - 2)
-
-    return layer, output_shape
+    return layer
