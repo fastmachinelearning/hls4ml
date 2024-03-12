@@ -4,6 +4,7 @@ This file includes optimizations related to moving the ApplyAphas across MatMul 
 TODO:  Check that biases are properly handled. (Attempt to do it via Merge)
 
 '''
+
 import numpy as np
 
 from hls4ml.model.layers import ApplyAlpha, Constant, Conv, MatMul, Merge
