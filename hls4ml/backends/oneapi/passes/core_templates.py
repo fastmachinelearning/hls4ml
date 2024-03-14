@@ -40,7 +40,7 @@ dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}_stream<{inp
 
 dense_stream_function_template = '{name}.async({w}, {b});'
 
-dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_stream.h']
 
 
 class DenseConfigTemplate(LayerConfigTemplate):
