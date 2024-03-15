@@ -3,10 +3,10 @@
 	url = https://github.com/hls-fpga-machine-learning/example-models.git
 [submodule "hls4ml/templates/catapult/ac_types"]
 	path = hls4ml/templates/catapult/ac_types
-	url = git@github.com:hlslibs/ac_types.git
+	url = https://github.com/hlslibs/ac_types.git
 [submodule "hls4ml/templates/catapult/ac_simutils"]
 	path = hls4ml/templates/catapult/ac_simutils
-	url = git@github.com:hlslibs/ac_simutils.git
+	url = https://github.com/hlslibs/ac_simutils.git
 [submodule "hls4ml/templates/catapult/ac_math"]
 	path = hls4ml/templates/catapult/ac_math
-	url = git@github.com:hlslibs/ac_math.git
+	url = https://github.com/hlslibs/ac_math.git
