@@ -53,7 +53,7 @@ proc report_time { op_name time_start time_end } {
 proc setup_xilinx_part { part } {
   # Map Xilinx PART into Catapult library names
   set part_sav $part
-  set libname [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v]
+  set libname [lindex [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v] 0]
   puts "Library Name: $libname"
   if { [llength $libname] == 1 } {
     set libpath [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret p]
@@ -226,11 +226,8 @@ if {$opt(synth)} {
   set bu_mappings {}
   set top [lindex $blocks 0]
   foreach block [lreverse [lrange $blocks 1 end]] {
-    # BEGIN: WORKAROUND
-    if { $block == "ac::fx_div<8>" } {
-        continue
-    }
-    # END: WORKAROUND
+    # skip blocks that are net nnet:: functions
+    if { [string match {nnet::*} $block] == 0 } { continue }
     go analyze
     solution design set $block -top
     # BEGIN: WORKAROUND
@@ -276,10 +273,24 @@ if {$opt(synth)} {
 
   # Map to bottom-up blocks
   foreach {d i l} $bu_mappings {
-    logfile message "directive set $i -MAP_TO_MODULE [list $l]\n" info
-    eval directive set $i -MAP_TO_MODULE [list $l]
+    # Make sure block exists
+    set cnt [directive get $i/* -match glob -checkpath 0 -ret p]
+    if { $cnt != {} } {
+      logfile message "directive set $i -MAP_TO_MODULE [list $l]\n" info
+      eval directive set $i -MAP_TO_MODULE [list $l]
+    }
   }
   go assembly
+  set design [solution get -name]
+  # FIFO interconnect between layers
+  foreach ch_fifo [directive get -match glob -checkpath 0 -ret p $design/*_out:cns/FIFO_DEPTH] {
+    directive set -match glob "$ch_fifo" 1
+  }
+  # For bypass paths - the depth will likely need to be larger than 1
+  foreach ch_fifo [directive get -match glob -checkpath 0 -ret p $design/*_cpy*:cns/FIFO_DEPTH] {
+    logfile message "Bypass FIFO '$ch_fifo' depth set to 1 - larger value may be required to prevent deadlock\n" warning
+    directive set -match glob "$ch_fifo" 1
+  }
   go architect
   go allocate
   go schedule

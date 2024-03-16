@@ -13,15 +13,13 @@ void embedding(ac_channel<data_T> &data, ac_channel<res_T> &res,
     data_T in_data = data.read();
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
-#pragma hls_pipeline_init_interval ce_reuse_factor
 InputSequence:
     for (int j = 0; j < data_T::size; j++) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
         res_T res_pack;
-    //#pragma HLS DATA_PACK variable=res_pack
+        //#pragma HLS DATA_PACK variable=res_pack
 
-    #pragma hls_unroll
     DenseEmbedding:
         for (int i = 0; i < CONFIG_T::n_out; i++) {
             // #pragma HLS UNROLL

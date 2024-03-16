@@ -102,7 +102,6 @@ template <class data_T, class res_T, typename CONFIG_T>
 void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONFIG_T::n_out * CONFIG_T::n_filt]) {
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
-    #pragma hls_pipeline_init_interval ce_reuse_factor
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
     // TODO partition the arrays according to the reuse factor
@@ -152,7 +151,6 @@ template <class data_T, class res_T, typename CONFIG_T>
 void global_pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONFIG_T::n_filt]) {
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
-    #pragma hls_pipeline_init_interval ce_reuse_factor
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
@@ -208,7 +206,6 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                   res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]) {
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
-    #pragma hls_pipeline_init_interval ce_reuse_factor
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
     // TODO partition the arrays according to the reuse factor
@@ -273,7 +270,6 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                   res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]) {
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
-    #pragma hls_pipeline_init_interval ce_reuse_factor
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
     // TODO partition the arrays according to the reuse factor
@@ -343,7 +339,6 @@ void global_pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * 
 
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
-    #pragma hls_pipeline_init_interval ce_reuse_factor
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
     const int limit = pool_op_limit<CONFIG_T>();
