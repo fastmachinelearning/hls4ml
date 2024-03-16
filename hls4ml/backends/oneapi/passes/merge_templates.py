@@ -1,4 +1,5 @@
 from hls4ml.backends.backend import get_backend
+from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Concatenate, Dot, Merge
 
@@ -12,6 +13,13 @@ merge_config_template = """struct config{index} : nnet::merge_config {{
 }};\n"""
 
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
+
+merge_task_sequence_template = (
+    'task_sequence<nnet::{merge}_stream<{input1_pipe}, {input2_pipe}, {output_pipe}, {config}>> {name};'
+)
+
+merge_stream_function_template = '{name}.async();'
+
 merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h']
 
 
@@ -33,15 +41,36 @@ class MergeFunctionTemplate(FunctionCallTemplate):
         self.template = merge_function_template
 
     def format(self, node):
-        params = {}
+        params = self._default_function_params(node)
         params['merge'] = node.get_attr('op').lower()
-        params['config'] = f'config{node.index}'
         params['input1_t'] = node.get_input_variable(node.inputs[0]).type.name
         params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
-        params['output_t'] = node.get_output_variable().type.name
         params['input1'] = node.get_input_variable(node.inputs[0]).name
         params['input2'] = node.get_input_variable(node.inputs[1]).name
-        params['output'] = node.get_output_variable().name
+
+        return self.template.format(**params)
+
+
+class MergeTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__((Merge, Concatenate, Dot))
+        self.template = merge_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['merge'] = node.get_attr('op').lower()
+        params['input1_pipe'] = node.get_input_variable(node.inputs[0]).pipe_name
+        params['input2_pipe'] = node.get_input_variable(node.inputs[1]).pipe_name
+        return self.template.format(**params)
+
+
+class MergeStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__((Merge, Concatenate, Dot))
+        self.template = merge_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
 
         return self.template.format(**params)
 

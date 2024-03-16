@@ -35,11 +35,8 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
 }};\n"""
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-
 dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
-
 dense_stream_function_template = '{name}.async({w}, {b});'
-
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_stream.h']
 
 
@@ -111,11 +108,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
 }};\n"""
 
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
-
 batchnorm_task_sequence_template = 'task_sequence<nnet::normalize_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
-
 batchnorm_stream_function_template = '{name}.async({scale}, {bias});'
-
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
 
