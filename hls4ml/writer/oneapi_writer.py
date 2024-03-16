@@ -387,7 +387,6 @@ class OneAPIWriter(Writer):
         if len(model_inputs) != 1 or len(model_outputs) != 1:
             print("The testbench supports only single input arrays and single output arrays.")
             print("Please modify it before using it.")
-            return
 
         if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
             os.mkdir(f'{model.config.get_output_dir()}/tb_data/')

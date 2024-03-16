@@ -59,7 +59,7 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void average(const input1_T &data1, const input2_T &data2, res_T &res) {
     #pragma unroll
     for (int i = 0; i < CONFIG_T::n_elem; i++) {
-        res[i] = static_cast<typename res_T::value_type>((data1[i] + data2[i]) / (res_T)2);
+        res[i] = static_cast<typename res_T::value_type>((data1[i] + data2[i]) / 2);
     }
 }
 
