@@ -31,6 +31,15 @@ zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
 zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 
+zeropad1d_task_sequence_template = (
+    'task_sequence<nnet::zeropad1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+)
+zeropad2d_task_sequence_template = (
+    'task_sequence<nnet::zeropad2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+)
+
+padding_stream_function_template = '{name}.async();'
+
 padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
 
 
@@ -62,6 +71,34 @@ class ZeroPaddingFunctionTemplate(FunctionCallTemplate):
         params['data_format'] = 'cl'
 
         return self.templates[node.class_name].format(**params)
+
+
+class ZeroPaddingTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__((ZeroPadding1D, ZeroPadding2D))
+        self.templates = {
+            'ZeroPadding1D': zeropad1d_task_sequence_template,
+            'ZeroPadding2D': zeropad2d_task_sequence_template,
+        }
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        if node.get_attr('data_format') == 'channels_first':
+            raise RuntimeError('channels_first not supported on Quartus')
+        params['data_format'] = 'cl'
+
+        return self.templates[node.class_name].format(**params)
+
+
+class ZeroPaddingStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__((ZeroPadding1D, ZeroPadding2D))
+        self.template = padding_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+
+        return self.template.format(**params)
 
 
 # Resize templates

@@ -12,26 +12,29 @@ struct padding1d_config {
     static const unsigned pad_right = 0;
 };
 
-template <class data_T, class res_T, typename CONFIG_T>
-void zeropad1d_cl(data_T data[CONFIG_T::n_chan * CONFIG_T::in_width], res_T res[CONFIG_T::n_chan * CONFIG_T::out_width]) {
+template <class data_T, class res_T, typename CONFIG_T> void zeropad1d_cl(const data_T &data, res_T &res) {
+
+    auto resIter = res.begin();
+    auto dataIter = data.cbegin();
+
     for (int i = 0; i < CONFIG_T::pad_left; i++) {
         #pragma unroll
         for (int j = 0; j < CONFIG_T::n_chan; j++) {
-            *(res++) = 0;
+            *(resIter++) = 0;
         }
     }
 
     for (int i = 0; i < CONFIG_T::in_width; i++) {
         #pragma unroll
         for (int j = 0; j < CONFIG_T::n_chan; j++) {
-            *(res++) = (res_T) * (data++);
+            *(resIter++) = static_cast<typename res_T::value_type>(*(dataIter++));
         }
     }
 
     for (int i = 0; i < CONFIG_T::pad_right; i++) {
         #pragma unroll
         for (int j = 0; j < CONFIG_T::n_chan; j++) {
-            *(res++) = 0;
+            *(resIter++) = 0;
         }
     }
 }
@@ -51,14 +54,16 @@ struct padding2d_config {
     static const unsigned pad_right = 0;
 };
 
-template <class data_T, class res_T, typename CONFIG_T>
-void zeropad2d_cl(data_T data[CONFIG_T::n_chan * CONFIG_T::in_height * CONFIG_T::in_width],
-                  res_T res[CONFIG_T::n_chan * CONFIG_T::out_height * CONFIG_T::out_width]) {
+template <class data_T, class res_T, typename CONFIG_T> void zeropad2d_cl(const data_T &data, res_T &res) {
+
+    auto resIter = res.begin();
+    auto dataIter = data.cbegin();
+
     for (int i = 0; i < CONFIG_T::pad_top; i++) {
         for (int j = 0; j < CONFIG_T::out_width; j++) {
             #pragma unroll
             for (int k = 0; k < CONFIG_T::n_chan; k++) {
-                *(res++) = 0;
+                *(resIter++) = 0;
             }
         }
     }
@@ -67,19 +72,19 @@ void zeropad2d_cl(data_T data[CONFIG_T::n_chan * CONFIG_T::in_height * CONFIG_T:
         for (int j = 0; j < CONFIG_T::pad_left; j++) {
             #pragma unroll
             for (int k = 0; k < CONFIG_T::n_chan; k++) {
-                *(res++) = 0;
+                *(resIter++) = 0;
             }
         }
         for (int j = 0; j < CONFIG_T::in_width; j++) {
             #pragma unroll
             for (int k = 0; k < CONFIG_T::n_chan; k++) {
-                *(res++) = (res_T) * (data++);
+                *(resIter++) = static_cast<typename res_T::value_type>(*(dataIter++));
             }
         }
         for (int j = 0; j < CONFIG_T::pad_right; j++) {
             #pragma unroll
             for (int k = 0; k < CONFIG_T::n_chan; k++) {
-                *(res++) = 0;
+                *(resIter++) = 0;
             }
         }
     }
@@ -88,7 +93,7 @@ void zeropad2d_cl(data_T data[CONFIG_T::n_chan * CONFIG_T::in_height * CONFIG_T:
         for (int j = 0; j < CONFIG_T::out_width; j++) {
             #pragma unroll
             for (int k = 0; k < CONFIG_T::n_chan; k++) {
-                *(res++) = 0;
+                *(resIter++) = 0;
             }
         }
     }
