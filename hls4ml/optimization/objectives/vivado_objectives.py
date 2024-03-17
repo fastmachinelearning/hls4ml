@@ -32,7 +32,7 @@ class VivadoDSPEstimator(ObjectiveEstimator):
         if not layer_attributes.weight_shape or layer_attributes.args['hls4ml_attributes'].weight_precision.width < 9:
             return [0]
         else:
-            # TOOD - Extend for parallelisation factor
+            # TOOD - Extend for parallelization factor
             return [np.prod(layer_attributes.weight_shape) // layer_attributes.args['hls4ml_attributes'].reuse_factor]
 
     @classmethod
@@ -117,7 +117,7 @@ class VivadoMultiObjectiveEstimator(ObjectiveEstimator):
         if not layer_attributes.weight_shape:
             return [0]
 
-        # TOOD - Extend for parallelisation factor
+        # TOOD - Extend for parallelization factor
         if layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'latency':
             return [
                 int(np.prod(layer_attributes.weight_shape) // layer_attributes.args['hls4ml_attributes'].reuse_factor),
