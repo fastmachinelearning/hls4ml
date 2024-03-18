@@ -62,6 +62,7 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
     static const bool use_static = {static};
+    static const bool pytorch_order = {pytorch};
 }};\n"""
 
 recr_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
@@ -97,6 +98,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
         params['strategy'] = node.get_attr('strategy')
         params['static'] = 'true' if node.attributes['static'] else 'false'
+        params['pytorch'] = 'true' if "pytorch" in node.attributes.keys() else 'false'
         params['recr_type'] = node.class_name.lower()
         params['RECR_TYPE'] = node.class_name
 

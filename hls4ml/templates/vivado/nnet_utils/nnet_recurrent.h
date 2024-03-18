@@ -316,6 +316,7 @@ struct gru_config {
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     static const bool use_static = true;
+    static const bool pytorch_order = false;
     static const unsigned n_zeros = 0;
 
     template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
@@ -368,7 +369,10 @@ void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_
     // Hadamrd product of r(t) = inputacc_zr[2*n_state:n_state] and h(t-1) = h_newstate
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL
-        tmpres_state_h[iacc] = tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
+        if (CONFIG_T::pytorch_order)
+            tmpres_state_h[iacc] = tmpres_zr[iacc] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
+        else
+            tmpres_state_h[iacc] = tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
     }
 
     // Assuming reset_after is false
@@ -385,7 +389,11 @@ void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_
     // Mix the stat with the previous state
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL
-        h_newstate[iacc] = (res_T)(tmpres_h[iacc] * (1 - tmpres_zr[iacc]) + h_newstate[iacc] * tmpres_zr[iacc]);
+        if (CONFIG_T::pytorch_order)
+            h_newstate[iacc] = (res_T)(tmpres_h[iacc] * (1 - tmpres_zr[iacc + (CONFIG_T::n_state)]) +
+                                       h_newstate[iacc] * tmpres_zr[iacc + (CONFIG_T::n_state)]);
+        else
+            h_newstate[iacc] = (res_T)(tmpres_h[iacc] * (1 - tmpres_zr[iacc]) + h_newstate[iacc] * tmpres_zr[iacc]);
     }
 }
 
@@ -444,7 +452,10 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
     // Hadamrd product of r(t) = inputacc_zr[2*n_state:n_state] and h(t-1) = h_newstate
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL
-        tmpres_state_h[iacc] = tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
+        if (CONFIG_T::pytorch_order)
+            tmpres_state_h[iacc] = tmpres_zr[iacc] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
+        else
+            tmpres_state_h[iacc] = tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
     }
 
     // Assuming reset_after is false
@@ -461,7 +472,11 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
     // Mix the stat with the previous state
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL
-        h_state[iacc] = (res_T)(tmpres_h[iacc] * (1 - tmpres_zr[iacc]) + h_state[iacc] * tmpres_zr[iacc]);
+        if (CONFIG_T::pytorch_order)
+            h_state[iacc] = (res_T)(tmpres_h[iacc] * (1 - tmpres_zr[iacc + (CONFIG_T::n_state)]) +
+                                    h_state[iacc] * tmpres_zr[iacc + (CONFIG_T::n_state)]);
+        else
+            h_state[iacc] = (res_T)(tmpres_h[iacc] * (1 - tmpres_zr[iacc]) + h_state[iacc] * tmpres_zr[iacc]);
         h_newstate[iacc] = h_state[iacc];
     }
 }
