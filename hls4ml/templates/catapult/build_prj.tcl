@@ -97,9 +97,6 @@ options set Input/CppStandard {c++17}
 options set Input/CompilerFlags -DRANDOM_FRAMES=$opt(ran_frame)
 options set Input/SearchPath {$MGC_HOME/shared/include/nnet_utils} -append
 options set ComponentLibs/SearchPath {$MGC_HOME/shared/pkgs/ccs_hls4ml} -append
-# BEGIN: WORKAROUND
-options set Input/SearchPath {firmware/ac_math/include} -append
-# END: WORKAROUND
 
 if {$opt(reset)} {
   project load CATAPULT_DIR.ccs
@@ -230,9 +227,6 @@ if {$opt(synth)} {
     if { [string match {nnet::*} $block] == 0 } { continue }
     go analyze
     solution design set $block -top
-    # BEGIN: WORKAROUND
-    solution design set ac::fx_div<8> -inline
-    # END: WORKAROUND
     go compile
     solution library remove *
     puts "***** SETTING TECHNOLOGY LIBRARIES *****"
