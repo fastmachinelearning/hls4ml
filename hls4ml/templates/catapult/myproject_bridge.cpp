@@ -2,7 +2,7 @@
 #define MYPROJECT_BRIDGE_H_
 
 #include "firmware/myproject.h"
-#include "nnet_helpers.h"
+#include "firmware/nnet_utils/nnet_helpers.h"
 #include <algorithm>
 #include <map>
 
