@@ -12,7 +12,7 @@ test_root_path = Path(__file__).parent
 # Variable 'name' is simply used as an identifier for the activation
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'Quartus'])
 @pytest.mark.parametrize('shape, io_type', [((8,), 'io_parallel'), ((8,), 'io_stream'), ((8, 8, 3), 'io_stream')])
 @pytest.mark.parametrize(
     'activation, name',

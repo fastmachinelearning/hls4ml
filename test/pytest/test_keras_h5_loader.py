@@ -9,7 +9,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 def test_keras_h5_loader(backend):
     input_shape = (10,)
     model = tf.keras.models.Sequential(

@@ -25,7 +25,7 @@ bias_options = [False]
 @pytest.mark.parametrize('kernels', kernel_options)
 @pytest.mark.parametrize('bias', bias_options)
 @pytest.mark.parametrize('io_type', io_type_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult'])
 def test_sepconv1d(conv1d, chans, padds, strides, kernels, bias, io_type, backend):
     model = tf.keras.models.Sequential()
     input_shape = (28, 3)

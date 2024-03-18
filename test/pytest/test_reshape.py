@@ -21,7 +21,7 @@ def randX_20_10():
     return randX(20, 10)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reshape_parallel(randX_20_10, backend, io_type):
     model = tf.keras.models.Sequential(

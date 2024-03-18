@@ -560,6 +560,7 @@ class Conv2DBatchnorm(Conv2D):
         if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in [
             'Vivado',
             'VivadoAccelerator',
+            'Catapult',
         ]:
             self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
             self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)

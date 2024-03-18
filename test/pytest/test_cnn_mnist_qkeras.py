@@ -54,6 +54,8 @@ def mnist_model():
         ('Vitis', 'io_parallel', 'latency'),
         ('Vitis', 'io_stream', 'latency'),
         ('Vitis', 'io_stream', 'resource'),
+        ('Catapult', 'io_stream', 'latency'),
+        ('Catapult', 'io_stream', 'resource'),
     ],
 )
 def hls_model(mnist_model, backend, io_type, strategy):
@@ -84,6 +86,8 @@ def hls_model(mnist_model, backend, io_type, strategy):
         ('Vitis', 'io_parallel', 'latency'),
         ('Vitis', 'io_stream', 'latency'),
         ('Vitis', 'io_stream', 'resource'),
+        ('Catapult', 'io_stream', 'latency'),
+        ('Catapult', 'io_stream', 'resource'),
     ],
 )
 def test_accuracy(mnist_data, mnist_model, hls_model):

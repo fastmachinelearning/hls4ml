@@ -19,7 +19,7 @@ def generate_data(input_shape):
     return np.clip(d, -32, 31)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('strategy', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type',
@@ -65,7 +65,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
     assert acc_hls4ml >= 0.98
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(backend, io_type):
     X = np.random.rand(100, 10)
