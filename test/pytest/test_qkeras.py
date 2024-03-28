@@ -322,7 +322,7 @@ def test_relu_negative_slope(randX_1000_1, quantizer, backend, io_type):
     Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
     '''
     X = randX_1000_1
-    X = -X # Make it negative so leaky relu does something
+    X = -X  # Make it negative so leaky relu does something
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = Sequential()
     model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
