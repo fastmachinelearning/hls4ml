@@ -166,6 +166,10 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
         layer['slope_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer['shift_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer['activation'] = activation_config['class_name'].replace('quantized_', 'hard_')
+    elif activation_config['class_name'] == 'quantized_relu' and activation_config['config']['negative_slope'] != 0:
+        layer['class_name'] = 'LeakyReLU'
+        layer['activation'] = activation_config['class_name'].replace('quantized_', 'leaky_')
+        layer['activ_param'] = activation_config['config']['negative_slope']
     else:
         layer['class_name'] = 'Activation'
         layer['activation'] = activation_config['class_name'].replace('quantized_', '')
