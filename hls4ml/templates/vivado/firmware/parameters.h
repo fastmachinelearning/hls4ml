@@ -10,6 +10,10 @@
 
 // hls-fpga-machine-learning insert weights
 
+// hls-fpga-machine-learning insert namespace-start
+
 // hls-fpga-machine-learning insert layer-config
+
+// hls-fpga-machine-learning insert namespace-end
 
 #endif
