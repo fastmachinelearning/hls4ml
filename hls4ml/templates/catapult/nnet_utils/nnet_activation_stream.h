@@ -9,20 +9,20 @@
 
 #include "ac_channel.h"
 #include "ac_fixed.h"
+#include "ac_math/ac_elu_pwl.h"
+#include "ac_math/ac_pow_pwl.h"
+#include "ac_math/ac_relu.h"
+#include "ac_math/ac_selu_pwl.h"
+#include "ac_math/ac_sigmoid_pwl.h"
+#include "ac_math/ac_softmax_pwl.h"
+#include "ac_math/ac_softplus_pwl.h"
+#include "ac_math/ac_softsign_pwl.h"
+#include "ac_math/ac_tanh_pwl.h"
+#include "ac_std_float.h"
 #include "nnet_activation.h"
 #include "nnet_common.h"
 #include "nnet_stream.h"
 #include "nnet_types.h"
-#include <ac_math/ac_elu_pwl.h>
-#include <ac_math/ac_pow_pwl.h>
-#include <ac_math/ac_relu.h>
-#include <ac_math/ac_selu_pwl.h>
-#include <ac_math/ac_sigmoid_pwl.h>
-#include <ac_math/ac_softmax_pwl.h>
-#include <ac_math/ac_softplus_pwl.h>
-#include <ac_math/ac_softsign_pwl.h>
-#include <ac_math/ac_tanh_pwl.h>
-#include <ac_std_float.h>
 #include <cmath>
 
 namespace nnet {
