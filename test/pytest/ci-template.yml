@@ -5,7 +5,13 @@
     - k8s-default
   before_script:
     - source ~/.bashrc
-    - if [ $EXAMPLEMODEL == 1 ]; then git submodule init; git submodule update; fi
+    - git submodule init hls4ml/templates/catapult/ac_types
+    - git submodule init hls4ml/templates/catapult/ac_simutils
+    - git submodule init hls4ml/templates/catapult/ac_math
+    - git submodule update hls4ml/templates/catapult/ac_types
+    - git submodule update hls4ml/templates/catapult/ac_simutils
+    - git submodule update hls4ml/templates/catapult/ac_math
+    - if [ $EXAMPLEMODEL == 1 ]; then git submodule init example-models; git submodule update example-models; fi
     - conda activate hls4ml-testing
     - pip install .[testing,sr,optimization]
   script:
