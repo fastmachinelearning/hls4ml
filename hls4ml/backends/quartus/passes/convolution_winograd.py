@@ -118,7 +118,6 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
                 # Fractional precision is increased by 2 bits (division by 4),
                 # for low-precision (less than 8) fractional weights
                 if node.weights['weight'].type.precision.fractional < 8:
-                    node.weights['weight'].type.precision.fractional += 2
                     node.weights['weight'].type.precision.width += 2
 
                 # Modified kernel size
@@ -163,7 +162,6 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
                 # Fractional precision is increased by 2 bits (division by 4),
                 # for low-precision (less than 8) fractional weights
                 if node.weights['weight'].type.precision.fractional < 8:
-                    node.weights['weight'].type.precision.fractional += 2
                     node.weights['weight'].type.precision.width += 2
 
                 # Modified kernel size
