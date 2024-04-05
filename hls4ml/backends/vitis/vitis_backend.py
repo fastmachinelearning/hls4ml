@@ -33,6 +33,19 @@ class VitisBackend(VivadoBackend):
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
+    def create_initial_config(
+        self, part='xcvu13p-flga2577-2-e', clock_period=5, clock_uncertainty='27%', io_type='io_parallel'
+    ):
+        config = {}
+
+        config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
+        config['ClockPeriod'] = clock_period
+        config['ClockUncertainty'] = clock_uncertainty
+        config['IOType'] = io_type
+        config['HLSConfig'] = {}
+
+        return config
+
     def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
         if 'linux' in sys.platform:
             found = os.system('command -v vitis_hls > /dev/null')
