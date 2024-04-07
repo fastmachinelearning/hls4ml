@@ -38,15 +38,19 @@ def test_linear(backend, io_type, clock_unc):
     if clock_unc is not None:
         output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}_{clock_unc.replace("%","")}')
         hls_model = convert_from_pytorch_model(
-            model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type,
-            clock_uncertainty=clock_unc
+            model,
+            (None, 1),
+            hls_config=config,
+            output_dir=output_dir,
+            backend=backend,
+            io_type=io_type,
+            clock_uncertainty=clock_unc,
         )
     else:
         output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}')
         hls_model = convert_from_pytorch_model(
             model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
         )
-
 
     hls_model.compile()
 
