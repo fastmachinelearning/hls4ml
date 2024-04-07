@@ -27,7 +27,8 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_dense(backend, io_type):
+@pytest.mark.parametrize('clock_unc', ['15%', None])
+def test_dense(backend, io_type, clock_unc):
     model = tf.keras.models.Sequential()
     model.add(
         Dense(
@@ -52,11 +53,17 @@ def test_dense(backend, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
 
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    if clock_unc is not None:
+        output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}_{clock_unc.replace("%","")}')
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type, clock_uncertainty=clock_unc
+        )
+    else:
+        output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        )
 
     hls_model.compile()
 
@@ -73,6 +80,14 @@ def test_dense(backend, io_type):
     assert list(hls_model.get_layers())[1].attributes['n_out'] == model.layers[0].output_shape[1:][0]
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
+
+    read_clock_unc = hls_model.config.get_config_value('ClockUncertainty')
+    if backend == 'Vivado' and clock_unc is None:
+        assert read_clock_unc == '12.5%'
+    elif backend == 'Vitis' and clock_unc is None:
+        assert read_clock_unc == '27%'
+    elif backend in ['Vivado', 'Vitis']:
+        assert read_clock_unc == clock_unc
 
 
 # TODO: add ThresholdedReLU test when it can be made to pass
