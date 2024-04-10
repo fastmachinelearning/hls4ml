@@ -366,6 +366,17 @@ template <class data_T, size_t SIZE> void fill_zero(ac_channel<data_T> &data) {
     }
 }
 
+// Fix for CAT-36531
+template <class data_T, size_t SIZE> void fill_random(data_T data[SIZE]) {
+    // std::cout << "Fill_Random SIZE:"<< SIZE << std::endl;
+    data_T MAX_VALUE;
+    for (unsigned int i = 0; i < SIZE; i++) {
+        // Generate a random value (for example, between 0 and 1)
+        data_T random_value = (data_T)rand() / MAX_VALUE.template set_val<AC_VAL_MIN>();
+        data[i] = random_value;
+    }
+}
+
 template <class data_T, size_t SIZE> void fill_random(ac_channel<data_T> &data) {
     typedef typename data_T::value_type base_T;
     base_T MAX_VALUE;

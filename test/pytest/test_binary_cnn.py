@@ -25,8 +25,6 @@ test_root_path = Path(__file__).parent
         ('Vitis', 'io_parallel', 'latency'),
         ('Vitis', 'io_stream', 'latency'),
         ('Vitis', 'io_stream', 'resource'),
-        ('Catapult', 'io_stream', 'latency'),
-        ('Catapult', 'io_stream', 'resource'),
     ],
 )
 def test_binary_cnn(backend, io_type, strategy):

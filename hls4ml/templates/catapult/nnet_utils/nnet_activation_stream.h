@@ -545,7 +545,6 @@ HardTanhActLoop:
 // *************************************************
 //       Leaky RELU Activation
 // *************************************************
-
 template <class data_T, class res_T, typename CONFIG_T>
 void leaky_relu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res) {
 LeakyReLUActLoop:
@@ -846,7 +845,6 @@ SeluActLoop:
 // *************************************************
 //       PReLU Activation
 // *************************************************
-
 template <class data_T, class res_T, typename CONFIG_T>
 void prelu(ac_channel<data_T> &data, typename data_T::value_type alpha[CONFIG_T::n_in], ac_channel<res_T> &res) {
 PReLUActLoop:

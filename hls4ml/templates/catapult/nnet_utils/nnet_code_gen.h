@@ -1,7 +1,7 @@
 #ifndef NNET_INSTR_GEN_H_
 #define NNET_INSTR_GEN_H_
 
-#include "nnet_helpers.h"
+#include "nnet_utils/nnet_helpers.h"
 #include <iostream>
 
 namespace nnet {

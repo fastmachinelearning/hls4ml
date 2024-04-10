@@ -758,24 +758,31 @@ class CatapultWriter(Writer):
         f = open(srcpath)
         fout = open(dstpath, 'w')
         for line in f.readlines():
+            indent = line[: len(line) - len(line.lstrip())]
             line = line.replace('myproject', model.config.get_project_name())
             line = line.replace('CATAPULT_DIR', model.config.get_project_dir())
             if '#hls-fpga-machine-learning insert techlibs' in line:
-                if model.config.get_config_value('Part') is not None:
-                    line = 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
-                elif model.config.get_config_value('ASICLibs') is not None:
-                    line = 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
+                if model.config.get_config_value('Technology') is None:
+                    if model.config.get_config_value('Part') is not None:
+                        line = indent + 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
+                    elif model.config.get_config_value('ASICLibs') is not None:
+                        line = indent + 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
+                else:
+                    if model.config.get_config_value('Technology') == 'asic':
+                        line = indent + 'setup_asic_libs {{{}}}\n'.format(model.config.get_config_value('ASICLibs'))
+                    else:
+                        line = indent + 'setup_xilinx_part {{{}}}\n'.format(model.config.get_config_value('Part'))
             elif '#hls-fpga-machine-learning insert invoke_args' in line:
                 tb_in_file = model.config.get_config_value('InputData')
                 tb_out_file = model.config.get_config_value('OutputPredictions')
                 invoke_args = '$sfd/firmware/weights'
                 if tb_in_file is not None:
-                    invoke_args = invoke_args + ' $sfd/tb_data/{tb_in_file}'
+                    invoke_args = invoke_args + f' $sfd/tb_data/{tb_in_file}'
                 if tb_out_file is not None:
-                    invoke_args = invoke_args + ' $sfd/tb_data/{tb_out_file}'
-                line = f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"\n'
+                    invoke_args = invoke_args + f' $sfd/tb_data/{tb_out_file}'
+                line = indent + f'flow package option set /SCVerify/INVOKE_ARGS "{invoke_args}"\n'
             elif 'set hls_clock_period 5' in line:
-                line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
+                line = indent + 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
         f.close()
         fout.close()
@@ -898,8 +905,11 @@ class CatapultWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
 
-        with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
-            archive.add(model.config.get_output_dir(), recursive=True)
+        if not os.path.exists(model.config.get_output_dir() + '.tar.gz'):
+            with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
+                archive.add(model.config.get_output_dir(), recursive=True)
+        else:
+            print("Project .tar.gz archive already exists")
 
     def write_hls(self, model):
         print('Writing HLS project')
