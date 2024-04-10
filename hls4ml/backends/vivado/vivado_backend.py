@@ -175,13 +175,41 @@ class VivadoBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcvu13p-flga2577-2-e', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(
+        self,
+        part='xcvu13p-flga2577-2-e',
+        clock_period=5,
+        io_type='io_parallel',
+        namespace=None,
+        write_weights_txt=False,
+        write_tar=True,
+    ):
+        """Create initial configuration of the Vivado backend.
+
+        Args:
+            part (str, optional): The FPGA part to be used. Defaults to 'xcvu13p-flga2577-2-e'.
+            clock_period (int, optional): The clock period. Defaults to 5.
+            io_type (str, optional): Type of implementation used. One of
+                'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            namespace (str, optional): If defined, place all generated code within a namespace. Defaults to None.
+            write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
+                Defaults to False.
+            write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to True.
+
+        Returns:
+            dict: initial configuration.
+        """
         config = {}
 
         config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
+        config['WriterConfig'] = {
+            'Namespace': namespace,
+            'WriteWeightsTxt': write_weights_txt,
+            'WriteTar': write_tar,
+        }
 
         return config
 

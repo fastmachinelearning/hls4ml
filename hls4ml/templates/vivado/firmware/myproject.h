@@ -7,9 +7,13 @@
 
 #include "defines.h"
 
+// hls-fpga-machine-learning insert namespace-start
+
 // Prototype of top level function for C-synthesis
 void myproject(
     // hls-fpga-machine-learning insert header
 );
+
+// hls-fpga-machine-learning insert namespace-end
 
 #endif
