@@ -276,13 +276,18 @@ if {$opt(synth)} {
   }
   go assembly
   set design [solution get -name]
+  logfile message "Adjusting FIFO_DEPTH for top-level interconnect channels\n" warning
   # FIFO interconnect between layers
-  foreach ch_fifo [directive get -match glob -checkpath 0 -ret p $design/*_out:cns/FIFO_DEPTH] {
+  foreach ch_fifo_m2m [directive get -match glob -checkpath 0 -ret p $design/*_out:cns/MAP_TO_MODULE] {
+    set ch_fifo [join [lrange [split $ch_fifo_m2m '/'] 0 end-1] /]/FIFO_DEPTH
+    logfile message "directive set -match glob $ch_fifo 1\n" info
     directive set -match glob "$ch_fifo" 1
   }
   # For bypass paths - the depth will likely need to be larger than 1
-  foreach ch_fifo [directive get -match glob -checkpath 0 -ret p $design/*_cpy*:cns/FIFO_DEPTH] {
+  foreach ch_fifo_m2m [directive get -match glob -checkpath 0 -ret p $design/*_cpy*:cns/MAP_TO_MODULE] {
+    set ch_fifo [join [lrange [split $ch_fifo_m2m '/'] 0 end-1] /]/FIFO_DEPTH
     logfile message "Bypass FIFO '$ch_fifo' depth set to 1 - larger value may be required to prevent deadlock\n" warning
+    logfile message "directive set -match glob $ch_fifo 1\n" info
     directive set -match glob "$ch_fifo" 1
   }
   go architect
