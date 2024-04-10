@@ -72,7 +72,6 @@ CCS_MAIN(int argc, char *argv[]) {
         }
     }
 
-    std::cout << "Number of Frames Passed from the tcl= " << RANDOM_FRAMES << std::endl;
 #ifdef RTL_SIM
     std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";
 #else
@@ -135,6 +134,7 @@ CCS_MAIN(int argc, char *argv[]) {
         }
     } else {
         std::cout << "INFO: Unable to open input/predictions file(s) so feeding random values" << std::endl;
+        std::cout << "Number of Frames Passed from the tcl= " << RANDOM_FRAMES << std::endl;
 
         if (RANDOM_FRAMES > 0) {
             for (unsigned int k = 0; k < RANDOM_FRAMES; k++) {
