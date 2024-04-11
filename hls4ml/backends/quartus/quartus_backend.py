@@ -128,8 +128,8 @@ class QuartusBackend(FPGABackend):
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
-        config['ClockPeriod'] = clock_period
-        config['IOType'] = io_type
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
 
         return config
