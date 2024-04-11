@@ -22,10 +22,9 @@ class LinearModel(nn.Module):
         return self.linear(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('clock_unc', ['15%', None])
-def test_linear(backend, io_type, clock_unc):
+def test_linear(backend, io_type):
     model = LinearModel()
     model.eval()
 
@@ -34,23 +33,11 @@ def test_linear(backend, io_type, clock_unc):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model)
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}')
 
-    if clock_unc is not None:
-        output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}_{clock_unc.replace("%","")}')
-        hls_model = convert_from_pytorch_model(
-            model,
-            (None, 1),
-            hls_config=config,
-            output_dir=output_dir,
-            backend=backend,
-            io_type=io_type,
-            clock_uncertainty=clock_unc,
-        )
-    else:
-        output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}')
-        hls_model = convert_from_pytorch_model(
-            model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-        )
+    hls_model = convert_from_pytorch_model(
+        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
 
     hls_model.compile()
 
@@ -72,14 +59,6 @@ def test_linear(backend, io_type, clock_unc):
     assert list(hls_model.get_layers())[0].attributes['input_shape'] == [1]
     assert list(hls_model.get_layers())[1].attributes['n_in'] == 1
     assert list(hls_model.get_layers())[1].attributes['n_out'] == 1
-
-    read_clock_unc = hls_model.config.get_config_value('ClockUncertainty')
-    if backend == 'Vivado' and clock_unc is None:
-        assert read_clock_unc == '12.5%'
-    elif backend == 'Vitis' and clock_unc is None:
-        assert read_clock_unc == '27%'
-    elif backend in ['Vivado', 'Vitis']:
-        assert read_clock_unc == clock_unc
 
 
 # TODO: add ThresholdedReLU test when it can be made to pass

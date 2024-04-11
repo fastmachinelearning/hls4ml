@@ -176,14 +176,14 @@ class VivadoBackend(FPGABackend):
         return self._writer_flow
 
     def create_initial_config(
-        self, part='xcvu13p-flga2577-2-e', clock_period=5, clock_uncertainty='12.5%', io_type='io_parallel'
+        self, part='xcvu13p-flga2577-2-e', clock_period=5, clock_uncertainty='12.5%', io_type='io_parallel', **_
     ):
         config = {}
 
         config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
-        config['ClockPeriod'] = clock_period
-        config['ClockUncertainty'] = clock_uncertainty
-        config['IOType'] = io_type
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['ClockUncertainty'] = clock_uncertainty if clock_uncertainty is not None else '12.5%'
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
 
         return config
