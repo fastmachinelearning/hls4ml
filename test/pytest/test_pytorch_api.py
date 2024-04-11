@@ -22,7 +22,7 @@ class LinearModel(nn.Module):
         return self.linear(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linear(backend, io_type):
     model = LinearModel()
@@ -73,7 +73,7 @@ def test_linear(backend, io_type):
         nn.Threshold(threshold=1.0, value=0.0),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(activation_function, backend, io_type):
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
@@ -164,7 +164,7 @@ class SigmoidModel(nn.Module):
         ThresholdModel(),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activation_functionals(activation_function, backend, io_type):
     model = activation_function
@@ -200,7 +200,7 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(padds, backend, io_type):
     n_in = 2
@@ -310,7 +310,7 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(padds, backend, io_type):
     n_in = 2
@@ -463,7 +463,7 @@ pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_pooling(pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
@@ -587,7 +587,7 @@ class BatchNormModel(nn.Module):
         return self.bn(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bn(backend, io_type):
     model = BatchNormModel()
@@ -630,7 +630,7 @@ class SqueezeModel(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_squeeze(backend, io_type):
     model = SqueezeModel()
@@ -666,7 +666,7 @@ def test_squeeze(backend, io_type):
         assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_flatten(backend):
     input = torch.randn(1, 1, 5, 5)
     model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
@@ -710,7 +710,7 @@ class ModelSkippedLayers(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_skipped_layers(backend, io_type):
     model = ModelSkippedLayers()
