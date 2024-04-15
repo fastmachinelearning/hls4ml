@@ -262,7 +262,7 @@ HeightLoop:
             [[intel::fpga_register]] data_col_T data_col;
             im2col_2d_pointwise_cl<data_T, data_col_T, CONFIG_T>(data, data_col, row, col);
 
-            [[intel::fpga_register]] res_T res_col;
+            [[intel::fpga_register]] res_col_T res_col;
             dense_resource<data_col_T, res_col_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
 
         FiltLoop:

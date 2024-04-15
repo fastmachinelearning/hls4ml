@@ -65,7 +65,7 @@ conv1d_task_sequence_template = (
     'task_sequence<nnet::conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
 
-conv1d_stream_function_template = '{name}.async({w}, {b});'
+conv_stream_function_template = '{name}.async({w}, {b});'
 
 conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 
@@ -124,10 +124,10 @@ class Conv1DTaskSequenceTemplate(TaskSequenceTemplate):
         return self.template.format(**params)
 
 
-class Conv1DStreamFunctionTemplate(StreamFunctionCallTemplate):
+class ConvStreamFunctionTemplate(StreamFunctionCallTemplate):
     def __init__(self):
-        super().__init__(Conv1D)
-        self.template = conv1d_stream_function_template
+        super().__init__((Conv1D, Conv2D))
+        self.template = conv_stream_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -177,8 +177,6 @@ conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {
 conv2d_task_sequence_template = (
     'task_sequence<nnet::conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
-
-conv2d_stream_function_template = '{name}.async({w}, {b});'
 
 conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
 
@@ -234,17 +232,4 @@ class Conv2DTaskSequenceTemplate(TaskSequenceTemplate):
         if node.get_attr('data_format') == 'channels_first':
             raise RuntimeError('channels_first not supported on Quartus')
         params['data_format'] = 'cl'
-        return self.template.format(**params)
-
-
-class Conv2DStreamFunctionTemplate(StreamFunctionCallTemplate):
-    def __init__(self):
-        super().__init__((Conv2D, Conv2DBatchnorm))
-        self.template = conv2d_stream_function_template
-
-    def format(self, node):
-        params = self._default_function_params(node)
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
-
         return self.template.format(**params)
