@@ -588,8 +588,9 @@ def get_ymodel_keras(keras_model, X):
         # Note that if the layer is a standalone activation layer then skip this
         name = layer.name
         if (
-            hasattr(layer, 'activation')
-            and layer.activation is not None
+            hasattr(layer, "activation")
+            and hasattr(layer.activation, "__name__")
+            and layer.activation.__name__ != "linear"
             and not isinstance(layer, (keras.layers.Activation, qkeras.qlayers.QActivation))
             and layer.activation.__name__ != 'linear'
         ):
