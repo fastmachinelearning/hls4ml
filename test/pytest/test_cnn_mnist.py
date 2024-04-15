@@ -61,7 +61,7 @@ def keras_model(mnist_data):
         ('Vitis', 'io_parallel', 'resource'),
         ('Vitis', 'io_parallel', 'latency'),
         ('Vitis', 'io_stream', 'latency'),
-        ('Vitis', 'io_stream', 'resource'),
+        ('Vitis', 'io_stream', 'latency'),
     ],
 )
 def test_mnist_cnn(keras_model, mnist_data, backend, io_type, strategy):
