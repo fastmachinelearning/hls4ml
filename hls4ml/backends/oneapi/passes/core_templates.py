@@ -49,7 +49,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
-        params['product_type'] = get_backend('quartus').product_type(
+        params['product_type'] = get_backend('oneAPI').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
 
@@ -121,7 +121,7 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['product_type'] = get_backend('quartus').product_type(
+        params['product_type'] = get_backend('oneAPI').product_type(
             node.get_input_variable().type.precision, node.get_weights('scale').type.precision
         )
 

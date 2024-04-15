@@ -100,7 +100,7 @@ class DotConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
         params['n_out'] = 1
         params['n_in'] = inp1.shape[0]
-        params['product_type'] = get_backend('quartus').product_type(inp1.type.precision, inp2.type.precision)
+        params['product_type'] = get_backend('oneAPI').product_type(inp1.type.precision, inp2.type.precision)
 
         return self.template.format(**params)
 

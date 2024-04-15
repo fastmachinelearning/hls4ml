@@ -56,7 +56,7 @@ class PointwiseConv1DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on Quartus')
+            raise RuntimeError('channels_first not supported on oneAPI')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -72,7 +72,7 @@ class PointwiseConv1DTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on Quartus')
+            raise RuntimeError('channels_first not supported on oneAPI')
         params['data_format'] = 'cl'
         return self.template.format(**params)
 
@@ -92,7 +92,7 @@ class PointwiseConv2DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on Quartus')
+            raise RuntimeError('channels_first not supported on oneAPI')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -108,7 +108,7 @@ class PointwiseConv2DTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on Quartus')
+            raise RuntimeError('channels_first not supported on oneAPI')
         params['data_format'] = 'cl'
         return self.template.format(**params)
 
