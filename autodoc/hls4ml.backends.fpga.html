@@ -24,7 +24,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="hls4ml.backends.fpga.passes package" href="hls4ml.backends.fpga.passes.html" />
-    <link rel="prev" title="hls4ml.backends package" href="hls4ml.backends.html" /> 
+    <link rel="prev" title="hls4ml.backends.catapult.passes package" href="hls4ml.backends.catapult.passes.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +40,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev17+gb4ba0206
+                0.9.0.dev18+g2531afed
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -462,6 +462,91 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultArrayVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultArrayVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultArrayVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultArrayVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultArrayVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultArrayVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultInplaceArrayVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultInplaceArrayVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultInplaceArrayVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultInplaceArrayVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultInplaceArrayVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultInplaceArrayVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultInplaceStreamVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultInplaceStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InplaceStreamVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultInplaceStreamVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultInplaceStreamVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultInplaceStreamVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultInplaceStreamVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultStreamVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.StreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultStreamVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultStreamVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultStreamVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultStreamVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultStructMemberVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStructMemberVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultStructMemberVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter" title="hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StructMemberVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultStructMemberVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStructMemberVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultStructMemberVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CatapultStructMemberVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CatapultStructMemberVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CompressedTypeConverter">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CompressedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CompressedTypeConverter" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
@@ -810,7 +895,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="hls4ml.backends.html" class="btn btn-neutral float-left" title="hls4ml.backends package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.backends.catapult.passes.html" class="btn btn-neutral float-left" title="hls4ml.backends.catapult.passes package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="hls4ml.backends.fpga.passes.html" class="btn btn-neutral float-right" title="hls4ml.backends.fpga.passes package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
