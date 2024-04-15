@@ -42,6 +42,10 @@ class APFixedPrecisionDefinition(PrecisionDefinition):
             self._saturation_mode_cpp(self.saturation_mode),
             self.saturation_bits,
         ]
+        if args[2] == 'AP_TRN' and args[3] == 'AP_WRAP' and args[4] == 0:
+            # This is the default, so we won't write the full definition for brevity
+            args[2] = args[3] = args[4] = None
+
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
@@ -71,7 +75,17 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self._saturation_mode_cpp(self.saturation_mode),
             self.saturation_bits,
         ]
-        args = ','.join([str(arg) for arg in args if arg is not None])
+        if args[3] == 'AC_TRN' and args[4] == 'AC_WRAP':
+            # This is the default, so we won't write the full definition for brevity
+            args[3] = args[4] = None
+        if args[5] > 0:
+            print(
+                f'WARNING: Invalid setting of saturation bits ({args[5]}) for ac_fixed type, only 0 is allowed.'
+                'Ignoring set value.'
+            )
+            args[5] = None
+
+        args = ','.join([str(arg) for arg in args[:5] if arg is not None])
         typestring = f'ac_fixed<{args}>'
         return typestring
 
@@ -234,12 +248,24 @@ class QuartusArrayVariableDefinition(VariableDefinition):
         )
 
 
+class CatapultArrayVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return '{type} {name}{suffix}[{shape}] /* {pragma} */'.format(
+            type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma
+        )
+
+
 class VivadoInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
         return f'auto& {self.name} = {self.input_var.name}'
 
 
 class QuartusInplaceArrayVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'auto& {self.name} = {self.input_var.name}'
+
+
+class CatapultInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
         return f'auto& {self.name} = {self.input_var.name}'
 
@@ -271,6 +297,11 @@ class QuartusArrayVariableConverter(ArrayVariableConverter):
         super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusArrayVariableDefinition)
 
 
+class CatapultArrayVariableConverter(ArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Catapult', definition_cls=CatapultArrayVariableDefinition)
+
+
 class VivadoInplaceArrayVariableConverter(ArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoInplaceArrayVariableDefinition)
@@ -283,12 +314,26 @@ class QuartusInplaceArrayVariableConverter(ArrayVariableConverter):
         )
 
 
+class CatapultInplaceArrayVariableConverter(ArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(
+            type_converter=type_converter, prefix='Catapult', definition_cls=CatapultInplaceArrayVariableDefinition
+        )
+
+
 # endregion
 
 # region StructMemberVariable
 
 
 class QuartusStructMemberVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return '{type} {name}{suffix}[{shape}]'.format(
+            type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp()
+        )
+
+
+class CatapultStructMemberVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
         return '{type} {name}{suffix}[{shape}]'.format(
             type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp()
@@ -321,6 +366,13 @@ class QuartusStructMemberVariableConverter(StructMemberVariableConverter):
     def __init__(self, type_converter):
         super().__init__(
             type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStructMemberVariableDefinition
+        )
+
+
+class CatapultStructMemberVariableConverter(StructMemberVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(
+            type_converter=type_converter, prefix='Catapult', definition_cls=CatapultStructMemberVariableDefinition
         )
 
 
@@ -357,6 +409,21 @@ class QuartusInplaceStreamVariableDefinition(VariableDefinition):
         return f'auto& {self.name} = {self.input_var.name}'
 
 
+class CatapultStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if as_reference:  # Function parameter
+            return f'ac_channel<{self.type.name}> &{self.name}{name_suffix}'
+        else:  # Declaration (string name arg not implemented in ac_channel)
+            return 'ac_channel<{type}> {name}{suffix}/*("{name}")*/'.format(
+                type=self.type.name, name=self.name, suffix=name_suffix
+            )
+
+
+class CatapultInplaceStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'auto& {self.name} = {self.input_var.name}'
+
+
 class StreamVariableConverter:
     def __init__(self, type_converter, prefix, definition_cls):
         self.type_converter = type_converter
@@ -386,6 +453,11 @@ class VivadoStreamVariableConverter(StreamVariableConverter):
 class QuartusStreamVariableConverter(StreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStreamVariableDefinition)
+
+
+class CatapultStreamVariableConverter(StreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Catapult', definition_cls=CatapultStreamVariableDefinition)
 
 
 # endregion
@@ -418,6 +490,13 @@ class QuartusInplaceStreamVariableConverter(InplaceStreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(
             type_converter=type_converter, prefix='Quartus', definition_cls=QuartusInplaceStreamVariableDefinition
+        )
+
+
+class CatapultInplaceStreamVariableConverter(InplaceStreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(
+            type_converter=type_converter, prefix='Catapult', definition_cls=CatapultInplaceStreamVariableDefinition
         )
 
 
