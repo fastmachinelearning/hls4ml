@@ -6,13 +6,12 @@
 namespace nnet {
 
 // Returns the maximum value from an array of size N
-template <typename T, int N> T max(T x[N]) {
+template <typename T, int N, typename accum_t> accum_t max(T x[N]) {
     [[intel::fpga_register]] T y = x[0];
 
     // Due to loop dependencies, pipelining & unrolling is not possible
     // Explictily disabling pipeline significantly reduces resource usage
-    #pragma disable_loop_pipelining
-    for (int i = 1; i < N; i++) {
+    [[intel::disable_loop_pipelining]] for (int i = 1; i < N; i++) {
         if (x[i] > y)
             y = x[i];
     }
@@ -21,67 +20,30 @@ template <typename T, int N> T max(T x[N]) {
 }
 
 // Returns the mean value of an array of size N
-template <typename T, int N> T avg(T (&x)[N]) {
-    [[intel::fpga_register]] T y = 0;
+template <typename T, int N, typename accum_t> accum_t avg(T x[N], unsigned length) {
+    [[intel::fpga_register]] accum_t y = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
     // Explictily disabling pipeline significantly reduces resource usage
-    #pragma disable_loop_pipelining
-    for (int i = 0; i < N; i++) {
-        y += x[i];
-    }
+    [[intel::disable_loop_pipelining]] for (int i = 0; i < N; i++) { y += x[i]; }
 
-    y /= N;
-    return y;
-}
-
-// Returns the mean value of an array of size N
-// Overload of the above function; using a wider accumulator than the input to avoid overflow
-template <int W, int N> ac_int<W, true> avg(ac_int<W, true> (&x)[N]) {
-    [[intel::fpga_register]] ac_int<W + ceillog2(N), true> tmp = 0;
-
-    // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
-    #pragma disable_loop_pipelining
-    for (int i = 0; i < N; i++) {
-        tmp += x[i];
-    }
-
-    tmp /= N;
-
-    // Cast back to original type
-    ac_int<W, true> y = static_cast<ac_int<W, true>>(tmp);
-    return tmp;
-}
-
-// Returns the mean value of an array of size N
-// Overload of the above function; using a wider accumulator than the input to avoid overflow
-template <int W, int I, int N> ac_fixed<W, I, true> avg(ac_fixed<W, I, true> (&x)[N]) {
-    [[intel::fpga_register]] ac_fixed<W + ceillog2(N), I + ceillog2(N), true> tmp = 0;
-
-    // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
-    #pragma disable_loop_pipelining
-    for (int i = 0; i < N; i++) {
-        tmp += x[i];
-    }
-
-    tmp /= N;
-
-    // Cast back to original type
-    ac_fixed<W, I, true> y = tmp;
+    y /= length;
     return y;
 }
 
 // Enumeration for pooling functions
 enum Pool_Op { Max, Average };
-template <typename T, int N, Pool_Op op> T pool_op(T (&x)[N]) {
+template <typename T, int N, Pool_Op op, typename accum_t> accum_t pool_op(T x[N], unsigned length) {
     switch (op) {
     case Max:
-        return max<T, N>(x);
+        return max<T, N, accum_t>(x);
     case Average:
-        return avg(x);
+        return avg<T, N, accum_t>(x, length);
     }
+}
+
+template <typename T, int N, Pool_Op op, typename accum_t> accum_t pool_op(T (&x)[N]) {
+    return pool_op<T, N, op, accum_t>(x, N);
 }
 
 /*
@@ -120,8 +82,7 @@ struct pooling1d_config {
     static const Pool_Op pool_op = Max;
 };
 
-template <class data_T, class res_T, typename CONFIG_T>
-void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONFIG_T::n_out * CONFIG_T::n_filt]) {
+template <class data_T, class res_T, typename CONFIG_T> void pooling1d_cl(const data_T &data, res_T &res) {
     // For 'same' padding, increase input width by left- and right-side padding
     // For 'valid' padding, reduce input width to area covered by pooling function
     static constexpr int padded_width = (CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0)
@@ -130,24 +91,21 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
 
 FiltLoop:
     #pragma unroll
-    #pragma disable_loop_pipelining
-    for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
+    [[intel::disable_loop_pipelining]] for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
     InputWidthLoop:
         #pragma unroll
-        #pragma disable_loop_pipelining
-        for (int inp_col = 0; inp_col < padded_width; inp_col += CONFIG_T::stride_width) {
-            [[intel::fpga_register]] data_T pool[CONFIG_T::pool_width];
+        [[intel::disable_loop_pipelining]] for (int inp_col = 0; inp_col < padded_width; inp_col += CONFIG_T::stride_width) {
+            [[intel::fpga_register]] typename data_T::value_type pool[CONFIG_T::pool_width];
 
             // Keep track of number of pixels in image vs padding region; needed for rescaling Average Pooling
             [[intel::fpga_register]] unsigned img_overlap = 0;
 
         PoolWidthLoop:
             #pragma unroll
-            #pragma disable_loop_pipelining
-            for (int pool_col = 0; pool_col < CONFIG_T::stride_width; pool_col++) {
+            [[intel::disable_loop_pipelining]] for (int pool_col = 0; pool_col < CONFIG_T::stride_width; pool_col++) {
                 if (inp_col + pool_col < CONFIG_T::pad_left || inp_col + pool_col >= (padded_width - CONFIG_T::pad_right)) {
                     // Add padding
-                    pool[pool_col] = pad_val<data_T, CONFIG_T::pool_op>();
+                    pool[pool_col] = pad_val<typename data_T::value_type, CONFIG_T::pool_op>();
                     if (CONFIG_T::count_pad)
                         img_overlap++;
                 } else {
@@ -158,36 +116,30 @@ FiltLoop:
             }
 
             // Pooling operation
-            res[(inp_col / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] =
-                static_cast<res_T>(pool_op<data_T, CONFIG_T::pool_width, CONFIG_T::pool_op>(pool));
-
-            // If the pool op is Average, the zero-padding needs to be removed from the results
-            if (CONFIG_T::pool_op == Average)
-                res[(inp_col / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] *=
-                    (static_cast<data_T>(CONFIG_T::pool_width) / img_overlap);
+            res[(inp_col / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] = static_cast<typename res_T::value_type>(
+                pool_op<typename data_T::value_type, CONFIG_T::pool_width, CONFIG_T::pool_op, typename CONFIG_T::accum_t>(
+                    pool, img_overlap));
         }
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void global_pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONFIG_T::n_filt]) {
+template <class data_T, class res_T, typename CONFIG_T> void global_pooling1d_cl(const data_T &data, res_T &res) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::pool_width == CONFIG_T::stride_width);
 
 FiltLoop:
     #pragma unroll
-    #pragma disable_loop_pipelining
-    for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
-        [[intel::fpga_register]] data_T pool[CONFIG_T::n_in];
+    [[intel::disable_loop_pipelining]] for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
+        [[intel::fpga_register]] typename data_T::value_type pool[CONFIG_T::n_in];
 
     InputWidthLoop:
         #pragma unroll
-        #pragma disable_loop_pipelining
-        for (int col = 0; col < CONFIG_T::n_in; col++) {
+        [[intel::disable_loop_pipelining]] for (int col = 0; col < CONFIG_T::n_in; col++) {
             pool[col] = data[col * CONFIG_T::n_filt + filt];
         }
 
-        res[filt] = static_cast<res_T>(pool_op<data_T, CONFIG_T::n_in, CONFIG_T::pool_op>(pool));
+        res[filt] = static_cast<typename res_T::value_type>(
+            pool_op<typename data_T::value_type, CONFIG_T::n_in, CONFIG_T::pool_op, typename CONFIG_T::accum_t>(pool));
     }
 }
 
@@ -217,9 +169,7 @@ struct pooling2d_config {
     static const Pool_Op pool_op = Max;
 };
 
-template <class data_T, class res_T, typename CONFIG_T>
-void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_filt],
-                  res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]) {
+template <class data_T, class res_T, typename CONFIG_T> void pooling2d_cl(const data_T &data, res_T &res) {
     // For 'same' padding, increase input width by left- and right-side padding
     // For 'valid' padding, reduce input width to area covered by pooling function
     static constexpr int padded_width = (CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0)
@@ -231,35 +181,34 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
 
 FiltLoop:
     #pragma unroll
-    #pragma disable_loop_pipelining
-    for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
+    [[intel::disable_loop_pipelining]] for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
     InputHeightLoop:
         #pragma unroll
-        #pragma disable_loop_pipelining
-        for (int inp_col = 0; inp_col < padded_height; inp_col += CONFIG_T::stride_height) {
+        [[intel::disable_loop_pipelining]] for (int inp_col = 0; inp_col < padded_height;
+                                                inp_col += CONFIG_T::stride_height) {
         InputWidthLoop:
             #pragma unroll
-            #pragma disable_loop_pipelining
-            for (int inp_width = 0; inp_width < padded_width; inp_width += CONFIG_T::stride_width) {
-                [[intel::fpga_register]] data_T pool[CONFIG_T::pool_height * CONFIG_T::pool_width];
+            [[intel::disable_loop_pipelining]] for (int inp_width = 0; inp_width < padded_width;
+                                                    inp_width += CONFIG_T::stride_width) {
+                [[intel::fpga_register]] typename data_T::value_type pool[CONFIG_T::pool_height * CONFIG_T::pool_width];
 
                 // Keep track of number of pixels in image vs padding region; needed for rescaling Average Pooling
                 [[intel::fpga_register]] unsigned img_overlap = 0;
 
             PoolHeightLoop:
                 #pragma unroll
-                #pragma disable_loop_pipelining
-                for (int pool_col = 0; pool_col < CONFIG_T::stride_height; pool_col++) {
+                [[intel::disable_loop_pipelining]] for (int pool_col = 0; pool_col < CONFIG_T::stride_height; pool_col++) {
                 PoolWidthLoop:
                     #pragma unroll
-                    #pragma disable_loop_pipelining
-                    for (int pool_row = 0; pool_row < CONFIG_T::stride_width; pool_row++) {
+                    [[intel::disable_loop_pipelining]] for (int pool_row = 0; pool_row < CONFIG_T::stride_width;
+                                                            pool_row++) {
                         if (inp_col + pool_col < CONFIG_T::pad_top ||
                             inp_col + pool_col >= (padded_height - CONFIG_T::pad_bottom) ||
                             inp_width + pool_row < CONFIG_T::pad_left ||
                             inp_width + pool_row >= (padded_width - CONFIG_T::pad_right)) {
                             // Add padding
-                            pool[pool_col * CONFIG_T::stride_width + pool_row] = pad_val<data_T, CONFIG_T::pool_op>();
+                            pool[pool_col * CONFIG_T::stride_width + pool_row] =
+                                pad_val<typename data_T::value_type, CONFIG_T::pool_op>();
                             if (CONFIG_T::count_pad)
                                 img_overlap++;
                         } else {
@@ -275,23 +224,15 @@ FiltLoop:
                 // Pooling operation
                 res[(inp_col / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                     (inp_width / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] =
-                    static_cast<res_T>(
-                        pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool));
-
-                // If the pool op is Average, the zero-padding needs to be removed from the results
-                if (CONFIG_T::pool_op == Average)
-                    res[(inp_col / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
-                        (inp_width / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] *=
-                        (static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) /
-                         img_overlap);
+                    static_cast<typename res_T::value_type>(
+                        pool_op<typename data_T::value_type, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op,
+                                typename CONFIG_T::accum_t>(pool, img_overlap));
             }
         }
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void global_pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_filt],
-                         res_T res[CONFIG_T::n_filt]) {
+template <class data_T, class res_T, typename CONFIG_T> void global_pooling2d_cl(const data_T &data, res_T &res) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0);
     assert(CONFIG_T::pool_width == CONFIG_T::stride_width);
@@ -299,18 +240,18 @@ void global_pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * 
 
 FiltLoop:
     #pragma unroll
-    #pragma disable_loop_pipelining
-    for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
-        [[intel::fpga_register]] data_T pool[CONFIG_T::in_height * CONFIG_T::in_width];
+    [[intel::disable_loop_pipelining]] for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
+        [[intel::fpga_register]] typename data_T::value_type pool[CONFIG_T::in_height * CONFIG_T::in_width];
 
     InputLoop:
         #pragma unroll
-        #pragma disable_loop_pipelining
-        for (int i = 0; i < CONFIG_T::in_height * CONFIG_T::in_width; i++) {
+        [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::in_height * CONFIG_T::in_width; i++) {
             pool[i] = data[i * CONFIG_T::n_filt + filt];
         }
 
-        res[filt] = static_cast<res_T>(pool_op<data_T, CONFIG_T::in_height * CONFIG_T::in_width, CONFIG_T::pool_op>(pool));
+        res[filt] = static_cast<typename res_T::value_type>(
+            pool_op<typename data_T::value_type, CONFIG_T::in_height * CONFIG_T::in_width, CONFIG_T::pool_op,
+                    typename CONFIG_T::accum_t>(pool));
     }
 }
 

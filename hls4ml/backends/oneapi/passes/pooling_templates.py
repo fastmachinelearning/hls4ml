@@ -1,7 +1,6 @@
+from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import GlobalPooling1D, GlobalPooling2D, Pooling1D, Pooling2D
-
-# TODO - Move to ../fpga/passes, once streaming is supported on Quartus (should be identical to Vivado)
 
 pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned stride_width = {stride_width};
@@ -75,6 +74,21 @@ global_pooling2d_function_template = (
     'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 )
 
+pooling1d_task_sequence_template = (
+    'task_sequence<nnet::pooling1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>>({name});'
+)
+pooling2d_task_sequence_template = (
+    'task_sequence<nnet::pooling2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>>({name});'
+)
+global_pooling1d_task_sequence_template = (
+    'task_sequence<nnet::global_pooling1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>>({name});'
+)
+global_pooling2d_task_sequence_template = (
+    'task_sequence<nnet::global_pooling2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>>({name});'
+)
+
+pooling_stream_function_template = '{name}.async();'
+
 pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
 
 
@@ -106,6 +120,34 @@ class PoolingFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise Exception('channels_first not supported for Quartus')
+            raise Exception('channels_first not supported for oneAPI')
         params['data_format'] = 'cl'
         return self.templates[node.class_name].format(**params)
+
+
+class PoolingTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__((Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D))
+        self.templates = {
+            'Pooling1D': pooling1d_task_sequence_template,
+            'Pooling2D': pooling2d_task_sequence_template,
+            'GlobalPooling1D': global_pooling1d_task_sequence_template,
+            'GlobalPooling2D': global_pooling2d_task_sequence_template,
+        }
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        if node.get_attr('data_format') == 'channels_first':
+            raise Exception('channels_first not supported for oneAPI')
+        params['data_format'] = 'cl'
+        return self.templates[node.class_name].format(**params)
+
+
+class PoolingStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__((Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D))
+        self.template = pooling_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        return self.template.format(**params)

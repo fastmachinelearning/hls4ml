@@ -357,7 +357,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 def test_pooling(pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
