@@ -241,19 +241,7 @@ class VivadoArrayVariableDefinition(VariableDefinition):
         )
 
 
-class QuartusArrayVariableDefinition(VariableDefinition):
-    def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}{suffix}[{shape}] {pragma}'.format(
-            type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma
-        )
-
-
 class VivadoInplaceArrayVariableDefinition(VariableDefinition):
-    def definition_cpp(self):
-        return f'auto& {self.name} = {self.input_var.name}'
-
-
-class QuartusInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
         return f'auto& {self.name} = {self.input_var.name}'
 
@@ -280,33 +268,14 @@ class VivadoArrayVariableConverter(ArrayVariableConverter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoArrayVariableDefinition)
 
 
-class QuartusArrayVariableConverter(ArrayVariableConverter):
-    def __init__(self, type_converter):
-        super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusArrayVariableDefinition)
-
-
 class VivadoInplaceArrayVariableConverter(ArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoInplaceArrayVariableDefinition)
 
 
-class QuartusInplaceArrayVariableConverter(ArrayVariableConverter):
-    def __init__(self, type_converter):
-        super().__init__(
-            type_converter=type_converter, prefix='Quartus', definition_cls=QuartusInplaceArrayVariableDefinition
-        )
-
-
 # endregion
 
 # region StructMemberVariable
-
-
-class QuartusStructMemberVariableDefinition(VariableDefinition):
-    def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}{suffix}[{shape}]'.format(
-            type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp()
-        )
 
 
 class StructMemberVariableConverter:
@@ -331,13 +300,6 @@ class StructMemberVariableConverter:
         return tensor_var
 
 
-class QuartusStructMemberVariableConverter(StructMemberVariableConverter):
-    def __init__(self, type_converter):
-        super().__init__(
-            type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStructMemberVariableDefinition
-        )
-
-
 # endregion
 
 # region StreamVariable
@@ -354,19 +316,6 @@ class VivadoStreamVariableDefinition(VariableDefinition):
 
 
 class VivadoInplaceStreamVariableDefinition(VariableDefinition):
-    def definition_cpp(self):
-        return f'auto& {self.name} = {self.input_var.name}'
-
-
-class QuartusStreamVariableDefinition(VariableDefinition):
-    def definition_cpp(self, name_suffix='', as_reference=False):
-        if as_reference:  # Function parameter
-            return f'stream<{self.type.name}> &{self.name}{name_suffix}'
-        else:  # Declaration
-            return f'stream<{self.type.name}> {self.name}{name_suffix}'
-
-
-class QuartusInplaceStreamVariableDefinition(VariableDefinition):
     def definition_cpp(self):
         return f'auto& {self.name} = {self.input_var.name}'
 
@@ -397,11 +346,6 @@ class VivadoStreamVariableConverter(StreamVariableConverter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
 
 
-class QuartusStreamVariableConverter(StreamVariableConverter):
-    def __init__(self, type_converter):
-        super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStreamVariableDefinition)
-
-
 # endregion
 
 # region InplaceStreamVariable
@@ -425,13 +369,6 @@ class VivadoInplaceStreamVariableConverter(InplaceStreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(
             type_converter=type_converter, prefix='Vivado', definition_cls=VivadoInplaceStreamVariableDefinition
-        )
-
-
-class QuartusInplaceStreamVariableConverter(InplaceStreamVariableConverter):
-    def __init__(self, type_converter):
-        super().__init__(
-            type_converter=type_converter, prefix='Quartus', definition_cls=QuartusInplaceStreamVariableDefinition
         )
 
 
