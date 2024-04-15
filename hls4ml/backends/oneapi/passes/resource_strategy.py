@@ -10,7 +10,7 @@ class ApplyResourceStrategy(OptimizerPass):
     def match(self, node):
         node_matches = isinstance(node, (Dense, Conv1D, Conv2D, GRU, LSTM, SimpleRNN))
         is_resource_strategy = (
-            True  # node.get_attr('strategy', '').lower() == 'resource' -> Quartus only supportr Resource strategy
+            True  # node.get_attr('strategy', '').lower() == 'resource' -> oneAPI only supportr Resource strategy
         )
         already_transformed = node.get_attr('_weights_transposed', False) is True
         return node_matches and is_resource_strategy and not already_transformed

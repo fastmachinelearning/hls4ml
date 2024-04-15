@@ -67,7 +67,7 @@ class ZeroPaddingFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise Exception('Quartus only supports channels_last data format')
+            raise Exception('oneAPI only supports channels_last data format')
         params['data_format'] = 'cl'
 
         return self.templates[node.class_name].format(**params)
@@ -84,7 +84,7 @@ class ZeroPaddingTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on Quartus')
+            raise RuntimeError('channels_first not supported on oneAPI')
         params['data_format'] = 'cl'
 
         return self.templates[node.class_name].format(**params)

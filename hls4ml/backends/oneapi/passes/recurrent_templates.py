@@ -112,7 +112,7 @@ class GRUConfigTemplate(LayerConfigTemplate):
         mult_params_x = self._default_config_params(node)
         mult_params_x['n_in'] = node.get_attr('n_in')
         mult_params_x['n_out'] = str(node.get_attr('n_out')) + ' * 3'
-        mult_params_x['product_type'] = get_backend('quartus').product_type(
+        mult_params_x['product_type'] = get_backend('oneAPI').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
         mult_params_x['index'] = str(node.index) + '_x'
@@ -123,7 +123,7 @@ class GRUConfigTemplate(LayerConfigTemplate):
         mult_params_h['n_in'] = node.get_attr('n_out')
         mult_params_h['n_out'] = str(node.get_attr('n_out')) + ' * 3'
         mult_params_h['reuse_factor'] = params['recurrent_reuse_factor']
-        mult_params_h['product_type'] = get_backend('quartus').product_type(
+        mult_params_h['product_type'] = get_backend('oneAPI').product_type(
             node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
         )
         mult_params_h['index'] = str(node.index) + '_h'
