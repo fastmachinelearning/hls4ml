@@ -26,7 +26,7 @@ namespace nnet {
 template <class data_T, class data_window_T, class res_pipe, typename CONFIG_T>
 void compute_pool_buffer_1d(const data_T &in_elem,
                             nnet::shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::n_filt],
-                            data_window_T kernel_window, int &pX, int &sX) {
+                            data_window_T &kernel_window, int &pX, int &sX) {
 
     using res_T = typename ExtractPipeType<res_pipe>::value_type;
 
@@ -118,13 +118,11 @@ ReadInputWidth:
  * Counter housekeeping - performs the required pooling operation
  *
  */
-template <class data_T, class res_pipe, typename CONFIG_T>
-void compute_pool_buffer_2d(
-    const data_T &in_elem,
-    nnet::shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::pool_height - 1]
-                                                                                [CONFIG_T::n_filt],
-    typename data_T::value_type kernel_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt], int &pX,
-    int &pY, int &sX, int &sY) {
+template <class data_T, class data_window_T, class res_pipe, typename CONFIG_T>
+void compute_pool_buffer_2d(const data_T &in_elem,
+                            nnet::shift_reg<typename data_T::value_type, CONFIG_T::in_width>
+                                line_buffer[CONFIG_T::pool_height - 1][CONFIG_T::n_filt],
+                            data_window_T &kernel_window, int &pX, int &pY, int &sX, int &sY) {
 
     using res_T = typename ExtractPipeType<res_pipe>::value_type;
 
@@ -137,7 +135,7 @@ void compute_pool_buffer_2d(
     nnet::shift_line_buffer_2d<data_T, CONFIG_T>(in_elem, line_buffer, shift_buffer);
 
     // Step 2 - Kernel shift
-    nnet::kernel_shift_2d<data_T, CONFIG_T>(shift_buffer, kernel_window);
+    nnet::kernel_shift_2d<data_T, data_window_T, CONFIG_T>(shift_buffer, kernel_window);
 
     // Check to see if we have a full pool window
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > (lShiftY - 1) && pX > (lShiftX - 1)) {
@@ -190,13 +188,14 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void pooling2d_cl_
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0);
 
-    using data_T = typename ExtractPipeType<data_pipe>::value_type;
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using data_element_T = typename data_arr_T::value_type;
+    using data_window_T = array<data_element_T, CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt>;
 
     // Line buffer and kernel window
-    [[intel::fpga_register]] static nnet::shift_reg<typename data_T::value_type, CONFIG_T::in_width>
+    [[intel::fpga_register]] nnet::shift_reg<data_element_T, CONFIG_T::in_width>
         line_buffer[MAX(CONFIG_T::pool_height - 1, 1)][CONFIG_T::n_filt];
-    [[intel::fpga_register]] static
-        typename data_T::value_type kernel_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt];
+    [[intel::fpga_register]] data_window_T kernel_window;
 
     // former static variables
     // X, Y position pixels
@@ -212,8 +211,8 @@ ReadInputHeight:
     // Read input image
     ReadInputWidth:
         for (int col = 0; col < CONFIG_T::in_width; col++) {
-            compute_pool_buffer_2d<data_T, res_pipe, CONFIG_T>(data_pipe::read(), line_buffer, kernel_window, pX, pY, sX,
-                                                               sY);
+            compute_pool_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(data_pipe::read(), line_buffer,
+                                                                                  kernel_window, pX, pY, sX, sY);
         }
     }
 }
