@@ -124,12 +124,12 @@ class QuartusBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', **_):
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
-        config['ClockPeriod'] = clock_period
-        config['IOType'] = io_type
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
 
         return config
