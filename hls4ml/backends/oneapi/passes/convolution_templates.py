@@ -126,7 +126,7 @@ class Conv1DTaskSequenceTemplate(TaskSequenceTemplate):
 
 class ConvStreamFunctionTemplate(StreamFunctionCallTemplate):
     def __init__(self):
-        super().__init__((Conv1D, Conv2D))
+        super().__init__((Conv1D, Conv2D, Conv2DBatchnorm))
         self.template = conv_stream_function_template
 
     def format(self, node):
