@@ -1,18 +1,29 @@
 import math
-from copy import deepcopy
 
 import numpy as np
 
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
 from hls4ml.model.types import FixedPrecisionType, UnspecifiedPrecisionType
 
+# TODO:  The code assumes everything is Fixed or Integer precision. Need to add checks
+
 
 class InferPrecisionTypes(ConfigurableOptimizerPass):
     def __init__(self):
         # The option, infer_no_bias, allows you to tailor for the given weights, in particular, zero bias
         self.infer_no_bias = False
+        self.count = 0
+        self.MAX_COUNT = 1000
 
     def match(self, node):
+        input_var = node.get_input_variable()
+        if input_var is not None and isinstance(input_var.type, UnspecifiedPrecisionType):
+            # need to wait for the input to update
+            # but check for infinite loops
+            self.count += 1
+            if self.count == self.MAX_COUNT:
+                raise RuntimeError("There is an infinite loop in the precision inference.")
+            return False
         for layer_type in node.types.values():
             if isinstance(layer_type.precision, UnspecifiedPrecisionType):
                 return True
@@ -29,14 +40,14 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             if type_name not in inferred_types:
                 self._infer_default_type(node, type_name)
 
-        return False  # No model graph changes made
+        return True  # May need to rerun
 
     def _infer_precision(self, node, types_to_infer):
         node_class = node.class_name
         if node_class in ['Dense']:
             return self._infer_dense_precision(node, types_to_infer)
 
-        if node_class in ['BatchNormalization']:
+        if node_class in ['BatchNormalization', 'ApplyAlpha']:
             return self._infer_bn_precision(node, types_to_infer)
 
         if node_class in ['Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D', 'Conv2DBatchnorm']:
@@ -51,13 +62,23 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Clone', 'Reshape', 'Resize', 'Transpose', 'ZeroPadding1D', 'ZeroPadding2D']:
             return self._infer_output_matching_precision(node, types_to_infer)
 
-        if node_class in ['Concatenate', 'Merge']:
+        if node_class in ['Merge']:
             return self._infer_merge_precision(node, types_to_infer)
+
+        if node_class in ['Concatenate']:
+            return self._infer_cat_precision(node, types_to_infer)
+
+        if node_class in ['Dot']:
+            return self._infer_dot_precision(node, types_to_infer)
 
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
         return []
+
+    def _get_default_precision(self, node):
+        model_config = node.model.config
+        return model_config.backend.convert_precision_string(model_config.model_precision['default'])
 
     def _infer_default_type(self, node, type_name):
         model_config = node.model.config
@@ -124,6 +145,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             bitwidth = integers + max(frac, bias_width - bias_integers)
             signed = signed or bias_signed
 
+        # Note:  this is guaranteed to not overflow or need rounding, so it's sufficient to use the simpler form.
         new_type = FixedPrecisionType(bitwidth, integers, signed)
 
         if 'accum_t' in types_to_infer:
@@ -225,6 +247,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         return inferred_types
 
     def _infer_bn_precision(self, node, types_to_infer):
+        """
+        The batchnormalziation precision here is the more implementation-focused version. It propagates
+        precision from scale and bias, not mean, variance, etc.
+        """
+
         inferred_types = []
 
         if 'scale_t' in types_to_infer:
@@ -238,16 +265,28 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('bias_t')
 
         if 'result_t' in types_to_infer:
+            input_precision = node.get_input_variable().type.precision
             scale_precision = node.types['scale_t'].precision
             bias_precision = node.types['bias_t'].precision
 
-            out_precision = deepcopy(node.get_input_node().get_output_variable().type.precision)
-            out_precision.integer += scale_precision.integer
-            out_precision.fractional = max(out_precision.fractional, scale_precision.fractional)
+            after_scale_signed = scale_precision.signed or input_precision.signed
+            after_scale_width = input_precision.width + scale_precision.width
+            after_scale_integer = input_precision.integer + scale_precision.integer
 
-            out_precision.integer = max(out_precision.integer, bias_precision.integer) + 1
-            out_precision.fractional = max(out_precision.fractional, bias_precision.fractional)
-            out_precision.width = out_precision.fractional + out_precision.integer
+            out_precision_signed = after_scale_signed or bias_precision.signed
+            out_precision_integer = (
+                max(
+                    after_scale_integer + (bias_precision.signed and not after_scale_signed),
+                    bias_precision.integer + (after_scale_signed and not bias_precision.signed),
+                )
+                + 1
+            )
+            out_precision_width = out_precision_integer + max(
+                after_scale_width - after_scale_integer, bias_precision.fractional
+            )
+
+            # Note:  this is guaranteed to not overflow or need rounding, so it's sufficient to use the simpler form.
+            out_precision = FixedPrecisionType(out_precision_width, out_precision_integer, out_precision_signed)
 
             node.types['result_t'].name = node.name + '_result_t'
             node.types['result_t'].precision = out_precision
@@ -288,10 +327,86 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         input_1 = node.get_input_variable(node.inputs[0]).type.precision
         input_2 = node.get_input_variable(node.inputs[1]).type.precision
 
-        new_width = max(input_1.fractional, input_2.fractional) + max(input_1.integer, input_2.integer)
-        new_int = max(input_1.integer, input_2.integer)
+        op = node.get_attr('op').lower()
+        if op in ('add', 'subtract', 'average'):
+            new_signed = input_1.signed or input_2.signed or op == 'subtract'
+            new_int = (
+                max(
+                    input_1.integer + (input_2.signed and not input_1.signed),
+                    input_2.integer + (input_1.signed and not input_2.signed),
+                )
+                + 1
+            )
+            new_width = new_int + max(input_1.fractional, input_2.fractional)
+            out_precision = FixedPrecisionType(new_width, new_int, new_signed)
+        elif op == 'multiply':
+            new_signed = input_1.signed or input_2.signed
+            new_int = input_1.integer + input_2.integer
+            new_width = input_1.width + input_2.width
+            out_precision = FixedPrecisionType(new_width, new_int, new_signed)
+        elif op in ('maximum', 'minimum'):
+            new_signed = input_1.signed or input_2.signed
 
-        out_precision = FixedPrecisionType(new_width, new_int)
+            input_1_integer = input_1.integer
+            input_2_integer = input_2.integer
+
+            # add one to integer if unsigned while new is signed
+            if new_signed and not input_1.signed:
+                input_1_integer += 1
+            if new_signed and not input_2.signed:
+                input_2_integer += 1
+
+            new_width = max(input_1.fractional, input_2.fractional) + max(input_1_integer, input_2_integer)
+            new_int = max(input_1_integer, input_2_integer)
+            out_precision = FixedPrecisionType(new_width, new_int, new_signed)
+        else:
+            print(f'Warning: not propagating weights for type {op}')
+            out_precision = self._get_default_precision(node)
+
+        node.types['result_t'].name = node.name + '_result_t'
+        node.types['result_t'].precision = out_precision
+
+        return ['result_t']
+
+    def _infer_cat_precision(self, node, types_to_infer):
+        assert 'result_t' in types_to_infer and len(types_to_infer) == 1
+
+        input_1 = node.get_input_variable(node.inputs[0]).type.precision
+        input_2 = node.get_input_variable(node.inputs[1]).type.precision
+
+        new_signed = input_1.signed or input_2.signed
+
+        input_1_integer = input_1.integer
+        input_2_integer = input_2.integer
+
+        # add one to integer if unsigned while new is signed
+        if new_signed and not input_1.signed:
+            input_1_integer += 1
+        if new_signed and not input_2.signed:
+            input_2_integer += 1
+
+        new_width = max(input_1.fractional, input_2.fractional) + max(input_1_integer, input_2_integer)
+        new_int = max(input_1_integer, input_2_integer)
+
+        out_precision = FixedPrecisionType(new_width, new_int, new_signed)
+        node.types['result_t'].name = node.name + '_result_t'
+        node.types['result_t'].precision = out_precision
+
+        return ['result_t']
+
+    def _infer_dot_precision(self, node, types_to_infer):
+        assert 'result_t' in types_to_infer and len(types_to_infer) == 1
+
+        input_1 = node.get_input_variable(node.inputs[0]).type.precision
+        input_2 = node.get_input_variable(node.inputs[1]).type.precision
+
+        n_in = node.get_input_variable(node.inputs[0]).shape[0]
+
+        new_signed = input_1.signed or input_2.signed
+        new_width = input_1.width + input_2.width + math.ceil(np.log2(n_in))
+        new_int = input_1.integer + input_2.integer + math.ceil(np.log2(n_in))
+
+        out_precision = FixedPrecisionType(new_width, new_int, new_signed)
         node.types['result_t'].name = node.name + '_result_t'
         node.types['result_t'].precision = out_precision
 
