@@ -20,6 +20,14 @@ hls4ml.backends.vivado.vivado\_backend module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.vivado.vivado\_types module
+-------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.vivado_types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

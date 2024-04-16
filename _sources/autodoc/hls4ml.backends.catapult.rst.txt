@@ -20,6 +20,14 @@ hls4ml.backends.catapult.catapult\_backend module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.catapult.catapult\_types module
+-----------------------------------------------
+
+.. automodule:: hls4ml.backends.catapult.catapult_types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
