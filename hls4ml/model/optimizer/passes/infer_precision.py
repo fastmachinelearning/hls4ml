@@ -296,15 +296,21 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if 'accum_t' in types_to_infer:
             input_precision = node.get_input_variable().type.precision
-            input_width = input_precision.width
-            input_integers = input_precision.integer
+            pool_op = node.attributes['pool_op'].lower()
 
-            n_ops = node.get_attr('n_filt') * node.get_attr('pool_height', 1) * node.get_attr('pool_width')
+            width: int = input_precision.width
+            integer: int = input_precision.integer
+            signed: bool = input_precision.signed
 
-            accum_type = FixedPrecisionType(
-                width=int(np.ceil(input_width + np.log2(n_ops)) + 1),
-                integer=int(np.ceil(input_integers + np.log2(n_ops)) + 1),
-            )
+            pool_size: int = node.get_attr('pool_height', 1) * node.get_attr('pool_width')
+            if pool_op == 'avg':
+                extra_bits = int(np.ceil(np.log2(pool_size)))
+            elif pool_op == 'max':
+                extra_bits = 0
+            else:
+                raise ValueError(f'Unknown pooling operation: {pool_op}')
+
+            accum_type = FixedPrecisionType(width=width + extra_bits * 2, integer=integer + extra_bits, signed=signed)
 
             node.types['accum_t'].name = node.name + '_accum_t'
             node.types['accum_t'].precision = accum_type
