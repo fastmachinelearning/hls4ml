@@ -69,3 +69,70 @@ def test_pysr_luts(data):
     eq = str(model.sympy())
 
     assert 'cos_lut' in eq
+
+
+@pytest.mark.parametrize('part', ['some_part', None])
+@pytest.mark.parametrize('clock_period', [8, None])
+@pytest.mark.parametrize('clock_unc', ['15%', None])
+@pytest.mark.parametrize('compiler', ['vivado_hls', 'vitis_hls'])
+def test_sr_backend_config(part, clock_period, clock_unc, compiler):
+
+    expr = 'x0**2 + 2.5382*cos_lut(x3) - 0.5'
+
+    if clock_unc is not None:
+        unc_str = clock_unc.replace('%', '')
+    else:
+        unc_str = clock_unc
+
+    compiler_str = compiler.replace('_hls', '')
+
+    test_dir = f'hls4mlprj_sr_backend_config_part_{part}_period_{clock_period}_unc_{unc_str}_{compiler_str}'
+    output_dir = test_root_path / test_dir
+
+    hls_model = hls4ml.converters.convert_from_symbolic_expression(
+        expr,
+        n_symbols=5,
+        precision='ap_fixed<18,6>',
+        output_dir=str(output_dir),
+        part=part,
+        clock_period=clock_period,
+        clock_uncertainty=clock_unc,
+        compiler=compiler,
+        hls_include_path='',
+        hls_libs_path='',
+    )
+    hls_model.write()
+
+    # Check if config was properly parsed into the ModelGraph
+
+    read_part = hls_model.config.get_config_value('Part')
+    expected_part = part if part is not None else 'xcvu13p-flga2577-2-e'
+    assert read_part == expected_part
+
+    read_clock_period = hls_model.config.get_config_value('ClockPeriod')
+    expected_period = clock_period if clock_period is not None else 5
+    assert read_clock_period == expected_period
+
+    read_clock_unc = hls_model.config.get_config_value('ClockUncertainty')
+    expected_unc = clock_unc
+    if expected_unc is None:
+        if compiler == 'vivado_hls':
+            expected_unc = '12.5%'
+        else:
+            expected_unc = '27%'
+    assert read_clock_unc == expected_unc
+
+    # Check if Writer properly wrote tcl scripts
+    part_ok = period_ok = unc_ok = False
+
+    prj_tcl_path = output_dir / 'project.tcl'
+    with open(prj_tcl_path) as f:
+        for line in f.readlines():
+            if 'set part' in line and expected_part in line:
+                part_ok = True
+            if f'set clock_period {expected_period}' in line:
+                period_ok = True
+            if f'set clock_uncertainty {expected_unc}' in line:
+                unc_ok = True
+
+    assert part_ok and period_ok and unc_ok
