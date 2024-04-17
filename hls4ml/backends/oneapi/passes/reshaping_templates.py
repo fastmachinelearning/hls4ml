@@ -38,7 +38,7 @@ zeropad2d_task_sequence_template = (
     'task_sequence<nnet::zeropad2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
 
-padding_stream_function_template = '{name}.async();'
+reshaping_stream_function_template = '{name}.async();'
 
 padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
 
@@ -90,10 +90,10 @@ class ZeroPaddingTaskSequenceTemplate(TaskSequenceTemplate):
         return self.templates[node.class_name].format(**params)
 
 
-class ZeroPaddingStreamFunctionTemplate(StreamFunctionCallTemplate):
+class ReshapingStreamFunctionTemplate(StreamFunctionCallTemplate):
     def __init__(self):
-        super().__init__((ZeroPadding1D, ZeroPadding2D))
-        self.template = padding_stream_function_template
+        super().__init__((ZeroPadding1D, ZeroPadding2D, Resize, Reshape, Transpose))
+        self.template = reshaping_stream_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -113,7 +113,10 @@ resize_config_template = """struct config{index} : nnet::resize_config {{
     static const unsigned n_chan = {n_chan};
 }};\n"""
 
-resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
+resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {output_t}, {config}>({input}, {output});'
+resize_task_sequence_template = (
+    'task_sequence<nnet::resize_{algorithm}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+)
 resize_include_list = ['nnet_utils/nnet_resize.h', 'nnet_utils/nnet_resize_stream.h']
 
 
@@ -142,6 +145,20 @@ class ResizeFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
 
+class ResizeTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__(Resize)
+        self.template = resize_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        if node.get_attr('algorithm') != 'nearest':
+            raise Exception('Currently only supporting resize_nearest')
+        params['algorithm'] = node.get_attr('algorithm')
+
+        return self.template.format(**params)
+
+
 # Transpose templates
 
 transpose_config_template = """struct config{index} : nnet::transpose_config {{
@@ -152,6 +169,9 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
 }};\n"""
 
 transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {output_t}, {config}>({input}, {output});'
+transpose_task_sequence_template = (
+    'task_sequence<nnet::transpose_{dim}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+)
 transpose_include_list = ['nnet_utils/nnet_transpose.h', 'nnet_utils/nnet_transpose_stream.h']
 
 
@@ -178,9 +198,20 @@ class TransposeFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
 
+class TransposeTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__(Transpose)
+        self.template = transpose_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['dim'] = node.get_attr('dim')
+
+        return self.template.format(**params)
+
+
 # Reshape template (only used in streaming)
 reshape_task_sequence_template = 'task_sequence<nnet::repack_stream<{input_pipe}, {output_pipe}, {size}>> {name};'
-reshape_stream_function_template = '{name}.async();'
 reshape_include_list = ['nnet_utils/nnet_stream.h']
 
 
@@ -210,15 +241,4 @@ class ReshapeTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['size'] = np.prod(node.get_output_variable().shape)
-        return self.template.format(**params)
-
-
-class ReshapeStreamFunctionTemplate(StreamFunctionCallTemplate):
-    def __init__(self):
-        super().__init__(Reshape)
-        self.template = reshape_stream_function_template
-
-    def format(self, node):
-        params = self._default_function_params(node)
-
         return self.template.format(**params)

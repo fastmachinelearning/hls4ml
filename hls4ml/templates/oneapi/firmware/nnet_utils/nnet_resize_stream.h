@@ -5,9 +5,11 @@
 
 namespace nnet {
 
-template <class data_T, typename CONFIG_T> void resize_nearest(stream<data_T> &image, stream<data_T> &resized) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void resize_nearest_stream() {
     assert(CONFIG_T::new_height % CONFIG_T::height == 0);
     assert(CONFIG_T::new_width % CONFIG_T::width == 0);
+
+    using data_T = typename ExtractPipeType<data_pipe>::value_type;
 
     constexpr unsigned ratio_height = CONFIG_T::new_height / CONFIG_T::height;
     constexpr unsigned ratio_width = CONFIG_T::new_width / CONFIG_T::width;
@@ -18,7 +20,7 @@ ImageHeight:
 
     ImageWidth:
         for (unsigned i = 0; i < CONFIG_T::width; i++) {
-            [[intel::fpga_register]] data_T in_data = image.read();
+            [[intel::fpga_register]] auto in_data = data_pipe::read();
 
         ImageChan:
             #pragma unroll
@@ -44,7 +46,7 @@ ImageHeight:
                         out_data[k] = data_in_row[l][k];
                     }
 
-                    resized.write(out_data);
+                    res_pipe::write(out_data);
                 }
             }
         }

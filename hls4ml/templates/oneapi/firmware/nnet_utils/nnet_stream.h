@@ -2,6 +2,7 @@
 #define NNET_CLONE_H
 
 #include "nnet_common.h"
+#include "nnet_printf.h"
 
 namespace nnet {
 
@@ -71,7 +72,7 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
     if (datasize == ressize) {
         [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
 
-            data_T in_data = data_pipe::read();
+            auto in_data = data_pipe::read();
             res_T out_data;
 
             #pragma unroll
@@ -86,8 +87,7 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
 
         for (int i = 0; i < N / datasize; i++) {
 
-            data_T in_data = data_pipe::read();
-            res_T out_data;
+            auto in_data = data_pipe::read();
 
             [[intel::initiation_interval(1)]] for (int j = 0; j < pack_diff; j++) {
 
@@ -101,12 +101,12 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
             }
         }
     } else { // datasize < ressize
-        res_T out_data;
         constexpr unsigned pack_diff = ressize / datasize;
         unsigned pack_cnt = 0;
         [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
 
-            data_T in_data = data_pipe::read();
+            auto in_data = data_pipe::read();
+            res_T out_data;
 
             #pragma unroll
             for (int j = 0; j < datasize; j++) {
