@@ -12,17 +12,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
     def __init__(self):
         # The option, infer_no_bias, allows you to tailor for the given weights, in particular, zero bias
         self.infer_no_bias = False
-        self.count = 0
-        self.MAX_COUNT = 1000
 
     def match(self, node):
         input_var = node.get_input_variable()
         if input_var is not None and isinstance(input_var.type, UnspecifiedPrecisionType):
-            # need to wait for the input to update
-            # but check for infinite loops
-            self.count += 1
-            if self.count == self.MAX_COUNT:
-                raise RuntimeError("There is an infinite loop in the precision inference.")
+            # only infer types if the input type is known
             return False
         for layer_type in node.types.values():
             if isinstance(layer_type.precision, UnspecifiedPrecisionType):
@@ -40,7 +34,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             if type_name not in inferred_types:
                 self._infer_default_type(node, type_name)
 
-        return True  # May need to rerun
+        # if the return type was set, this may allow InferPrecisionTypes to be run
+        # on layers it was not previously able to
+        return 'result_t' in types_to_infer
 
     def _infer_precision(self, node, types_to_infer):
         node_class = node.class_name
