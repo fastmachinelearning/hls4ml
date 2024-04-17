@@ -298,11 +298,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             input_precision = node.get_input_variable().type.precision
             pool_op = node.attributes['pool_op'].lower()
 
-            width: int = input_precision.width
-            integer: int = input_precision.integer
-            signed: bool = input_precision.signed
+            width = input_precision.width
+            integer = input_precision.integer
+            signed = input_precision.signed
 
-            pool_size: int = node.get_attr('pool_height', 1) * node.get_attr('pool_width')
+            pool_size = node.get_attr('pool_height', 1) * node.get_attr('pool_width')
             if pool_op == 'avg':
                 extra_bits = int(np.ceil(np.log2(pool_size)))
             elif pool_op == 'max':
