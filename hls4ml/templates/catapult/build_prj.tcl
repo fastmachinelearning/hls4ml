@@ -149,18 +149,17 @@ set design_top myproject
 solution file add $sfd/firmware/myproject.cpp
 solution file add $sfd/myproject_test.cpp -exclude true
 
-# Parse parameters.h to determine config info to control directives/pragmas
+# Parse hls4ml_config.yml
+set Strategy latency
 set IOType io_stream
-if { ![file exists $sfd/firmware/parameters.h] } {
-  logfile message "Could not locate firmware/parameters.h. Unable to determine network configuration.\n" warning
+if { ![file exists $sfd/hls4ml_config.yml] } {
+  logfile message "Could not locate HLS4ML configuration file '$sfd/hls4ml_config.yml'. Unable to determine network configuration.\n" warning
 } else {
-  set pf [open "$sfd/firmware/parameters.h" "r"]
+  set pf [open "$sfd/hls4ml_config.yml" "r"]
   while {![eof $pf]} {
     gets $pf line
-    if { [string match {*io_type = nnet::io_stream*} $line] } {
-      set IOType io_stream
-      break
-    }
+    if { [regexp {\s+Strategy: (\w+)} $line all value] }     { set Strategy [string tolower $value] }
+    if { [regexp {IOType: (\w+)} $line all value] }          { set IOType [string tolower $value] }
   }
   close $pf
 }
@@ -175,6 +174,26 @@ directive set -MEM_MAP_THRESHOLD [expr 2048 * 16 + 1]
 set hls_clock_period 5
 
 go analyze
+
+# Workaround for io_parallel and separable conv2d
+if { $IOType == "io_parallel" } {
+  set inlines {}
+  set pooling2d_used 0
+  foreach fn [solution get /SOURCEHIER/FUNC_HBS/* -match glob -ret l -checkpath 0] {
+    if { [string match {nnet::*} $fn] }             { lappend inlines $fn }
+    if { [string match {nnet::pooling2d_cl*} $fn] } { set pooling2d_used 1 }
+    if { [string match {ac::fx_div*} $fn] }         { lappend inlines $fn }
+  }
+  foreach fn $inlines {
+    set old [solution design get $fn]
+    logfile message "solution design set $fn -inline\n" warning
+    solution design set $fn -inline
+  }
+  if { $pooling2d_used } {
+    # Need to enable this since pooling2d_cl has some division operations in it
+    directive set -SCHED_USE_MULTICYCLE true
+  }
+}
 
 # NORMAL TOP DOWN FLOW
 if { ! $opt(bup) } {
