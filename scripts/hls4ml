@@ -328,16 +328,14 @@ def _build_catapult(args, extra_args):
             print('Catapult HLS installation not found. Make sure "catapult" is on PATH.')
             sys.exit(1)
 
-    ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile}"'.format(
-        reset=reset,
-        csim=csim,
-        synth=synth,
-        cosim=cosim,
-        validation=validation,
-        export=export,
-        vsynth=vsynth,
-        fifo_opt=fifo_opt,
-        bitfile=bitfile,
+    ccs_args = '"reset={re} csim={cs} synth={sy} cosim={co} validation={va} export={ex} vsynth={vs}"'.format(
+        re=reset,
+        cs=csim,
+        sy=synth,
+        co=cosim,
+        va=validation,
+        ex=export,
+        vs=vsynth,
     )
     ccs_invoke = catapult_exe + ' -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
     print(ccs_invoke)
