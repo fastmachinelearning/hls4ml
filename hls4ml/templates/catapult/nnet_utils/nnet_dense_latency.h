@@ -16,8 +16,9 @@ void dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
                    typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     // Partial unroll config
-    constexpr int prod1_unroll = (ce_reuse_factor<CONFIG_T::n_in) ? CONFIG_T::n_in : (int)(CONFIG_T::n_in*CONFIG_T::n_out)/ce_reuse_factor;
-    constexpr int prod2_unroll = (int)CONFIG_T::n_out/ce_reuse_factor;
+    constexpr int prod1_unroll =
+        (ce_reuse_factor < CONFIG_T::n_in) ? CONFIG_T::n_in : (int)(CONFIG_T::n_in * CONFIG_T::n_out) / ce_reuse_factor;
+    constexpr int prod2_unroll = (int)CONFIG_T::n_out / ce_reuse_factor;
 
     (void)ce_reuse_factor; // to silence compiler warnings
     (void)prod1_unroll;

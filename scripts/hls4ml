@@ -277,6 +277,7 @@ def _build_quartus(args, extra_args):
 
     os.chdir(curr_dir)
 
+
 def _build_catapult(args, extra_args):
     catapult_parser = argparse.ArgumentParser(prog=f'hls4ml build -p {args.project}', add_help=False)
     catapult_parser.add_argument('-c', '--simulation', help='Run C simulation', action='store_true', default=False)
@@ -327,10 +328,21 @@ def _build_catapult(args, extra_args):
             print('Catapult HLS installation not found. Make sure "catapult" is on PATH.')
             sys.exit(1)
 
-    ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile)
+    ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile}"'.format(
+        reset=reset,
+        csim=csim,
+        synth=synth,
+        cosim=cosim,
+        validation=validation,
+        export=export,
+        vsynth=vsynth,
+        fifo_opt=fifo_opt,
+        bitfile=bitfile,
+    )
     ccs_invoke = catapult_exe + ' -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
     print(ccs_invoke)
     os.system(ccs_invoke)
+
 
 def _report(args, extra_args):
     if args.project is None:

@@ -33,8 +33,7 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
         //#pragma HLS ARRAY_PARTITION variable=mult complete
 
         //#pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
-    
-    
+
     // Do the matrix-multiply
     #pragma hls_unroll
     Product1:
@@ -43,7 +42,9 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
         Product2:
             for (unsigned int jj = 0; jj < CONFIG_T::d_mult; jj++) {
                 int index = ii * CONFIG_T::d_mult + jj;
-                mult[index] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(data[ii], weights[index]);
+                mult[index] =
+                    CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
+                        data[ii], weights[index]);
             }
         }
 
