@@ -18,6 +18,8 @@ from hls4ml.model.layers import (
     Embedding,
     GarNet,
     GarNetStack,
+    GlobalPooling1D,
+    GlobalPooling2D,
     Layer,
     Pooling1D,
     Pooling2D,
@@ -29,6 +31,7 @@ from hls4ml.model.layers import (
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_catapult_report
+from hls4ml.utils.fixed_point_utils import ceil_log2
 
 
 class CatapultBackend(FPGABackend):
@@ -407,13 +410,36 @@ class CatapultBackend(FPGABackend):
             dw_output_t = NamedType(dw_out_name, dw_out_precision)
         layer.set_attr('dw_output_t', dw_output_t)
 
+    def _set_pooling_accum_t(self, layer, pool_size):
+        extra_bits = ceil_log2(pool_size)
+        accum_t = layer.get_attr('accum_t')
+        accum_t.precision.width += extra_bits * 2
+        if isinstance(accum_t.precision, FixedPrecisionType):
+            accum_t.precision.integer += extra_bits
+
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
+        pool_size = layer.get_attr('pool_width')
+        self._set_pooling_accum_t(layer, pool_size)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Pooling2D)
     def init_pooling2d(self, layer):
+        pool_size = layer.get_attr('pool_height') * layer.get_attr('pool_width')
+        self._set_pooling_accum_t(layer, pool_size)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    @layer_optimizer(GlobalPooling1D)
+    def init_global_pooling1d(self, layer):
+        pool_size = layer.get_attr('n_in')
+        self._set_pooling_accum_t(layer, pool_size)
+
+    @layer_optimizer(GlobalPooling2D)
+    def init_global_pooling2d(self, layer):
+        pool_size = layer.get_attr('in_height') * layer.get_attr('in_width')
+        self._set_pooling_accum_t(layer, pool_size)
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
