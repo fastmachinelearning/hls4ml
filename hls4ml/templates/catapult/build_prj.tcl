@@ -12,6 +12,7 @@ array set opt {
   export     0
   vsynth     0
   bitfile    0
+  fifo_opt   0
   ran_frame  2
   sw_opt     0
   power      0
@@ -51,11 +52,14 @@ proc report_time { op_name time_start time_end } {
 
 proc setup_xilinx_part { part } {
   # Map Xilinx PART into Catapult library names
-  set libname [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v]
+  set part_sav $part
+  set libname [lindex [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret v] 0]
+  puts "Library Name: $libname"
   if { [llength $libname] == 1 } {
     set libpath [library get /CONFIG/PARAMETERS/Vivado/PARAMETERS/Xilinx/PARAMETERS/*/PARAMETERS/*/PARAMETERS/$part/LIBRARIES/*/NAME -match glob -ret p]
+    puts "Library Path: $libpath"
     if { [regexp {/CONFIG/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/PARAMETERS/(\S+)/.*} $libpath dummy rtltool vendor family speed part] } {
-      solution library add $libname -- -rtlsyntool $rtltool -vendor $vendor -family $family -speed $speed
+      solution library add $libname -- -rtlsyntool $rtltool -vendor $vendor -family $family -speed $speed -part $part_sav
     } else {
       solution library add $libname -- -rtlsyntool Vivado
     }
@@ -67,6 +71,7 @@ proc setup_xilinx_part { part } {
   solution library add Xilinx_ROMS
   solution library add Xilinx_FIFO
 }
+
 
 proc setup_asic_libs { args } {
   set do_saed 0
@@ -94,10 +99,10 @@ options set Input/SearchPath {$MGC_HOME/shared/include/nnet_utils} -append
 options set ComponentLibs/SearchPath {$MGC_HOME/shared/pkgs/ccs_hls4ml} -append
 
 if {$opt(reset)} {
-  project load myproject_prj.ccs
+  project load CATAPULT_DIR.ccs
   go new
 } else {
-  project new -name myproject_prj
+  project new -name CATAPULT_DIR
 }
 
 #--------------------------------------------------------
@@ -106,10 +111,10 @@ if {$opt(reset)} {
 options set Message/ErrorOverride HIER-10 -remove
 solution options set Message/ErrorOverride HIER-10 -remove
 
-if {$opt(vhdl)}    { 
-  options set Output/OutputVHDL true 
+if {$opt(vhdl)}    {
+  options set Output/OutputVHDL true
 } else {
-  options set Output/OutputVHDL false 
+  options set Output/OutputVHDL false
 }
 if {$opt(verilog)} {
   options set Output/OutputVerilog true
@@ -140,15 +145,16 @@ flow package require /SCVerify
 
 #--------------------------------------------------------
 #    Start of HLS script
-solution file add firmware/myproject.cpp
-solution file add myproject_test.cpp -exclude true
+set design_top myproject
+solution file add $sfd/firmware/myproject.cpp
+solution file add $sfd/myproject_test.cpp -exclude true
 
 # Parse parameters.h to determine config info to control directives/pragmas
 set IOType io_stream
-if { ![file exists firmware/parameters.h] } {
+if { ![file exists $sfd/firmware/parameters.h] } {
   logfile message "Could not locate firmware/parameters.h. Unable to determine network configuration.\n" warning
 } else {
-  set pf [open "firmware/parameters.h" "r"]
+  set pf [open "$sfd/firmware/parameters.h" "r"]
   while {![eof $pf]} {
     gets $pf line
     if { [string match {*io_type = nnet::io_stream*} $line] } {
@@ -217,6 +223,8 @@ if {$opt(synth)} {
   set bu_mappings {}
   set top [lindex $blocks 0]
   foreach block [lreverse [lrange $blocks 1 end]] {
+    # skip blocks that are net nnet:: functions
+    if { [string match {nnet::*} $block] == 0 } { continue }
     go analyze
     solution design set $block -top
     go compile
@@ -259,10 +267,29 @@ if {$opt(synth)} {
 
   # Map to bottom-up blocks
   foreach {d i l} $bu_mappings {
-    logfile message "directive set $i -MAP_TO_MODULE [list $l]\n" info
-    eval directive set $i -MAP_TO_MODULE [list $l]
+    # Make sure block exists
+    set cnt [directive get $i/* -match glob -checkpath 0 -ret p]
+    if { $cnt != {} } {
+      logfile message "directive set $i -MAP_TO_MODULE [list $l]\n" info
+      eval directive set $i -MAP_TO_MODULE [list $l]
+    }
   }
   go assembly
+  set design [solution get -name]
+  logfile message "Adjusting FIFO_DEPTH for top-level interconnect channels\n" warning
+  # FIFO interconnect between layers
+  foreach ch_fifo_m2m [directive get -match glob -checkpath 0 -ret p $design/*_out:cns/MAP_TO_MODULE] {
+    set ch_fifo [join [lrange [split $ch_fifo_m2m '/'] 0 end-1] /]/FIFO_DEPTH
+    logfile message "directive set -match glob $ch_fifo 1\n" info
+    directive set -match glob "$ch_fifo" 1
+  }
+  # For bypass paths - the depth will likely need to be larger than 1
+  foreach ch_fifo_m2m [directive get -match glob -checkpath 0 -ret p $design/*_cpy*:cns/MAP_TO_MODULE] {
+    set ch_fifo [join [lrange [split $ch_fifo_m2m '/'] 0 end-1] /]/FIFO_DEPTH
+    logfile message "Bypass FIFO '$ch_fifo' depth set to 1 - larger value may be required to prevent deadlock\n" warning
+    logfile message "directive set -match glob $ch_fifo 1\n" info
+    directive set -match glob "$ch_fifo" 1
+  }
   go architect
   go allocate
   go schedule
@@ -273,7 +300,12 @@ if {$opt(synth)} {
 project save
 
 if {$opt(cosim) || $opt(validation)} {
-  flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
+  if {$opt(verilog)} {
+    flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
+  }
+  if {$opt(vhdl)} {
+    flow run /SCVerify/launch_make ./scverify/Verify_rtl_vhdl_msim.mk {} SIMTOOL=msim sim
+  }
 }
 
 if {$opt(export)} {
@@ -289,15 +321,18 @@ if {$opt(export)} {
 if {$opt(sw_opt)} {
   puts "***** Pre Power Optimization *****"
   go switching
-  flow run /PowerAnalysis/report_pre_pwropt_Verilog
-  flow run /PowerAnalysis/report_pre_pwropt_VHDL
+  if {$opt(verilog)} {
+    flow run /PowerAnalysis/report_pre_pwropt_Verilog
   }
+  if {$opt(vhdl)} {
+    flow run /PowerAnalysis/report_pre_pwropt_VHDL
+  }
+}
 
 if {$opt(power)} {
   puts "***** Power Optimization *****"
-
-	go power
-  }
+  go power
+}
 
 if {$opt(vsynth)} {
   puts "***** VIVADO SYNTHESIS *****"
@@ -306,6 +341,7 @@ if {$opt(vsynth)} {
   set time_end [clock clicks -milliseconds]
   report_time "VIVADO SYNTHESIS" $time_start $time_end
 }
+
 if {$opt(bitfile)} {
   puts "***** Option bitfile not supported yet *****"
 }
@@ -318,4 +354,3 @@ if {$opt(da)} {
 if { [catch {flow package present /HLS4ML}] == 0 } {
   flow run /HLS4ML/collect_reports
 }
-

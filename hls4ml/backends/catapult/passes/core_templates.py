@@ -31,7 +31,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Dense)
         self.template = dense_config_template
-    
+
     def format(self, node):
         params = self._default_config_params(node)
         params['nzeros'] = node.get_weights('weight').nzeros
@@ -47,7 +47,7 @@ class DenseFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Dense, include_header=dense_include_list)
         self.template = dense_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['w'] = node.get_weights('weight').name
@@ -81,7 +81,7 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(BatchNormalization)
         self.template = batchnorm_config_template
-    
+
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
@@ -96,7 +96,7 @@ class BatchNormalizationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(BatchNormalization, include_header=batchnorm_include_list)
         self.template = batchnorm_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['scale'] = node.get_weights('scale').name
@@ -171,7 +171,7 @@ class HardActivationConfigTemplate(LayerConfigTemplate):
 
 class SoftmaxConfigTemplate(ActivationConfigTemplate):
     def __init__(self):
-        super(ActivationConfigTemplate, self).__init__(Softmax) # Skip ActivationConfigTemplate's __init__
+        super(ActivationConfigTemplate, self).__init__(Softmax)  # Skip ActivationConfigTemplate's __init__
         self.template = softmax_config_template
 
 
@@ -179,7 +179,7 @@ class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__((Activation, HardActivation, Softmax), include_header=activ_include_list)
         self.template = activ_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()

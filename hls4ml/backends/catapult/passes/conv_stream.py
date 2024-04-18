@@ -3,7 +3,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class GenerateConvStreamingInstructions(OptimizerPass):
-    ''' Generates the instructions for streaming implementation of CNNs '''
+    '''Generates the instructions for streaming implementation of CNNs'''
 
     def match(self, node):
         return isinstance(node, (Conv1D, SeparableConv1D, Conv2D, SeparableConv2D))
@@ -16,7 +16,7 @@ class GenerateConvStreamingInstructions(OptimizerPass):
             self._generate_2d_instructions(node)
         else:
             raise Exception(f'Cannot generate instructions for node {node.name} ({node_class})')
-    
+
     def _generate_1d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
             min_w, instructions = node.model.config.backend.compute_conv1d_instructions(

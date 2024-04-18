@@ -4,7 +4,8 @@ import sys
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter, CatapultArrayVariableConverter
+from hls4ml.backends.catapult.catapult_types import CatapultArrayVariableConverter
+from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
@@ -103,12 +104,12 @@ class CatapultBackend(FPGABackend):
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
-             'catapult:remove_final_reshape', 
-             'catapult:optimize_pointwise_conv', 
-             'catapult:inplace_parallel_reshape', 
-             'catapult:inplace_stream_flatten', 
-             'catapult:skip_softmax',
-             'catapult:fix_softmax_table_size',
+            'catapult:remove_final_reshape',
+            'catapult:optimize_pointwise_conv',
+            'catapult:inplace_parallel_reshape',
+            'catapult:inplace_stream_flatten',
+            'catapult:skip_softmax',
+            'catapult:fix_softmax_table_size',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -175,7 +176,15 @@ class CatapultBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, tech='fpga', part='xcku115-flvb2104-2-i', asiclibs='nangate-45nm', fifo=None, clock_period=5, io_type='io_parallel'):
+    def create_initial_config(
+        self,
+        tech='fpga',
+        part='xcku115-flvb2104-2-i',
+        asiclibs='nangate-45nm',
+        fifo=None,
+        clock_period=5,
+        io_type='io_parallel',
+    ):
         config = {}
 
         config['Technology'] = tech
@@ -208,7 +217,7 @@ class CatapultBackend(FPGABackend):
         sw_opt=False,
         power=False,
         da=False,
-        bup=False
+        bup=False,
     ):
         # print(f'ran_frame value: {ran_frame}')  # Add this line for debugging
         catapult_exe = 'catapult'
@@ -226,8 +235,11 @@ class CatapultBackend(FPGABackend):
                 raise Exception('Catapult HLS installation not found. Make sure "catapult" is on PATH.')
 
         curr_dir = os.getcwd()
+        # this execution moves into the hls4ml-generated "output_dir" and runs the build_prj.tcl script.
         os.chdir(model.config.get_output_dir())
-        ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame} sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog} bup={bup}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile, ran_frame=ran_frame, sw_opt=sw_opt, power=power, da=da, vhdl=vhdl, verilog=verilog, bup=bup)
+        ccs_args = f'"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation}'
+        ccs_args += f' export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame}'
+        ccs_args += f' sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog} bup={bup}"'
         ccs_invoke = catapult_exe + ' -product ultra -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
         print(ccs_invoke)
         os.system(ccs_invoke)
@@ -401,8 +413,9 @@ class CatapultBackend(FPGABackend):
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
         accum_t = layer.get_attr('accum_t')
-        accum_t.precision.fractional += extra_bits
-        accum_t.precision.integer += extra_bits
+        accum_t.precision.width += extra_bits * 2
+        if isinstance(accum_t.precision, FixedPrecisionType):
+            accum_t.precision.integer += extra_bits
 
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
@@ -475,7 +488,9 @@ class CatapultBackend(FPGABackend):
     def init_garnet(self, layer):
         reuse_factor = layer.attributes['reuse_factor']
 
-        var_converter = CatapultArrayVariableConverter(type_converter=HLSTypeConverter(precision_converter=ACTypeConverter()))
+        var_converter = CatapultArrayVariableConverter(
+            type_converter=HLSTypeConverter(precision_converter=ACTypeConverter())
+        )
 
         # A bit controversial but we are going to set the partitioning of the input here
         in_layer = layer.model.graph[layer.inputs[0]]

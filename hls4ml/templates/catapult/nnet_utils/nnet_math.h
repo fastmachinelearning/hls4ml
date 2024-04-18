@@ -56,8 +56,8 @@ template <class T> void sincos_lut(const T &input, T output[2]) {
     // Datatype for posinput which is used to handle negative inputs
     typedef ac_fixed<T::width - T::iwidth, 0, false> posinputtype;
 
-    typedef ac_int<9,false> lutindextype; // 9 bits required for indexing into 512 entry table
-    typedef ac_int<3,false> octanttype;   // 3 bits required for octant value range of 0 thru 7
+    typedef ac_int<9, false> lutindextype; // 9 bits required for indexing into 512 entry table
+    typedef ac_int<3, false> octanttype;   // 3 bits required for octant value range of 0 thru 7
     T outputtemp[2];
     lutindextype luTdex = 0;
     posinputtype posinput = input;
@@ -78,7 +78,7 @@ template <class T> void sincos_lut(const T &input, T output[2]) {
     // Leaving this commented out makes the table to to BRAM
     //#pragma HLS ARRAY_PARTITION variable=sincos complete dim=0
 
-    typedef ac_int<AP_MAX(T::width - T::iwidth - 3, 1),false> lutindextype1;
+    typedef ac_int<AP_MAX(T::width - T::iwidth - 3, 1), false> lutindextype1;
     // Extracting (MSB-3:LSB) bits of scaled input to determine the lookup table index
     lutindextype1 luTdex1 = posinput.range(AP_MAX(T::width - T::iwidth - 3, 1), 0); // Extracting the lookup table index
 
@@ -93,7 +93,7 @@ template <class T> void sincos_lut(const T &input, T output[2]) {
             luTdex = luTdex + 1;
         }
         typedef ac_fixed<AP_MAX((AP_MAX(T::width - T::iwidth - 3, 1) + T::width - T::iwidth - 12), 1),
-                          AP_MAX(T::width - T::iwidth - 3, 1),false>
+                         AP_MAX(T::width - T::iwidth - 3, 1), false>
             datatype;
         datatype x = (datatype)luTdex1;
         x = x >> AP_MAX(T::width - T::iwidth - 12, 0);
@@ -176,4 +176,3 @@ template <class T> T cos_lut(const T input) {
 } // namespace nnet
 
 #endif
-

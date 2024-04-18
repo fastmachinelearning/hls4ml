@@ -204,6 +204,8 @@ def convert_from_keras_model(
             will overwrite any part passed as a parameter.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
+        clock_uncertainty (str, optional): Clock uncertainty
+            Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
@@ -264,6 +266,8 @@ def convert_from_pytorch_model(
             will overwrite any part passed as a parameter.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
+        clock_uncertainty (str, optional): Clock uncertainty
+            Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
@@ -336,6 +340,8 @@ def convert_from_onnx_model(
             will overwrite any part passed as a parameter.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
+        clock_uncertainty (str, optional): Clock uncertainty
+            Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
