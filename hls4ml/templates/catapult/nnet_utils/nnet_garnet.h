@@ -119,6 +119,7 @@ template <class CONFIG_T, class E = typename CONFIG_T::edge_weight_t> struct Mea
         //#pragma HLS INLINE
         //#pragma HLS ARRAY_PARTITION variable=edge_weight_mean complete
         //#pragma HLS ARRAY_PARTITION variable=weighted_feature_mean complete
+        #pragma hls_unroll region
 
     Aggregators:
         for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
@@ -157,6 +158,7 @@ template <class CONFIG_T, class E = typename CONFIG_T::edge_weight_t> struct Mea
     template <class nvtx_T, class arrays_T, class T = CONFIG_T>
     typename std::enable_if<T::mean_by_nvert>::type set_means_normalized(nvtx_T const nvtx, arrays_T const &accum) {
         //#pragma HLS INLINE
+        #pragma hls_unroll region
 
         // accum comes divided by unroll factor
         typename T::norm_t nvtx_norm = (T::n_vertices / T::reuse_factor) / nvtx;
@@ -177,6 +179,7 @@ template <class CONFIG_T, class E = typename CONFIG_T::edge_weight_t> struct Mea
     template <class nvtx_T, class arrays_T, class T = CONFIG_T>
     typename std::enable_if<not T::mean_by_nvert>::type set_means_normalized(nvtx_T const nvtx, arrays_T const &accum) {
         //#pragma HLS INLINE
+        #pragma hls_unroll region
 
     Aggregators:
         for (unsigned ia = 0; ia < T::n_aggregators; ++ia) {
@@ -231,6 +234,7 @@ struct OutputBiasNormalizer<CONFIG_T, nvtx_T, typename std::enable_if<not CONFIG
 
     OutputBiasNormalizer(nvtx_T const nvtx) {
         //#pragma HLS ARRAY_PARTITION variable=output_biases complete
+        #pragma hls_unroll region
 
         // Cannot add a loop label here due to a Vivado HLS bug, apparently
         for (unsigned io = 0; io < CONFIG_T::n_out_features; ++io) {
@@ -339,6 +343,7 @@ Aggregators:
 template <class CONFIG_T, class arrays_T>
 inline typename CONFIG_T::aggr_t compute_output_base_core(arrays_T const &arrays, unsigned io, unsigned ia) {
     //#pragma HLS INLINE
+    #pragma hls_unroll region
 
     unsigned const ioa = io * CONFIG_T::n_aggregators + ia;
     typename CONFIG_T::aggr_t aggr = arrays.edge_weight_mean[ia] * CONFIG_T::input_transform_biases[ioa];
@@ -358,6 +363,7 @@ template <class CONFIG_T, class arrays_T>
 inline void compute_output_base(arrays_T const &arrays,
                                 typename CONFIG_T::aggr_t output_base[CONFIG_T::n_out_features * CONFIG_T::n_aggregators]) {
     //#pragma HLS INLINE
+    #pragma hls_unroll region
 
 OutFeatures:
     for (unsigned io = 0; io < CONFIG_T::n_out_features; ++io) {

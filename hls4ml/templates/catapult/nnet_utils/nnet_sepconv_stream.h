@@ -8,14 +8,15 @@
 
 namespace nnet {
 
+#pragma hls_design inline
 template <class data_T, class res_T, typename CONFIG_T>
-void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                       typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                       typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_filt],
+                       typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_filt],
+                       typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     // #pragma HLS INLINE
 
-    typename CONFIG_T::accum_t mult[CONFIG_T::kernel_size * CONFIG_T::n_chan];
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
+    typename CONFIG_T::accum_t mult[CONFIG_T::kernel_size * CONFIG_T::n_filt];
+    typename CONFIG_T::accum_t acc[CONFIG_T::n_filt];
 
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     // #pragma HLS function_instantiate variable=weights
@@ -23,6 +24,8 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
+    #pragma hls_unroll
 
     // Add dummy loop to which the pipeline pragma can be applied
     do {
@@ -30,41 +33,55 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
         //#pragma HLS ARRAY_PARTITION variable=mult complete
 
         //#pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
-
+    
+    
     // Do the matrix-multiply
-    Product:
-        for (int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
-            // #pragma HLS UNROLL
-            mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
-                data[ii], weights[ii]);
+    #pragma hls_unroll
+    Product1:
+        for (unsigned int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
+        #pragma hls_unroll
+        Product2:
+            for (unsigned int jj = 0; jj < CONFIG_T::d_mult; jj++) {
+                int index = ii * CONFIG_T::d_mult + jj;
+                mult[index] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(data[ii], weights[index]);
+            }
         }
 
     // Initialize accumulator with input biases
+    #pragma hls_unroll
     ResetAccum:
-        for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
+        for (unsigned int iacc = 0; iacc < CONFIG_T::n_filt; iacc++) {
             //#pragma HLS UNROLL
             acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
         }
 
     // Accumulate multiplication result
+    #pragma hls_unroll
     Accum1:
-        for (int ii = 0; ii < CONFIG_T::kernel_size; ii++) {
+        for (unsigned int ii = 0; ii < CONFIG_T::kernel_size; ii++) {
+        #pragma hls_unroll
         Accum2:
-            for (int jj = 0; jj < CONFIG_T::n_chan; jj++) {
-                int index = ii * CONFIG_T::n_chan + jj;
-                acc[jj] += mult[index];
+            for (unsigned int jj = 0; jj < CONFIG_T::n_chan; jj++) {
+            #pragma hls_unroll
+            Accum3:
+                for (unsigned int kk = 0; kk < CONFIG_T::d_mult; kk++) {
+                    int index1 = ii * CONFIG_T::n_chan * CONFIG_T::d_mult + jj * CONFIG_T::d_mult + kk;
+                    int index2 = jj * CONFIG_T::d_mult + kk;
+                    acc[index2] += mult[index1];
+                }
             }
         }
 
     // Cast to "res_t" type
+    #pragma hls_unroll
     Result:
-        for (int ires = 0; ires < CONFIG_T::n_chan; ires++) {
-            //#pragma HLS UNROLL
+        for (unsigned int ires = 0; ires < CONFIG_T::n_filt; ires++) {
             res[ires] = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[ires]);
         }
     } while (0);
 }
 
+#pragma hls_design inline
 template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_mult_buffer(ac_channel<typename data_T::value_type> data_window[CONFIG_T::kernel_size * CONFIG_T::n_chan],
                            res_T &res_pack, ac_channel<res_T> &res_stream, unsigned &outputs_ready,
@@ -77,8 +94,9 @@ void depthwise_mult_buffer(ac_channel<typename data_T::value_type> data_window[C
     typename res_T::value_type res[CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable=res complete
 
+    #pragma hls_unroll
 InitData:
-    for (int id = 0; id < CONFIG_T::kernel_size * CONFIG_T::n_chan; id++) {
+    for (unsigned int id = 0; id < CONFIG_T::kernel_size * CONFIG_T::n_chan; id++) {
         //#pragma HLS UNROLL
         data[id] = data_window[id].read();
     }
@@ -90,6 +108,7 @@ InitData:
         assert("Resource strategy for DepthwiseConv2D is not supported." && false);
     }
 
+    #pragma hls_unroll
 CastLoop:
     for (unsigned jj = 0; jj < CONFIG_T::n_chan; jj++) {
         //#pragma HLS UNROLL
@@ -122,11 +141,15 @@ void compute_depthwise_output_encoded(
 
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
+    #pragma hls_unroll
 MultLoop:
     for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    #pragma hls_unroll
     CopyDataFilt:
         for (unsigned f = 0; f < CONFIG_T::kernel_size; f++) {
+        #pragma hls_unroll
         //#pragma HLS UNROLL
         CopyDataChan:
             for (unsigned c = 0; c < CONFIG_T::n_chan; c++) {
@@ -141,6 +164,7 @@ MultLoop:
     }
 }
 
+#pragma hls_design inline
 template <class data_T, class res_T, typename CONFIG_T>
 void pointwise_mult_buffer(const data_T &data_pack, ac_channel<res_T> &res_stream,
                            typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -156,6 +180,7 @@ void pointwise_mult_buffer(const data_T &data_pack, ac_channel<res_T> &res_strea
     res_T res_pack;
     // PRAGMA_DATA_PACK(res_pack)
 
+    #pragma hls_unroll
 InitData:
     for (int id = 0; id < CONFIG_T::n_chan; id++) {
         //#pragma HLS UNROLL
@@ -171,6 +196,7 @@ InitData:
             data, res, weights, biases);
     }
 
+    #pragma hls_unroll
 CastLoop:
     for (unsigned jj = 0; jj < CONFIG_T::n_filt; jj++) {
         //#pragma HLS UNROLL
@@ -181,10 +207,11 @@ CastLoop:
 }
 
 // Line Buffer Implementation (Phil's)
+#pragma hls_design inline
 template <class data_T, class res_T, typename CONFIG_T>
 void compute_depthwise_output_buffer_1d(const data_T &in_elem, ac_channel<res_T> &res_stream,
-                                        typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                                        typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+                                        typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_filt],
+                                        typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     //#pragma HLS INLINE
 
     // Thresholds
@@ -197,7 +224,7 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, ac_channel<res_T>
     static typename data_T::value_type kernel_data[CONFIG_T::filt_width * CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable=kernel_data complete
 
-    typename res_T::value_type res_out[CONFIG_T::n_chan];
+    typename res_T::value_type res_out[CONFIG_T::n_filt];
     //#pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
@@ -218,6 +245,7 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, ac_channel<res_T>
         }
 
     // Pack output
+    #pragma hls_unroll
     CastLoop:
         for (unsigned i_ic = 0; i_ic < CONFIG_T::n_filt; i_ic++) {
             //#pragma HLS UNROLL
@@ -239,13 +267,14 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, ac_channel<res_T>
     }
 }
 
+#pragma hls_design inline
 template <class data_T, class res_T, typename CONFIG_T>
 void compute_depthwise_output_buffer_2d(const data_T &in_elem,
                                         ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width>
                                             line_buffer[MAX(CONFIG_T::filt_height - 1, 1)][CONFIG_T::n_chan],
                                         ac_channel<res_T> &res_stream,
-                                        typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                                        typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+                                        typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_filt],
+                                        typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     //#pragma HLS INLINE
 
     // Thresholds
@@ -259,10 +288,10 @@ void compute_depthwise_output_buffer_2d(const data_T &in_elem,
     static int sX = 0; // stride X
     static int sY = 0; // stride Y
 
-    static typename data_T::value_type kernel_data[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
+    static typename data_T::value_type kernel_data[CONFIG_T::kernel_size * CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable=kernel_data complete
 
-    typename res_T::value_type res_out[CONFIG_T::n_chan];
+    typename res_T::value_type res_out[CONFIG_T::n_filt];
     //#pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
@@ -283,6 +312,7 @@ void compute_depthwise_output_buffer_2d(const data_T &in_elem,
         }
 
     // Pack output
+    #pragma hls_unroll
     CastLoop:
         for (unsigned i_ic = 0; i_ic < CONFIG_T::n_filt; i_ic++) {
             //#pragma HLS UNROLL

@@ -78,6 +78,7 @@ void compute_pool_encoded_2d(
 
     const unsigned sh_idx = pool_table_height[h_idx] * CONFIG_T::pool_width;
     const unsigned wp_idx = w_idx * (data_T::size / CONFIG_T::n_filt);
+#pragma hls_unroll
 PixelLoop:
     for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
         //#pragma HLS PIPELINE
@@ -86,6 +87,7 @@ PixelLoop:
         if ((h_idx < nH) && (wp_idx + p < nW)) {
             filt_mask = sh_idx + pool_table_width[wp_idx + p] + 1;
         }
+    // #pragma hls_unroll
     CopyDataFilt:
         for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
             if (filt_mask > 0)
@@ -94,6 +96,7 @@ PixelLoop:
         }
 
         if (filt_mask == CONFIG_T::pool_height * CONFIG_T::pool_width) {
+        #pragma hls_unroll
         FiltLoop:
             for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
             PoolLoop:
@@ -144,6 +147,7 @@ void pooling2d_encoded_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 
     constexpr int pack_factor = (data_T::size / CONFIG_T::n_filt) * (res_T::size / CONFIG_T::n_filt == 1);
     (void)pack_factor;
+#pragma hls_pipeline_init_interval pack_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -186,12 +190,14 @@ void compute_pool_buffer_2d(const data_T &in_elem,
     // Add pixel into line buffer, return pooling kernels
     nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
 
+    #pragma hls_unroll
     // Can compute pooling output
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
     FiltLoop:
         for (unsigned i_ic = 0; i_ic < CONFIG_T::n_filt; i_ic++) {
         //#pragma HLS PIPELINE
 
+        #pragma hls_unroll
         // Retrieve data for current channel
         PoolLoop:
             for (unsigned i_ihw = 0; i_ihw < CONFIG_T::pool_height * CONFIG_T::pool_width; i_ihw++) {
@@ -237,6 +243,7 @@ void pooling2d_buffer_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
                                                                                     [CONFIG_T::n_filt];
     //#pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
+    #pragma hls_pipeline_init_interval 1
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -249,6 +256,7 @@ ReadInputHeight:
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T> void pooling2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     //#pragma HLS inline region
     switch (CONFIG_T::implementation) {
@@ -439,6 +447,7 @@ ReadInputWidth:
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T> void pooling1d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     //#pragma HLS inline region
     switch (CONFIG_T::implementation) {
@@ -472,12 +481,14 @@ template <class data_T, class res_T, typename CONFIG_T>
 void compute_global_pool(const data_T &in_elem, typename CONFIG_T::accum_t data_window[CONFIG_T::n_filt]) {
 PoolFilt:
     for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
+        #pragma hls_unroll
 
         typename CONFIG_T::accum_t data_pack[data_T::size / CONFIG_T::n_filt];
         //#pragma HLS ARRAY_PARTITION variable=data_pack complete dim=0
 
     PixelLoop:
         for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
+            #pragma hls_unroll
             data_pack[p] = in_elem[p * CONFIG_T::n_filt + c];
         }
         data_window[c] = reduce_global_pool<typename CONFIG_T::accum_t, data_T::size / CONFIG_T::n_filt, CONFIG_T>(
@@ -485,6 +496,7 @@ PoolFilt:
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void global_pooling2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
@@ -501,6 +513,7 @@ void global_pooling2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 
 PoolInitLoop:
     for (unsigned i_init = 0; i_init < CONFIG_T::n_filt; i_init++) {
+        #pragma hls_unroll
         data_window[i_init] = init;
     }
 
@@ -522,6 +535,7 @@ ReadInputHeight:
         //#pragma HLS DATA_PACK variable=res_pack
         MaxPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+                #pragma hls_unroll
                 res_pack[i_pack] = data_window[i_pack];
             }
             res.write(res_pack);
@@ -535,6 +549,7 @@ ReadInputHeight:
         //#pragma HLS DATA_PACK variable=res_pack
         AvgPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+                #pragma hls_unroll
                 res_pack[i_pack] = data_window[i_pack] / (CONFIG_T::in_height * CONFIG_T::in_width);
             }
             res.write(res_pack);
@@ -542,6 +557,7 @@ ReadInputHeight:
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void global_pooling1d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
@@ -558,6 +574,7 @@ void global_pooling1d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 
 PoolInitLoop:
     for (unsigned i_init = 0; i_init < CONFIG_T::n_filt; i_init++) {
+        #pragma hls_unroll
         data_window[i_init] = init;
     }
 
@@ -576,6 +593,7 @@ ReadInput:
         //#pragma HLS DATA_PACK variable=res_pack
         MaxPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+                #pragma hls_unroll
                 res_pack[i_pack] = data_window[i_pack];
             }
             res.write(res_pack);
@@ -589,6 +607,7 @@ ReadInput:
         //#pragma HLS DATA_PACK variable=res_pack
         AvgPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+                #pragma hls_unroll
                 res_pack[i_pack] = data_window[i_pack] / CONFIG_T::n_in;
             }
             res.write(res_pack);

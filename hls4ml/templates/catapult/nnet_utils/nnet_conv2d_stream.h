@@ -15,6 +15,7 @@ void compute_scaled_indices_2d(const unsigned h_idx, const unsigned w_idx,
                                                                   CONFIG_T::in_height>::scale_index(h_idx);
     unsigned wp_idx = w_idx * (data_T::size / CONFIG_T::n_chan);
 
+#pragma hls_unroll
 ComputeIndex:
     for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
         // #pragma HLS UNROLL
@@ -51,6 +52,7 @@ void conv_2d_encoded_cl(
     constexpr int ce_reuse_factor =
         CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -80,6 +82,7 @@ void conv_2d_buffer_cl(
 
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency);
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -97,6 +100,7 @@ ReadInputHeight:
     }
 }
 
+#pragma hls_design
 template <class data_T, class res_T, typename CONFIG_T>
 void conv_2d_cl(
     ac_channel<data_T> &data, ac_channel<res_T> &res,

@@ -80,6 +80,7 @@ void dot1d(input1_T data1[CONFIG_T::n_in], input2_T data2[CONFIG_T::n_in], res_T
     //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
     CONFIG_T::template product<input1_T, input2_T>::limit(multiplier_limit);
@@ -88,12 +89,14 @@ void dot1d(input1_T data1[CONFIG_T::n_in], input2_T data2[CONFIG_T::n_in], res_T
     //#pragma HLS ARRAY_PARTITION variable=mult complete
     typename CONFIG_T::accum_t acc = 0;
 
+#pragma hls_unroll
 Product:
     for (int i_mult = 0; i_mult < CONFIG_T::n_in; i_mult++) {
         // #pragma HLS UNROLL
         mult[i_mult] = CONFIG_T::template product<input1_T, input2_T>::product(data1[i_mult], data2[i_mult]);
     }
 
+#pragma hls_unroll
 Accum:
     for (int i_acc = 0; i_acc < CONFIG_T::n_in; i_acc++) {
         // #pragma HLS UNROLL

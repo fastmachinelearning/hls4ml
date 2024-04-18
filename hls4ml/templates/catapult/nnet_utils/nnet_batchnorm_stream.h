@@ -12,6 +12,7 @@ namespace nnet {
 // ****************************************************
 //       Streaming Batch Normalization
 // ****************************************************
+#pragma hls_design block
 
 template <class data_T, class res_T, typename CONFIG_T>
 void normalize(ac_channel<data_T> &data, ac_channel<res_T> &res, typename CONFIG_T::scale_t scale[CONFIG_T::n_scale_bias],
@@ -24,14 +25,16 @@ void normalize(ac_channel<data_T> &data, ac_channel<res_T> &res, typename CONFIG
     (void)ii;
     CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::limit(multiplier_limit);
 
+#pragma hls_pipeline_init_interval ii
 BatchNormLoop:
     for (unsigned int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         //#pragma HLS PIPELINE II=ii
 
         data_T in_data = data.read();
         res_T out_data;
-        //#pragma HLS DATA_PACK variable=out_data
+    //#pragma HLS DATA_PACK variable=out_data
 
+    #pragma hls_unroll
     BatchNormpack:
         for (unsigned int j = 0; j < data_T::size; j++) {
             // #pragma HLS UNROLL
@@ -68,6 +71,7 @@ BinaryNormLoop:
 
     BatchNormPack:
         for (int j = 0; j < data_T::size; j++) {
+            #pragma hls_unroll
             out_data[j] = (in_data[j] > threshold[i * data_T::size + j]) ? 1 : 0;
         }
 
@@ -92,6 +96,7 @@ TernaryNormLoop:
 
     BatchNormPack:
         for (int j = 0; j < data_T::size; j++) {
+            #pragma hls_unroll
 
             int norm_index = i * data_T::size + j;
 

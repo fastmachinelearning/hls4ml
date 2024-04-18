@@ -31,6 +31,8 @@ void embedding(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in * CONFIG_T:
 
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor;
     (void)ce_reuse_factor;
+#pragma hls_pipeline_init_interval ce_reuse_factor
+#pragma hls_unroll
 InputSequence:
     for (int j = 0; j < CONFIG_T::n_in; j++) {
     // #pragma HLS UNROLL

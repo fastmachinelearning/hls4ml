@@ -13,8 +13,10 @@ void im2col_1d(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
     for (int channel = CONFIG_T::n_chan; channel--; data += CONFIG_T::in_width) {
         //#pragma HLS PIPELINE II=1 rewind
         for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
+            #pragma hls_unroll
             int input_col = -CONFIG_T::pad_left + kernel_col * CONFIG_T::dilation;
             for (int output_col = CONFIG_T::out_width; output_col; output_col--) {
+                #pragma hls_unroll
                 if (input_col >= 0 && input_col < CONFIG_T::in_width) {
                     *(data_col++) = data[input_col];
                     // data_col[index] = data[input_col];
@@ -44,6 +46,7 @@ void conv_1d_full(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[
     im2col_1d<data_T, CONFIG_T>(data, data_conv);
 
     for (int i = 0; i < CONFIG_T::out_width; i++) {
+        #pragma hls_unroll
         for (int j = 0; j < CONFIG_T::filt_width * CONFIG_T::n_chan; j++) {
             data_col[j] = data_conv[j * CONFIG_T::out_width + i];
         }
@@ -60,9 +63,11 @@ void im2col_1d_cf_idx(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
                       data_T data_col[CONFIG_T::filt_width * CONFIG_T::n_chan], const int col) {
 ChannelLoop:
     for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
+        //#pragma hls_unroll
     //#pragma HLS PIPELINE II=1 rewind
     KernelLoop:
         for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
+            #pragma hls_unroll
             int input_col = -CONFIG_T::pad_left + kernel_col * CONFIG_T::dilation + col * CONFIG_T::stride_width;
             if (input_col >= 0 && input_col < CONFIG_T::in_width) {
                 //*(data_col++) = data[input_col];
@@ -81,6 +86,7 @@ void im2col_1d_cf(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
     int index = 0;
 ChannelLoop:
     for (int channel = CONFIG_T::n_chan; channel--; data += CONFIG_T::in_width) {
+        #pragma hls_unroll
     KernelLoop:
         for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
             int input_col = -CONFIG_T::pad_left + kernel_col * CONFIG_T::dilation + col * CONFIG_T::stride_width;
@@ -136,6 +142,7 @@ void im2col_1d_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
     int index = 0;
 KernelLoop:
     for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
+        #pragma hls_unroll
 
     ChannelLoop:
         for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
@@ -157,6 +164,7 @@ void im2col_1d_pointwise_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], 
     int index = 0;
 ChannelLoop:
     for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
+        #pragma hls_unroll
 
         int index_data = (col * CONFIG_T::stride_width - CONFIG_T::pad_left) * CONFIG_T::n_chan + channel;
 

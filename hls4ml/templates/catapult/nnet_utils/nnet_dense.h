@@ -32,6 +32,7 @@ struct dense_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void dense(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
            typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],

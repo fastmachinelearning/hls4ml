@@ -83,6 +83,7 @@ void im2col_2d_cf(data_T data[CONFIG_T::n_chan * CONFIG_T::in_height * CONFIG_T:
     const int channel_size = CONFIG_T::in_height * CONFIG_T::in_width;
     int index = 0;
     for (int channel = CONFIG_T::n_chan; channel--; data += channel_size) {
+        #pragma hls_unroll
         for (int kernel_row = 0; kernel_row < CONFIG_T::filt_height; kernel_row++) {
             int input_row = -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
             for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
@@ -152,6 +153,7 @@ void im2col_2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                   const int col) {
     int index = 0;
     for (int kernel_row = 0; kernel_row < CONFIG_T::filt_height; kernel_row++) {
+        #pragma hls_unroll
         int input_row = -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
         for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
             for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
@@ -180,6 +182,7 @@ void im2col_2d_pointwise_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width
 
 ChannelLoop:
     for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
+        #pragma hls_unroll
         if (input_row < 0 || input_row >= CONFIG_T::in_height) {
             data_col[index++] = 0;
         } else {

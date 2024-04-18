@@ -36,6 +36,7 @@ void depthwise_conv_2d_encoded_cl(
     constexpr int ce_reuse_factor =
         CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -55,8 +56,8 @@ ReadInputHeight:
 template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_conv_2d_buffer_cl(
     ac_channel<data_T> &data, ac_channel<res_T> &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],
-    typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+    typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_filt],
+    typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
     static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1]
@@ -65,6 +66,7 @@ void depthwise_conv_2d_buffer_cl(
 
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency);
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -82,11 +84,12 @@ ReadInputHeight:
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_conv_2d_cl(
     ac_channel<data_T> &data, ac_channel<res_T> &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],
-    typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+    typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_filt],
+    typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     // #pragma HLS inline recursive
     switch (CONFIG_T::implementation) {
     case conv_implementation::linebuffer:
@@ -98,6 +101,7 @@ void depthwise_conv_2d_cl(
     }
 }
 
+#pragma hls_design block
 template <class data_T, class res_T, typename CONFIG_T>
 void pointwise_conv_2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
                           typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -111,6 +115,7 @@ void pointwise_conv_2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
     constexpr int ce_reuse_factor =
         CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
     (void)ce_reuse_factor;
+    #pragma hls_pipeline_init_interval ce_reuse_factor
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -127,14 +132,14 @@ ReadInputHeight:
     }
 }
 
+#pragma hls_design block
 template <class data_T, class dw_res_T, class res_T, typename CONFIG_T>
 void separable_conv_2d_cl(ac_channel<data_T> &data, ac_channel<res_T> &res,
                           typename CONFIG_T::depthwise_config::weight_t
-                              depthwise_weights[CONFIG_T::depthwise_config::filt_height *
-                                                CONFIG_T::depthwise_config::filt_width * CONFIG_T::depthwise_config::n_chan],
+                              depthwise_weights[CONFIG_T::depthwise_config::kernel_size * CONFIG_T::depthwise_config::n_filt],
                           typename CONFIG_T::pointwise_config::weight_t
                               pointwise_weights[CONFIG_T::pointwise_config::n_chan * CONFIG_T::pointwise_config::n_filt],
-                          typename CONFIG_T::depthwise_config::bias_t depthwise_biases[CONFIG_T::depthwise_config::n_chan],
+                          typename CONFIG_T::depthwise_config::bias_t depthwise_biases[CONFIG_T::depthwise_config::n_filt],
                           typename CONFIG_T::pointwise_config::bias_t pointwise_biases[CONFIG_T::pointwise_config::n_filt]) {
     // #pragma HLS DATAFLOW
 

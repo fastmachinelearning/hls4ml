@@ -21,23 +21,31 @@ void depthwise_conv_2d_cl(
     const int out_width = CONFIG_T::out_width;
 
     //    constexpr int ce_reuse_factor = CONFIG_T::reuse_factor; (void)ce_reuse_factor;
+    //    #pragma hls_pipeline_init_interval ce_reuse_factor
+    //    #pragma hls_preserve_loop yes
+    //    #pragma hls_unroll //yet to finalize on this
 
     //    do {
 
     //#pragma HLS ARRAY_PARTITION variable=res complete dim=0
     //#pragma HLS ARRAY_PARTITION variable=depthwise_biases complete dim=0
     //#pragma HLS ARRAY_PARTITION variable=depthwise_weights complete dim=0
+    #pragma hls_unroll
     for (int h = 0; h < in_height - filt_height + 1; h++) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
+        #pragma hls_unroll
         for (int w = 0; w < in_width - filt_width + 1; w++) {
             //#pragma HLS UNROLL
+            #pragma hls_unroll
             for (int c = 0; c < n_chan; c++) {
                 //#pragma HLS UNROLL
                 res_T sum = depthwise_biases[c];
 
                 // Apply the filter
+                #pragma hls_unroll
                 for (int i = 0; i < filt_height; i++) {
                     //#pragma HLS UNROLL
+                    #pragma hls_unroll
                     for (int j = 0; j < filt_width; j++) {
                         //#pragma HLS UNROLL
                         int data_idx = (h + i) * in_width * n_chan + (w + j) * n_chan + c;
