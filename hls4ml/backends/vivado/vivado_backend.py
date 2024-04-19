@@ -4,7 +4,8 @@ import sys
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter
+from hls4ml.backends.vivado.vivado_types import VivadoArrayVariableConverter
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
@@ -109,6 +110,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
             'vivado:fix_softmax_table_size',
+            'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -175,12 +177,15 @@ class VivadoBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcvu13p-flga2577-2-e', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(
+        self, part='xcvu13p-flga2577-2-e', clock_period=5, clock_uncertainty='12.5%', io_type='io_parallel', **_
+    ):
         config = {}
 
         config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
-        config['ClockPeriod'] = clock_period
-        config['IOType'] = io_type
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['ClockUncertainty'] = clock_uncertainty if clock_uncertainty is not None else '12.5%'
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
 
         return config
