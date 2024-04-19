@@ -6,7 +6,7 @@ import numpy as np
 from hls4ml.model.layers import FixedPrecisionType, IntegerPrecisionType
 
 
-class VivadoAcceleratorConfig:
+class VitisAcceleratorConfig:
     def __init__(self, config, model_inputs, model_outputs):
         self.config = config.config
         self.board = self.config.get('AcceleratorConfig', {}).get('Board', 'pynq-z2')
