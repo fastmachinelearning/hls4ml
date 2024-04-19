@@ -37,8 +37,10 @@ class MergeLinearActivation(OptimizerPass):
     def transform(self, model, node):
         prev_node = node.get_input_node(node.inputs[0])
         quantizer = node.get_attr("quantizer")
-        prev_node.set_attr("quantizer", quantizer)
-        prev_node.types['result_t'] = quantizer.hls_type
-        prev_node.get_output_variable().type.precision = quantizer.hls_type
+        # if the activation has a quantizer (usually from a QONNX Quant node), set the previous node's output precision
+        if quantizer is not None:
+            prev_node.set_attr("quantizer", quantizer)
+            prev_node.types['result_t'] = quantizer.hls_type
+            prev_node.get_output_variable().type.precision = quantizer.hls_type
         model.remove_node(node)
         return True
