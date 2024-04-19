@@ -33,6 +33,7 @@ del optimizers
 register_flow(
     'convert',
     [
+        'infer_precision_types',
         'channels_last_converter',
         'fuse_bias_add',
         'remove_useless_transpose',
@@ -51,6 +52,7 @@ register_flow(
         'fuse_consecutive_batch_normalization',
         'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
+        'infer_precision_types',
         'set_precision_concat',
     ],
     requires=['convert'],
