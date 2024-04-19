@@ -40,7 +40,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev26+g9df3e147
+                0.9.0.dev27+g1616caf7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -140,6 +140,7 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">hls4ml.model.optimizer.passes.convert_to_channels_last module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">hls4ml.model.optimizer.passes.expand_layer_group module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.infer_precision">hls4ml.model.optimizer.passes.infer_precision module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.multi_dense">hls4ml.model.optimizer.passes.multi_dense module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.precision_merge">hls4ml.model.optimizer.passes.precision_merge module</a></li>
@@ -1552,6 +1553,14 @@ element will be a concatenation of <code class="docutils literal notranslate"><s
 <span class="sig-name descname"><span class="pre">size_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.TensorVariable.size_cpp" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.UnspecifiedPrecisionType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">UnspecifiedPrecisionType</span></span><a class="headerlink" href="#hls4ml.model.types.UnspecifiedPrecisionType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.PrecisionType" title="hls4ml.model.types.PrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionType</span></code></a></p>
+<p>Class representing an unspecified precision type.</p>
+<p>Instances of this class are expected to be replaced with concrete precision types during conversion.</p>
 </dd></dl>
 
 <dl class="py class">

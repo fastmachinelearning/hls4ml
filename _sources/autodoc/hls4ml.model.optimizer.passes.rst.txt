@@ -36,6 +36,14 @@ hls4ml.model.optimizer.passes.fuse\_biasadd module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.infer\_precision module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.infer_precision
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.multi\_dense module
 -------------------------------------------------
 
