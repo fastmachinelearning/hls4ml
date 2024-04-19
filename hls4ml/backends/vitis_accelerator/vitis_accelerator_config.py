@@ -54,10 +54,10 @@ class VitisAcceleratorConfig:
 
         assert (
             len(model_inputs) == 1
-        ), "Only models with one input tensor are currently supported by VivadoAcceleratorBackend"
+        ), "Only models with one input tensor are currently supported by VitisAcceleratorBackend"
         assert (
             len(model_outputs) == 1
-        ), "Only models with one output tensor are currently supported by VivadoAcceleratorBackend"
+        ), "Only models with one output tensor are currently supported by VitisAcceleratorBackend"
         self.inp = model_inputs[0]
         self.out = model_outputs[0]
         inp_axi_t = self.input_type
@@ -131,16 +131,16 @@ class VitisAcceleratorConfig:
 
     def get_driver_path(self):
         if self.board.startswith('alveo'):
-            return '../templates/vivado_accelerator/' + 'alveo/' + self.driver + '_drivers/' + self.get_driver_file()
+            return '../templates/vitis_accelerator/' + 'alveo/' + self.driver + '_drivers/' + self.get_driver_file()
         else:
-            return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + self.get_driver_file()
+            return '../templates/vitis_accelerator/' + self.board + '/' + self.driver + '_drivers/' + self.get_driver_file()
 
     def get_driver_file(self):
         driver_ext = '.py' if self.driver == 'python' else '.h'
         return self.interface + '_driver' + driver_ext
 
     def get_krnl_rtl_src_dir(self):
-        return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
+        return '../templates/vitis_accelerator/' + 'alveo/' + '/krnl_rtl_src'
 
     def get_input_type(self):
         return self.input_type
@@ -157,6 +157,6 @@ class VitisAcceleratorConfig:
         if tcl_script is None:
             raise Exception('No tcl script definition available for the desired interface in supported_board.json')
         if self.board.startswith('alveo'):
-            return '../templates/vivado_accelerator/' + 'alveo/' + '/tcl_scripts/' + tcl_script
+            return '../templates/vitis_accelerator/' + 'alveo/' + '/tcl_scripts/' + tcl_script
         else:
-            return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
+            return '../templates/vitis_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
