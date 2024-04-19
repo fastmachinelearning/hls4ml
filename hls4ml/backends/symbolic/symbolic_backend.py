@@ -42,6 +42,7 @@ class SymbolicExpressionBackend(FPGABackend):
         self,
         part='xcvu9p-flga2577-2-e',
         clock_period=5,
+        clock_uncertainty=None,
         io_type='io_parallel',
         compiler='vivado_hls',
         hls_include_path=None,
@@ -49,10 +50,17 @@ class SymbolicExpressionBackend(FPGABackend):
     ):
         config = {}
 
-        config['Part'] = part if part is not None else 'xcvu9p-flga2577-2-e'
-        config['ClockPeriod'] = clock_period
-        config['IOType'] = io_type
+        config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['ClockUncertainty'] = clock_uncertainty
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['Compiler'] = compiler if compiler is not None else 'vivado_hls'
+        if config['ClockUncertainty'] is None:
+            if config['Compiler'] == 'vivado_hls':
+                config['ClockUncertainty'] = '12.5%'
+            else:
+                config['ClockUncertainty'] = '27%'
+
         if not all([hls_include_path, hls_libs_path]):
             # Try to infer the include path from Vivado path
             bin_path = os.popen(f'command -v {compiler}').read().strip()
