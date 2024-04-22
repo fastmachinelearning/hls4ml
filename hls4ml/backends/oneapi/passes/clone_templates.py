@@ -4,7 +4,6 @@
 from hls4ml.backends.fpga.passes.clone import Clone
 from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 
-clone_sequence_template = 'task_sequence<nnet::{activation}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 clone_stream_function_template = '{name}.async();'
 
 
