@@ -278,12 +278,24 @@ class PReLUFunctionTemplate(FunctionCallTemplate):
 
 class ActivationTaskSequenceTemplate(TaskSequenceTemplate):
     def __init__(self):
-        super().__init__((Activation, ParametrizedActivation, PReLU, HardActivation, Softmax, ParametrizedActivation, PReLU))
+        super().__init__((Activation, HardActivation, Softmax, PReLU))
         self.template = activ_task_sequence_template
 
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
+        return self.template.format(**params)
+
+
+class ParametrizedActivationTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__(ParametrizedActivation)
+        self.template = activ_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['activation'] = node._get_act_function_name()
         params['config'] = f"{node.get_attr('activation')}_config{node.index}"
         return self.template.format(**params)
 

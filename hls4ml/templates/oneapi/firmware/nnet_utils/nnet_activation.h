@@ -450,7 +450,8 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(const data_T &
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T> void prelu(const data_T &data, const data_T &alpha, res_T &res) {
+template <class data_T, class res_T, typename CONFIG_T>
+void prelu(const data_T &data, const typename data_T::value_type alpha[CONFIG_T::n_in], res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto datareg = data[ii];
