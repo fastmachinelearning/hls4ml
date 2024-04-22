@@ -50,6 +50,8 @@ void collect_trace_output(struct trace_data *c_trace_outputs) {
     }
 }
 
+// hls-fpga-machine-learning insert class def #float
+
 // Wrapper of top level function for Python bridge
 void myproject_float(
     // hls-fpga-machine-learning insert header #float
@@ -59,6 +61,8 @@ void myproject_float(
 
     // hls-fpga-machine-learning insert wrapper #float
 }
+
+// hls-fpga-machine-learning insert class def #double
 
 void myproject_double(
     // hls-fpga-machine-learning insert header #double

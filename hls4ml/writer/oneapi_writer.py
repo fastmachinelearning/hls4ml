@@ -456,6 +456,7 @@ class OneAPIWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         project_name = model.config.get_project_name()
+        stamp = model.config.get_config_value('Stamp')
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
@@ -483,6 +484,10 @@ class OneAPIWriter(Writer):
                     for bram in model_brams:
                         newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
 
+                elif '// hls-fpga-machine-learning insert class def' in line:
+                    dtype = line.split('#', 1)[1].strip()
+                    newline = f'class {convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp};\n'
+
                 elif '// hls-fpga-machine-learning insert header' in line:
                     dtype = line.split('#', 1)[1].strip()
                     inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
@@ -498,7 +503,11 @@ class OneAPIWriter(Writer):
                     for i in model_inputs:
                         newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
-                    newline += indent + f'q.single_task({convert_to_pascal_case(project_name)}{{}});\n'
+                    newline += (
+                        indent
+                        + f'q.single_task<{convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp}>'
+                        + f'({convert_to_pascal_case(project_name)}{{}});\n'
+                    )
 
                     for o in model_outputs:
                         newline += (
