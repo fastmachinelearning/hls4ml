@@ -1,6 +1,6 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.5.2.base
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.5.3.base
   tags:
     - k8s-default
   before_script:
