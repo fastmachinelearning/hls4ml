@@ -29,5 +29,5 @@ def test_weight_writer(k, i, f):
     print(w_paths[0])
     assert len(w_paths) == 1
     w_loaded = np.loadtxt(w_paths[0], delimiter=',').reshape(1, 1)
-    print(f'{w[0,0]:.14}', f'{w_loaded[0,0]:.14}')
+    print(f'{w[0, 0]:.14}', f'{w_loaded[0, 0]:.14}')
     assert np.all(w == w_loaded)
