@@ -4,7 +4,7 @@ from warnings import warn
 from hls4ml.backends.fpga.fpga_types import NamedType
 from hls4ml.model.layers import Layer, register_layer
 from hls4ml.model.optimizer import OptimizerPass, register_pass
-from hls4ml.model.types import FixedPrecisionType, WeightVariable
+from hls4ml.model.types import FixedPrecisionType, UnspecifiedPrecisionType, WeightVariable
 
 re_purge_prefix = re.compile(r'(?<!\w)(?:ap_|ac_)', re.IGNORECASE)
 re_parse_fixed = re.compile(r'\s*(u?)fixed<([^>]+)>\s*', re.IGNORECASE)
@@ -95,6 +95,12 @@ class EnforceProxyModelEmbeddedConfig(OptimizerPass):
                 # Some layer may be removed by other passes. (e.g. Final flatten layer)
                 continue
             target_node: Layer = model.graph[name]
+
+            # Invoke automatic precision derivation for pooling layers accum_t, if undefined.
+            if 'pool' in target_node.__class__.__name__.lower():
+                if not userconf_ifdef('accum_t', name, model):
+                    target_node.attributes['accum_t'].precision = UnspecifiedPrecisionType()
+
             for k, v in conf.items():
                 if userconf_ifdef(k, name, model):
                     warn(
