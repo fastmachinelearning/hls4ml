@@ -145,5 +145,7 @@ class EnforceProxyModelEmbeddedConfig(OptimizerPass):
 
 def register_hgq_proxy_model():
     register_layer('FixedPointQuantizer', FixedPointQuantizer)
+    register_layer('HGQ>FixedPointQuantizer', FixedPointQuantizer)
     register_layer('UnaryLUT', UnaryLUT)
+    register_layer('HGQ>UnaryLUT', UnaryLUT)
     register_pass('enforce_proxy_model_embedded_config', EnforceProxyModelEmbeddedConfig)

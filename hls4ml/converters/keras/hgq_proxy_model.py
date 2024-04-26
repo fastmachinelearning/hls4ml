@@ -1,7 +1,7 @@
 from hls4ml.converters.keras_to_hls import KerasReader, keras_handler, parse_default_keras_layer
 
 
-@keras_handler('FixedPointQuantizer')
+@keras_handler('FixedPointQuantizer', 'HGQ>FixedPointQuantizer')
 def fixedpoint_quantizer_handler(keras_layer, input_names, input_shapes, data_reader: KerasReader):
     config = parse_default_keras_layer(keras_layer, input_names)
 
@@ -21,7 +21,7 @@ def fixedpoint_quantizer_handler(keras_layer, input_names, input_shapes, data_re
     return layer, input_shapes[0]
 
 
-@keras_handler('UnaryLUT')
+@keras_handler('UnaryLUT', 'HGQ>UnaryLUT')
 def unary_lut_keras_handler(keras_layer, input_names, input_shapes, data_reader: KerasReader):
     config = parse_default_keras_layer(keras_layer, input_names)
 
