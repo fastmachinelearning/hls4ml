@@ -52,7 +52,7 @@ void conv_2d_encoded_cl(
     constexpr int ce_reuse_factor =
         CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1);
     (void)ce_reuse_factor;
-    #pragma hls_pipeline_init_interval ce_reuse_factor
+    #pragma hls_pipeline_init_interval 1
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
@@ -82,7 +82,7 @@ void conv_2d_buffer_cl(
 
     constexpr int ce_reuse_factor = CONFIG_T::reuse_factor * (CONFIG_T::strategy == nnet::latency);
     (void)ce_reuse_factor;
-    #pragma hls_pipeline_init_interval ce_reuse_factor
+    #pragma hls_pipeline_init_interval 1
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
