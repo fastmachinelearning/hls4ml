@@ -60,10 +60,21 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
 
-    if 'filters' in keras_layer['config']:
-        layer['n_filt'] = keras_layer['config']['filters']
+    layer['n_chan2'] = layer['n_chan']
+    if 'depth_multiplier' in keras_layer['config']:
+        # 'SeparableConv2D', 'DepthwiseConv2D'
+        layer['d_mult'] = keras_layer['config']['depth_multiplier']
+        if 'filters' in keras_layer['config']:
+            # 'SeparableConv2D'
+            layer['n_filt'] = keras_layer['config']['filters']
+            layer['n_chan2'] = layer['d_mult'] * layer['n_chan']
+        else:
+            # 'DepthwiseConv2D'
+            layer['n_filt'] = layer['d_mult'] * layer['n_chan']
     else:
-        layer['n_filt'] = layer['n_chan']
+        # 'Conv2D'
+        layer['n_filt'] = keras_layer['config']['filters']
+
     layer['filt_height'] = keras_layer['config']['kernel_size'][0]
     layer['filt_width'] = keras_layer['config']['kernel_size'][1]
     layer['stride_height'] = keras_layer['config']['strides'][0]
