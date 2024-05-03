@@ -40,7 +40,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev30+ged553948
+                0.9.0.dev31+g28f158d4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -141,9 +141,13 @@ To implement a custom layer in <code class="docutils literal notranslate"><span 
 
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reverse</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>We can define the equivalent layer in hls4ml <code class="docutils literal notranslate"><span class="pre">HReverse</span></code>, which inherits from <code class="docutils literal notranslate"><span class="pre">hls4ml.model.layers.Layer</span></code>.</p>
+<p>Make sure you define a <code class="docutils literal notranslate"><span class="pre">get_config()</span></code> method for your custom layer as this is needed for correct parsing.
+We can define the equivalent layer in hls4ml <code class="docutils literal notranslate"><span class="pre">HReverse</span></code>, which inherits from <code class="docutils literal notranslate"><span class="pre">hls4ml.model.layers.Layer</span></code>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hls4ml layer implementation</span>
 <span class="k">class</span> <span class="nc">HReverse</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;hls4ml implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
