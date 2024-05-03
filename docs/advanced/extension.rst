@@ -35,6 +35,10 @@ For concreteness, let's say our custom layer ``KReverse`` is implemented in Kera
         def call(self, inputs):
             return tf.reverse(inputs, axis=[-1])
 
+        def get_config(self):
+            return super().get_config()
+
+Make sure you define a ``get_config()`` method for your custom layer as this is needed for correct parsing.
 We can define the equivalent layer in hls4ml ``HReverse``, which inherits from ``hls4ml.model.layers.Layer``.
 
 .. code-block:: Python
