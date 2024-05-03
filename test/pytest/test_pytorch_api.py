@@ -740,3 +740,72 @@ def test_skipped_layers(backend, io_type):
     hls_prediction = hls_model.predict(hls_input).flatten()
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])  # Only io_parallel for now
+@pytest.mark.parametrize('tensor_rank', [2, 3])
+def test_remove_transpose(backend, io_type, tensor_rank):
+    class TestModel(nn.Module):
+        def __init__(self, tensor_rank):
+            super().__init__()
+            if tensor_rank == 2:
+                self.conv1 = nn.Conv1d(in_channels=1, out_channels=4, kernel_size=3, bias=False)
+                self.relu1 = nn.ReLU()
+                self.flatten = nn.Flatten()
+                self.fc1 = nn.Linear(in_features=4 * 6, out_features=5, bias=False)
+                self.relu2 = nn.ReLU()
+            else:
+                self.conv1 = nn.Conv2d(in_channels=1, out_channels=4, kernel_size=3, bias=False)
+                self.relu1 = nn.ReLU()
+                self.flatten = nn.Flatten()
+                self.fc1 = nn.Linear(in_features=4 * 6 * 6, out_features=5, bias=False)
+                self.relu2 = nn.ReLU()
+
+        def forward(self, x):
+            # In the hls4ml model, there should be a Transpose node on the input tensor before conv1
+            x = self.conv1(x)
+            x = self.relu1(x)
+            x = self.flatten(x)  # This should result in a Transpose node that we aim to remove
+            x = self.fc1(x)
+            x = self.relu2(x)
+            return x
+
+    model = TestModel(tensor_rank=tensor_rank)
+    if tensor_rank == 2:
+        input_shape = (1, 8)
+        input_tensor = torch.randn(10, 1, 8)
+        hls_input = np.ascontiguousarray(torch.permute(input_tensor, (0, 2, 1)).detach().numpy())
+    else:
+        input_shape = (1, 8, 8)
+        input_tensor = torch.randn(10, 1, 8, 8)
+        hls_input = np.ascontiguousarray(torch.permute(input_tensor, (0, 2, 3, 1)).detach().numpy())
+
+    batch_input_shape = (None,) + input_shape
+    config = config_from_pytorch_model(
+        model,
+        default_precision='ap_fixed<32,16>',
+        inputs_channel_last=False,  # Crucial for testing if the first Transpose was removed
+        transpose_outputs=False,
+    )
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_transpose_nop_{tensor_rank}d_{backend}_{io_type}')
+    hls_model = convert_from_pytorch_model(
+        model,
+        batch_input_shape,
+        hls_config=config,
+        output_dir=output_dir,
+        io_type=io_type,
+        backend=backend,
+    )
+
+    hls_model.compile()
+
+    # Test optimizers removed the two Transpose layers
+    transpose_layers = [layer for layer in list(hls_model.get_layers()) if layer.class_name == 'Transpose']
+    assert len(transpose_layers) == 0
+
+    # Test predictions match
+    pytorch_prediction = model(input_tensor).detach().numpy().flatten()
+    hls_prediction = hls_model.predict(hls_input).flatten()
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)

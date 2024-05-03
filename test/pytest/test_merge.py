@@ -13,18 +13,25 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('merge_layer', [Add, Average, Maximum, Minimum, Multiply, Subtract])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_merge(merge_layer, io_type, backend):
+@pytest.mark.parametrize('swap_inputs', [True, False])
+def test_merge(merge_layer, io_type, backend, swap_inputs):
     input_shape = (10, 10, 3)
 
     in1 = Input(shape=input_shape)
     in2 = Input(shape=input_shape)
-    out = merge_layer()([in1, in2])
+    if swap_inputs:
+        out = merge_layer()([in2, in1])
+    else:
+        out = merge_layer()([in1, in2])
 
     model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
-    output_dir = str(test_root_path / f'hls4mlprj_merge_{merge_layer.__name__.lower()}_{backend}_{io_type}')
+    output_dir = str(
+        test_root_path
+        / f'hls4mlprj_merge_{"swap_inputs_" if swap_inputs else ""}{merge_layer.__name__.lower()}_{backend}_{io_type}'
+    )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

@@ -196,11 +196,12 @@ class VivadoWriter(Writer):
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.get_attr('function_cpp', None)
                     if func:
-                        func = [func]
+                        if not isinstance(func, (list, set)):
+                            func = [func]
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
-                            newline += '// ' + layer.name + '\n'
+                            newline += '    // ' + layer.name + '\n'
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
@@ -685,7 +686,7 @@ class VivadoWriter(Writer):
         """
 
         def keras_model_representer(dumper, keras_model):
-            model_path = model.config.get_output_dir() + '/keras_model.h5'
+            model_path = model.config.get_output_dir() + '/keras_model.keras'
             keras_model.save(model_path)
             return dumper.represent_scalar('!keras_model', model_path)
 
