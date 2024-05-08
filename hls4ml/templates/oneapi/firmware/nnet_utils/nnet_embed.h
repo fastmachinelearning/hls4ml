@@ -21,7 +21,7 @@ struct embed_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void embedding(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in * CONFIG_T::n_out],
+void embedding(const data_T &data, res_T &res,
                const typename CONFIG_T::embeddings_t embeddings[CONFIG_T::vocab_size * CONFIG_T::n_out]) {
 
     /*
@@ -30,9 +30,8 @@ void embedding(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in * CONFIG_T:
      */
 
 InputSequence:
-    #pragma ii CONFIG_T::reuse_factor
     #pragma unroll
-    for (int j = 0; j < CONFIG_T::n_in; j++) {
+    [[intel::initiation_interval(CONFIG_T::reuse_factor)]] for (int j = 0; j < CONFIG_T::n_in; j++) {
     DenseEmbedding:
         #pragma unroll
         for (int i = 0; i < CONFIG_T::n_out; i++) {

@@ -3,14 +3,16 @@
 
 namespace nnet {
 
-template <class data_T, class res_T, typename CONFIG_T>
-void embedding(stream<data_T> &data, stream<res_T> &res,
-               const typename CONFIG_T::embeddings_t embeddings[CONFIG_T::vocab_size * CONFIG_T::n_out]) {
-    data_T in_data = data.read();
+template <class data_pipe, class res_pipe, typename CONFIG_T>
+void embedding_stream(const typename CONFIG_T::embeddings_t embeddings[CONFIG_T::vocab_size * CONFIG_T::n_out]) {
+
+    using res_T = typename ExtractPipeType<res_pipe>::value_type;
+    constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
+
+    auto in_data = data_pipe::read();
 
 InputSequence:
-    #pragma ii CONFIG_T::reuse_factor
-    for (int j = 0; j < data_T::size; j++) {
+    [[intel::initiation_interval(CONFIG_T::reuse_factor)]] for (int j = 0; j < datasize; j++) {
 
         res_T res_pack;
 
@@ -20,7 +22,7 @@ InputSequence:
             res_pack[i] = embeddings[in_data[j] * CONFIG_T::n_out + i];
         }
 
-        res.write(res_pack);
+        res_pipe::write(res_pack);
     }
 }
 
