@@ -1,6 +1,9 @@
 from hls4ml.backends.backend import get_backend
+from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import GRU, LSTM, SimpleRNN
+
+# Note:  currently only GRU is supported for stream; lstm and simpleRNN are parallel-only
 
 recurrent_include_list = ['nnet_utils/nnet_recurrent.h', 'nnet_utils/nnet_recurrent_stream.h']
 
@@ -70,6 +73,8 @@ gru_config_template = '''struct config{index} : nnet::gru_config {{
 }};\n'''
 
 gru_function_template = 'nnet::gru<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
+gru_task_sequence_template = 'task_sequence<nnet::gru_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+gru_stream_function_template = '{name}.async({w}, {wr}, {b}, {br});'
 
 
 class GRUConfigTemplate(LayerConfigTemplate):
@@ -143,6 +148,32 @@ class GRUFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
         params['wr'] = node.get_weights('recurrent_weight').name
         params['br'] = node.get_weights('recurrent_bias').name
+        return self.template.format(**params)
+
+
+class GRUTaskSequenceTemplate(TaskSequenceTemplate):
+    def __init__(self):
+        super().__init__(GRU)
+        self.template = gru_task_sequence_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+
+        return self.template.format(**params)
+
+
+class GRUStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__(GRU)
+        self.template = gru_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['w'] = node.get_weights('weight').name
+        params['b'] = node.get_weights('bias').name
+        params['wr'] = node.get_weights('recurrent_weight').name
+        params['br'] = node.get_weights('recurrent_bias').name
+
         return self.template.format(**params)
 
 

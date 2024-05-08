@@ -13,7 +13,7 @@ template <class data_T, class res_T, typename CONFIG_T> class Activation {
     // *************************************************
     //       Blank Activation
     // *************************************************
-    static void activation(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {}
+    static void activation(const data_T &data, res_T &res) {}
 };
 
 template <class data_T, class res_T, typename CONFIG_T> class relu : public Activation<data_T, res_T, CONFIG_T> {
@@ -21,9 +21,7 @@ template <class data_T, class res_T, typename CONFIG_T> class relu : public Acti
     // *************************************************
     //       Relu Activation
     // *************************************************
-    static void activation(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
-        nnet::relu<data_T, res_T, CONFIG_T>(data, res);
-    }
+    static void activation(const data_T &data, res_T &res) { nnet::relu<data_T, res_T, CONFIG_T>(data, res); }
 };
 
 template <class data_T, class res_T, typename CONFIG_T> class sigmoid : public Activation<data_T, res_T, CONFIG_T> {
@@ -31,9 +29,7 @@ template <class data_T, class res_T, typename CONFIG_T> class sigmoid : public A
     // *************************************************
     //       Sigmoid Activation
     // *************************************************
-    static void activation(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
-        nnet::sigmoid<data_T, res_T, CONFIG_T>(data, res);
-    }
+    static void activation(const data_T &data, res_T &res) { nnet::sigmoid<data_T, res_T, CONFIG_T>(data, res); }
 };
 
 template <class data_T, class res_T, typename CONFIG_T> class tanh : public Activation<data_T, res_T, CONFIG_T> {
@@ -41,9 +37,7 @@ template <class data_T, class res_T, typename CONFIG_T> class tanh : public Acti
     // *************************************************
     //       TanH Activation
     // *************************************************
-    static void activation(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
-        nnet::dense_tanh<data_T, res_T, CONFIG_T>(data, res);
-    }
+    static void activation(const data_T &data, res_T &res) { nnet::dense_tanh<data_T, res_T, CONFIG_T>(data, res); }
 };
 
 } // namespace activation
