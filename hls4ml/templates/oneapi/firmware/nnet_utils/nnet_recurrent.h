@@ -274,7 +274,7 @@ void simple_rnn(const data_T &data, res_T &res, const typename CONFIG_T::weight_
 INIT_LOOP:
     #pragma unroll
     for (int x = 0; x < CONFIG_T::n_out; x++) {
-        hidden_state[x][0] = 0;
+        hidden_state[0][x] = 0;
     }
 
     [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
@@ -288,7 +288,7 @@ INIT_LOOP:
         // Hidden state at current time step
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state_temp[x] = hidden_state[x][i];
+            hidden_state_temp[x] = hidden_state[i][x];
         }
 
         // Do SimpleRNN
@@ -297,7 +297,7 @@ INIT_LOOP:
         // Write result
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state[x][i + 1] = h[x];
+            hidden_state[i + 1][x] = h[x];
         }
     }
 
@@ -305,7 +305,7 @@ INIT_LOOP:
         // Output when return_sequences is false
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            res[x] = hidden_state[x][CONFIG_T::n_timesteps];
+            res[x] = hidden_state[CONFIG_T::n_timesteps][x];
         }
     } else {
         // Output when return_sequences is true
@@ -313,7 +313,7 @@ INIT_LOOP:
         for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
             #pragma unroll
             for (int h = 0; h < CONFIG_T::n_out; h++) {
-                res[x * CONFIG_T::n_out + h] = hidden_state[h][x + 1];
+                res[x * CONFIG_T::n_out + h] = hidden_state[x + 1][h];
             }
         }
     }
@@ -520,8 +520,8 @@ void lstm(const data_T &data, res_T &res, const typename CONFIG_T::weight_t WI[C
 INIT_LOOP:
     #pragma unroll
     for (int x = 0; x < CONFIG_T::n_out; x++) {
-        hidden_state[x][0] = 0;
-        cell_state[x][0] = 0;
+        hidden_state[0][x] = 0;
+        cell_state[0][x] = 0;
     }
 
     // Input dimension
@@ -534,8 +534,8 @@ INIT_LOOP:
         // Hidden state at current time step
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state_temp[x] = hidden_state[x][i];
-            cell_state_temp[x] = cell_state[x][i];
+            hidden_state_temp[x] = hidden_state[i][x];
+            cell_state_temp[x] = cell_state[i][x];
         }
 
         // Do LSTM
@@ -545,8 +545,8 @@ INIT_LOOP:
         // Write result
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state[x][i + 1] = h[x];
-            cell_state[x][i + 1] = c[x];
+            hidden_state[i + 1][x] = h[x];
+            cell_state[i + 1][x] = c[x];
         }
     }
 
@@ -554,14 +554,14 @@ INIT_LOOP:
         // Output when return_sequences is false
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            res[x] = hidden_state[x][CONFIG_T::n_timesteps];
+            res[x] = hidden_state[CONFIG_T::n_timesteps][x];
         }
     } else {
         // Output when return_sequences is true
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
             for (int h = 0; h < CONFIG_T::n_out; h++) {
-                res[x * CONFIG_T::n_out + h] = hidden_state[h][x + 1];
+                res[x * CONFIG_T::n_out + h] = hidden_state[x + 1][h];
             }
         }
     }
