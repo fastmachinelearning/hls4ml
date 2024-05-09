@@ -16,6 +16,9 @@ void gru_stream(const typename CONFIG_T::weight_t weights[3 * CONFIG_T::n_units 
     using res_T = typename ExtractPipeType<res_pipe>::value_type;
     using h_T = array<typename res_T::value_type, CONFIG_T::n_units>;
 
+    constexpr auto datasize = std::tuple_size<data_T>{};
+    constexpr auto ressize = std::tuple_size<res_T>{};
+
     [[intel::fpga_register]] h_T h;
     #pragma unroll
     for (int i = 0; i < CONFIG_T::n_units; i++) {
@@ -25,12 +28,12 @@ void gru_stream(const typename CONFIG_T::weight_t weights[3 * CONFIG_T::n_units 
     [[intel::fpga_register]] data_T x;
 
 DataPropagation:
-    for (int i_in = 0; i_in < CONFIG_T::n_timesteps * CONFIG_T::n_in / data_T::size; i_in++) {
+    for (int i_in = 0; i_in < CONFIG_T::n_timesteps * CONFIG_T::n_in / datasize; i_in++) {
         auto data_pack = data_pipe::read();
 
     DataPack:
         #pragma unroll
-        for (int i_pack = 0; i_pack < data_T::size; i_pack++) {
+        for (int i_pack = 0; i_pack < datasize; i_pack++) {
             x[i_pack] = data_pack[i_pack];
         }
 
@@ -41,7 +44,7 @@ DataPropagation:
 
         ResPackRetSeq:
             #pragma unroll
-            for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+            for (int i_pack = 0; i_pack < ressize; i_pack++) {
                 res_pack[i_pack] = h[i_pack];
             }
 
@@ -54,7 +57,7 @@ DataPropagation:
 
     ResPackNoRetSeq:
         #pragma unroll
-        for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+        for (int i_pack = 0; i_pack < ressize; i_pack++) {
             res_pack[i_pack] = h[i_pack];
         }
 
