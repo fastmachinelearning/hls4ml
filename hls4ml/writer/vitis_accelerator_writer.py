@@ -163,7 +163,7 @@ class VitisAcceleratorWriter(VitisWriter):
                         newline += indent + indent + 'is_last |= (in[i].last == 1)? true: false;\n'
                     else:
                         newline += indent + indent + '#pragma HLS UNROLL\n'
-                        newline += indent + indent + 'in_local[i] = in[i]; // Read input with cast\n'
+                        newline += indent + indent + 'in_local[i] = in[i].data; // Read input with cast\n'
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
                     newline = ''
@@ -188,7 +188,7 @@ class VitisAcceleratorWriter(VitisWriter):
                             indent
                             + indent
                             + indent
-                            + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j]);\n'
+                            + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j].data);\n'
                         )
                     newline += indent + indent + '}}\n'
                     newline += indent + indent + 'in_local.write(ctype);\n'

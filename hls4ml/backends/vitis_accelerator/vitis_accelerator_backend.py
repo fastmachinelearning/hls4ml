@@ -34,7 +34,7 @@ class VitisAcceleratorBackend(VitisBackend):
             validation=validation,
             export=export,
             vsynth=vsynth,
-            fifo_opt=fifo_opt,
+            # fifo_opt=fifo_opt,
         )
         # Get Config to view Board and Platform
         from hls4ml.backends import VitisAcceleratorConfig
