@@ -6,8 +6,8 @@ from qkeras import QActivation, QConv2D, QDense, quantized_bits
 from tensorflow.keras.layers import AveragePooling2D, BatchNormalization, Conv2D, Dense, Flatten, MaxPooling2D, ReLU, Softmax
 from tensorflow.keras.models import Sequential
 
-from hls4ml.optimization.keras.reduction import reduce_model
-from hls4ml.optimization.keras.utils import get_model_sparsity
+from hls4ml.optimization.dsp_aware_pruning.keras.reduction import reduce_model
+from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_model_sparsity
 
 pytest.skip(allow_module_level=True)
 
