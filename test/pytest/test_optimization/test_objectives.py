@@ -2,8 +2,8 @@ import numpy as np
 from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
 
-from hls4ml.optimization.attributes import get_attributes_from_keras_model
-from hls4ml.optimization.objectives import ParameterEstimator
+from hls4ml.optimization.dsp_aware_pruning.attributes import get_attributes_from_keras_model
+from hls4ml.optimization.dsp_aware_pruning.objectives import ParameterEstimator
 
 
 # Test attempts to verify one of the estimators (parameter) is correctly declared, the functions are static etc.

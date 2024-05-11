@@ -7,13 +7,13 @@ import tensorflow as tf
 # Enables printing of loss tensors during custom training loop
 from tensorflow.python.ops.numpy_ops import np_config
 
-import hls4ml.optimization.keras.utils as utils
-from hls4ml.optimization.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.keras.builder import build_optimizable_model, remove_custom_regularizers
-from hls4ml.optimization.keras.config import SUPPORTED_LAYERS, SUPPORTED_METRICS, TMP_DIRECTORY
-from hls4ml.optimization.keras.masking import get_model_masks
-from hls4ml.optimization.keras.reduction import reduce_model
-from hls4ml.optimization.scheduler import OptimizationScheduler
+import hls4ml.optimization.dsp_aware_pruning.keras.utils as utils
+from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
+from hls4ml.optimization.dsp_aware_pruning.keras.builder import build_optimizable_model, remove_custom_regularizers
+from hls4ml.optimization.dsp_aware_pruning.keras.config import SUPPORTED_LAYERS, SUPPORTED_METRICS, TMP_DIRECTORY
+from hls4ml.optimization.dsp_aware_pruning.keras.masking import get_model_masks
+from hls4ml.optimization.dsp_aware_pruning.keras.reduction import reduce_model
+from hls4ml.optimization.dsp_aware_pruning.scheduler import OptimizationScheduler
 
 np_config.enable_numpy_behavior()
 default_regularization_range = np.logspace(-6, -2, num=16).tolist()

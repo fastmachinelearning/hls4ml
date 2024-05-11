@@ -6,9 +6,9 @@ import tensorflow as tf
 from qkeras import QConv2D, QDense
 from tensorflow.keras.layers import Conv2D, Dense
 
-from hls4ml.optimization.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.keras.config import SUPPORTED_LAYERS, SUPPORTED_METRICS
-from hls4ml.optimization.knapsack import solve_knapsack
+from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
+from hls4ml.optimization.dsp_aware_pruning.keras.config import SUPPORTED_LAYERS, SUPPORTED_METRICS
+from hls4ml.optimization.dsp_aware_pruning.knapsack import solve_knapsack
 
 
 def get_model_masks(

@@ -6,9 +6,9 @@ from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 
-from hls4ml.optimization.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.keras.builder import remove_custom_regularizers
-from hls4ml.optimization.keras.regularizers import Conv2DRegularizer, DenseRegularizer
+from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
+from hls4ml.optimization.dsp_aware_pruning.keras.builder import remove_custom_regularizers
+from hls4ml.optimization.dsp_aware_pruning.keras.regularizers import Conv2DRegularizer, DenseRegularizer
 
 # Constants
 pattern_offset = 4
