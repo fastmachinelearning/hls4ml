@@ -320,6 +320,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
 
         params['filt_width'] = 1
         params['stride_width'] = 1
+        params['pad_left'] = params['pad_right'] = 0
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('pointwise').nzeros
         params['index'] = str(node.index) + '_pointwise'
@@ -327,7 +328,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
         if node.model.config.get_config_value('IOType') == 'io_parallel':
-            params['fill_fn'] = f'fill_buffer_{node.index}_dw'
+            params['fill_fn'] = f'fill_buffer_{node.index}_pw'
         else:
             params['fill_fn'] = 'FillConv1DBuffer'
 
@@ -449,6 +450,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
 
         params['filt_height'] = params['filt_width'] = 1
         params['stride_height'] = params['stride_width'] = 1
+        params['pad_left'] = params['pad_right'] = 0
+        params['pad_top'] = params['pad_bottom'] = 0
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('pointwise').nzeros
         params['index'] = str(node.index) + '_pointwise'
