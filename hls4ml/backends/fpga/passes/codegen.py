@@ -78,7 +78,7 @@ class GenerateConvIm2col(OptimizerPass):
             str(node.get_attr('index')) + '_pw',
             node.get_attr('n_partitions'),
             node.get_output_variable().shape[0],
-            node.get_output_variable().shape[1],
+            node.get_input_variable().shape[1],
             kernel=1,
         )
 
