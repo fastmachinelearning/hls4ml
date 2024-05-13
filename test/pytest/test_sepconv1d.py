@@ -12,9 +12,9 @@ test_root_path = Path(__file__).parent
 keras_conv1d = [SeparableConv1D]
 padds_options = ['same', 'valid']
 chans_options = ['channels_last']
-io_type_options = ['io_stream']
+io_type_options = ['io_parallel', 'io_stream']
 strides_options = [(1), (2)]
-kernel_options = [(1), (3)]
+kernel_options = [(2), (3)]
 bias_options = [False]
 
 
