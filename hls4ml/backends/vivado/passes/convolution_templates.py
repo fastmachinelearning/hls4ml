@@ -24,6 +24,7 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     typedef {weight_t.name} weight_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
+    constexpr static auto unrolled_fn = {unrolled_fn_name};
 }};\n"""
 
 # Conv1D templates
@@ -93,6 +94,10 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
 
         conv_config = self.template.format(**params)
 
+        mult_config = node.get_attr('dense_config')
+        if mult_config is not None:
+            return mult_config + '\n' + conv_config
+
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
@@ -100,6 +105,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+        mult_params.setdefault('unrolled_fn_name', 'nullptr')
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -117,6 +123,14 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('unrolled_codegen') is not None:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # Unrolled impl use alternate entry point for
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
@@ -206,6 +220,10 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
 
         conv_config = self.template.format(**params)
 
+        mult_config = node.get_attr('dense_config')
+        if mult_config is not None:
+            return mult_config + '\n' + conv_config
+
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_height') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
@@ -213,6 +231,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+        mult_params.setdefault('unrolled_fn_name', 'nullptr')
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -230,6 +249,14 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('unrolled_codegen') is not None:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # Unrolled impl use alternate entry point for
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):
