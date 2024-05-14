@@ -21,6 +21,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {index_t.name} index_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
+    constexpr static auto unrolled_fn = {unrolled_fn_name};
 }};\n"""
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -34,12 +35,17 @@ class DenseConfigTemplate(LayerConfigTemplate):
         self.template = dense_config_template
 
     def format(self, node):
+        mult_config = node.get_attr('dense_config')
+        if mult_config is not None:
+            return mult_config
+
         params = self._default_config_params(node)
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
         params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+        params.setdefault('unrolled_fn_name', 'nullptr')
 
         return self.template.format(**params)
 
@@ -55,6 +61,14 @@ class DenseFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('unrolled_codegen') is not None:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # Unrolled impl use alternate entry point for
+                return False
+        return super().match(node)
 
 
 # BatchNormalization templates

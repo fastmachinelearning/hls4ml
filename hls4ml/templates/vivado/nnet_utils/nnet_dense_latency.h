@@ -10,9 +10,20 @@
 namespace nnet {
 
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
-                   typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
-                   typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+typename std::enable_if<CONFIG_T::unrolled_fn != nullptr, void>::type
+dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+              typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
+              typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+    #pragma HLS INLINE
+    CONFIG_T::unrolled_fn(data, res);
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+typename std::enable_if<CONFIG_T::unrolled_fn == nullptr, void>::type
+dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+              typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
+              typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+
     data_T cache;
     typename CONFIG_T::accum_t mult[CONFIG_T::n_in * CONFIG_T::n_out];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
