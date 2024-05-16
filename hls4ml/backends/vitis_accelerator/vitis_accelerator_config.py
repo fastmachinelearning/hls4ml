@@ -1,3 +1,6 @@
+import json
+import os
+
 class VitisAcceleratorConfig:
     def __init__(self, config):
         self.config = config.config
