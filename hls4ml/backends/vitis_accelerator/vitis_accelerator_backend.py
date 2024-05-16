@@ -7,7 +7,7 @@ class VitisAcceleratorBackend(VitisBackend):
         super(VivadoBackend, self).__init__(name='VitisAccelerator')
         self._register_layer_attributes()
         self._register_flows()
-    
+
     def create_initial_config(
         self,
         board='alveo-u55c',
@@ -38,7 +38,7 @@ class VitisAcceleratorBackend(VitisBackend):
         config['AcceleratorConfig']['Num_Thread'] = num_thread
         config['AcceleratorConfig']['Batchsize'] = batchsize
         return config
-    
+
     def _register_flows(self):
         validation_passes = [
             'vitisaccelerator:validate_conv_implementation',
