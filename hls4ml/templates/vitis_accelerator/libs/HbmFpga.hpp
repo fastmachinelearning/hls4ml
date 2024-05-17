@@ -57,7 +57,7 @@ class HbmFpga : public FpgaObj<V, W> {
         size_t vector_size_out_bytes = sizeof(W) * this->_kernOutputSize;
         for (int ib = 0; ib < this->_numThreads; ib++) {
             for (int ik = 0; ik < this->_numCU; ik++) {
-                cl::Buffer buffer_in_tmp (this->context, 
+                cl::Buffer buffer_in_tmp(this->context, 
                         CL_MEM_USE_HOST_PTR | CL_MEM_EXT_PTR_XILINX | CL_MEM_READ_ONLY,
                         vector_size_in_bytes,
                         &(this->buf_in_ext[ib*this->_numCU + ik]));

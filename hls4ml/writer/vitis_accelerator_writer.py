@@ -1,14 +1,19 @@
 
-import glob
 import os
-from shutil import copy
+from shutil import copy, copytree
 
 from hls4ml.writer.vitis_writer import VitisWriter
 
 
 class VitisAcceleratorWriter(VitisWriter):
     def __init__(self):
+        
         super().__init__()
+
+    def create_accelerator_config(self, model):
+        from hls4ml.backends import VitisAcceleratorConfig
+
+        self.vitis_accelerator_config = VitisAcceleratorConfig(model.config)
 
     def write_parameters_overrides(self, model):
         """Write the C++ layer config file (parameters.h)
@@ -63,88 +68,103 @@ class VitisAcceleratorWriter(VitisWriter):
         f.close()
 
     def write_kernel(self, model):
-        """Write the Python-C++ kernel (myproject_kernel.cpp)
-
-        Args:
-            model (ModelGraph): the hls4ml model.
-        """
-
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir, '../templates/vitis_accelerator/myproject_kernel.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_kernel.cpp', 'w')
-
-        model_inputs = model.get_input_variables()
-        model_outputs = model.get_output_variables()
-
-        indent = '    '
-
-        for line in f.readlines():
-            if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
-            elif 'myproject' in line:
-                newline = line.replace('myproject', format(model.config.get_project_name()))
-            elif '// hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([f'input_t *{i.name}' for i in model_inputs])
-                outputs_str = ', '.join([f'result_t *{o.name}' for o in model_outputs])
-
-                newline = ''
-                newline += indent + inputs_str + ',\n'
-                newline += indent + outputs_str + ',\n'
-                newline += '    uint32_t size\n'
-            elif '// hls-fpga-machine-learning insert project top' in line:
-                top_function_str = format(model.config.get_project_name())
-                input_str = str(model_inputs[-1].name)
-                output_str = str(model_outputs[-1].name)
-                newline = indent + top_function_str + '(' + input_str + '_stream, ' + output_str + '_stream);\n'
-            elif 'project_input' in line:
-                # input = [i.name for i in model_inputs]
-                newline = line.replace('project_input', str(model_inputs[-1].name))
-            elif 'project_output' in line:
-                # output = [o.name for o in model_outputs]
-                newline = line.replace('project_output', str(model_outputs[-1].name))
-            else:
-                newline = line
-            fout.write(newline)
-
-        f.close()
-        fout.close()
-
-    def write_host(self, model):
-        """Write the Python-C++ kernel (myproject_host.cpp)
+        """Write the Python-C++ kernel (kernel_wrapper.cpp & kernel_wrapper.h)
 
         Args:
             model (ModelGraph): the hls4ml model.
         """
         from hls4ml.backends import VitisAcceleratorConfig
-        vitis_accelerator_config = VitisAcceleratorConfig(model.config)
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir, '../templates/vitis_accelerator/myproject_host.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_host.cpp', 'w')
+        io_type = model.config.get_config_value("IOType")
+
+        # Writing header file
+        f_header = open(os.path.join(filedir, '../templates/vitis_accelerator/kernel_wrapper.h'))
+        fout_header = open(f'{model.config.get_output_dir()}/kernel_wrapper.h', 'w')
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
+        for line in f_header.readlines():
+            if '// hls-fpga-machine-learning accelerator parameters' in line:
+                newline = ''
+                newline += '#define NUM_CU ' + format(self.vitis_accelerator_config.get_num_kernel()) + '\n'
+                newline += '#define NUM_THREAD ' + format(self.vitis_accelerator_config.get_num_thread()) + '\n'
+                newline += '#define NUM_CHANNEL '
+                if self.vitis_accelerator_config.get_memory_type() == 'hbm':
+                    newline += format(self.vitis_accelerator_config.get_memory_channel_count() // (2 * self.vitis_accelerator_config.get_num_kernel())) + '\n'
+                elif self.vitis_accelerator_config.get_memory_type() == 'ddr':
+                    newline += '1\n'
+                newline += '#define BATCHSIZE ' + format(self.vitis_accelerator_config.get_batchsize()) + '\n'
+            elif '// hls-fpga-machine-learning accelerator io' in line:
+                newline = ''
+                if io_type == 'io_parallel':
+                    for inp in model_inputs:
+                        for out in model_outputs:
+                            newline += '#define DATA_SIZE_IN ' + format(inp.size_cpp()) + '\n'
+                            newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN)' + '\n\n'
+                            newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
+                            newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
+                            newline += 'typedef ' + format(inp.type.name) + ' in_buffer_t;\n'
+                            newline += 'typedef ' + format(out.type.name) + ' out_buffer_t;\n'
+                elif io_type == 'io_stream':
+                    for inp in model_inputs:
+                        for out in model_outputs:
+                            (dims, _) = inp.get_shape()
+                            nnet_array_depth = dims.pop()
+                            newline += '#define DATA_SIZE_IN ' + ' * '.join(dims) + '\n'
+                            newline += '#define NNET_ARRAY_DEPTH ' + format(nnet_array_depth) + '\n'
+                            newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN * NNET_ARRAY_DEPTH)' + '\n\n'
+                            newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
+                            newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
+                            precision_str = model.config.backend.convert_precision_string(model.config.model_precision.get('default'))
+                            newline += 'typedef ' + precision_str + ' in_buffer_t;\n'
+                            newline += 'typedef ' + precision_str + ' out_buffer_t;\n'
+            else:
+                newline = line
+            fout_header.write(newline)
+        f_header.close()
+        fout_header.close()
 
-        for line in f.readlines():
-            if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
-            elif 'myproject' in line:
+        # Writing source file
+        f_source = open(os.path.join(filedir, '../templates/vitis_accelerator/kernel_wrapper_' + io_type +'.cpp'))
+        fout_source = open(f'{model.config.get_output_dir()}/kernel_wrapper.cpp', 'w')
+        for line in f_source.readlines():
+            if 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
-            elif 'myproject_kernel' in line:
-                newline = line.replace('myproject_kernel', format(model.config.get_project_name(), '_kernel'))
-            elif 'output_dir' in line:
-                newline = line.replace('output_dir', format(model.config.get_output_dir()))
-            elif 'myplatform' in line:
-                newline = line.replace('myplatform', format(vitis_accelerator_config.get_platform()))
-            elif 'mylayer_out' in line:
-                newline = line.replace('mylayer_out', format(model_outputs[-1].size_cpp())) 
-            elif 'myinput' in line:
-                newline = line.replace('myinput', format(model_inputs[-1].size_cpp()))
+            else:
+                newline = line
+            fout_source.write(newline)
+        f_source.close()
+        fout_source.close()
+        
+
+    def write_host(self, model):
+        """Write the OpenCL-based host code (myproject_host_cl.cpp) and associated libraries
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        from hls4ml.backends import VitisAcceleratorConfig
+
+        # Write host code
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir, '../templates/vitis_accelerator/myproject_host_cl.cpp'))
+        fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_host_cl.cpp', 'w')
+        for line in f.readlines():
+            if '/*FPGATYPE*/' in line:
+                if self.vitis_accelerator_config.get_memory_type() == 'hbm':
+                    newline = line.replace('/*FPGATYPE*/', 'HbmFpga')
+                elif self.vitis_accelerator_config.get_memory_type() == 'ddr':
+                    newline = line.replace('/*FPGATYPE*/', 'DdrFpga')
             else:
                 newline = line
             fout.write(newline)
-
         f.close()
         fout.close()
+
+        # Write libraries
+        src = os.path.join(filedir, '../templates/vitis_accelerator/libs')
+        dst = f'{model.config.get_output_dir()}/libs'
+        copytree(src, dst, copy_function=copy)
 
     def write_makefile(self, model):
         """Write the Python-C++ Makefile (Makefile)
@@ -152,68 +172,77 @@ class VitisAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        from hls4ml.backends import VitisAcceleratorConfig
-
-        #        vivado_accelerator_config = VitisAcceleratorConfig(
-        #            model.config, model.get_input_variables(), model.get_output_variables()
-        #        )
-        vitis_accelerator_config = VitisAcceleratorConfig(model.config)
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/vitis_accelerator/Makefile'))
         fout = open(f'{model.config.get_output_dir()}/Makefile', 'w')
 
         for line in f.readlines():
-            if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
-            elif 'myproject' in line:
+            if 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
-            elif 'myproject_host' in line:
-                newline = line.replace('myproject_host', format(model.config.get_project_name(), '_host'))
-            elif 'myproject_kernel' in line:
-                newline = line.replace('myproject_kernel', format(model.config.get_project_name(), '_kernel'))
-            elif 'myplatform' in line:
-                newline = line.replace('myplatform', format(vitis_accelerator_config.get_platform()))
             else:
                 newline = line
             fout.write(newline)
-
         f.close()
         fout.close()
 
     def write_accelerator_card_cfg(self, model):
-        """Write the Python acceleratro card configuration (accelerator_card.cfg)
+        """Write the configuration file passed to Vivado/Vitis (accelerator_card.cfg)
 
         Args:
             model (ModelGraph): the hls4ml model.
         """
+        from hls4ml.backends import VitisAcceleratorConfig
 
+        # Write accelerator_card.cfg
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/vitis_accelerator/accelerator_card.cfg'))
         fout = open(f'{model.config.get_output_dir()}/accelerator_card.cfg', 'w')
 
-        from hls4ml.backends import VitisAcceleratorConfig
-
-        #        vitis_accelerator_config = VitisAcceleratorConfig(
-        #            model.config, model.get_input_variables(), model.get_output_variables()
-        #        )
-        vitis_accelerator_config = VitisAcceleratorConfig(model.config)
-
+        memory_type = self.vitis_accelerator_config.get_memory_type()
+        num_kernels = self.vitis_accelerator_config.get_num_kernel()
+        num_channels = self.vitis_accelerator_config.get_memory_channel_count()
+        if memory_type == 'hbm':
+            if num_kernels > 4:
+                print(
+                    'WARNING: You are trying to instantiate too many kernels on the FPGA.'
+                    'Synthesis is likely to fail due to resource shortage'
+                )
+            num_channels_per_cu =  num_channels // (num_kernels * 2)
+        elif memory_type == 'ddr':
+            if num_kernels > self.vitis_accelerator_config.get_memory_channel_count():
+                raise Exception(format(self.vitis_accelerator_config.get_platform()) + 
+                                ' has only ' + format(num_channels) + ' memory banks.')
+        
         for line in f.readlines():
-            if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
-            elif 'myproject' in line:
-                newline = line.replace('myproject', format(model.config.get_project_name()))
-            elif 'myproject_kernel' in line:
-                newline = line.replace('myproject_kernel', format(model.config.get_project_name(), '_kernel'))
-            elif 'myplatform' in line:
-                newline = line.replace('myplatform', format(vitis_accelerator_config.get_platform()))
+            if 'MYPLATFORM' in line:
+                newline = line.replace('MYPLATFORM', format(self.vitis_accelerator_config.get_platform()))
+            elif '# hls-fpga-machine-learning kernel control' in line:
+                newline = '[connectivity]\n'
+                newline += 'nk=kernel_wrapper:' + format(num_kernels) + '\n\n'
+                if memory_type == 'hbm':
+                    for i in range(0, num_kernels):
+                        newline += 'sp=kernel_wrapper_{}.in:HBM[{}:{}]\n'.format(i + 1, (i*2)*num_channels_per_cu, ((i*2 + 1)*num_channels_per_cu) - 1)
+                        newline += 'sp=kernel_wrapper_{}.out:HBM[{}:{}]\n'.format(i + 1, (i*2 + 1)*num_channels_per_cu, ((i+1) * 2)*num_channels_per_cu - 1)
+                elif memory_type == 'ddr':
+                    for i in range(0, num_kernels):
+                        newline += 'sp=kernel_wrapper_{}.in:DDR[{}]\n'.format(i + 1, i)
+                        newline += 'sp=kernel_wrapper_{}.out:HBM[{}]\n'.format(i + 1, i)
+                        newline += '\n'
+                    for i in range(0, num_kernels):
+                        newline += 'slr=kernel_wrapper_{}:SLR{}\n'.format(i + 1, i)
             else:
                 newline = line
             fout.write(newline)
-
         f.close()
         fout.close()
+
+        # Copy hls_config.tcl
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        srcpath = os.path.join(filedir, '../templates/vitis_accelerator/hls_config.tcl')
+        dstpath = f'{model.config.get_output_dir()}/hls_config.tcl'
+        copy(srcpath, dstpath)
+
 
     def write_nnet_utils_overrides(self, model):
         """Override nnet_types.h pointer comparison
@@ -232,6 +261,8 @@ class VitisAcceleratorWriter(VitisWriter):
         Write the HLS project. Calls the steps from VivadoWriter, adapted for Vitis
         """
         super().write_hls(model)
+        print("\n\nWriting Accelerator code")
+        self.create_accelerator_config(model)
         self.write_nnet_utils_overrides(model)
         self.write_build_script_backend_override(model)
         self.write_parameters_overrides(model)
@@ -239,3 +270,4 @@ class VitisAcceleratorWriter(VitisWriter):
         self.write_host(model)
         self.write_makefile(model)
         self.write_accelerator_card_cfg(model)
+        print("Done")

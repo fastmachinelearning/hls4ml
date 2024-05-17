@@ -1,32 +1,56 @@
-.PHONY: clean
+# Absolute path to top directory of accelerator project
+PWD = $(shell readlink -f .)
 
-PLATFORM=myplatform
-
-app.exe: ./myproject_host.cpp
-	g++ -g -std=c++14 ./myproject_host.cpp -o app.exe \
-		-I firmware/ap_types -I/opt/xilinx/xrt/include \
-		-L${XILINX_XRT}/lib/ -lxrt_coreutil -lOpenCL -pthread -lrt -lstdc++
-
-myproject_kernel.xo: myproject_kernel.cpp
-	v++ --target hw --compile -I"./" --config accelerator_card.cfg -o"build/myproject_kernel.xo" "myproject_kernel.cpp"
-
-ifneq (,$(findstring vck5000,$(PLATFORM)))
-myproject_kernel.xsa: ./build/myproject_kernel.xo
-	v++ -l -t hw --config ./accelerator_card.cfg ./build/myproject_kernel.xo -o myproject_kernel.xsa
-
-myproject_kernel.xclbin: ./myproject_kernel.xsa
-	v++ --package -t hw --config ./accelerator_card.cfg ./myproject_kernel.xsa -o myproject_kernel.xclbin
-else
-myproject_kernel.xclbin: ./myproject_kernel.xo
-	v++ -l -t hw --config ./accelerator_card.cfg ./build/myproject_kernel.xo -o myproject_kernel.xclbin
+# Checks for XILINX_VITIS
+ifndef XILINX_VITIS
+$(error XILINX_VITIS variable is not set, please set correctly and rerun)
 endif
 
-emconfig.json:
-	emconfigutil --platform  xilinx_vck5000_gen4x8_qdma_2_202220_1 --nd 1
+# Checks for XILINX_XRT
+ifndef XILINX_XRT
+$(error XILINX_XRT variable is not set, please set correctly and rerun)
+endif
 
+# Checks for XILINX_VIVADO
+ifndef XILINX_VIVADO
+$(error XILINX_VIVADO variable is not set, please set correctly and rerun)
+endif
+
+# Checks for g++
+ifneq ($(shell expr $(shell g++ -dumpversion) \>= 5), 1)
+CXX := $(XILINX_VIVADO)/tps/lnx64/gcc-6.2.0/bin/g++
+$(warning [WARNING]: g++ version older. Using g++ provided by the tool : $(CXX))
+endif
+
+KERN_LIBRARIES += -I./ -I./firmware/ -I./firmware/weights -I./firmware/nnet_utils/
+
+.PHONY: all
+all: host kernel 
+
+# Building kernel
+./build/myproject_kernel.xo: kernel_wrapper.cpp
+	mkdir -p ./build
+	v++ -c -t hw --config ./accelerator_card.cfg kernel_wrapper.cpp firmware/myproject.cpp -o ./build/myproject_kernel.xo $(KERN_LIBRARIES)
+ 
+myproject_kernel.xclbin: ./build/myproject_kernel.xo
+	v++ -l -t hw --config ./accelerator_card.cfg ./build/myproject_kernel.xo -o kernel_wrapper.xclbin
+
+# Building Host 
+INCLUDES += -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -I$(XILINX_HLS)/include/ \
+			-I$(PWD)/libs/ -I$(PWD)/firmware/ -I$(PWD)/firmware/nnet_utils/
+CXXFLAGS += -Wall -std=c++11 -Wno-unknown-pragmas -g -O0 
+LDFLAGS = -L$(XILINX_XRT)/lib/ -lstdc++ -lpthread -lrt -lOpenCL
+
+host: myproject_host_cl.cpp libs/xcl2.cpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS) 
+
+.PHONY: kernel
+kernel: myproject_kernel.xclbin
+
+# Cleaning stuff
+.PHONY: clean
 clean:
-	rm -f KERAS_3layer.json KERAS_3layer_weights.h5  prj_tuto_vitis_stream.tar.gz
-	rm -rf myproject_kernel* myproject_kernel* .exe *json *csv *log *summary _x xilinx* .run .Xil .ipcache *.jou
-
-# Unless specified, use the current directory name as the v++ build target
-TARGET ?= $(notdir $(CURDIR))
+	-rm -rf host
+	-rm -rf *.xclbin*
+	-rm -rf build*
+	-rm -rf *.log *.jou *.rpt *.csv *.mdb *.ltx
