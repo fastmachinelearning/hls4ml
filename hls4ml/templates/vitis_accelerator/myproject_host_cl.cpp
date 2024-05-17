@@ -83,13 +83,13 @@ int main(int argc, char **argv) {
     }
     
     // Copying in testbench data
-    int n = inputData.size();
+    int n = std::min((int) inputData.size(), INSTREAMSIZE * NUM_CU * NUM_THREAD);
     for (int i = 0; i < n; i++) {
         fpga.source_in[i] = inputData[i];
     }
 
     // Padding rest of buffer with arbitrary values
-    for (int i = n; i < NUM_CU * NUM_THREAD * INSTREAMSIZE; i++) {
+    for (int i = n; i < INSTREAMSIZE * NUM_CU * NUM_THREAD; i++) {
         fpga.source_in[i] = (in_buffer_t)(1234.567);
     }
 
@@ -115,16 +115,34 @@ int main(int argc, char **argv) {
             float(std::chrono::duration_cast<std::chrono::nanoseconds>(ts_end - ts_start).count())) *
             1000000000.;
     
+    std::cout << "Throughput = "
+            << throughput
+            <<" predictions/second\n" << std::endl;
+
+    std::cout << "Writing hw resaults to file" << std::endl;
+    std::ofstream resultsFile;
+    resultsFile.open("tb_data/hw_results.dat", std::ios::trunc);
+    if (resultsFile.is_open()) {   
+        for (int i = 0; i < NUM_THREAD * NUM_CU * BATCHSIZE; i++) {
+            std::stringstream line;
+            for (int n = 0; n < DATA_SIZE_OUT; n++) {
+                line << (float)fpga.source_hw_results[(i * DATA_SIZE_OUT) + n] << " ";
+            }
+            resultsFile << line.str() << "\n";
+        }
+        resultsFile.close();
+    } else {
+        std::cerr << "Error writing hw results to file" << std::endl;
+    }
+
+    std::cout << "\nWriting run logs to file" << std::endl;
     std::ofstream outFile("u55c_executable_logfile.log", std::ios::trunc);
     if (outFile.is_open()) {
         outFile << fpga.ss.rdbuf();
         outFile.close();
     } else {
-        std::cerr << "Error opening file for writing." << std::endl;
+        std::cerr << "Error opening file for logging" << std::endl;
     }
-
-    std::cout << "Throughput = "
-            << throughput
-            <<" predictions/second" << std::endl;
+    
     return EXIT_SUCCESS;
 }

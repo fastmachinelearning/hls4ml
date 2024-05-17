@@ -31,9 +31,8 @@ all: host kernel
 ./build/myproject_kernel.xo: kernel_wrapper.cpp
 	mkdir -p ./build
 	v++ -c -t hw --config ./accelerator_card.cfg kernel_wrapper.cpp firmware/myproject.cpp -o ./build/myproject_kernel.xo $(KERN_LIBRARIES)
- 
-myproject_kernel.xclbin: ./build/myproject_kernel.xo
-	v++ -l -t hw --config ./accelerator_card.cfg ./build/myproject_kernel.xo -o kernel_wrapper.xclbin
+
+# hls-fpga-machine-learning packaging 
 
 # Building Host 
 INCLUDES += -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -I$(XILINX_HLS)/include/ \
@@ -45,7 +44,7 @@ host: myproject_host_cl.cpp libs/xcl2.cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS) 
 
 .PHONY: kernel
-kernel: myproject_kernel.xclbin
+kernel: kernel_wrapper.xclbin
 
 # Cleaning stuff
 .PHONY: clean

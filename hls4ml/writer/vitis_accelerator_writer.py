@@ -172,14 +172,27 @@ class VitisAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model.
         """
+        from hls4ml.backends import VitisAcceleratorConfig
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/vitis_accelerator/Makefile'))
         fout = open(f'{model.config.get_output_dir()}/Makefile', 'w')
 
+        board_type = self.vitis_accelerator_config.get_board_type()
+        project_name = format(model.config.get_project_name())
+
         for line in f.readlines():
             if 'myproject' in line:
-                newline = line.replace('myproject', format(model.config.get_project_name()))
+                newline = line.replace('myproject', project_name)
+            elif '# hls-fpga-machine-learning packaging' in line:
+                if board_type == "alveo":
+                    newline = f'kernel_wrapper.xclbin: ./build/{project_name}_kernel.xo\n'
+                    newline += f'    v++ -l -t hw --config ./accelerator_card.cfg ./build/{project_name}_kernel.xo -o kernel_wrapper.xclbin\n'
+                elif board_type == "versal":
+                    newline = f'kernel_wrapper.xsa: ./build/{project_name}_kernel.xo\n'
+                    newline += f'    v++ -l -t hw --config ./accelerator_card.cfg ./build/{project_name}_kernel.xo -o kernel_wrapper.xsa\n\n'
+                    newline += f'kernel_wrapper.xclbin: ./kernel_wrapper.xsa\n'
+                    newline += f'    v++ --package -t hw --config ./accelerator_card.cfg ./kernel_wrapper.xsa -o kernel_wrapper.xclbin\n'
             else:
                 newline = line
             fout.write(newline)
@@ -220,17 +233,18 @@ class VitisAcceleratorWriter(VitisWriter):
             elif '# hls-fpga-machine-learning kernel control' in line:
                 newline = '[connectivity]\n'
                 newline += 'nk=kernel_wrapper:' + format(num_kernels) + '\n\n'
-                if memory_type == 'hbm':
-                    for i in range(0, num_kernels):
-                        newline += 'sp=kernel_wrapper_{}.in:HBM[{}:{}]\n'.format(i + 1, (i*2)*num_channels_per_cu, ((i*2 + 1)*num_channels_per_cu) - 1)
-                        newline += 'sp=kernel_wrapper_{}.out:HBM[{}:{}]\n'.format(i + 1, (i*2 + 1)*num_channels_per_cu, ((i+1) * 2)*num_channels_per_cu - 1)
-                elif memory_type == 'ddr':
-                    for i in range(0, num_kernels):
-                        newline += 'sp=kernel_wrapper_{}.in:DDR[{}]\n'.format(i + 1, i)
-                        newline += 'sp=kernel_wrapper_{}.out:HBM[{}]\n'.format(i + 1, i)
-                        newline += '\n'
-                    for i in range(0, num_kernels):
-                        newline += 'slr=kernel_wrapper_{}:SLR{}\n'.format(i + 1, i)
+                if self.vitis_accelerator_config.get_board_type() == "alveo":
+                    if memory_type == 'hbm':
+                        for i in range(0, num_kernels):
+                            newline += 'sp=kernel_wrapper_{}.in:HBM[{}:{}]\n'.format(i + 1, (i*2)*num_channels_per_cu, ((i*2 + 1)*num_channels_per_cu) - 1)
+                            newline += 'sp=kernel_wrapper_{}.out:HBM[{}:{}]\n'.format(i + 1, (i*2 + 1)*num_channels_per_cu, ((i+1) * 2)*num_channels_per_cu - 1)
+                    elif memory_type == 'ddr':
+                        for i in range(0, num_kernels):
+                            newline += 'sp=kernel_wrapper_{}.in:DDR[{}]\n'.format(i + 1, i)
+                            newline += 'sp=kernel_wrapper_{}.out:HBM[{}]\n'.format(i + 1, i)
+                            newline += '\n'
+                        for i in range(0, num_kernels):
+                            newline += 'slr=kernel_wrapper_{}:SLR{}\n'.format(i + 1, i)
             else:
                 newline = line
             fout.write(newline)
