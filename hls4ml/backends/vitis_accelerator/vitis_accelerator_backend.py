@@ -1,3 +1,7 @@
+import os
+import sys
+import subprocess
+
 from hls4ml.backends import VitisBackend, VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
 
@@ -38,6 +42,35 @@ class VitisAcceleratorBackend(VitisBackend):
         config['AcceleratorConfig']['Num_Thread'] = num_thread
         config['AcceleratorConfig']['Batchsize'] = batchsize
         return config
+
+    def build(self, model, target="all"):
+        if 'linux' in sys.platform:
+            if 'XILINX_VITIS' not in os.environ:
+                raise Exception("XILINX_VITIS environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building")
+            if 'XILINX_XRT' not in os.environ:
+                raise Exception("XILINX_XRT environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building")
+            if 'XILINX_VIVADO' not in os.environ:
+                raise Exception("XILINX_VIVADO environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building")
+
+            if target not in ["all", "host", "hls", "xclbin"]:
+                raise Exception("Invalid build target")
+
+            curr_dir = os.getcwd()
+            os.chdir(model.config.get_output_dir())
+            command = "make " + target
+            # Pre-loading libudev
+            ldconfig_output = subprocess.check_output(["ldconfig", "-p"]).decode("utf-8")
+            for line in ldconfig_output.split("\n"):
+                if "libudev.so" in line and "x86" in line:
+                    command = "LD_PRELOAD=" + line.split("=>")[1].strip() + " " + command
+                    break
+            os.system(command)
+            os.chdir(curr_dir)
+        else:
+            raise Exception("Currently untested on non-Linux OS")
+
+    def predict(self, model, x):
+        raise Exception("TODO: Needs to be implemented")
 
     def _register_flows(self):
         validation_passes = [

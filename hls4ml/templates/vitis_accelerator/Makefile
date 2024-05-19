@@ -25,12 +25,12 @@ endif
 KERN_LIBRARIES += -I./ -I./firmware/ -I./firmware/weights -I./firmware/nnet_utils/
 
 .PHONY: all
-all: host kernel 
+all: host xclbin
 
 # Building kernel
 ./build/myproject_kernel.xo: kernel_wrapper.cpp
-	mkdir -p ./build
-	v++ -c -t hw --config ./accelerator_card.cfg kernel_wrapper.cpp firmware/myproject.cpp -o ./build/myproject_kernel.xo $(KERN_LIBRARIES)
+	mkdir -p ./build && mkdir -p ./build/xo
+	v++ -c -t hw --config ./accelerator_card.cfg --temp_dir build/xo kernel_wrapper.cpp firmware/myproject.cpp -o ./build/myproject_kernel.xo $(KERN_LIBRARIES)
 
 # hls-fpga-machine-learning packaging 
 
@@ -43,8 +43,11 @@ LDFLAGS = -L$(XILINX_XRT)/lib/ -lstdc++ -lpthread -lrt -lOpenCL
 host: myproject_host_cl.cpp libs/xcl2.cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS) 
 
-.PHONY: kernel
-kernel: kernel_wrapper.xclbin
+.PHONY: hls
+hls: ./build/myproject_kernel.xo
+
+.PHONY: xclbin
+xclbin: ./build/kernel_wrapper.xclbin
 
 # Cleaning stuff
 .PHONY: clean

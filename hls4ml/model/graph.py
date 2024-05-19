@@ -873,6 +873,9 @@ class ModelGraph(Serializable):
         return int(n_sample)
 
     def predict(self, x):
+        if self.config.config.get('Backend', 'Vivado') == 'VitisAccelerator':
+            return self.config.backend.predict(self, x)
+
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
