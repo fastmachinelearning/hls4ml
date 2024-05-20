@@ -64,7 +64,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
         layer['activation'] = layer['class_name']
         bit_width = class_object.quant_act_bit_width()
         ap_fixed_params = convert_uaq_to_apfixed(bit_width,class_object.quant_act_scale())
-        layer['activation_quantizer'] = BrevitasQuantizer(bit_width,FixedPrecisionType(width=bit_width, integer=ap_fixed_params[1], signed=True))
+        layer['activation_quantizer'] = BrevitasQuantizer(bit_width,FixedPrecisionType(width=bit_width, integer=ap_fixed_params[1], signed=False))
  
     if node.op == 'call_module':
         if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
