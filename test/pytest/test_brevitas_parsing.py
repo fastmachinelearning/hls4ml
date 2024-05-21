@@ -72,7 +72,7 @@ def test_quantconv2d(backend, io_type):
     pytorch_prediction = model(x).detach().numpy()
     config = config_from_pytorch_model(model, inputs_channel_last=False,transpose_outputs=True)
     if io_type == 'io_stream':
-        x = np.ascontiguousarray(x.transpose(0, 2, 3, 1))
+        x = np.ascontiguousarray(x.permute(0, 2, 3, 1))
         config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
     else:
         config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
@@ -91,7 +91,7 @@ def test_quantconv2d(backend, io_type):
 
     if io_type == 'io_stream':
         hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape), (0, 3, 1, 2)
+            np.reshape(hls_model.predict(x), pytorch_prediction.shape), (0, 3, 1, 2)
         )
     else:
         hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
