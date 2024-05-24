@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import numpy as np
 
 from hls4ml.backends import VitisBackend, VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
@@ -69,8 +70,42 @@ class VitisAcceleratorBackend(VitisBackend):
         else:
             raise Exception("Currently untested on non-Linux OS")
 
-    def predict(self, model, x):
-        raise Exception("TODO: Needs to be implemented")
+    def _numpy_to_dat(self, model, x):
+        if len(self.get_input_variables()) != 1:
+            raise Exception("Currently unsupported for multi-input projects")
+        
+        # Verify numpy array of correct shape
+        expected_shape = (np.newaxis, model.get_input_variables()[0].size())
+        print(f"Expected model input shape: {expected_shape}")
+        print(f"Give numpy array shape: {x.shape}")
+        if expected_shape != x.shape:
+            raise Exception(f'Input shape mismatch, got {x.shape}, expected {expected_shape}')
+        
+        # Write to tb_data/tb_input_features.dat
+        input_dat = open(f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat', 'w')
+        for input in x:
+            newline = " ".join(str(n) for n in input)
+            input_dat.write(newline + '\n')
+        input_dat.close()
+    
+    def _dat_to_numpy(self, model):
+        expected_shape = model.get_output_variables()[0].size()
+        y = np.array([], dtype=float).reshape(0, expected_shape)
+
+        output_dat = open(f'{model.config.get_output_dir()}/tb_data/hw_results.dat', 'r')
+        for line in output_dat.readlines():
+            data = [list(map(float, line.strip().split()))]
+            if len(data) != expected_shape:
+                raise Exception('Error in output file. Does not match expected model output shape.')
+            y = np.concatenate(y, np.array(data)[np.newaxis, :], axis=0)
+        output_dat.close()
+        
+        return y
+
+    def hardware_predict(self, model, x):
+        self._numpy_to_dat(model, x)
+        os.system("./host build/kernel_wrapper.xclbin")
+        return self._dat_to_numpy(model)
 
     def _register_flows(self):
         validation_passes = [

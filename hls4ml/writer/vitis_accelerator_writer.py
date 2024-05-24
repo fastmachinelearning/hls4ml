@@ -83,6 +83,10 @@ class VitisAcceleratorWriter(VitisWriter):
         fout_header = open(f'{model.config.get_output_dir()}/kernel_wrapper.h', 'w')
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
+        if len(model_inputs) != 1 or len(model_outputs) != 1:
+            raise Exception("Accelerator currently only supports projects with a single input and a single output variable")
+        inp = model_inputs[0]
+        out = model_outputs[0]
         for line in f_header.readlines():
             if '// hls-fpga-machine-learning accelerator parameters' in line:
                 newline = ''
@@ -97,27 +101,25 @@ class VitisAcceleratorWriter(VitisWriter):
             elif '// hls-fpga-machine-learning accelerator io' in line:
                 newline = ''
                 if io_type == 'io_parallel':
-                    for inp in model_inputs:
-                        for out in model_outputs:
-                            newline += '#define DATA_SIZE_IN ' + format(inp.size_cpp()) + '\n'
-                            newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN)' + '\n\n'
-                            newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
-                            newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
-                            newline += 'typedef ' + format(inp.type.name) + ' in_buffer_t;\n'
-                            newline += 'typedef ' + format(out.type.name) + ' out_buffer_t;\n'
+                    newline += '#define DATA_SIZE_IN ' + format(inp.size_cpp()) + '\n'
+                    newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN)' + '\n\n'
+                    newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
+                    newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
+                    newline += 'typedef ' + format(inp.type.name) + ' in_buffer_t;\n'
+                    newline += 'typedef ' + format(out.type.name) + ' out_buffer_t;\n'
                 elif io_type == 'io_stream':
-                    for inp in model_inputs:
-                        for out in model_outputs:
-                            (dims, _) = inp.get_shape()
-                            nnet_array_depth = dims.pop()
-                            newline += '#define DATA_SIZE_IN ' + ' * '.join(dims) + '\n'
-                            newline += '#define NNET_ARRAY_DEPTH ' + format(nnet_array_depth) + '\n'
-                            newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN * NNET_ARRAY_DEPTH)' + '\n\n'
-                            newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
-                            newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
-                            precision_str = model.config.backend.convert_precision_string(model.config.model_precision.get('default'))
-                            newline += 'typedef ' + precision_str + ' in_buffer_t;\n'
-                            newline += 'typedef ' + precision_str + ' out_buffer_t;\n'
+                    dims, _ = zip(*inp.get_shape())
+                    dims = list(dims)
+                    nnet_array_depth = dims.pop()
+                    dims.append("1")
+                    newline += '#define DATA_SIZE_IN ' + ' * '.join(dims) + '\n'
+                    newline += '#define NNET_ARRAY_DEPTH ' + format(nnet_array_depth) + '\n'
+                    newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN * NNET_ARRAY_DEPTH)' + '\n\n'
+                    newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
+                    newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
+                    precision_str = str(model.config.backend.convert_precision_string(model.config.model_precision.get('default')))
+                    newline += 'typedef ' + precision_str + ' in_buffer_t;\n'
+                    newline += 'typedef ' + precision_str + ' out_buffer_t;\n'
             else:
                 newline = line
             fout_header.write(newline)

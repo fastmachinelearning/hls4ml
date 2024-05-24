@@ -873,9 +873,6 @@ class ModelGraph(Serializable):
         return int(n_sample)
 
     def predict(self, x):
-        if self.config.config.get('Backend', 'Vivado') == 'VitisAccelerator':
-            return self.config.backend.predict(self, x)
-
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
@@ -991,6 +988,14 @@ class ModelGraph(Serializable):
             return [output_i[0] for output_i in output], trace_output
         else:
             return output, trace_output
+
+    def hardware_predict(self, x):
+        """Currently only supported for VitisAccelerator backend"""
+        backend = self.config.config.get('Backend', 'Vivado')
+        if backend != 'VitisAccelerator':
+            raise Exception(f"Function unsupported for {backend} backend")
+
+        return self.config.backend.hadrware_predict(self, x)
 
     def build(self, **kwargs):
         """Builds the generated project using HLS compiler.
