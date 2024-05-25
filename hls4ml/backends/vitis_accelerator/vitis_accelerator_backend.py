@@ -71,15 +71,13 @@ class VitisAcceleratorBackend(VitisBackend):
             raise Exception("Currently untested on non-Linux OS")
 
     def _numpy_to_dat(self, model, x):
-        if len(self.get_input_variables()) != 1:
-            raise Exception("Currently unsupported for multi-input projects")
+        if len(model.get_input_variables()) != 1:
+            raise Exception("Currently unsupported for multi-input/output projects")
         
         # Verify numpy array of correct shape
-        expected_shape = (np.newaxis, model.get_input_variables()[0].size())
-        print(f"Expected model input shape: {expected_shape}")
-        print(f"Give numpy array shape: {x.shape}")
-        if expected_shape != x.shape:
-            raise Exception(f'Input shape mismatch, got {x.shape}, expected {expected_shape}')
+        expected_shape = model.get_input_variables()[0].size()
+        if expected_shape != x.shape[-1]:
+            raise Exception(f'Input shape mismatch, got {x.shape}, expected (_, {expected_shape})')
         
         # Write to tb_data/tb_input_features.dat
         input_dat = open(f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat', 'w')
@@ -90,16 +88,8 @@ class VitisAcceleratorBackend(VitisBackend):
     
     def _dat_to_numpy(self, model):
         expected_shape = model.get_output_variables()[0].size()
-        y = np.array([], dtype=float).reshape(0, expected_shape)
-
-        output_dat = open(f'{model.config.get_output_dir()}/tb_data/hw_results.dat', 'r')
-        for line in output_dat.readlines():
-            data = [list(map(float, line.strip().split()))]
-            if len(data) != expected_shape:
-                raise Exception('Error in output file. Does not match expected model output shape.')
-            y = np.concatenate(y, np.array(data)[np.newaxis, :], axis=0)
-        output_dat.close()
-        
+        output_file = f'{model.config.get_output_dir()}/tb_data/hw_results.dat'
+        y = np.loadtxt(output_file, dtype=float).reshape(-1, expected_shape)
         return y
 
     def hardware_predict(self, model, x):
