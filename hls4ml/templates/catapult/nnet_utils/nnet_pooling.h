@@ -7,12 +7,13 @@
 namespace nnet {
 
 // Return the maximum value from an array
-template <typename T, int N> T max(T x[N]) {
-    T y = x[0];
+template <typename Tin, typename Tou, int N> Tou max(Tin x[N]) {
+    Tin y = x[0];
     for (int i = 1; i < N; i++) {
         y = x[i] > y ? x[i] : y;
     }
-    return y;
+    Tou y_ou = y;
+    return y_ou;
 }
 
 template <int W, int N> ac_int<W, true> avg(ac_int<W, true> (&x)[N]) {
@@ -40,23 +41,24 @@ template <int W, int I, int N> ac_fixed<W, I, true> avg(ac_fixed<W, I, true> (&x
 }
 
 // Return the mean value of an array
-template <typename T, int N> T avg(T (&x)[N]) {
-    T y = 0;
+template <typename Tin, typename Tou, int N> Tou avg(Tin (&x)[N]) {
+    ac_fixed<64,32> y = 0;
     for (int i = 0; i < N; i++) {
         y += x[i];
     }
     y /= N;
-    return y;
+    Tou y_ou = y;
+    return y_ou;
 }
 
 // Enumeration for pooling operation (max, avg, l2norm pooling)
 enum Pool_Op { Max, Average }; // L2Norm };
-template <typename T, int N, Pool_Op op> T pool_op(T (&x)[N]) {
+template <typename Tin, typename Tou, int N, Pool_Op op> Tou pool_op(Tin (&x)[N]) {
     switch (op) {
     case Max:
-        return max<T, N>(x);
+        return max<Tin, Tou, N>(x);
     case Average:
-        return avg(x);
+        return avg<Tin, Tou, N>(x);
         // case L2Norm: return l2norm<T, N>(x);
     }
 }
@@ -138,10 +140,10 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
             // TODO in the case of average pooling, need to reduce width to area of pool window
             // not overlapping padding region
             res[(ii / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] =
-                pool_op<data_T, CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
+                pool_op<data_T, res_T, CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
             // If the pool op is Average, the zero-padding needs to be removed from the results
             if (CONFIG_T::pool_op == Average) {
-                data_T rescale = static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
+                res_T rescale = static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
                 res[(ii / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] *= rescale;
             }
         }
@@ -169,7 +171,7 @@ void global_pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T r
             pool[jj] = data[jj * CONFIG_T::n_filt + ff];
         }
         // do the pooling
-        res[ff] = pool_op<data_T, CONFIG_T::n_in, CONFIG_T::pool_op>(pool);
+        res[ff] = pool_op<data_T, res_T, CONFIG_T::n_in, CONFIG_T::pool_op>(pool);
     }
 }
 
@@ -255,11 +257,11 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                 // not overlapping padding region
                 res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                     (jj / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] =
-                    pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
+                    pool_op<data_T, res_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
                 // If the pool op is Average, the zero-padding needs to be removed from the results
                 if (CONFIG_T::pool_op == Average) {
-                    data_T rescale =
-                        static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
+                    res_T rescale =
+                        static_cast<res_T>(CONFIG_T::pool_height) * static_cast<res_T>(CONFIG_T::pool_width) / img_overlap;
                     res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                         (jj / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] *= rescale;
                 }
@@ -320,11 +322,11 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                 // not overlapping padding region
                 res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width + (jj / CONFIG_T::stride_width) +
                     ff * CONFIG_T::out_height * CONFIG_T::out_width] =
-                    pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
+                    pool_op<data_T, res_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
                 // If the pool op is Average, the zero-padding needs to be removed from the results
                 if (CONFIG_T::pool_op == Average) {
-                    data_T rescale =
-                        static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
+                    res_T rescale =
+                        static_cast<res_T>(CONFIG_T::pool_height) * static_cast<res_T>(CONFIG_T::pool_width) / img_overlap;
                     res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width + (jj / CONFIG_T::stride_width) +
                         ff * CONFIG_T::out_height * CONFIG_T::out_width] *= rescale;
                 }
@@ -358,7 +360,7 @@ FiltLoop:
             pool[i] = data[i * CONFIG_T::n_filt + filt];
         }
 
-        res[filt] = static_cast<res_T>(pool_op<data_T, CONFIG_T::in_height * CONFIG_T::in_width, CONFIG_T::pool_op>(pool));
+        res[filt] = static_cast<res_T>(pool_op<data_T, res_T, CONFIG_T::in_height * CONFIG_T::in_width, CONFIG_T::pool_op>(pool));
     }
 }
 
