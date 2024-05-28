@@ -10,7 +10,6 @@
 #include "FpgaObj.hpp"
 #include "HbmFpga.hpp"
 #include "DdrFpga.hpp"
-#include "timing.hpp"
 #include "xcl2.hpp"
 
 #define STRINGIFY(var) #var
@@ -18,9 +17,7 @@
 
 
 void runFPGAHelper(FpgaObj<in_buffer_t, out_buffer_t> &fpga) {
-    std::stringstream ss;
-    ss << (fpga.runFPGA()).str();
-    fpga.write_ss_safe(ss.str());
+    fpga.runFPGA();
 }
 
 int main(int argc, char **argv) {
@@ -30,7 +27,7 @@ int main(int argc, char **argv) {
     }
     std::string xclbinFilename = argv[1];
 
-    /*FPGATYPE*/<in_buffer_t, out_buffer_t> fpga(INSTREAMSIZE, OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 100); 
+    /*FPGATYPE*/<in_buffer_t, out_buffer_t> fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10); 
 
     std::vector<cl::Device> devices = xcl::get_xil_devices();  // Utility API that finds xilinx platforms and return a list of devices connected to Xilinx platforms
     cl::Program::Binaries bins = xcl::import_binary_file(xclbinFilename);  // Load xclbin
@@ -48,7 +45,7 @@ int main(int argc, char **argv) {
     if (fin.is_open()) {
         std::string iline;
         while (std::getline(fin, iline)) {
-            if (num_inputs % 10 == 0) {
+            if (num_inputs % 100 == 0) {
                 std::cout << "Processing input " << num_inputs << std::endl;
             }
             std::stringstream in(iline); 
@@ -60,21 +57,17 @@ int main(int argc, char **argv) {
             num_inputs++;
         }
     }
-    
+    fin.close();
+
     // Copying in testbench data
     int num_samples = std::min(num_inputs, BATCHSIZE * NUM_CU * NUM_THREAD);
-    memcpy(fpga.source_in.data(), inputData.data(), num_samples * DATA_SIZE_IN * sizeof(in_buffer_t));
-
-    // Padding rest of buffer with arbitrary values
-    for (int i = num_samples * DATA_SIZE_IN; i < INSTREAMSIZE * NUM_CU * NUM_THREAD; i++) {
-        fpga.source_in[i] = (in_buffer_t)(2.345678);
-    }
+    memcpy(fpga.source_in.data(), inputData.data(), num_samples * INSTREAMSIZE * sizeof(in_buffer_t));
 
     std::vector<std::thread> hostAccelerationThreads;
     hostAccelerationThreads.reserve(NUM_THREAD);
 
     std::cout << "Beginning FPGA run" << std::endl;
-    auto ts_start = SClock::now();
+    auto ts_start = std::chrono::system_clock::now();
 
     for (int i = 0; i < NUM_THREAD; i++) {
         hostAccelerationThreads.push_back(std::thread(runFPGAHelper, std::ref(fpga)));
@@ -86,8 +79,8 @@ int main(int argc, char **argv) {
 
     fpga.finishRun();
 
-    auto ts_end = SClock::now();
-    float throughput = (float(NUM_CU * NUM_THREAD * 100 * BATCHSIZE) /
+    auto ts_end = std::chrono::system_clock::now();
+    float throughput = (float(BATCHSIZE* NUM_CU * NUM_THREAD * 10 ) /
             float(std::chrono::duration_cast<std::chrono::nanoseconds>(ts_end - ts_start).count())) *
             1000000000.;
     std::cout << "Throughput = " << throughput <<" predictions/second\n" << std::endl;
@@ -106,15 +99,6 @@ int main(int argc, char **argv) {
         resultsFile.close();
     } else {
         std::cerr << "Error writing hw results to file" << std::endl;
-    }
-
-    std::cout << "\nWriting run logs to file" << std::endl;
-    std::ofstream outFile("u55c_executable_logfile.log", std::ios::trunc);
-    if (outFile.is_open()) {
-        outFile << fpga.ss.rdbuf();
-        outFile.close();
-    } else {
-        std::cerr << "Error opening file for logging" << std::endl;
     }
     
     return EXIT_SUCCESS;

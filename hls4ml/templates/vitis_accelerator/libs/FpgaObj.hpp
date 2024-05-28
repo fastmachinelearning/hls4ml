@@ -7,11 +7,9 @@
 #include <stdlib.h>
 #include <string>
 #include <stdio.h>
-#include <sstream>
 #include <thread>
 #include <vector>
 
-#include "timing.hpp"
 #include "xcl2.hpp"
 
 template <class T, class U>
@@ -20,7 +18,6 @@ class FpgaObj {
 	std::vector<T,aligned_allocator<T>> source_in;  // Vector containing inputs to all kernels
 	std::vector<U,aligned_allocator<U>> source_hw_results;  // Vector containing all outputs from all kernels
 	cl_int err;  // Stores potential error codes thrown by OpenCL functions
-	std::stringstream ss;  // Logs information from runFPGA(). Every thread logs to this stringstream
 
 	/**
 	 * \brief Constructor. Reserves and allocates buffers in host memory.
@@ -36,8 +33,7 @@ class FpgaObj {
 			_numCU(numCU),
 			_numThreads(numThreads),
 			_numEpochs(numEpochs),
-			ikern(0), 
-			ithr(0) {
+			ikern(0) {
 				source_in.reserve(_kernInputSize * _numCU * _numThreads);
 				source_hw_results.reserve(_kernOutputSize * _numCU * _numThreads);
 				isFirstRun.reserve(_numCU * _numThreads);
@@ -114,17 +110,6 @@ class FpgaObj {
 	virtual void allocateHostMemory(int chan_per_port) = 0;
 
 	/**
-	 * \brief Logs information about thread completion
-	 * \param newss Additional thread-specific information to log
-	*/
-	void write_ss_safe(std::string newss) {
-		smtx.lock();
-		ss << "Thread " << ithr << "\n" << newss << "\n";
-		ithr++;
-		smtx.unlock();
-	}
-
-	/**
 	 * \brief Completes all enqueued operations
 	*/
 	void finishRun() {
@@ -135,22 +120,13 @@ class FpgaObj {
 
 	/**
 	 * \brief Migrates input to FPGA , executes kernels, and migrates output to host memory. Run this function in numThreads different threads
-	 * \return Stringstream containing logs of the run
 	*/
-	std::stringstream runFPGA() {
-		auto t_start = Clock::now();
-		auto t_end = Clock::now();
-		std::stringstream ss;
-
+	void runFPGA() {
 		for (int i = 0 ; i < _numCU * _numEpochs; i++){
-			t_start = Clock::now();
 			auto ikf = get_info_lock();
 			int ikb = ikf.first;
 			int ik = ikb % _numCU ;
 			bool firstRun = ikf.second;
-
-			auto ts1 = SClock::now();
-			print_nanoseconds("        start:  ",ts1, ik, ss);
 		
 			get_ilock(ikb);
 			// Copy input data to device global memory
@@ -179,13 +155,7 @@ class FpgaObj {
 		
 			OCL_CHECK(err, err = kern_event[ikb].wait());
 			OCL_CHECK(err, err = read_event[ikb].wait());
-			auto ts2 = SClock::now();
-			print_nanoseconds("       finish:  ",ts2, ik, ss);
-
-			t_end = Clock::now();
-			ss << "KERN"<<ik<<"   Total time: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count() << " ns\n";
 		}
-		return ss;
 	}
 
 	protected:
@@ -199,9 +169,6 @@ class FpgaObj {
 	std::vector<bool> isFirstRun;  // Vector tracking whether each virtual kernel is being run for the first time
 	mutable std::mutex mtx;  // Mutex for ikern, isFirstRun, and get_info_lock()
 	mutable std::vector<std::mutex> mtxi;  // Mutexes for each virtual kernel and associate resources
-
-	int ithr;  // Counter tracking the threads that ran to completion (for logging purposes)
-	mutable std::mutex smtx; // Mutex for ithr and write_ss_safe()
 
 	cl::Program program;  // Object containing the Program (built from kernel_wrapper.cpp) that runs on each physical compute unit
 	cl::Context context;  // Object containing the Device Context

@@ -70,32 +70,36 @@ class VitisAcceleratorBackend(VitisBackend):
         else:
             raise Exception("Currently untested on non-Linux OS")
 
-    def _numpy_to_dat(self, model, x):
+    def numpy_to_dat(self, model, x):
         if len(model.get_input_variables()) != 1:
             raise Exception("Currently unsupported for multi-input/output projects")
         
         # Verify numpy array of correct shape
         expected_shape = model.get_input_variables()[0].size()
-        if expected_shape != x.shape[-1]:
+        actual_shape = np.prod(x.shape[1:])
+        if expected_shape != actual_shape:
             raise Exception(f'Input shape mismatch, got {x.shape}, expected (_, {expected_shape})')
         
         # Write to tb_data/tb_input_features.dat
-        input_dat = open(f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat', 'w')
-        for input in x:
-            newline = " ".join(str(n) for n in input)
-            input_dat.write(newline + '\n')
-        input_dat.close()
-    
-    def _dat_to_numpy(self, model):
+        samples = x.reshape(x.shape[0], -1)
+        input_dat = f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat'
+        np.savetxt(input_dat, samples, fmt='%.4e')
+
+    def dat_to_numpy(self, model):
         expected_shape = model.get_output_variables()[0].size()
         output_file = f'{model.config.get_output_dir()}/tb_data/hw_results.dat'
         y = np.loadtxt(output_file, dtype=float).reshape(-1, expected_shape)
         return y
 
     def hardware_predict(self, model, x):
-        self._numpy_to_dat(model, x)
+        self.numpy_to_dat(model, x)
+
+        currdir = os.getcwd()
+        os.chdir(model.config.get_output_dir())
         os.system("./host build/kernel_wrapper.xclbin")
-        return self._dat_to_numpy(model)
+        os.chdir(currdir)
+
+        return self.dat_to_numpy(model)
 
     def _register_flows(self):
         validation_passes = [

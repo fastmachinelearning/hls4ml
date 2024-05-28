@@ -102,9 +102,9 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = ''
                 if io_type == 'io_parallel':
                     newline += '#define DATA_SIZE_IN ' + format(inp.size_cpp()) + '\n'
-                    newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN)' + '\n\n'
+                    newline += '#define INSTREAMSIZE DATA_SIZE_IN' + '\n\n'
                     newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
-                    newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
+                    newline += '#define OUTSTREAMSIZE DATA_SIZE_OUT' + '\n\n'
                     newline += 'typedef ' + format(inp.type.name) + ' in_buffer_t;\n'
                     newline += 'typedef ' + format(out.type.name) + ' out_buffer_t;\n'
                 elif io_type == 'io_stream':
@@ -114,12 +114,11 @@ class VitisAcceleratorWriter(VitisWriter):
                     dims.append("1")
                     newline += '#define DATA_SIZE_IN ' + ' * '.join(dims) + '\n'
                     newline += '#define NNET_ARRAY_DEPTH ' + format(nnet_array_depth) + '\n'
-                    newline += '#define INSTREAMSIZE (BATCHSIZE * DATA_SIZE_IN * NNET_ARRAY_DEPTH)' + '\n\n'
+                    newline += '#define INSTREAMSIZE (DATA_SIZE_IN * NNET_ARRAY_DEPTH)' + '\n\n'
                     newline += '#define DATA_SIZE_OUT ' + format(out.size_cpp()) + '\n'
-                    newline += '#define OUTSTREAMSIZE (BATCHSIZE * DATA_SIZE_OUT)' + '\n\n'
-                    precision_str = str(model.config.backend.convert_precision_string(model.config.model_precision.get('default')))
-                    newline += 'typedef ' + precision_str + ' in_buffer_t;\n'
-                    newline += 'typedef ' + precision_str + ' out_buffer_t;\n'
+                    newline += '#define OUTSTREAMSIZE DATA_SIZE_OUT' + '\n\n'
+                    newline += 'typedef ' +  inp.type.precision.definition_cpp() + ' in_buffer_t;\n'
+                    newline += 'typedef ' + out.type.precision.definition_cpp() + ' out_buffer_t;\n'
             else:
                 newline = line
             fout_header.write(newline)
