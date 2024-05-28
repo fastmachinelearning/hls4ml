@@ -127,7 +127,7 @@ def randX_20_15():
     return randX(20, 15)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_nested_model(randX_20_15, backend, io_type):
     n_in = 15
@@ -150,7 +150,7 @@ def test_nested_model(randX_20_15, backend, io_type):
     np.testing.assert_allclose(y_keras.ravel(), y_hls4ml.ravel(), rtol=1e-2, atol=0.02)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_sub_nested_model(randX_20_15, backend, io_type):
     n_in = 15

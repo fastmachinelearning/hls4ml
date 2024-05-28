@@ -1,8 +1,10 @@
 #!/bin/bash
 
-basedir=vivado_prj
-vivadodir=/opt/Xilinx
-vivadover=2020.1
+basedir=hls_prj
+hlsdir=/opt/Xilinx
+hlstool=Vivado
+hlsver=2020.1
+hlscommand=vivado_hls
 parallel=1
 
 csim="csim=0"
@@ -16,15 +18,15 @@ reset="reset=0"
 function print_usage {
    echo "Usage: `basename $0` [OPTION]"
    echo ""
-   echo "Builds Vivado HLS projects found in the current directory."
+   echo "Builds Vivado/Vitis HLS projects found in the current directory."
    echo ""
    echo "Options are:"
    echo "   -d DIR"
-   echo "      Base directory of projects to build. Defaults to 'vivado_prj'."
+   echo "      Base directory of projects to build. Defaults to 'hls_prj'."
    echo "   -i DIR"
-   echo "      Base directory of Vivado installation. Defaults to '/opt/Xilinx'."
+   echo "      Base directory of Vivado/Vitis installation. Defaults to '/opt/Xilinx'."
    echo "   -v VERSION"
-   echo "      Vivado HLS version to use. Defaults to '2020.1'."
+   echo "      Vivado/Vitis HLS version to use. Defaults to '2020.1'."
    echo "   -p N"
    echo "      Run with N parallel tasks. Defaults to 1."
    echo "   -c"
@@ -36,21 +38,24 @@ function print_usage {
    echo "   -t"
    echo "      Run C/RTL validation."
    echo "   -l"
-   echo "      Run Vivado (logic) synthesis."
+   echo "      Run logic synthesis."
    echo "   -e"
    echo "      Export IP."
    echo "   -n"
    echo "      Create new project (reset any existing)."
+   echo "   -a"
+   echo "      Use Vitis HLS instead of Vivado HLS."
    echo "   -h"
    echo "      Prints this help message."
 }
 
-function run_vivado {
-   dir=$1
-   opt=$2
+function run_hls {
+   hlscommand=$1
+   dir=$2
+   opt=$3
    echo "Building project in ${dir} with options: ${opt}"
    cd ${dir}
-   cmd="vivado_hls -f build_prj.tcl \"${opt}\" &> build_prj.log"
+   cmd="\"${hlscommand}\" -f build_prj.tcl \"${opt}\" &> build_prj.log"
    eval ${cmd}
    if [ $? -eq 1 ]; then
       touch BUILD_FAILED
@@ -72,13 +77,13 @@ function check_status {
    cd ..
 }
 
-while getopts ":d:i:v:p:csrtlenh" opt; do
+while getopts ":d:i:v:p:csrtlenah" opt; do
    case "$opt" in
    d) basedir=$OPTARG
       ;;
-   i) vivadodir=$OPTARG
+   i) hlsdir=$OPTARG
       ;;
-   v) vivadover=$OPTARG
+   v) hlsver=$OPTARG
       ;;
    p) parallel=$OPTARG
       ;;
@@ -95,6 +100,9 @@ while getopts ":d:i:v:p:csrtlenh" opt; do
    e) export="export=1"
       ;;
    n) reset="reset=1"
+      ;;
+   a) hlstool='Vitis'
+      hlscommand='vitis_hls'
       ;;
    h)
       print_usage
@@ -119,34 +127,34 @@ cd "${basedir}"
 # Use .tar.gz archives to create separate project directories
 for archive in *.tar.gz ; do
    filename="${archive%%.*}"
-   dir="${filename}-${vivadover}"
+   dir="${filename}-${hlstool}-${hlsver}"
    tarpath=`tar -tf "${archive}" | grep -m1 "${filename}"`
    slashes="${tarpath//[^\/]}"
    mkdir -p "${dir}" && tar -xzf "${archive}" -C "${dir}" --strip-components ${#slashes}
 done
 
-source ${vivadodir}/Vivado/${vivadover}/settings64.sh
+source ${hlsdir}/${hlstool}/${hlsver}/settings64.sh
 
 opt="${reset} ${csim} ${synth} ${cosim} ${validation} ${vsynth} ${export}"
 
 if [ "${parallel}" -gt 1 ]; then
    # Run in parallel
    (
-   for dir in *-${vivadover}/ ; do
+   for dir in *-${hlstool}-${hlsver}/ ; do
       ((n=n%parallel)); ((n++==0)) && wait
-      run_vivado "${dir}" "${opt}" &
+      run_hls "${hlscommand}" "${dir}" "${opt}" &
    done
    wait
    )
 else
    # Run sequentially
-   for dir in *-${vivadover}/ ; do
-      run_vivado "${dir}" "${opt}"
+   for dir in *-${hlstool}-${hlsver}/ ; do
+      run_hls "${hlscommand}" "${dir}" "${opt}"
    done
 fi
 
 # Check for build errors
-for dir in *-${vivadover}/ ; do
+for dir in *-${hlstool}-${hlsver}/ ; do
    check_status "${dir}" "${opt}"
 done
 

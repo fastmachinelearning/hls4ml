@@ -1,7 +1,5 @@
-from hls4ml.backends.fpga.fpga_types import (
-    APTypeConverter,
-    HLSTypeConverter,
-    StaticWeightVariableConverter,
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, StaticWeightVariableConverter
+from hls4ml.backends.vivado.vivado_types import (
     VivadoArrayVariableConverter,
     VivadoInplaceArrayVariableConverter,
     VivadoInplaceStreamVariableConverter,

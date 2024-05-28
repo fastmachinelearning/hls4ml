@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
 from qkeras.qconvolutional import QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
@@ -307,6 +308,44 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
 
 
 @pytest.mark.parametrize(
+    'quantizer',
+    [
+        (quantized_relu(4, negative_slope=0.5)),
+        (quantized_relu(8, 4, negative_slope=1.0)),
+        (quantized_relu(10, 2, negative_slope=0.25)),
+    ],
+)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_relu_negative_slope(randX_1000_1, quantizer, backend, io_type):
+    '''
+    Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
+    '''
+    X = randX_1000_1
+    X = -X  # Make it negative so leaky relu does something
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    output_dir = str(
+        test_root_path
+        / 'hls4mlprj_qkeras_leaky_relu_{}_{}_neg_slope_{}_{}_{}'.format(
+            quantizer.bits, quantizer.integer, quantizer.negative_slope, backend, io_type
+        )
+    )
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+    np.testing.assert_allclose(y_hls4ml, y_qkeras, rtol=1e-5, atol=0)
+
+
+@pytest.mark.parametrize(
     'weight_quantizer,activation_quantizer,',
     [
         ('binary', 'binary'),
@@ -478,6 +517,108 @@ def test_quantised_po2_bit_width(backend, io_type, strategy):
     y_hls = hls_model.predict(np.ascontiguousarray(X))
 
     np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
+
+
+@pytest.mark.parametrize('backend', ['Quartus'])
+def test_qsimplernn(backend):
+    '''
+    Test proper handling of QSimpleRNN.
+    '''
+    X = np.linspace(-0.25, 0.25, 5)
+    X = np.stack([X, X], axis=1).reshape(1, 5, 2)
+
+    model = Sequential()
+    model.add(
+        QSimpleRNN(
+            4,
+            input_shape=(5, 2),
+            kernel_quantizer='quantized_bits(16, 0, alpha=1)',
+            recurrent_quantizer='quantized_bits(16, 0, alpha=1)',
+            bias_quantizer='quantized_bits(16, 0, alpha=1)',
+            state_quantizer='quantized_bits(16, 0, alpha=1)',
+            activation='relu',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<16,1>")
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_qlstm(backend):
+    '''
+    Test proper handling of QLSTM.
+    '''
+    X = np.linspace(-0.5, 0.5, 5)
+    X = np.stack([X, X], axis=1).reshape(1, 5, 2)
+
+    model = Sequential()
+    model.add(
+        QLSTM(
+            4,
+            input_shape=(5, 2),
+            kernel_quantizer='quantized_bits(8, 0, alpha=1)',
+            recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
+            bias_quantizer='quantized_bits(8, 0, alpha=1)',
+            state_quantizer='quantized_bits(8, 0, alpha=1)',
+            activation='tanh',
+            recurrent_activation='sigmoid',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<8,1>")
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_qgru(backend):
+    '''
+    Test proper handling of QGRU.
+    '''
+    X = np.linspace(-0.5, 0.5, 5)
+    X = np.stack([X, X], axis=1).reshape(1, 5, 2)
+
+    model = Sequential()
+    model.add(
+        QGRU(
+            4,
+            input_shape=(5, 2),
+            kernel_quantizer='quantized_bits(8, 0, alpha=1)',
+            recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
+            bias_quantizer='quantized_bits(8, 0, alpha=1)',
+            state_quantizer='quantized_bits(8, 0, alpha=1)',
+            activation='tanh',
+            recurrent_activation='sigmoid',
+            reset_after='False',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<8,1>")
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])

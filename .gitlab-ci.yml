@@ -6,6 +6,8 @@ stages:
 generator:
   stage: generate
   image: python:3.8-alpine
+  variables:
+    N_TESTS_PER_YAML: 5
   tags:
     - k8s-default
   before_script:

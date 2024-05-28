@@ -35,6 +35,8 @@ strides2d_options = [(1, 1), (2, 2)]
         ('Vivado', 'io_stream', 'resource', 'LineBuffer', 1),
         ('Vitis', 'io_stream', 'latency', 'LineBuffer', 1),
         ('Vitis', 'io_stream', 'resource', 'LineBuffer', 1),
+        ('Catapult', 'io_stream', 'latency', 'LineBuffer', 1),
+        ('Catapult', 'io_stream', 'resource', 'LineBuffer', 1),
     ],
 )
 def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, conv_impl, rf):
@@ -92,6 +94,8 @@ def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, conv
         ('Vivado', 'io_parallel', 'latency'),
         ('Vivado', 'io_stream', 'latency'),
         ('Vivado', 'io_stream', 'resource'),
+        ('Catapult', 'io_stream', 'latency'),
+        ('Catapult', 'io_stream', 'resource'),
     ],
 )
 def test_pointwiseconv2d(chans, padds, strides, backend, io_type, strategy):

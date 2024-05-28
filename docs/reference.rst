@@ -14,7 +14,7 @@ If you use this software in a publication, please cite the software
     title        = {fastmachinelearning/hls4ml},
     year         = 2023,
     publisher    = {Zenodo},
-    version      = {v0.8.0},
+    version      = {v0.8.1},
     doi          = {10.5281/zenodo.1201549},
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }
@@ -84,6 +84,19 @@ binary/ternary networks:
         volume = "2",
         pages = "015001",
         year = "2021"
+    }
+
+optimization API:
+
+..  code-block:: bibtex
+
+    @article{Ramhorst:2023fpga,
+      author = "Benjamin Ramhorst and others",
+      title = "{FPGA Resource-aware Structured Pruning for Real-Time Neural Networks}",
+      eprint = "2308.05170",
+      archivePrefix = "arXiv",
+      primaryClass = "cs.AR",
+      year = "2023"
     }
 
 Acknowledgments
