@@ -32,6 +32,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif '// hls-fpga-machine-learning insert include' in line:
                 newline = f'#include "{model.config.get_project_name()}.h"\n'
+                newline = '#include "ap_axi_sdata.h'
             elif 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '// hls-fpga-machine-learning insert definitions' in line:
@@ -39,57 +40,58 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
                 newline += f'static const unsigned N_OUT = {out.size()};\n'
                 if self.vitis_accelerator_config.get_interface() == 'axi_stream':
-                    newline += f'typedef {inp_axi_t} T_in;\n'
-                    newline += f'typedef {out_axi_t} T_out;\n'
-                    newline += (
-                        'typedef struct in_struct {\n'
-                        + indent
-                        + 'T_in data;\n'
-                        + indent
-                        + 'ap_uint<1> last;\n'
-                        + indent
-                        + 'in_struct(const T_in& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n'
-                        + indent
-                        + 'in_struct(){this->data = 0; this->last = 0;};\n'
-                        + indent
-                        + 'friend std::ostream& operator<<(std::ostream& stream, const in_struct& in)\n'
-                        + indent
-                        + '{ return stream << "{ data: " << in.data << ", last: " << in.last << " }" << std::endl; }\n'
-                        + indent
-                        + 'operator float() const {return this->data;}\n'
-                        + indent
-                        + 'operator double() const {return this->data;}\n'
-                        + indent
-                        + 'in_struct(float data) {this->data = data; this->last = 0;}\n'
-                        + indent
-                        + 'in_struct(double data) {this->data = data; this->last = 0;}\n'
-                        + '} input_axi_t;\n'
-                    )
-                    newline += (
-                        'typedef struct out_struct {\n'
-                        + indent
-                        + 'T_out data;\n'
-                        + indent
-                        + 'ap_uint<1> last;\n'
-                        + indent
-                        + 'out_struct(const T_out& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n'
-                        + indent
-                        + 'out_struct(){this->data = 0; this->last = 0;};\n'
-                        + indent
-                        + 'friend std::ostream& operator<<(std::ostream& stream, const out_struct& out)\n'
-                        + indent
-                        + '{ return stream << "{ data: " << out.data << ", last: " << out.last << " }" << std::endl; }\n'
-                        + indent
-                        + 'operator float() const {return this->data;}\n'
-                        + indent
-                        + 'operator double() const {return this->data;}\n'
-                        + indent
-                        + 'out_struct(float data) {this->data = data; this->last = 0;}\n'
-                        + indent
-                        + 'out_struct(double data) {this->data = data; this->last = 0;}\n'
-                        + '} output_axi_t;\n'
-                    )
-                else:
+                    newline += f'typedef hls::axis<{inp_axi_t}, 0, 0, 0> my_pkt;;\n'
+                    # newline += f'typedef {inp_axi_t} T_in;\n'
+                    # newline += f'typedef {out_axi_t} T_out;\n'
+                    # newline += (
+                    #     'typedef struct in_struct {\n'
+                    #     + indent
+                    #     + 'T_in data;\n'
+                    #     + indent
+                    #     + 'ap_uint<1> last;\n'
+                    #     + indent
+                    #     + 'in_struct(const T_in& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n'
+                    #     + indent
+                    #     + 'in_struct(){this->data = 0; this->last = 0;};\n'
+                    #     + indent
+                    #     + 'friend std::ostream& operator<<(std::ostream& stream, const in_struct& in)\n'
+                    #     + indent
+                    #     + '{ return stream << "{ data: " << in.data << ", last: " << in.last << " }" << std::endl; }\n'
+                    #     + indent
+                    #     + 'operator float() const {return this->data;}\n'
+                    #     + indent
+                    #     + 'operator double() const {return this->data;}\n'
+                    #     + indent
+                    #     + 'in_struct(float data) {this->data = data; this->last = 0;}\n'
+                    #     + indent
+                    #     + 'in_struct(double data) {this->data = data; this->last = 0;}\n'
+                    #     + '} input_axi_t;\n'
+                    # )
+                    # newline += (
+                    #     'typedef struct out_struct {\n'
+                    #     + indent
+                    #     + 'T_out data;\n'
+                    #     + indent
+                    #     + 'ap_uint<1> last;\n'
+                    #     + indent
+                    #     + 'out_struct(const T_out& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n'
+                    #     + indent
+                    #     + 'out_struct(){this->data = 0; this->last = 0;};\n'
+                    #     + indent
+                    #     + 'friend std::ostream& operator<<(std::ostream& stream, const out_struct& out)\n'
+                    #     + indent
+                    #     + '{ return stream << "{ data: " << out.data << ", last: " << out.last << " }" << std::endl; }\n'
+                    #     + indent
+                    #     + 'operator float() const {return this->data;}\n'
+                    #     + indent
+                    #     + 'operator double() const {return this->data;}\n'
+                    #     + indent
+                    #     + 'out_struct(float data) {this->data = data; this->last = 0;}\n'
+                    #     + indent
+                    #     + 'out_struct(double data) {this->data = data; this->last = 0;}\n'
+                    #     + '} output_axi_t;\n'
+                    # )
+                else: # TODO: handle this case
                     newline += f'typedef {inp_axi_t} input_axi_t;\n'
                     newline += f'typedef {out_axi_t} output_axi_t;\n'
             else:
@@ -114,9 +116,9 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = f'#include "{model.config.get_project_name()}_axi.h"\n'
             elif '// hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
-                if self.vitis_accelerator_config.get_interface() == 'axi_stream':
-                    newline += indent + 'bool is_last = false;\n'
-                if io_type == 'io_parallel':
+                # if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                #     newline += indent + 'bool is_last = false;\n'
+                if io_type == 'io_parallel': # TODO: handle io_parallel
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
                     newline += indent + out.type.name + ' out_local[N_OUT];\n'
                 elif io_type == 'io_stream':
@@ -131,12 +133,12 @@ class VitisAcceleratorWriter(VitisWriter):
             elif '// hls-fpga-machine-learning insert call' in line:
                 newline = indent + f'{model.config.get_project_name()}(in_local, out_local);\n'
             elif '// hls-fpga-machine-learning insert interface' in line:
-                if self.vitis_accelerator_config.get_interface() == 'axi_lite':
+                if self.vitis_accelerator_config.get_interface() == 'axi_lite': # TODO: handle axi_lite
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=in\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=out\n'
-                elif self.vitis_accelerator_config.get_interface() == 'axi_master':
+                elif self.vitis_accelerator_config.get_interface() == 'axi_master': # TODO: handle axi_master
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=in offset=slave bundle=IN_BUS\n'.format(
@@ -154,7 +156,7 @@ class VitisAcceleratorWriter(VitisWriter):
                         newline += indent + '#pragma HLS DATAFLOW\n'
             elif '// hls-fpga-machine-learning insert enqueue' in line:
                 io_type = model.config.get_config_value("IOType")
-                if io_type == 'io_parallel':
+                if io_type == 'io_parallel': # TODO: handle io_parallel
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN; i++){\n'
                     if self.vitis_accelerator_config.get_interface() == 'axi_stream':
@@ -167,23 +169,36 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
                     newline = ''
+                    newline += indent + 'my_pkt tmp_a;\n'
+
+                    newline = ''
+                    newline += indent + 'my_pkt tmp_b;\n'
+
+                    newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN / {input_t}::size; ++i) {{\n'
-                    # newline += indent + indent + '#pragma HLS PIPELINE\n'
+                    # newline += indent + indent + '#pragma HLS PIPELINE\n' # TODO: check if needed
                     newline += indent + indent + '{input_t} ctype;\n'
-                    newline += indent + indent + '#pragma HLS DATA_PACK variable=ctype\n'
+                    # newline += indent + indent + '#pragma HLS DATA_PACK variable=ctype\n'
+                    # newline += indent + indent + 'pragma HLS aggregate variable=ctype compact=auto' # TODO: check if needed
                     newline += indent + indent + 'for(unsigned j = 0; j < {input_t}::size; j++) {{\n'
-                    # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
+                    # newline += indent + indent + indent + '#pragma HLS UNROLL\n' # TODO: check if needed
                     if self.vitis_accelerator_config.get_interface() == 'axi_stream':
                         newline += (
                             indent
                             + indent
                             + indent
-                            + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j].data);\n'
+                            + 'in.read(tmp_a);\n'
                         )
                         newline += (
-                            indent + indent + indent + 'is_last |= (in[i * input_t::size + j].last == 1)? true : false;\n'
+                            indent
+                            + indent
+                            + indent
+                            + 'ctype[j] = tmp_a.data;\n'
                         )
-                    else:
+                        # newline += (
+                        #     indent + indent + indent + 'is_last |= (in[i * input_t::size + j].last == 1)? true : false;\n'
+                        # )
+                    else: # TODO: handle this case
                         newline += (
                             indent
                             + indent
@@ -196,7 +211,7 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline = newline.format(input_t=inp.type.name)
             elif '// hls-fpga-machine-learning insert dequeue' in line:
                 io_type = model.config.get_config_value("IOType")
-                if io_type == 'io_parallel':
+                if io_type == 'io_parallel':  # TODO: handle this case
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_OUT; i++){\n'
                     if self.vitis_accelerator_config.get_interface() == 'axi_stream':
@@ -215,14 +230,22 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
                     if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                        # newline += (
+                        #     indent
+                        #     + indent
+                        #     + indent
+                        #     + 'bool last = (is_last && (i * {result_t}::size + j == N_OUT - 1)) ? true : false;\n'
+                        # )
                         newline += (
-                            indent
-                            + indent
-                            + indent
-                            + 'bool last = (is_last && (i * {result_t}::size + j == N_OUT - 1)) ? true : false;\n'
+                            indent + indent + indent + f'tmp_b.data = ({inp_axi_t}) (ctype[j]);\n'
                         )
+
                         newline += (
-                            indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j], last);\n'
+                            indent + indent + indent + 'if(tmp_a.last == 1) {tmp_b.last = (((i+1)*(j+1))==N_OUT);}\n'
+                        )
+
+                        newline += (
+                            indent + indent + indent + 'out.write(tmp_b);\n'
                         )
                     else:
                         newline += indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j]);\n'
