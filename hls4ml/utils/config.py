@@ -182,7 +182,7 @@ def config_from_keras_model(
                 if name.endswith('_t'):
                     name = name[:-2]
                 if attr.default is None:
-                    precision_cfg[name] = default_precision
+                    precision_cfg[name] = 'auto'
                 else:
                     precision_cfg[name] = str(attr.default)
             else:
