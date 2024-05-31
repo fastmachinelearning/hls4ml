@@ -154,10 +154,10 @@ class VitisAcceleratorBackend(VitisBackend):
 
     def _register_flows(self):
         vivado_ip = 'vivado:ip'
-        writer_passes = ['make_stamp', 'vivadoaccelerator:write_hls']
+        writer_passes = ['make_stamp', 'vitisaccelerator:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=[vivado_ip], backend=self.name)
         self._default_flow = vivado_ip
 
-        fifo_depth_opt_passes = ['vivadoaccelerator:fifo_depth_optimization'] + writer_passes
+        # fifo_depth_opt_passes = ['vivadoaccelerator:fifo_depth_optimization'] + writer_passes
 
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[vivado_ip], backend=self.name)
+        # register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[vivado_ip], backend=self.name)
