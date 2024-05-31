@@ -241,7 +241,7 @@ class VitisAcceleratorWriter(VitisWriter):
                         )
 
                         newline += (
-                            indent + indent + indent + 'if(tmp_a.last == 1) {tmp_b.last = (((i+1)*(j+1))==N_OUT);}\n'
+                            indent + indent + indent + 'if(tmp_a.last == 1) {{tmp_b.last = (((i+1)*(j+1))==N_OUT);}}\n'
                         )
 
                         newline += (
