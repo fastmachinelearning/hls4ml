@@ -30,7 +30,8 @@ int main(int argc, char **argv) {
     /*FPGATYPE*/<in_buffer_t, out_buffer_t> fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10); 
 
     std::vector<cl::Device> devices = xcl::get_xil_devices();  // Utility API that finds xilinx platforms and return a list of devices connected to Xilinx platforms
-    cl::Program::Binaries bins = xcl::import_binary_file(xclbinFilename);  // Load xclbin
+    auto fileBuf = xcl::read_binary_file(xclbinFilename);  // Load xclbin
+    cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
     fpga.initializeOpenCL(devices, bins);
 
     fpga.allocateHostMemory(NUM_CHANNEL);

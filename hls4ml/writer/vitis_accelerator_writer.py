@@ -1,6 +1,6 @@
 
 import os
-from shutil import copy, copytree, rmtree
+from shutil import copy, copytree
 
 from hls4ml.writer.vitis_writer import VitisWriter
 
@@ -165,9 +165,7 @@ class VitisAcceleratorWriter(VitisWriter):
         # Write libraries
         src = os.path.join(filedir, '../templates/vitis_accelerator/libs')
         dst = f'{model.config.get_output_dir()}/libs'
-        if os.path.exists(dst):
-            rmtree(dst)
-        copytree(src, dst, copy_function=copy)
+        copytree(src, dst, copy_function=copy, dirs_exist_ok=True)
 
     def write_makefile(self, model):
         """Write the Python-C++ Makefile (Makefile)

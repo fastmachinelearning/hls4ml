@@ -44,7 +44,7 @@ class VitisAcceleratorBackend(VitisBackend):
         config['AcceleratorConfig']['Batchsize'] = batchsize
         return config
 
-    def build(self, model, target="all"):
+    def build(self, model, reset=False, synth=True, vsynth=True):
         if 'linux' in sys.platform:
             if 'XILINX_VITIS' not in os.environ:
                 raise Exception("XILINX_VITIS environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building")
@@ -53,12 +53,27 @@ class VitisAcceleratorBackend(VitisBackend):
             if 'XILINX_VIVADO' not in os.environ:
                 raise Exception("XILINX_VIVADO environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building")
 
-            if target not in ["all", "host", "hls", "xclbin"]:
-                raise Exception("Invalid build target")
-
             curr_dir = os.getcwd()
             os.chdir(model.config.get_output_dir())
+
+            if reset:
+                if vsynth:
+                    os.system("make cleanxclbin")
+                if synth:
+                    os.system("make cleanhls")
+                os.system("rm -rf host")
+            
+            if vsynth:
+                if synth:
+                    target = "all"
+                else:
+                    target = "xclbin"
+            elif synth:
+                target = "hls"
+            else:
+                target = "host"
             command = "make " + target
+
             # Pre-loading libudev
             ldconfig_output = subprocess.check_output(["ldconfig", "-p"]).decode("utf-8")
             for line in ldconfig_output.split("\n"):
@@ -66,6 +81,7 @@ class VitisAcceleratorBackend(VitisBackend):
                     command = "LD_PRELOAD=" + line.split("=>")[1].strip() + " " + command
                     break
             os.system(command)
+            
             os.chdir(curr_dir)
         else:
             raise Exception("Currently untested on non-Linux OS")

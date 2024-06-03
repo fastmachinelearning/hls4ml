@@ -25,7 +25,7 @@ endif
 KERN_LIBRARIES += -I./ -I./firmware/ -I./firmware/weights -I./firmware/nnet_utils/
 
 .PHONY: all
-all: host xclbin
+all: hls xclbin
 
 # Building kernel
 ./build/myproject_kernel.xo: kernel_wrapper.cpp
@@ -47,12 +47,16 @@ host: myproject_host_cl.cpp libs/xcl2.cpp
 hls: ./build/myproject_kernel.xo
 
 .PHONY: xclbin
-xclbin: ./build/kernel_wrapper.xclbin
+xclbin: ./build/kernel_wrapper.xclbin host
 
 # Cleaning stuff
-.PHONY: clean
-clean:
-	-rm -rf host
-	-rm -rf *.xclbin*
-	-rm -rf build*
-	-rm -rf *.log *.jou *.rpt *.csv *.mdb *.ltx
+.PHONY: cleanxclbin
+	-rm -rf host tb_data/hw_results.dat
+	-rm -rf *kernel_wrapper*.log 
+	-rm -rf build/kernel_wrapper.xclbin* build/kernel_wrapper.xsa* build/kernel_wrapper.ltx build/kernel_wrapper.mdb
+	-rm -rf build/xclbin
+
+.PHONY: cleanhls
+	-rm -rf build/myproject_kernel.xo*
+	-rm -rf build/xo
+	-rm -rf *myproject_kernel*.log
