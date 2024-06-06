@@ -57,7 +57,7 @@ void myproject_float(
     // hls-fpga-machine-learning insert header #float
 ) {
     auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-    sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
+    static sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
 
     // hls-fpga-machine-learning insert wrapper #float
 }
@@ -68,7 +68,7 @@ void myproject_double(
     // hls-fpga-machine-learning insert header #double
 ) {
     auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-    sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
+    static sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
 
     // hls-fpga-machine-learning insert wrapper #double
 }
