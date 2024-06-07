@@ -1,7 +1,9 @@
-import torch
 import math
 
+import torch
+
 from hls4ml.model import ModelGraph
+
 
 class CustomFXTracer(torch.fx.Tracer):
 
@@ -10,9 +12,11 @@ class CustomFXTracer(torch.fx.Tracer):
         Custom Tracher class for hls4ml to define brevitas modules as leaf modules so they are not traced through by torch.FX
         """
         return (
-            (m.__module__.startswith("torch.nn") or m.__module__.startswith("torch.ao.nn") or m.__module__.startswith("brevitas.nn"))
-            and not isinstance(m, torch.nn.Sequential)
-        )    
+            m.__module__.startswith("torch.nn")
+            or m.__module__.startswith("torch.ao.nn")
+            or m.__module__.startswith("brevitas.nn")
+        ) and not isinstance(m, torch.nn.Sequential)
+
 
 class PyTorchModelReader:
     """
@@ -68,21 +72,23 @@ def get_weights_data(data_reader, layer_name, var_name):
     else:
         return (*data,)
 
+
 def convert_uaq_to_apfixed(bitwidth, scale_factor):
-  """
-  parameters:
-  bitwidth: int
-  scale_factor: float
-  zero_point: float
-  
-  return:
-  int_bitwidth: int 
-  fract_bitwidth: int
-  """
-  fract_bitwidth = - math.log2(scale_factor)
-  int_bitwidth = bitwidth - fract_bitwidth 
-  
-  return (fract_bitwidth, int_bitwidth)
+    """
+    parameters:
+    bitwidth: int
+    scale_factor: float
+    zero_point: float
+
+    return:
+    int_bitwidth: int
+    fract_bitwidth: int
+    """
+    fract_bitwidth = -math.log2(scale_factor)
+    int_bitwidth = bitwidth - fract_bitwidth
+
+    return (fract_bitwidth, int_bitwidth)
+
 
 # ----------------------Layer handling--------------------- #
 layer_handlers = {}
