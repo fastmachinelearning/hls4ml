@@ -1,5 +1,6 @@
-from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler, convert_uaq_to_apfixed
-from hls4ml.model.types import FixedPrecisionType, BrevitasQuantizer
+from hls4ml.converters.pytorch_to_hls import convert_uaq_to_apfixed, get_weights_data, pytorch_handler
+from hls4ml.model.quantizers import BrevitasQuantizer
+from hls4ml.model.types import FixedPrecisionType
 
 
 @pytorch_handler('Linear', 'QuantLinear')
@@ -23,7 +24,9 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
             width = int(class_object.quant_weight().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
             layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
-            layer['weight_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+            layer['weight_quantizer'] = BrevitasQuantizer(
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+            )
         else:
             layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
 
@@ -31,7 +34,9 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
             width = int(class_object.quant_bias().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_bias().scale))
             layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
-            layer['bias_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+            layer['bias_quantizer'] = BrevitasQuantizer(
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+            )
         else:
             layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     else:
@@ -55,7 +60,19 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     return layer, output_shape
 
 
-activation_layers = ['Softmax', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU', 'Sigmoid', 'Tanh','QuantReLU','QuantSigmoid','QuantTanh']
+activation_layers = [
+    'Softmax',
+    'ReLU',
+    'LeakyReLU',
+    'Threshold',
+    'ELU',
+    'PReLU',
+    'Sigmoid',
+    'Tanh',
+    'QuantReLU',
+    'QuantSigmoid',
+    'QuantTanh',
+]
 
 
 @pytorch_handler(*activation_layers)
@@ -71,9 +88,11 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
         layer['class_name'] = operation.split('Quant')[-1]
         layer['activation'] = layer['class_name']
         bit_width = class_object.quant_act_bit_width()
-        ap_fixed_params = convert_uaq_to_apfixed(bit_width,class_object.quant_act_scale())
-        layer['activation_quantizer'] = BrevitasQuantizer(bit_width,FixedPrecisionType(width=bit_width, integer=ap_fixed_params[1], signed=False))
- 
+        ap_fixed_params = convert_uaq_to_apfixed(bit_width, class_object.quant_act_scale())
+        layer['activation_quantizer'] = BrevitasQuantizer(
+            bit_width, FixedPrecisionType(width=bit_width, integer=ap_fixed_params[1], signed=False)
+        )
+
     if node.op == 'call_module':
         if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
             layer['class_name'] = 'Activation'
@@ -109,7 +128,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
             layer['axis'] = node.kwargs['dim']
 
     output_shape = input_shapes[0]
-    print (layer)
+    print(layer)
     return layer, output_shape
 
 

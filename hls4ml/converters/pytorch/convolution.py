@@ -1,6 +1,8 @@
-from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler, convert_uaq_to_apfixed
+from hls4ml.converters.pytorch_to_hls import convert_uaq_to_apfixed, get_weights_data, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
-from hls4ml.model.types import FixedPrecisionType, BrevitasQuantizer
+from hls4ml.model.quantizers import BrevitasQuantizer
+from hls4ml.model.types import FixedPrecisionType
+
 
 @pytorch_handler('Conv1d', 'QuantConv1d')
 def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
@@ -18,7 +20,9 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
             width = int(class_object.quant_weight().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
             layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
-            layer['weight_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+            layer['weight_quantizer'] = BrevitasQuantizer(
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+            )
         else:
             layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
 
@@ -26,7 +30,9 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
             width = int(class_object.quant_bias().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_bias().scale))
             layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
-            layer['bias_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+            layer['bias_quantizer'] = BrevitasQuantizer(
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+            )
         else:
             layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     else:
@@ -81,7 +87,9 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
             width = int(class_object.quant_weight().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
             layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
-            layer['weight_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+            layer['weight_quantizer'] = BrevitasQuantizer(
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+            )
         else:
             layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
 
@@ -89,7 +97,9 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
             width = int(class_object.quant_bias().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_bias().scale))
             layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
-            layer['bias_quantizer'] = BrevitasQuantizer(width,FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True))
+            layer['bias_quantizer'] = BrevitasQuantizer(
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+            )
         else:
             layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     else:
