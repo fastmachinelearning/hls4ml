@@ -56,7 +56,6 @@ class Layer:
         ConfigurableAttribute('trace', default=False),
         TypeAttribute('result'),
     ]
-    """"""
 
     @classproperty
     def expected_attributes(cls):
@@ -472,6 +471,23 @@ class SeparableConv1D(Layer):
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
+class DepthwiseConv1D(Conv1D):
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_width'], self.attributes['n_chan']]
+            dims = [f'OUT_HEIGHT_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            shape = [self.attributes['n_chan'], self.attributes['out_width']]
+            dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+        self.add_output_variable(shape, dims)
+
+        self.add_weights_variable(
+            name='weight', var_name='w{index}', data='depthwise', quantizer=self.get_attr('depthwise_quantizer')
+        )
+
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
 class Conv2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
@@ -544,6 +560,7 @@ class Conv2DBatchnorm(Conv2D):
         if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in [
             'Vivado',
             'VivadoAccelerator',
+            'Catapult',
         ]:
             self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
             self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
@@ -895,14 +912,34 @@ class BiasAdd(Merge):  # TensorFlow's operator that gets merged into Dense/Conv
 
 
 class Resize(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        ChoiceAttribute('algorithm', ['nearest', 'bilinear'], default='nearest'),
+        Attribute('align_corners', value_type=bool, default=False),
+    ]
+
     def initialize(self):
         inp = self.get_input_variable()
-        if len(inp.shape) == 2:  # 1D -> width + chan
-            shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
-            dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
-        elif len(inp.shape) == 3:  # 2D -> height + width + chan
-            shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+
+        if self.get_attr('data_format') == 'channels_last':
+            if len(inp.shape) == 2:  # 1D -> width + chan
+                shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
+                dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
+                dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            if len(inp.shape) == 2:  # 1D -> width + chan
+                shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
+                dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+            elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
+                dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
+
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 
@@ -1290,6 +1327,18 @@ class LayerGroup(Layer):
         self.add_output_variable(shape, dims)
 
 
+class SymbolicExpression(Layer):
+    _expected_attributes = [
+        Attribute('expression', value_type=list),
+        Attribute('n_symbols'),
+        Attribute('lut_functions', value_type=list, default=[]),
+    ]
+
+    def initialize(self):
+        self.set_attr('expr_t', NamedType(*reversed(self.model.config.get_precision(self, 'expr'))))
+        self.add_output_variable([len(self.get_attr('expression'))], [f'N_OUTPUTS_{self.index}'], var_name='y')
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1314,8 +1363,12 @@ layer_map = {
     'QConv2D': Conv2D,
     'QConv2DBatchnorm': Conv2DBatchnorm,
     'SeparableConv1D': SeparableConv1D,
+    'QSeparableConv1D': SeparableConv1D,
+    'DepthwiseConv1D': DepthwiseConv1D,
     'SeparableConv2D': SeparableConv2D,
+    'QSeparableConv2D': SeparableConv2D,
     'DepthwiseConv2D': DepthwiseConv2D,
+    'QDepthwiseConv2D': DepthwiseConv2D,
     'BatchNormalization': BatchNormalization,
     'QBatchNormalization': BatchNormalization,
     'MaxPooling1D': Pooling1D,
@@ -1339,9 +1392,13 @@ layer_map = {
     'SimpleRNN': SimpleRNN,
     'LSTM': LSTM,
     'GRU': GRU,
+    'QSimpleRNN': SimpleRNN,
+    'QLSTM': LSTM,
+    'QGRU': GRU,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
     'LayerGroup': LayerGroup,
+    'SymbolicExpression': SymbolicExpression,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }

@@ -20,6 +20,7 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
         layer['class_name'] = 'AveragePooling2D'
 
     layer['name'] = layer_name
+    layer['inputs'] = input_names
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
     if node.op == 'call_module' and 'Avg' in operation:
         if class_object.count_include_pad:

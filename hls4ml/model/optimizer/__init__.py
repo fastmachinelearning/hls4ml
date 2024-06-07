@@ -33,9 +33,12 @@ del optimizers
 register_flow(
     'convert',
     [
+        'infer_precision_types',
         'channels_last_converter',
+        'remove_transpose_before_flatten',
+        'remove_nop_transpose',
+        'remove_single_channel_transpose',
         'fuse_bias_add',
-        'remove_useless_transpose',
         'expand_layer_group',
         'output_rounding_saturation_mode',
         'qkeras_factorize_alpha',
@@ -51,6 +54,7 @@ register_flow(
         'fuse_consecutive_batch_normalization',
         'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
+        'infer_precision_types',
         'set_precision_concat',
     ],
     requires=['convert'],

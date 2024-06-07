@@ -172,7 +172,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n) {\n'
@@ -191,7 +192,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'\
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n) {\n'
@@ -277,7 +279,7 @@ class QuartusWriter(Writer):
                         newline += indent + f'  {out.type.name} tmp = {out.name}.read();\n'
                         newline += indent + f'  {out.name}_stream.write(tmp);\n'
                         newline += indent + '}\n'
-                        newline += '}\n'
+                    newline += '}\n'
                 else:
                     newline = line
                     newline += indent + 'return outputs;\n'
@@ -330,7 +332,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n);\n'
@@ -350,7 +353,8 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream,\n'
+                    newline = newline[:-2]  # Remove the tailing ',\n'
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n);\n'
@@ -1318,7 +1322,7 @@ class QuartusWriter(Writer):
         """
 
         def keras_model_representer(dumper, keras_model):
-            model_path = model.config.get_output_dir() + '/keras_model.h5'
+            model_path = model.config.get_output_dir() + '/keras_model.keras'
             keras_model.save(model_path)
             return dumper.represent_scalar('!keras_model', model_path)
 

@@ -4,7 +4,8 @@ import sys
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter
+from hls4ml.backends.vivado.vivado_types import VivadoArrayVariableConverter
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
@@ -28,7 +29,7 @@ from hls4ml.model.layers import (
     Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils.fixed_point_utils import ceil_log2
 
@@ -75,6 +76,12 @@ class VivadoBackend(FPGABackend):
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
+        sep_conv_layers = [SeparableConv1D, SeparableConv2D]
+        for layer in sep_conv_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('dw_output', default=FixedPrecisionType(18, 8)))
+            self.attribute_map[layer] = attrs
+
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
@@ -102,6 +109,8 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_parallel_reshape',
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
+            'vivado:fix_softmax_table_size',
+            'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -168,12 +177,15 @@ class VivadoBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(
+        self, part='xcvu13p-flga2577-2-e', clock_period=5, clock_uncertainty='12.5%', io_type='io_parallel', **_
+    ):
         config = {}
 
-        config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
-        config['ClockPeriod'] = clock_period
-        config['IOType'] = io_type
+        config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['ClockUncertainty'] = clock_uncertainty if clock_uncertainty is not None else '12.5%'
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
 
         return config
@@ -288,6 +300,15 @@ class VivadoBackend(FPGABackend):
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
+
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
         if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -334,6 +355,15 @@ class VivadoBackend(FPGABackend):
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        # Set the output type of the depthwise phase
+        dw_out_precision, _ = layer.model.config.get_precision(layer, 'dw_output')
+        dw_out_name = layer.name + '_dw_out_t'
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            dw_output_t = PackedType(dw_out_name, dw_out_precision, layer.get_attr('n_chan'), n_pack=1)
+        else:
+            dw_output_t = NamedType(dw_out_name, dw_out_precision)
+        layer.set_attr('dw_output_t', dw_output_t)
+
     @layer_optimizer(DepthwiseConv2D)
     def init_depconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
@@ -351,8 +381,9 @@ class VivadoBackend(FPGABackend):
     def _set_pooling_accum_t(self, layer, pool_size):
         extra_bits = ceil_log2(pool_size)
         accum_t = layer.get_attr('accum_t')
-        accum_t.precision.fractional += extra_bits
-        accum_t.precision.integer += extra_bits
+        accum_t.precision.width += extra_bits * 2
+        if isinstance(accum_t.precision, FixedPrecisionType):
+            accum_t.precision.integer += extra_bits
 
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
