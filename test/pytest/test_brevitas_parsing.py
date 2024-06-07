@@ -67,6 +67,12 @@ def test_quantlinear(backend, io_type):
 def test_quantconv2d(backend, io_type):
     model = QuantModelConv2d()
 
+    n_in = 3
+    n_out = 6
+    kernel_size = 5
+    size_in_width = 5
+    size_in_height = 6
+
     x = torch.randn(1,3,6,5)
 
     pytorch_prediction = model(x).detach().numpy()
@@ -78,6 +84,44 @@ def test_quantconv2d(backend, io_type):
         config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_linear_{backend}_{io_type}')
+
+    from hls4ml.converters.pytorch_to_hls import CustomFXTracer
+
+    tracer = CustomFXTracer()
+    traced_model = tracer.trace(model)
+
+    nNodes = 0
+    convNode = None
+    for _node in traced_model.nodes:
+        nNodes += 1
+        if nNodes == 2:
+            convNode = _node
+
+    children = {c[0]: c[1] for c in model.named_children()}
+    class_object_conv = children[convNode.target]
+
+    out_width = int(
+        (
+            size_in_width
+            + 2 * class_object_conv.padding[1]
+            - class_object_conv.dilation[1] * (class_object_conv.kernel_size[1] - 1)
+            - 1
+        )
+        / class_object_conv.stride[1]
+        + 1
+    )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+    out_height = int(
+        (
+            size_in_height
+            + 2 * class_object_conv.padding[0]
+            - class_object_conv.dilation[0] * (class_object_conv.kernel_size[0] - 1)
+            - 1
+        )
+        / class_object_conv.stride[0]
+        + 1
+    )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+
+
 
     hls_model = convert_from_pytorch_model(
         model,
@@ -91,7 +135,7 @@ def test_quantconv2d(backend, io_type):
 
     if io_type == 'io_stream':
         hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(x), pytorch_prediction.shape), (0, 3, 1, 2)
+            np.reshape(hls_model.predict(x), (1,out_height, out_width, n_out)), (0, 3, 1, 2)
         )
     else:
         hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
