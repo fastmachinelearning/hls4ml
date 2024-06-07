@@ -1,4 +1,4 @@
-from hls4ml.converters.pytorch_to_hls import convert_uaq_to_apfixed, get_weights_data, pytorch_handler
+from hls4ml.converters.pytorch_to_hls import convert_uaq_to_apfixed, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 from hls4ml.model.quantizers import BrevitasQuantizer
 from hls4ml.model.types import FixedPrecisionType
@@ -24,7 +24,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
             )
         else:
-            layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+            layer['weight_data'] = class_object.weight.data.numpy()
 
         if class_object.is_bias_quant_enabled:
             width = int(class_object.quant_bias().bit_width)
@@ -34,10 +34,13 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
             )
         else:
-            layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+            layer['bias_data'] = class_object.bias.data.numpy()
     else:
-        layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
-        layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+        layer['weight_data'] = class_object.weight.data.numpy()
+        if class_object.bias is not None:
+            layer['bias_data'] = class_object.bias.data.numpy()
+        else:
+            layer['bias_data'] = None
     # Input info
     (layer['in_width'], layer['n_chan']) = parse_data_format(
         input_shapes[0], 'channels_first'
@@ -91,7 +94,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
             )
         else:
-            layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+            layer['weight_data'] = class_object.weight.data.numpy()
 
         if class_object.is_bias_quant_enabled:
             width = int(class_object.quant_bias().bit_width)
@@ -101,10 +104,14 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
             )
         else:
-            layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+            layer['bias_data'] = class_object.bias.data.numpy()
     else:
-        layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
-        layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+        layer['weight_data'] = class_object.weight.data.numpy()
+        if class_object.bias is not None:
+            layer['bias_data'] = class_object.bias.data.numpy()
+        else:
+            layer['bias_data'] = None
+
     # Input info
     (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(
         input_shapes[0], 'channels_first'

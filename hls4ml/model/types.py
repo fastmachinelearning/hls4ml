@@ -9,7 +9,6 @@ from enum import Enum
 
 import numpy as np
 
-
 # region Precision types
 
 
