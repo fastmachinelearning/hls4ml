@@ -3,13 +3,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-from tensorflow.keras.layers import SeparableConv1D
 
 import hls4ml
 
 test_root_path = Path(__file__).parent
 
-keras_conv1d = [SeparableConv1D]
 padds_options = ['same', 'valid']
 chans_options = ['channels_last']
 strides_options = [(1), (2)]
@@ -17,7 +15,6 @@ kernel_options = [(2), (3)]
 bias_options = [False]
 
 
-@pytest.mark.parametrize('conv1d', keras_conv1d)
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('strides', strides_options)
@@ -33,11 +30,11 @@ bias_options = [False]
         ('Catapult', 'io_stream'),
     ],
 )
-def test_sepconv1d(conv1d, chans, padds, strides, kernels, bias, io_type, backend):
+def test_sepconv1d(chans, padds, strides, kernels, bias, io_type, backend):
     model = tf.keras.models.Sequential()
     input_shape = (16, 3)
     model.add(
-        conv1d(
+        tf.keras.layers.SeparableConv1D(
             filters=8,
             kernel_size=kernels,
             strides=strides,
@@ -57,8 +54,8 @@ def test_sepconv1d(conv1d, chans, padds, strides, kernels, bias, io_type, backen
     kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(
         test_root_path
-        / 'hls4mlprj_{}_{}_strides_{}_kernels_{}_{}_padding_{}_{}'.format(
-            conv1d.__name__.lower(), chans, stride_cfg, kernel_cfg, padds, backend, io_type
+        / 'hls4mlprj_sepconv1d_{}_strides_{}_kernels_{}_{}_padding_{}_{}'.format(
+            chans, stride_cfg, kernel_cfg, padds, backend, io_type
         )
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
