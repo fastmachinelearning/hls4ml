@@ -100,6 +100,7 @@ class Layer:
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
+            print(f'{config_key=}, {config_value=}')
             config_key = convert_to_snake_case(config_key)
             if config_key in self.attributes:
                 print(
@@ -178,6 +179,12 @@ class Layer:
         if has_accum_t:
             accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
             self.set_attr('accum_t', accum_t)
+
+    def _set_type_t(self, name):
+        has_type_t = any(a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute))
+        if has_type_t:
+            type_t = NamedType(*reversed(self.model.config.get_precision(self, name)))
+            self.set_attr(name + '_t', type_t)
 
     def get_input_node(self, input_name=None):
         if input_name is None:
@@ -470,6 +477,11 @@ class SeparableConv1D(Layer):
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+        # set the needed types if needed
+        self._set_type_t('pointwise_accum')
+        self._set_type_t('depthwise_accum')
+        self._set_type_t('depthwise_result')
+
 
 class DepthwiseConv1D(Conv1D):
     def initialize(self):
@@ -615,6 +627,10 @@ class SeparableConv2D(Layer):
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+        self._set_type_t('pointwise_accum')
+        self._set_type_t('depthwise_accum')
+        self._set_type_t('depthwise_result')
 
 
 class DepthwiseConv2D(Conv2D):

@@ -100,6 +100,12 @@ class HLSConfig:
 
         return layer_config
 
+    def set_name_config(self, name, config):
+        """sets hls_config["LayerName"][name] = config"""
+        hls_config = self.config['HLSConfig']
+        layer_config = hls_config.setdefault('LayerName', {})
+        layer_config[name] = config
+
     def get_precision(self, layer, var='default'):
         precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
         type_name = layer.name.lower() + '_' + var + '_t'
@@ -183,6 +189,35 @@ class HLSConfig:
 
         return compression
 
+    def parse_name_config(self, layer_name, layer_cfg):
+        """This is used by _parse_hls_config below, but also in optimizers when a new layer config is created"""
+        precision_cfg = layer_cfg.get('Precision')
+        if isinstance(precision_cfg, dict):
+            for var, precision in precision_cfg.items():
+                self.layer_name_precision[layer_name.lower() + '_' + var] = precision
+        else:
+            self.layer_name_precision[layer_name.lower() + '_default'] = precision_cfg
+
+        rf = layer_cfg.get('ReuseFactor')
+        if rf is not None:
+            self.layer_name_rf[layer_name.lower()] = rf
+
+        targ_cycles = layer_cfg.get('TargetCycles')
+        if targ_cycles is not None:
+            self.layer_name_targ_cycles[layer_name.lower()] = targ_cycles
+
+        strategy = layer_cfg.get('Strategy')
+        if strategy is not None:
+            self.layer_name_strategy[layer_name.lower()] = strategy
+
+        conv_implementation = layer_cfg.get('ConvImplementation')
+        if conv_implementation is not None:
+            self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
+
+        compression = layer_cfg.get('Compression')
+        if compression is not None:
+            self.layer_name_compression[layer_name.lower()] = bool(compression)
+
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
 
@@ -255,32 +290,7 @@ class HLSConfig:
         layer_name_cfg = hls_config.get('LayerName')
         if layer_name_cfg is not None:
             for layer_name, layer_cfg in layer_name_cfg.items():
-                precision_cfg = layer_cfg.get('Precision')
-                if isinstance(precision_cfg, dict):
-                    for var, precision in precision_cfg.items():
-                        self.layer_name_precision[layer_name.lower() + '_' + var] = precision
-                else:
-                    self.layer_name_precision[layer_name.lower() + '_default'] = precision_cfg
-
-                rf = layer_cfg.get('ReuseFactor')
-                if rf is not None:
-                    self.layer_name_rf[layer_name.lower()] = rf
-
-                targ_cycles = layer_cfg.get('TargetCycles')
-                if targ_cycles is not None:
-                    self.layer_name_targ_cycles[layer_name.lower()] = targ_cycles
-
-                strategy = layer_cfg.get('Strategy')
-                if strategy is not None:
-                    self.layer_name_strategy[layer_name.lower()] = strategy
-
-                conv_implementation = layer_cfg.get('ConvImplementation')
-                if conv_implementation is not None:
-                    self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
-
-                compression = layer_cfg.get('Compression')
-                if compression is not None:
-                    self.layer_name_compression[layer_name.lower()] = bool(compression)
+                self.parse_name_config(layer_name, layer_cfg)
 
     def _validate_hls_config(self):
         use_dataflow = False
