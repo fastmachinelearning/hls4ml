@@ -318,10 +318,10 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = line.replace(f'{model.config.get_project_name()}.h', f'{model.config.get_project_name()}_axi.h')
             elif inp.definition_cpp() in line:
                 newline = line.replace(
-                    inp.definition_cpp(), 'input_axi_t inputs[N_IN]'
+                    inp.definition_cpp(), 'hls::stream< my_pkt > inputs'
                 )  # TODO instead of replacing strings, how about we use proper variables and their definition?
             elif out.definition_cpp() in line:
-                newline = line.replace(out.definition_cpp(), 'output_axi_t outputs[N_OUT]')
+                newline = line.replace(out.definition_cpp(), 'hls::stream< my_pkt > outputs')
             elif 'unsigned short' in line:
                 newline = ''
             elif f'{model.config.get_project_name()}(' in line:
@@ -329,11 +329,11 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = indent_amount + f'{model.config.get_project_name()}_axi(inputs,outputs);\n'
             elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
                 newline = (
-                    line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'input_axi_t')
+                    line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'hls::stream< my_pkt >')
                 )
             elif out.size_cpp() in line or out.name in line or out.type.name in line:
                 newline = (
-                    line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'output_axi_t')
+                    line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'hls::stream< my_pkt >')
                 )
             else:
                 newline = line
@@ -365,18 +365,25 @@ class VitisAcceleratorWriter(VitisWriter):
             if f'{model.config.get_project_name()}.h' in line:
                 newline = line.replace(f'{model.config.get_project_name()}.h', f'{model.config.get_project_name()}_axi.h')
             elif inp.definition_cpp(name_suffix='_ap') in line:
-                newline = line.replace(inp.definition_cpp(name_suffix='_ap'), f'input_axi_t {inp.name}_ap[N_IN]')
+                newline = line.replace(inp.definition_cpp(name_suffix='_ap'), f'hls::stream< my_pkt > {inp.name}_ap')
             elif out.definition_cpp(name_suffix='_ap') in line:
-                newline = line.replace(out.definition_cpp(name_suffix='_ap'), f'output_axi_t {out.name}_ap[N_OUT]')
+                newline = line.replace(out.definition_cpp(name_suffix='_ap'), f'hls::stream< my_pkt > {out.name}_ap')
             elif f'{model.config.get_project_name()}(' in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
                 newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(
                     model.config.get_project_name(), inp.name, out.name
                 )
-            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
-                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, 'input_axi_t')
-            elif out.size_cpp() in line or out.name in line or out.type.name in line:
-                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, 'output_axi_t')
+            # elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
+            #     newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, 'hls::stream< my_pkt >')
+            # elif out.size_cpp() in line or out.name in line or out.type.name in line:
+            #     newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, 'hls::stream< my_pkt >')
+
+            elif ("nnet::convert_data<float" in line) or ("nnet::convert_data<double" in line):
+                newline = f"for(unsigned i = 0; i < N_IN; ++i) {{my_pkt a; a.data = {inp.name}[i]; {inp.name}_ap.write(a);}}"
+            
+            elif f"nnet::convert_data<{out.type.name}" in line:
+                newline = f"for(unsigned i = 0; i < N_OUT; ++i) {{my_pkt a; {out.name}_ap.read(a); {inp.name}[i] = a.data;}}"
+            
             else:
                 newline = line
             fout.write(newline)
