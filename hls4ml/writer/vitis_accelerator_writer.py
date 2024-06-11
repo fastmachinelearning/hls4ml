@@ -308,6 +308,8 @@ class VitisAcceleratorWriter(VitisWriter):
         ###################
         oldfile = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp'
         newfile = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test_wrapper.cpp'
+        
+        inp_axi_t, out_axi_t, inp, out = self.vitis_accelerator_config.get_corrected_types()
 
         f = open(oldfile)
         fout = open(newfile, 'w')
@@ -375,17 +377,10 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(
                     model.config.get_project_name(), inp.name, out.name
                 )
-            # elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
-            #     newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, 'hls::stream< my_pkt >')
-            # elif out.size_cpp() in line or out.name in line or out.type.name in line:
-            #     newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, 'hls::stream< my_pkt >')
-
-            elif ("nnet::convert_data<float" in line) or ("nnet::convert_data<double" in line):
-                newline = f"for(unsigned i = 0; i < N_IN; ++i) {{my_pkt a; a.data = {inp.name}[i]; {inp.name}_ap.write(a);}}"
-            
-            elif f"nnet::convert_data<{out.type.name}" in line:
-                newline = f"for(unsigned i = 0; i < N_OUT; ++i) {{my_pkt a; {out.name}_ap.read(a); {inp.name}[i] = a.data;}}"
-            
+            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
+                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, inp_axi_t)
+            elif out.size_cpp() in line or out.name in line or out.type.name in line:
+                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, out_axi_t)      
             else:
                 newline = line
             fout.write(newline)
