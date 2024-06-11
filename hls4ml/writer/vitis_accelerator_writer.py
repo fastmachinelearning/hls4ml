@@ -206,6 +206,8 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline += indent + indent + '}}\n'
                     newline += indent + indent + 'in_local.write(ctype);\n'
                     newline += indent + '}}\n'
+                    newline += indent + 'tmp_b = tmp_a;\n'
+                    newline += indent + 'tmp_b.last = 0;\n'
                     newline = newline.format(input_t=inp.type.name)
             elif '// hls-fpga-machine-learning insert dequeue' in line:
                 io_type = model.config.get_config_value("IOType")
