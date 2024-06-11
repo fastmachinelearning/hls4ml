@@ -32,7 +32,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif '// hls-fpga-machine-learning insert include' in line:
                 newline = f'#include "{model.config.get_project_name()}.h"\n'
-                newline = '#include "ap_axi_sdata.h'
+                newline += '#include "ap_axi_sdata.h"\n'
             elif 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '// hls-fpga-machine-learning insert definitions' in line:
@@ -171,10 +171,8 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline = ''
                     newline += indent + 'my_pkt tmp_a;\n'
 
-                    newline = ''
                     newline += indent + 'my_pkt tmp_b;\n'
 
-                    newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN / {input_t}::size; ++i) {{\n'
                     # newline += indent + indent + '#pragma HLS PIPELINE\n' # TODO: check if needed
                     newline += indent + indent + '{input_t} ctype;\n'

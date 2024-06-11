@@ -34,7 +34,7 @@ void depthwise_product_resource_rf_leq_nchan(data_T data[CONFIG_T::kernel_size *
 
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=acc factor=block_factor
-    std::cout << "LEQ IMPLE" << std::endl;
+    // std::cout << "LEQ IMPLE" << std::endl;
 
 InitAccum:  
     for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
@@ -101,7 +101,7 @@ void depthwise_product_resource_rf_gt_nchan_rem0(data_T data[CONFIG_T::kernel_si
 
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=acc factor=block_factor
-    std::cout << "REM0 IMPLE" << std::endl;
+    // std::cout << "REM0 IMPLE" << std::endl;
 
 InitAccum:  
     for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
@@ -165,7 +165,7 @@ void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * 
 
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=acc factor=block_factor
-    std::cout << "GT IMPLE" << std::endl;
+    // std::cout << "GT IMPLE" << std::endl;
 
 InitAccum:  
     for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
