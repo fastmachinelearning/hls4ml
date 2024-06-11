@@ -76,12 +76,6 @@ class VivadoBackend(FPGABackend):
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
-        sep_conv_layers = [SeparableConv1D, SeparableConv2D]
-        for layer in sep_conv_layers:
-            attrs = self.attribute_map.get(layer, [])
-            attrs.append(TypeAttribute('dw_output', default=FixedPrecisionType(18, 8)))
-            self.attribute_map[layer] = attrs
-
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
