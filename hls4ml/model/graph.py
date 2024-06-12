@@ -615,6 +615,44 @@ class ModelGraph:
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
         self._update_model_outputs()
 
+    def split_node(self, old_node, new_node1, new_node2):
+        """Replace an existing node in the graph with two nodes in sequence.
+
+        Args:
+            old_node (Layer): The node to replace
+            new_node1 (Layer): The first new node in sequence
+            new_node2 (Layer): The second new node in sequence
+
+        """
+
+        # fmt: off
+        assert len(new_node1.inputs) == len(old_node.inputs), \
+            f'{new_node1.name} and {old_node.name} have different number of inputs'
+        assert len(new_node2.outputs) == len(old_node.outputs), \
+            f'{new_node2.name} and {old_node.name} have different number of outputs'
+        # fmt: on
+
+        repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node2.outputs)}
+        repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node1.inputs)})
+
+        for node in self.graph.values():
+            for i, n in enumerate(node.inputs):
+                if n in repl:
+                    node.inputs[i] = repl[n]
+            for i, n in enumerate(node.outputs):
+                if n in repl:
+                    node.outputs[i] = repl[n]
+
+        new_graph = OrderedDict()
+        for key, value in self.graph.items():
+            if key == old_node.name:
+                new_graph[new_node1.name] = new_node1
+                new_graph[new_node2.name] = new_node2
+            else:
+                new_graph[key] = value
+        self.graph = new_graph
+        self._update_model_outputs()
+
     def _update_model_outputs(self):
         '''Update the model outputs
 
