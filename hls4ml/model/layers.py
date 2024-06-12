@@ -447,6 +447,7 @@ class SeparableConv1D(Layer):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('n_filt'),
+        Attribute('depth_multiplier', default=1),
         Attribute('filt_width'),
         Attribute('stride_width'),
         Attribute('pad_left'),
@@ -484,12 +485,27 @@ class SeparableConv1D(Layer):
 
 
 class DepthwiseConv1D(Conv1D):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('depth_multiplier', default=1),
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        WeightAttribute('depthwise'),
+        WeightAttribute('bias'),
+        TypeAttribute('depthwise'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_width'], self.attributes['n_chan']]
+            shape = [self.attributes['out_width'], self.attributes['n_chan'] * self.attributes['depth_multiplier']]
             dims = [f'OUT_HEIGHT_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'], self.attributes['out_width']]
+            shape = [self.attributes['n_chan'] * self.attributes['depth_multiplier'], self.attributes['out_width']]
             dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -498,6 +514,7 @@ class DepthwiseConv1D(Conv1D):
         )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        self.set_attr('n_filt', self.get_attr('n_chan') * self.get_attr('depth_multiplier'))
 
 
 class Conv2D(Layer):
@@ -594,6 +611,7 @@ class SeparableConv2D(Layer):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('n_filt'),
+        Attribute('depth_multiplier', default=1),
         Attribute('filt_height'),
         Attribute('filt_width'),
         Attribute('stride_height'),
@@ -634,12 +652,41 @@ class SeparableConv2D(Layer):
 
 
 class DepthwiseConv2D(Conv2D):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('depth_multiplier', default=1),
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            shape = [
+                self.attributes['out_height'],
+                self.attributes['out_width'],
+                self.attributes['n_chan'] * self.attributes['depth_multiplier'],
+            ]
             dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            shape = [
+                self.attributes['n_chan'] * self.attributes['depth_multiplier'],
+                self.attributes['out_height'],
+                self.attributes['out_width'],
+            ]
             dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -648,6 +695,7 @@ class DepthwiseConv2D(Conv2D):
         )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        self.set_attr('n_filt', self.get_attr('n_chan') * self.get_attr('depth_multiplier'))
 
 
 class Pooling1D(Layer):
