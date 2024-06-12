@@ -100,7 +100,6 @@ class Layer:
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
-            print(f'{config_key=}, {config_value=}')
             config_key = convert_to_snake_case(config_key)
             if config_key in self.attributes:
                 print(
@@ -494,9 +493,9 @@ class DepthwiseConv1D(Conv1D):
         Attribute('stride_width'),
         Attribute('pad_left'),
         Attribute('pad_right'),
-        WeightAttribute('depthwise'),
+        WeightAttribute('weight'),
         WeightAttribute('bias'),
-        TypeAttribute('depthwise'),
+        TypeAttribute('weight'),
         TypeAttribute('bias'),
     ]
 
