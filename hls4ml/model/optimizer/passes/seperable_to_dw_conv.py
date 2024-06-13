@@ -71,7 +71,7 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
             model.config.parse_name_config(dw_name, dw_layer_config)
 
         # creating the attributes
-        dw_attributes = {k: node.attributes.get(k, None) for k in SeperableToDepthwiseAndConv._dw_attributes}
+        dw_attributes = {k: node.attributes[k] for k in SeperableToDepthwiseAndConv._dw_attributes if k in node.attributes}
 
         dw_attributes['use_bias'] = False
 
@@ -101,7 +101,7 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
             model.config.parse_name_config(pw_name, pw_layer_config)
 
         # creating the attributes
-        pw_attributes = {k: node.attributes.get(k, None) for k in SeperableToDepthwiseAndConv._pw_attributes}
+        pw_attributes = {k: node.attributes[k] for k in SeperableToDepthwiseAndConv._pw_attributes if k in node.attributes}
         pw_attributes['filt_width'] = 1
         pw_attributes['filt_height'] = 1
         pw_attributes['stride_width'] = 1
@@ -111,7 +111,7 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
         pw_attributes['pad_top'] = 0
         pw_attributes['pad_bottom'] = 0
         pw_attributes['in_width'] = pw_attributes['out_width']
-        pw_attributes['in_height'] = pw_attributes['out_height']
+        pw_attributes['in_height'] = pw_attributes.get('out_height', 1)
         pw_attributes['n_chan'] = node.get_attr('n_chan') * node.get_attr('depth_multiplier')
         pw_attributes['weight_data'] = node.get_attr('pointwise_data')
         pw_attributes['weight_quantizer'] = node.get_attr('pointwise_quantizer')
