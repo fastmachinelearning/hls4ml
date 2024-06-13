@@ -206,17 +206,6 @@ class VitisAcceleratorWriter(VitisWriter):
         for line in f.readlines():
             if 'myproject' in line:
                 newline = line.replace('myproject', project_name)
-            elif '# hls-fpga-machine-learning packaging' in line:
-                if board_type == "alveo":
-                    newline = f'./build/kernel_wrapper.xclbin: ./build/{project_name}_kernel.xo\n'
-                    newline += f'\tmkdir -p ./build/xclbin\n'
-                    newline += f'\tv++ -l -t hw --config ./accelerator_card.cfg --temp_dir build/xclbin ./build/{project_name}_kernel.xo -o ./build/kernel_wrapper.xclbin\n'
-                elif board_type == "versal":
-                    newline = f'./build/kernel_wrapper.xsa: ./build/{project_name}_kernel.xo\n'
-                    newline += f'\tmkdir -p ./build/xclbin\n'
-                    newline += f'\tv++ -l -t hw --config ./accelerator_card.cfg --temp_dir build/xclbin ./build/{project_name}_kernel.xo -o ./build/kernel_wrapper.xsa\n\n'
-                    newline += f'./build/kernel_wrapper.xclbin: ./build/kernel_wrapper.xsa\n'
-                    newline += f'\tv++ --package -t hw --config ./accelerator_card.cfg --temp_dir build/xclbin ./build/kernel_wrapper.xsa -o ./build/kernel_wrapper.xclbin\n'
             else:
                 newline = line
             fout.write(newline)

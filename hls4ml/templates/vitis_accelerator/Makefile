@@ -1,62 +1,126 @@
-# Absolute path to top directory of accelerator project
-PWD = $(shell readlink -f .)
+# Check environment ###########################################################
 
-# Checks for XILINX_VITIS
 ifndef XILINX_VITIS
 $(error XILINX_VITIS variable is not set, please set correctly and rerun)
 endif
 
-# Checks for XILINX_XRT
 ifndef XILINX_XRT
 $(error XILINX_XRT variable is not set, please set correctly and rerun)
 endif
 
-# Checks for XILINX_VIVADO
 ifndef XILINX_VIVADO
 $(error XILINX_VIVADO variable is not set, please set correctly and rerun)
 endif
 
-# Checks for g++
 ifneq ($(shell expr $(shell g++ -dumpversion) \>= 5), 1)
 CXX := $(XILINX_VIVADO)/tps/lnx64/gcc-6.2.0/bin/g++
-$(warning [WARNING]: g++ version older. Using g++ provided by the tool : $(CXX))
+$(warning [WARNING]: g++ version older. Using g++ provided by the tool: $(CXX))
 endif
 
-KERN_LIBRARIES += -I./ -I./firmware/ -I./firmware/weights -I./firmware/nnet_utils/
+# Configuration variables #####################################################
 
-.PHONY: all
-all: hls xclbin
+# Absolute path to top directory of accelerator project
+PWD := $(shell pwd)
 
-# Building kernel
-./build/myproject_kernel.xo: kernel_wrapper.cpp
-	mkdir -p ./build && mkdir -p ./build/xo
-	v++ -c -t hw --config ./accelerator_card.cfg --temp_dir build/xo kernel_wrapper.cpp firmware/myproject.cpp -o ./build/myproject_kernel.xo $(KERN_LIBRARIES)
+# Target (hw, hw_emu, sw_emu)
+TARGET ?= hw
 
-# hls-fpga-machine-learning packaging 
+# Accelerator card configuration file
+CARD_CFG ?= accelerator_card.cfg
 
-# Building Host 
-INCLUDES += -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -I$(XILINX_HLS)/include/ \
-			-I$(PWD)/libs/ -I$(PWD)/firmware/ -I$(PWD)/firmware/nnet_utils/
-CXXFLAGS += -Wall -std=c++11 -Wno-unknown-pragmas -g -O0 
+# Platform (currently extracted from accelerator_card.cfg if not already set)
+PLATFORM ?= $(shell awk -F '=' '/platform=/ {print $$2}' $(CARD_CFG))
+
+# kernel name
+KERNEL_NAME := myproject
+
+# Wrapper name
+WRAPPER_NAME := kernel_wrapper
+
+# Top level build directory
+BUILD_DIR := ./build_$(TARGET)
+
+# Directories for kernel synthesis
+XO_DIR := $(BUILD_DIR)/xo
+XCLBIN_DIR := $(BUILD_DIR)/xclbin
+
+# CC flags for v++
+XOCCFLAGS := -t $(TARGET) --config $(CARD_CFG) --messageDb=$(BUILD_DIR)/kernel_wrapper.mdb
+
+# Linker flags for V++
+XOLDFLAGS := -t $(TARGET) --config $(CARD_CFG) --messageDb=$(BUILD_DIR)/kernel_wrapper.mdb
+
+# C++ compiler & linker flags
+CXXFLAGS := -Wall -std=c++11 -Wno-unknown-pragmas
 LDFLAGS = -L$(XILINX_XRT)/lib/ -lstdc++ -lpthread -lrt -lOpenCL
 
-host: myproject_host_cl.cpp libs/xcl2.cpp
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS) 
+ifdef DEBUG
+XOCCFLAGS += -g
+XOLDFLAGS += -g
+CXXFLAGS += -g -O0
+else
+# Optimization flags can be added here
+endif
 
-.PHONY: hls
-hls: ./build/myproject_kernel.xo
+.PHONY: all xclbin hls clean cleanhls cleanxclbin
 
-.PHONY: xclbin
-xclbin: ./build/kernel_wrapper.xclbin host
+all: xclbin host
 
-# Cleaning stuff
-.PHONY: cleanxclbin
-	-rm -rf host tb_data/hw_results.dat
-	-rm -rf *kernel_wrapper*.log 
-	-rm -rf build/kernel_wrapper.xclbin* build/kernel_wrapper.xsa* build/kernel_wrapper.ltx build/kernel_wrapper.mdb
-	-rm -rf build/xclbin
+# Kernel C/RTL synthesis ######################################################
 
-.PHONY: cleanhls
-	-rm -rf build/myproject_kernel.xo*
-	-rm -rf build/xo
-	-rm -rf *myproject_kernel*.log
+HLS_INCLUDES := -I./ -I./firmware/ -I./firmware/weights -I./firmware/nnet_utils/
+
+$(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo: $(WRAPPER_NAME).cpp firmware/$(KERNEL_NAME).cpp
+	mkdir -p $(XO_DIR)
+	v++ -c $(XOCCFLAGS) --temp_dir $(XO_DIR) --log_dir $(XO_DIR) -o $@ $^ $(HLS_INCLUDES)
+
+hls: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
+
+# Kernel linking & packaging ##################################################
+
+# For Standard Alveo, a single step is required for linking and packaging
+ifneq (,$(findstring vck5000,$(PLATFORM)))
+
+$(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
+	mkdir -p $(XCLBIN_DIR)
+	v++ -l $(XOLDFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
+
+# For VCK5000, linking and packaging are separate steps
+else
+
+$(BUILD_DIR)/$(WRAPPER_NAME).xsa: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
+	mkdir -p $(XCLBIN_DIR)
+	v++ -l $(XOLDFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
+
+XOCCPFLAGS := -t $(TARGET) -f $(PLATFORM) --package.boot_mode=ospi --messageDb=$(BUILD_DIR)/kernel_wrapper.mdb
+
+# VCK5000 specific packaging
+$(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(WRAPPER_NAME).xsa
+	v++ -p $(XOCCPFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
+
+endif
+
+xclbin: $(BUILD_DIR)/$(WRAPPER_NAME).xclbin
+
+# Host compilation ############################################################
+
+INCLUDES := -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -I$(XILINX_HLS)/include/
+INCLUDES += -I$(PWD)/libs/ -I$(PWD)/firmware/ -I$(PWD)/firmware/nnet_utils/
+
+host: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS)
+
+# Cleanup #####################################################################
+
+cleanxclbin:
+	rm -rf host tb_data/hw_results.dat
+	rm -rf *$(WRAPPER_NAME)*.log
+	rm -rf $(BUILD_DIR)/$(WRAPPER_NAME).xclbin* $(BUILD_DIR)/$(WRAPPER_NAME).xsa* $(BUILD_DIR)/$(WRAPPER_NAME).ltx $(BUILD_DIR)/$(WRAPPER_NAME).mdb
+	rm -rf $(BUILD_DIR)/xclbincleanhls
+
+cleanhls:
+	rm -rf $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo*
+	rm -rf $(BUILD_DIR)/xo
+	rm -rf *$(KERNEL_NAME)_kernel*.log
+
+clean: cleanxclbin cleanhls
