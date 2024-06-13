@@ -21,6 +21,9 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
 
+    if 'depth_multiplier' in keras_layer['config']:
+        layer['depth_multiplier'] = keras_layer['config']['depth_multiplier']
+
     if 'filters' in keras_layer['config']:
         layer['n_filt'] = keras_layer['config']['filters']
     else:
