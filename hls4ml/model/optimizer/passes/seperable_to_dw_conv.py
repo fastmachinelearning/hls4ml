@@ -55,17 +55,18 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
 
         if dw_layer_config:
             dw_precision_cfg = dw_layer_config.setdefault('Precision', {})
-            if 'depthwise' in dw_precision_cfg:
-                dw_precision_cfg['weight'] = dw_precision_cfg['depthwise']
-                del dw_precision_cfg['depthwise']
-            if 'depthwise_accum' in dw_precision_cfg:
-                dw_precision_cfg['accum'] = dw_precision_cfg['depthwise_accum']
-                del dw_precision_cfg['depthwise_accum']
-            if 'depthwise_result' in dw_precision_cfg:
-                dw_precision_cfg['result'] = dw_precision_cfg['depthwise_result']
-                del dw_precision_cfg['depthwise_result']
-            dw_precision_cfg.pop('pointwise', None)
-            dw_precision_cfg.pop('pointwise_accum', None)
+            if isinstance(dw_precision_cfg, dict):
+                if 'depthwise' in dw_precision_cfg:
+                    dw_precision_cfg['weight'] = dw_precision_cfg['depthwise']
+                    del dw_precision_cfg['depthwise']
+                if 'depthwise_accum' in dw_precision_cfg:
+                    dw_precision_cfg['accum'] = dw_precision_cfg['depthwise_accum']
+                    del dw_precision_cfg['depthwise_accum']
+                if 'depthwise_result' in dw_precision_cfg:
+                    dw_precision_cfg['result'] = dw_precision_cfg['depthwise_result']
+                    del dw_precision_cfg['depthwise_result']
+                dw_precision_cfg.pop('pointwise', None)
+                dw_precision_cfg.pop('pointwise_accum', None)
             model.config.set_name_config(dw_name, dw_layer_config)
             model.config.parse_name_config(dw_name, dw_layer_config)
 
@@ -84,17 +85,18 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
 
         if pw_layer_config:
             pw_precision_cfg = pw_layer_config.setdefault('Precision', {})
-            if 'pointwise' in pw_precision_cfg:
-                pw_precision_cfg['weight'] = pw_precision_cfg['pointwise']
-                del pw_precision_cfg['pointwise']
-            if 'pointwise_accum' in pw_precision_cfg:
-                pw_precision_cfg['accum'] = pw_precision_cfg['pointwise_accum']
-                del pw_precision_cfg['pointwise_accum']
-            if 'pointwise_result' in pw_precision_cfg:
-                pw_precision_cfg['result'] = pw_precision_cfg['pointwise_result']
-                del pw_precision_cfg['pointwise_result']
-            pw_precision_cfg.pop('depthwise', None)
-            pw_precision_cfg.pop('depthwise_accum', None)
+            if isinstance(pw_precision_cfg, dict):
+                if 'pointwise' in pw_precision_cfg:
+                    pw_precision_cfg['weight'] = pw_precision_cfg['pointwise']
+                    del pw_precision_cfg['pointwise']
+                if 'pointwise_accum' in pw_precision_cfg:
+                    pw_precision_cfg['accum'] = pw_precision_cfg['pointwise_accum']
+                    del pw_precision_cfg['pointwise_accum']
+                if 'pointwise_result' in pw_precision_cfg:
+                    pw_precision_cfg['result'] = pw_precision_cfg['pointwise_result']
+                    del pw_precision_cfg['pointwise_result']
+                pw_precision_cfg.pop('depthwise', None)
+                pw_precision_cfg.pop('depthwise_accum', None)
             model.config.set_name_config(pw_name, pw_layer_config)
             model.config.parse_name_config(pw_name, pw_layer_config)
 
