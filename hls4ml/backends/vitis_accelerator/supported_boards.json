@@ -19,7 +19,7 @@
     },
     "vck5000": {
       "board_type": "versal",
-      "part": "xcvc1902-2msevsvd1760", 
+      "part": "xcvc1902-vsvd1760-2MP-e-S",
       "platform": "xilinx_vck5000_gen4x8_qdma_2_202220_1",
       "memory":{"type": "ddr", "channels": 3, "capacity": 12}
     }
