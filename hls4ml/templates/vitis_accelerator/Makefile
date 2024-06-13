@@ -79,14 +79,15 @@ hls: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 # Kernel linking & packaging ##################################################
 
 # For Standard Alveo, a single step is required for linking and packaging
-ifneq (,$(findstring vck5000,$(PLATFORM)))
+ifeq (,$(findstring vck5000,$(PLATFORM)))
+# This is standard Alveo linking and packaging
 
 $(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 	mkdir -p $(XCLBIN_DIR)
 	v++ -l $(XOLDFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
 
-# For VCK5000, linking and packaging are separate steps
 else
+# For VCK5000, linking and packaging are separate steps
 
 $(BUILD_DIR)/$(WRAPPER_NAME).xsa: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 	mkdir -p $(XCLBIN_DIR)
