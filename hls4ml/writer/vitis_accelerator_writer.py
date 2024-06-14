@@ -41,56 +41,6 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline += f'static const unsigned N_OUT = {out.size()};\n'
                 if self.vitis_accelerator_config.get_interface() == 'axi_stream':
                     newline += f'typedef hls::axis<{inp_axi_t}, 0, 0, 0> my_pkt;;\n'
-                    # newline += f'typedef {inp_axi_t} T_in;\n'
-                    # newline += f'typedef {out_axi_t} T_out;\n'
-                    # newline += (
-                    #     'typedef struct in_struct {\n'
-                    #     + indent
-                    #     + 'T_in data;\n'
-                    #     + indent
-                    #     + 'ap_uint<1> last;\n'
-                    #     + indent
-                    #     + 'in_struct(const T_in& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n'
-                    #     + indent
-                    #     + 'in_struct(){this->data = 0; this->last = 0;};\n'
-                    #     + indent
-                    #     + 'friend std::ostream& operator<<(std::ostream& stream, const in_struct& in)\n'
-                    #     + indent
-                    #     + '{ return stream << "{ data: " << in.data << ", last: " << in.last << " }" << std::endl; }\n'
-                    #     + indent
-                    #     + 'operator float() const {return this->data;}\n'
-                    #     + indent
-                    #     + 'operator double() const {return this->data;}\n'
-                    #     + indent
-                    #     + 'in_struct(float data) {this->data = data; this->last = 0;}\n'
-                    #     + indent
-                    #     + 'in_struct(double data) {this->data = data; this->last = 0;}\n'
-                    #     + '} input_axi_t;\n'
-                    # )
-                    # newline += (
-                    #     'typedef struct out_struct {\n'
-                    #     + indent
-                    #     + 'T_out data;\n'
-                    #     + indent
-                    #     + 'ap_uint<1> last;\n'
-                    #     + indent
-                    #     + 'out_struct(const T_out& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n'
-                    #     + indent
-                    #     + 'out_struct(){this->data = 0; this->last = 0;};\n'
-                    #     + indent
-                    #     + 'friend std::ostream& operator<<(std::ostream& stream, const out_struct& out)\n'
-                    #     + indent
-                    #     + '{ return stream << "{ data: " << out.data << ", last: " << out.last << " }" << std::endl; }\n'
-                    #     + indent
-                    #     + 'operator float() const {return this->data;}\n'
-                    #     + indent
-                    #     + 'operator double() const {return this->data;}\n'
-                    #     + indent
-                    #     + 'out_struct(float data) {this->data = data; this->last = 0;}\n'
-                    #     + indent
-                    #     + 'out_struct(double data) {this->data = data; this->last = 0;}\n'
-                    #     + '} output_axi_t;\n'
-                    # )
                 else: # TODO: handle this case
                     newline += f'typedef {inp_axi_t} input_axi_t;\n'
                     newline += f'typedef {out_axi_t} output_axi_t;\n'
@@ -230,12 +180,6 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
                     if self.vitis_accelerator_config.get_interface() == 'axi_stream':
-                        # newline += (
-                        #     indent
-                        #     + indent
-                        #     + indent
-                        #     + 'bool last = (is_last && (i * {result_t}::size + j == N_OUT - 1)) ? true : false;\n'
-                        # )
                         newline += (
                             indent + indent + indent + f'tmp_b.data = ({inp_axi_t}) (ctype[j]);\n'
                         )
