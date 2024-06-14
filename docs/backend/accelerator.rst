@@ -75,3 +75,50 @@ The ``predict`` method will send the input data to the PL and return the output 
 
     nn = NeuralNetworkOverlay('hls4ml_nn.bit', X_test.shape, y_test.shape)
     y_hw, latency, throughput = nn.predict(X_test, profile=True)
+
+========================
+VitisAccelerator Backend
+========================
+
+The ``VitsAccelerator`` backned makes use of the vitis kernel flow to and streamlines the generation of an hls4ml project targeting PCIe accelerators.
+Vitis accelerator backend supports the following boards:
+
+* `Alveo u50 <https://www.xilinx.com/products/boards-and-kits/alveo/u50.html>`_
+* `Alveo u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_
+* `Alveo u250 <https://www.xilinx.com/products/boards-and-kits/alveo/u250.html>`_
+* `Versal vck5000 <https://www.xilinx.com/products/boards-and-kits/vck5000.html>`_
+
+The backend also generates an `OpenCL` host code that uploads and runs the kernel on the accelerator card.
+
+Example
+=======
+
+The following example is a modified version of `hsl4ml example 7 <https://github.com/fastmachinelearning/hls4ml-tutorial/blob/master/part7_deployment.ipynb>`_.
+
+.. code-block:: Python
+
+    import hls4ml
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir='model_3/hls4ml_prj_vitis_accel',
+        backend='VitisAccelerator',
+        board='alveo-u55c',
+        num_kernel=4,
+        num_thread=8,
+        batchsize=8192
+    )
+    hls_model.compile()
+    hls_model.build()
+
+By default the build method generates all the necessary files to run the kernel on the accelerator board. As this can be a long process, there are three build options that target the generation of specific parts of the project:
+
+* `host`: Compiles the host application
+* `hls`: Produces only the kernel's object file
+* `xclbin`: Produces only the kernel's .xclbin file
+
+The generated host code application and the xclbin file can be executed as such:
+
+.. code-block:: Bash
+
+    ./host <myproject>.xclbin
