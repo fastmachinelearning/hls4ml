@@ -21,7 +21,8 @@ class VitisAcceleratorBackend(VitisBackend):
         io_type='io_parallel',
         num_kernel=1,
         num_thread=1,
-        batchsize=8192
+        batchsize=8192,
+        vivado_directives=[]
     ):
         '''
         Create initial accelerator config with default parameters
@@ -32,6 +33,8 @@ class VitisAcceleratorBackend(VitisBackend):
             io_type: io_parallel or io_stream
             num_kernel: how many compute units to create on the fpga
             num_thread: how many threads the host cpu uses to drive the fpga
+            batchsize: how many samples to process within a single buffer on the fpga
+            vivado_directives: Directives passed down to Vivado that controls the hardware synthesis and implementation steps
         Returns:
             populated config
         '''
@@ -42,9 +45,10 @@ class VitisAcceleratorBackend(VitisBackend):
         config['AcceleratorConfig']['Num_Kernel'] = num_kernel
         config['AcceleratorConfig']['Num_Thread'] = num_thread
         config['AcceleratorConfig']['Batchsize'] = batchsize
+        config['AcceleratorConfig']['Vivado_Directives'] = vivado_directives
         return config
 
-    def build(self, model, reset=False, synth=True, vsynth=True):
+    def build(self, model, reset=False, synth=True, vsynth=True, **kwargs):
         if 'linux' in sys.platform:
             if 'XILINX_VITIS' not in os.environ:
                 raise Exception("XILINX_VITIS environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building")

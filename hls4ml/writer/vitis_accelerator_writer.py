@@ -230,13 +230,18 @@ class VitisAcceleratorWriter(VitisWriter):
                 raise Exception(format(self.vitis_accelerator_config.get_platform()) + 
                                 ' has only ' + format(num_channels) + ' memory banks.')
         
+        directives = self.vitis_accelerator_config.get_vivado_directives()
+        
         for line in f.readlines():
             if 'MYPLATFORM' in line:
                 newline = line.replace('MYPLATFORM', format(self.vitis_accelerator_config.get_platform()))
+            elif "# hls-fpga-machine-learning clock control" in line:
+                freq = round(1e9 / model.config.get_config_value('ClockPeriod'))
+                newline = 'clock={}:kernel_wrapper\n'.format(freq)
             elif '# hls-fpga-machine-learning kernel control' in line:
                 newline = '[connectivity]\n'
                 newline += 'nk=kernel_wrapper:' + format(num_kernels) + '\n\n'
-                if self.vitis_accelerator_config.get_board_type() == "alveo":
+                if self.vitis_accelerator_config.get_board_type() == 'alveo':
                     if memory_type == 'hbm':
                         for i in range(0, num_kernels):
                             newline += 'sp=kernel_wrapper_{}.in:HBM[{}:{}]\n'.format(i + 1, (i*2)*num_channels_per_cu, ((i*2 + 1)*num_channels_per_cu) - 1)
@@ -248,18 +253,27 @@ class VitisAcceleratorWriter(VitisWriter):
                             newline += '\n'
                         for i in range(0, num_kernels):
                             newline += 'slr=kernel_wrapper_{}:SLR{}\n'.format(i + 1, i)
+            elif '# hls-fpga-machine-learning vivado directives' in line:
+                newline = ''
+                if directives:
+                    newline += '[vivado]\n'
+                    for x in directives:
+                        newline += x + '\n'
             else:
                 newline = line
             fout.write(newline)
         f.close()
         fout.close()
 
-        # Copy hls_config.tcl
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        srcpath = os.path.join(filedir, '../templates/vitis_accelerator/hls_config.tcl')
-        dstpath = f'{model.config.get_output_dir()}/hls_config.tcl'
-        copy(srcpath, dstpath)
-
+        # Write hls_config.tcl
+        tcl_f = open(os.path.join(filedir, '../templates/vitis_accelerator/hls_config.tcl'))
+        tcl_fout = open(f'{model.config.get_output_dir()}/hls_config.tcl', 'w')
+        for line in tcl_f.readlines():
+            newline = line
+            tcl_fout.write(newline)
+        tcl_fout.write('\nset_clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
+        tcl_f.close()
+        tcl_fout.close() 
 
     def write_nnet_utils_overrides(self, model):
         """Override nnet_types.h pointer comparison

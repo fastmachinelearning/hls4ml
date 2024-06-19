@@ -31,7 +31,9 @@ class VitisAcceleratorConfig:
         
         self.num_kernel = accel_config.get('Num_Kernel')
         self.num_thread = accel_config.get('Num_Thread')
-        self.batchsize = accel_config.get('Batchsize')        
+        self.batchsize = accel_config.get('Batchsize')
+
+        self.vivado_directives = accel_config.get('Vivado_Directives')    
 
     def get_board_type(self):
         return self.board_type
@@ -53,3 +55,6 @@ class VitisAcceleratorConfig:
     
     def get_memory_channel_count(self):
         return self.memory_channel_count
+    
+    def get_vivado_directives(self):
+        return self.vivado_directives
