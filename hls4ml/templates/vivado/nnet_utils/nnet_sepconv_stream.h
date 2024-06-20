@@ -207,7 +207,7 @@ template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_product_latency(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
                        typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
                        typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
-    #pragma HLS INLINE
+    // #pragma HLS INLINE
 
     typename CONFIG_T::accum_t mult[CONFIG_T::kernel_size * CONFIG_T::n_chan];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
@@ -239,8 +239,10 @@ ResetAccum:
 // Accumulate multiplication result
 Accum1:
     for (int ii = 0; ii < CONFIG_T::kernel_size; ii++) {
+        // #pragma HLS PIPELINE II=1 rewind
     Accum2:
         for (int jj = 0; jj < CONFIG_T::n_chan; jj++) {
+            // #pragma HLS UNROLL
             int index = ii * CONFIG_T::n_chan + jj;
             acc[jj] += mult[index];
         }
