@@ -31,7 +31,10 @@ CARD_CFG ?= accelerator_card.cfg
 # Platform (currently extracted from accelerator_card.cfg if not already set)
 PLATFORM ?= $(shell awk -F '=' '/platform=/ {print $$2}' $(CARD_CFG))
 
-# kernel name
+# Board Type (determines whether design will go through packaging step)
+BOARD_TYPE := 
+
+# Kernel name
 KERNEL_NAME := myproject
 
 # Wrapper name
@@ -39,6 +42,11 @@ WRAPPER_NAME := kernel_wrapper
 
 # Top level build directory
 BUILD_DIR := ./build_$(TARGET)
+ifdef DEBUG
+BUILD_DIR += _deb
+else
+BUILD_DIR += _rel
+endif
 
 # Directories for kernel synthesis
 XO_DIR := $(BUILD_DIR)/xo
@@ -78,26 +86,26 @@ hls: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 
 # Kernel linking & packaging ##################################################
 
+ifeq ($(BOARD_TYPE),alveo)
 # For Standard Alveo, a single step is required for linking and packaging
-ifeq (,$(findstring vck5000,$(PLATFORM)))
 # This is standard Alveo linking and packaging
-
 $(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 	mkdir -p $(XCLBIN_DIR)
 	v++ -l $(XOLDFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
 
-else
-# For VCK5000, linking and packaging are separate steps
-
+else ifeq ($(BOARD_TYPE),alveo-versal) || ($(BOARD_TYPE),versal)
+# For Versal architecture, linking and packaging are separate steps
 $(BUILD_DIR)/$(WRAPPER_NAME).xsa: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 	mkdir -p $(XCLBIN_DIR)
 	v++ -l $(XOLDFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
 
-XOCCPFLAGS := -t $(TARGET) -f $(PLATFORM) --package.boot_mode=ospi --messageDb=$(BUILD_DIR)/kernel_wrapper.mdb
-
 # VCK5000 specific packaging
+XOCCPFLAGS := -t $(TARGET) -f $(PLATFORM) --package.boot_mode=ospi --messageDb=$(BUILD_DIR)/kernel_wrapper.mdb
 $(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(WRAPPER_NAME).xsa
 	v++ -p $(XOCCPFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
+
+else
+    @echo "$(BOARD_TYPE) board type is currently unsupported"
 
 endif
 
@@ -114,14 +122,19 @@ host: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp
 # Cleanup #####################################################################
 
 cleanxclbin:
-	rm -rf host tb_data/hw_results.dat
+	rm -rf host tb_data/hw_results.dat tb_data/tb_input_features.dat
 	rm -rf *$(WRAPPER_NAME)*.log
-	rm -rf $(BUILD_DIR)/$(WRAPPER_NAME).xclbin* $(BUILD_DIR)/$(WRAPPER_NAME).xsa* $(BUILD_DIR)/$(WRAPPER_NAME).ltx $(BUILD_DIR)/$(WRAPPER_NAME).mdb
-	rm -rf $(BUILD_DIR)/xclbincleanhls
+	rm -rf $(BUILD_DIR)/$(WRAPPER_NAME).xclbin.* $(BUILD_DIR)/$(WRAPPER_NAME).xsa* $(BUILD_DIR)/$(WRAPPER_NAME).ltx $(BUILD_DIR)/$(WRAPPER_NAME).mdb
+	rm -rf $(XCLBIN_DIR)
 
 cleanhls:
-	rm -rf $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo*
-	rm -rf $(BUILD_DIR)/xo
 	rm -rf *$(KERNEL_NAME)_kernel*.log
+	rm -rf $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo.*
+	rm -rf $(XO_DIR)
 
 clean: cleanxclbin cleanhls
+
+ultraclean: 
+	rm -rf host tb_data/hw_results.dat tb_data/tb_input_features.dat *.log
+	rm -rf $(BUILD_DIR)
+	

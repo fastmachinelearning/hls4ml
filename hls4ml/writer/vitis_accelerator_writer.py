@@ -206,6 +206,9 @@ class VitisAcceleratorWriter(VitisWriter):
         for line in f.readlines():
             if 'myproject' in line:
                 newline = line.replace('myproject', project_name)
+            if 'BOARD_TYPE :=' in line:
+                newline = line
+                newline += board_type
             else:
                 newline = line
             fout.write(newline)
