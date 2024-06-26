@@ -292,9 +292,20 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr(
-            'n_partitions', 1
-        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+        out_width = layer.get_output_variable().shape[0]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(1, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
         # Set the output type of the depthwise phase
@@ -347,9 +358,21 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr(
-            'n_partitions', 1
-        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+        out_height = layer.get_output_variable().shape[0]
+        out_width = layer.get_output_variable().shape[1]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
         # Set the output type of the depthwise phase
@@ -370,9 +393,21 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr(
-            'n_partitions', 1
-        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+        out_height = layer.get_output_variable().shape[0]
+        out_width = layer.get_output_variable().shape[1]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Pooling1D)
