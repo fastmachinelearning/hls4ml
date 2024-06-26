@@ -402,9 +402,9 @@ class Reshape(Layer):
             else:
                 raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
 
-        # nones should not exist here
+        # remove Nones -- Seems to be used by pytorch parser
         if target_shape[0] is None:
-            raise RuntimeError(f"Unexpectedly have a None in {target_shape=}")
+            target_shape = target_shape[1:]
 
         # take care of -1 shapes
         shape = self._infer_output_shape(input_shape, target_shape)
