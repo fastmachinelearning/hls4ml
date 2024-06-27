@@ -68,13 +68,11 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
     constexpr auto datasize = std::tuple_size<data_T>{};
     constexpr auto ressize = std::tuple_size<res_T>{};
 
-    // This may need to be valid across iterations so taken outside
-    [[intel::fpga_memory]] res_T out_data;
-
     if constexpr (datasize == ressize) {
         [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
 
             [[intel::fpga_memory]] auto in_data = data_pipe::read();
+            [[intel::fpga_memory]] res_T out_data;
 
             #pragma unroll
             for (int j = 0; j < datasize; j++) {
@@ -89,6 +87,7 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
         for (int i = 0; i < N / datasize; i++) {
 
             [[intel::fpga_memory]] auto in_data = data_pipe::read();
+            [[intel::fpga_memory]] res_T out_data;
 
             [[intel::initiation_interval(1)]] for (int j = 0; j < pack_diff; j++) {
 
@@ -100,6 +99,7 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
             }
         }
     } else { // datasize < ressize
+        [[intel::fpga_memory]] res_T out_data;
         constexpr unsigned pack_diff = ressize / datasize;
         unsigned pack_cnt = 0;
         [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
