@@ -2,7 +2,6 @@
 #define NNET_CLONE_H
 
 #include "nnet_common.h"
-#include "nnet_printf.h"
 
 namespace nnet {
 
@@ -69,11 +68,13 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
     constexpr auto datasize = std::tuple_size<data_T>{};
     constexpr auto ressize = std::tuple_size<res_T>{};
 
-    if (datasize == ressize) {
+    // This may need to be valid across iterations so taken outside
+    [[intel::fpga_memory]] res_T out_data;
+
+    if constexpr (datasize == ressize) {
         [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
 
-            auto in_data = data_pipe::read();
-            res_T out_data;
+            [[intel::fpga_memory]] auto in_data = data_pipe::read();
 
             #pragma unroll
             for (int j = 0; j < datasize; j++) {
@@ -82,16 +83,14 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
 
             res_pipe::write(out_data);
         }
-    } else if (datasize > ressize) {
+    } else if constexpr (datasize > ressize) {
         constexpr unsigned pack_diff = datasize / ressize;
 
         for (int i = 0; i < N / datasize; i++) {
 
-            auto in_data = data_pipe::read();
+            [[intel::fpga_memory]] auto in_data = data_pipe::read();
 
             [[intel::initiation_interval(1)]] for (int j = 0; j < pack_diff; j++) {
-
-                res_T out_data;
 
                 #pragma unroll
                 for (int k = 0; k < ressize; k++) {
@@ -105,8 +104,7 @@ template <class data_pipe, class res_pipe, int N> void repack_stream() {
         unsigned pack_cnt = 0;
         [[intel::initiation_interval(1)]] for (int i = 0; i < N / datasize; i++) {
 
-            auto in_data = data_pipe::read();
-            res_T out_data;
+            [[intel::fpga_memory]] auto in_data = data_pipe::read();
 
             #pragma unroll
             for (int j = 0; j < datasize; j++) {
