@@ -59,7 +59,7 @@ def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, 
                 mismatch_ph = p != h
                 assert (
                     np.sum(mismatch_ph) == 0
-                ), f"Proxy-HLS4ML mismatch for out {i}: {np.sum(np.any(mismatch_ph,axis=1))} out of {data_len} samples are different. Sample: {p[mismatch_ph].ravel()[:5]} vs {h[mismatch_ph].ravel()[:5]}"  # noqa: E501
+                ), f"Proxy-HLS4ML mismatch for out {i}: {np.sum(np.any(mismatch_ph, axis=1))} out of {data_len} samples are different. Sample: {p[mismatch_ph].ravel()[:5]} vs {h[mismatch_ph].ravel()[:5]}"  # noqa: E501
             else:
                 cond(p, h)
         except AssertionError as e:

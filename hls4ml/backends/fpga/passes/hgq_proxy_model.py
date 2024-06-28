@@ -33,7 +33,7 @@ def generate_mask_fn(
         if b == 0:
             fn = f'out[{idx}] = 0;'
         else:
-            fn = f'out[{idx}] = {to_fixed(k,b,i,RND,SAT)}(inp[{idx}]);'
+            fn = f'out[{idx}] = {to_fixed(k, b, i, RND, SAT)}(inp[{idx}]);'
         masks.append(f'    {fn}')
     body = "\n".join(masks)
     mask_fn = f'''
