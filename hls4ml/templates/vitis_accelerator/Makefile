@@ -43,9 +43,9 @@ WRAPPER_NAME := kernel_wrapper
 # Top level build directory
 BUILD_DIR := ./build_$(TARGET)
 ifdef DEBUG
-BUILD_DIR += _deb
+BUILD_DIR := $(BUILD_DIR)_deb
 else
-BUILD_DIR += _rel
+BUILD_DIR := $(BUILD_DIR)_rel
 endif
 
 # Directories for kernel synthesis
@@ -70,7 +70,7 @@ else
 # Optimization flags can be added here
 endif
 
-.PHONY: all xclbin hls clean cleanhls cleanxclbin
+.PHONY: all xclbin hls clean cleanhls cleanxclbin ultraclean
 
 all: xclbin host
 

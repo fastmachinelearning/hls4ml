@@ -167,7 +167,7 @@ class VitisAcceleratorWriter(VitisWriter):
             if '// hls-fpga-machine-learning FPGA type' in line:
                 fpgaType = 'HbmFpga' if memoryType == 'hbm' else ('DdrFpga' if memoryType == 'ddr' else 'DdrFpga')
                 dataType = '<float, float>' if isHwQuant else '<in_buffer_t, out_buffer_t>'
-                newline = fpgaType + dataType + ' fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10);'
+                newline = '\t' + fpgaType + dataType + ' fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10);'
             elif '/*IN_TYPE_CAST*/' in line:
                 newline = line.replace('/*IN_TYPE_CAST*/', '' if isHwQuant else '(in_buffer_t)')
             elif '/*OUT_TYPE_CAST*/' in line:
@@ -207,8 +207,7 @@ class VitisAcceleratorWriter(VitisWriter):
             if 'myproject' in line:
                 newline = line.replace('myproject', project_name)
             if 'BOARD_TYPE :=' in line:
-                newline = line
-                newline += board_type
+                newline += 'BOARD_TYPE := ' + board_type + '\n'
             else:
                 newline = line
             fout.write(newline)
