@@ -128,11 +128,22 @@ class VitisAcceleratorWriter(VitisWriter):
         # Writing source file
         f_source = open(os.path.join(filedir, '../templates/vitis_accelerator/kernel_wrapper_' + io_type +'.cpp'))
         fout_source = open(f'{model.config.get_output_dir()}/kernel_wrapper.cpp', 'w')
+        isHwQuant = self.vitis_accelerator_config.get_hw_quant()
         for line in f_source.readlines():
             if 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
+            elif '/*IN_HW_QUANT*/' in line:
+                newline = line.replace('/*IN_HW_QUANT*/', '(in_buffer_t)' if isHwQuant else '')
+            elif '/*OUT_HW_QUANT*/' in line:
+                newline = line.replace('/*OUT_HW_QUANT*/', '(float)' if isHwQuant else '')
             else:
                 newline = line
+
+            if '/*IN_INTERFACE_TYPE*/' in newline:
+                newline = newline.replace('/*IN_INTERFACE_TYPE*/', ('float' if isHwQuant else 'in_buffer_t'))
+            if '/*OUT_INTERFACE_TYPE*/' in newline:
+                newline = newline.replace('/*OUT_INTERFACE_TYPE*/', ('float' if isHwQuant else 'out_buffer_t'))
+
             fout_source.write(newline)
         f_source.close()
         fout_source.close()
@@ -150,14 +161,24 @@ class VitisAcceleratorWriter(VitisWriter):
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/vitis_accelerator/myproject_host_cl.cpp'))
         fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_host_cl.cpp', 'w')
+        memoryType = self.vitis_accelerator_config.get_memory_type()
+        isHwQuant = self.vitis_accelerator_config.get_hw_quant()
         for line in f.readlines():
-            if '/*FPGATYPE*/' in line:
-                if self.vitis_accelerator_config.get_memory_type() == 'hbm':
-                    newline = line.replace('/*FPGATYPE*/', 'HbmFpga')
-                elif self.vitis_accelerator_config.get_memory_type() == 'ddr':
-                    newline = line.replace('/*FPGATYPE*/', 'DdrFpga')
+            if '// hls-fpga-machine-learning FPGA type' in line:
+                fpgaType = 'HbmFpga' if memoryType == 'hbm' else ('DdrFpga' if memoryType == 'ddr' else 'DdrFpga')
+                dataType = '<float, float>' if isHwQuant else '<in_buffer_t, out_buffer_t>'
+                newline = fpgaType + dataType + ' fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10);'
+            elif '/*IN_TYPE_CAST*/' in line:
+                newline = line.replace('/*IN_TYPE_CAST*/', '' if isHwQuant else '(in_buffer_t)')
+            elif '/*OUT_TYPE_CAST*/' in line:
+                newline = line.replace('/*OUT_TYPE_CAST*/', '' if isHwQuant else '(float)')
             else:
                 newline = line
+            
+            if '/*IN_INTERFACE_TYPE*/' in line:
+                newline = newline.replace('/*IN_INTERFACE_TYPE*/', 'float' if isHwQuant else 'in_buffer_t')
+            if '/*OUT_INTERFACE_TYPE*/' in line:
+                newline = newline.replace('/*OUT_INTERFACE_TYPE*/', 'float' if isHwQuant else 'out_buffer_t')
             fout.write(newline)
         f.close()
         fout.close()

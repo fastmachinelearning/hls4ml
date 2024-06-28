@@ -16,7 +16,7 @@
 #define EXPAND_STRING(var) STRINGIFY(var)
 
 
-void runFPGAHelper(FpgaObj<in_buffer_t, out_buffer_t> &fpga) {
+void runFPGAHelper(FpgaObj</*IN_INTERFACE_TYPE*/, /*OUT_INTERFACE_TYPE*/> &fpga) {
     fpga.runFPGA();
 }
 
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     }
     std::string xclbinFilename = argv[1];
 
-    /*FPGATYPE*/<in_buffer_t, out_buffer_t> fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10); 
+    // hls-fpga-machine-learning FPGA type 
 
     std::vector<cl::Device> devices = xcl::get_xil_devices();  // Utility API that finds xilinx platforms and return a list of devices connected to Xilinx platforms
     auto fileBuf = xcl::read_binary_file(xclbinFilename);  // Load xclbin
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     if (!fin.is_open()) {
         std::cerr << "Error: Could not open tb_input_features.dat" << std::endl;
     }
-    std::vector<in_buffer_t> inputData;
+    std::vector</*IN_INTERFACE_TYPE*/> inputData;
     int num_inputs = 0;
     if (fin.is_open()) {
         std::string iline;
@@ -52,17 +52,16 @@ int main(int argc, char **argv) {
             std::stringstream in(iline); 
             std::string token;
             while (in >> token) {
-                in_buffer_t tmp = stof(token);
-                inputData.push_back(tmp);
+                inputData.push_back(/*IN_TYPE_CAST*/stof(token));
             }
             num_inputs++;
         }
     }
     fin.close();
 
-    // Copying in testbench data
+    // Copying input data into memory-mapped arrays
     int num_samples = std::min(num_inputs, BATCHSIZE * NUM_CU * NUM_THREAD);
-    memcpy(fpga.source_in.data(), inputData.data(), num_samples * INSTREAMSIZE * sizeof(in_buffer_t));
+    memcpy(fpga.source_in.data(), inputData.data(), num_samples * INSTREAMSIZE * sizeof(/*IN_INTERFACE_TYPE*/));
 
     std::vector<std::thread> hostAccelerationThreads;
     hostAccelerationThreads.reserve(NUM_THREAD);
@@ -93,7 +92,7 @@ int main(int argc, char **argv) {
         for (int i = 0; i < num_samples; i++) {
             std::stringstream oline;
             for (int n = 0; n < DATA_SIZE_OUT; n++) {
-                oline << (float)fpga.source_hw_results[(i * DATA_SIZE_OUT) + n] << " ";
+                oline << /*OUT_TYPE_CAST*/fpga.source_hw_results[(i * DATA_SIZE_OUT) + n] << " ";
             }
             resultsFile << oline.str() << "\n";
         }

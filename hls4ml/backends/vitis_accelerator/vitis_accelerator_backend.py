@@ -22,6 +22,7 @@ class VitisAcceleratorBackend(VitisBackend):
         num_kernel=1,
         num_thread=1,
         batchsize=8192,
+        hw_quant=False,
         vivado_directives=[]
     ):
         '''
@@ -45,6 +46,7 @@ class VitisAcceleratorBackend(VitisBackend):
         config['AcceleratorConfig']['Num_Kernel'] = num_kernel
         config['AcceleratorConfig']['Num_Thread'] = num_thread
         config['AcceleratorConfig']['Batchsize'] = batchsize
+        config['AcceleratorConfig']['HW_Quant'] = hw_quant
         config['AcceleratorConfig']['Vivado_Directives'] = vivado_directives
         return config
 
