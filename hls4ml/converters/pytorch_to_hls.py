@@ -1,6 +1,21 @@
+import math
+
 import torch
 
 from hls4ml.model import ModelGraph
+
+
+class CustomFXTracer(torch.fx.Tracer):
+
+    def is_leaf_module(self, m: torch.nn.Module, module_qualified_name: str) -> bool:
+        """
+        Custom Tracher class for hls4ml to define brevitas modules as leaf modules so they are not traced through by torch.FX
+        """
+        return (
+            m.__module__.startswith("torch.nn")
+            or m.__module__.startswith("torch.ao.nn")
+            or m.__module__.startswith("brevitas.nn")
+        ) and not isinstance(m, torch.nn.Sequential)
 
 
 class PyTorchModelReader:
@@ -56,6 +71,23 @@ def get_weights_data(data_reader, layer_name, var_name):
         return data[0]
     else:
         return (*data,)
+
+
+def convert_uaq_to_apfixed(bitwidth, scale_factor):
+    """
+    parameters:
+    bitwidth: int
+    scale_factor: float
+    zero_point: float
+
+    return:
+    int_bitwidth: int
+    fract_bitwidth: int
+    """
+    fract_bitwidth = -math.log2(scale_factor)
+    int_bitwidth = bitwidth - fract_bitwidth
+
+    return (fract_bitwidth, int_bitwidth)
 
 
 # ----------------------Layer handling--------------------- #
@@ -131,9 +163,9 @@ def pytorch_to_hls(config):
     # dict of layer objects in non-traced form for access lateron
     children = {c[0]: c[1] for c in model.named_children()}
     # use symbolic_trace to get a full graph of the model
-    from torch.fx import symbolic_trace
 
-    traced_model = symbolic_trace(model)
+    tracer = CustomFXTracer()
+    traced_model = tracer.trace(model)
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Sequential']
 
@@ -154,8 +186,8 @@ def pytorch_to_hls(config):
     layer_counter = 0
 
     n_inputs = 0
+    for node in traced_model.nodes:
 
-    for node in traced_model.graph.nodes:
         if node.op == 'call_module':
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
             # where x is an integer numbering the elements of the Sequential
