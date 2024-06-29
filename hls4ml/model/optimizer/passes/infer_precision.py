@@ -76,6 +76,13 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         model_config = node.model.config
         return model_config.backend.convert_precision_string(model_config.model_precision['default'])
 
+    def _get_maximum_precision(self, node):
+        model_config = node.model.config
+        if 'maximum' in model_config.model_precision:
+            return model_config.backend.convert_precision_string(model_config.model_precision['maximum'])
+        else:
+            return None
+
     def _infer_default_type(self, node, type_name):
         model_config = node.model.config
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
@@ -140,6 +147,12 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             integers = max(integers + (bias_signed and not signed), bias_integers + (signed and not bias_signed)) + 1
             bitwidth = integers + max(frac, bias_width - bias_integers)
             signed = signed or bias_signed
+
+        # if max_precision is specified, limit the size to be less than max precisoin
+        max_precision = self._get_maximum_precision(node)
+        if max_precision is not None:
+            bitwidth = min(bitwidth, max_precision.width)
+            integers = min(integers, max_precision.integer)
 
         # Note:  this is guaranteed to not overflow or need rounding, so it's sufficient to use the simpler form.
         new_type = FixedPrecisionType(bitwidth, integers, signed)
