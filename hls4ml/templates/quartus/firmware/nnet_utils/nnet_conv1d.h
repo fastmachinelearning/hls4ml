@@ -32,7 +32,7 @@ struct conv1d_config {
     // Run-time Configuration
     static const unsigned n_zeros = 0;
     static const unsigned reuse_factor = 1;
-    static const unsigned parallelisation_factor = 1;
+    static const unsigned parallelization_factor = 1;
 
     // TODO: BRAM Storage on Quartus
     static const bool store_weights_in_bram = false;

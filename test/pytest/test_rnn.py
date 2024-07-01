@@ -66,31 +66,42 @@ def test_rnn_parsing(rnn_layer, return_sequences):
 
 
 @pytest.mark.parametrize(
-    'rnn_layer,backend, io_type',
+    'rnn_layer, backend, io_type, strategy',
     [
-        (SimpleRNN, 'Quartus', 'io_parallel'),
-        (LSTM, 'Vivado', 'io_parallel'),
-        (LSTM, 'Vitis', 'io_parallel'),
-        (LSTM, 'Quartus', 'io_parallel'),
-        (LSTM, 'Vivado', 'io_stream'),
-        (LSTM, 'Vitis', 'io_stream'),
-        (GRU, 'Vivado', 'io_parallel'),
-        (GRU, 'Vivado', 'io_stream'),
-        (GRU, 'Vitis', 'io_parallel'),
-        (GRU, 'Vitis', 'io_stream'),
-        (GRU, 'Quartus', 'io_parallel'),
-        (GRU, 'Quartus', 'io_stream'),
+        (SimpleRNN, 'Quartus', 'io_parallel', 'resource'),
+        (SimpleRNN, 'oneAPI', 'io_parallel', 'resource'),
+        (LSTM, 'Vivado', 'io_parallel', 'resource'),
+        (LSTM, 'Vivado', 'io_parallel', 'latency'),
+        (LSTM, 'Vitis', 'io_parallel', 'resource'),
+        (LSTM, 'Vitis', 'io_parallel', 'latency'),
+        (LSTM, 'Quartus', 'io_parallel', 'resource'),
+        (LSTM, 'oneAPI', 'io_parallel', 'resource'),
+        (LSTM, 'Vivado', 'io_stream', 'resource'),
+        (LSTM, 'Vivado', 'io_stream', 'latency'),
+        (LSTM, 'Vitis', 'io_stream', 'resource'),
+        (LSTM, 'Vitis', 'io_stream', 'latency'),
+        (GRU, 'Vivado', 'io_parallel', 'resource'),
+        (GRU, 'Vivado', 'io_parallel', 'latency'),
+        (GRU, 'Vitis', 'io_parallel', 'resource'),
+        (GRU, 'Vitis', 'io_parallel', 'latency'),
+        (GRU, 'Quartus', 'io_parallel', 'resource'),
+        (GRU, 'oneAPI', 'io_parallel', 'resource'),
+        (GRU, 'Vivado', 'io_stream', 'resource'),
+        (GRU, 'Vivado', 'io_stream', 'latency'),
+        (GRU, 'Vitis', 'io_stream', 'resource'),
+        (GRU, 'Vitis', 'io_stream', 'latency'),
+        (GRU, 'Quartus', 'io_stream', 'resource'),
+        (GRU, 'oneAPI', 'io_stream', 'resource'),
     ],
 )
 @pytest.mark.parametrize('return_sequences', [True, False])
 @pytest.mark.parametrize('static', [True, False])
-@pytest.mark.parametrize('strategy', ['latency', 'resource'])
 def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, static):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
 
-    layer_name = rnn_layer.__class__.__name__.lower()
+    layer_name = rnn_layer.__name__
     keras_model = Sequential()
     keras_model.add(
         rnn_layer(
@@ -111,8 +122,9 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, s
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
-    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}_{}'.format(
-        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type, strategy
+    prj_name = (
+        f'hls4mlprj_rnn_accuracy_{layer_name}_static_{int(static)}_ret_seq_{int(return_sequences)}_'
+        f'{backend}_{io_type}_{strategy}'
     )
     output_dir = str(test_root_path / prj_name)
 

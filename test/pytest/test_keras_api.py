@@ -25,7 +25,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(backend, io_type):
     model = tf.keras.models.Sequential()
@@ -67,7 +67,7 @@ def test_dense(backend, io_type):
     assert len(model.layers) + 1 == len(hls_model.get_layers())
     assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
     assert list(hls_model.get_layers())[1].attributes["class_name"] == model.layers[0]._name
-    assert list(hls_model.get_layers())[2].attributes['class_name'] == model.layers[1]._name
+    assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ELU'
     assert list(hls_model.get_layers())[0].attributes['input_shape'] == list(model.layers[0].input_shape[1:])
     assert list(hls_model.get_layers())[1].attributes['n_in'] == model.layers[0].input_shape[1:][0]
     assert list(hls_model.get_layers())[1].attributes['n_out'] == model.layers[0].output_shape[1:][0]
@@ -80,17 +80,17 @@ def test_dense(backend, io_type):
 @pytest.mark.parametrize(
     "activation_function",
     [
-        Activation(activation='relu', name='Activation'),
+        Activation(activation='relu', name='relu'),
         LeakyReLU(alpha=1.0),
         ELU(alpha=1.0),
         PReLU(
             alpha_initializer="zeros",
         ),
-        Activation(activation='sigmoid', name='Activation'),
+        Activation(activation='sigmoid', name='sigmoid'),
     ],
 )
 # ThresholdedReLU(theta=1.0)])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(activation_function, backend, io_type):
     model = tf.keras.models.Sequential()
@@ -101,9 +101,12 @@ def test_activations(activation_function, backend, io_type):
     X_input = np.random.rand(100, 1)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(
-        test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.__class__.__name__}_{backend}_{io_type}'
-    )
+    if isinstance(activation_function, Activation):
+        output_dir = str(test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
+    else:
+        output_dir = str(
+            test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.__class__.__name__}_{backend}_{io_type}'
+        )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -121,7 +124,7 @@ padds_options = ['same', 'valid']
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(padds, backend, io_type):
     model = tf.keras.models.Sequential()
@@ -195,7 +198,7 @@ padds_options = ['same', 'valid']
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(chans, padds, backend, io_type):
     model = tf.keras.models.Sequential()
@@ -357,7 +360,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 def test_pooling(pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
