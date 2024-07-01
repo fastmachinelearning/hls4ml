@@ -33,6 +33,7 @@ del optimizers
 register_flow(
     'convert',
     [
+        'seperable_to_depthwise_and_conv',  # has to be before precision inference
         'infer_precision_types',
         'channels_last_converter',
         'remove_transpose_before_flatten',

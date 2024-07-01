@@ -280,7 +280,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         # Override bias and bias_t since these are zeros in depthwise step of SepConv1D
         params['bias'] = params['zero_bias']
         params['bias_t'] = params['zero_bias_t']
-        params['n_filt'] = params['n_chan']  # In depthwise step n_chan == n_filt
+        params['n_filt'] = params['n_chan'] * node.get_attr('depth_multiplier')  # In depthwise step n_chan == n_filt
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('depthwise').nzeros
         params['index'] = str(node.index) + '_depthwise'
