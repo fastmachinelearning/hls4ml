@@ -147,7 +147,7 @@ class VitisAcceleratorBackend(VitisBackend):
 
         currdir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        os.system("./host build/kernel_wrapper.xclbin")
+        os.system("make run")
         os.chdir(currdir)
 
         return self.dat_to_numpy(model)

@@ -70,7 +70,7 @@ else
 # Optimization flags can be added here
 endif
 
-.PHONY: all xclbin hls clean cleanhls cleanxclbin ultraclean
+.PHONY: all xclbin hls run clean cleanhls cleanxclbin ultraclean
 
 all: xclbin host
 
@@ -117,6 +117,11 @@ INCLUDES += -I$(PWD)/libs/ -I$(PWD)/firmware/ -I$(PWD)/firmware/nnet_utils/
 
 host: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS)
+
+# Execute program #############################################################
+
+run: ./host $(BUILD_DIR)/$(WRAPPER_NAME).xclbin
+	./host $(BUILD_DIR)/$(WRAPPER_NAME).xclbin
 
 # Cleanup #####################################################################
 
