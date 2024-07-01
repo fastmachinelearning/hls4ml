@@ -81,33 +81,34 @@ class VitisAcceleratorBackend(VitisBackend):
 
             curr_dir = os.getcwd()
             os.chdir(model.config.get_output_dir())
-
-            if reset:
-                if vsynth:
-                    os.system("make cleanxclbin")
-                if synth:
-                    os.system("make cleanhls")
-                os.system("rm -rf host")
-
-            if vsynth:
-                if synth:
-                    target = "all "
-                else:
-                    target = "xclbin "
-            elif synth:
-                target = "hls "
-            else:
-                target = "host "
-
+            
             if cosim:
-                target += "TARGET=hw_emu "
+                target = "TARGET=hw_emu "
             elif csim:
-                target += "TARGET=sw_emu "
+                target = "TARGET=sw_emu "
 
             if debug:
                 target += "DEBUG"
 
-            command = "make " + target
+            if vsynth:
+                if synth:
+                    process = "all "
+                else:
+                    process = "xclbin "
+            elif synth:
+                process = "hls "
+            else:
+                process = "host "
+
+            command = "make " + process + target
+
+            # Cleaning
+            if reset:
+                if vsynth:
+                    os.system("make cleanxclbin " + target)
+                if synth:
+                    os.system("make cleanhls " + target)
+                os.system("rm -rf host")
 
             # Pre-loading libudev
             ldconfig_output = subprocess.check_output(["ldconfig", "-p"]).decode("utf-8")

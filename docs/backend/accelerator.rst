@@ -116,12 +116,12 @@ Build workflow
 
 At the call of the ``build`` method, the following option affect the build process:
 
-    * ``reset``: TBD.
-    * ``csim``: TBD.
-    * ``synth``: TBD.
-    * ``cosim``: TBD.
-    * ``vsynth``: TBD.
-    * ``debug``: TBD.
+    * ``reset``: If True, clears files generated during previous build processes (STILL BEING TESTED).
+    * ``csim``: If True, builds the project for Vitis' software emulation validation flow (STILL BEING TESTED)
+    * ``synth``: If True, runs `make hls`, building object files for the kernel (STILL BEING TESTED)
+    * ``cosim``: If True, builds the project for Vitis' hardware emulation validation flow (STILL BEING TESTED)
+    * ``vsynth``: If True, runs `make xclbin`, building the .xclbin binary executable for the kernel (STILL BEING TESTED)
+    * ``debug``: If True, compiles the c++ host code and the HLS in debug mode (STILL BEING TESTED)
 
 Once the project is generated, it possible to run manually the build steps by using one of the following ``make`` targets in the generated project directory:
 
@@ -135,7 +135,7 @@ The generated host code application and the xclbin file can be executed as such:
 
 .. code-block:: Bash
 
-    ./host <myproject>.xclbin
+    ./host <build_directory>/<myproject>.xclbin
 
 Example
 =======
@@ -153,7 +153,9 @@ The following example is a modified version of `hsl4ml example 7 <https://github
         board='alveo-u55c',
         num_kernel=4,
         num_thread=8,
-        batchsize=8192
+        batchsize=8192,
+        hw_quant=False,
+        vivado_directives=["prop=run.impl_1.STEPS.PLACE_DESIGN.ARGS.DIRECTIVE=Explore"]
     )
     hls_model.compile()
     hls_model.build()
@@ -168,4 +170,4 @@ The generated host code application and the xclbin file can be executed as such:
 
 .. code-block:: Bash
 
-    ./host <myproject>.xclbin
+    ./host <build_directory>/<myproject>.xclbin
