@@ -31,8 +31,36 @@ del module_path
 del optimizers
 
 register_flow(
+    'parse_qonnx',
+    [
+        'reshape_constant',
+        'quant_constant_parameters',
+        'quant_to_activation',
+        'fuse_quant_with_constant',
+        'quant_to_alpha_activation_alpha',
+        'const_quant_to_const_alpha',
+        'batch_norm_onnx_constant_parameters',
+        'constant_batch_norm_fusion',
+        'merge_two_constants',
+        'scale_down_add',
+        'scale_down_mat_mul',
+        'scale_down_weight_conv',
+        'scale_down_bias_conv',
+        'scale_down_conv',
+        'merge_to_apply_alpha',
+        'merge_to_apply_alpha_div',
+        'matmul_const_to_dense',
+        'conv_to_conv_x_d',
+    ],
+)
+
+register_flow(
     'convert',
     [
+        'fuse_consecutive_batch_normalization',
+        'merge_linear_activation',
+        'fuse_batch_normalization',
+        # The ones above here need to be before infer_precision_types
         'infer_precision_types',
         'channels_last_converter',
         'remove_transpose_before_flatten',
@@ -43,16 +71,15 @@ register_flow(
         'output_rounding_saturation_mode',
         'qkeras_factorize_alpha',
         'extract_ternary_threshold',
-        'fuse_consecutive_batch_normalization',
     ],
+    requires=['parse_qonnx'],
 )  # TODO Maybe not all QKeras optmizers belong here?
 
 register_flow(
     'optimize',
     [
         'eliminate_linear_activation',
-        'fuse_consecutive_batch_normalization',
-        'fuse_batch_normalization',
+        'remove_nop_batch_normalization',
         'replace_multidimensional_dense_with_conv',
         'infer_precision_types',
         'set_precision_concat',
