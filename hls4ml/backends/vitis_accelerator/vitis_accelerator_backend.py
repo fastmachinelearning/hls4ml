@@ -1,6 +1,7 @@
 import os
-import sys
 import subprocess
+import sys
+
 import numpy as np
 
 from hls4ml.backends import VitisBackend, VivadoBackend
@@ -23,7 +24,7 @@ class VitisAcceleratorBackend(VitisBackend):
         num_thread=1,
         batchsize=8192,
         hw_quant=False,
-        vivado_directives=[],
+        vivado_directives=None,
     ):
         """
         Create initial accelerator config with default parameters
@@ -64,15 +65,18 @@ class VitisAcceleratorBackend(VitisBackend):
         if "linux" in sys.platform:
             if "XILINX_VITIS" not in os.environ:
                 raise Exception(
-                    "XILINX_VITIS environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building"
+                    "XILINX_VITIS environmental variable missing."
+                    " Please install XRT and Vitis, and run the setup scripts before building"
                 )
             if "XILINX_XRT" not in os.environ:
                 raise Exception(
-                    "XILINX_XRT environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building"
+                    "XILINX_XRT environmental variable missing."
+                    " Please install XRT and Vitis, and run the setup scripts before building"
                 )
             if "XILINX_VIVADO" not in os.environ:
                 raise Exception(
-                    "XILINX_VIVADO environmental variable missing. Please install XRT and Vitis, and run the setup scripts before building"
+                    "XILINX_VIVADO environmental variable missing."
+                    " Please install XRT and Vitis, and run the setup scripts before building"
                 )
 
             curr_dir = os.getcwd()
@@ -106,14 +110,10 @@ class VitisAcceleratorBackend(VitisBackend):
             command = "make " + target
 
             # Pre-loading libudev
-            ldconfig_output = subprocess.check_output(["ldconfig", "-p"]).decode(
-                "utf-8"
-            )
+            ldconfig_output = subprocess.check_output(["ldconfig", "-p"]).decode("utf-8")
             for line in ldconfig_output.split("\n"):
                 if "libudev.so" in line and "x86" in line:
-                    command = (
-                        "LD_PRELOAD=" + line.split("=>")[1].strip() + " " + command
-                    )
+                    command = "LD_PRELOAD=" + line.split("=>")[1].strip() + " " + command
                     break
             os.system(command)
 
@@ -129,9 +129,7 @@ class VitisAcceleratorBackend(VitisBackend):
         expected_shape = model.get_input_variables()[0].size()
         actual_shape = np.prod(x.shape[1:])
         if expected_shape != actual_shape:
-            raise Exception(
-                f"Input shape mismatch, got {x.shape}, expected (_, {expected_shape})"
-            )
+            raise Exception(f"Input shape mismatch, got {x.shape}, expected (_, {expected_shape})")
 
         # Write to tb_data/tb_input_features.dat
         samples = x.reshape(x.shape[0], -1)
@@ -175,18 +173,10 @@ class VitisAcceleratorBackend(VitisBackend):
         )
 
         writer_passes = ["make_stamp", "vitisaccelerator:write_hls"]
-        self._writer_flow = register_flow(
-            "write", writer_passes, requires=["vitis:ip"], backend=self.name
-        )
+        self._writer_flow = register_flow("write", writer_passes, requires=["vitis:ip"], backend=self.name)
 
         ip_flow_requirements = get_flow("vivado:ip").requires.copy()
-        ip_flow_requirements.insert(
-            ip_flow_requirements.index("vivado:init_layers"), validation_flow
-        )
-        ip_flow_requirements.insert(
-            ip_flow_requirements.index("vivado:apply_templates"), template_flow
-        )
+        ip_flow_requirements.insert(ip_flow_requirements.index("vivado:init_layers"), validation_flow)
+        ip_flow_requirements.insert(ip_flow_requirements.index("vivado:apply_templates"), template_flow)
 
-        self._default_flow = register_flow(
-            "ip", None, requires=ip_flow_requirements, backend=self.name
-        )
+        self._default_flow = register_flow("ip", None, requires=ip_flow_requirements, backend=self.name)

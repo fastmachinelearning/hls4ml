@@ -1,24 +1,21 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
 #include <thread>
 #include <vector>
 
-#include "kernel_wrapper.h"
+#include "DdrFpga.hpp"
 #include "FpgaObj.hpp"
 #include "HbmFpga.hpp"
-#include "DdrFpga.hpp"
+#include "kernel_wrapper.h"
 #include "xcl2.hpp"
 
 #define STRINGIFY(var) #var
 #define EXPAND_STRING(var) STRINGIFY(var)
 
-
-void runFPGAHelper(FpgaObj</*IN_INTERFACE_TYPE*/, /*OUT_INTERFACE_TYPE*/> &fpga) {
-    fpga.runFPGA();
-}
+void runFPGAHelper(FpgaObj</*IN_INTERFACE_TYPE*/, /*OUT_INTERFACE_TYPE*/> &fpga) { fpga.runFPGA(); }
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -27,15 +24,16 @@ int main(int argc, char **argv) {
     }
     std::string xclbinFilename = argv[1];
 
-    // hls-fpga-machine-learning FPGA type 
+    // hls-fpga-machine-learning FPGA type
 
-    std::vector<cl::Device> devices = xcl::get_xil_devices();  // Utility API that finds xilinx platforms and return a list of devices connected to Xilinx platforms
-    auto fileBuf = xcl::read_binary_file(xclbinFilename);  // Load xclbin
+    std::vector<cl::Device> devices = xcl::get_xil_devices(); // Utility API that finds xilinx platforms and return a list of
+                                                              // devices connected to Xilinx platforms
+    auto fileBuf = xcl::read_binary_file(xclbinFilename);     // Load xclbin
     cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
     fpga.initializeOpenCL(devices, bins);
 
     fpga.allocateHostMemory(NUM_CHANNEL);
-      
+
     std::cout << "Loading input data from tb_data/tb_input_features.dat" << std::endl;
     std::ifstream fin("tb_data/tb_input_features.dat");
     if (!fin.is_open()) {
@@ -49,10 +47,10 @@ int main(int argc, char **argv) {
             if (num_inputs % 100 == 0) {
                 std::cout << "Processing input " << num_inputs << std::endl;
             }
-            std::stringstream in(iline); 
+            std::stringstream in(iline);
             std::string token;
             while (in >> token) {
-                inputData.push_back(/*IN_TYPE_CAST*/stof(token));
+                inputData.push_back(/*IN_TYPE_CAST*/ stof(token));
             }
             num_inputs++;
         }
@@ -80,19 +78,19 @@ int main(int argc, char **argv) {
     fpga.finishRun();
 
     auto ts_end = std::chrono::system_clock::now();
-    float throughput = (float(BATCHSIZE* NUM_CU * NUM_THREAD * 10 ) /
-            float(std::chrono::duration_cast<std::chrono::nanoseconds>(ts_end - ts_start).count())) *
-            1000000000.;
-    std::cout << "Throughput = " << throughput <<" predictions/second\n" << std::endl;
+    float throughput = (float(BATCHSIZE * NUM_CU * NUM_THREAD * 10) /
+                        float(std::chrono::duration_cast<std::chrono::nanoseconds>(ts_end - ts_start).count())) *
+                       1000000000.;
+    std::cout << "Throughput = " << throughput << " predictions/second\n" << std::endl;
 
     std::cout << "Writing hw results to file" << std::endl;
     std::ofstream resultsFile;
     resultsFile.open("tb_data/hw_results.dat", std::ios::trunc);
-    if (resultsFile.is_open()) {   
+    if (resultsFile.is_open()) {
         for (int i = 0; i < num_samples; i++) {
             std::stringstream oline;
             for (int n = 0; n < DATA_SIZE_OUT; n++) {
-                oline << /*OUT_TYPE_CAST*/fpga.source_hw_results[(i * DATA_SIZE_OUT) + n] << " ";
+                oline << /*OUT_TYPE_CAST*/ fpga.source_hw_results[(i * DATA_SIZE_OUT) + n] << " ";
             }
             resultsFile << oline.str() << "\n";
         }
@@ -100,6 +98,6 @@ int main(int argc, char **argv) {
     } else {
         std::cerr << "Error writing hw results to file" << std::endl;
     }
-    
+
     return EXIT_SUCCESS;
 }

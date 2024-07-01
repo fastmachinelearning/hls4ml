@@ -31,10 +31,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 for include in sorted(
                     set(
                         sum(
-                            (
-                                layer.get_attr("include_header", [])
-                                for layer in model.get_layers()
-                            ),
+                            (layer.get_attr("include_header", []) for layer in model.get_layers()),
                             [],
                         )
                     )
@@ -72,15 +69,9 @@ class VitisAcceleratorWriter(VitisWriter):
         f.write("variable part\n")
         f.write('set part "{}"\n'.format(model.config.get_config_value("Part")))
         f.write("variable clock_period\n")
-        f.write(
-            "set clock_period {}\n".format(model.config.get_config_value("ClockPeriod"))
-        )
+        f.write("set clock_period {}\n".format(model.config.get_config_value("ClockPeriod")))
         f.write("variable clock_uncertainty\n")
-        f.write(
-            "set clock_uncertainty {}\n".format(
-                model.config.get_config_value("ClockUncertainty", "12.5%")
-            )
-        )
+        f.write("set clock_uncertainty {}\n".format(model.config.get_config_value("ClockUncertainty", "12.5%")))
         f.close()
 
     def write_kernel(self, model):
@@ -89,37 +80,23 @@ class VitisAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        from hls4ml.backends import VitisAcceleratorConfig
-
         filedir = os.path.dirname(os.path.abspath(__file__))
         io_type = model.config.get_config_value("IOType")
 
         # Writing header file
-        f_header = open(
-            os.path.join(filedir, "../templates/vitis_accelerator/kernel_wrapper.h")
-        )
+        f_header = open(os.path.join(filedir, "../templates/vitis_accelerator/kernel_wrapper.h"))
         fout_header = open(f"{model.config.get_output_dir()}/kernel_wrapper.h", "w")
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         if len(model_inputs) != 1 or len(model_outputs) != 1:
-            raise Exception(
-                "Accelerator currently only supports projects with a single input and a single output variable"
-            )
+            raise Exception("Accelerator currently only supports projects with a single input and a single output variable")
         inp = model_inputs[0]
         out = model_outputs[0]
         for line in f_header.readlines():
             if "// hls-fpga-machine-learning accelerator parameters" in line:
                 newline = ""
-                newline += (
-                    "#define NUM_CU "
-                    + format(self.vitis_accelerator_config.get_num_kernel())
-                    + "\n"
-                )
-                newline += (
-                    "#define NUM_THREAD "
-                    + format(self.vitis_accelerator_config.get_num_thread())
-                    + "\n"
-                )
+                newline += "#define NUM_CU " + format(self.vitis_accelerator_config.get_num_kernel()) + "\n"
+                newline += "#define NUM_THREAD " + format(self.vitis_accelerator_config.get_num_thread()) + "\n"
                 newline += "#define NUM_CHANNEL "
                 if self.vitis_accelerator_config.get_memory_type() == "hbm":
                     newline += (
@@ -131,11 +108,7 @@ class VitisAcceleratorWriter(VitisWriter):
                     )
                 elif self.vitis_accelerator_config.get_memory_type() == "ddr":
                     newline += "1\n"
-                newline += (
-                    "#define BATCHSIZE "
-                    + format(self.vitis_accelerator_config.get_batchsize())
-                    + "\n"
-                )
+                newline += "#define BATCHSIZE " + format(self.vitis_accelerator_config.get_batchsize()) + "\n"
             elif "// hls-fpga-machine-learning accelerator io" in line:
                 newline = ""
                 if io_type == "io_parallel":
@@ -151,25 +124,12 @@ class VitisAcceleratorWriter(VitisWriter):
                     nnet_array_depth = dims.pop()
                     dims.append("1")
                     newline += "#define DATA_SIZE_IN " + " * ".join(dims) + "\n"
-                    newline += (
-                        "#define NNET_ARRAY_DEPTH " + format(nnet_array_depth) + "\n"
-                    )
-                    newline += (
-                        "#define INSTREAMSIZE (DATA_SIZE_IN * NNET_ARRAY_DEPTH)"
-                        + "\n\n"
-                    )
+                    newline += "#define NNET_ARRAY_DEPTH " + format(nnet_array_depth) + "\n"
+                    newline += "#define INSTREAMSIZE (DATA_SIZE_IN * NNET_ARRAY_DEPTH)" + "\n\n"
                     newline += "#define DATA_SIZE_OUT " + format(out.size_cpp()) + "\n"
                     newline += "#define OUTSTREAMSIZE DATA_SIZE_OUT" + "\n\n"
-                    newline += (
-                        "typedef "
-                        + inp.type.precision.definition_cpp()
-                        + " in_buffer_t;\n"
-                    )
-                    newline += (
-                        "typedef "
-                        + out.type.precision.definition_cpp()
-                        + " out_buffer_t;\n"
-                    )
+                    newline += "typedef " + inp.type.precision.definition_cpp() + " in_buffer_t;\n"
+                    newline += "typedef " + out.type.precision.definition_cpp() + " out_buffer_t;\n"
             else:
                 newline = line
             fout_header.write(newline)
@@ -187,28 +147,18 @@ class VitisAcceleratorWriter(VitisWriter):
         isHwQuant = self.vitis_accelerator_config.get_hw_quant()
         for line in f_source.readlines():
             if "myproject" in line:
-                newline = line.replace(
-                    "myproject", format(model.config.get_project_name())
-                )
+                newline = line.replace("myproject", format(model.config.get_project_name()))
             elif "/*IN_HW_QUANT*/" in line:
-                newline = line.replace(
-                    "/*IN_HW_QUANT*/", "(in_buffer_t)" if isHwQuant else ""
-                )
+                newline = line.replace("/*IN_HW_QUANT*/", "(in_buffer_t)" if isHwQuant else "")
             elif "/*OUT_HW_QUANT*/" in line:
-                newline = line.replace(
-                    "/*OUT_HW_QUANT*/", "(float)" if isHwQuant else ""
-                )
+                newline = line.replace("/*OUT_HW_QUANT*/", "(float)" if isHwQuant else "")
             else:
                 newline = line
 
             if "/*IN_INTERFACE_TYPE*/" in newline:
-                newline = newline.replace(
-                    "/*IN_INTERFACE_TYPE*/", ("float" if isHwQuant else "in_buffer_t")
-                )
+                newline = newline.replace("/*IN_INTERFACE_TYPE*/", ("float" if isHwQuant else "in_buffer_t"))
             if "/*OUT_INTERFACE_TYPE*/" in newline:
-                newline = newline.replace(
-                    "/*OUT_INTERFACE_TYPE*/", ("float" if isHwQuant else "out_buffer_t")
-                )
+                newline = newline.replace("/*OUT_INTERFACE_TYPE*/", ("float" if isHwQuant else "out_buffer_t"))
 
             fout_source.write(newline)
         f_source.close()
@@ -220,15 +170,9 @@ class VitisAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        from hls4ml.backends import VitisAcceleratorConfig
-
         # Write host code
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(
-            os.path.join(
-                filedir, "../templates/vitis_accelerator/myproject_host_cl.cpp"
-            )
-        )
+        f = open(os.path.join(filedir, "../templates/vitis_accelerator/myproject_host_cl.cpp"))
         fout = open(
             f"{model.config.get_output_dir()}/{model.config.get_project_name()}_host_cl.cpp",
             "w",
@@ -237,14 +181,8 @@ class VitisAcceleratorWriter(VitisWriter):
         isHwQuant = self.vitis_accelerator_config.get_hw_quant()
         for line in f.readlines():
             if "// hls-fpga-machine-learning FPGA type" in line:
-                fpgaType = (
-                    "HbmFpga"
-                    if memoryType == "hbm"
-                    else ("DdrFpga" if memoryType == "ddr" else "DdrFpga")
-                )
-                dataType = (
-                    "<float, float>" if isHwQuant else "<in_buffer_t, out_buffer_t>"
-                )
+                fpgaType = "HbmFpga" if memoryType == "hbm" else ("DdrFpga" if memoryType == "ddr" else "DdrFpga")
+                dataType = "<float, float>" if isHwQuant else "<in_buffer_t, out_buffer_t>"
                 newline = (
                     "\t"
                     + fpgaType
@@ -252,24 +190,16 @@ class VitisAcceleratorWriter(VitisWriter):
                     + " fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10);"
                 )
             elif "/*IN_TYPE_CAST*/" in line:
-                newline = line.replace(
-                    "/*IN_TYPE_CAST*/", "" if isHwQuant else "(in_buffer_t)"
-                )
+                newline = line.replace("/*IN_TYPE_CAST*/", "" if isHwQuant else "(in_buffer_t)")
             elif "/*OUT_TYPE_CAST*/" in line:
-                newline = line.replace(
-                    "/*OUT_TYPE_CAST*/", "" if isHwQuant else "(float)"
-                )
+                newline = line.replace("/*OUT_TYPE_CAST*/", "" if isHwQuant else "(float)")
             else:
                 newline = line
 
             if "/*IN_INTERFACE_TYPE*/" in line:
-                newline = newline.replace(
-                    "/*IN_INTERFACE_TYPE*/", "float" if isHwQuant else "in_buffer_t"
-                )
+                newline = newline.replace("/*IN_INTERFACE_TYPE*/", "float" if isHwQuant else "in_buffer_t")
             if "/*OUT_INTERFACE_TYPE*/" in line:
-                newline = newline.replace(
-                    "/*OUT_INTERFACE_TYPE*/", "float" if isHwQuant else "out_buffer_t"
-                )
+                newline = newline.replace("/*OUT_INTERFACE_TYPE*/", "float" if isHwQuant else "out_buffer_t")
             fout.write(newline)
         f.close()
         fout.close()
@@ -285,8 +215,6 @@ class VitisAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        from hls4ml.backends import VitisAcceleratorConfig
-
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, "../templates/vitis_accelerator/Makefile"))
         fout = open(f"{model.config.get_output_dir()}/Makefile", "w")
@@ -310,13 +238,9 @@ class VitisAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        from hls4ml.backends import VitisAcceleratorConfig
-
         # Write accelerator_card.cfg
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(
-            os.path.join(filedir, "../templates/vitis_accelerator/accelerator_card.cfg")
-        )
+        f = open(os.path.join(filedir, "../templates/vitis_accelerator/accelerator_card.cfg"))
         fout = open(f"{model.config.get_output_dir()}/accelerator_card.cfg", "w")
 
         memory_type = self.vitis_accelerator_config.get_memory_type()
@@ -342,12 +266,10 @@ class VitisAcceleratorWriter(VitisWriter):
 
         for line in f.readlines():
             if "MYPLATFORM" in line:
-                newline = line.replace(
-                    "MYPLATFORM", format(self.vitis_accelerator_config.get_platform())
-                )
+                newline = line.replace("MYPLATFORM", format(self.vitis_accelerator_config.get_platform()))
             elif "# hls-fpga-machine-learning clock control" in line:
                 freq = round(1e9 / model.config.get_config_value("ClockPeriod"))
-                newline = "clock={}:kernel_wrapper\n".format(freq)
+                newline = f"clock={freq}:kernel_wrapper\n"
             elif "# hls-fpga-machine-learning kernel control" in line:
                 newline = "[connectivity]\n"
                 newline += "nk=kernel_wrapper:" + format(num_kernels) + "\n\n"
@@ -366,15 +288,11 @@ class VitisAcceleratorWriter(VitisWriter):
                             )
                     elif memory_type == "ddr":
                         for i in range(0, num_kernels):
-                            newline += "sp=kernel_wrapper_{}.in:DDR[{}]\n".format(
-                                i + 1, i
-                            )
-                            newline += "sp=kernel_wrapper_{}.out:HBM[{}]\n".format(
-                                i + 1, i
-                            )
+                            newline += f"sp=kernel_wrapper_{i + 1}.in:DDR[{i}]\n"
+                            newline += f"sp=kernel_wrapper_{i + 1}.out:HBM[{i}]\n"
                             newline += "\n"
                         for i in range(0, num_kernels):
-                            newline += "slr=kernel_wrapper_{}:SLR{}\n".format(i + 1, i)
+                            newline += f"slr=kernel_wrapper_{i + 1}:SLR{i}\n"
             elif "# hls-fpga-machine-learning vivado directives" in line:
                 newline = ""
                 if directives:
@@ -388,18 +306,12 @@ class VitisAcceleratorWriter(VitisWriter):
         fout.close()
 
         # Write hls_config.tcl
-        tcl_f = open(
-            os.path.join(filedir, "../templates/vitis_accelerator/hls_config.tcl")
-        )
+        tcl_f = open(os.path.join(filedir, "../templates/vitis_accelerator/hls_config.tcl"))
         tcl_fout = open(f"{model.config.get_output_dir()}/hls_config.tcl", "w")
         for line in tcl_f.readlines():
             newline = line
             tcl_fout.write(newline)
-        tcl_fout.write(
-            "\nset_clock_uncertainty {}\n".format(
-                model.config.get_config_value("ClockUncertainty", "12.5%")
-            )
-        )
+        tcl_fout.write("\nset_clock_uncertainty {}\n".format(model.config.get_config_value("ClockUncertainty", "12.5%")))
         tcl_f.close()
         tcl_fout.close()
 

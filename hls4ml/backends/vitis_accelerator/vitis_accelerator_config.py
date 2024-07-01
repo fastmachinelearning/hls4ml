@@ -11,9 +11,7 @@ class VitisAcceleratorConfig:
             raise Exception("Missing AcceleratorConfig")
 
         self.board = accel_config.get("Board", "alveo-u55c")
-        self.supported_boards = json.load(
-            open(os.path.dirname(__file__) + "/supported_boards.json")
-        )
+        self.supported_boards = json.load(open(os.path.dirname(__file__) + "/supported_boards.json"))
         if self.board in self.supported_boards.keys():
             board_info = self.supported_boards[self.board]
             self.board_type = board_info["board_type"]
