@@ -32,10 +32,10 @@ CARD_CFG ?= accelerator_card.cfg
 PLATFORM ?= $(shell awk -F '=' '/platform=/ {print $$2}' $(CARD_CFG))
 
 # Board Type (determines whether design will go through packaging step)
-BOARD_TYPE := 
+BOARD_TYPE :=
 
 # Kernel name
-KERNEL_NAME := myproject
+KERNEL_NAME := #PRJNAME
 
 # Wrapper name
 WRAPPER_NAME := kernel_wrapper
@@ -86,14 +86,8 @@ hls: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 
 # Kernel linking & packaging ##################################################
 
-ifeq ($(BOARD_TYPE),alveo)
-# For Standard Alveo, a single step is required for linking and packaging
-# This is standard Alveo linking and packaging
-$(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
-	mkdir -p $(XCLBIN_DIR)
-	v++ -l $(XOLDFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
+ifneq (,$(findstring versal,$(BOARD_TYPE)))
 
-else ifeq ($(BOARD_TYPE),alveo-versal) || ($(BOARD_TYPE),versal)
 # For Versal architecture, linking and packaging are separate steps
 $(BUILD_DIR)/$(WRAPPER_NAME).xsa: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
 	mkdir -p $(XCLBIN_DIR)
@@ -105,7 +99,12 @@ $(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(WRAPPER_NAME).xsa
 	v++ -p $(XOCCPFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
 
 else
-    @echo "$(BOARD_TYPE) board type is currently unsupported"
+
+# For Standard Alveo, a single step is required for linking and packaging
+# This is standard Alveo linking and packaging
+$(BUILD_DIR)/$(WRAPPER_NAME).xclbin: $(BUILD_DIR)/$(KERNEL_NAME)_kernel.xo
+	mkdir -p $(XCLBIN_DIR)
+	v++ -l $(XOLDFLAGS) --temp_dir $(XCLBIN_DIR) --log_dir $(XCLBIN_DIR) -o $@ $^
 
 endif
 
@@ -134,7 +133,6 @@ cleanhls:
 
 clean: cleanxclbin cleanhls
 
-ultraclean: 
+ultraclean:
 	rm -rf host tb_data/hw_results.dat tb_data/tb_input_features.dat *.log
 	rm -rf $(BUILD_DIR)
-	

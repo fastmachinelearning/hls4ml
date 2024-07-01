@@ -202,11 +202,10 @@ class VitisAcceleratorWriter(VitisWriter):
 
         board_type = self.vitis_accelerator_config.get_board_type()
         project_name = format(model.config.get_project_name())
-
         for line in f.readlines():
-            if 'myproject' in line:
-                newline = line.replace('myproject', project_name)
-            if 'BOARD_TYPE :=' in line:
+            if '#PRJNAME' in line:
+                newline = line.replace('#PRJNAME', project_name)
+            elif 'BOARD_TYPE :=' in line:
                 newline += 'BOARD_TYPE := ' + board_type + '\n'
             else:
                 newline = line
