@@ -81,7 +81,7 @@ class VitisAcceleratorBackend(VitisBackend):
 
             curr_dir = os.getcwd()
             os.chdir(model.config.get_output_dir())
-            
+
             if cosim:
                 target = "TARGET=hw_emu "
             elif csim:
