@@ -24,7 +24,8 @@
 
     advanced/fifo_depth
     advanced/extension
-    advanced/accelerator
+    advanced/vivado_accelerator
+    advanced/vitis_accelerator
     advanced/model_optimization
 
 .. toctree::

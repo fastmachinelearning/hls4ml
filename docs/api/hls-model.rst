@@ -100,3 +100,22 @@ The trace method is an advanced version of the ``predict`` method. It's used to 
 
    #We also support a similar function for keras
    keras_trace = hls4ml.model.profiling.get_ymodel_keras(keras_model, X)
+
+.. _hw_predict-method:
+
+``hw_predict`` method
+======================
+
+An specialized version of the ``predict`` method, for the VitisAccelerator backend after a successful build. Runs the project on the FPGA and obtains prediction for the supplied numpy array.
+
+Note that the host code being run under the hood is an example written for generic benchmarking purposes, helpful for validating projects and gauging maximum throughput. It should be further adapted for more specific applications.
+
+.. code-block:: python
+
+   # Suppose that you already have input array X
+   # Note that you have to do both hls_model.compile() and hls_model.build(), ensuring the .xclbin file is successfully created, before using hw_predict
+
+   y = hls_model.hw_predict(X)
+
+The maximum of number of input samples that can processed is ``batchsize * num_cu * num_buffer``. If the input array exceeds that size the additional samples will be ignored.
+----
