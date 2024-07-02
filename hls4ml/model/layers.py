@@ -489,6 +489,7 @@ class DepthwiseConv1D(Conv1D):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
         Attribute('filt_width'),
         Attribute('stride_width'),
         Attribute('pad_left'),
@@ -501,10 +502,10 @@ class DepthwiseConv1D(Conv1D):
 
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_width'], self.attributes['n_chan'] * self.attributes['depth_multiplier']]
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
             dims = [f'OUT_HEIGHT_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'] * self.attributes['depth_multiplier'], self.attributes['out_width']]
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -513,7 +514,6 @@ class DepthwiseConv1D(Conv1D):
         )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-        self.set_attr('n_filt', self.get_attr('n_chan') * self.get_attr('depth_multiplier'))
 
 
 class Conv2D(Layer):
@@ -658,6 +658,7 @@ class DepthwiseConv2D(Conv2D):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
         Attribute('filt_height'),
         Attribute('filt_width'),
         Attribute('stride_height'),
@@ -677,12 +678,12 @@ class DepthwiseConv2D(Conv2D):
             shape = [
                 self.attributes['out_height'],
                 self.attributes['out_width'],
-                self.attributes['n_chan'] * self.attributes['depth_multiplier'],
+                self.attributes['n_filt'],
             ]
             dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
             shape = [
-                self.attributes['n_chan'] * self.attributes['depth_multiplier'],
+                self.attributes['n_filt'],
                 self.attributes['out_height'],
                 self.attributes['out_width'],
             ]
@@ -694,7 +695,6 @@ class DepthwiseConv2D(Conv2D):
         )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-        self.set_attr('n_filt', self.get_attr('n_chan') * self.get_attr('depth_multiplier'))
 
 
 class Pooling1D(Layer):
