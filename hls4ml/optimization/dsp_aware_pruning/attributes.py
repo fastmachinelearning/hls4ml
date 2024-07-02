@@ -2,8 +2,8 @@ import numpy as np
 
 import hls4ml
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType
-from hls4ml.optimization.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.keras.config import SUPPORTED_LAYERS
+from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
+from hls4ml.optimization.dsp_aware_pruning.keras.config import SUPPORTED_LAYERS
 
 
 class hls4mlAttributes:

@@ -1,6 +1,6 @@
 import numpy as np  # Use np.testing.assert_allclose due to floating point rounding errors
 
-from hls4ml.optimization.scheduler import BinaryScheduler, ConstantScheduler, PolynomialScheduler
+from hls4ml.optimization.dsp_aware_pruning.scheduler import BinaryScheduler, ConstantScheduler, PolynomialScheduler
 
 
 def test_constant_scheduler():

@@ -3,9 +3,9 @@ import math
 
 import numpy as np
 
-from hls4ml.optimization.attributes import OptimizationAttributes
-from hls4ml.optimization.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.objectives import ObjectiveEstimator
+from hls4ml.optimization.dsp_aware_pruning.attributes import OptimizationAttributes
+from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
+from hls4ml.optimization.dsp_aware_pruning.objectives import ObjectiveEstimator
 
 
 # Optimizes DSP utilisation for Vivado backend

@@ -30,6 +30,7 @@ struct dense_config {
     // partitioning arrays cyclically to go with roll factors?
     // Product function to use
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
+    constexpr static auto unrolled_fn = nullptr;
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
