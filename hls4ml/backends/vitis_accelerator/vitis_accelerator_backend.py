@@ -19,12 +19,14 @@ class VitisAcceleratorBackend(VitisBackend):
         board="alveo-u55c",
         part=None,
         clock_period=5,
+        clock_uncertainty='27%',
         io_type="io_parallel",
         num_kernel=1,
         num_thread=1,
         batchsize=8192,
         hw_quant=False,
         vivado_directives=None,
+        **_,
     ):
         """
         Create initial accelerator config with default parameters
@@ -41,7 +43,7 @@ class VitisAcceleratorBackend(VitisBackend):
             populated config
         """
         board = board if board is not None else "alveo-u55c"
-        config = super().create_initial_config(part, clock_period, io_type)
+        config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
         config["AcceleratorConfig"] = {}
         config["AcceleratorConfig"]["Board"] = board
         config["AcceleratorConfig"]["Num_Kernel"] = num_kernel
