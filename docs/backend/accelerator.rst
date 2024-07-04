@@ -159,15 +159,3 @@ The following example is a modified version of `hsl4ml example 7 <https://github
     )
     hls_model.compile()
     hls_model.build()
-
-By default the build method generates all the necessary files to run the kernel on the accelerator board. As this can be a long process, there are three build options that target the generation of specific parts of the project:
-
-* `host`: Compiles the host application
-* `hls`: Produces only the kernel's object file
-* `xclbin`: Produces only the kernel's .xclbin file
-
-The generated host code application and the xclbin file can be executed as such:
-
-.. code-block:: Bash
-
-    ./host <build_directory>/<myproject>.xclbin
