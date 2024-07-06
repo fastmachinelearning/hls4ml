@@ -147,10 +147,10 @@ class VitisAcceleratorWriter(VitisWriter):
         for line in f_source.readlines():
             if "myproject" in line:
                 newline = line.replace("myproject", format(model.config.get_project_name()))
-            elif "/*IN_HW_QUANT*/" in line:
-                newline = line.replace("/*IN_HW_QUANT*/", "(in_buffer_t)" if isHwQuant else "")
-            elif "/*OUT_HW_QUANT*/" in line:
-                newline = line.replace("/*OUT_HW_QUANT*/", "(float)" if isHwQuant else "")
+            elif "/*IN_HW_QUANT*/ " in line:
+                newline = line.replace("/*IN_HW_QUANT*/ ", "(in_buffer_t)" if isHwQuant else "")
+            elif "/*OUT_HW_QUANT*/ " in line:
+                newline = line.replace("/*OUT_HW_QUANT*/ ", "(float)" if isHwQuant else "")
             else:
                 newline = line
 
@@ -188,10 +188,10 @@ class VitisAcceleratorWriter(VitisWriter):
                     + dataType
                     + " fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10);"
                 )
-            elif "/*IN_TYPE_CAST*/" in line:
-                newline = line.replace("/*IN_TYPE_CAST*/", "" if isHwQuant else "(in_buffer_t)")
-            elif "/*OUT_TYPE_CAST*/" in line:
-                newline = line.replace("/*OUT_TYPE_CAST*/", "" if isHwQuant else "(float)")
+            elif "/*IN_TYPE_CAST*/ " in line:
+                newline = line.replace("/*IN_TYPE_CAST*/ ", "" if isHwQuant else "(in_buffer_t)")
+            elif "/*OUT_TYPE_CAST*/ " in line:
+                newline = line.replace("/*OUT_TYPE_CAST*/ ", "" if isHwQuant else "(float)")
             else:
                 newline = line
 
