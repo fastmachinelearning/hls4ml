@@ -116,18 +116,17 @@ Build workflow
 
 At the call of the ``build`` method, the following option affect the build process:
 
-    * ``reset``: If True, clears files generated during previous build processes (STILL BEING TESTED).
-    * ``csim``: If True, builds the project for Vitis' software emulation validation flow (STILL BEING TESTED)
-    * ``synth``: If True, runs `make hls`, building object files for the kernel (STILL BEING TESTED)
-    * ``cosim``: If True, builds the project for Vitis' hardware emulation validation flow (STILL BEING TESTED)
-    * ``vsynth``: If True, runs `make xclbin`, building the .xclbin binary executable for the kernel (STILL BEING TESTED)
-    * ``debug``: If True, compiles the c++ host code and the HLS in debug mode (STILL BEING TESTED)
+    * ``reset``: If True, clears files generated during previous build processes (Equivalent to ``make clean`` in build folder).
+    * ``target``: Can be one of ``hw``, ``hw_emu``, ``sw_emu``, to define which build target to use (Default is ``hw``).
+    * ``debug``: If True, compiles the c++ host code and the HLS in debug mode.
 
 Once the project is generated, it possible to run manually the build steps by using one of the following ``make`` targets in the generated project directory:
 
     * ``host``: Compiles the host application.
     * ``hls``: Produces only the kernel's object file.
     * ``xclbin``: Produces only the kernel's .xclbin file.
+    * ``clean``: Removes all generated files.
+    * ``run``: Run the host application using the .xclbin file and the input data present in ``tb_data/tb_input_features.dat``.
 
 It is also possible to run the full build process by calling ``make`` without any target. Modifications to the ``accelerator_card.cfg`` file can be done manually before running the build process (e.g., to change the clock period, or add addition ``.xo`` kernel to the build).
 

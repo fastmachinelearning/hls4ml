@@ -57,60 +57,28 @@ class VitisAcceleratorBackend(VitisBackend):
         self,
         model,
         reset=False,
-        synth=True,
-        vsynth=True,
-        csim=False,
-        cosim=False,
+        target="hw",
         debug=False,
         **kwargs,
     ):
+        if target not in ["hw", "hw_emu", "sw_emu"]:
+            raise Exception("Invalid target, must be one of 'hw', 'hw_emu' or 'sw_emu'")
+
         if "linux" in sys.platform:
-            if "XILINX_VITIS" not in os.environ:
-                raise Exception(
-                    "XILINX_VITIS environmental variable missing."
-                    " Please install XRT and Vitis, and run the setup scripts before building"
-                )
-            if "XILINX_XRT" not in os.environ:
-                raise Exception(
-                    "XILINX_XRT environmental variable missing."
-                    " Please install XRT and Vitis, and run the setup scripts before building"
-                )
-            if "XILINX_VIVADO" not in os.environ:
-                raise Exception(
-                    "XILINX_VIVADO environmental variable missing."
-                    " Please install XRT and Vitis, and run the setup scripts before building"
-                )
 
             curr_dir = os.getcwd()
             os.chdir(model.config.get_output_dir())
 
-            if cosim:
-                target = "TARGET=hw_emu "
-            elif csim:
-                target = "TARGET=sw_emu "
+            command = f"TARGET={target} "
 
             if debug:
-                target += "DEBUG"
+                command += "DEBUG=1 "
 
-            if vsynth:
-                if synth:
-                    process = "all "
-                else:
-                    process = "xclbin "
-            elif synth:
-                process = "hls "
-            else:
-                process = "host "
-
-            command = "make " + process + target
+            command += " make all"
 
             # Cleaning
             if reset:
-                if vsynth:
-                    os.system("make cleanxclbin " + target)
-                if synth:
-                    os.system("make cleanhls " + target)
-                os.system("rm -rf host")
+                os.system(f"TARGET={target} make clean")
 
             # Pre-loading libudev
             ldconfig_output = subprocess.check_output(["ldconfig", "-p"]).decode("utf-8")
