@@ -995,7 +995,7 @@ class ModelGraph(Serializable):
         if backend != 'VitisAccelerator':
             raise Exception(f"Function unsupported for {backend} backend")
 
-        return self.config.backend.hadrware_predict(self, x)
+        return self.config.backend.hardware_predict(self, x)
 
     def build(self, **kwargs):
         """Builds the generated project using HLS compiler.
