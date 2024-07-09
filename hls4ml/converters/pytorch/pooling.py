@@ -1,7 +1,14 @@
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 
-pooling_layers = ['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d', 'QuantMaxPool1d', 'QuantMaxPool2d'] #TODO add support for special quantized average pool layers
+pooling_layers = [
+    'MaxPool1d',
+    'MaxPool2d',
+    'AvgPool1d',
+    'AvgPool2d',
+    'QuantMaxPool1d',
+    'QuantMaxPool2d',
+]  # TODO add support for special quantized average pool layers
 
 
 @pytorch_handler(*pooling_layers)
@@ -92,7 +99,7 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
                     layer['stride_width'] = node.args[-1][0]
                 else:
                     layer['stride_height'] = node.args[-1]
-                    layer['stride_width'] = node.args[-1]                
+                    layer['stride_width'] = node.args[-1]
             elif type(node.kwargs['stride']) is tuple:
                 layer['stride_height'] = node.kwargs['stride'][0]
                 layer['stride_width'] = node.kwargs['stride'][1]
