@@ -61,8 +61,7 @@ class VitisAcceleratorBackend(VitisBackend):
         debug=False,
         **kwargs,
     ):
-        if target not in ["hw", "hw_emu", "sw_emu"]:
-            raise Exception("Invalid target, must be one of 'hw', 'hw_emu' or 'sw_emu'")
+        self._validate_target(target)
 
         if "linux" in sys.platform:
 
@@ -113,12 +112,12 @@ class VitisAcceleratorBackend(VitisBackend):
         y = np.loadtxt(output_file, dtype=float).reshape(-1, expected_shape)
         return y
 
-    def hardware_predict(self, model, x):
+    def hardware_predict(self, model, x, target="hw"):
+        self._validate_target(target)
         self.numpy_to_dat(model, x)
-
         currdir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        os.system("make run")
+        os.system(f"TARGET={target} make run")
         os.chdir(currdir)
 
         return self.dat_to_numpy(model)
@@ -151,3 +150,7 @@ class VitisAcceleratorBackend(VitisBackend):
         ip_flow_requirements.insert(ip_flow_requirements.index("vivado:apply_templates"), template_flow)
 
         self._default_flow = register_flow("ip", None, requires=ip_flow_requirements, backend=self.name)
+
+    def _validate_target(self, target):
+        if target not in ["hw", "hw_emu", "sw_emu"]:
+            raise Exception("Invalid target, must be one of 'hw', 'hw_emu' or 'sw_emu'")

@@ -989,13 +989,13 @@ class ModelGraph(Serializable):
         else:
             return output, trace_output
 
-    def hardware_predict(self, x):
+    def hardware_predict(self, x, **kwargs):
         """Currently only supported for VitisAccelerator backend"""
         backend = self.config.config.get('Backend', 'Vivado')
         if backend != 'VitisAccelerator':
             raise Exception(f"Function unsupported for {backend} backend")
 
-        return self.config.backend.hardware_predict(self, x)
+        return self.config.backend.hardware_predict(self, x, **kwargs)
 
     def build(self, **kwargs):
         """Builds the generated project using HLS compiler.
