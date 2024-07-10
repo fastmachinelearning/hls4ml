@@ -80,7 +80,7 @@ The ``predict`` method will send the input data to the PL and return the output 
 VitisAccelerator
 ================
 
-The ``VitsAccelerator`` backend leverages the `Vitis System Design Flow <https://www.xilinx.com/products/design-tools/vitis.html#design-flows>`_ to automate and simplify the creation of an hls4ml project for `AMD Alveo PCIe accelerators <https://www.amd.com/en/products/accelerators/alveo.html>`_.
+The ``VitsAccelerator`` backend leverages the `Vitis System Design Flow <https://www.xilinx.com/products/design-tools/vitis.html#design-flows>`_ to automate and simplify the creation of an hls4ml project targeting `AMD Alveo PCIe accelerators <https://www.amd.com/en/products/accelerators/alveo.html>`_.
 The Vitis accelerator backend has been tested with the following boards:
 
 * `Alveo u50 <https://www.xilinx.com/products/boards-and-kits/alveo/u50.html>`_
@@ -93,18 +93,20 @@ Kernel wrapper
 
 To integrate with the Vitis System Design Flow and run on an accelerator, the generated ``hls4ml`` model must be encapsulated and built as a Vitis kernel (``.xo`` file) and linked into a binary file (``.xclbin``) during the implementation step. On the host side, standard C++ code using either `OpenCL <https://xilinx.github.io/XRT/master/html/opencl_extension.html>`_ or `XRT API <https://xilinx.github.io/XRT/master/html/xrt_native_apis.html>`_ can be used to download the ``.xclbin`` file to the accelerator card and use any kernel it contains.
 
-The ``VitisAccelerator`` backend generates automatically generate a kernel wrapper, an host code example, and a Makefile to build the project.
+The ``VitisAccelerator`` backend automatically generates a kernel wrapper, an host code example, and a Makefile to build the project.
+
+**Note:** The current implementation of the kernel wrapper code is oriented toward throughput benchmarking and not general inference uses (See :ref:`here<hardware_predict-method>`). It can nonetheless be further customized to fit specific applications.
 
 Options
 =======
 
 As PCIe accelerators are not suitable for ultra-low latency applications, it is assumed that they are used for high-throughput applications. To accommodate this, the backend supports the following options to optimize the kernel for throughput:
 
-    * ``num_kernel``: Number of kernel instances to implement in the hardware architecture.
+    * ``num_kernel``: Number of kernel instance to implement in the hardware architecture.
     * ``num_thread``: Number of host threads used to exercise the kernels in the host application.
     * ``batchsize``: Number of samples to be processed in a single kernel execution.
 
-Additionnaly, the backend propose the following options to customize the implementation:
+Additionaly, the backend proposes the following options to customize the implementation:
 
     * ``board``: The target board, must match one entry in ``supported_boards.json``.
     * ``clock_period``: The target clock period in ns.
@@ -158,3 +160,4 @@ The following example is a modified version of `hsl4ml example 7 <https://github
     )
     hls_model.compile()
     hls_model.build()
+    y = hls_model.predict_hardware(y) # Limited to batchsize * num_kernel * num_thread for now
