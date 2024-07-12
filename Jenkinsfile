@@ -1,7 +1,7 @@
 pipeline {
   agent {
     docker {
-      image 'vivado-el7:3'
+      image 'vivado-alma9:1'
       args  '-v /data/Xilinx:/data/Xilinx'
     }
   }
@@ -14,7 +14,7 @@ pipeline {
       steps {
         dir(path: 'test') {
           sh '''#!/bin/bash --login
-              conda activate hls4ml-py38
+              conda activate hls4ml-py310
               pip install tensorflow pyparsing
               pip install -U ../ --user
               ./convert-keras-models.sh -x -f keras-models.txt
