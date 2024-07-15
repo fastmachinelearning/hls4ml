@@ -59,8 +59,8 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
     def transform(self, model):
         # use `large_fifo_depth = 0` to keep the default fifo depth
-        profiling_fifo_depth = getattr(self, 'profiling_fifo_depth', 100_000) # consider changing 100_000 either with a very very large value > of any total bram storage space or via vitis 2023.2 
-
+        profiling_fifo_depth = getattr(self, 'profiling_fifo_depth', 100_000) # consider changing 100_000 either with a very very large value > of any total bram storage space or via vitis 2023.2 c-simulation 
+        return
         # check axi-stream or io-stream, if not one the 2 exit
         if not (model.config.get_config_value('IOType') == 'io_stream'):
             raise RuntimeError('To use this optimization you have to set `IOType` field to `io_stream` in the HLS config')
