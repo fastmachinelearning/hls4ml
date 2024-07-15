@@ -183,6 +183,12 @@ if {$opt(csim)} {
 
 if {$opt(synth)} {
     puts "***** C/RTL SYNTHESIS *****"
+
+    if {$opt(fifo_opt) && [string equal $backend "vitis"]} {
+        puts "Synthesize with large FIFOs"
+        add_vitis_profiling_instructions_tcl
+    }
+
     set time_start [clock clicks -milliseconds]
     csynth_design
     set time_end [clock clicks -milliseconds]
@@ -200,10 +206,7 @@ if {$opt(cosim)} {
     if {$opt(fifo_opt)} {
         puts "\[hls4ml\] - FIFO optimization started"
 
-        if {[string equal "$backend" "vitis"]} {
-             puts "***** AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA *****"
-            add_vitis_profiling_instructions_tcl
-        } else {
+        if {[string equal "$backend" "vivado"] && [string equal $backend "vivadoaccelerator"]} {
             add_vcd_instructions_tcl
         }
     }
