@@ -178,7 +178,7 @@ class VivadoBackend(FPGABackend):
         self,
         part='xcvu13p-flga2577-2-e',
         clock_period=5,
-        clock_uncertainty='12.5%', 
+        clock_uncertainty='12.5%',
         io_type='io_parallel',
         namespace=None,
         write_weights_txt=False,
