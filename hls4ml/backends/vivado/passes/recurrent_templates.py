@@ -11,15 +11,13 @@ recr_mult_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
-    static const unsigned resource_implementation = nnet::{dense_resource_implementation};
-    template<class data_T, class res_T, class CONFIG_T>
-    using dense_unrolled = nnet::{unrolled_function}<data_T, res_T, CONFIG_T>;
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
     static const bool store_weights_in_bram = false;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
-    typedef {index_t.name} index_t;
+    template<class data_T, class res_T, class CONFIG_T>
+    using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -116,11 +114,11 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         act_params['type'] = node.get_attr('activation')
         recr_act_params['type'] = node.get_attr('recurrent_activation')
         if node.get_attr('return_sequences'):
-            act_params['n_in'] = node.get_output_variable().dim_names[1]
-            recr_act_params['n_in'] = node.get_output_variable().dim_names[1] + ' * %i' % (n_recr_mult - 1)
+            act_params['n_in'] = node.get_output_variable().shape[1]
+            recr_act_params['n_in'] = node.get_output_variable().shape[1] * (n_recr_mult - 1)
         else:
-            act_params['n_in'] = node.get_output_variable().dim_names[0]
-            recr_act_params['n_in'] = node.get_output_variable().dim_names[0] + ' * %i' % (n_recr_mult - 1)
+            act_params['n_in'] = node.get_output_variable().shape[0]
+            recr_act_params['n_in'] = node.get_output_variable().shape[0] * (n_recr_mult - 1)
 
         act_config = self.act_template.format(**act_params)
         recr_act_config = self.recr_act_template.format(**recr_act_params)
@@ -128,11 +126,11 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params1 = self._default_config_params(node)
         mult_params2 = self._default_config_params(node)
 
-        mult_params1['n_in'] = node.get_input_variable().dim_names[1]
+        mult_params1['n_in'] = node.get_input_variable().shape[1]
         if node.get_attr('return_sequences'):
-            mult_params1['n_out'] = node.get_output_variable().dim_names[1] + ' * %i' % n_recr_mult
+            mult_params1['n_out'] = node.get_output_variable().shape[1] * n_recr_mult
         else:
-            mult_params1['n_out'] = node.get_output_variable().dim_names[0] + ' * %i' % n_recr_mult
+            mult_params1['n_out'] = node.get_output_variable().shape[0] * n_recr_mult
         mult_params1['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
@@ -141,15 +139,23 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
 
-        # TODO - Extend unrolled Dense Resource to recurrent kernels
-        mult_params1['unrolled_function'] = 'DenseResourceUnrolled'
+        if node.get_attr('strategy').lower() == 'latency':
+            mult_params1['dense_function'] = 'DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if int(mult_params1['reuse_factor']) <= int(mult_params1['n_in']):
+                mult_params1['dense_function'] = 'DenseResource_rf_leq_nin'
+            else:
+                mult_params1['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+            # The 3rd case is never used
+        elif node.get_attr('strategy').lower() == 'unrolled':
+            mult_params1['dense_function'] = f'dense_unrolled_{node.index}_1'
 
         if node.get_attr('return_sequences'):
-            mult_params2['n_in'] = node.get_output_variable().dim_names[1]
-            mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * %i' % n_recr_mult
+            mult_params2['n_in'] = node.get_output_variable().shape[1]
+            mult_params2['n_out'] = node.get_output_variable().shape[1] * n_recr_mult
         else:
-            mult_params2['n_in'] = node.get_output_variable().dim_names[0]
-            mult_params2['n_out'] = node.get_output_variable().dim_names[0] + ' * %i' % n_recr_mult
+            mult_params2['n_in'] = node.get_output_variable().shape[0]
+            mult_params2['n_out'] = node.get_output_variable().shape[0] * n_recr_mult
         mult_params2['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
         )
@@ -158,8 +164,16 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params2['nzeros'] = node.get_weights('recurrent_weight').nzeros
         mult_params2['nonzeros'] = node.get_weights('recurrent_weight').nonzeros
 
-        # TODO - Extend unrolled Dense Resource to recurrent kernels
-        mult_params2['unrolled_function'] = 'DenseResourceUnrolled'
+        if node.get_attr('strategy').lower() == 'latency':
+            mult_params2['dense_function'] = 'DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if int(mult_params2['reuse_factor']) <= int(mult_params2['n_in']):
+                mult_params2['dense_function'] = 'DenseResource_rf_leq_nin'
+            else:
+                mult_params2['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+            # The 3rd case is never used
+        elif node.get_attr('strategy').lower() == 'unrolled':
+            mult_params2['dense_function'] = f'dense_unrolled_{node.index}_2'
 
         mult_config1 = self.mult1_template.format(**mult_params1)
         mult_config2 = self.mult2_template.format(**mult_params2)

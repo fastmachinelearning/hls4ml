@@ -95,13 +95,8 @@ InitData:
     }
 
     #pragma HLS INLINE recursive
-    if (CONFIG_T::strategy == nnet::latency) {
-        dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-            data, res, weights, biases);
-    } else {
-        dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-            data, res, weights, biases);
-    }
+    CONFIG_T::mult_config::template kernel<typename data_T::value_type, typename res_T::value_type,
+                                           typename CONFIG_T::mult_config>::dense(data, res, weights, biases);
 
 CastLoop:
     for (unsigned jj = 0; jj < CONFIG_T::n_filt; jj++) {
@@ -290,18 +285,8 @@ void compute_output_buffer_2d(
 
         // Dense multiply
         // #pragma HLS INLINE recursive
-        if (CONFIG_T::strategy == nnet::latency) {
-            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
-        } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled &&
-                   CONFIG_T::reuse_factor > 1) {
-            CONFIG_T::template dense_unrolled<typename data_T::value_type, typename res_T::value_type,
-                                              typename CONFIG_T::mult_config>::dense_unrolled(kernel_data, res_out, weights,
-                                                                                              biases);
-        } else {
-            dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
-        }
+        CONFIG_T::mult_config::template kernel<typename data_T::value_type, typename res_T::value_type,
+                                               typename CONFIG_T::mult_config>::dense(kernel_data, res_out, weights, biases);
 
     // Pack output
     CastLoop:
@@ -366,18 +351,8 @@ void compute_output_buffer_1d(
 
         // Dense multiply
         // #pragma HLS INLINE recursive
-        if (CONFIG_T::strategy == nnet::latency) {
-            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
-        } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled &&
-                   CONFIG_T::reuse_factor > 1) {
-            CONFIG_T::template dense_unrolled<typename data_T::value_type, typename res_T::value_type,
-                                              typename CONFIG_T::mult_config>::dense_unrolled(kernel_data, res_out, weights,
-                                                                                              biases);
-        } else {
-            dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
-        }
+        CONFIG_T::mult_config::template kernel<typename data_T::value_type, typename res_T::value_type,
+                                               typename CONFIG_T::mult_config>::dense(kernel_data, res_out, weights, biases);
 
     // Pack output
     CastLoop:

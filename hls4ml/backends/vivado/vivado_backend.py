@@ -75,15 +75,6 @@ class VivadoBackend(FPGABackend):
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
-        # Add implementation of Dense Resource for all layers that use Dense for matrix mult
-        # Handle different implementations of Resource strategy; only makes a difference if strategy == Resource
-        # Standard -> nnet_dense_resource.h
-        # Unrolled -> Code generation, ignoring zero DSPs and optimizing zero-filled BRAM blocks
-        for layer in [Dense] + cnn_layers + rnn_layers:
-            attrs = self.attribute_map.get(layer, [])
-            attrs.append(
-                ChoiceAttribute('dense_resource_implementation', choices=['standard', 'unrolled'], default='standard')
-            )
         sep_conv_layers = [SeparableConv1D, SeparableConv2D]
         for layer in sep_conv_layers:
             attrs = self.attribute_map.get(layer, [])
@@ -259,6 +250,11 @@ class VivadoBackend(FPGABackend):
                 index_t = layer.get_weights('weight').type.index_precision
             else:
                 layer.set_attr('strategy', 'resource')
+        elif layer.model.config.get_strategy(layer).lower() == 'unrolled' and layer.get_attr('reuse_factor', 1) > 1:
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_target_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            layer.set_attr('strategy', 'unrolled')
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))
@@ -275,6 +271,11 @@ class VivadoBackend(FPGABackend):
             n_in, n_out = self.get_layer_mult_size(layer)
             self.set_target_reuse_factor(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
+        elif layer.model.config.get_strategy(layer).lower() == 'unrolled' and layer.get_attr('reuse_factor', 1) > 1:
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_target_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            layer.set_attr('strategy', 'unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -334,6 +335,11 @@ class VivadoBackend(FPGABackend):
             self.set_target_reuse_factor(layer)
             n_in, n_out = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
+        elif layer.model.config.get_strategy(layer).lower() == 'unrolled' and layer.get_attr('reuse_factor', 1) > 1:
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_target_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            layer.set_attr('strategy', 'unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -453,6 +459,11 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.set_attr('strategy', 'resource')
+        elif layer.model.config.get_strategy(layer).lower() == 'unrolled' and layer.get_attr('reuse_factor', 1) > 1:
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.set_attr('strategy', 'unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -471,6 +482,11 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.set_attr('strategy', 'resource')
+        elif layer.model.config.get_strategy(layer).lower() == 'unrolled' and layer.get_attr('reuse_factor', 1) > 1:
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.set_attr('strategy', 'unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
