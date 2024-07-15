@@ -1322,7 +1322,7 @@ class QuartusWriter(Writer):
         """
 
         def keras_model_representer(dumper, keras_model):
-            model_path = model.config.get_output_dir() + '/keras_model.h5'
+            model_path = model.config.get_output_dir() + '/keras_model.keras'
             keras_model.save(model_path)
             return dumper.represent_scalar('!keras_model', model_path)
 

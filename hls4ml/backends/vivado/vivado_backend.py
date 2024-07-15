@@ -4,7 +4,8 @@ import sys
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter
+from hls4ml.backends.vivado.vivado_types import VivadoArrayVariableConverter
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
@@ -17,8 +18,6 @@ from hls4ml.model.layers import (
     Embedding,
     GarNet,
     GarNetStack,
-    GlobalPooling1D,
-    GlobalPooling2D,
     Layer,
     Pooling1D,
     Pooling2D,
@@ -30,7 +29,6 @@ from hls4ml.model.layers import (
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_vivado_report
-from hls4ml.utils.fixed_point_utils import ceil_log2
 
 
 class VivadoBackend(FPGABackend):
@@ -109,6 +107,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
             'vivado:fix_softmax_table_size',
+            'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -179,16 +178,19 @@ class VivadoBackend(FPGABackend):
         self,
         part='xcvu13p-flga2577-2-e',
         clock_period=5,
+        clock_uncertainty='12.5%', 
         io_type='io_parallel',
         namespace=None,
         write_weights_txt=False,
         write_tar=True,
+        **_,
     ):
         """Create initial configuration of the Vivado backend.
 
         Args:
             part (str, optional): The FPGA part to be used. Defaults to 'xcvu13p-flga2577-2-e'.
             clock_period (int, optional): The clock period. Defaults to 5.
+            clock_uncertainty (str, optional): The clock uncertainty. Defaults to 12.5%.
             io_type (str, optional): Type of implementation used. One of
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
             namespace (str, optional): If defined, place all generated code within a namespace. Defaults to None.
@@ -202,8 +204,9 @@ class VivadoBackend(FPGABackend):
         config = {}
 
         config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
-        config['ClockPeriod'] = clock_period
-        config['IOType'] = io_type
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['ClockUncertainty'] = clock_uncertainty if clock_uncertainty is not None else '12.5%'
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
         config['WriterConfig'] = {
             'Namespace': namespace,
@@ -318,9 +321,20 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr(
-            'n_partitions', 1
-        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+        out_width = layer.get_output_variable().shape[0]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(1, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
         # Set the output type of the depthwise phase
@@ -373,9 +387,21 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr(
-            'n_partitions', 1
-        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+        out_height = layer.get_output_variable().shape[0]
+        out_width = layer.get_output_variable().shape[1]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
         # Set the output type of the depthwise phase
@@ -396,41 +422,30 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr(
-            'n_partitions', 1
-        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
-        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+        out_height = layer.get_output_variable().shape[0]
+        out_width = layer.get_output_variable().shape[1]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
 
-    def _set_pooling_accum_t(self, layer, pool_size):
-        extra_bits = ceil_log2(pool_size)
-        accum_t = layer.get_attr('accum_t')
-        accum_t.precision.width += extra_bits * 2
-        if isinstance(accum_t.precision, FixedPrecisionType):
-            accum_t.precision.integer += extra_bits
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
-        pool_size = layer.get_attr('pool_width')
-        self._set_pooling_accum_t(layer, pool_size)
-
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Pooling2D)
     def init_pooling2d(self, layer):
-        pool_size = layer.get_attr('pool_height') * layer.get_attr('pool_width')
-        self._set_pooling_accum_t(layer, pool_size)
-
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
-
-    @layer_optimizer(GlobalPooling1D)
-    def init_global_pooling1d(self, layer):
-        pool_size = layer.get_attr('n_in')
-        self._set_pooling_accum_t(layer, pool_size)
-
-    @layer_optimizer(GlobalPooling2D)
-    def init_global_pooling2d(self, layer):
-        pool_size = layer.get_attr('in_height') * layer.get_attr('in_width')
-        self._set_pooling_accum_t(layer, pool_size)
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):

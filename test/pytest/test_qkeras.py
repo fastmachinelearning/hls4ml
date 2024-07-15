@@ -308,6 +308,44 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
 
 
 @pytest.mark.parametrize(
+    'quantizer',
+    [
+        (quantized_relu(4, negative_slope=0.5)),
+        (quantized_relu(8, 4, negative_slope=1.0)),
+        (quantized_relu(10, 2, negative_slope=0.25)),
+    ],
+)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_relu_negative_slope(randX_1000_1, quantizer, backend, io_type):
+    '''
+    Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
+    '''
+    X = randX_1000_1
+    X = -X  # Make it negative so leaky relu does something
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    output_dir = str(
+        test_root_path
+        / 'hls4mlprj_qkeras_leaky_relu_{}_{}_neg_slope_{}_{}_{}'.format(
+            quantizer.bits, quantizer.integer, quantizer.negative_slope, backend, io_type
+        )
+    )
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+    np.testing.assert_allclose(y_hls4ml, y_qkeras, rtol=1e-5, atol=0)
+
+
+@pytest.mark.parametrize(
     'weight_quantizer,activation_quantizer,',
     [
         ('binary', 'binary'),
@@ -359,6 +397,38 @@ def test_qactivation_kwarg(randX_100_10, activation_quantizer, weight_quantizer)
             y_hls4ml = np.where(y_hls4ml == 0, -1, 1)
         wrong = (y_hls4ml != y_qkeras).ravel()
         assert sum(wrong) / len(wrong) <= 0.005
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_quantizer_parsing(randX_100_10, backend, io_type):
+    X = randX_100_10
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QDense(
+            8,
+            input_shape=(10,),
+            kernel_quantizer=None,  # Incorrect usage, but shouldn't break hls4ml
+            kernel_initializer='ones',
+            bias_quantizer=None,
+            bias_initializer='zeros',
+            activation='quantized_relu(8, 0)',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_quant_parse_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
 @pytest.fixture(scope='module')

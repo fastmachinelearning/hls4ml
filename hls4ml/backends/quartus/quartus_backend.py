@@ -73,6 +73,7 @@ class QuartusBackend(FPGABackend):
             'quartus:inplace_stream_flatten',
             'quartus:skip_softmax',
             'quartus:fix_softmax_table_size',
+            'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -124,12 +125,12 @@ class QuartusBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', **_):
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
-        config['ClockPeriod'] = clock_period
-        config['IOType'] = io_type
+        config['ClockPeriod'] = clock_period if clock_period is not None else 5
+        config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
 
         return config
@@ -273,7 +274,7 @@ class QuartusBackend(FPGABackend):
         # - combination - at compile-time, the decision between Winograd and im2col is made
         # - im2col - specifically use im2col
         # - Winograd - use Winograd, if possible
-        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'im2col'))
 
         layer.set_attr(
             'n_partitions', 1
@@ -304,7 +305,7 @@ class QuartusBackend(FPGABackend):
         # - combination - at compile-time, the decision between Winograd and im2col is made
         # - im2col - specifically use im2col
         # - Winograd - use Winograd, if possible
-        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'im2col'))
 
         layer.set_attr(
             'n_partitions', 1
