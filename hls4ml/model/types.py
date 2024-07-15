@@ -8,162 +8,6 @@ higher-dimensional tensors, which are defined as arrays or FIFO streams in the g
 from enum import Enum
 
 import numpy as np
-import tensorflow as tf
-from qkeras.quantizers import get_quantizer
-
-# region Quantizer definition
-
-
-class Quantizer:
-    """
-    Base class for representing quantizers in hls4ml.
-
-    Subclasses of ``Quantizer`` are expected to wrap the quantizers of upstream tools (e.g., QKeras).
-
-    Args:
-        bits (int): Total number of bits used by the quantizer.
-        hls_type (NamedType): The hls4ml type used by the quantizer.
-    """
-
-    def __init__(self, bits, hls_type):
-        self.bits = bits
-        self.hls_type = hls_type
-
-    def __call__(self, data):
-        raise NotImplementedError
-
-
-class BinaryQuantizer(Quantizer):
-    """Quantizer that quantizes to 0 and 1 (``bits=1``) or -1 and 1 (``bits==2``).
-
-    Args:
-        bits (int, optional): Number of bits used by the quantizer. Defaults to 2.
-
-    Raises:
-        Exception: Raised if ``bits>2``
-    """
-
-    def __init__(self, bits=2):
-        if bits == 1:
-            hls_type = XnorPrecisionType()
-        elif bits == 2:
-            hls_type = IntegerPrecisionType(width=2)
-        else:
-            raise Exception(f'BinaryQuantizer suppots 1 or 2 bits, but called with bits={bits}')
-        super().__init__(bits, hls_type)
-
-    def __call__(self, data):
-        zeros = np.zeros_like(data)
-        ones = np.ones_like(data)
-        quant_data = data
-        if self.bits == 1:
-            quant_data = np.where(data > 0, ones, zeros).astype('int')
-        if self.bits == 2:
-            quant_data = np.where(data > 0, ones, -ones)
-        return quant_data
-
-
-class TernaryQuantizer(Quantizer):
-    """Quantizer that quantizes to -1, 0 and 1."""
-
-    def __init__(self):
-        super().__init__(2, IntegerPrecisionType(width=2))
-
-    def __call__(self, data):
-        zeros = np.zeros_like(data)
-        ones = np.ones_like(data)
-        return np.where(data > 0.5, ones, np.where(data <= -0.5, -ones, zeros))
-
-
-class QKerasQuantizer(Quantizer):
-    """Wrapper around QKeras quantizers.
-
-    Args:
-        config (dict): Config of the QKeras quantizer to wrap.
-    """
-
-    def __init__(self, config):
-        self.quantizer_fn = get_quantizer(config)
-        self.alpha = config['config'].get('alpha', None)
-        if config['class_name'] == 'quantized_bits':
-            self.bits = config['config']['bits']
-            self.hls_type = self._get_type(config)
-        # ! includes stochastic_ternary
-        elif 'ternary' in config['class_name']:
-            self.bits = 2
-            self.hls_type = IntegerPrecisionType(width=2, signed=True)
-        # ! includes stochastic_binary
-        elif 'binary' in config['class_name']:
-            self.bits = 1
-            self.hls_type = XnorPrecisionType()
-        else:
-            print("Unsupported quantizer: " + config['class_name'])
-            self.bits = 16
-            self.hls_type = FixedPrecisionType(width=16, integer=6, signed=True)
-
-    def __call__(self, data):
-        tf_data = tf.convert_to_tensor(data)
-        return self.quantizer_fn(tf_data).numpy()
-        # return self.quantizer_fn(data)
-
-    def _get_type(self, quantizer_config):
-        width = quantizer_config['config']['bits']
-        integer = quantizer_config['config'].get('integer', 0)
-        if quantizer_config['class_name'] == 'quantized_po2':
-            return ExponentPrecisionType(width=width, signed=True)
-        if width == integer:
-            if width == 1:
-                return XnorPrecisionType()
-            else:
-                return IntegerPrecisionType(width=width, signed=True)
-        else:
-            return FixedPrecisionType(width=width, integer=integer + 1, signed=True)
-
-
-class QKerasBinaryQuantizer(Quantizer):
-    """Wrapper around QKeras binary quantizer.
-
-    Args:
-        config (dict): Config of the QKeras quantizer to wrap.
-    """
-
-    def __init__(self, config, xnor=False):
-        self.bits = 1 if xnor else 2
-        self.hls_type = XnorPrecisionType() if xnor else IntegerPrecisionType(width=2, signed=True)
-        self.alpha = config['config']['alpha']
-        # Use the QKeras quantizer to handle any stochastic / alpha stuff
-        self.quantizer_fn = get_quantizer(config)
-        # Then we use our BinaryQuantizer to convert to '0,1' format
-        self.binary_quantizer = BinaryQuantizer(1) if xnor else BinaryQuantizer(2)
-
-    def __call__(self, data):
-        x = tf.convert_to_tensor(data)
-        y = self.quantizer_fn(x).numpy()
-        return self.binary_quantizer(y)
-
-
-class QKerasPO2Quantizer(Quantizer):
-    """Wrapper around QKeras power-of-2 quantizers.
-
-    Args:
-        config (dict): Config of the QKeras quantizer to wrap.
-    """
-
-    def __init__(self, config):
-        self.bits = config['config']['bits']
-        self.quantizer_fn = get_quantizer(config)
-        self.hls_type = ExponentPrecisionType(width=self.bits, signed=True)
-
-    def __call__(self, data):
-        # Weights are quantized to nearest power of two
-        x = tf.convert_to_tensor(data)
-        y = self.quantizer_fn(x)
-        if hasattr(y, 'numpy'):
-            y = y.numpy()
-        return y
-
-
-# endregion
 
 # region Precision types
 
@@ -224,6 +68,8 @@ class PrecisionType:
         eq = self.width == other.width
         eq = eq and self.signed == other.signed
 
+        return eq
+
 
 class IntegerPrecisionType(PrecisionType):
     """Arbitrary precision integer  data type.
@@ -237,20 +83,36 @@ class IntegerPrecisionType(PrecisionType):
 
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
-        self.integer = width
-        self.fractional = 0
 
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
     def __eq__(self, other):
-        eq = self.width == other.width
-        eq = eq and self.signed == other.signed
-        # These are probably unnecessary
-        eq = eq and self.integer == other.integer
-        eq = eq and self.fractional == other.fractional
-        return eq
+        if isinstance(other, IntegerPrecisionType):
+            return super().__eq__(other)
+
+        return False
+
+    @property
+    def integer(self):
+        return self.width
+
+    @property
+    def fractional(self):
+        return 0
+
+    @property
+    def rounding_mode(self):
+        return RoundingMode.TRN
+
+    @property
+    def saturation_mode(self):
+        return SaturationMode.WRAP
+
+    @property
+    def saturation_bits(self):
+        return 0
 
 
 class FixedPrecisionType(PrecisionType):
@@ -270,10 +132,13 @@ class FixedPrecisionType(PrecisionType):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         super().__init__(width=width, signed=signed)
         self.integer = integer
-        self.fractional = width - integer
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
+
+    @property
+    def fractional(self):
+        return self.width - self.integer
 
     @property
     def rounding_mode(self):
@@ -281,7 +146,9 @@ class FixedPrecisionType(PrecisionType):
 
     @rounding_mode.setter
     def rounding_mode(self, mode):
-        if isinstance(mode, str):
+        if mode is None:
+            self._rounding_mode = RoundingMode.TRN
+        elif isinstance(mode, str):
             self._rounding_mode = RoundingMode.from_string(mode)
         else:
             self._rounding_mode = mode
@@ -292,26 +159,40 @@ class FixedPrecisionType(PrecisionType):
 
     @saturation_mode.setter
     def saturation_mode(self, mode):
-        if isinstance(mode, str):
+        if mode is None:
+            self._saturation_mode = SaturationMode.WRAP
+        elif isinstance(mode, str):
             self._saturation_mode = SaturationMode.from_string(mode)
         else:
             self._saturation_mode = mode
 
+    @property
+    def saturation_bits(self):
+        return self._saturation_bits
+
+    @saturation_bits.setter
+    def saturation_bits(self, bits):
+        if bits is None:
+            self._saturation_bits = 0
+        else:
+            self._saturation_bits = bits
+
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
-        args = ','.join([str(arg) for arg in args if arg is not None])
+        args = ','.join([str(arg) for arg in args])
         typestring = '{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
 
     def __eq__(self, other):
-        eq = self.width == other.width
-        eq = eq and self.integer == other.integer
-        eq = eq and self.fractional == other.fractional
-        eq = eq and self.signed == other.signed
-        eq = eq and self.rounding_mode == other.rounding_mode
-        eq = eq and self.saturation_mode == other.saturation_mode
-        eq = eq and self.saturation_bits == other.saturation_bits
-        return eq
+        if isinstance(other, FixedPrecisionType):
+            eq = super().__eq__(other)
+            eq = eq and self.integer == other.integer
+            eq = eq and self.rounding_mode == other.rounding_mode
+            eq = eq and self.saturation_mode == other.saturation_mode
+            eq = eq and self.saturation_bits == other.saturation_bits
+            return eq
+
+        return False
 
 
 class XnorPrecisionType(PrecisionType):
@@ -340,6 +221,17 @@ class ExponentPrecisionType(PrecisionType):
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
+
+
+class UnspecifiedPrecisionType(PrecisionType):
+    """
+    Class representing an unspecified precision type.
+
+    Instances of this class are expected to be replaced with concrete precision types during conversion.
+    """
+
+    def __init__(self):
+        super().__init__(width=0, signed=False)
 
 
 def find_minimum_width(data, signed=True):
@@ -556,17 +448,14 @@ class WeightVariable(Variable):
 
     def update_precision(self, new_precision):
         self.type.precision = new_precision
-        if isinstance(new_precision, (IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType)):
+        if isinstance(new_precision, UnspecifiedPrecisionType):
+            self.precision_fmt = ''  # Temporarily set precision to undefined value
+        elif isinstance(new_precision, (IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType)):
             self.precision_fmt = '{:.0f}'
         elif isinstance(new_precision, FixedPrecisionType):
-            if new_precision.fractional > 0:
-                # Use str to represent the float with digits, get the length
-                # to right of decimal point
-                lsb = 2**-new_precision.fractional
-                decimal_spaces = len(str(lsb).split('.')[1])
-                self.precision_fmt = f'{{:.{decimal_spaces}f}}'
-            else:
-                self.precision_fmt = '{:.0f}'
+            decimal_spaces = max(0, new_precision.fractional)
+            self.precision_fmt = f'{{:.{decimal_spaces}f}}'
+
         else:
             raise RuntimeError(f"Unexpected new precision type: {new_precision}")
 

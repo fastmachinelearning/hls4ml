@@ -70,7 +70,7 @@ It looks like this:
    OutputPredictions: keras/KERAS_3layer_predictions.dat
 
    # Backend section (Vivado backend)
-   Part: xcku115-flvb2104-2-i
+   Part: xcvu13p-flga2577-2-e
    ClockPeriod: 5
    IOType: io_parallel # options: io_parallel/io_stream
 
@@ -97,7 +97,7 @@ There are a number of configuration options that you have.  Let's go through the
 The backend-specific section of the configuration depends on the backend. You can get a starting point for the necessary settings using, for example `hls4ml.templates.get_backend('Vivado').create_initial_config()`.
 For Vivado backend the options are:
 
-* **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
+* **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex UltraScale+ VU13P FPGA
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
 * **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines the type of data structure used for inputs, intermediate activations between layers, and outputs. For ``io_parallel``, arrays are used that, in principle, can be fully unrolled and are typically implemented in RAMs. For ``io_stream``, HLS streams are used, which are a more efficient/scalable mechanism to represent data that are produced and consumed in a sequential manner. Typically, HLS streams are implemented with FIFOs instead of RAMs. For more information see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.

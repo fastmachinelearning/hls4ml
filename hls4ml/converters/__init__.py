@@ -74,7 +74,7 @@ def parse_yaml_config(config_file):
         KerasH5: my_keras_model.h5
         OutputDir: my-hls-test
         ProjectName: myproject
-        Part: xcku115-flvb2104-2-i
+        Part: xcvu13p-flga2577-2-e
         ClockPeriod: 5
         IOType: io_stream
         HLSConfig:
@@ -196,7 +196,7 @@ def convert_from_keras_model(
         output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
             used during csim and cosim.
         backend (str, optional): Name of the backend to use, e.g., 'Vivado'
-            or 'Quartus'.
+            or 'Quartus' or 'Catapult'.
         board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
             device of a backend will be used. See documentation of the backend used.
         part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
@@ -204,6 +204,8 @@ def convert_from_keras_model(
             will overwrite any part passed as a parameter.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
+        clock_uncertainty (str, optional): Clock uncertainty
+            Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
@@ -256,7 +258,7 @@ def convert_from_pytorch_model(
             used during csim and cosim. Defaults to None.
         output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
             used during csim and cosim. Defaults to None.
-        backend (str, optional): Name of the backend to use, e.g., 'Vivado' or 'Quartus'. Defaults to 'Vivado'.
+        backend (str, optional): Name of the backend to use, e.g., 'Vivado' or 'Quartus' or 'Catapult'. Defaults to 'Vivado'.
         board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
             device of a backend will be used. See documentation of the backend used.
         part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
@@ -264,6 +266,8 @@ def convert_from_pytorch_model(
             will overwrite any part passed as a parameter.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
+        clock_uncertainty (str, optional): Clock uncertainty
+            Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
@@ -328,7 +332,7 @@ def convert_from_onnx_model(
         output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
             used during csim and cosim.
         backend (str, optional): Name of the backend to use, e.g., 'Vivado'
-            or 'Quartus'.
+            or 'Quartus' or 'Catapult'.
         board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
             device of a backend will be used. See documentation of the backend used.
         part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
@@ -336,6 +340,8 @@ def convert_from_onnx_model(
             will overwrite any part passed as a parameter.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
+        clock_uncertainty (str, optional): Clock uncertainty
+            Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
