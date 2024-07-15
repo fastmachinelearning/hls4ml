@@ -32,6 +32,8 @@ void depthwise_conv_1d_latency_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_c
     // Limit multipliers to control parallelization
     #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::mult_config::multiplier_limit
 
+    assert((CONFIG_T::n_filt == CONFIG_T::n_chan) && "only a depth multiplier of 1 is currently supported");
+
 PartitionLoop:
     for (int i_part = 0; i_part < CONFIG_T::n_partitions; i_part++) {
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
