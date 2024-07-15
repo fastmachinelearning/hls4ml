@@ -43,6 +43,10 @@ proc remove_recursive_log_wave {} {
     file rename -force $temp $filename
 }
 
+proc add_vitis_profiling_instructions_tcl {} {
+    config_dataflow -override_user_fifo_depth 100000
+}
+
 proc add_vcd_instructions_tcl {} {
     set tcldir [file dirname [info script]]
     source [file join $tcldir project.tcl]
@@ -52,7 +56,7 @@ proc add_vcd_instructions_tcl {} {
     set temp     $filename.new.$timestamp
     # set backup   $filename.bak.$timestamp
 
-    set in  [open $filename r]
+    set in  [open $filename r]  
     set out [open $temp     w]
 
     # line-by-line, read the original file
@@ -195,7 +199,13 @@ if {$opt(cosim)} {
 
     if {$opt(fifo_opt)} {
         puts "\[hls4ml\] - FIFO optimization started"
-        add_vcd_instructions_tcl
+
+        if {[string equal "$backend" "vitis"]} {
+             puts "***** AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA *****"
+            add_vitis_profiling_instructions_tcl
+        } else {
+            add_vcd_instructions_tcl
+        }
     }
 
     remove_recursive_log_wave

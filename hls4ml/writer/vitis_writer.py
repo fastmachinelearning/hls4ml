@@ -23,6 +23,12 @@ class VitisWriter(VivadoWriter):
 
         for h in headers:
             copy(srcpath + h, dstpath + h)
+            
+    def write_board_script(model):
+        return
+
+    def modify_build_script(model):
+        return        
 
     def write_hls(self, model):
         """
@@ -30,4 +36,8 @@ class VitisWriter(VivadoWriter):
         """
         super().write_hls(model)
         self.write_nnet_utils_overrides(model)
+        self.write_board_script(model)
+        self.modify_build_script(model)
+        os.remove(model.config.get_output_dir() + '.tar.gz')
         self.write_tar(model)
+        
