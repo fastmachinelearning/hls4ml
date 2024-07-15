@@ -1,4 +1,4 @@
-from hls4ml.model.layers import Conv1D, Conv2D, DepthwiseConv1D, DepthwiseConv2D, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import Conv1D, Conv2D, SeparableConv1D, SeparableConv2D
 from hls4ml.model.optimizer import OptimizerPass
 
 
@@ -7,7 +7,7 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
 
     def match(self, node):
         is_match = (
-            isinstance(node, (Conv1D, DepthwiseConv1D, SeparableConv1D))
+            isinstance(node, (Conv1D, SeparableConv1D))
             and ((node.get_attr('padding') == 'same') or (node.get_attr('padding') == 'causal'))
             and node.get_attr('filt_width') != 1
         )
@@ -55,7 +55,7 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
 
     def match(self, node):
         is_match = (
-            isinstance(node, (Conv2D, DepthwiseConv2D, SeparableConv2D))
+            isinstance(node, (Conv2D, SeparableConv2D))
             and node.get_attr('padding') == 'same'
             and node.get_attr('filt_height') != 1
             and node.get_attr('filt_width') != 1
