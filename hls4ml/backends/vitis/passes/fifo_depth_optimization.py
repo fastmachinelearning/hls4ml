@@ -20,21 +20,21 @@ def set_big_fifos(vars_to_profile, profiling_fifo_depth):
             v.pragma = (v.pragma[0], profiling_fifo_depth)
 
 
-def get_vcd_data(model):
+def get_fifo_data(model):
     model.write()
     model.build(reset=False, csim=True, synth=True, cosim=True, validation=False, export=False, vsynth=False, fifo_opt=True)
 
-    with open(
-        model.config.get_output_dir()
-        + '/'
-        + model.config.get_project_name()
-        + '_prj'
-        + '/solution1/sim/verilog/fifo_opt.vcd'
-    ) as vcd_file:
-        vcd = VcdParser()
-        vcd.parse(vcd_file)
-        data = vcd.scope.toJson()
-    return data
+    # with open(
+    #     model.config.get_output_dir()
+    #     + '/'
+    #     + model.config.get_project_name()
+    #     + '_prj'
+    #     + '/solution1/sim/verilog/fifo_opt.vcd'
+    # ) as vcd_file:
+    #     vcd = VcdParser()
+    #     vcd.parse(vcd_file)
+    #     data = vcd.scope.toJson()
+    # return data
 
 
 def generate_max_depth_file(model, maxs):
@@ -60,23 +60,23 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
     def transform(self, model):
         # use `large_fifo_depth = 0` to keep the default fifo depth
         profiling_fifo_depth = getattr(self, 'profiling_fifo_depth', 100_000) # consider changing 100_000 either with a very very large value > of any total bram storage space or via vitis 2023.2 c-simulation 
-        return
-        # check axi-stream or io-stream, if not one the 2 exit
+
+        # check axi-stream or io-stream, if not one the 2nd, exit
         if not (model.config.get_config_value('IOType') == 'io_stream'):
             raise RuntimeError('To use this optimization you have to set `IOType` field to `io_stream` in the HLS config')
 
         # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs
         # and so they will be profiled
-        if profiling_fifo_depth:
-            vars_to_profile = {
-                k: v
-                for k, v in model.output_vars.items()
-                if v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
-            }
+        # if profiling_fifo_depth:
+        #     vars_to_profile = {
+        #         k: v
+        #         for k, v in model.output_vars.items()
+        #         if v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
+        #     }
 
-            set_big_fifos(vars_to_profile, profiling_fifo_depth)
+        #     set_big_fifos(vars_to_profile, profiling_fifo_depth)
 
-        data = get_vcd_data(model)
+        data = get_fifo_data(model)
 
         if len(data['children']) == 0:
             print(
