@@ -33,6 +33,11 @@ class VitisBackend(VivadoBackend):
         ip_flow_requirements.insert(ip_flow_requirements.index('vivado:apply_templates'), template_flow)
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
+        
+        # Register the fifo depth optimization flow which is different from the one for vivado
+        fifo_depth_opt_passes = ['vitis:fifo_depth_optimization'] + writer_passes # After optimization, a new project will be written
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)
 
     def create_initial_config(
         self,
@@ -76,7 +81,7 @@ class VitisBackend(VivadoBackend):
 
         return config
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False,):
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False):
         if 'linux' in sys.platform:
             found = os.system('command -v vitis_hls > /dev/null')
             if found != 0:
@@ -88,7 +93,7 @@ class VitisBackend(VivadoBackend):
             (
                 'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
                 'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
-            ).format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+            ).format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt)
         )
         os.chdir(curr_dir)
 
