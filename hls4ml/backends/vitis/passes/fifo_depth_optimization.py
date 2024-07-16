@@ -58,7 +58,7 @@ def get_vitis_optimized_fifo_depths(model):
         for line in names_file:
             # if "layer" in line:
             layer_name = line.split(",")[1]
-            csv_file_name = line.split(",")[3]
+            csv_file_name = line.split(",")[3][:-1]
             csv_fifo_depth_files[layer_name] = csv_file_name
     
     optmized_fifo_depths = {}
