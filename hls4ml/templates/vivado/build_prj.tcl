@@ -186,7 +186,7 @@ if {$opt(synth)} {
 
     if {$opt(fifo_opt) && [string equal $backend "vitis"]} {
         puts "Synthesize with large FIFOs"
-        add_vitis_profiling_instructions_tcl
+        # add_vitis_profiling_instructions_tcl
     }
 
     set time_start [clock clicks -milliseconds]
