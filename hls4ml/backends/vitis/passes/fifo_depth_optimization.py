@@ -73,15 +73,18 @@ def generate_max_depth_file(model, maxs):
     with open(model.config.get_output_dir() + "/max_depth.json", "w") as f:
         json.dump(maxs, f, indent=4)
 
-def set_optimized_fifo_depths(model, maxs):
+def set_optimized_fifo_depths(model, optmized_fifo_depths):
     for v in model.output_vars.values():
         if v.pragma:
-            filtered_max = [x["max"] for x in maxs if v.name in x["name"]]
-            if len(filtered_max) == 0:
+            if v.name in optmized_fifo_depths.keys():
+                filtered_depth = optmized_fifo_depths[v.name]
+            else:
                 continue
-            if len(filtered_max) > 1:
-                print("WARNING! Check names of FIFOs")
-            v.pragma = (v.pragma[0], filtered_max[0] + 1)
+            # if len(filtered_max) == 0:
+            #     continue
+            # if len(filtered_max) > 1:
+            #     print("WARNING! Check names of FIFOs")
+            v.pragma = (v.pragma[0], filtered_depth)
 
 class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
     def __init__(self):
@@ -109,9 +112,9 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         #     for i in self.values
         # ]
 
-        generate_max_depth_file(model, optmized_fifo_depth_dict)
+        # generate_max_depth_file(model, optmized_fifo_depths)
 
-        set_optimized_fifo_depths(model, optmized_fifo_depth_dict)
+        set_optimized_fifo_depths(model, optmized_fifo_depths)
 
         print("[hls4ml] - FIFO optimization completed")
         return False
