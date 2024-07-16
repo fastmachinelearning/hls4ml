@@ -56,8 +56,8 @@ class HLSConfig:
         else:
             self.writer_config = {
                 'Namespace': None,
-                'WriteWeightsTxt': True,
-                'WriteTar': False,
+                'WriteWeightsTxt': False,
+                'WriteTar': True,
             }
 
         self._parse_hls_config()
