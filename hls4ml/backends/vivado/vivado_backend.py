@@ -195,8 +195,8 @@ class VivadoBackend(FPGABackend):
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
             namespace (str, optional): If defined, place all generated code within a namespace. Defaults to None.
             write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
-                Defaults to False.
-            write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to True.
+                Defaults to True.
+            write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
 
         Returns:
             dict: initial configuration.
