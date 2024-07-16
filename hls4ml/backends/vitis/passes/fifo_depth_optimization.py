@@ -14,10 +14,10 @@ def populate_values(values, name, data, depth):
     return values
 
 
-def set_big_fifos(vars_to_profile, profiling_fifo_depth):
-    for v in vars_to_profile.values():
-        if v.pragma:
-            v.pragma = (v.pragma[0], profiling_fifo_depth)
+# def set_big_fifos(vars_to_profile, profiling_fifo_depth):
+#     for v in vars_to_profile.values():
+#         if v.pragma:
+#             v.pragma = (v.pragma[0], profiling_fifo_depth)
 
 
 def get_fifo_data(model):
@@ -78,12 +78,12 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
         data = get_fifo_data(model)
 
-        if len(data['children']) == 0:
-            print(
-                "FIFO depth optimization found no FIFOs implemented using BRAMs in the design, no optimization is possible."
-            )
-            print("Consider increasing profiling_fifo_depth.")
-            return False
+        # if len(data['children']) == 0:
+        #     print(
+        #         "FIFO depth optimization found no FIFOs implemented using BRAMs in the design, no optimization is possible."
+        #     )
+        #     print("Consider increasing profiling_fifo_depth.")
+        #     return False
 
         n_elem = len(data['children'][0]['children'][0]['children'])
         for i in range(n_elem):
