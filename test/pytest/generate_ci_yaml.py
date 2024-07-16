@@ -41,7 +41,7 @@ def uses_example_model(test_filename):
         return 'example-models' in content
 
 
-def generate_test_yaml(test_root: str | Path = '.'):
+def generate_test_yaml(test_root='.'):
     test_root = Path(test_root)
     test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem not in BLACKLIST]
     for path in test_paths:
