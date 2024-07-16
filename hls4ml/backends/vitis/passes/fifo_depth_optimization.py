@@ -5,10 +5,18 @@ from hls4ml.model.optimizer.optimizer import (
     ModelOptimizerPass,
 )
 
-def set_big_fifos(vars_to_profile, profiling_fifo_depth):
-    for v in vars_to_profile.values():
-        if v.pragma:
-            v.pragma = (v.pragma[0], profiling_fifo_depth)
+def set_big_fifos(model, profiling_fifo_depth):
+    # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so they will be profiled
+    # alternatively, "config_dataflow -override_user_fifo_depth profiling_fifo_depth" can be used inside build_prj.tcl to override all FIFO depths with the specified value 
+    if profiling_fifo_depth:
+        vars_to_profile = {
+            k: v
+            for k, v in model.output_vars.items()
+            if v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
+        }
+        for v in vars_to_profile.values():
+            if v.pragma:
+                v.pragma = (v.pragma[0], profiling_fifo_depth)
 
 def execute_cosim_to_profile_fifos(model):
     model.write()
@@ -26,7 +34,7 @@ def execute_cosim_to_profile_fifos(model):
 def get_vitis_optimized_fifo_depths(model):
     
     # channel.zip is generated after the cosimulation and contains the chan_status*.csv files
-    # in the chan_status*.csv files the max depth achieved during cosimulation can be found at the last line
+    # in the chan_status*.csv files the max depth achieved during cosimulation can be found at the last (4th) line
     path_to_zip_file = (
         model.config.get_output_dir()
         + "/"
@@ -52,7 +60,15 @@ def get_vitis_optimized_fifo_depths(model):
             layer_name = line.split(",")[1]
             csv_file_name = line.split(",")[3]
             csv_fifo_depth_files[layer_name] = csv_file_name
-
+    
+    optmized_fifo_depths = {}
+    for layer_name, file_name in csv_fifo_depth_files.items():
+        with open(path_to_zip_file+file_name) as chan_status_file:
+            lines = chan_status_file.readlines()
+            optmized_fifo_depths[layer_name] = int(lines[-1])
+            
+    return optmized_fifo_depths
+        
 def generate_max_depth_file(model, maxs):
     with open(model.config.get_output_dir() + "/max_depth.json", "w") as f:
         json.dump(maxs, f, indent=4)
@@ -83,19 +99,10 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
                 "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config"
             )
 
-        # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs
-        # and so they will be profiled
-        if profiling_fifo_depth:
-            vars_to_profile = {
-                k: v
-                for k, v in model.output_vars.items()
-                if v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
-            }
-
-            set_big_fifos(vars_to_profile, profiling_fifo_depth)
+        set_big_fifos(model, profiling_fifo_depth)
 
         execute_cosim_to_profile_fifos(model)
-        optmized_fifo_depth_dict = get_vitis_optimized_fifo_depths(model)
+        optmized_fifo_depths = get_vitis_optimized_fifo_depths(model)
 
         # maxs = [
         #     {"name": i["name"], "max": i["max"], "depth": i["depth"]}
