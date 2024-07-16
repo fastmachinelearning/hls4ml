@@ -42,7 +42,7 @@ def get_vitis_optimized_fifo_depths(model):
         + "_prj"
         + "/solution1/.autopilot/db/channel_depth_info/"
     )
-    os.system(f"unzip -q {path_to_zip_file}channel.zip -d {path_to_zip_file}")
+    os.system(f"unzip -q -o {path_to_zip_file}channel.zip -d {path_to_zip_file}")
     
     names_file_path = (
         model.config.get_output_dir()
@@ -65,7 +65,7 @@ def get_vitis_optimized_fifo_depths(model):
     for layer_name, file_name in csv_fifo_depth_files.items():
         with open(path_to_zip_file+file_name) as chan_status_file:
             lines = chan_status_file.readlines()
-            optmized_fifo_depths[layer_name] = int(lines[-1])
+            optmized_fifo_depths[layer_name[:-2]] = int(lines[-1])
             
     return optmized_fifo_depths
         
