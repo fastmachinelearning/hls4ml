@@ -175,7 +175,8 @@ def test_activation_functionals(activation_function, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_relu_{backend}_{io_type}')
+    fn_name = activation_function.__class__.__name__
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_relu_{backend}_{io_type}_{fn_name}')
     hls_model = convert_from_pytorch_model(
         model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )

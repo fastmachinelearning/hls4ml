@@ -8,7 +8,6 @@ import pytest
 import hls4ml
 
 test_root_path = Path(__file__).parent
-test_root_path = Path('/tmp/trash')
 
 
 @pytest.mark.parametrize('k', [0, 1])
