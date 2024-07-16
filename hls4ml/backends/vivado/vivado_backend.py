@@ -181,8 +181,8 @@ class VivadoBackend(FPGABackend):
         clock_uncertainty='12.5%',
         io_type='io_parallel',
         namespace=None,
-        write_weights_txt=False,
-        write_tar=True,
+        write_weights_txt=True,
+        write_tar=False,
         **_,
     ):
         """Create initial configuration of the Vivado backend.

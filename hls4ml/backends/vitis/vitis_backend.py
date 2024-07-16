@@ -40,8 +40,8 @@ class VitisBackend(VivadoBackend):
         clock_uncertainty='27%',
         io_type='io_parallel',
         namespace=None,
-        write_weights_txt=False,
-        write_tar=True,
+        write_weights_txt=True,
+        write_tar=False,
         **_,
     ):
         """Create initial configuration of the Vitis backend.
