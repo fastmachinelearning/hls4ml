@@ -274,7 +274,7 @@ class QuartusBackend(FPGABackend):
         # - combination - at compile-time, the decision between Winograd and im2col is made
         # - im2col - specifically use im2col
         # - Winograd - use Winograd, if possible
-        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'im2col'))
 
         layer.set_attr(
             'n_partitions', 1
@@ -305,7 +305,7 @@ class QuartusBackend(FPGABackend):
         # - combination - at compile-time, the decision between Winograd and im2col is made
         # - im2col - specifically use im2col
         # - Winograd - use Winograd, if possible
-        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'im2col'))
 
         layer.set_attr(
             'n_partitions', 1
