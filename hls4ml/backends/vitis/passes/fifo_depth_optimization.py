@@ -6,11 +6,11 @@ from hls4ml.model.optimizer.optimizer import (
 )
 
 def initialize_large_fifos(model, profiling_fifo_depth):
-    """Setting all FIFO depths equal to a large value so that they can be profiled
+    """Setting all FIFO depths equal to a large value so that they can be profiled.
 
     Args:
-        model (ModelGraph): The model to which FIFO depth optimization is applied
-        profiling_fifo_depth (int): A large non-negative integer, must be larger than the max expected depth of the FIFOs
+        model (ModelGraph): The model to which FIFO depth optimization is applied.
+        profiling_fifo_depth (int): A large non-negative integer, must be larger than the max expected depth of the FIFOs.
     """
     # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so they will be profiled
     # alternatively, "config_dataflow -override_user_fifo_depth profiling_fifo_depth" can be used inside build_prj.tcl to override all FIFO depths with the specified value
@@ -26,10 +26,10 @@ def initialize_large_fifos(model, profiling_fifo_depth):
     return
 
 def execute_cosim_to_profile_fifos(model):
-    """Execute a cosimulation with a testh bench that calls the top function - Vitis IP at **least twice**, to properly profile the max FIFO depths
+    """Execute a cosimulation with a testh bench that calls the top function - Vitis IP at **least twice**, to properly profile the max FIFO depths.
 
     Args:
-        model (ModelGraph): The model to which FIFO depth optimization is applied
+        model (ModelGraph): The model to which FIFO depth optimization is applied.
     """
     model.write()
     model.build(
@@ -50,10 +50,10 @@ def get_vitis_optimized_fifo_depths(model):
     Attention, only the FIFOs between the layers are profiled!
 
     Args:
-        model (ModelGraph): The model to which FIFO depth optimization is applied
+        model (ModelGraph): The model to which FIFO depth optimization is applied.
 
     Returns:
-        Dict[str, int]: A dictionary that contains the FIFO names as keys and the optimized depths as values
+        Dict[str, int]: A dictionary that contains the FIFO names as keys and the optimized depths as values.
     """
     # channel.zip is generated after the cosimulation and contains the chan_status*.csv files
     # in the chan_status*.csv files the max depth achieved during cosimulation can be found at the last (4th) line
@@ -94,22 +94,22 @@ def get_vitis_optimized_fifo_depths(model):
 
 def generate_max_depth_file(model, optmized_fifo_depths):
     """Generate a json file with the names of the FIFOs and their optimized depths for post-processing.
-    The json file is not used by the rest of the pipeline, it is only produced for the user
+    The json file is not used by the rest of the pipeline, it is only produced for the user.
 
     Args:
-        model (ModelGraph): The model to which FIFO depth optimization is applied
-        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized depths as values
+        model (ModelGraph): The model to which FIFO depth optimization is applied.
+        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized depths as values.
     """    
     with open(model.config.get_output_dir() + "/max_depth.json", "w") as f:
         json.dump(optmized_fifo_depths, f, indent=4)
 
 
 def set_optimized_fifo_depths(model, optmized_fifo_depths):
-    """Set the new optimized FIFO depths 
+    """Set the new optimized FIFO depths.
 
     Args:
-        model (ModelGraph): The model to which FIFO depth optimization is applied
-        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized depths as values
+        model (ModelGraph): The model to which FIFO depth optimization is applied.
+        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized depths as values.
     """
     
     # iterate through the layer output FIFOs
@@ -132,14 +132,14 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         , thus no additional delays between the layers. In some cases, this optimization might lead to bigger FIFOs than initially set by the hls4ml tool in order to prevent deadlocks. 
 
         Args:
-            model (ModelGraph): The model to which FIFO depth optimization is applied
+            model (ModelGraph): The model to which FIFO depth optimization is applied.
 
         Raises:
-            ValueError: If the FIFO depth for profiling provided by the user is not a non-negative integer
-            RuntimeError: If the IO type is not set to "io_stream"
+            ValueError: If the FIFO depth for profiling provided by the user is not a non-negative integer.
+            RuntimeError: If the IO type is not set to "io_stream".
 
         Returns:
-            _type_: _description_
+            bool: The execution state of the Optimzer Pass
         """        
 
         # use `large_fifo_depth = 0` to keep the default fifo depth
