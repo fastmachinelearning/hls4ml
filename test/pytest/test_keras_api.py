@@ -101,12 +101,7 @@ def test_activations(activation_function, backend, io_type):
     X_input = np.random.rand(100, 1)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    if isinstance(activation_function, Activation):
-        output_dir = str(test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
-    else:
-        output_dir = str(
-            test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.__class__.__name__}_{backend}_{io_type}'
-        )
+    output_dir = str(test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )

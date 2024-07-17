@@ -37,10 +37,10 @@ def keras_model(mnist_data):
     keras_model = Sequential()
     keras_model.add(Conv2D(4, (3, 3), input_shape=(28, 28, 1), padding='same'))
     keras_model.add(Activation('relu'))
-    keras_model.add(MaxPooling2D())
+    keras_model.add(MaxPooling2D(name='max_pooling2d'))
     keras_model.add(Conv2D(6, (5, 5), padding='valid'))
     keras_model.add(Activation('relu'))
-    keras_model.add(AveragePooling2D())
+    keras_model.add(AveragePooling2D(name='average_pooling2d'))
     keras_model.add(Flatten())
     keras_model.add(Dense(10, kernel_initializer='lecun_uniform'))
     keras_model.add(Activation('softmax', name='softmax'))
@@ -69,6 +69,8 @@ def test_mnist_cnn(keras_model, mnist_data, backend, io_type, strategy):
 
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     hls_config['Model']['Strategy'] = strategy
+    hls_config['LayerName']['average_pooling2d']['Precision']['accum'] = 'auto'
+    hls_config['LayerName']['max_pooling2d']['Precision']['result'] = 'auto'
     hls_config['LayerName']['softmax']['Implementation'] = 'stable'
     output_dir = str(test_root_path / f'hls4mlprj_cnn_mnist_{backend}_{io_type}_{strategy}')
 
