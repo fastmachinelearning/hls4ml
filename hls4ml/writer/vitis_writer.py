@@ -48,10 +48,7 @@ class VitisWriter(VivadoWriter):
         f.write('variable version\n')
         f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
         f.close()
-        return
-
-    def modify_build_script(self, model):
-        return        
+        return     
 
     def write_hls(self, model):
         """
@@ -60,7 +57,6 @@ class VitisWriter(VivadoWriter):
         super().write_hls(model)
         self.write_nnet_utils_overrides(model)
         self.write_board_script(model)
-        self.modify_build_script(model)
         os.remove(model.config.get_output_dir() + '.tar.gz')
         self.write_tar(model)
         
