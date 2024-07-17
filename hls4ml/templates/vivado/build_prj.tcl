@@ -43,10 +43,6 @@ proc remove_recursive_log_wave {} {
     file rename -force $temp $filename
 }
 
-proc add_vitis_profiling_instructions_tcl {} {
-    config_dataflow -override_user_fifo_depth 100000
-}
-
 proc add_vcd_instructions_tcl {} {
     set tcldir [file dirname [info script]]
     source [file join $tcldir project.tcl]
@@ -183,11 +179,6 @@ if {$opt(csim)} {
 
 if {$opt(synth)} {
     puts "***** C/RTL SYNTHESIS *****"
-
-    if {$opt(fifo_opt) && [string equal $backend "vitis"]} {
-        puts "Synthesize with large FIFOs"
-        # add_vitis_profiling_instructions_tcl
-    }
 
     set time_start [clock clicks -milliseconds]
     csynth_design

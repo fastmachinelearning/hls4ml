@@ -27,18 +27,8 @@ class VitisWriter(VivadoWriter):
             
     def write_board_script(self, model):
         '''
-        Write the tcl scripts and kernel sources to create a Vivado IPI project for the VivadoAccelerator
+        Write the tcl scripts and kernel sources to create a Vitis IPI
         '''
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        # copyfile(
-        #     os.path.join(filedir, self.config.get_tcl_file_path()),
-        #     f'{model.config.get_output_dir()}/design.tcl',
-        # )
-        # # Generic alveo board
-        # if self.vivado_accelerator_config.get_board().startswith('alveo'):
-        #     src_dir = os.path.join(filedir, self.vivado_accelerator_config.get_krnl_rtl_src_dir())
-        #     dst_dir = os.path.abspath(model.config.get_output_dir()) + '/src'
-        #     copy_tree(src_dir, dst_dir)
 
         ###################
         # project.tcl
