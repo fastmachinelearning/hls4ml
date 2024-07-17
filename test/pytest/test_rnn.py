@@ -25,7 +25,7 @@ def test_rnn_parsing(rnn_layer, return_sequences):
     model = Model(model_input, model_output)
     model.compile(optimizer='adam', loss='mse')
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     prj_name = f'hls4mlprj_rnn_{rnn_layer.__class__.__name__.lower()}_seq_{int(return_sequences)}'
     output_dir = str(test_root_path / prj_name)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)

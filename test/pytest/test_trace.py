@@ -39,7 +39,7 @@ def test_trace(backend, activation):
 
     keras_prediction = model.predict(X_input)
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     for layer in config['LayerName'].keys():
         config['LayerName'][layer]['Trace'] = True
 

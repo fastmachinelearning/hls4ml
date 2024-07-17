@@ -68,7 +68,7 @@ def test_mnist_cnn(keras_model, mnist_data, backend, io_type, strategy):
     x_train, y_train, x_test, y_test = mnist_data
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        keras_model, granularity='name', backend=backend, max_precision='fixed<24,16>'
+        keras_model, granularity='name', backend=backend, max_precision='fixed<24,16>', backend=backend
     )
     hls_config['Model']['Strategy'] = strategy
     hls_config['LayerName']['average_pooling2d']['Precision']['accum'] = 'auto'
