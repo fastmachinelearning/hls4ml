@@ -191,6 +191,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         n_ops = node.get_attr('n_chan') * node.get_attr('filt_height', 1) * node.get_attr('filt_width')
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
+    # This function is ignored because we will split sepconv in the future
     def _infer_sepconv_precision(self, node, types_to_infer):
         inferred_types = []
 
@@ -308,6 +309,12 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                     after_scale_width - after_scale_integer, bias_precision.fractional
                 )
 
+                # if max_precision is specified, limit the size to be less than max precisoin
+                max_precision = self._get_maximum_precision(node)
+                if max_precision is not None:
+                    out_precision_width = min(out_precision_width, max_precision.width)
+                    out_precision_integer = min(out_precision_integer, max_precision.integer)
+
                 # Note:  this is guaranteed to not overflow or need rounding, so it's sufficient to use the simpler form.
                 out_precision = FixedPrecisionType(out_precision_width, out_precision_integer, out_precision_signed)
 
@@ -341,6 +348,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                     pool_size = node.get_attr('pool_height', 1) * node.get_attr('pool_width')
                     extra_bits = int(np.ceil(np.log2(pool_size)))
 
+                    # for now ignore max precision in this case
                     accum_type = FixedPrecisionType(
                         width=width + extra_bits * 2, integer=integer + extra_bits, signed=signed
                     )
@@ -379,6 +387,10 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                     + 1
                 )
                 new_width = new_int + max(input_1.fractional, input_2.fractional)
+                max_precision = self._get_maximum_precision(node)
+                if max_precision is not None:
+                    new_width = min(new_width, max_precision.width)
+                    new_int = min(new_int, max_precision.integer)
                 out_precision = FixedPrecisionType(new_width, new_int, new_signed)
             else:
                 out_precision = self._get_default_precision(node)
@@ -387,6 +399,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                 new_signed = input_1.signed or input_2.signed
                 new_int = input_1.integer + input_2.integer
                 new_width = input_1.width + input_2.width
+                # if max_precision is specified, limit the size to be less than max precisoin
+                max_precision = self._get_maximum_precision(node)
+                if max_precision is not None:
+                    new_width = min(new_width, max_precision.width)
+                    new_int = min(new_int, max_precision.integer)
                 out_precision = FixedPrecisionType(new_width, new_int, new_signed)
             else:
                 out_precision = self._get_default_precision(node)
@@ -444,6 +461,12 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             new_width = max(input_1.fractional, input_2.fractional) + max(input_1_integer, input_2_integer)
             new_int = max(input_1_integer, input_2_integer)
 
+            # if max_precision is specified, limit the size to be less than max precisoin
+            max_precision = self._get_maximum_precision(node)
+            if max_precision is not None:
+                new_width = min(new_width, max_precision.width)
+                new_int = min(new_int, max_precision.integer)
+
             out_precision = FixedPrecisionType(new_width, new_int, new_signed)
         else:
             out_precision = self._get_default_precision(node)
@@ -465,6 +488,12 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             new_signed = input_1.signed or input_2.signed
             new_width = input_1.width + input_2.width + math.ceil(np.log2(n_in))
             new_int = input_1.integer + input_2.integer + math.ceil(np.log2(n_in))
+
+            # if max_precision is specified, limit the size to be less than max precisoin
+            max_precision = self._get_maximum_precision(node)
+            if max_precision is not None:
+                new_width = min(new_width, max_precision.width)
+                new_int = min(new_int, max_precision.integer)
 
             out_precision = FixedPrecisionType(new_width, new_int, new_signed)
         else:
