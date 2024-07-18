@@ -1,5 +1,6 @@
 import glob
 import os
+from shutil import copy
 
 from hls4ml.writer.vivado_writer import VivadoWriter
 

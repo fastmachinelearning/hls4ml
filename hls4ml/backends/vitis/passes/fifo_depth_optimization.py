@@ -11,8 +11,9 @@ def initialize_large_fifos(model, profiling_fifo_depth):
         model (ModelGraph): The model to which FIFO depth optimization is applied.
         profiling_fifo_depth (int): A large non-negative integer, must be larger than the max expected depth of the FIFOs.
     """
-    # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so they will be profiled
-    # alternatively, "config_dataflow -override_user_fifo_depth profiling_fifo_depth" can be used inside build_prj.tcl to override all FIFO depths with the specified value
+    # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so
+    # they will be profiled. Alternatively, "config_dataflow -override_user_fifo_depth profiling_fifo_depth" can be
+    # used inside build_prj.tcl to override all FIFO depths with the specified value
     vars_to_profile = {
         k: v
         for k, v in model.output_vars.items()
@@ -25,8 +26,9 @@ def initialize_large_fifos(model, profiling_fifo_depth):
 
 
 def override_test_bench(model):
-    """In order for the FIFO depth profiling to produce correct results, it is necessary for the cosimulation to call the top function - Vitis IP at **least twice**.
-    The test bench produced by the Vivado Writer is overwritten by adding a for-loop over the top function.
+    """In order for the FIFO depth profiling to produce correct results, it is necessary for the cosimulation to
+    call the top function - Vitis IP at **least twice**. The test bench produced by the Vivado Writer is
+    overwritten by adding a for-loop over the top function.
 
     Args:
         model (ModelGraph): The model to which FIFO depth optimization is applied.
@@ -66,8 +68,9 @@ def override_test_bench(model):
 
 
 def execute_cosim_to_profile_fifos(model):
-    """Execute a cosimulation with a testh bench that calls the top function - Vitis IP at **least twice**, to properly profile the max FIFO depths.
-    The function will momentarily replace the initial test bench with a suitable one for the optimization, and a converter call (i.e convert_from_keras_model()) from
+    """Execute a cosimulation with a testh bench that calls the top function - Vitis IP at **least twice**,
+    to properly profile the max FIFO depths.     The function will momentarily replace the initial test
+    bench with a suitable one for the optimization, and a converter call (i.e convert_from_keras_model()) from
     the user-written script that utilized hls4ml will reinitilize the original test bench.
 
     Args:
@@ -112,7 +115,8 @@ def get_vitis_optimized_fifo_depths(model):
     )
     os.system(f"unzip -q -o {path_to_zip_file}channel.zip -d {path_to_zip_file}")
 
-    # the channel_info.csv file contains the mapping of each fifo name (i.e layer4_out_U) to the respective chan_status*.csv file
+    # the channel_info.csv file contains the mapping of each fifo name (i.e layer4_out_U) to the respective
+    # chan_status*.csv file
     names_file_path = (
         model.config.get_output_dir()
         + "/"
@@ -146,7 +150,8 @@ def generate_max_depth_file(model, optmized_fifo_depths):
 
     Args:
         model (ModelGraph): The model to which FIFO depth optimization is applied.
-        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized depths as values.
+        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized
+        depths as values.
     """
     with open(model.config.get_output_dir() + "/max_depth.json", "w") as f:
         json.dump(optmized_fifo_depths, f, indent=4)
@@ -157,7 +162,8 @@ def set_optimized_fifo_depths(model, optmized_fifo_depths):
 
     Args:
         model (ModelGraph): The model to which FIFO depth optimization is applied.
-        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized depths as values.
+        optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized
+        depths as values.
     """
 
     # iterate through the layer output FIFOs
@@ -176,9 +182,11 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         pass
 
     def transform(self, model):
-        """Perform FIFO depth optimization between the FIFOs of all layers to reduce resource utilization as the initial FIFOs set by hls4ml might be larger than required.
-        At the end of the optimization the FIFOs will have the largest depths achieved during cosimulation without causing any deadlocks between the layers (producer-consumer)
-        , thus no additional delays between the layers. In some cases, this optimization might lead to bigger FIFOs than initially set by the hls4ml tool in order to prevent deadlocks.
+        """Perform FIFO depth optimization between the FIFOs of all layers to reduce resource utilization as the
+        initial FIFOs set by hls4ml might be larger than required. At the end of the optimization the FIFOs will
+        have the largest depths achieved during cosimulation without causing any deadlocks between the layers
+        (producer-consumer), thus no additional delays between the layers. In some cases, this optimization
+        might lead to bigger FIFOs than initially set by the hls4ml tool in order to prevent deadlocks.
 
         Args:
             model (ModelGraph): The model to which FIFO depth optimization is applied.
@@ -192,9 +200,9 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         """
 
         # use `large_fifo_depth = 0` to keep the default fifo depth
-        profiling_fifo_depth = getattr(
-            self, "profiling_fifo_depth", 100_000
-        )  # consider changing 100_000 either with a very very large value > of any total bram storage space or via vitis 2023.2 c-simulation
+        # consider changing 100_000 either with a very very large value > of any total bram storage space
+        # or via vitis 2023.2 c-simulation
+        profiling_fifo_depth = getattr(self, "profiling_fifo_depth", 100_000)
 
         if not isinstance(profiling_fifo_depth, int) or profiling_fifo_depth < 0:
             raise ValueError("The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer")
