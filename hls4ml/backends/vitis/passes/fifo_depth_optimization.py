@@ -1,9 +1,7 @@
 import json
 import os
-from hls4ml.model.optimizer.optimizer import (
-    ConfigurableOptimizerPass,
-    ModelOptimizerPass,
-)
+
+from hls4ml.model.optimizer.optimizer import ConfigurableOptimizerPass, ModelOptimizerPass
 
 
 def initialize_large_fifos(model, profiling_fifo_depth):
@@ -34,14 +32,12 @@ def override_test_bench(model):
         model (ModelGraph): The model to which FIFO depth optimization is applied.
     """
     indent = "    "
-    path_to_old_test_bench = (
-        f"{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp"
-    )
+    path_to_old_test_bench = f"{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp"
     path_to_new_test_bench = f"{model.config.get_output_dir()}/{model.config.get_project_name()}_new_test.cpp"
 
     newline = ""
     second_part_of_testbench = False
-    with open(path_to_old_test_bench, "r") as old_test_bench:
+    with open(path_to_old_test_bench) as old_test_bench:
         file_iterator = iter(old_test_bench)
         for line in file_iterator:
 
@@ -54,9 +50,7 @@ def override_test_bench(model):
                 )
                 newline += line
                 second_part_of_testbench = True
-            elif (
-                "// hls-fpga-machine-learning insert tb-output" in line
-            ) and second_part_of_testbench:
+            elif ("// hls-fpga-machine-learning insert tb-output" in line) and second_part_of_testbench:
                 newline += line
                 newline += next(file_iterator)
                 newline += indent + "}\n"
@@ -203,15 +197,11 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         )  # consider changing 100_000 either with a very very large value > of any total bram storage space or via vitis 2023.2 c-simulation
 
         if not isinstance(profiling_fifo_depth, int) or profiling_fifo_depth < 0:
-            raise ValueError(
-                "The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer"
-            )
+            raise ValueError("The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer")
 
         # check axi-stream or io-stream
         if not (model.config.get_config_value("IOType") == "io_stream"):
-            raise RuntimeError(
-                "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config"
-            )
+            raise RuntimeError("To use this optimization you have to set `IOType` field to `io_stream` in the HLS config")
 
         initialize_large_fifos(model, profiling_fifo_depth)
 

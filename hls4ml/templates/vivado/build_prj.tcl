@@ -52,7 +52,7 @@ proc add_vcd_instructions_tcl {} {
     set temp     $filename.new.$timestamp
     # set backup   $filename.bak.$timestamp
 
-    set in  [open $filename r]  
+    set in  [open $filename r]
     set out [open $temp     w]
 
     # line-by-line, read the original file

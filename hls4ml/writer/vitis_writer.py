@@ -1,10 +1,10 @@
 import glob
 import os
-from shutil import copy
 from distutils.dir_util import copy_tree
-from shutil import copyfile
+from shutil import copy, copyfile
 
 from hls4ml.writer.vivado_writer import VivadoWriter
+
 
 class VitisWriter(VivadoWriter):
     def __init__(self):
@@ -24,7 +24,7 @@ class VitisWriter(VivadoWriter):
 
         for h in headers:
             copy(srcpath + h, dstpath + h)
-            
+
     def write_board_script(self, model):
         '''
         Write the tcl scripts and kernel sources to create a Vitis IPI
@@ -48,7 +48,7 @@ class VitisWriter(VivadoWriter):
         f.write('variable version\n')
         f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
         f.close()
-        return     
+        return
 
     def write_hls(self, model):
         """
@@ -59,4 +59,3 @@ class VitisWriter(VivadoWriter):
         self.write_board_script(model)
         os.remove(model.config.get_output_dir() + '.tar.gz')
         self.write_tar(model)
-        
