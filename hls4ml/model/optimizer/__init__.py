@@ -60,6 +60,7 @@ register_flow(
         'fuse_consecutive_batch_normalization',
         'merge_linear_activation',
         'fuse_batch_normalization',
+        'eliminate_linear_activation',
         # The ones above here need to be before infer_precision_types
         'infer_precision_types',
         'channels_last_converter',
