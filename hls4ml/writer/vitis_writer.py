@@ -1,7 +1,5 @@
 import glob
 import os
-from distutils.dir_util import copy_tree
-from shutil import copy, copyfile
 
 from hls4ml.writer.vivado_writer import VivadoWriter
 
