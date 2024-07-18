@@ -43,7 +43,7 @@ def test_trace(backend, activation):
     for layer in config['LayerName'].keys():
         config['LayerName'][layer]['Trace'] = True
 
-    output_dir = str(test_root_path / f'hls4mlprj_trace_{backend}')
+    output_dir = str(test_root_path / f'hls4mlprj_trace_{backend}_{activation}')
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
 
