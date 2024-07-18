@@ -729,7 +729,7 @@ def test_qseparableconv2d(backend, io_type):
     model = Model(inputs=x_in, outputs=x)
 
     config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', backend=backend, default_precision='fixed<23,7>', backend=backend
+        model, granularity='name', backend=backend, default_precision='fixed<23,7>'
     )
 
     # Use 8 bits for input
