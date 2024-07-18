@@ -581,6 +581,7 @@ class SeparableConv2D(Layer):
         Attribute('out_height'),
         Attribute('out_width'),
         Attribute('n_chan'),
+        Attribute('d_mult'),
         Attribute('n_filt'),
         Attribute('filt_height'),
         Attribute('filt_width'),
@@ -610,7 +611,7 @@ class SeparableConv2D(Layer):
         self.add_weights_variable(name='depthwise', var_name='d{index}', quantizer=self.get_attr('depthwise_quantizer'))
         self.add_weights_variable(name='pointwise', var_name='p{index}', quantizer=self.get_attr('pointwise_quantizer'))
 
-        zero_bias_data = np.zeros((self.attributes['n_chan'],))
+        zero_bias_data = np.zeros((self.attributes['n_chan2'],))
         precision = IntegerPrecisionType(width=1, signed=False)
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
@@ -618,12 +619,34 @@ class SeparableConv2D(Layer):
 
 
 class DepthwiseConv2D(Conv2D):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('d_mult'),
+        Attribute('n_filt'),
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
             dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -912,34 +935,14 @@ class BiasAdd(Merge):  # TensorFlow's operator that gets merged into Dense/Conv
 
 
 class Resize(Layer):
-    _expected_attributes = [
-        Attribute('in_height'),
-        Attribute('in_width'),
-        Attribute('out_height'),
-        Attribute('out_width'),
-        Attribute('n_chan'),
-        ChoiceAttribute('algorithm', ['nearest', 'bilinear'], default='nearest'),
-        Attribute('align_corners', value_type=bool, default=False),
-    ]
-
     def initialize(self):
         inp = self.get_input_variable()
-
-        if self.get_attr('data_format') == 'channels_last':
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
-        else:
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
-
+        if len(inp.shape) == 2:  # 1D -> width + chan
+            shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
+            dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        elif len(inp.shape) == 3:  # 2D -> height + width + chan
+            shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 
