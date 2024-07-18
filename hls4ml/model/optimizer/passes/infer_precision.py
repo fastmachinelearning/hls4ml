@@ -71,6 +71,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Embedding']:
             return self._infer_embedding_precision(node, types_to_infer)
 
+        if node_class in ['SimpleRNN', 'LSTM', 'GRU']:
+            return self._infer_rnn_precision(node, types_to_infer)
+
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -519,5 +522,18 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             node.types['result_t'].name = node.name + '_result_t'
             node.types['result_t'].precision = out_precision
             inferred_types.append('result_t')
+
+        return inferred_types
+
+    # TODO:  This is just a placeholder
+    def _infer_rnn_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        # for now just do the weights and leave the rest for the default catch
+        for weightvar in ('weight', 'bias', 'recurrent_weight', 'recurrent_bias'):
+            if f'{weightvar}_t' in types_to_infer:
+                self._infer_default_type(node, f'{weightvar}_t')
+                node.weights[weightvar].update_precision(node.types[f'{weightvar}_t'].precision)
+                inferred_types.append(f'{weightvar}_t')
 
         return inferred_types
