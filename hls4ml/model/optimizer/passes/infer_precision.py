@@ -68,6 +68,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Dot']:
             return self._infer_dot_precision(node, types_to_infer)
 
+        if node_class in ['Embedding']:
+            return self._infer_embedding_precision(node, types_to_infer)
+
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -502,3 +505,19 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         node.types['result_t'].precision = out_precision
 
         return ['result_t']
+
+    def _infer_embedding_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        if 'embeddings_t' in types_to_infer:
+            self._infer_default_type(node, 'embeddings_t')
+            node.weights['embeddings'].update_precision(node.types['embeddings_t'].precision)
+            inferred_types.append('embeddings_t')
+
+        if 'result_t' in types_to_infer:
+            out_precision = self._get_default_precision(node)
+            node.types['result_t'].name = node.name + '_result_t'
+            node.types['result_t'].precision = out_precision
+            inferred_types.append('result_t')
+
+        return inferred_types
