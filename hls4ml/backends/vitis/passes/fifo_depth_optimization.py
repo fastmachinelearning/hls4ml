@@ -25,13 +25,54 @@ def initialize_large_fifos(model, profiling_fifo_depth):
             v.pragma = (v.pragma[0], profiling_fifo_depth)
     return
 
+def override_test_bench(model):
+    """In order for the FIFO depth profiling to produce correct results, it is necessary for the cosimulation to call the top function - Vitis IP at **least twice**.
+    The test bench produced by the Vivado Writer is overwritten by adding a for-loop over the top function.
+
+    Args:
+        model (ModelGraph): The model to which FIFO depth optimization is applied.
+    """    
+    indent = '    '
+    path_to_old_test_bench = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp'
+    path_to_new_test_bench = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_new_test.cpp'
+    
+    newline = ""
+    second_part_of_testbench = False
+    with open(path_to_old_test_bench, 'r') as old_test_bench:
+        file_iterator = iter(old_test_bench)
+        for line in file_iterator:
+
+            if '// hls-fpga-machine-learning insert zero' in line:
+                newline += indent + indent + 'const unsigned BATCH_SIZE = 2;\n'
+                newline += indent + indent + 'for(unsigned batch_iteration = 0; batch_iteration < BATCH_SIZE; ++batch_iteration) {\n'
+                newline += line
+                second_part_of_testbench = True
+            elif ('// hls-fpga-machine-learning insert tb-output' in line) and second_part_of_testbench:
+                newline += line
+                newline += next(file_iterator)
+                newline += indent + '}\n'
+            else:
+                newline += line
+                
+    with open(path_to_new_test_bench, 'w+') as new_test_bench:
+        new_test_bench.write(newline)
+    
+    # replace the old test bench with the new test bench that includes a for-loop
+    os.system(f"mv {path_to_new_test_bench} {path_to_old_test_bench}")
+    return
+
 def execute_cosim_to_profile_fifos(model):
     """Execute a cosimulation with a testh bench that calls the top function - Vitis IP at **least twice**, to properly profile the max FIFO depths.
-
+    The function will momentarily replace the initial test bench with a suitable one for the optimization, and a converter call (i.e convert_from_keras_model()) from 
+    the user-written script that utilized hls4ml will reinitilize the original test bench.
+    
     Args:
         model (ModelGraph): The model to which FIFO depth optimization is applied.
     """
     model.write()
+    
+    override_test_bench(model)
+    
     model.build(
         reset=False,
         csim=True,
