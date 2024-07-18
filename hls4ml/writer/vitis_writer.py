@@ -32,7 +32,7 @@ class VitisWriter(VivadoWriter):
         ###################
         # project.tcl
         ###################
-        # project.tcl
+
         f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
         f.write('variable project_name\n')
         f.write(f'set project_name "{model.config.get_project_name()}"\n')
