@@ -132,7 +132,8 @@ def config_from_keras_model(
             will generate config keys for every layer separately, allowing for highly specific
             configuration tweaks.
         backend(str, optional): Name of the backend to use
-        default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
+        default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'. Note, this must 
+            be an explicit precision: 'auto' is not allowed.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
         max_precision (str or None, optional): Maximum width precision to use. Defaults to None, meaning no maximum.
             Note:  Only integer and fixed precisions are supported
