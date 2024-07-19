@@ -95,6 +95,7 @@ layer_name_map = {
     'avg_pool1d': 'AvgPool1d',
     'avg_pool2d': 'AvgPool2d',
     'flatten': 'Flatten',
+    'view': 'View',
 }
 
 
@@ -134,6 +135,7 @@ def pytorch_to_hls(config):
     from torch.fx import symbolic_trace
 
     traced_model = symbolic_trace(model)
+    print (traced_model.graph)
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Sequential']
 
