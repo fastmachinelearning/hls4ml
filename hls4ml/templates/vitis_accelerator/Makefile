@@ -25,6 +25,11 @@ PWD := $(shell pwd)
 # Target (hw, hw_emu, sw_emu)
 TARGET ?= hw
 
+# Define emulation mode variable
+ifneq($(TARGET), hw)
+  XCL_EMULATION_MODE=$(TARGET)
+endif
+
 # Accelerator card configuration file
 CARD_CFG ?= accelerator_card.cfg
 
@@ -121,7 +126,9 @@ host: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp
 # Execute program #############################################################
 
 run: ./host $(BUILD_DIR)/$(WRAPPER_NAME).xclbin
+  cd firmware
 	./host $(BUILD_DIR)/$(WRAPPER_NAME).xclbin
+  cd ..
 
 # Cleanup #####################################################################
 

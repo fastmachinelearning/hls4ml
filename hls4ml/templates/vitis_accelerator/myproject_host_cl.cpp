@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     fpga.allocateHostMemory(NUM_CHANNEL);
 
     std::cout << "Loading input data from tb_data/tb_input_features.dat" << std::endl;
-    std::ifstream fin("tb_data/tb_input_features.dat");
+    std::ifstream fin("../tb_data/tb_input_features.dat");
     if (!fin.is_open()) {
         std::cerr << "Error: Could not open tb_input_features.dat" << std::endl;
     }
