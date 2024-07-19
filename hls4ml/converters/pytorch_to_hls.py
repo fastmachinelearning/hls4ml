@@ -135,7 +135,6 @@ def pytorch_to_hls(config):
     from torch.fx import symbolic_trace
 
     traced_model = symbolic_trace(model)
-    print (traced_model.graph)
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Sequential']
 
