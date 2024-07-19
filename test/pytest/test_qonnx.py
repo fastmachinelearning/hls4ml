@@ -105,11 +105,11 @@ def test_tfc_2w2a(tfc_2w2a_model, backend):
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vitis'])
 def test_cnv_2w2a(cnv_2w2a_model, backend):
     """
-    This tests a convolution model. Note:  the batch normalizations weights not quantized, so it
-    is difficult to make this match perfectly. It is also a slow test.
+    This tests a convolution model. Note:  the batch normalizations weights not quantized, so it is
+    difficult to make this match perfectly. It is also a slow test, which is why only Vitis is tested.
     """
     model = cnv_2w2a_model
 
