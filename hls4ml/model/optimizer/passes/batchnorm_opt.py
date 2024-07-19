@@ -170,12 +170,12 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
             s1 = node.weights['scale'].data_unquantized
             b1 = node.weights['bias'].data_unquantized
             scale_compatible = (
-                (prev_node.get_attr('scale_quantizer') is None and node.get_attr('scale_quantizer') is None)
+                (prev_node.get_attr('scale_quantizer') is None or node.get_attr('scale_quantizer') is None)
                 or (s0 == np.ones_like(s0)).all()
                 or (s1 == np.ones_like(s1)).all()
             )
             bias_compatible = (
-                (prev_node.get_attr('bias_quantizer') is None and node.get_attr('bias_quantizer') is None)
+                (prev_node.get_attr('bias_quantizer') is None or node.get_attr('bias_quantizer') is None)
                 or (b0 == np.zeros_like(b0)).all()
                 or (b1 == np.zeros_like(b1)).all()
             )
@@ -195,26 +195,24 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         # if len(node_map[node.outputs[0]]) > 1:
         #     return False
 
-        # only merge if the types are integer or fixed
-        if (
-            not isinstance(prev_node.weights['scale'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(prev_node.weights['bias'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(node.weights['scale'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
-            or not isinstance(node.weights['bias'].type.precision, (IntegerPrecisionType, FixedPrecisionType))
-        ):
-            return False
-
         s0 = prev_node.weights['scale'].data_unquantized
         b0 = prev_node.weights['bias'].data_unquantized
         s1 = node.weights['scale'].data_unquantized
         b1 = node.weights['bias'].data_unquantized
 
-        s_quantizer = (
-            node.get_attr('scale_quantizer') if (s0 == np.ones_like(s0)).all() else prev_node.get_attr('scale_quantizer')
-        )
-        b_quantizer = (
-            node.get_attr('bias_quantizer') if (b0 == np.zeros_like(b0)).all() else prev_node.get_attr('bias_quantizer')
-        )
+        if (s0 == np.ones_like(s0)).all():
+            s_quantizer = node.get_attr('scale_quantizer')
+        elif (s1 == np.ones_like(s1)).all():
+            s_quantizer = prev_node.get_attr('scale_quantizer')
+        else:
+            s_quantizer = None
+
+        if (b0 == np.ones_like(b0)).all():
+            b_quantizer = node.get_attr('bias_quantizer')
+        elif (b1 == np.ones_like(b1)).all():
+            b_quantizer = prev_node.get_attr('bias_quantizer')
+        else:
+            b_quantizer = None
 
         node.set_attr('scale_quantizer', s_quantizer)
         node.set_attr('bias_quantizer', b_quantizer)

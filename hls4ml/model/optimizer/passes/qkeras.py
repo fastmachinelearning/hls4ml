@@ -163,8 +163,16 @@ class QKerasFactorizeAlpha(OptimizerPass):
         else:
             n_in = node.get_attr('n_out')
 
+        # the name of the new ApplyAlpha node
+        alpha_name = node.get_attr('name') + '_alpha'
+
+        # make the precision auto
+        alpha_precision = {'Precision': 'auto'}
+        model.config.set_name_config(alpha_name, alpha_precision)
+        model.config.parse_name_config(alpha_name, alpha_precision)
+
         attrs = {
-            'name': node.get_attr('name') + '_alpha',
+            'name': alpha_name,
             'class_name': 'Alpha',
             'inputs': node.outputs,
             'n_in': n_in,

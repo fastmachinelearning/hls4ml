@@ -61,6 +61,8 @@ register_flow(
         'merge_linear_activation',
         'fuse_batch_normalization',
         'eliminate_linear_activation',
+        'qkeras_factorize_alpha',
+        'extract_ternary_threshold',
         # The ones above here need to be before infer_precision_types
         'infer_precision_types',
         'channels_last_converter',
@@ -70,8 +72,6 @@ register_flow(
         'fuse_bias_add',
         'expand_layer_group',
         'output_rounding_saturation_mode',
-        'qkeras_factorize_alpha',
-        'extract_ternary_threshold',
     ],
     requires=['parse_qonnx'],
 )  # TODO Maybe not all QKeras optmizers belong here?
