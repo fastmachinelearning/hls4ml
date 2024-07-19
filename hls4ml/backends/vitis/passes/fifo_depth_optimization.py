@@ -69,9 +69,8 @@ def override_test_bench(model):
 
 def execute_cosim_to_profile_fifos(model):
     """Execute a cosimulation with a testh bench that calls the top function - Vitis IP at **least twice**,
-    to properly profile the max FIFO depths.     The function will momentarily replace the initial test
-    bench with a suitable one for the optimization, and a converter call (i.e convert_from_keras_model()) from
-    the user-written script that utilized hls4ml will reinitilize the original test bench.
+    to properly profile the max FIFO depths. The function will momentarily replace the initial test bench
+    with a suitable one for the optimization, and after the optimizer pass, the original test bench reinitialized.
 
     Args:
         model (ModelGraph): The model to which FIFO depth optimization is applied.
@@ -215,11 +214,11 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
         execute_cosim_to_profile_fifos(model)
 
-        optmized_fifo_depths = get_vitis_optimized_fifo_depths(model)
+        optimized_fifo_depths = get_vitis_optimized_fifo_depths(model)
 
-        generate_max_depth_file(model, optmized_fifo_depths)
+        generate_max_depth_file(model, optimized_fifo_depths)
 
-        set_optimized_fifo_depths(model, optmized_fifo_depths)
+        set_optimized_fifo_depths(model, optimized_fifo_depths)
 
         print("[hls4ml] - FIFO optimization completed")
         return False
