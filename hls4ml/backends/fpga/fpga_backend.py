@@ -685,7 +685,7 @@ class FPGABackend(Backend):
 
         The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
         to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
-        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        the result depends on the parameters of the convolution layer (the input size, the kernel size, stride etc),
         we need to do this for every convolution layer.
 
         Args:
@@ -782,7 +782,7 @@ class FPGABackend(Backend):
 
         The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
         to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
-        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        the result depends on the parameters of the convolution layer (the input size, the kernel size, stride etc),
         we need to do this for every convolution layer.
 
         Args:

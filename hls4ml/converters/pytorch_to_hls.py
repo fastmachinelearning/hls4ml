@@ -127,6 +127,7 @@ layer_name_map = {
     'avg_pool1d': 'AvgPool1d',
     'avg_pool2d': 'AvgPool2d',
     'flatten': 'Flatten',
+    'view': 'View',
 }
 
 

@@ -31,12 +31,11 @@ bias_options = [False]
         ('Catapult', 'io_stream'),
     ],
 )
-def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend):
+def test_depthconv2d(chans, padds, strides, kernels, bias, io_type, backend):
     model = tf.keras.models.Sequential()
     input_shape = (16, 16, 3)
     model.add(
-        tf.keras.layers.SeparableConv2D(
-            filters=8,
+        tf.keras.layers.DepthwiseConv2D(
             kernel_size=kernels,
             strides=strides,
             padding=padds,
@@ -55,7 +54,7 @@ def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend):
     kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(
         test_root_path
-        / 'hls4mlprj_sepconv2d_{}_strides_{}_kernels_{}_{}_padding_{}_{}'.format(
+        / 'hls4mlprj_depthconv2d_{}_strides_{}_kernels_{}_{}_padding_{}_{}'.format(
             chans, stride_cfg, kernel_cfg, padds, backend, io_type
         )
     )
