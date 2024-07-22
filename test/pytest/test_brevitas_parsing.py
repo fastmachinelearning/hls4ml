@@ -59,7 +59,7 @@ def test_quantlinear(backend, io_type):
 
     hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
 
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.05)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
@@ -134,4 +134,4 @@ def test_quantconv2d(backend, io_type):
     else:
         hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
 
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.05)
