@@ -24,6 +24,7 @@ class QuantModelConv2d(Module):
         out = self.relu1(self.conv1(x))
         return out
 
+
 class QuantModelConv1d(Module):
     def __init__(self):
         super().__init__()
@@ -71,6 +72,7 @@ def test_quantlinear(backend, io_type):
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
 
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantconv1d(backend, io_type):
@@ -88,7 +90,7 @@ def test_quantconv1d(backend, io_type):
         config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
     else:
         config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
-    
+
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_conv1d_{backend}_{io_type}')
 
     from hls4ml.converters.pytorch_to_hls import CustomFXTracer
@@ -117,12 +119,7 @@ def test_quantconv1d(backend, io_type):
     )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
 
     hls_model = convert_from_pytorch_model(
-        model,
-        (None, n_in, size_in),
-        hls_config=config,
-        output_dir=output_dir,
-        backend=backend,
-        io_type=io_type
+        model, (None, n_in, size_in), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
     hls_model.compile()
 
@@ -130,7 +127,7 @@ def test_quantconv1d(backend, io_type):
         hls_prediction = np.transpose(np.reshape(hls_model.predict(x), (1, out_width, n_out)), (0, 2, 1))
     else:
         hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
-    
+
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
 
 
