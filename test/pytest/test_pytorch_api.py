@@ -409,7 +409,7 @@ def test_conv2d(padds, backend, io_type):
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
-    if not ((backend == 'Vivado' or backend == 'Vitis')  and io_type == 'io_stream' and padds == 1):
+    if not ((backend == 'Vivado' or backend == 'Vitis') and io_type == 'io_stream' and padds == 1):
         # Vivado inserts and additional layer for 'same' padding in io_stream
         conv_index = 2
         act_index = 3
