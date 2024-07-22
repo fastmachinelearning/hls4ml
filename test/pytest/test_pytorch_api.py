@@ -812,8 +812,8 @@ def test_remove_transpose(backend, io_type, tensor_rank):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])  # Only io_parallel for now
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_view(backend, io_type):
 
     class TestModel(nn.Module):
@@ -836,8 +836,8 @@ def test_view(backend, io_type):
 
     n_in = 2
     n_out = 4
-    size_in = 1024
-    n_batch = 16
+    size_in = 128
+    n_batch = 100
 
     model = TestModel(n_in, n_out, size_in)
     model = model.to(memory_format=torch.channels_last)
@@ -850,7 +850,7 @@ def test_view(backend, io_type):
     X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
     config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
 
-    output_dir = str(test_root_path / f'hls4mlprj_test_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_view_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
         (None, n_in, size_in),
