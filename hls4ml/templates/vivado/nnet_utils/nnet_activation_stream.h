@@ -413,6 +413,34 @@ TanHActLoop:
 }
 
 // *************************************************
+//       UnaryLUT Activation
+// *************************************************
+
+template <class data_T, class res_T, typename CONFIG_T>
+void unary_lut(hls::stream<data_T> &data, hls::stream<res_T> &res, typename CONFIG_T::table_t table[CONFIG_T::table_size]) {
+    #pragma HLS function_instantiate variable=table
+    #pragma HLS ARRAY_PARTITION variable=table complete
+
+UnaryLUTActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
+
+        data_T in_data = data.read();
+        res_T out_data;
+        PRAGMA_DATA_PACK(out_data)
+
+    UnaryLUTPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
+            #pragma HLS UNROLL
+            unsigned index = get_index_unary_lut<CONFIG_T::table_size>(in_data[j].V);
+            out_data[j] = table[index];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
 //       Hard sigmoid Activation
 // *************************************************
 
