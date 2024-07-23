@@ -36,6 +36,14 @@ hls4ml.converters.pytorch.pooling module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.converters.pytorch.recurrent module
+------------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.recurrent
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.converters.pytorch.reshape module
 ----------------------------------------
 
