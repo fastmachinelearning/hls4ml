@@ -846,7 +846,7 @@ def test_view(backend, io_type):
 
     # X_input is channels last
     X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-    config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+    config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_view_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(

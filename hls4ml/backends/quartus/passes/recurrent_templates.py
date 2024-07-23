@@ -93,7 +93,7 @@ class GRUConfigTemplate(LayerConfigTemplate):
         params['config_mult_h'] = f'config{node.index}_h_mult'
         params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), str(node.index) + '_act')
         params['act_recurrent_t'] = '{}_config{}'.format(node.get_attr('recurrent_activation'), str(node.index) + '_rec_act')
-        params['pytorch'] = 'true' if "pytorch" in node.attributes.keys() else 'false'
+        params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
         gru_config = self.gru_template.format(**params)
 
         # Activation is on candidate hidden state, dimensionality (1, n_units)
@@ -306,7 +306,7 @@ class SimpleRNNFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        if "pytorch" in node.attributes.keys():
+        if node.get_attr('pytorch', False):
             self.template = simple_rnn_pytorch_function_template
             params['weights'] = 'w{0}, wr{0}, b{0}, br{0}'.format(str(node.index))
         else:

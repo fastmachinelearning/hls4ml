@@ -98,7 +98,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
         params['strategy'] = node.get_attr('strategy')
         params['static'] = 'true' if node.attributes['static'] else 'false'
-        params['pytorch'] = 'true' if "pytorch" in node.attributes.keys() else 'false'
+        params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
         params['recr_type'] = node.class_name.lower()
         params['RECR_TYPE'] = node.class_name
 
