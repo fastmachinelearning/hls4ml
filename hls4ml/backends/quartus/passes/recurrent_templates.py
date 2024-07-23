@@ -66,6 +66,7 @@ gru_config_template = '''struct config{index} : nnet::gru_config {{
     using activation_recr = nnet::activation::{recurrent_activation}<x_T, y_T, config_T>;
 
     static const unsigned reuse_factor = {reuse};
+    static const unsigned pytorch_order = {pytorch};
     static const bool store_weights_in_bram = false;
 }};\n'''
 
@@ -92,6 +93,7 @@ class GRUConfigTemplate(LayerConfigTemplate):
         params['config_mult_h'] = f'config{node.index}_h_mult'
         params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), str(node.index) + '_act')
         params['act_recurrent_t'] = '{}_config{}'.format(node.get_attr('recurrent_activation'), str(node.index) + '_rec_act')
+        params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
         gru_config = self.gru_template.format(**params)
 
         # Activation is on candidate hidden state, dimensionality (1, n_units)
@@ -256,6 +258,9 @@ simple_rnn_config_template = """struct config{index} : nnet::simpleRNN_config {{
 }};\n"""
 
 simple_rnn_function_template = 'nnet::simple_rnn<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
+simple_rnn_pytorch_function_template = (
+    'nnet::simple_rnn_pytorch<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
+)
 
 
 class SimpleRNNConfigTemplate(LayerConfigTemplate):
@@ -301,5 +306,9 @@ class SimpleRNNFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['weights'] = 'w{0}, wr{0}, b{0}'.format(str(node.index))
+        if node.get_attr('pytorch', False):
+            self.template = simple_rnn_pytorch_function_template
+            params['weights'] = 'w{0}, wr{0}, b{0}, br{0}'.format(str(node.index))
+        else:
+            params['weights'] = 'w{0}, wr{0}, b{0}'.format(str(node.index))
         return self.template.format(**params)

@@ -199,8 +199,21 @@ def pytorch_to_hls(config):
 
             # parse info from class object
             input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
-            input_shapes = [output_shapes[str(i)] for i in node.args]
-
+            if pytorch_class in ["RNN", "GRU", "LSTM"]:
+                # we currently don't support the passing of the initial value of the hidden state to RNN models
+                input_names = [inputs_map.get(str(node.args[0]), str(node.args[0]))]
+                input_shapes = [output_shapes[str(node.args[0])]]
+            # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
+            elif "getitem" in node.args[0].name:
+                for tmp_node in traced_model.graph.nodes:
+                    if tmp_node.name == node.args[0].name:
+                        if "getitem" in tmp_node.args[0].name:
+                            raise Exception('Nested getitem calles not resolved at the moment.')
+                        input_names = [inputs_map.get(str(tmp_node.args[0]), str(tmp_node.args[0]))]
+                        input_shapes = [output_shapes[str(tmp_node.args[0])]]
+                        node.args = [tmp_node.args[0]]
+            else:
+                input_shapes = [output_shapes[str(i)] for i in node.args]
             # for Conv layers
             if 'Conv' in pytorch_class:
                 if not class_object.padding_mode == 'zeros':
@@ -254,6 +267,8 @@ def pytorch_to_hls(config):
                 operation = layer_name_map[operation]
 
             # only a limited number of functions are supported
+            if operation == "getitem":
+                continue
             if operation not in supported_layers:
                 raise Exception(f'Unsupported function {operation}')
             if operation == 'PReLU' or operation == 'batch_norm' or operation == 'conv1d' or operation == 'conv2d':

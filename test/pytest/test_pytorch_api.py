@@ -217,9 +217,9 @@ def test_conv1d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(model, channels_last_conversion="full", transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv1d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
@@ -328,9 +328,9 @@ def test_conv2d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 3, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(model, channels_last_conversion="full", transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv2d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
@@ -551,7 +551,7 @@ def test_pooling(pooling, padds, backend):
     # Verify correct parsing of layer
     hls_pool = list(hls_model.get_layers())[-2]
     if '2d' in pooling.__name__:
-        assert hls_pool.attributes['name'] == poolNode.name
+        assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
         assert hls_pool.attributes['class_name'][-2] == str(2)
         assert hls_pool.attributes['stride_height'] == class_object_pool.stride
         assert hls_pool.attributes['stride_width'] == class_object_pool.stride
@@ -561,14 +561,14 @@ def test_pooling(pooling, padds, backend):
 
     elif '1d' in pooling.__name__:
         if "Max" in pooling.__name__:
-            assert hls_pool.attributes['name'] == poolNode.name
+            assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride
             assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
         else:
-            assert hls_pool.attributes['name'] == poolNode.name
+            assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size[0]
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride[0]
@@ -642,7 +642,7 @@ def test_squeeze(backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
     config = config_from_pytorch_model(model)
-    del config['Model']['InputsChannelLast']  # We don't want anything touched for this test
+    del config['Model']['ChannelsLastConversion']  # We don't want anything touched for this test
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_squeeze_{backend}_{io_type}')
 
     hls_model = convert_from_pytorch_model(
@@ -720,7 +720,7 @@ def test_skipped_layers(backend, io_type):
     input_shape = (3, 8)
     batch_input_shape = (None,) + input_shape
     config = config_from_pytorch_model(
-        model, default_precision='ap_fixed<32,16>', inputs_channel_last=True, transpose_outputs=False
+        model, default_precision='ap_fixed<32,16>', channels_last_conversion="full", transpose_outputs=False
     )
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_skipped_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
@@ -735,10 +735,9 @@ def test_skipped_layers(backend, io_type):
     hls_model.compile()
 
     input = torch.randn(10, 3, 8)
-    hls_input = np.ascontiguousarray(torch.permute(input, (0, 2, 1)).detach().numpy())  # Transpose to channels_last
 
     pytorch_prediction = model(input).detach().numpy().flatten()
-    hls_prediction = hls_model.predict(hls_input).flatten()
+    hls_prediction = hls_model.predict(input.detach().numpy()).flatten()
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
@@ -786,8 +785,7 @@ def test_remove_transpose(backend, io_type, tensor_rank):
     config = config_from_pytorch_model(
         model,
         default_precision='ap_fixed<32,16>',
-        inputs_channel_last=False,  # Crucial for testing if the first Transpose was removed
-        transpose_outputs=False,
+        channels_last_conversion="full",  # Crucial for testing if the first Transpose was removed
     )
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_transpose_nop_{tensor_rank}d_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
@@ -848,7 +846,7 @@ def test_view(backend, io_type):
 
     # X_input is channels last
     X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-    config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+    config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_view_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
