@@ -112,12 +112,15 @@ class VitisAcceleratorBackend(VitisBackend):
         y = np.loadtxt(output_file, dtype=float).reshape(-1, expected_shape)
         return y
 
-    def hardware_predict(self, model, x, target="hw"):
+    def hardware_predict(self, model, x, target="hw", debug=False):
+        if debug:
+            command = "DEBUG=1 "
         self._validate_target(target)
         self.numpy_to_dat(model, x)
         currdir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        os.system(f"TARGET={target} make run")
+        command += "TARGET=" + target + " make run"
+        os.system(command)
         os.chdir(currdir)
 
         return self.dat_to_numpy(model)
