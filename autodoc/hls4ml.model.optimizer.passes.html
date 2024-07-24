@@ -40,7 +40,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev45+gf93aab9f
+                0.9.0.dev46+gba08ca17
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -346,6 +346,9 @@ In this case we can remove the expensive transpose and instead transpose the wei
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.multi_dense.</span></span><span class="sig-name descname"><span class="pre">ReplaceMultidimensionalDenseWithConv</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This matches all multidimensional Dense layers and changes them to a convolution.
+Note:  the convolution may subsequently be changed to a pointwise convolution for
+bakends that implement special pointwise convolutions.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match" title="Permalink to this definition"></a></dt>
