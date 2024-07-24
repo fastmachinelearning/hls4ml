@@ -13,6 +13,8 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize(
     'backend, strategy',
     [
+        ('Vivado', 'Latency'),
+        ('Vivado', 'Resource'),
         ('Vitis', 'Latency'),
         ('Vitis', 'Resource'),
         ('Quartus', 'Resource'),

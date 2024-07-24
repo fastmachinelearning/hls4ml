@@ -18,7 +18,7 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
         dim = len(node.get_input_variable().shape) - 1
         input_shape = node.get_input_variable().shape
 
-        pointwise_attrs = {
+        conv_attrs = {
             'data_format': 'channels_last',
             'padding': 'valid',
             'n_chan': input_shape[-1],
@@ -28,7 +28,7 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
         }
 
         if dim == 1:
-            pointwise_attrs.update(
+            conv_attrs.update(
                 {
                     'in_width': input_shape[0],
                     'out_width': input_shape[0],
@@ -39,7 +39,7 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
                 }
             )
         elif dim == 2:
-            pointwise_attrs.update(
+            conv_attrs.update(
                 {
                     'in_height': input_shape[0],
                     'in_width': input_shape[1],
@@ -59,7 +59,7 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
             raise Exception('Cannot replace Dense over {dim}D tensor with Conv{dim}D.'.format(dim=dim))
 
         class_name = 'Conv' + str(dim) + 'D'
-        pw_node = model.make_node(class_name, node.name, pointwise_attrs, node.inputs.copy())
-        model.replace_node(node, pw_node)
+        conv_node = model.make_node(class_name, node.name, conv_attrs, node.inputs.copy())
+        model.replace_node(node, conv_node)
 
         return True
