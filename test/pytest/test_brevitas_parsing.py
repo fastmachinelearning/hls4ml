@@ -205,3 +205,62 @@ def test_quantconv2d(backend, io_type):
         hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+class QuantMaxPool1d(Module):
+    def __init__(self):
+        super().__init__()
+        self.pool = qnn.QuantMaxPool1d(2)
+
+    def forward(self, x):
+        return self.pool(x)
+
+
+class QuantMaxPool2d(Module):
+    def __init__(self):
+        super().__init__()
+        self.pool = qnn.QuantMaxPool2d(2)
+
+    def forward(self, x):
+        return self.pool(x)
+
+
+@pytest.mark.parametrize('pooling', [QuantMaxPool1d, QuantMaxPool2d])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_pooling(pooling, backend):
+    model = pooling()
+
+    assert '1d' in pooling.__name__ or '2d' in pooling.__name__
+
+    if '2d' in pooling.__name__:
+        n_in = 2
+        size_in_height = 15
+        size_in_width = 18
+    else:
+        n_in = 2
+        size_in_width = 121
+        size_in_height = 0
+
+    input_shape = (1, n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (1, n_in, size_in_width)
+    input_shape_forHLS = (
+        (None, n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (None, n_in, size_in_width)
+    )
+    x = torch.randn(*input_shape)
+
+    pytorch_prediction = model(x).tensor.detach().numpy()
+
+    config = config_from_pytorch_model(model)
+    output_dir = str(test_root_path / f'hls4mlprj_brevitas_{pooling.__name__}_{backend}')
+
+    hls_model = convert_from_pytorch_model(
+        model,
+        input_shape_forHLS,
+        hls_config=config,
+        output_dir=output_dir,
+        backend=backend,
+    )
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)

@@ -168,7 +168,7 @@ def pytorch_to_hls(config):
     tracer = CustomFXTracer()
     traced_model = tracer.trace(model)
     # Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Sequential']
+    skip_layers = ['Dropout', 'QuantDropout', 'Sequential']
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
