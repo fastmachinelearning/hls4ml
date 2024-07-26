@@ -21,10 +21,13 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
 
+    if 'depth_multiplier' in keras_layer['config']:
+        layer['depth_multiplier'] = keras_layer['config']['depth_multiplier']
+
     if 'filters' in keras_layer['config']:
         layer['n_filt'] = keras_layer['config']['filters']
     else:
-        layer['n_filt'] = layer['n_chan']
+        layer['n_filt'] = layer['n_chan'] * layer.get('depth_multiplier')
     layer['filt_width'] = keras_layer['config']['kernel_size'][0]
     layer['stride_width'] = keras_layer['config']['strides'][0]
     layer['padding'] = keras_layer['config']['padding']
@@ -60,10 +63,13 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
 
+    if 'depth_multiplier' in keras_layer['config']:
+        layer['depth_multiplier'] = keras_layer['config']['depth_multiplier']
+
     if 'filters' in keras_layer['config']:
         layer['n_filt'] = keras_layer['config']['filters']
     else:
-        layer['n_filt'] = layer['n_chan']
+        layer['n_filt'] = layer['n_chan'] * layer.get('depth_multiplier')
     layer['filt_height'] = keras_layer['config']['kernel_size'][0]
     layer['filt_width'] = keras_layer['config']['kernel_size'][1]
     layer['stride_height'] = keras_layer['config']['strides'][0]

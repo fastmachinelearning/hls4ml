@@ -61,6 +61,9 @@ template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_conv_1d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
                           typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan],
                           typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+
+    assert((CONFIG_T::n_filt == CONFIG_T::n_chan) && "only a depth multiplier of 1 is currently supported");
+
     #pragma HLS inline recursive
     switch (CONFIG_T::implementation) {
     case conv_implementation::linebuffer:
