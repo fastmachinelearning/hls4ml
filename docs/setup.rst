@@ -57,7 +57,7 @@ To run FPGA synthesis, installation of following tools is required:
 
 * Xilinx Vivado HLS 2018.2 to 2020.1 for synthesis for Xilinx FPGAs
 
-  * Vitis HLS 2022.1 or newer is required for synthesis for Xilinx FPGAs using the experimental ``Vitis`` backend.
+  * Vitis HLS 2022.2 or newer is required for synthesis for Xilinx FPGAs using the ``Vitis`` backend.
 
 * Intel Quartus 20.1 to 21.4 for the synthesis for Intel FPGAs
 

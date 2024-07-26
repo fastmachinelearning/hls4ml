@@ -33,6 +33,7 @@ del optimizers
 register_flow(
     'convert',
     [
+        'eliminate_linear_activation',  # needs to be before infer_precision_types
         'infer_precision_types',
         'channels_last_converter',
         'remove_transpose_before_flatten',

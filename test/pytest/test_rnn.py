@@ -25,7 +25,7 @@ def test_rnn_parsing(rnn_layer, return_sequences):
     model = Model(model_input, model_output)
     model.compile(optimizer='adam', loss='mse')
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     prj_name = f'hls4mlprj_rnn_{rnn_layer.__class__.__name__.lower()}_seq_{int(return_sequences)}'
     output_dir = str(test_root_path / prj_name)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
@@ -90,7 +90,7 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, s
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
 
-    layer_name = rnn_layer.__class__.__name__.lower()
+    layer_name = rnn_layer.__name__
     keras_model = Sequential()
     keras_model.add(
         rnn_layer(
@@ -111,8 +111,9 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, s
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
-    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}_{}'.format(
-        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type, strategy
+    prj_name = (
+        f'hls4mlprj_rnn_accuracy_{layer_name}_static_{int(static)}_ret_seq_{int(return_sequences)}_'
+        f'{backend}_{io_type}_{strategy}'
     )
     output_dir = str(test_root_path / prj_name)
 

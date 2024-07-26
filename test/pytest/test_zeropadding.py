@@ -60,7 +60,9 @@ def test_zeropadding(keras_model_1d, keras_model_2d, data_1d, data_2d, model_typ
         model = keras_model_2d
         data = data_2d
 
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,1>', granularity='name')
+    config = hls4ml.utils.config_from_keras_model(
+        model, default_precision='ap_fixed<32,1>', granularity='name', backend=backend
+    )
     odir = str(test_root_path / f'hls4mlprj_zeropadding_{model_type}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend

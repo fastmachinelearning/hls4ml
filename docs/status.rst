@@ -81,7 +81,7 @@ Other feature notes:
 * ``hls4ml`` is tested on Linux, and supports
    * Vivado HLS versions 2018.2 to 2020.1
    * Intel HLS versions 20.1 to 21.4
-   * Vitis HLS versions 2020.2 to 2022.2 (experimentally)
+   * Vitis HLS versions 2022.2 to 2024.1
 * Windows and macOS are not supported
 * BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package
 

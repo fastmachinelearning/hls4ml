@@ -23,7 +23,9 @@ def test_causalpadding(io_type, backend):
     data = np.expand_dims(data, axis=0)
     data = np.expand_dims(data, axis=-1)
 
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>', granularity='name')
+    config = hls4ml.utils.config_from_keras_model(
+        model, default_precision='ap_fixed<32,16>', granularity='name', backend=backend
+    )
     odir = str(test_root_path / f'hls4mlprj_validpadding_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend

@@ -41,7 +41,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
 
     table_type = f'fixed<{table_bits}, RND, SAT>'
 
-    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = table_type
     cfg['LayerName']['softmax']['exp_table_t'] = table_type
@@ -74,7 +74,7 @@ def test_softmax_skipped(backend, io_type):
     model = tf.keras.models.Sequential([dense, softmax])
     model.compile()
 
-    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['skip'] = True
 
     odir = str(test_root_path / 'hls4mlprj_softmax_skipped_{}_{}').format(backend, io_type)

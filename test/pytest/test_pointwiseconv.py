@@ -154,7 +154,7 @@ def test_pointwise_config(strategy):
 
     model.compile(optimizer='adam', loss='mse')
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     config['Model']['Strategy'] = strategy
     config['LayerName']['conv2d_1x1']['Strategy'] = strategy  # Will fail if the strategy is not lowercase
     output_dir = str(test_root_path / f'hls4mlprj_pointwise2d_config_{strategy}')
