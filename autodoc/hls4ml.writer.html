@@ -39,7 +39,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev46+gba08ca17
+                0.9.0.dev47+gaace3203
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -613,13 +613,14 @@
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.writer.writers.Writer" title="hls4ml.writer.writers.Writer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Writer</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.print_array_to_cpp">
-<span class="sig-name descname"><span class="pre">print_array_to_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_txt_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.print_array_to_cpp" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">print_array_to_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_txt_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.print_array_to_cpp" title="Permalink to this definition"></a></dt>
 <dd><p>Write a weights array to C++ header files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>var</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.WeightVariable" title="hls4ml.model.types.WeightVariable"><em>WeightVariable</em></a>) – Weight to write</p></li>
 <li><p><strong>odir</strong> (<em>str</em>) – Output directory</p></li>
+<li><p><strong>namespace</strong> (<em>str</em><em>, </em><em>optional</em>) – Writes a namespace for the weights to avoid clashes with global variables.</p></li>
 <li><p><strong>write_txt_file</strong> (<em>bool</em><em>, </em><em>optional</em>) – Write txt files in addition to .h files. Defaults to True.</p></li>
 </ul>
 </dd>
