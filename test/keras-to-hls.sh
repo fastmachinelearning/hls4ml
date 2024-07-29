@@ -146,9 +146,9 @@ do
    fi
    # Write tarball
    echo "WriterConfig:" >> ${file}
-   echo "  Namespace: None" >> ${file}
-   echo "  WriteWeightsTxt: True" >> ${file}
-   echo "  WriteTar: True" >> ${file}
+   echo "  Namespace: null" >> ${file}
+   echo "  WriteWeightsTxt: true" >> ${file}
+   echo "  WriteTar: true" >> ${file}
 
    ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
