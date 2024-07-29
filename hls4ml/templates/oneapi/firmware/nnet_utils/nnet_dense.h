@@ -37,9 +37,8 @@ struct dense_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_gt(const data_T &data, res_T &res,
-                 const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
-                 const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+void dense_rf_gt(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
+                 const typename CONFIG_T::bias_t &biases) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
            "The current Reuse Factor is not allowed");
     assert((CONFIG_T::reuse_factor > CONFIG_T::n_in) && "This function is correct only for RF > N_IN");
@@ -103,9 +102,8 @@ Store:
     }
 }
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_lt(const data_T &data, res_T &res,
-                 const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
-                 const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+void dense_rf_lt(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
+                 const typename CONFIG_T::bias_t &biases) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
            "The current Reuse Factor is not allowed");
     assert((CONFIG_T::multiplier_limit == CONFIG_T::block_factor) && "This function is correct only for RF <= N_IN");
@@ -152,10 +150,8 @@ Result:
     }
 }
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_resource(
-    const data_T &data, res_T &res,
-    const typename CONFIG_T::weight_t weights[CONFIG_T::reuse_factor_rounded * CONFIG_T::block_factor_rounded],
-    const typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+void dense_resource(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
+                    const typename CONFIG_T::bias_t &biases) {
     if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
         dense_rf_lt<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {

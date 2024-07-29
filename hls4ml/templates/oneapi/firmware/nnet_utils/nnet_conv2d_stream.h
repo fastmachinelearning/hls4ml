@@ -114,9 +114,8 @@ void compute_output_buffer_2d(
     const data_T &in_elem,
     nnet::shift_reg<typename data_T::value_type, CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right>
         line_buffer[MAX(CONFIG_T::filt_height - 1, 1)][CONFIG_T::n_chan],
-    data_window_T &kernel_window,
-    const typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt], int &pX, int &pY, int &sX, int &sY) {
+    data_window_T &kernel_window, const typename CONFIG_T::weight_t &weights, const typename CONFIG_T::bias_t &biases,
+    int &pX, int &pY, int &sX, int &sY) {
 
     using res_T = typename ExtractPipeType<res_pipe>::value_type;
 
@@ -168,9 +167,7 @@ void compute_output_buffer_2d(
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void conv_2d_cl_stream(const typename CONFIG_T::weight_t
-                           weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-                       const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+void conv_2d_cl_stream(const typename CONFIG_T::weight_t &weights, const typename CONFIG_T::bias_t &biases) {
 
     using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
     using data_element_T = typename data_arr_T::value_type;

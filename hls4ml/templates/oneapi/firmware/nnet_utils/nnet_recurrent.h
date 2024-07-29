@@ -98,10 +98,9 @@ struct gru_config {
 };
 
 template <class data_T, class h_T, typename CONFIG_T>
-void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t weights[3 * CONFIG_T::n_units * CONFIG_T::n_in],
-              const typename CONFIG_T::weight_t recurrent_weights[3 * CONFIG_T::n_units * CONFIG_T::n_units],
-              const typename CONFIG_T::bias_t bias[3 * CONFIG_T::n_units],
-              const typename CONFIG_T::bias_t recurrent_bias[3 * CONFIG_T::n_units]) {
+void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t &weights,
+              const typename CONFIG_T::weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
+              const typename CONFIG_T::bias_t &recurrent_bias) {
     static constexpr int recurrent_unroll_factor = CONFIG_T::n_units / CONFIG_T::reuse_factor;
     // A matrix containing the values of matrix product between input (x) and weights (weights), for update, reset and
     // candidate state gates, for each of the units
@@ -162,10 +161,9 @@ void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t weights
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void gru(const data_T &data, res_T &res, const typename CONFIG_T::weight_t weights[3 * CONFIG_T::n_units * CONFIG_T::n_in],
-         const typename CONFIG_T::weight_t recurrent_weights[3 * CONFIG_T::n_units * CONFIG_T::n_units],
-         const typename CONFIG_T::bias_t bias[3 * CONFIG_T::n_units],
-         const typename CONFIG_T::bias_t recurrent_bias[3 * CONFIG_T::n_units]) {
+void gru(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
+         const typename CONFIG_T::weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
+         const typename CONFIG_T::bias_t &recurrent_bias) {
 
     using h_T = array<typename res_T::value_type, CONFIG_T::n_units>;
     [[intel::fpga_register]] data_T x;
