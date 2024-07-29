@@ -101,6 +101,8 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
                     for channel in range(0, weights.data.shape[1]):
                         node.weights['weight'].data[filter][channel] = np.matmul(G, weights[filter][channel])
                         node.weights['weight'].data_length = node.weights['weight'].data.size
+                        # need to always be consistent
+                        node.weights['weight'].type.n_elem = node.weights['weight'].data_length
 
                 # Winograd's minimal filtering algorithm transforms the weight matrix
                 # This transformation consists of addition and division (by 2&4) of the weight matrix
@@ -146,6 +148,8 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
                     for channel in range(0, weights.data.shape[1]):
                         node.weights['weight'].data[filter][channel] = np.matmul(np.matmul(G, weights[filter][channel]), GT)
                         node.weights['weight'].data_length = node.weights['weight'].data.size
+                        # need to always be consistent
+                        node.weights['weight'].type.n_elem = node.weights['weight'].data_length
 
                 # Winograd's minimal filtering algorithm transforms the weight matrix
                 # This transformation consists of addition and division (by 2&4) of the weight matrix
