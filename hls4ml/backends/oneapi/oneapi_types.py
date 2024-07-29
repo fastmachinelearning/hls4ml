@@ -5,6 +5,7 @@ This package includes oneAPI-specific customizations to the variable types
 import numpy as np
 
 from hls4ml.backends.fpga.fpga_types import PackedType, VariableDefinition
+from hls4ml.utils.fixed_point_utils import next_pow2
 from hls4ml.utils.string_utils import convert_to_pascal_case
 
 # region ArrayVarable
@@ -127,5 +128,51 @@ class OneAPIInplaceStreamVariableConverter(AggregratedArrayVariableConverter):
             type_converter=type_converter, prefix='OneAPI', definition_cls=OneAPIInplaceStreamVariableDefinition
         )
 
+
+# region WeightsVariable
+
+
+class OneAPIStaticWeightVariableDefinition(VariableDefinition):
+    def definition_cpp(self, reuse_factor):
+        """Write the appropriate weight definiiton"""
+        # first determine whether to store in register or bram (heuristic)
+        if reuse_factor == 1 or self.data_length < 2048 or self.type.precision.width < 3:
+            attribute = '[[intel::fpga_register]]'
+        else:
+            # revisit this heuristic
+            nbanks = int(2 ** np.ceil(np.log2(self.data_length)) / 2)
+            var_width = int(np.ceil(self.type.precision.width / 8))
+            bwidth = next_pow2(var_width)
+            attribute = (
+                f'[[intel::bankwidth({bwidth}), intel::numbanks({nbanks}), '
+                'intel::max_replicates(1), intel::fpga_memory("BLOCK_RAM")]]'
+            )
+        if self.storage == 'register':
+            return f'{attribute} constexpr {self.type.name} {self.name}'
+        else:
+            return f'{attribute} {self.type.name} {self.name}'
+
+
+class OneAPIStaticWeightVariableConverter:
+    def __init__(self, type_converter):
+        self.type_converter = type_converter
+
+    def convert(self, weight_var):
+        if isinstance(weight_var, OneAPIStaticWeightVariableDefinition):  # Already converted
+            return weight_var
+
+        weight_var.weight_class = weight_var.__class__.__name__
+        weight_var.storage = 'register'
+        weight_var.type = self.type_converter.convert(
+            PackedType(weight_var.type.name, weight_var.type.precision, weight_var.data_length, 1)
+        )
+
+        weight_var.__class__ = type(
+            'OneAPIStaticWeightVariable', (type(weight_var), OneAPIStaticWeightVariableDefinition), {}
+        )
+        return weight_var
+
+
+# endregion
 
 # endregion

@@ -8,7 +8,6 @@ import numpy as np
 import yaml
 
 from hls4ml.backends import get_backend
-from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, Dense
 from hls4ml.utils.fixed_point_utils import FixedPointEmulator, ceil_log2, uint_to_binary
 from hls4ml.utils.string_utils import convert_to_pascal_case
 from hls4ml.writer.writers import Writer
@@ -17,8 +16,6 @@ config_filename = 'hls4ml_config.yml'
 
 
 class OneAPIWriter(Writer):
-    def next_pow2(self, x):
-        return 1 << (x - 1).bit_length()
 
     def __make_dat_file(self, original_path, project_path):
         """
@@ -75,37 +72,8 @@ class OneAPIWriter(Writer):
             h_file.write("\n")
 
             rf = int(layer.get_attr('reuse_factor', 1))
-            weight_header = ''
 
-            weight_size = 0
-            if isinstance(layer, (Conv2D, Conv2DBatchnorm)):
-                weight_size = (
-                    layer.get_attr('impl_filt_height')
-                    * layer.get_attr('impl_filt_width')
-                    * layer.get_attr('n_filt')
-                    * layer.get_attr('n_chan')
-                )
-            elif isinstance(layer, (Conv1D)):
-                weight_size = layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')
-            elif isinstance(layer, (Dense)):
-                weight_size = layer.get_attr('n_in') * layer.get_attr('n_out')
-
-            if rf == 1 or var.name[0] == 'b' or weight_size <= 2048 or (var.name[0] == 'w' and var.type.precision.width < 3):
-                pass  # might want to modify this
-            else:
-                block_factor = (layer.get_attr('n_in') * layer.get_attr('n_out')) / rf
-                nbanks = int(2 ** np.ceil(np.log2(block_factor)) / 2)
-                var_width = int(np.ceil(var.type.precision.width / 8))
-                bwidth = self.next_pow2(var_width)
-                weight_header += (
-                    f'[[intel::bankwidth({bwidth}), intel::numbanks({nbanks}), '
-                    'intel::max_replicates(1), intel::fpga_memory("BLOCK_RAM")]]'
-                )
-            if var.storage.lower() == 'bram':
-                weight_header += 'static '
-            else:
-                weight_header += 'static const '
-            h_file.write(weight_header + var.definition_cpp() + " = {")
+            h_file.write(var.definition_cpp(rf) + " = {")
 
             # fill c++ array.
             # not including internal brackets for multidimensional case

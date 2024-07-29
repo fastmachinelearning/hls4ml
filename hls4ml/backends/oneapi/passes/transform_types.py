@@ -1,9 +1,10 @@
-from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter, StaticWeightVariableConverter
+from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter
 from hls4ml.backends.oneapi.oneapi_types import (
     OneAPIArrayVariableConverter,
     OneAPIInplaceArrayVariableConverter,
     OneAPIInplaceStreamVariableConverter,
     OneAPIInterfaceVariableConverter,
+    OneAPIStaticWeightVariableConverter,
     OneAPIStreamVariableConverter,
 )
 from hls4ml.model.optimizer import GlobalOptimizerPass
@@ -20,7 +21,7 @@ class TransformTypes(GlobalOptimizerPass):
         self.interface_var_converter = OneAPIInterfaceVariableConverter(type_converter=self.type_converter)
         self.stream_var_converter = OneAPIStreamVariableConverter(type_converter=self.type_converter)
         self.inplace_stream_var_converter = OneAPIInplaceStreamVariableConverter(type_converter=self.type_converter)
-        self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
+        self.weight_var_converter = OneAPIStaticWeightVariableConverter(type_converter=self.type_converter)
 
     def transform(self, model, node):
         io_type = node.model.config.get_config_value('IOType')
