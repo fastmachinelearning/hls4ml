@@ -72,8 +72,9 @@ Product1:
                 continue;
             int data_index = d_index[ir][im];
             // Modified this
-            tmp_acc[im] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t>::product(
-                data[data_index], weights[w_index]);
+            tmp_acc[im] =
+                CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t::value_type>::product(
+                    data[data_index], weights[w_index]);
         }
         [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::multiplier_limit];
     ResetMult:
@@ -124,8 +125,9 @@ ReuseLoop:
             if (ir + CONFIG_T::reuse_factor * im >= CONFIG_T::n_in * CONFIG_T::n_out)
                 continue;
             // Modified this
-            mult[im] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t>::product(
-                data[in_index], weights[w_index]);
+            mult[im] =
+                CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t::value_type>::product(
+                    data[in_index], weights[w_index]);
             in_index += CONFIG_T::reuse_factor;
             if (in_index >= CONFIG_T::n_in)
                 in_index = ir;

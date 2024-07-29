@@ -164,7 +164,7 @@ class OneAPIStaticWeightVariableConverter:
         weight_var.weight_class = weight_var.__class__.__name__
         weight_var.storage = 'register'
         weight_var.type = self.type_converter.convert(
-            PackedType(weight_var.type.name, weight_var.type.precision, weight_var.data_length, 1)
+            PackedType(weight_var.name + '_t', weight_var.type.precision, weight_var.data_length, 1)
         )
 
         weight_var.__class__ = type(
