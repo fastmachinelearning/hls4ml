@@ -28,7 +28,7 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
         }
 
         if (pf := node.get_attr('parallelization_factor', None)) is not None:
-            pointwise_attrs['parallelization_factor'] = pf
+            conv_attrs['parallelization_factor'] = pf
 
         if dim == 1:
             conv_attrs.update(
