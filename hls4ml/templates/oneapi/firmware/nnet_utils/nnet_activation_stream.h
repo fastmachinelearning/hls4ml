@@ -174,8 +174,7 @@ SeluActLoop:
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void prelu_stream(const typename ExtractPipeType<data_pipe>::value_type::value_type alpha[CONFIG_T::n_in]) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void prelu_stream(typename CONFIG_T::alpha_t alpha) {
     constexpr unsigned multiplier_limit =
         DIV_ROUNDUP(std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{} / multiplier_limit;

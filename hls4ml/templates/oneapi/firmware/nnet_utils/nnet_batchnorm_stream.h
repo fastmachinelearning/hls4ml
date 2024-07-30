@@ -12,7 +12,7 @@ namespace nnet {
 //       Streaming Batch Normalization
 // ****************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void normalize_stream(const typename CONFIG_T::scale_t &scale, const typename CONFIG_T::bias_t &bias) {
+void normalize_stream(typename CONFIG_T::scale_t scale, typename CONFIG_T::bias_t bias) {
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = CONFIG_T::n_in / multiplier_limit;

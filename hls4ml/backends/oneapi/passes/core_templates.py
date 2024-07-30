@@ -175,6 +175,15 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     typedef {table_t.name} table_t;
 }};\n"""
 
+prelu_activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned table_size = {table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    typedef {table_t.name} table_t;
+    typedef {alpha_t.name} alpha_t;
+}};\n"""
+
 hard_activ_config_template = """struct {type}_config{index} {{
     static const unsigned n_in = {n_in};
     static const {slope_t.name} slope;
@@ -207,8 +216,20 @@ activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activatio
 
 class ActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((Activation, ParametrizedActivation, PReLU))
+        super().__init__((Activation, ParametrizedActivation))
         self.template = activ_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['type'] = node.get_attr('activation')
+
+        return self.template.format(**params)
+
+
+class PreluActivationConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(PReLU)
+        self.template = prelu_activ_config_template
 
     def format(self, node):
         params = self._default_config_params(node)
