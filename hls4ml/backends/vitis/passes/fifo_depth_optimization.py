@@ -19,10 +19,13 @@ def initialize_large_fifos(model, profiling_fifo_depth):
         for k, v in model.output_vars.items()
         if v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
     }
+
+    initial_fifo_depths = {}
     for v in vars_to_profile.values():
         if v.pragma:
+            initial_fifo_depths[v.name] = v.pragma[1]
             v.pragma = (v.pragma[0], profiling_fifo_depth)
-    return
+    return initial_fifo_depths
 
 
 def override_test_bench(model):
@@ -142,20 +145,23 @@ def get_vitis_optimized_fifo_depths(model):
     return optmized_fifo_depths
 
 
-def generate_max_depth_file(model, optmized_fifo_depths):
-    """Generate a json file with the names of the FIFOs and their optimized depths for post-processing.
-    The json file is not used by the rest of the pipeline, it is only produced for the user.
+def generate_depths_file(model, initial_fifo_depths, optimized_fifo_depths):
+    """Generate a json file with the names of the FIFOs, the initial depths set by hls4ml and their optimized depths,
+    for post-processing. The json file is not used by the rest of the pipeline, it is only produced for the user.
 
     Args:
         model (ModelGraph): The model to which FIFO depth optimization is applied.
+        initial_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the initial
+        depths as values.
         optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized
         depths as values.
     """
     with open(model.config.get_output_dir() + "/max_depth.json", "w") as f:
-        json.dump(optmized_fifo_depths, f, indent=4)
+        json.dump(initial_fifo_depths, f, indent=4)
+        json.dump(optimized_fifo_depths, f, indent=4)
 
 
-def set_optimized_fifo_depths(model, optmized_fifo_depths):
+def set_optimized_fifo_depths(model, optimized_fifo_depths):
     """Set the new optimized FIFO depths.
 
     Args:
@@ -167,10 +173,11 @@ def set_optimized_fifo_depths(model, optmized_fifo_depths):
     # iterate through the layer output FIFOs
     for v in model.output_vars.values():
         if v.pragma:
-            if v.name not in optmized_fifo_depths.keys():
+
+            if v.name not in optimized_fifo_depths.keys():
                 continue
 
-            filtered_depth = optmized_fifo_depths[v.name]
+            filtered_depth = optimized_fifo_depths[v.name]
             v.pragma = (v.pragma[0], filtered_depth)
     return
 
@@ -209,13 +216,13 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         if not (model.config.get_config_value("IOType") == "io_stream"):
             raise RuntimeError("To use this optimization you have to set `IOType` field to `io_stream` in the HLS config")
 
-        initialize_large_fifos(model, profiling_fifo_depth)
+        initial_fifo_depths = initialize_large_fifos(model, profiling_fifo_depth)
 
         execute_cosim_to_profile_fifos(model)
 
         optimized_fifo_depths = get_vitis_optimized_fifo_depths(model)
 
-        generate_max_depth_file(model, optimized_fifo_depths)
+        generate_depths_file(model, initial_fifo_depths, optimized_fifo_depths)
 
         set_optimized_fifo_depths(model, optimized_fifo_depths)
 
