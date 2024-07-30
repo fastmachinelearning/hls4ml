@@ -118,11 +118,8 @@ inline void winograd_transform_input_tile_3x3_kernel(const data_T I[16], res_T D
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void winograd_conv2d_3x3_kernel_cl(
-    const data_T &data, res_T &res,
-    const typename CONFIG_T::weight_t
-        weights[CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::impl_filt_height * CONFIG_T::impl_filt_width],
-    const typename CONFIG_T::bias_t &biases) {
+void winograd_conv2d_3x3_kernel_cl(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
+                                   const typename CONFIG_T::bias_t &biases) {
     // Ensure Winograd conditions are met
     assert(CONFIG_T::filt_height == 3 && CONFIG_T::filt_width == 3);
     assert(CONFIG_T::stride_height == 1 && CONFIG_T::stride_width == 1);

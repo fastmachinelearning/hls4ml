@@ -148,7 +148,7 @@ class OneAPIStaticWeightVariableDefinition(VariableDefinition):
                 'intel::max_replicates(1), intel::fpga_memory("BLOCK_RAM")]]'
             )
         if self.storage == 'register':
-            return f'{attribute} constexpr {self.type.name} {self.name}'
+            return f'{attribute} static constexpr {self.type.name} {self.name}'
         else:
             return f'{attribute} {self.type.name} {self.name}'
 
