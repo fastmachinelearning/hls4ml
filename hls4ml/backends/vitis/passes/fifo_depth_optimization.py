@@ -23,7 +23,7 @@ def initialize_large_fifos(model, profiling_fifo_depth):
     initial_fifo_depths = {}
     for v in vars_to_profile.values():
         if v.pragma:
-            initial_fifo_depths[v.name] = v.pragma[1]
+            initial_fifo_depths[v.name] = int(v.pragma[1])
             v.pragma = (v.pragma[0], profiling_fifo_depth)
     return initial_fifo_depths
 
@@ -156,9 +156,14 @@ def generate_depths_file(model, initial_fifo_depths, optimized_fifo_depths):
         optmized_fifo_depths (Dict[str, int]): A dictionary that contains the FIFO names as keys and the optimized
         depths as values.
     """
-    with open(model.config.get_output_dir() + "/max_depth.json", "w") as f:
-        json.dump(initial_fifo_depths, f, indent=4)
-        json.dump(optimized_fifo_depths, f, indent=4)
+    depths = {}
+    for fifo_name in initial_fifo_depths.keys():
+        depths[fifo_name] = {}
+        depths[fifo_name]['initial'] = initial_fifo_depths[fifo_name]
+        depths[fifo_name]['optimized'] = optimized_fifo_depths[fifo_name]
+
+    with open(model.config.get_output_dir() + "/fifo_depths.json", "w") as f:
+        json.dump(depths, f, indent=4)
 
 
 def set_optimized_fifo_depths(model, optimized_fifo_depths):
@@ -217,7 +222,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
             raise RuntimeError("To use this optimization you have to set `IOType` field to `io_stream` in the HLS config")
 
         initial_fifo_depths = initialize_large_fifos(model, profiling_fifo_depth)
-
+        print("AAAA", initial_fifo_depths)
         execute_cosim_to_profile_fifos(model)
 
         optimized_fifo_depths = get_vitis_optimized_fifo_depths(model)

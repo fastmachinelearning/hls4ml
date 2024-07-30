@@ -1,6 +1,6 @@
 from pathlib import Path
 
-# import numpy as np
+import numpy as np
 import pytest
 from tensorflow.keras.layers import SeparableConv2D
 from tensorflow.keras.models import Sequential
@@ -12,8 +12,13 @@ test_root_path = Path(__file__).parent
 # backends = ['Vivado', 'Vitis']
 backends = ['Vitis']
 
+import os
 
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
+os.environ['XILINX_VITIS'] = "/opt/Xilinx/Vitis_HLS/2023.2/"
+os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
+
+
+# @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backends)
 def test_fifo_depth(backend):
 
@@ -29,8 +34,8 @@ def test_fifo_depth(backend):
     model.add(SeparableConv2D(filters=8, kernel_size=kernel_size, padding=padding, activation=activation))
 
     model.compile(optimizer='adam', loss='mse')
-    # X_input = np.random.rand(100, *input_shape)
-    # keras_prediction = model.predict(X_input)
+    X_input = np.random.rand(100, *input_shape)
+    keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<8, 4>')
     config['Flows'] = ['vitis:fifo_depth_optimization']
