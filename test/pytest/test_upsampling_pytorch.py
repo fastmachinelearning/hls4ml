@@ -56,7 +56,7 @@ def test_pytorch_upsampling1d(data_1d, io_type, backend):
     config = hls4ml.utils.config_from_pytorch_model(
         model,
         default_precision='ap_fixed<16,6>',
-        inputs_channel_last=True,  # We don't test channels_last conversion here
+        channels_last_conversion="internal",
         transpose_outputs=False,
     )
     odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_1d_{backend}_{io_type}')
@@ -85,7 +85,7 @@ def test_pytorch_upsampling2d(data_2d, io_type, backend):
     config = hls4ml.utils.config_from_pytorch_model(
         model,
         default_precision='ap_fixed<16,6>',
-        inputs_channel_last=False,  # With conversion to channels_last
+        channels_last_conversion="full",  # With conversion to channels_last
         transpose_outputs=True,
     )
     odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_2d_{backend}_{io_type}')
