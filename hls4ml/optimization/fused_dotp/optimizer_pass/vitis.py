@@ -1,9 +1,12 @@
+import numpy as np
+
 from hls4ml.backends import get_backend
 from hls4ml.backends.fpga.fpga_backend import FPGABackend
 from hls4ml.model.graph import ModelGraph
 from hls4ml.model.layers import Layer
 from hls4ml.model.optimizer import OptimizerPass
 
+from ..codegen_backends import VitisCodegenBackend
 from .common import UnrollCodeGenPass
 
 conf_template = """struct config{index}{postfix} {{
@@ -17,9 +20,39 @@ conf_template = """struct config{index}{postfix} {{
 class VitisUnrollCodeGen(UnrollCodeGenPass):
     def __init__(self):
         super().__init__('Dense', 'Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D')
+        self.backend = VitisCodegenBackend()
 
-    def get_stream_type_name(self, name: str) -> str:
-        return f'{name}::value_type'
+
+class VitisFullyUnrolledConvToDense(OptimizerPass):
+    def match(self, node: Layer):
+        return (
+            node.get_attr('unrolled_codegen')
+            and node.class_name in ('Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D')
+            and node.get_attr('n_partitions') == 1
+            and node.model.config.get_config_value("IOType") == 'io_parallel'
+        )
+
+    def transform(self, model: ModelGraph, node: Layer):
+        class_name = 'Dense'
+
+        name = node.name
+        attrs = {
+            'n_out': node.get_attr('out_width', 1) * node.get_attr('out_height', 1) * node.get_attr('n_filt'),  # type: ignore # noqa: E501
+            'n_in': np.prod(node.get_input_variable().shape),
+            'result_t': node.get_attr('result_t'),
+            'unrolled_codegen': node.get_attr('unrolled_codegen'),
+            'weight_data': node.get_attr('weight_data'),
+            'bias_data': node.get_attr('weight_data'),
+        }
+        new_node = model.make_node(class_name, node.name, attrs, node.inputs.copy())
+        new_node.attributes[name] = node.attributes[name]
+        new_node.attributes['result_t'] = node.attributes['result_t']
+        new_node.attributes['index'] = node.attributes['index']
+        new_node.index = node.index
+        del new_node.attributes.attributes['accum_t']
+        del new_node.attributes.attributes['weight_t']
+        del new_node.attributes.attributes['bias_t']
+        model.replace_node(node, new_node)
 
 
 class VitisDensePreTemplate(OptimizerPass):
@@ -60,6 +93,8 @@ class VitisDensePreTemplate(OptimizerPass):
         # avoid output weights and bias; alternatie entry point does not use them
         del node.attributes.attributes['weight_data']
         del node.attributes.attributes['bias_data']
+        del node.attributes.attributes['weight']
+        del node.attributes.attributes['bias']
 
 
 class VitisConvPreTemplate(OptimizerPass):
@@ -124,6 +159,8 @@ class VitisConvPreTemplate(OptimizerPass):
         # avoid output weights and bias; alternatie entry point does not use them
         del node.attributes.attributes['weight_data']
         del node.attributes.attributes['bias_data']
+        # del node.attributes.attributes['weight']
+        # del node.attributes.attributes['bias']
 
 
 unrolled_codegen = VitisUnrollCodeGen()
@@ -133,5 +170,6 @@ vitis_conv_pre_template = VitisConvPreTemplate()
 vitis_backend: FPGABackend = get_backend('vitis')
 # Optimizer flow is shared
 vitis_backend.register_pass('unrolled_codegen', unrolled_codegen, flow='vivado:specific_types')
+vitis_backend.register_pass('fully_unrolled_conv_to_dense', VitisFullyUnrolledConvToDense(), flow='vivado:specific_types')
 vitis_backend.register_pass('dense_pre_template', vitis_dense_pre_template, flow='vivado:specific_types')
 vitis_backend.register_pass('conv_pre_template', vitis_conv_pre_template, flow='vivado:specific_types')
