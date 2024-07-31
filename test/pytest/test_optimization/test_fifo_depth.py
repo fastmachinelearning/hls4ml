@@ -77,10 +77,9 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
     with open(hls_model.config.get_output_dir() + "/fifo_depths.json", "r") as fifo_depths_file:
         fifo_depths = json.load(fifo_depths_file)
 
-    fifo_depths_descreased = True
-    for fifo_name in fifo_depths.keys():
-        if fifo_depths[fifo_name]['optimized'] >= fifo_depths[fifo_name]['initial']:
-            fifo_depths_descreased = False
+    fifo_depths_decreased = all(
+        fifo['optimized'] < fifo['initial'] for fifo in fifo_depths.values()
+    )
 
     # checks that cosimulation ran succesfully without detecting deadlocks
     cosim_report_path = parse_cosim_report(hls_model.config.get_output_dir())
@@ -89,7 +88,7 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
         cosim_succesful = any("Pass" in line for line in cosim_report_file)
 
     # np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
-    assert cosim_succesful and fifo_depths_descreased
+    assert cosim_succesful and fifo_depths_decreased
      
 def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
     with pytest.raises(error, match=re.escape(message)):
@@ -113,13 +112,10 @@ def expect_succeful_execution(backend):
 # @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_fifo_depth(backend):
-    profiling_fifo_depth = -2
-    expect_value_error(backend, profiling_fifo_depth)
+    expect_value_error(backend, profiling_fifo_depth=-2)
     
-    profiling_fifo_depth = "a"
-    expect_value_error(backend, profiling_fifo_depth)
+    expect_value_error(backend, profiling_fifo_depth="a")
         
-    io_type = 'io_parallel'
-    expect_runtime_error(backend, io_type)
+    expect_runtime_error(backend, io_type='io_parallel')
 
     expect_succeful_execution(backend)        
