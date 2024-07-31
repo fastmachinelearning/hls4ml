@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Sequence
 
 import numpy as np
 
@@ -14,15 +15,17 @@ from ..dotp_unroll import compile_conv
 from ..precision import FixedPointPrecision
 from ..symbolic_variable import Variable
 from ..utils import Singleton
+from .pixel_unrolled_conv import get_input_KIF_idxs
 
 
 def nn_codegen(
     kernel: np.ndarray,
     bias: np.ndarray | None,
-    KIF_in: tuple[np.ndarray, ...],
+    KIFs_in: Sequence[Sequence[np.ndarray]] | np.ndarray,
     inp_name: str,
     out_name: str,
     backend='vivado',
+    index: Sequence[Sequence[int]] | None = None,
 ):
     """
     Codegen for conv/dense layer
@@ -41,15 +44,31 @@ def nn_codegen(
         _backend = VitisCodegenBackend()
     else:
         raise ValueError(f'Backend {backend} not supported')
-    precisions = [FixedPointPrecision.from_kif(k, i, f) for k, i, f in zip(*KIF_in)]
-    inp = np.array(
-        [Variable(p, id=f'{inp_name}[{_i}]') if isinstance(p, FixedPointPrecision) else p for _i, p in enumerate(precisions)]
-    )
-    r = compile_conv(kernel, inp)
-    if bias is not None:
-        r = r + bias
-    r = list(r)
-    return code_gen(r, _backend, out_name), r
+    if index is None:
+        assert len(KIFs_in) == 1
+        index = [range(len(KIFs_in[0][0]))]
+
+    R = []
+
+    def to_symbol(p, i):
+        if i >= 0:
+            if isinstance(p, FixedPointPrecision):
+                return Variable(p, id=f'{inp_name}[{i}]')
+            else:
+                return p
+        else:
+            return 0
+
+    for KIF_in, idxs in zip(KIFs_in, index):
+        assert len(KIF_in) == 3
+
+        precisions = [FixedPointPrecision.from_kif(k, i, f) for k, i, f in zip(*KIF_in)]
+        inp = np.array([to_symbol(p, _i) for _i, p in zip(idxs, precisions)])
+        r = compile_conv(kernel, inp)
+        if bias is not None:
+            r = r + bias
+        R.extend(r)
+    return code_gen(R, _backend, out_name), R
 
 
 def get_input_KIF(model: ModelGraph, node: Layer):
@@ -131,9 +150,13 @@ def latency_mat_vec_mul_fn_gen(model: ModelGraph, node: Layer):
 
     # Get input precision per-element
 
-    KIF_in = get_input_KIF(model, node)
-    backend = node.model.config.config['Backend']
-    oprs, r_variables = nn_codegen(kernel, node.attributes['bias_data'], KIF_in, 'inp', 'out', backend)
+    if 'Conv' in node.class_name and np.prod(node.attributes.attributes.get('dilation', 1)) > 1:
+        KIFs_in = [get_input_KIF(model, node)]
+        index = None
+    else:
+        KIFs_in, index = get_input_KIF_idxs(model, node)
+    backend = model.config.config['Backend']
+    oprs, r_variables = nn_codegen(kernel, node.attributes['bias_data'], KIFs_in, 'inp', 'out', backend, index=index)
     opr_code = '\n    '.join(oprs)
     return opr_code, r_variables
 
@@ -145,12 +168,14 @@ class UnrollCodeGenPass(OptimizerPass, metaclass=Singleton):
 
     def __init__(self, *targets: str):
         self.target = targets
+        self.backend = None
 
     def match(self, node: Layer):
         return any(node.class_name == target for target in self.target)
 
     def get_stream_type_name(self, name: str) -> str:
-        raise NotImplementedError
+        assert self.backend is not None, 'Backend not set'
+        return self.backend.get_stream_type_name(name)
 
     def transform(self, model: ModelGraph, node: Layer):
 
@@ -164,7 +189,7 @@ class UnrollCodeGenPass(OptimizerPass, metaclass=Singleton):
         input_t_name: str = input_named_t.name
         output_t_name: str = output_named_t.name
 
-        io_type: str = node.model.config.get_config_value('IOType')
+        io_type: str = model.config.get_config_value('IOType')
         assert io_type in ('io_stream', 'io_parallel'), f'io_type {io_type} is unknown.'
         if io_type == 'io_stream':
             input_t_name = self.get_stream_type_name(input_t_name)
