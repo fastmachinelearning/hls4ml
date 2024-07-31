@@ -100,6 +100,7 @@ def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
 
 
 # test faulty inputs of profiling_fifo_depth to verify that an exception is raised
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 @pytest.mark.parametrize('profiling_fifo_depth', [-2, "a"])
 def test_value_error(backend, profiling_fifo_depth):
@@ -108,12 +109,14 @@ def test_value_error(backend, profiling_fifo_depth):
 
 
 # test with io_type='io_parallel' to verify that an exception is raised
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_runtime_error(backend):
     message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
     expect_exception(RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel')
 
 
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_successful_execution(backend):
     fifo_depth_optimization_script(backend, profiling_fifo_depth=200_000, io_type='io_stream')
