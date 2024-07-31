@@ -60,6 +60,14 @@ hls4ml.backends.fpga.passes.fix\_softmax\_table\_size module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.hgq\_proxy\_model module
+----------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.hgq_proxy_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.fpga.passes.inplace\_parallel\_reshape module
 -------------------------------------------------------------
 

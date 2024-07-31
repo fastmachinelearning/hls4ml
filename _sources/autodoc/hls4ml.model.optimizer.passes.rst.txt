@@ -36,6 +36,14 @@ hls4ml.model.optimizer.passes.fuse\_biasadd module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.hgq\_proxy\_model module
+------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.hgq_proxy_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.infer\_precision module
 -----------------------------------------------------
 

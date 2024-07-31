@@ -40,7 +40,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev48+geb68da5c
+                0.9.0.dev49+g7f285026
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -450,6 +450,84 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.fix_softmax_table_size.register_softmax__table_size_fix">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.fix_softmax_table_size.</span></span><span class="sig-name descname"><span class="pre">register_softmax__table_size_fix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.fix_softmax_table_size.register_softmax__table_size_fix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.fpga.passes.hgq_proxy_model">
+<span id="hls4ml-backends-fpga-passes-hgq-proxy-model-module"></span><h2>hls4ml.backends.fpga.passes.hgq_proxy_model module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.hgq_proxy_model" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessFixedPointQuantizerCall</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall.format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessFixedPointQuantizerLayer</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.FixedPointQuantizer" title="hls4ml.model.optimizer.passes.hgq_proxy_model.FixedPointQuantizer"><span class="pre">FixedPointQuantizer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessUnaryLUTCall</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall.format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.generate_mask_fn">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">generate_mask_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RND</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SAT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.generate_mask_fn" title="Permalink to this definition"></a></dt>
+<dd><p>Generate heterogenous quantization mask function, ONLY works for IOType=io_parallel</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.register_hgq_proxy_model">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">register_hgq_proxy_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.backend.Backend" title="hls4ml.backends.backend.Backend"><span class="pre">Backend</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.register_hgq_proxy_model" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.to_acfixed">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">to_acfixed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RND</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SAT</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.to_acfixed" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.to_apfixed">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">to_apfixed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RND</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SAT</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.to_apfixed" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
