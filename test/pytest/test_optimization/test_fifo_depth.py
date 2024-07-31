@@ -24,23 +24,21 @@ def parse_cosim_report(project_path):
     prj_dir = None
     top_func_name = None
 
-    project_path = project_path + '/project.tcl'
+    project_tcl_path = project_path + '/project.tcl'
 
-    with open(project_path) as f:
+    with open(project_tcl_path) as f:
         for line in f.readlines():
             if 'set project_name' in line:
                 top_func_name = line.split('"')[-2]
                 prj_dir = top_func_name + '_prj'
 
-    sln_dir = project_path + '/' + prj_dir
-    cosim_file_path = sln_dir + f'/sim/report/{top_func_name}_cosim.rpt'
-
+    cosim_file_path = project_path + '/' + prj_dir + f'/solution1/sim/report/{top_func_name}_cosim.rpt'
+    
     if os.path.isfile(cosim_file_path):
         return cosim_file_path
     else:
         raise FileNotFoundError("Co-simulation report not found.")
 
-# @pytest.mark.skip(reason='Skipping synthesis tests for now')
 def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
 
     # build a keras model
@@ -72,11 +70,11 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
 
     # build the new project with optimized depths
     hls_model.build(reset=False, csim=False, synth=True, cosim=True)
-    # hls4ml.report.read_vivado_report(output_dir)
+    hls4ml.report.read_vivado_report(output_dir)
 
     # checks if the fifo depths decreased
     fifo_depths = {}
-    with open(model.config.get_output_dir() + "/fifo_depths.json", "w") as fifo_depths_file:
+    with open(hls_model.config.get_output_dir() + "/fifo_depths.json", "r") as fifo_depths_file:
         fifo_depths = json.load(fifo_depths_file)
 
     fifo_depths_descreased = True
@@ -85,11 +83,10 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
             fifo_depths_descreased = False
 
     # checks that cosimulation ran succesfully without detecting deadlocks
-    cosim_report_path = parse_cosim_report(model.config.get_output_dir())
+    cosim_report_path = parse_cosim_report(hls_model.config.get_output_dir())
 
     with open(cosim_report_path) as cosim_report_file:
-        cosim_succesful = any(line.strip() == "Pass" for line in cosim_report_file)
-
+        cosim_succesful = any("Pass" in line for line in cosim_report_file)
 
     # np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
     assert cosim_succesful and fifo_depths_descreased
@@ -108,6 +105,12 @@ def expect_runtime_error(backend, io_type):
     runtime_error_expected_message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
     expect_exception(RuntimeError, runtime_error_expected_message, backend, profiling_fifo_depth, io_type)
 
+def expect_succeful_execution(backend):
+    profiling_fifo_depth = 200_000
+    io_type = 'io_stream'
+    fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)
+
+# @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_fifo_depth(backend):
     profiling_fifo_depth = -2
@@ -119,8 +122,4 @@ def test_fifo_depth(backend):
     io_type = 'io_parallel'
     expect_runtime_error(backend, io_type)
 
-            
-    # profiling_fifo_depth = "asdada"
-    # io_type = 'io_stream'
-    # with pytest.raises(ValueError, match="The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer"):
-    #     fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)
+    expect_succeful_execution(backend)        
