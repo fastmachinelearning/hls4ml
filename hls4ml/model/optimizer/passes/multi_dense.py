@@ -27,6 +27,9 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
             'bias_data': node.get_attr('bias_data'),
         }
 
+        if (pf := node.get_attr('parallelization_factor', None)) is not None:
+            conv_attrs['parallelization_factor'] = pf
+
         if dim == 1:
             conv_attrs.update(
                 {

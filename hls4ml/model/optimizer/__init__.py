@@ -45,6 +45,7 @@ register_flow(
         'extract_ternary_threshold',
         'fuse_consecutive_batch_normalization',
         'replace_multidimensional_dense_with_conv',
+        'enforce_proxy_model_embedded_config',
     ],
 )  # TODO Maybe not all QKeras optmizers belong here?
 
