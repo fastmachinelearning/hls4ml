@@ -59,6 +59,7 @@ if __name__ == "__main__":
     config = config_from_pytorch_model(model,
                                        default_reuse_factor=12,
                                        #granularity='name',
+                                       channels_last_conversion="full",
                                        transpose_outputs=False)
     config['Model']['Strategy'] = 'Resource'
     config['Model']['Precision'] = 'ap_fixed<64,24>'
