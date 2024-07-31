@@ -222,7 +222,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
             raise RuntimeError("To use this optimization you have to set `IOType` field to `io_stream` in the HLS config.")
 
         initial_fifo_depths = initialize_large_fifos(model, profiling_fifo_depth)
-        print("AAAA", initial_fifo_depths)
+
         execute_cosim_to_profile_fifos(model)
 
         optimized_fifo_depths = get_vitis_optimized_fifo_depths(model)
