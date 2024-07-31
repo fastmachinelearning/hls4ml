@@ -215,11 +215,11 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         profiling_fifo_depth = getattr(self, "profiling_fifo_depth", 100_000)
 
         if not isinstance(profiling_fifo_depth, int) or profiling_fifo_depth < 0:
-            raise ValueError("The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer")
+            raise ValueError("The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer.")
 
         # check axi-stream or io-stream
         if not (model.config.get_config_value("IOType") == "io_stream"):
-            raise RuntimeError("To use this optimization you have to set `IOType` field to `io_stream` in the HLS config")
+            raise RuntimeError("To use this optimization you have to set `IOType` field to `io_stream` in the HLS config.")
 
         initial_fifo_depths = initialize_large_fifos(model, profiling_fifo_depth)
         print("AAAA", initial_fifo_depths)
