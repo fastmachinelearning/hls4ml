@@ -93,24 +93,32 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
 
     # np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
     assert cosim_succesful and fifo_depths_descreased
+     
+def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
+    with pytest.raises(error, match=re.escape(message)):
+        fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)   
+    
+def expect_value_error(backend, profiling_fifo_depth):
+    io_type = 'io_stream'
+    value_error_expected_message = "The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer."
+    expect_exception(ValueError, value_error_expected_message, backend, profiling_fifo_depth, io_type)
+
+def expect_runtime_error(backend, io_type):
+    profiling_fifo_depth = 200_000
+    runtime_error_expected_message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
+    expect_exception(RuntimeError, runtime_error_expected_message, backend, profiling_fifo_depth, io_type)
 
 @pytest.mark.parametrize('backend', backend_options)
 def test_fifo_depth(backend):
     profiling_fifo_depth = -2
-    io_type = 'io_stream'
-    value_error_expected_message = "The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer."
-    with pytest.raises(ValueError, match=re.escape(value_error_expected_message)):
-        fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)
+    expect_value_error(backend, profiling_fifo_depth)
+    
+    profiling_fifo_depth = "a"
+    expect_value_error(backend, profiling_fifo_depth)
         
-    profiling_fifo_depth = "aaa"
-    with pytest.raises(ValueError, match=re.escape(value_error_expected_message)):
-        fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)
-        
-    profiling_fifo_depth = 200_000
     io_type = 'io_parallel'
-    runtime_error_expected_message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
-    with pytest.raises(RuntimeError, match=re.escape(runtime_error_expected_message)):
-            fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)
+    expect_runtime_error(backend, io_type)
+
             
     # profiling_fifo_depth = "asdada"
     # io_type = 'io_stream'
