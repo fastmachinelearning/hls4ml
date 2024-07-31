@@ -73,7 +73,7 @@ class OneAPIWriter(Writer):
 
             rf = int(layer.get_attr('reuse_factor', 1))
 
-            h_file.write(var.definition_cpp(rf) + " = {")
+            h_file.write(var.definition_cpp(rf) + " = {{")
 
             # fill c++ array.
             # not including internal brackets for multidimensional case
@@ -81,7 +81,7 @@ class OneAPIWriter(Writer):
             for x in var:
                 h_file.write(sep + x)
                 sep = ", "
-            h_file.write("};\n")
+            h_file.write("}};\n")
             h_file.write("\n#endif\n")
 
     def write_project_dir(self, model):

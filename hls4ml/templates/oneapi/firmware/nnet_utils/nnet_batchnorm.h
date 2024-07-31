@@ -36,14 +36,16 @@ Result:
     #pragma unroll
     for (int ires = 0; ires < CONFIG_T::n_in; ires++) {
         if (CONFIG_T::n_filt == -1) {
-            res[ires] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::product(
-                            data[ires], scale[ires]) +
-                        bias[ires];
+            res[ires] =
+                CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t::value_type>::product(
+                    data[ires], scale[ires]) +
+                bias[ires];
         } else {
             int norm_index = ires % CONFIG_T::n_filt;
-            res[ires] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::product(
-                            data[ires], scale[norm_index]) +
-                        bias[norm_index];
+            res[ires] =
+                CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t::value_type>::product(
+                    data[ires], scale[norm_index]) +
+                bias[norm_index];
         }
     }
 }

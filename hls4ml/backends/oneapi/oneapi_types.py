@@ -4,9 +4,66 @@ This package includes oneAPI-specific customizations to the variable types
 
 import numpy as np
 
-from hls4ml.backends.fpga.fpga_types import PackedType, VariableDefinition
+from hls4ml.backends.fpga.fpga_types import (
+    HLSTypeConverter,
+    NamedTypeConverter,
+    TypeDefinition,
+    TypePrecisionConverter,
+    VariableDefinition,
+)
+from hls4ml.model.types import CompressedType, ExponentType, NamedType, PackedType
 from hls4ml.utils.fixed_point_utils import next_pow2
 from hls4ml.utils.string_utils import convert_to_pascal_case
+
+
+class OneAPICompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
+    """Use a tuple for storing a compressed type for oneAPI since it's better supported. (Currently unused)"""
+
+    def definition_cpp(self):
+        """tuple format is row_index, col_index, weight"""
+        cpp_fmt = 'typedef std::tuple<{index}, {index}, {precision}> {name};\n'
+        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision.definition_cpp())
+
+    def convert_precision(self, precision_converter):
+        super().convert_precision(precision_converter)
+        self.index_precision = precision_converter.convert(self.index_precision)
+
+
+class OneAPIExponentTypeConverter(TypeDefinition, TypePrecisionConverter):
+    """Use a pair for storing a exponent type for oneAPI since it's better supported"""
+
+    def definition_cpp(self):
+        cpp_fmt = 'typedef std::pair<{sign}, {precision}> {name};\n'
+        return cpp_fmt.format(name=self.name, precision=self.precision.definition_cpp(), sign=self.sign.definition_cpp())
+
+    def convert_precision(self, precision_converter):
+        super().convert_precision(precision_converter)
+        self.sign = precision_converter.convert(self.sign)
+
+
+class OneAPIPackedTypeConverter(TypeDefinition, TypePrecisionConverter):
+    def definition_cpp(self):
+        n_elem_expr = '/' if self.unpack else '*'
+        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(
+            name=self.name,
+            precision=self.precision.definition_cpp(),
+            n_elem=str(self.n_elem) + n_elem_expr + str(self.n_pack),
+        )
+
+    def convert_precision(self, precision_converter):
+        self.precision = precision_converter.convert(self.precision)
+
+
+class OneAPIHLSTypeConverter(HLSTypeConverter):
+    def __init__(self, precision_converter):
+        self.precision_converter = precision_converter
+        self.type_map = {
+            NamedType: NamedTypeConverter,
+            CompressedType: OneAPICompressedTypeConverter,
+            ExponentType: OneAPIExponentTypeConverter,
+            PackedType: OneAPIPackedTypeConverter,
+        }
+
 
 # region ArrayVarable
 

@@ -73,14 +73,14 @@ template <class x_T, class w_T> class mult : public Product {
 
 template <class x_T, class w_T> class weight_exponential : public Product {
   public:
-    using r_T = ac_fixed<2 * (decltype(w_T::weight)::width + x_T::width), (decltype(w_T::weight)::width + x_T::width), true>;
+    using r_T = ac_fixed<2 * (w_T::second_type::width + x_T::width), (w_T::second_type::width + x_T::width), true>;
     inline static r_T product(x_T a, w_T w) {
         // Shift product for exponential weights
         // Shift by the exponent. Negative weights shift right
-        r_T y = static_cast<r_T>(a) << w.weight;
+        r_T y = static_cast<r_T>(a) << w.second;
 
         // Negate or not depending on weight sign
-        return w.sign == 1 ? y : static_cast<r_T>(-y);
+        return w.first == 1 ? y : static_cast<r_T>(-y);
     }
 };
 } // namespace product

@@ -18,7 +18,7 @@ void normalize_stream(typename CONFIG_T::scale_t scale, typename CONFIG_T::bias_
     constexpr unsigned pipeline = CONFIG_T::n_in / multiplier_limit;
     constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
     CONFIG_T::template product<typename ExtractPipeType<data_pipe>::value_type::value_type,
-                               typename CONFIG_T::scale_t>::limit(multiplier_limit);
+                               typename CONFIG_T::scale_t::value_type>::limit(multiplier_limit);
 
 BatchNormLoop:
     [[intel::initiation_interval(pipeline)]] for (int i = 0; i < CONFIG_T::n_in / datasize; i++) {
@@ -33,9 +33,10 @@ BatchNormLoop:
                 norm_index = i * datasize + j;
             else
                 norm_index = j % CONFIG_T::n_filt;
-            out_data[j] = CONFIG_T::template product<typename ExtractPipeType<data_pipe>::value_type::value_type,
-                                                     typename CONFIG_T::scale_t>::product(in_data[j], scale[norm_index]) +
-                          bias[norm_index];
+            out_data[j] =
+                CONFIG_T::template product<typename ExtractPipeType<data_pipe>::value_type::value_type,
+                                           typename CONFIG_T::scale_t::value_type>::product(in_data[j], scale[norm_index]) +
+                bias[norm_index];
         }
 
         res_pipe::write(out_data);

@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <cstddef>
 #include <cstdio>
+#include <tuple>
+#include <utility>
 
 namespace nnet {
 

@@ -57,6 +57,12 @@ class ACIntegerPrecisionDefinition(PrecisionDefinition):
         return typestring
 
 
+class ACExponentPrecisionDefinition(PrecisionDefinition):
+    def definition_cpp(self):
+        typestring = f'std::pair<ac_int<1, false>, ac_int<{self.width}, true>>'
+        return typestring
+
+
 class ACFixedPrecisionDefinition(PrecisionDefinition):
     def _rounding_mode_cpp(self, mode):
         if mode is not None:
@@ -136,7 +142,7 @@ class ACTypeConverter(FixedPrecisionConverter):
             type_map={
                 FixedPrecisionType: ACFixedPrecisionDefinition,
                 IntegerPrecisionType: ACIntegerPrecisionDefinition,
-                ExponentPrecisionType: ACIntegerPrecisionDefinition,
+                ExponentPrecisionType: ACExponentPrecisionDefinition,
                 XnorPrecisionType: ACIntegerPrecisionDefinition,
             },
             prefix='AC',

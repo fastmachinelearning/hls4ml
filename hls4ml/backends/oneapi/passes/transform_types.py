@@ -1,6 +1,7 @@
-from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter
+from hls4ml.backends.fpga.fpga_types import ACTypeConverter
 from hls4ml.backends.oneapi.oneapi_types import (
     OneAPIArrayVariableConverter,
+    OneAPIHLSTypeConverter,
     OneAPIInplaceArrayVariableConverter,
     OneAPIInplaceStreamVariableConverter,
     OneAPIInterfaceVariableConverter,
@@ -15,7 +16,7 @@ from hls4ml.model.types import InplaceTensorVariable
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
-        self.type_converter = HLSTypeConverter(precision_converter=ACTypeConverter())
+        self.type_converter = OneAPIHLSTypeConverter(precision_converter=ACTypeConverter())
         self.array_var_converter = OneAPIArrayVariableConverter(type_converter=self.type_converter)
         self.inplace_array_var_converter = OneAPIInplaceArrayVariableConverter(type_converter=self.type_converter)
         self.interface_var_converter = OneAPIInterfaceVariableConverter(type_converter=self.type_converter)
