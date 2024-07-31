@@ -9,6 +9,7 @@ from tensorflow.keras.layers import SeparableConv2D
 from tensorflow.keras.models import Sequential
 
 import hls4ml
+from hls4ml.backends.vitis.passes.fifo_depth_optimization import override_test_bench
 
 test_root_path = Path(__file__).parent
 
@@ -36,8 +37,7 @@ def parse_cosim_report(project_path):
 
 
 def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
-
-    # build a keras model
+    # create a keras model
     input_shape = (128, 128, 3)
     activation = 'relu'
     kernel_size = (3, 3)
@@ -48,8 +48,8 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
         SeparableConv2D(filters=4, kernel_size=kernel_size, padding=padding, activation=activation, input_shape=input_shape)
     )
     model.add(SeparableConv2D(filters=8, kernel_size=kernel_size, padding=padding, activation=activation))
-
     model.compile(optimizer='adam', loss='mse')
+
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
 
@@ -70,7 +70,12 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
 
-    # build the new project with optimized depths
+    # force the top-function to execute twice in the cosimulation, to verify no deadlocks occur even
+    # when streaming multiple inputs into the network
+    override_test_bench(hls_model)
+
+    # build the new project with optimized depths and execute cosimulation to check for deadlocks
+    # due to the new FIFO depths
     hls_model.build(reset=False, csim=False, synth=True, cosim=True)
 
     # checks if the fifo depths decreased
@@ -86,7 +91,6 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
     with open(cosim_report_path) as cosim_report_file:
         cosim_succesful = any("Pass" in line for line in cosim_report_file)
 
-    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
     assert cosim_succesful and fifo_depths_decreased
 
 
