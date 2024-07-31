@@ -5,15 +5,47 @@ This package includes oneAPI-specific customizations to the variable types
 import numpy as np
 
 from hls4ml.backends.fpga.fpga_types import (
+    ACFixedPrecisionDefinition,
+    ACIntegerPrecisionDefinition,
+    FixedPrecisionConverter,
     HLSTypeConverter,
     NamedTypeConverter,
+    PrecisionDefinition,
     TypeDefinition,
     TypePrecisionConverter,
     VariableDefinition,
 )
-from hls4ml.model.types import CompressedType, ExponentType, NamedType, PackedType
+from hls4ml.model.types import (
+    CompressedType,
+    ExponentPrecisionType,
+    ExponentType,
+    FixedPrecisionType,
+    IntegerPrecisionType,
+    NamedType,
+    PackedType,
+    XnorPrecisionType,
+)
 from hls4ml.utils.fixed_point_utils import next_pow2
 from hls4ml.utils.string_utils import convert_to_pascal_case
+
+
+class ACExponentPrecisionDefinition(PrecisionDefinition):
+    def definition_cpp(self):
+        typestring = f'std::pair<ac_int<1, false>, ac_int<{self.width}, true>>'
+        return typestring
+
+
+class OneAPIACTypeConverter(FixedPrecisionConverter):
+    def __init__(self):
+        super().__init__(
+            type_map={
+                FixedPrecisionType: ACFixedPrecisionDefinition,
+                IntegerPrecisionType: ACIntegerPrecisionDefinition,
+                ExponentPrecisionType: ACExponentPrecisionDefinition,
+                XnorPrecisionType: ACIntegerPrecisionDefinition,
+            },
+            prefix='AC',
+        )
 
 
 class OneAPICompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
