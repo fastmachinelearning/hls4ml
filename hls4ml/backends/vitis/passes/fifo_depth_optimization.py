@@ -5,12 +5,17 @@ from hls4ml.model.optimizer.optimizer import ConfigurableOptimizerPass, ModelOpt
 
 
 def initialize_large_fifos(model, profiling_fifo_depth):
-    """Setting all FIFO depths equal to a large value so that they can be profiled.
+    """Set all FIFO depths equal to a large value so that they can be profiled.
 
     Args:
         model (ModelGraph): The model to which FIFO depth optimization is applied.
         profiling_fifo_depth (int): A large non-negative integer, must be larger than the max expected depth of the FIFOs.
+
+    Returns:
+        Dict[str, int]: A dictionary containing FIFO names as keys and their initial depths as values is returned for
+        comparison with the optimized depths.
     """
+
     # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so
     # they will be profiled. Alternatively, "config_dataflow -override_user_fifo_depth profiling_fifo_depth" can be
     # used inside build_prj.tcl to override all FIFO depths with the specified value

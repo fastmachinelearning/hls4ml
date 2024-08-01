@@ -17,6 +17,9 @@ backend_options = ['Vitis']
 
 
 def parse_cosim_report(project_path):
+    """Parse the cosimulation report to check whether the cosimulation passed or failed and therefore a deadlock is
+    detected.
+    """
     prj_dir = None
     top_func_name = None
 
@@ -37,6 +40,8 @@ def parse_cosim_report(project_path):
 
 
 def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
+    """Execute the FIFO depth optimizer on an example model."""
+
     # create a keras model
     input_shape = (128, 128, 3)
     activation = 'relu'
@@ -78,20 +83,20 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
     # due to the new FIFO depths
     hls_model.build(reset=False, csim=False, synth=True, cosim=True)
 
-    # checks if the fifo depths decreased
+    # checks if the fifo depths decreased/were optimized
     fifo_depths = {}
     with open(hls_model.config.get_output_dir() + "/fifo_depths.json") as fifo_depths_file:
         fifo_depths = json.load(fifo_depths_file)
 
     fifo_depths_decreased = all(fifo['optimized'] < fifo['initial'] for fifo in fifo_depths.values())
 
-    # checks that cosimulation ran succesfully without detecting deadlocks
+    # checks that the cosimulation ran succesfully without detecting deadlocks
     cosim_report_path = parse_cosim_report(hls_model.config.get_output_dir())
 
     with open(cosim_report_path) as cosim_report_file:
         cosim_succesful = any("Pass" in line for line in cosim_report_file)
 
-    assert cosim_succesful and fifo_depths_decreased
+    assert fifo_depths_decreased and cosim_succesful
 
 
 def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
@@ -99,19 +104,19 @@ def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
         fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)
 
 
-# test faulty inputs of profiling_fifo_depth to verify that an exception is raised
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-@pytest.mark.parametrize('profiling_fifo_depth', [-2, "a"])
+@pytest.mark.parametrize('profiling_fifo_depth', [-2, 3.14, "a"])
 def test_value_error(backend, profiling_fifo_depth):
+    """Test the FIFO depth optimizer with faulty inputs of profiling_fifo_depth to verify that an exception is raised."""
     message = "The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer."
     expect_exception(ValueError, message, backend, profiling_fifo_depth, io_type='io_stream')
 
 
-# test with io_type='io_parallel' to verify that an exception is raised
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_runtime_error(backend):
+    """Test the FIFO depth optimizer with io_type='io_parallel' to verify that an exception is raised."""
     message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
     expect_exception(RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel')
 
@@ -119,4 +124,5 @@ def test_runtime_error(backend):
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_successful_execution(backend):
+    """Test the correct execution of the FIFO depth optimizer."""
     fifo_depth_optimization_script(backend, profiling_fifo_depth=200_000, io_type='io_stream')
