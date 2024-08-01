@@ -258,11 +258,13 @@ class Layer:
         precision = None
         type_name = None
         if data is None:
+            # Checks the data format of the node to determine size of bias vector.
             if self.attributes['data_format'] == "channels_first":
                 data = np.zeros(self.get_output_variable().shape[0])
             elif self.attributes['data_format'] == "channels_last":
                 data = np.zeros(self.get_output_variable().shape[-1])
-
+            else:
+                raise Exception('Invalid data_format')
             precision = IntegerPrecisionType(width=1, signed=False)
             type_name = 'bias{index}_t'
             quantizer = None  # Don't quantize non-existant bias
