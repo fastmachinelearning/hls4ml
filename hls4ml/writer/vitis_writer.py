@@ -55,6 +55,5 @@ class VitisWriter(VivadoWriter):
         """
         super().write_hls(model)
         self.write_nnet_utils_overrides(model)
-        self.write_board_script(model)
-        os.remove(model.config.get_output_dir() + '.tar.gz')
         self.write_tar(model)
+        self.write_board_script(model)
