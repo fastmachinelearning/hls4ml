@@ -95,7 +95,7 @@ class VitisAcceleratorWriter(VitisWriter):
             if "// hls-fpga-machine-learning accelerator parameters" in line:
                 newline = ""
                 newline += "#define NUM_CU " + format(self.vitis_accelerator_config.get_num_kernel()) + "\n"
-                newline += "#define NUM_THREAD " + format(self.vitis_accelerator_config.get_num_thread()) + "\n"
+                newline += "#define NUM_WORKER " + format(self.vitis_accelerator_config.get_num_worker()) + "\n"
                 newline += "#define NUM_CHANNEL "
                 if self.vitis_accelerator_config.get_memory_type() == "hbm":
                     newline += (
@@ -179,26 +179,13 @@ class VitisAcceleratorWriter(VitisWriter):
         memoryType = self.vitis_accelerator_config.get_memory_type()
         isHwQuant = self.vitis_accelerator_config.get_hw_quant()
         for line in f.readlines():
-            if "// hls-fpga-machine-learning FPGA type" in line:
-                fpgaType = "HbmFpga" if memoryType == "hbm" else ("DdrFpga" if memoryType == "ddr" else "DdrFpga")
-                dataType = "<float, float>" if isHwQuant else "<in_buffer_t, out_buffer_t>"
-                newline = (
-                    "\t"
-                    + fpgaType
-                    + dataType
-                    + " fpga(BATCHSIZE * INSTREAMSIZE, BATCHSIZE * OUTSTREAMSIZE, NUM_CU, NUM_THREAD, 10);"
-                )
-            elif "/*IN_TYPE_CAST*/ " in line:
-                newline = line.replace("/*IN_TYPE_CAST*/ ", "" if isHwQuant else "(in_buffer_t)")
-            elif "/*OUT_TYPE_CAST*/ " in line:
-                newline = line.replace("/*OUT_TYPE_CAST*/ ", "" if isHwQuant else "(float)")
+            if "/*FPGA_Type*/" in line:
+                newline = line.replace("/*FPGA_Type*/", memoryType.upper())
+            elif "/*INTERFACE_TYPES*/" in line:
+                dataTypes = "float, float" if isHwQuant else "in_buffer_t, out_buffer_t"
+                newline = line.replace("/*INTERFACE_TYPES*/", dataTypes)
             else:
                 newline = line
-
-            if "/*IN_INTERFACE_TYPE*/" in line:
-                newline = newline.replace("/*IN_INTERFACE_TYPE*/", "float" if isHwQuant else "in_buffer_t")
-            if "/*OUT_INTERFACE_TYPE*/" in line:
-                newline = newline.replace("/*OUT_INTERFACE_TYPE*/", "float" if isHwQuant else "out_buffer_t")
             fout.write(newline)
         f.close()
         fout.close()
@@ -223,8 +210,8 @@ class VitisAcceleratorWriter(VitisWriter):
         for line in f.readlines():
             if "#PRJNAME" in line:
                 newline = line.replace("#PRJNAME", project_name)
-            elif "BOARD_TYPE :=" in line:
-                newline += "BOARD_TYPE := " + board_type + "\n"
+            elif "#BOARDTYPE" in line:
+                newline = line.replace("#BOARDTYPE", board_type)
             else:
                 newline = line
             fout.write(newline)

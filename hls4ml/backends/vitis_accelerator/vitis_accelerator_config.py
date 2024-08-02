@@ -30,7 +30,7 @@ class VitisAcceleratorConfig:
                 self.config["Part"] = self.part
 
         self.num_kernel = accel_config.get("Num_Kernel", 1)
-        self.num_thread = accel_config.get("Num_Thread", 1)
+        self.num_worker = accel_config.get("Num_Worker", 1)
         self.batchsize = accel_config.get("Batchsize", 8192)
         self.hw_quant = accel_config.get("HW_Quant", False)
 
@@ -42,8 +42,8 @@ class VitisAcceleratorConfig:
     def get_platform(self):
         return self.platform
 
-    def get_num_thread(self):
-        return self.num_thread
+    def get_num_worker(self):
+        return self.num_worker
 
     def get_num_kernel(self):
         return self.num_kernel

@@ -32,7 +32,7 @@ CARD_CFG ?= accelerator_card.cfg
 PLATFORM ?= $(shell awk -F '=' '/platform=/ {print $$2}' $(CARD_CFG))
 
 # Board Type (determines whether design will go through packaging step)
-BOARD_TYPE :=
+BOARD_TYPE := #BOARDTYPE
 
 # Kernel name
 KERNEL_NAME := #PRJNAME
@@ -115,8 +115,8 @@ xclbin: $(BUILD_DIR)/$(WRAPPER_NAME).xclbin
 INCLUDES := -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -I$(XILINX_HLS)/include/
 INCLUDES += -I$(PWD)/libs/ -I$(PWD)/firmware/ -I$(PWD)/firmware/nnet_utils/
 
-host: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDES) $(LDFLAGS)
+host: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp $(wildcard libs/*.hpp)
+	$(CXX) $(CXXFLAGS) $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp -o $@ $(INCLUDES) $(LDFLAGS)
 
 # Execute program #############################################################
 
@@ -128,7 +128,7 @@ else
 	@echo "Setting XCL_EMULATION_MODE to $(TARGET)"
 	$(eval EMULATION_MODE := XCL_EMULATION_MODE=$(TARGET))
 endif
-	@cd firmware && $(EMULATION_MODE) ../host ../$(BUILD_DIR)/$(WRAPPER_NAME).xclbin
+	@cd firmware && $(EMULATION_MODE) ../host ../$(BUILD_DIR)/$(WRAPPER_NAME).xclbin $(PROFILING_DATA_REPEAT_COUNT)
 
 # Cleanup #####################################################################
 

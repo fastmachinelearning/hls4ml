@@ -22,7 +22,7 @@ class VitisAcceleratorBackend(VitisBackend):
         clock_uncertainty='27%',
         io_type="io_parallel",
         num_kernel=1,
-        num_thread=1,
+        num_worker=1,
         batchsize=8192,
         hw_quant=False,
         vivado_directives=None,
@@ -36,7 +36,7 @@ class VitisAcceleratorBackend(VitisBackend):
             clock_period: clock period passed to hls project
             io_type: io_parallel or io_stream
             num_kernel: how many compute units to create on the fpga
-            num_thread: how many threads the host cpu uses to drive the fpga
+            num_worker: how many threads the host cpu uses to drive each CU on the fpga
             batchsize: how many samples to process within a single buffer on the fpga
             vivado_directives: Directives passed down to Vivado that controls the hardware synthesis and implementation steps
         Returns:
@@ -47,7 +47,7 @@ class VitisAcceleratorBackend(VitisBackend):
         config["AcceleratorConfig"] = {}
         config["AcceleratorConfig"]["Board"] = board
         config["AcceleratorConfig"]["Num_Kernel"] = num_kernel
-        config["AcceleratorConfig"]["Num_Thread"] = num_thread
+        config["AcceleratorConfig"]["Num_Worker"] = num_worker
         config["AcceleratorConfig"]["Batchsize"] = batchsize
         config["AcceleratorConfig"]["HW_Quant"] = hw_quant
         config["AcceleratorConfig"]["Vivado_Directives"] = vivado_directives
@@ -112,11 +112,15 @@ class VitisAcceleratorBackend(VitisBackend):
         y = np.loadtxt(output_file, dtype=float).reshape(-1, expected_shape)
         return y
 
-    def hardware_predict(self, model, x, target="hw", debug=False):
+    def hardware_predict(self, model, x, target="hw", debug=False, profilingRepeat=-1):
         if debug:
             command = "DEBUG=1 "
+        if isinstance(profilingRepeat, int) and profilingRepeat > 0:
+            command += "PROFILING_DATA_REPEAT_COUNT=" + profilingRepeat + " "
         self._validate_target(target)
+
         self.numpy_to_dat(model, x)
+
         currdir = os.getcwd()
         os.chdir(model.config.get_output_dir())
         command += "TARGET=" + target + " make run"
