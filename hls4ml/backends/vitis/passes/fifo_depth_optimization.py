@@ -71,7 +71,7 @@ def override_test_bench(model):
         new_test_bench.write(newline)
 
     # replace the old test bench with the new test bench that includes a for-loop
-    os.system(f"mv {path_to_new_test_bench} {path_to_old_test_bench}")
+    os.replace(path_to_new_test_bench, path_to_old_test_bench)
     return
 
 
