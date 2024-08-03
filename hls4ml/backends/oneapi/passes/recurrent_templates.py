@@ -56,6 +56,8 @@ gru_config_template = '''struct config{index} : nnet::gru_config {{
     typedef {accum_t.name} accum_t;
     typedef {weight_t.name} weight_t;
     typedef {bias_t.name} bias_t;
+    typedef {recurrent_weight_t.name} recurrent_weight_t;
+    typedef {recurrent_bias_t.name} recurrent_bias_t;
 
     typedef {config_mult_x} mult_config_x;
     typedef {config_mult_h} mult_config_h;
@@ -189,6 +191,8 @@ lstm_config_template = """struct config{index} : nnet::lstm_config {{
     typedef {accum_t.name} accum_t;
     typedef {weight_t.name} weight_t;
     typedef {bias_t.name} bias_t;
+    typedef {recurrent_weight_t.name} recurrent_weight_t;
+    typedef {recurrent_bias_t.name} recurrent_bias_t;  // not yet supported
 
     typedef {act_t} ACT_CONFIG_T;
     template<class x_T, class y_T, class config_T>
@@ -273,6 +277,7 @@ simple_rnn_config_template = """struct config{index} : nnet::simpleRNN_config {{
     typedef {accum_t.name} accum_t;
     typedef {weight_t.name} weight_t;
     typedef {bias_t.name} bias_t;
+    typedef {recurrent_weight_t.name} recurrent_weight_t;
 
     typedef {act_t} ACT_CONFIG_T;
     template<class x_T, class y_T, class config_T>

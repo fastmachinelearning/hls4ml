@@ -66,8 +66,7 @@ struct batchnorm_quantized_tanh_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void normalize_binary_tanh(const data_T &data, res_T &res,
-                           const typename data_T::value_type threshold[CONFIG_T::n_scale_bias]) {
+void normalize_binary_tanh(const data_T &data, res_T &res, const typename CONFIG_T::threshold_t &threshold) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         ac_int<1, false> cache;
@@ -83,9 +82,8 @@ void normalize_binary_tanh(const data_T &data, res_T &res,
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void normalize_ternary_tanh(const data_T &data, res_T &res,
-                            const typename data_T::value_type threshold_hi[CONFIG_T::n_scale_bias],
-                            const typename data_T::value_type threshold_lo[CONFIG_T::n_scale_bias]) {
+void normalize_ternary_tanh(const data_T &data, res_T &res, const typename CONFIG_T::threshold_hi_t &threshold_hi,
+                            const typename CONFIG_T::threshold_lo_t &threshold_lo) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         ac_int<2, true> cache;

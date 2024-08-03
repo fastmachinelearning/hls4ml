@@ -47,8 +47,7 @@ BatchNormLoop:
 //       Merged Batch Normalization and Quantized Tanh
 // ****************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void normalize_binary_tanh_stream(
-    const typename ExtractPipeType<data_pipe>::value_type::value_type threshold[CONFIG_T::n_scale_bias]) {
+void normalize_binary_tanh_stream(typename CONFIG_T::threshold_t threshold) {
     constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type::value_type>{};
 
 BinaryNormLoop:
@@ -73,9 +72,8 @@ BinaryNormLoop:
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void normalize_ternary_tanh_stream(
-    const typename ExtractPipeType<data_pipe>::value_type::value_type threshold_hi[CONFIG_T::n_scale_bias],
-    const typename ExtractPipeType<data_pipe>::value_type::value_type threshold_lo[CONFIG_T::n_scale_bias]) {
+void normalize_ternary_tanh_stream(typename CONFIG_T::threshold_hi_t threshold_hi,
+                                   typename CONFIG_T::threshold_lo_t threshold_lo) {
     constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
 
 TernaryNormLoop:

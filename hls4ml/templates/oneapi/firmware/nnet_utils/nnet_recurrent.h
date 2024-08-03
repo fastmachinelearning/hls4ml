@@ -99,8 +99,8 @@ struct gru_config {
 
 template <class data_T, class h_T, typename CONFIG_T>
 void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t &weights,
-              const typename CONFIG_T::weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
-              const typename CONFIG_T::bias_t &recurrent_bias) {
+              const typename CONFIG_T::recurrent_weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
+              const typename CONFIG_T::recurrent_bias_t &recurrent_bias) {
     static constexpr int recurrent_unroll_factor = CONFIG_T::n_units / CONFIG_T::reuse_factor;
     // A matrix containing the values of matrix product between input (x) and weights (weights), for update, reset and
     // candidate state gates, for each of the units
@@ -162,8 +162,8 @@ void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t &weight
 
 template <class data_T, class res_T, typename CONFIG_T>
 void gru(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
-         const typename CONFIG_T::weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
-         const typename CONFIG_T::bias_t &recurrent_bias) {
+         const typename CONFIG_T::recurrent_weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
+         const typename CONFIG_T::recurrent_bias_t &recurrent_bias) {
 
     using h_T = array<typename res_T::value_type, CONFIG_T::n_units>;
     [[intel::fpga_register]] data_T x;
@@ -229,10 +229,8 @@ struct simpleRNN_config {
 };
 
 template <class in_T, class h_T, typename CONFIG_T>
-void simple_rnn_cell(const in_T &inputs, h_T &hidden_state, h_T &hidden_state_o,
-                     const typename CONFIG_T::weight_t kernel[CONFIG_T::n_in * CONFIG_T::n_out],
-                     const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
-                     const typename CONFIG_T::bias_t bias[CONFIG_T::n_out]) {
+void simple_rnn_cell(const in_T &inputs, h_T &hidden_state, h_T &hidden_state_o, const typename CONFIG_T::weight_t &kernel,
+                     const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias) {
 
     using accum_array_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_out>;
     // Weight multiplication
@@ -256,9 +254,8 @@ void simple_rnn_cell(const in_T &inputs, h_T &hidden_state, h_T &hidden_state_o,
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void simple_rnn(const data_T &data, res_T &res, const typename CONFIG_T::weight_t kernel[CONFIG_T::n_in * CONFIG_T::n_out],
-                const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
-                const typename CONFIG_T::bias_t bias[CONFIG_T::n_out]) {
+void simple_rnn(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &kernel,
+                const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias) {
 
     using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
     using h_T = array<typename res_T::value_type, CONFIG_T::n_out>;
@@ -348,16 +345,12 @@ struct lstm_config {
 
 template <class in_T, class h_T, typename CONFIG_T>
 void lstm_cell(const in_T &inputs, h_T &hidden_state, h_T &hidden_state_o, h_T &cell_state, h_T &cell_state_o,
-               const typename CONFIG_T::weight_t WI[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t WF[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t WC[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t WO[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWI[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWF[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWC[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWO[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::bias_t BI[CONFIG_T::n_out], const typename CONFIG_T::bias_t BF[CONFIG_T::n_out],
-               const typename CONFIG_T::bias_t BC[CONFIG_T::n_out], const typename CONFIG_T::bias_t BO[CONFIG_T::n_out]) {
+               const typename CONFIG_T::weight_t &WI, const typename CONFIG_T::weight_t &WF,
+               const typename CONFIG_T::weight_t &WC, const typename CONFIG_T::weight_t &WO,
+               const typename CONFIG_T::recurrent_weight_t &RWI, const typename CONFIG_T::recurrent_weight_t &RWF,
+               const typename CONFIG_T::recurrent_weight_t &RWC, const typename CONFIG_T::recurrent_weight_t &RWO,
+               const typename CONFIG_T::bias_t &BI, const typename CONFIG_T::bias_t BF, const typename CONFIG_T::bias_t &BC,
+               const typename CONFIG_T::bias_t BO) {
 
     using accum_array_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_out>;
 
@@ -492,16 +485,14 @@ OUTPUT_WRITE_LOOP:
 }
 
 template <class data_T, class res_T, class CONFIG_T>
-void lstm(const data_T &data, res_T &res, const typename CONFIG_T::weight_t WI[CONFIG_T::n_in * CONFIG_T::n_out],
-          const typename CONFIG_T::weight_t WF[CONFIG_T::n_in * CONFIG_T::n_out],
-          const typename CONFIG_T::weight_t WC[CONFIG_T::n_in * CONFIG_T::n_out],
-          const typename CONFIG_T::weight_t WO[CONFIG_T::n_in * CONFIG_T::n_out],
-          const typename CONFIG_T::weight_t RWI[CONFIG_T::n_out * CONFIG_T::n_out],
-          const typename CONFIG_T::weight_t RWF[CONFIG_T::n_out * CONFIG_T::n_out],
-          const typename CONFIG_T::weight_t RWC[CONFIG_T::n_out * CONFIG_T::n_out],
-          const typename CONFIG_T::weight_t RWO[CONFIG_T::n_out * CONFIG_T::n_out],
-          const typename CONFIG_T::bias_t BI[CONFIG_T::n_out], const typename CONFIG_T::bias_t BF[CONFIG_T::n_out],
-          const typename CONFIG_T::bias_t BC[CONFIG_T::n_out], const typename CONFIG_T::bias_t BO[CONFIG_T::n_out]) {
+void lstm(const data_T &data, res_T &res, const typename CONFIG_T::weight_t WI, const typename CONFIG_T::weight_t &WF,
+          const typename CONFIG_T::weight_t &WC, const typename CONFIG_T::weight_t &WO,
+          const typename CONFIG_T::recurrent_weight_t &RWI, const typename CONFIG_T::recurrent_weight_t &RWF,
+          const typename CONFIG_T::recurrent_weight_t &RWC, const typename CONFIG_T::recurrent_weight_t &RWO,
+          const typename CONFIG_T::bias_t &BI, const typename CONFIG_T::bias_t &BF, const typename CONFIG_T::bias_t &BC,
+          const typename CONFIG_T::bias_t &BO) {
+
+    // Note:  currently this does not support recurrent bias
 
     using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
     using h_T = array<typename res_T::value_type, CONFIG_T::n_out>;
