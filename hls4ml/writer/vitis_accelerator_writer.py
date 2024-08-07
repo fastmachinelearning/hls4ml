@@ -275,7 +275,7 @@ class VitisAcceleratorWriter(VitisWriter):
                     elif memory_type == "ddr":
                         for i in range(0, num_kernels):
                             newline += f"sp=kernel_wrapper_{i + 1}.in:DDR[{i}]\n"
-                            newline += f"sp=kernel_wrapper_{i + 1}.out:HBM[{i}]\n"
+                            newline += f"sp=kernel_wrapper_{i + 1}.out:DDR[{i}]\n"
                             newline += "\n"
                         for i in range(0, num_kernels):
                             newline += f"slr=kernel_wrapper_{i + 1}:SLR{i}\n"

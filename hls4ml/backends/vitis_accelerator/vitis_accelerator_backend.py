@@ -17,6 +17,7 @@ class VitisAcceleratorBackend(VitisBackend):
     def create_initial_config(
         self,
         board="alveo-u55c",
+        platform=None,
         part=None,
         clock_period=5,
         clock_uncertainty='27%',
@@ -46,6 +47,7 @@ class VitisAcceleratorBackend(VitisBackend):
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
         config["AcceleratorConfig"] = {}
         config["AcceleratorConfig"]["Board"] = board
+        config["AcceleratorConfig"]["Platform"] = platform
         config["AcceleratorConfig"]["Num_Kernel"] = num_kernel
         config["AcceleratorConfig"]["Num_Worker"] = num_worker
         config["AcceleratorConfig"]["Batchsize"] = batchsize

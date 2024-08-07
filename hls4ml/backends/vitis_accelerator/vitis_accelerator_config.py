@@ -15,7 +15,18 @@ class VitisAcceleratorConfig:
             board_info = self.supported_boards[self.board]
             self.board_type = board_info["board_type"]
             self.part = board_info["part"]
-            self.platform = board_info["platform"]
+            if accel_config.get("Platform") is not None:
+                if accel_config.get("Platform") in board_info["platform"]:
+                    self.platform = accel_config.get("Platform")
+                else:
+                    print(
+                        "WARNING: You set an unrecognized Platform."
+                        "Using " + board_info["platform"][0] + " platform instead"
+                    )
+                    self.platform = board_info["platform"][0]
+            else:
+                print("Using " + board_info["platform"][0] + " platform")
+                self.platform = board_info["platform"][0]
             self.memory_type = board_info["memory"]["type"]
             self.memory_channel_count = board_info["memory"]["channels"]
         else:
