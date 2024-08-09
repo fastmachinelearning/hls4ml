@@ -62,10 +62,9 @@ def test_dense(backend, io_type):
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
     data = hls_model.build()
-    if not compare_synthesis(data,str(test_root_path / f'keras_api_dense_{backend}_{io_type}')):
-        warnings.warn("Results don't match baseline")
     if data.keys() < {'CSimResults','CSynthesisReport'}:
         raise ValueError('Synthesis Failed')
+    dump_results(data,str(test_root_path / f'keras_api_dense_{backend}_{io_type}'))
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=1e-2, atol=0.01)
 
     assert len(model.layers) + 1 == len(hls_model.get_layers())
@@ -100,7 +99,6 @@ def test_activations(activation_function, backend, io_type):
     model = tf.keras.models.Sequential()
     model.add(Dense(64, input_shape=(1,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
     model.add(activation_function)
-
     model.compile(optimizer='adam', loss='mse')
     X_input = np.random.rand(100, 1)
     keras_prediction = model.predict(X_input)
@@ -112,10 +110,9 @@ def test_activations(activation_function, backend, io_type):
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
     data = hls_model.build()
-    if not compare_synthesis(data,str(test_root_path / f'keras_api_activations_{activation_function.name}_{backend}_{io_type}.json')):
-        warnings.warn("Results don't match baseline")
     if data.keys() < {'CSimResults','CSynthesisReport'}:
         raise ValueError('Synthesis Failed')
+    dump_results(data,str(test_root_path / f'keras_api_activations_{activation_function.name}_{backend}_{io_type}.json'))
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=1e-2, atol=0.01)
 
     assert len(model.layers) + 1 == len(hls_model.get_layers())
@@ -159,10 +156,9 @@ def test_conv1d(padds, backend, io_type):
     )
     hls_model.compile()
     data = hls_model.build()
-    if not compare_synthesis(data,str(test_root_path / f'keras_api_conv1d_{padds}_{backend}_{io_type}')):
-        warnings.warn("Results don't match baseline")
     if data.keys() < {'CSimResults','CSynthesisReport'}:
         raise ValueError('Synthesis Failed')
+    dump_results(data,str(test_root_path / f'keras_api_conv1d_{padds}_{backend}_{io_type}'))
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
     # 5e-2 might be too high
@@ -238,8 +234,7 @@ def test_conv2d(chans, padds, backend, io_type):
     data = hls_model.build()
     if data.keys() < {'CSimResults','CSynthesisReport'}:
         raise ValueError('Synthesis Failed')
-    if not compare_synthesis(data,str(test_root_path / f'keras_api_conv2d_{backend}_{chans}_{padds}_{io_type}.json')):
-        warnings.warn("Results don't match baseline")
+    dump_results(data,str(test_root_path / f'keras_api_conv2d_{backend}_{chans}_{padds}_{io_type}.json'))
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
     # A high tolerance, simply to verify correct functionality
@@ -338,8 +333,7 @@ def test_depthwise2d(backend, io_type):
     data = hls_model.build()
     if data.keys() < {'CSimResults','CSynthesisReport'}:
         raise ValueError('Synthesis Failed')
-    if compare_synthesis(data,str(test_root_path / f'keras_api_depthwiseconv2d_{backend}_{io_type}.json')):
-        warnings.warn("Results don't match baseline")
+    dump_results(data,str(test_root_path / f'keras_api_depthwiseconv2d_{backend}_{io_type}.json'))
     y_qkeras = model.predict(X)
     y_hls4ml = hls_model.predict(X)
 
@@ -368,8 +362,7 @@ def test_depthwise1d(backend, io_type):
     data = hls_model.build()
     if data.keys() < {'CSimResults','CSynthesisReport'}:
         raise ValueError('Synthesis Failed')
-    if not compare_synthesis(data,str(test_root_path / f'keras_api_depthwiseconv1d_{backend}_{io_type}.json')):
-        warnings.warn("Results don't match baseline")
+    dump_results(data,str(test_root_path / f'keras_api_depthwiseconv1d_{backend}_{io_type}.json'))
     y_qkeras = model.predict(X)
     y_hls4ml = hls_model.predict(X)
 
@@ -404,10 +397,9 @@ def test_pooling(pooling, padds, chans, backend):
     data = hls_model.build()
     if data.keys() < {'CSimResults','CSynthesisReport'}:
         raise ValueError('Synthesis Failed')
-    if not compare_synthesis(data,str(
+    dump_results(data,str(
         test_root_path / f'keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}.json'
-    )):
-        warnings.warn("Results don't match baseline")
+    ))
     # Verify accuracy
     keras_prediction = keras_model.predict(X_input)
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
@@ -508,12 +500,8 @@ def test_pooling(pooling, padds, chans, backend):
             assert hls_pool.attributes['n_out'] == out_valid
             assert hls_pool.attributes['pad_left'] == 0
             assert hls_pool.attributes['pad_right'] == 0
-def compare_synthesis(data,filename):
-    with open(filename, "w") as fp:
-       baseline = json.dump(data,fp)
-    if data == baseline:
-        return True
-    else: 
-        return False
+def dump_results(data,filename):
+    with open('results/' + filename, "w") as fp:
+       json.dump(data,fp)
 
-    
+   
