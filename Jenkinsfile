@@ -8,6 +8,9 @@ pipeline {
   options {
     timeout(time: 6, unit: 'HOURS')
   }
+  environment {
+        Artifact_Directory = '$JENKINS_HOME/jobs/<job>/builds/<build>/archive'
+    }
 
   stages {
     stage('Keras to HLS') {
@@ -17,8 +20,9 @@ pipeline {
               conda activate hls4ml-py310
               conda install -y jupyterhub pydot graphviz pytest pytest-cov
               pip install pytest-randomly jupyter onnx>=1.4.0 matplotlib pandas seaborn pydigitalwavetools==1.1 pyyaml tensorflow==2.14 qonnx torch git+https://github.com/google/qkeras.git pyparsing
-              pytest build_tests/test_keras_api_with_synthesis.py -v
               pip install -U ../ --user
+              pytest build_tests/test_keras_api_with_synthesis.py -v
+              python build_tests/compare_results.py $JENKINS_HOME/jobs/<job>/builds/<build>/archive/synthesis_results
               ./convert-keras-models.sh -x -f keras-models.txt
               pip uninstall hls4ml -y'''
         }
