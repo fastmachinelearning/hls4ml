@@ -259,9 +259,9 @@ class Layer:
         type_name = None
         if data is None:
             if 'data_format' in self.attributes:
-                if self.attributes['data_format'] == "channels_first":
+                if self.attributes['data_format'] == 'channels_first':
                     data = np.zeros(self.get_output_variable().shape[0])
-                elif self.attributes['data_format'] == "channels_last":
+                elif self.attributes['data_format'] == 'channels_last':
                     data = np.zeros(self.get_output_variable().shape[-1])
             else:
                 data = np.zeros(self.get_output_variable().shape[-1])

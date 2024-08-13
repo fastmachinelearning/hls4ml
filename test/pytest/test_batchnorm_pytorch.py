@@ -94,9 +94,9 @@ def test_batchnorm_fusion(fusion_data, backend, io_type):
     # We do not have an implementation of a transpose for io_stream, need to transpose inputs and outputs outside of hls4ml
     if io_type == 'io_stream':
         fusion_data = np.ascontiguousarray(fusion_data.transpose(0, 2, 1))
-        config = hls4ml.utils.config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
+        config = hls4ml.utils.config_from_pytorch_model(model, channels_last_conversion='internal', transpose_outputs=False)
     else:
-        config = hls4ml.utils.config_from_pytorch_model(model, channels_last_conversion="full", transpose_outputs=True)
+        config = hls4ml.utils.config_from_pytorch_model(model, channels_last_conversion='full', transpose_outputs=True)
 
     config['Model']['Strategy'] = 'Resource'
 
