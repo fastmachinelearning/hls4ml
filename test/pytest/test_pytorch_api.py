@@ -32,11 +32,11 @@ def test_linear(backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (None, 1))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}')
 
     hls_model = convert_from_pytorch_model(
-        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
 
     hls_model.compile()
@@ -83,12 +83,12 @@ def test_activations(activation_function, backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (None, 1))
     output_dir = str(
         test_root_path / f'hls4mlprj_pytorch_api_activations_{activation_function.__class__.__name__}_{backend}_{io_type}'
     )
     hls_model = convert_from_pytorch_model(
-        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
     hls_model.compile()
 
@@ -174,11 +174,11 @@ def test_activation_functionals(activation_function, backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (None, 1))
     fn_name = activation_function.__class__.__name__
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_relu_{backend}_{io_type}_{fn_name}')
     hls_model = convert_from_pytorch_model(
-        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
     hls_model.compile()
 
@@ -217,13 +217,13 @@ def test_conv1d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-        config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
+        config = config_from_pytorch_model(model, (None, n_in, size_in), channels_last_conversion="internal", transpose_outputs=False)
     else:
-        config = config_from_pytorch_model(model, channels_last_conversion="full", transpose_outputs=True)
+        config = config_from_pytorch_model(model, (None, n_in, size_in), channels_last_conversion="full", transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv1d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
-        model, (None, n_in, size_in), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
     hls_model.compile()
 
@@ -328,14 +328,13 @@ def test_conv2d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 3, 1))
-        config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
+        config = config_from_pytorch_model(model, (None, n_in, size_in_height, size_in_width), channels_last_conversion="internal", transpose_outputs=False)
     else:
-        config = config_from_pytorch_model(model, channels_last_conversion="full", transpose_outputs=True)
+        config = config_from_pytorch_model(model, (None, n_in, size_in_height, size_in_width), channels_last_conversion="full", transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv2d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
-        (None, n_in, size_in_height, size_in_width),
         hls_config=config,
         output_dir=output_dir,
         backend=backend,
@@ -487,10 +486,10 @@ def test_pooling(pooling, padds, backend):
     model.eval()
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, input_shape_forHLS)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_pooling_{pooling.__name__}_padds_{padds}_backend_{backend}')
     hls_model = convert_from_pytorch_model(
-        model, input_shape_forHLS, hls_config=config, output_dir=output_dir, backend=backend
+        model, hls_config=config, output_dir=output_dir, backend=backend
     )
     hls_model.compile()
 
@@ -598,11 +597,11 @@ def test_bn(backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (None, 5))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_bn_{backend}_{io_type}')
 
     hls_model = convert_from_pytorch_model(
-        model, (None, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
 
     hls_model.compile()
@@ -641,12 +640,12 @@ def test_squeeze(backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (None, 5))
     del config['Model']['ChannelsLastConversion']  # We don't want anything touched for this test
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_squeeze_{backend}_{io_type}')
 
     hls_model = convert_from_pytorch_model(
-        model, (None, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
 
     hls_model.compile()
@@ -674,9 +673,9 @@ def test_flatten(backend):
     pytorch_prediction = model(input).detach().numpy()
     input_shape = (None, 1, 5, 5)
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, input_shape)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_flatten_backend_{backend}')
-    hls_model = convert_from_pytorch_model(model, input_shape, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
     pred = hls_model.predict(input.detach().numpy())
@@ -720,12 +719,11 @@ def test_skipped_layers(backend, io_type):
     input_shape = (3, 8)
     batch_input_shape = (None,) + input_shape
     config = config_from_pytorch_model(
-        model, default_precision='ap_fixed<32,16>', channels_last_conversion="full", transpose_outputs=False
+        model, batch_input_shape, default_precision='ap_fixed<32,16>', channels_last_conversion="full", transpose_outputs=False
     )
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_skipped_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
-        batch_input_shape,
         hls_config=config,
         output_dir=output_dir,
         io_type=io_type,
@@ -784,13 +782,13 @@ def test_remove_transpose(backend, io_type, tensor_rank):
     batch_input_shape = (None,) + input_shape
     config = config_from_pytorch_model(
         model,
+        batch_input_shape,
         default_precision='ap_fixed<32,16>',
         channels_last_conversion="full",  # Crucial for testing if the first Transpose was removed
     )
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_transpose_nop_{tensor_rank}d_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
-        batch_input_shape,
         hls_config=config,
         output_dir=output_dir,
         io_type=io_type,
@@ -846,12 +844,11 @@ def test_view(backend, io_type):
 
     # X_input is channels last
     X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-    config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
+    config = config_from_pytorch_model(model, (None, n_in, size_in), channels_last_conversion="internal", transpose_outputs=False)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_view_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
-        (None, n_in, size_in),
         hls_config=config,
         output_dir=output_dir,
         backend=backend,

@@ -59,11 +59,11 @@ def test_unnamed_seq(backend, io_type, named_layers):
         model = seq_named
     else:
         model = seq_unnamed
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (None, 1, 5, 5))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_seq_unnamed_{backend}_{io_type}_{named_layers}')
 
     convert_from_pytorch_model(
-        model, (None, 1, 5, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
 
 
@@ -75,9 +75,9 @@ def test_named_seq(backend, io_type, named_layers):
         model = SeqModelNamedLayers()
     else:
         model = SeqModelUnnamedLayers()
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (None, 1, 5, 5))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_seq_named_{backend}_{io_type}_{named_layers}')
 
     convert_from_pytorch_model(
-        model, (None, 1, 5, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )

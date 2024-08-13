@@ -102,7 +102,7 @@ layer_name_map = {
 # ----------------------------------------------------------------
 
 
-def pytorch_to_hls(config):
+def parse_pytorch_model(config):
     """Convert PyTorch model to hls4ml ModelGraph.
 
     Args:
@@ -351,6 +351,12 @@ def pytorch_to_hls(config):
     if len(input_layers) == 0:
         input_layers = None
 
+    #print('Creating HLS model')
+    #hls_model = ModelGraph(config, layer_list, inputs=input_layers)
+    return layer_list, input_layers
+
+def pytorch_to_hls(config):
+    layer_list, input_layers = parse_pytorch_model(config)
     print('Creating HLS model')
     hls_model = ModelGraph(config, layer_list, inputs=input_layers)
     return hls_model
