@@ -334,7 +334,10 @@ def config_from_pytorch_model(
     if backend is not None:
         backend = hls4ml.backends.get_backend(backend)
 
-    layer_list, _, = hls4ml.converters.parse_pytorch_model(config)
+    (
+        layer_list,
+        _,
+    ) = hls4ml.converters.parse_pytorch_model(config)
 
     def make_layer_config(layer):
         cls_name = layer['class_name']
@@ -364,7 +367,6 @@ def config_from_pytorch_model(
                 if attr.default is not None:
                     layer_config[attr.config_name] = attr.default
 
-
         if layer['class_name'] == 'Input':
             dtype = layer['config']['dtype']
             if dtype.startswith('int') or dtype.startswith('uint'):
@@ -373,8 +375,7 @@ def config_from_pytorch_model(
                 layer_config['Precision']['result'] = f'ap_{typename}<{width}>'
             # elif bool, q[u]int, ...
 
-        return layer_config    
-
+        return layer_config
 
     if granularity.lower() == 'type':
         type_config = {}

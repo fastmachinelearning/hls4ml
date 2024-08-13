@@ -62,9 +62,7 @@ def test_unnamed_seq(backend, io_type, named_layers):
     config = config_from_pytorch_model(model, (None, 1, 5, 5))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_seq_unnamed_{backend}_{io_type}_{named_layers}')
 
-    convert_from_pytorch_model(
-        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
 
 @pytest.mark.parametrize('backend', ['Vivado'])
@@ -78,6 +76,4 @@ def test_named_seq(backend, io_type, named_layers):
     config = config_from_pytorch_model(model, (None, 1, 5, 5))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_seq_named_{backend}_{io_type}_{named_layers}')
 
-    convert_from_pytorch_model(
-        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
