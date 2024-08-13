@@ -32,12 +32,12 @@ def test_gru(backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0)).detach().numpy()
 
-    config = config_from_pytorch_model(model, [(None, 1, 10), (None, 1, 20)], channels_last_conversion="off", transpose_outputs=False)
+    config = config_from_pytorch_model(
+        model, [(None, 1, 10), (None, 1, 20)], channels_last_conversion="off", transpose_outputs=False
+    )
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_gru_{backend}_{io_type}')
 
-    hls_model = convert_from_pytorch_model(
-        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
 
@@ -69,7 +69,9 @@ def test_lstm(backend, io_type):
 
         pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0), torch.tensor(c0)).detach().numpy()
 
-        config = config_from_pytorch_model(model, [(None, 1, 10), (None, 1, 20), (None, 1, 20)], channels_last_conversion="off", transpose_outputs=False)
+        config = config_from_pytorch_model(
+            model, [(None, 1, 10), (None, 1, 20), (None, 1, 20)], channels_last_conversion="off", transpose_outputs=False
+        )
         output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_lstm_{backend}_{io_type}')
 
         hls_model = convert_from_pytorch_model(
@@ -111,7 +113,9 @@ def test_rnn(backend, io_type):
 
         pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0)).detach().numpy()
 
-        config = config_from_pytorch_model(model, [(None, 1, 10), (None, 1, 20)], channels_last_conversion="off", transpose_outputs=False)
+        config = config_from_pytorch_model(
+            model, [(None, 1, 10), (None, 1, 20)], channels_last_conversion="off", transpose_outputs=False
+        )
         output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_rnn_{backend}_{io_type}')
 
         hls_model = convert_from_pytorch_model(
