@@ -351,9 +351,10 @@ def parse_pytorch_model(config):
     if len(input_layers) == 0:
         input_layers = None
 
-    #print('Creating HLS model')
-    #hls_model = ModelGraph(config, layer_list, inputs=input_layers)
+    # print('Creating HLS model')
+    # hls_model = ModelGraph(config, layer_list, inputs=input_layers)
     return layer_list, input_layers
+
 
 def pytorch_to_hls(config):
     layer_list, input_layers = parse_pytorch_model(config)
