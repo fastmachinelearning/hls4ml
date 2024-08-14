@@ -77,7 +77,7 @@ class BatchNorm_w_Fusion(nn.Module):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 def test_batchnorm_fusion(fusion_data, backend, io_type):
     n_in = 2
     momentum = 0.99
