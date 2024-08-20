@@ -51,6 +51,15 @@ class HLSConfig:
 
         self.pipeline_style = 'pipeline'
 
+        if 'WriterConfig' in self.config:
+            self.writer_config = self.config['WriterConfig']
+        else:
+            self.writer_config = {
+                'Namespace': None,
+                'WriteWeightsTxt': True,
+                'WriteTar': False,
+            }
+
         self._parse_hls_config()
         self._validate_hls_config()
 
@@ -189,6 +198,7 @@ class HLSConfig:
 
         return compression
 
+
     def parse_name_config(self, layer_name, layer_cfg):
         """This is used by _parse_hls_config below, but also in optimizers when a new layer config is created"""
         precision_cfg = layer_cfg.get('Precision')
@@ -217,6 +227,11 @@ class HLSConfig:
         compression = layer_cfg.get('Compression')
         if compression is not None:
             self.layer_name_compression[layer_name.lower()] = bool(compression)
+
+
+    def get_writer_config(self):
+        return self.writer_config
+
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
