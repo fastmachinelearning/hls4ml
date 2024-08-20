@@ -198,7 +198,6 @@ class HLSConfig:
 
         return compression
 
-
     def parse_name_config(self, layer_name, layer_cfg):
         """This is used by _parse_hls_config below, but also in optimizers when a new layer config is created"""
         precision_cfg = layer_cfg.get('Precision')
@@ -228,10 +227,8 @@ class HLSConfig:
         if compression is not None:
             self.layer_name_compression[layer_name.lower()] = bool(compression)
 
-
     def get_writer_config(self):
         return self.writer_config
-
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
