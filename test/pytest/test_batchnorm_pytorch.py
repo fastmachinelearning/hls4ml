@@ -100,10 +100,6 @@ def test_batchnorm_fusion(fusion_data, backend, io_type):
 
     config['Model']['Strategy'] = 'Resource'
 
-    default_precision = 'ac_fixed<32, 1, true>' if backend == 'Quartus' else 'ac_fixed<32, 1>'
-
-    config['Model']['Precision'] = default_precision
-
     # conversion
     output_dir = str(test_root_path / f'hls4mlprj_block_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_pytorch_model(
