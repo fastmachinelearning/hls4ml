@@ -401,6 +401,8 @@ def config_from_onnx_model(
                     precision_cfg[name] = 'auto'
                 else:
                     precision_cfg[name] = str(attr.default)
+            elif attr.name == 'reuse_factor':
+                layer_config[attr.config_name] = default_reuse_factor
             else:
                 if attr.default is not None:
                     layer_config[attr.config_name] = attr.default
