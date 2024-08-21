@@ -179,6 +179,12 @@ class Layer:
             accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
             self.set_attr('accum_t', accum_t)
 
+    def _set_type_t(self, name):
+        has_type_t = any(a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute))
+        if has_type_t:
+            type_t = NamedType(*reversed(self.model.config.get_precision(self, name)))
+            self.set_attr(name + '_t', type_t)
+
     def get_input_node(self, input_name=None):
         if input_name is None:
             if len(self.inputs) > 0:
@@ -446,6 +452,7 @@ class SeparableConv1D(Layer):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('n_filt'),
+        Attribute('depth_multiplier', default=1),
         Attribute('filt_width'),
         Attribute('stride_width'),
         Attribute('pad_left'),
@@ -476,14 +483,35 @@ class SeparableConv1D(Layer):
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+        # set the needed types if needed
+        self._set_type_t('pointwise_accum')
+        self._set_type_t('depthwise_accum')
+        self._set_type_t('depthwise_result')
+
 
 class DepthwiseConv1D(Conv1D):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_width'], self.attributes['n_chan']]
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
             dims = [f'OUT_HEIGHT_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'], self.attributes['out_width']]
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -588,6 +616,7 @@ class SeparableConv2D(Layer):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('n_filt'),
+        Attribute('depth_multiplier', default=1),
         Attribute('filt_height'),
         Attribute('filt_width'),
         Attribute('stride_height'),
@@ -622,14 +651,48 @@ class SeparableConv2D(Layer):
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+        self._set_type_t('pointwise_accum')
+        self._set_type_t('depthwise_accum')
+        self._set_type_t('depthwise_result')
+
 
 class DepthwiseConv2D(Conv2D):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            shape = [
+                self.attributes['out_height'],
+                self.attributes['out_width'],
+                self.attributes['n_filt'],
+            ]
             dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            shape = [
+                self.attributes['n_filt'],
+                self.attributes['out_height'],
+                self.attributes['out_width'],
+            ]
             dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
