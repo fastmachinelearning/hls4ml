@@ -63,6 +63,7 @@ register_flow(
         'eliminate_linear_activation',
         'qkeras_factorize_alpha',
         'extract_ternary_threshold',
+        'replace_multidimensional_dense_with_conv',
         'seperable_to_depthwise_and_conv',
         # The ones above here need to be before infer_precision_types
         'infer_precision_types',
@@ -74,7 +75,6 @@ register_flow(
         'expand_layer_group',
         'output_rounding_saturation_mode',
         'fuse_consecutive_batch_normalization',
-        'replace_multidimensional_dense_with_conv',
         'enforce_proxy_model_embedded_config',
     ],
     requires=['parse_qonnx'],
