@@ -51,6 +51,15 @@ class HLSConfig:
 
         self.pipeline_style = 'pipeline'
 
+        if 'WriterConfig' in self.config:
+            self.writer_config = self.config['WriterConfig']
+        else:
+            self.writer_config = {
+                'Namespace': None,
+                'WriteWeightsTxt': True,
+                'WriteTar': False,
+            }
+
         self._parse_hls_config()
         self._validate_hls_config()
 
@@ -101,6 +110,7 @@ class HLSConfig:
         return layer_config
 
     def set_name_config(self, name, config):
+        """sets hls_config["LayerName"][name] = config"""
         hls_config = self.config['HLSConfig']
         layer_config = hls_config.setdefault('LayerName', {})
         layer_config[name] = config
@@ -217,6 +227,9 @@ class HLSConfig:
         compression = layer_cfg.get('Compression')
         if compression is not None:
             self.layer_name_compression[layer_name.lower()] = bool(compression)
+
+    def get_writer_config(self):
+        return self.writer_config
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
@@ -613,6 +626,44 @@ class ModelGraph:
                     node.outputs[i] = repl[n]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
+        self._update_model_outputs()
+
+    def split_node(self, old_node, new_node1, new_node2):
+        """Replace an existing node in the graph with two nodes in sequence.
+
+        Args:
+            old_node (Layer): The node to replace
+            new_node1 (Layer): The first new node in sequence
+            new_node2 (Layer): The second new node in sequence
+
+        """
+
+        # fmt: off
+        assert len(new_node1.inputs) == len(old_node.inputs), \
+            f'{new_node1.name} and {old_node.name} have different number of inputs'
+        assert len(new_node2.outputs) == len(old_node.outputs), \
+            f'{new_node2.name} and {old_node.name} have different number of outputs'
+        # fmt: on
+
+        repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node2.outputs)}
+        repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node1.inputs)})
+
+        for node in self.graph.values():
+            for i, n in enumerate(node.inputs):
+                if n in repl:
+                    node.inputs[i] = repl[n]
+            for i, n in enumerate(node.outputs):
+                if n in repl:
+                    node.outputs[i] = repl[n]
+
+        new_graph = OrderedDict()
+        for key, value in self.graph.items():
+            if key == old_node.name:
+                new_graph[new_node1.name] = new_node1
+                new_graph[new_node2.name] = new_node2
+            else:
+                new_graph[key] = value
+        self.graph = new_graph
         self._update_model_outputs()
 
     def _update_model_outputs(self):

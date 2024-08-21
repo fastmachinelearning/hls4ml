@@ -180,6 +180,12 @@ class Layer:
             accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
             self.set_attr('accum_t', accum_t)
 
+    def _set_type_t(self, name):
+        has_type_t = any(a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute))
+        if has_type_t:
+            type_t = NamedType(*reversed(self.model.config.get_precision(self, name)))
+            self.set_attr(name + '_t', type_t)
+
     def get_input_node(self, input_name=None):
         if input_name is None:
             if len(self.inputs) > 0:
@@ -259,7 +265,13 @@ class Layer:
         precision = None
         type_name = None
         if data is None:
-            data = np.zeros(self.get_output_variable().shape[-1])
+            if 'data_format' in self.attributes:
+                if self.attributes['data_format'] == 'channels_first':
+                    data = np.zeros(self.get_output_variable().shape[0])
+                elif self.attributes['data_format'] == 'channels_last':
+                    data = np.zeros(self.get_output_variable().shape[-1])
+            else:
+                data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
             type_name = 'bias{index}_t'
             quantizer = None  # Don't quantize non-existant bias
@@ -502,6 +514,7 @@ class SeparableConv1D(Layer):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('n_filt'),
+        Attribute('depth_multiplier', default=1),
         Attribute('filt_width'),
         Attribute('stride_width'),
         Attribute('pad_left'),
@@ -532,14 +545,35 @@ class SeparableConv1D(Layer):
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+        # set the needed types if needed
+        self._set_type_t('pointwise_accum')
+        self._set_type_t('depthwise_accum')
+        self._set_type_t('depthwise_result')
+
 
 class DepthwiseConv1D(Conv1D):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_width'], self.attributes['n_chan']]
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
             dims = [f'OUT_HEIGHT_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'], self.attributes['out_width']]
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -644,6 +678,7 @@ class SeparableConv2D(Layer):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('n_filt'),
+        Attribute('depth_multiplier', default=1),
         Attribute('filt_height'),
         Attribute('filt_width'),
         Attribute('stride_height'),
@@ -678,14 +713,48 @@ class SeparableConv2D(Layer):
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+        self._set_type_t('pointwise_accum')
+        self._set_type_t('depthwise_accum')
+        self._set_type_t('depthwise_result')
+
 
 class DepthwiseConv2D(Conv2D):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            shape = [
+                self.attributes['out_height'],
+                self.attributes['out_width'],
+                self.attributes['n_filt'],
+            ]
             dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            shape = [
+                self.attributes['n_filt'],
+                self.attributes['out_height'],
+                self.attributes['out_width'],
+            ]
             dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -1173,6 +1242,8 @@ class SimpleRNN(Layer):
 
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
+        if "pytorch" in self.attributes.keys():
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
 class LSTM(Layer):
@@ -1224,8 +1295,11 @@ class LSTM(Layer):
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
 
-        recurrent_bias = np.zeros(recurrent_weight.shape[1])
-        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+        if "pytorch" in self.attributes.keys():
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
+        else:
+            recurrent_bias = np.zeros(recurrent_weight.shape[1])
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
 
 class GRU(Layer):

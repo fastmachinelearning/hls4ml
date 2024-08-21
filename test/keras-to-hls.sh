@@ -144,6 +144,11 @@ do
      echo "    Input: ${precision}" >> ${file}
      echo "    Output: ${precision}" >> ${file}
    fi
+   # Write tarball
+   echo "WriterConfig:" >> ${file}
+   echo "  Namespace: null" >> ${file}
+   echo "  WriteWeightsTxt: true" >> ${file}
+   echo "  WriteTar: true" >> ${file}
 
    ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
