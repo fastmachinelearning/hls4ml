@@ -10,7 +10,6 @@ test_root_path = Path(__file__).parent
 
 padds_options = ['same', 'valid']
 chans_options = ['channels_last']
-io_type_options = ['io_parallel', 'io_stream']
 strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
 bias_options = [False]
@@ -50,7 +49,9 @@ def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend):
     model.compile(optimizer='adam', loss='mse')
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
+    config = hls4ml.utils.config_from_keras_model(
+        model, default_precision='ap_fixed<32,16>', granularity="name", backend=backend
+    )
     stride_cfg = str(strides).replace(', ', '_').replace('(', '').replace(')', '')
     kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(

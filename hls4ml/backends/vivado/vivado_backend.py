@@ -15,6 +15,7 @@ from hls4ml.model.layers import (
     Conv1D,
     Conv2D,
     Dense,
+    DepthwiseConv1D,
     DepthwiseConv2D,
     Embedding,
     GarNet,
@@ -72,12 +73,6 @@ class VivadoBackend(FPGABackend):
             attrs = self.attribute_map.get(layer, [])
             # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
-            self.attribute_map[layer] = attrs
-
-        sep_conv_layers = [SeparableConv1D, SeparableConv2D]
-        for layer in sep_conv_layers:
-            attrs = self.attribute_map.get(layer, [])
-            attrs.append(TypeAttribute('dw_output', default=FixedPrecisionType(18, 8)))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -358,6 +353,31 @@ class VivadoBackend(FPGABackend):
         else:
             dw_output_t = NamedType(dw_out_name, dw_out_precision)
         layer.set_attr('dw_output_t', dw_output_t)
+
+    @layer_optimizer(DepthwiseConv1D)
+    def init_depconv1d(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+        else:
+            layer.set_attr('strategy', 'latency')
+
+        out_width = layer.get_output_variable().shape[0]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(1, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_width // closest_pf)
+
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):

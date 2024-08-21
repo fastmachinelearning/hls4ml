@@ -109,6 +109,12 @@ class HLSConfig:
 
         return layer_config
 
+    def set_name_config(self, name, config):
+        """sets hls_config["LayerName"][name] = config"""
+        hls_config = self.config['HLSConfig']
+        layer_config = hls_config.setdefault('LayerName', {})
+        layer_config[name] = config
+
     def get_precision(self, layer, var='default'):
         precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
         type_name = layer.name.lower() + '_' + var + '_t'
@@ -192,6 +198,35 @@ class HLSConfig:
 
         return compression
 
+    def parse_name_config(self, layer_name, layer_cfg):
+        """This is used by _parse_hls_config below, but also in optimizers when a new layer config is created"""
+        precision_cfg = layer_cfg.get('Precision')
+        if isinstance(precision_cfg, dict):
+            for var, precision in precision_cfg.items():
+                self.layer_name_precision[layer_name.lower() + '_' + var] = precision
+        else:
+            self.layer_name_precision[layer_name.lower() + '_default'] = precision_cfg
+
+        rf = layer_cfg.get('ReuseFactor')
+        if rf is not None:
+            self.layer_name_rf[layer_name.lower()] = rf
+
+        targ_cycles = layer_cfg.get('TargetCycles')
+        if targ_cycles is not None:
+            self.layer_name_targ_cycles[layer_name.lower()] = targ_cycles
+
+        strategy = layer_cfg.get('Strategy')
+        if strategy is not None:
+            self.layer_name_strategy[layer_name.lower()] = strategy
+
+        conv_implementation = layer_cfg.get('ConvImplementation')
+        if conv_implementation is not None:
+            self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
+
+        compression = layer_cfg.get('Compression')
+        if compression is not None:
+            self.layer_name_compression[layer_name.lower()] = bool(compression)
+
     def get_writer_config(self):
         return self.writer_config
 
@@ -267,32 +302,7 @@ class HLSConfig:
         layer_name_cfg = hls_config.get('LayerName')
         if layer_name_cfg is not None:
             for layer_name, layer_cfg in layer_name_cfg.items():
-                precision_cfg = layer_cfg.get('Precision')
-                if isinstance(precision_cfg, dict):
-                    for var, precision in precision_cfg.items():
-                        self.layer_name_precision[layer_name.lower() + '_' + var] = precision
-                else:
-                    self.layer_name_precision[layer_name.lower() + '_default'] = precision_cfg
-
-                rf = layer_cfg.get('ReuseFactor')
-                if rf is not None:
-                    self.layer_name_rf[layer_name.lower()] = rf
-
-                targ_cycles = layer_cfg.get('TargetCycles')
-                if targ_cycles is not None:
-                    self.layer_name_targ_cycles[layer_name.lower()] = targ_cycles
-
-                strategy = layer_cfg.get('Strategy')
-                if strategy is not None:
-                    self.layer_name_strategy[layer_name.lower()] = strategy
-
-                conv_implementation = layer_cfg.get('ConvImplementation')
-                if conv_implementation is not None:
-                    self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
-
-                compression = layer_cfg.get('Compression')
-                if compression is not None:
-                    self.layer_name_compression[layer_name.lower()] = bool(compression)
+                self.parse_name_config(layer_name, layer_cfg)
 
     def _validate_hls_config(self):
         use_dataflow = False
@@ -615,6 +625,44 @@ class ModelGraph:
                     node.outputs[i] = repl[n]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
+        self._update_model_outputs()
+
+    def split_node(self, old_node, new_node1, new_node2):
+        """Replace an existing node in the graph with two nodes in sequence.
+
+        Args:
+            old_node (Layer): The node to replace
+            new_node1 (Layer): The first new node in sequence
+            new_node2 (Layer): The second new node in sequence
+
+        """
+
+        # fmt: off
+        assert len(new_node1.inputs) == len(old_node.inputs), \
+            f'{new_node1.name} and {old_node.name} have different number of inputs'
+        assert len(new_node2.outputs) == len(old_node.outputs), \
+            f'{new_node2.name} and {old_node.name} have different number of outputs'
+        # fmt: on
+
+        repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node2.outputs)}
+        repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node1.inputs)})
+
+        for node in self.graph.values():
+            for i, n in enumerate(node.inputs):
+                if n in repl:
+                    node.inputs[i] = repl[n]
+            for i, n in enumerate(node.outputs):
+                if n in repl:
+                    node.outputs[i] = repl[n]
+
+        new_graph = OrderedDict()
+        for key, value in self.graph.items():
+            if key == old_node.name:
+                new_graph[new_node1.name] = new_node1
+                new_graph[new_node2.name] = new_node2
+            else:
+                new_graph[key] = value
+        self.graph = new_graph
         self._update_model_outputs()
 
     def _update_model_outputs(self):
