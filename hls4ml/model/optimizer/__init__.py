@@ -33,8 +33,14 @@ del optimizers
 register_flow(
     'convert',
     [
-        'eliminate_linear_activation',  # needs to be before infer_precision_types
-        'seperable_to_depthwise_and_conv',  # has to be before precision inference
+        'fuse_consecutive_batch_normalization',
+        'fuse_batch_normalization',
+        'eliminate_linear_activation',
+        'qkeras_factorize_alpha',
+        'extract_ternary_threshold',
+        'replace_multidimensional_dense_with_conv',
+        'seperable_to_depthwise_and_conv',
+        # The ones above here need to be before infer_precision_types
         'infer_precision_types',
         'channels_last_converter',
         'remove_transpose_before_flatten',
@@ -43,10 +49,7 @@ register_flow(
         'fuse_bias_add',
         'expand_layer_group',
         'output_rounding_saturation_mode',
-        'qkeras_factorize_alpha',
-        'extract_ternary_threshold',
         'fuse_consecutive_batch_normalization',
-        'replace_multidimensional_dense_with_conv',
         'enforce_proxy_model_embedded_config',
     ],
 )  # TODO Maybe not all QKeras optmizers belong here?
@@ -55,8 +58,6 @@ register_flow(
     'optimize',
     [
         'eliminate_linear_activation',
-        'fuse_consecutive_batch_normalization',
-        'fuse_batch_normalization',
         'infer_precision_types',
         'set_precision_concat',
     ],
