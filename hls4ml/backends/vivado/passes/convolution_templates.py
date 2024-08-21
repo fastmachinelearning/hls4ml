@@ -254,8 +254,8 @@ sepconv2d_function_template = (
     '{input}, {output}, {d}, {p}, {z}, {b});'
 )
 
-sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
-sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
+sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
+sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
 
 
 class SeparableConv1DConfigTemplate(LayerConfigTemplate):
@@ -280,12 +280,16 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         # Override bias and bias_t since these are zeros in depthwise step of SepConv1D
         params['bias'] = params['zero_bias']
         params['bias_t'] = params['zero_bias_t']
-        params['n_filt'] = params['n_chan']  # In depthwise step n_chan == n_filt
+        params['n_filt'] = params['n_chan'] * node.get_attr('depth_multiplier')  # In depthwise step n_chan == n_filt
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('depthwise').nzeros
         params['index'] = str(node.index) + '_depthwise'
         params['weight_t'] = node.get_weights('depthwise').type
-        params['fill_fn'] = 'FillConv1DBuffer'
+        params['bias_t'] = node.get_weights('zero_bias').type
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = f'fill_buffer_{node.index}_dw'
+        else:
+            params['fill_fn'] = 'FillConv1DBuffer'
 
         if node.get_attr('unscaled'):
             params['scale_index_type'] = 'scale_index_unscaled'
@@ -316,13 +320,17 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
 
         params['filt_width'] = 1
         params['stride_width'] = 1
+        params['pad_left'] = params['pad_right'] = 0
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('pointwise').nzeros
         params['index'] = str(node.index) + '_pointwise'
         params['weight_t'] = node.get_weights('pointwise').type
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
-        params['fill_fn'] = 'FillConv1DBuffer'
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = f'fill_buffer_{node.index}_pw'
+        else:
+            params['fill_fn'] = 'FillConv1DBuffer'
 
         if node.get_attr('unscaled'):
             params['scale_index_type'] = 'scale_index_unscaled'
@@ -401,7 +409,10 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('depthwise').nzeros
         params['index'] = str(node.index) + '_depthwise'
         params['weight_t'] = node.get_weights('depthwise').type
-        params['fill_fn'] = 'FillConv2DBuffer'
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = f'fill_buffer_{node.index}_dw'
+        else:
+            params['fill_fn'] = 'FillConv2DBuffer'
 
         if node.get_attr('unscaled_h'):
             params['scale_index_height_type'] = 'scale_index_unscaled'
@@ -439,6 +450,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
 
         params['filt_height'] = params['filt_width'] = 1
         params['stride_height'] = params['stride_width'] = 1
+        params['pad_left'] = params['pad_right'] = 0
+        params['pad_top'] = params['pad_bottom'] = 0
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('pointwise').nzeros
         params['index'] = str(node.index) + '_pointwise'
@@ -446,7 +459,10 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['min_height'] = params['in_height']
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
-        params['fill_fn'] = 'FillConv2DBuffer'
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = f'fill_buffer_{node.index}_pw'
+        else:
+            params['fill_fn'] = 'FillConv2DBuffer'
 
         if node.get_attr('unscaled_h'):
             params['scale_index_height_type'] = 'scale_index_unscaled'
