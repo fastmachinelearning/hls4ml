@@ -40,7 +40,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev53+g5bcba684
+                0.9.0.dev54+g2898ab2f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -146,6 +146,7 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.precision_merge">hls4ml.model.optimizer.passes.precision_merge module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.qkeras">hls4ml.model.optimizer.passes.qkeras module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">hls4ml.model.optimizer.passes.seperable_to_dw_conv module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.stamp">hls4ml.model.optimizer.passes.stamp module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.transpose_opt">hls4ml.model.optimizer.passes.transpose_opt module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes">Module contents</a></li>
@@ -391,6 +392,18 @@ when defining the expected attributes of layer classes.</p>
 <span class="sig-name descname"><span class="pre">is_resource_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.HLSConfig.is_resource_strategy" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.HLSConfig.parse_name_config">
+<span class="sig-name descname"><span class="pre">parse_name_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_cfg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.HLSConfig.parse_name_config" title="Permalink to this definition"></a></dt>
+<dd><p>This is used by _parse_hls_config below, but also in optimizers when a new layer config is created</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.HLSConfig.set_name_config">
+<span class="sig-name descname"><span class="pre">set_name_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.HLSConfig.set_name_config" title="Permalink to this definition"></a></dt>
+<dd><p>sets hls_config[“LayerName”][name] = config</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -564,6 +577,21 @@ to the inputs of the next node</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>old_node</strong> (<a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The node to replace</p></li>
 <li><p><strong>new_node</strong> (<a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The new node</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.ModelGraph.split_node">
+<span class="sig-name descname"><span class="pre">split_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_node1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_node2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph.split_node" title="Permalink to this definition"></a></dt>
+<dd><p>Replace an existing node in the graph with two nodes in sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_node</strong> (<a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The node to replace</p></li>
+<li><p><strong>new_node1</strong> (<a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The first new node in sequence</p></li>
+<li><p><strong>new_node2</strong> (<a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The second new node in sequence</p></li>
 </ul>
 </dd>
 </dl>

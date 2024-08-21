@@ -84,6 +84,14 @@ hls4ml.model.optimizer.passes.qkeras module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.seperable\_to\_dw\_conv module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.seperable_to_dw_conv
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.stamp module
 ------------------------------------------
 

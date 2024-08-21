@@ -37,7 +37,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev53+g5bcba684
+                0.9.0.dev54+g2898ab2f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -2221,6 +2221,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.model.optimizer.passes.seperable_to_dw_conv
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.model.optimizer.passes.stamp
 
       <ul>
@@ -2536,6 +2543,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_dense">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_depconv1d">init_depconv1d() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_depconv2d">init_depconv2d() (hls4ml.backends.catapult.catapult_backend.CatapultBackend method)</a>
 
       <ul>
@@ -2947,6 +2956,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.match">(hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.match">(hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveNopTranspose.match">(hls4ml.model.optimizer.passes.transpose_opt.RemoveNopTranspose method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveSingleChannelTranspose.match">(hls4ml.model.optimizer.passes.transpose_opt.RemoveSingleChannelTranspose method)</a>
@@ -3248,6 +3259,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.qkeras">hls4ml.model.optimizer.passes.qkeras</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">hls4ml.model.optimizer.passes.seperable_to_dw_conv</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.stamp">hls4ml.model.optimizer.passes.stamp</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.transpose_opt">hls4ml.model.optimizer.passes.transpose_opt</a>
@@ -3482,6 +3495,8 @@
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.model.parse_model_layer">parse_model_layer() (in module hls4ml.converters.keras.model)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.parse_name_config">parse_name_config() (hls4ml.model.graph.HLSConfig method)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_permute_layer">parse_permute_layer() (in module hls4ml.converters.keras.reshape)</a>
 </li>
@@ -3903,6 +3918,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DFunctionTemplate">(class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv">SeperableToDepthwiseAndConv (class in hls4ml.model.optimizer.passes.seperable_to_dw_conv)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.set_attr">set_attr() (hls4ml.model.layers.Layer method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.set_big_fifos">set_big_fifos() (in module hls4ml.backends.catapult.passes.fifo_depth_optimization)</a>
@@ -3923,6 +3940,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.set_name_config">set_name_config() (hls4ml.model.graph.HLSConfig method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.set_target_reuse_factor">set_target_reuse_factor() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds">set_thresholds() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
@@ -3954,6 +3973,8 @@
       <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.knapsack.solve_knapsack">solve_knapsack() (in module hls4ml.optimization.knapsack)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Source">Source (class in hls4ml.model.types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.split_node">split_node() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter">StaticWeightVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
@@ -4115,6 +4136,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.transform">(hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.transform">(hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.transform">(hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.stamp.MakeStamp.transform">(hls4ml.model.optimizer.passes.stamp.MakeStamp method)</a>
 </li>
