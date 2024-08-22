@@ -55,8 +55,6 @@ class FPGABackend(Backend):
             Dense,
             Conv1D,
             Conv2D,
-            SeparableConv1D,
-            SeparableConv2D,
             Pooling1D,
             Pooling2D,
             GlobalPooling1D,
@@ -77,6 +75,16 @@ class FPGABackend(Backend):
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('reuse_factor', default=1))
+            self.attribute_map[layer] = attrs
+
+        # seperable is kind of special because it is effectively two layers that will be split
+        for layer in (SeparableConv1D, SeparableConv2D):
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('depthwise_accum'))
+            attrs.append(TypeAttribute('pointwise_accum'))
+            attrs.append(TypeAttribute('depthwise_result'))
+            attrs.append(ConfigurableAttribute('depthwise_reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('pointwise_reuse_factor', default=1))
             self.attribute_map[layer] = attrs
 
         act_attrs = self.attribute_map.get(Activation, [])

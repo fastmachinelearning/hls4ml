@@ -49,7 +49,10 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D', 'Conv2DBatchnorm']:
             return self._infer_conv_precision(node, types_to_infer)
 
-        if node_class in ['SeparableConv1D', 'SeparableConv2D', 'DepthwiseConv2D']:
+        if node_class in ['DepthwiseConv1D', 'DepthwiseConv2D']:
+            return self._infer_depthconv_precision(node, types_to_infer)
+
+        if node_class in ['SeparableConv1D', 'SeparableConv2D']:
             return self._infer_sepconv_precision(node, types_to_infer)
 
         if node_class in ['Pooling1D', 'Pooling2D']:
@@ -164,6 +167,10 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
     def _infer_conv_precision(self, node, types_to_infer):
         n_ops = node.get_attr('n_chan') * node.get_attr('filt_height', 1) * node.get_attr('filt_width')
+        return self._infer_common_precision(node, types_to_infer, n_ops)
+
+    def _infer_depthconv_precision(self, node, types_to_infer):
+        n_ops = node.get_attr('filt_height', 1) * node.get_attr('filt_width')
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
     def _infer_sepconv_precision(self, node, types_to_infer):
