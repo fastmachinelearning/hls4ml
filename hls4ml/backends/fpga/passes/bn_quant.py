@@ -42,9 +42,9 @@ class BatchNormalizationQuantizedTanhConfigTemplate(LayerConfigTemplate):
         params['n_in'] = node.get_input_variable().size_cpp()
 
         if node.get_attr('quantize') == 2:
-            return self.template(0).format(**params)
+            return self.template[0].format(**params)
         else:
-            return self.template(1).format(**params)
+            return self.template[1].format(**params)
 
 
 class BatchNormalizationQuantizedTanhFunctionTemplate(FunctionCallTemplate):
