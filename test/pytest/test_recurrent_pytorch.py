@@ -114,7 +114,7 @@ def test_rnn(backend, io_type):
         pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0)).detach().numpy()
 
         config = config_from_pytorch_model(
-            model, [(None, 1, 10), (None, 1, 20)], channels_last_conversion="off", transpose_outputs=False
+            model, [(1, 10), (1, 20)], channels_last_conversion="off", transpose_outputs=False
         )
         output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_rnn_{backend}_{io_type}')
 

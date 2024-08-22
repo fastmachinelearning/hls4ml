@@ -40,7 +40,7 @@ def test_batchnorm(data, backend, io_type):
     default_precision = 'ac_fixed<32, 1, true>' if backend == 'Quartus' else 'ac_fixed<32, 1>'
 
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (None, in_shape), default_precision=default_precision, granularity='name'
+        model, (in_shape,), default_precision=default_precision, granularity='name'
     )
     output_dir = str(test_root_path / f'hls4mlprj_batchnorm_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_pytorch_model(
@@ -97,11 +97,11 @@ def test_batchnorm_fusion(fusion_data, backend, io_type):
     if io_type == 'io_stream':
         fusion_data = np.ascontiguousarray(fusion_data.transpose(0, 2, 1))
         config = hls4ml.utils.config_from_pytorch_model(
-            model, (None, n_in, size_in_height), channels_last_conversion='internal', transpose_outputs=False
+            model, (n_in, size_in_height), channels_last_conversion='internal', transpose_outputs=False
         )
     else:
         config = hls4ml.utils.config_from_pytorch_model(
-            model, (None, n_in, size_in_height), channels_last_conversion='full', transpose_outputs=True
+            model, (n_in, size_in_height), channels_last_conversion='full', transpose_outputs=True
         )
 
     config['Model']['Strategy'] = 'Resource'

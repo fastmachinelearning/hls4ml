@@ -85,7 +85,7 @@ def test_pytorch_upsampling2d(data_2d, io_type, backend):
 
     config = hls4ml.utils.config_from_pytorch_model(
         model,
-        (None, in_feat, in_height, in_width),
+        (in_feat, in_height, in_width),
         default_precision='ap_fixed<16,6>',
         channels_last_conversion="full",  # With conversion to channels_last
         transpose_outputs=True,

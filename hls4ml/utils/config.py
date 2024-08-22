@@ -285,7 +285,7 @@ def config_from_pytorch_model(
 
     Args:
         model: PyTorch model
-        input_shape (list): The shape of the input tensor. First element is the batch size, needs to be None
+        input_shape (tuple or list of tuples): The shape of the input tensor, excluding the batch size.
         granularity (str, optional): Granularity of the created config. Defaults to 'model'.
             Can be set to 'model', 'type' and 'layer'.
 
@@ -324,6 +324,8 @@ def config_from_pytorch_model(
 
     config['Model'] = model_config
     config['PytorchModel'] = model
+    if not (isinstance(input_shape, tuple) or (isinstance(input_shape, list) and isinstance(input_shape[0], tuple))):
+        raise Exception('Input shape must be tuple (single input) or list of tuples (multiple inputs)')
     config['InputShape'] = input_shape
 
     if granularity.lower() not in ['model', 'type', 'name']:
@@ -334,10 +336,12 @@ def config_from_pytorch_model(
     if backend is not None:
         backend = hls4ml.backends.get_backend(backend)
 
+    from hls4ml.converters.pytorch_to_hls import parse_pytorch_model
+
     (
         layer_list,
         _,
-    ) = hls4ml.converters.parse_pytorch_model(config)
+    ) = parse_pytorch_model(config, verbose=False)
 
     def make_layer_config(layer):
         cls_name = layer['class_name']
@@ -363,6 +367,8 @@ def config_from_pytorch_model(
                     precision_cfg[name] = default_precision
                 else:
                     precision_cfg[name] = str(attr.default)
+            elif attr.name == 'reuse_factor':
+                layer_config[attr.config_name] = default_reuse_factor
             else:
                 if attr.default is not None:
                     layer_config[attr.config_name] = attr.default
