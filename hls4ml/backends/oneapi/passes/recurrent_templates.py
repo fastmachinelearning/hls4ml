@@ -189,11 +189,18 @@ lstm_config_template = """struct config{index} : nnet::lstm_config {{
     static const unsigned return_sequences = {return_sequences};
 
     typedef {accum_t.name} accum_t;
-    typedef {weight_t.name} weight_t;
-    typedef {bias_t.name} bias_t;
-    typedef {recurrent_weight_t.name} recurrent_weight_t;
-    typedef {recurrent_bias_t.name} recurrent_bias_t;  // not yet supported
-
+    typedef {weight_i_t.name} weight_i_t;
+    typedef {bias_i_t.name} bias_i_t;
+    typedef {weight_f_t.name} weight_f_t;
+    typedef {bias_f_t.name} bias_f_t;
+    typedef {weight_c_t.name} weight_c_t;
+    typedef {bias_c_t.name} bias_c_t;
+    typedef {weight_o_t.name} weight_o_t;
+    typedef {bias_o_t.name} bias_o_t;
+    typedef {recurrent_weight_i_t.name} recurrent_weight_i_t;
+    typedef {recurrent_weight_f_t.name} recurrent_weight_f_t;
+    typedef {recurrent_weight_c_t.name} recurrent_weight_c_t;
+    typedef {recurrent_weight_o_t.name} recurrent_weight_o_t;
     typedef {act_t} ACT_CONFIG_T;
     template<class x_T, class y_T, class config_T>
     using activation = nnet::activation::{activation}<x_T, y_T, config_T>;
