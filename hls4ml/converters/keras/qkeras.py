@@ -9,7 +9,9 @@ from hls4ml.model.types import FixedPrecisionType
 
 
 def get_quantizer_from_config(keras_layer, quantizer_var):
-    quantizer_config = keras_layer['config'][f'{quantizer_var}_quantizer']
+    quantizer_config = keras_layer['config'].get(f'{quantizer_var}_quantizer', None)
+    if quantizer_config is None:
+        return None  # No quantizer specified in the layer
     if keras_layer['class_name'] == 'QBatchNormalization':
         return QKerasQuantizer(quantizer_config)
     elif 'binary' in quantizer_config['class_name']:
@@ -25,10 +27,7 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader):
     layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    if keras_layer['config']['bias_quantizer'] is not None:
-        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
-    else:
-        layer['bias_quantizer'] = None
+    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape
 
@@ -43,10 +42,7 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader):
         layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    if keras_layer['config']['bias_quantizer'] is not None:
-        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
-    else:
-        layer['bias_quantizer'] = None
+    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape
 
@@ -56,11 +52,7 @@ def parse_qdepthwiseqconv_layer(keras_layer, input_names, input_shapes, data_rea
     layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'depthwise')
-
-    if keras_layer['config']['bias_quantizer'] is not None:
-        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
-    else:
-        layer['bias_quantizer'] = None
+    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape
 
@@ -76,11 +68,7 @@ def parse_qsepconv_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'depthwise')
     layer['pointwise_quantizer'] = get_quantizer_from_config(keras_layer, 'pointwise')
-
-    if keras_layer['config']['bias_quantizer'] is not None:
-        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
-    else:
-        layer['bias_quantizer'] = None
+    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape
 
@@ -93,11 +81,7 @@ def parse_qrnn_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     layer['recurrent_quantizer'] = get_quantizer_from_config(keras_layer, 'recurrent')
-
-    if keras_layer['config']['bias_quantizer'] is not None:
-        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
-    else:
-        layer['bias_quantizer'] = None
+    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape
 

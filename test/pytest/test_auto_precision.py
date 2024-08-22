@@ -151,12 +151,6 @@ def test_auto_precision_conv(keras_model_conv1d, keras_model_conv2d, data_2d, da
         },
     }
 
-    # Winograd is not bit-accurate, so avoid it.
-    if backend == 'Quartus' and io_type == 'io_parallel':
-        config['LayerName']['first_layer']['Implementation'] = 'im2col'
-        config['LayerName']['middle_layer']['Implementation'] = 'im2col'
-        config['LayerName']['last_layer']['Implementation'] = 'im2col'
-
     odir = str(test_root_path / f'hls4mlprj_auto_{model_type}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
