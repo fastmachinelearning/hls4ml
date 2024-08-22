@@ -10,7 +10,7 @@ recurrent_include_list = ['nnet_utils/nnet_recurrent.h', 'nnet_utils/nnet_recurr
 ################################################
 # Shared Matrix Multiplication Template (Dense)
 ################################################
-recr_mult_config_template = '''struct config{index}_mult : nnet::dense_config {{
+recr_mult_x_config_template = '''struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
 
@@ -26,6 +26,27 @@ recr_mult_config_template = '''struct config{index}_mult : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
+
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
+}};\n'''
+
+recr_mult_h_config_template = '''struct config{index}_mult : nnet::dense_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+
+    static const unsigned rf_pad = {rfpad};
+    static const unsigned bf_pad = {bfpad};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor_rounded = reuse_factor + rf_pad;
+    static const unsigned block_factor = DIV_ROUNDUP(n_in*n_out, reuse_factor);
+    static const unsigned block_factor_rounded = block_factor + bf_pad;
+    static const unsigned multiplier_factor = MIN(n_in, reuse_factor);
+    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in*n_out, multiplier_factor);
+    static const unsigned multiplier_scale = multiplier_limit/n_out;
+    typedef {accum_t.name} accum_t;
+    typedef {recurrent_bias_t.name} bias_t;
+    typedef {recurrent_weight_t.name} weight_t;
 
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
@@ -85,8 +106,8 @@ class GRUConfigTemplate(LayerConfigTemplate):
         self.gru_template = gru_config_template
         self.act_template = activ_config_template
         self.recr_act_template = activ_config_template
-        self.mult_x_template = recr_mult_config_template
-        self.mult_h_template = recr_mult_config_template
+        self.mult_x_template = recr_mult_x_config_template
+        self.mult_h_template = recr_mult_h_config_template
 
     def format(self, node):
         # Input has shape (n_timesteps, inp_dimensionality)
