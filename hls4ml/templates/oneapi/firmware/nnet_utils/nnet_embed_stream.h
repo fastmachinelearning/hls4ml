@@ -4,7 +4,7 @@
 namespace nnet {
 
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void embedding_stream(const typename CONFIG_T::embeddings_t &embeddings) {
+void embedding_stream(typename CONFIG_T::embeddings_t embeddings) {
 
     using res_T = typename ExtractPipeType<res_pipe>::value_type;
     constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
