@@ -6,23 +6,12 @@ from hls4ml.model.layers import BatchNormalization, register_layer
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import IntegerPrecisionType, NamedType, XnorPrecisionType
 
-batchnorm_quantized_tanh_binary_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
+batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_filt = {n_filt};
     static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef {threshold_t.name} threshold_t;
-}};\n"""
-
-batchnorm_quantized_tanh_ternary_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_filt = {n_filt};
-    static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    typedef {threshold_hi_t.name} threshold_hi_t;
-    typedef {threshold_lo_t.name} threshold_lo_t;
 }};\n"""
 
 batchnorm_quantized_tanh_function_template = (
@@ -35,16 +24,13 @@ bn_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_str
 class BatchNormalizationQuantizedTanhConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(BatchNormalizationQuantizedTanh)
-        self.template = (batchnorm_quantized_tanh_binary_config_template, batchnorm_quantized_tanh_ternary_config_template)
+        self.template = batchnorm_quantized_tanh_config_template
 
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
 
-        if node.get_attr('quantize') == 2:
-            return self.template[0].format(**params)
-        else:
-            return self.template[1].format(**params)
+        return self.template.format(**params)
 
 
 class BatchNormalizationQuantizedTanhFunctionTemplate(FunctionCallTemplate):

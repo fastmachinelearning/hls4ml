@@ -48,7 +48,7 @@ BatchNormLoop:
 // ****************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T>
 void normalize_binary_tanh_stream(typename CONFIG_T::threshold_t threshold) {
-    constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type::value_type>{};
+    constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
 
 BinaryNormLoop:
     [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / datasize; i++) {
