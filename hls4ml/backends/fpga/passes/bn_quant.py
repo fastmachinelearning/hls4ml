@@ -21,8 +21,8 @@ batchnorm_quantized_tanh_ternary_config_template = """struct config{index} : nne
     static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef {threshold_hi_t.name} threshold_t;
-    typedef {threshold_lo_t.name} threshold_t;
+    typedef {threshold_hi_t.name} threshold_hi_t;
+    typedef {threshold_lo_t.name} threshold_lo_t;
 }};\n"""
 
 batchnorm_quantized_tanh_function_template = (
