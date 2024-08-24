@@ -33,6 +33,7 @@ del optimizers
 register_flow(
     'convert',
     [
+        'channels_last_converter',
         'fuse_consecutive_batch_normalization',
         'fuse_batch_normalization',
         'eliminate_linear_activation',
@@ -42,7 +43,6 @@ register_flow(
         'seperable_to_depthwise_and_conv',
         # The ones above here need to be before infer_precision_types
         'infer_precision_types',
-        'channels_last_converter',
         'remove_transpose_before_flatten',
         'remove_nop_transpose',
         'remove_single_channel_transpose',
