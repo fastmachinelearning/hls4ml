@@ -130,5 +130,5 @@ Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used
 .. code-block:: Python
 
     hls_config = config_from_keras_model(optimized_model)
-    hls_config['Model']['DenseResourceImplementation'] = 'Unrolled'
-    # Any addition hls4ml config, such as strategy, reuse factor etc...
+    hls_config['Model']['Strategy'] = 'Unrolled'
+    # Any addition hls4ml config, reuse factor etc...
