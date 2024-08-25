@@ -43,10 +43,6 @@ class HLSConfig:
         self.layer_type_conv_implementation = {}
         self.layer_name_conv_implementation = {}
 
-        self.model_dense_resource_implementation = 'Standard'
-        self.layer_type_dense_resource_implementation = {}
-        self.layer_name_dense_resource_implementation = {}
-
         self.model_compression = False
         self.layer_type_compression = {}
         self.layer_name_compression = {}
@@ -190,17 +186,6 @@ class HLSConfig:
 
         return conv_implementation
 
-    def get_dense_resource_implementation(self, layer):
-        dense_resource_implementation = self.layer_name_dense_resource_implementation.get(layer.name.lower())
-        if dense_resource_implementation is None:
-            dense_resource_implementation = self.layer_type_dense_resource_implementation.get(
-                layer.__class__.__name__.lower()
-            )
-        if dense_resource_implementation is None:
-            dense_resource_implementation = self.model_dense_resource_implementation
-
-        return dense_resource_implementation
-
     def is_resource_strategy(self, layer):
         return self.get_strategy(layer).lower() == 'resource'
 
@@ -280,7 +265,6 @@ class HLSConfig:
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_targ_cycles = model_cfg.get('TargetCycles')
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
-            self.model_dense_resource_implementation = model_cfg.get('DenseResourceImplementation', 'Standard')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
             self.model_compression = bool(model_cfg.get('Compression', 0))
             self.pipeline_style = model_cfg.get('PipelineStyle', 'pipeline')
@@ -310,10 +294,6 @@ class HLSConfig:
                 conv_implementation = layer_cfg.get('ConvImplementation')
                 if conv_implementation is not None:
                     self.layer_type_conv_implementation[layer_type.lower()] = conv_implementation
-
-                dense_resource_implementation = layer_cfg.get('DenseResourceImplementation')
-                if conv_implementation is not None:
-                    self.layer_type_dense_resource_implementation[layer_type.lower()] = dense_resource_implementation
 
                 compression = layer_cfg.get('Compression')
                 if compression is not None:

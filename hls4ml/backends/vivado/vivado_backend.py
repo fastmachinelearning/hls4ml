@@ -292,7 +292,6 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))
-        layer.set_attr('dense_resource_implementation', layer.model.config.get_dense_resource_implementation(layer).lower())
 
     # TODO consolidate these functions into a single `init_conv`
     @layer_optimizer(Conv1D)
