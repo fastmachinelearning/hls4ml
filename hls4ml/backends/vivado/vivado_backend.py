@@ -114,6 +114,7 @@ class VivadoBackend(FPGABackend):
             'vivado:apply_resource_strategy',
             'vivado:generate_conv_im2col',
             'vivado:generate_unrolled_dense_resource',
+            'vivado:set_pipeline_style',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -247,11 +248,6 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    def _validate_conv_strategy(self, layer):
-        if layer.model.config.pipeline_style.lower() != 'dataflow':
-            print(f'WARNING: Layer {layer.name} requires "dataflow" pipeline style. Switching to "dataflow" pipeline style.')
-            layer.model.config.pipeline_style = 'dataflow'
-
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
@@ -355,8 +351,6 @@ class VivadoBackend(FPGABackend):
         layer.set_attr('parallelization_factor', closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
-
-        self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
@@ -480,8 +474,6 @@ class VivadoBackend(FPGABackend):
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
-        self._validate_conv_strategy(layer)
-
     @layer_optimizer(SeparableConv2D)
     def init_sepconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
@@ -585,8 +577,10 @@ class VivadoBackend(FPGABackend):
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             if use_resource_instead:
                 self.set_closest_reuse_factor(layer, n_in, n_out)
+                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
                 layer.set_attr('strategy', 'resource')
             else:
+                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 self.set_closest_reuse_factor(
                     layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
                 )
@@ -617,8 +611,10 @@ class VivadoBackend(FPGABackend):
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             if use_resource_instead:
                 self.set_closest_reuse_factor(layer, n_in, n_out)
+                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
                 layer.set_attr('strategy', 'resource')
             else:
+                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 self.set_closest_reuse_factor(
                     layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
                 )

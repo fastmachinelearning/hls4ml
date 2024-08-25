@@ -84,7 +84,7 @@ def test_dense_unrolled_streaming_conv(dim, io_type, reuse_factor):
 @pytest.mark.parametrize('backend', ['Vitis', 'Vivado'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('static', [True, False])
-@pytest.mark.parametrize('reuse_factor', [1, 4, 32, 128])  # These should be enough
+@pytest.mark.parametrize('reuse_factor', [1, 4, 32, 128])  # RF=128 also tests if setting closest RF works well
 def test_rnn_unrolled(rnn_layer, backend, io_type, static, reuse_factor):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
@@ -118,6 +118,10 @@ def test_rnn_unrolled(rnn_layer, backend, io_type, static, reuse_factor):
     hls_model = convert_from_keras_model(
         keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
     )
+
+    # Check if strategy was not overridden
+    assert list(hls_model.get_layers())[1].get_attr('strategy') == 'unrolled' if reuse_factor > 1 else 'latency'
+
     hls_model.compile()
 
     keras_prediction = keras_model.predict(X)

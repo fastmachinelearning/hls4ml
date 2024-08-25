@@ -199,7 +199,15 @@ class VivadoWriter(Writer):
                 all_inputs = [i.name for i in model_inputs]
                 all_outputs = [o.name for o in model_outputs]
                 all_brams = [b.name for b in model_brams]
-                io_type = model.config.get_config_value("IOType")
+                io_type = model.config.get_config_value('IOType')
+
+                pipeline_style = model.config.pipeline_style
+                pipeline_ii = model.config.pipeline_ii
+                pipeline_pragma = indent + f'#pragma HLS {pipeline_style.upper()}'
+                if pipeline_style == 'pipeline' and pipeline_ii is not None:
+                    pipeline_pragma += f' II={pipeline_ii}\n'
+                else:
+                    pipeline_pragma += '\n'
 
                 if io_type == 'io_parallel':
                     for i in model_inputs:
@@ -211,23 +219,15 @@ class VivadoWriter(Writer):
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
+                    newline += pipeline_pragma
 
-                    model_cfg = model.config.get_config_value('HLSConfig')['Model']
-                    if model_cfg.get('Strategy', 'latency').lower() == 'unrolled':
-                        max_rf = max([int(layer.get_attr('reuse_factor')) for layer in model.get_layers()])
-                        newline += indent + f'#pragma HLS PIPELINE II={max_rf} \n'
-                    else:
-                        if model.config.pipeline_style.lower() == 'dataflow':
-                            newline += indent + '#pragma HLS DATAFLOW \n'
-                        else:
-                            newline += indent + '#pragma HLS PIPELINE \n'
                 if io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
                     if all_brams:
                         newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
-                    newline += indent + '#pragma HLS DATAFLOW \n'
+                    newline += pipeline_pragma
 
             elif '// hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
