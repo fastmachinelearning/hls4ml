@@ -520,7 +520,6 @@ class DepthwiseConv1D(Conv1D):
         )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-        self.set_attr('n_filt', self.get_attr('n_chan') * self.get_attr('depth_multiplier'))
 
 
 class Conv2D(Layer):
@@ -702,7 +701,6 @@ class DepthwiseConv2D(Conv2D):
         )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-        self.set_attr('n_filt', self.get_attr('n_chan') * self.get_attr('depth_multiplier'))
 
 
 class Pooling1D(Layer):
