@@ -72,7 +72,7 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
 
         # creating the attributes
         dw_attributes = {k: node.attributes[k] for k in SeperableToDepthwiseAndConv._dw_attributes if k in node.attributes}
-
+        dw_attributes['n_filt'] = dw_attributes['n_chan'] * dw_attributes['depth_multiplier']
         dw_attributes['use_bias'] = False
 
         new_dw = model.make_node('DepthwiseConv' + dim, dw_name, dw_attributes, [node.inputs[0]])

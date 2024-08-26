@@ -4,7 +4,8 @@ import sys
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import ACTypeConverter, CatapultArrayVariableConverter, HLSTypeConverter
+from hls4ml.backends.catapult.catapult_types import CatapultArrayVariableConverter
+from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (

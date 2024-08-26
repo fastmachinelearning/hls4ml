@@ -55,8 +55,6 @@ class FPGABackend(Backend):
             Dense,
             Conv1D,
             Conv2D,
-            SeparableConv1D,
-            SeparableConv2D,
             Pooling1D,
             Pooling2D,
             GlobalPooling1D,

@@ -264,7 +264,13 @@ class Layer:
         precision = None
         type_name = None
         if data is None:
-            data = np.zeros(self.get_output_variable().shape[-1])
+            if 'data_format' in self.attributes:
+                if self.attributes['data_format'] == 'channels_first':
+                    data = np.zeros(self.get_output_variable().shape[0])
+                elif self.attributes['data_format'] == 'channels_last':
+                    data = np.zeros(self.get_output_variable().shape[-1])
+            else:
+                data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
             type_name = 'bias{index}_t'
             quantizer = None  # Don't quantize non-existant bias
@@ -489,6 +495,7 @@ class DepthwiseConv1D(Conv1D):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
         Attribute('filt_width'),
         Attribute('stride_width'),
         Attribute('pad_left'),
@@ -501,10 +508,10 @@ class DepthwiseConv1D(Conv1D):
 
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_width'], self.attributes['n_chan'] * self.attributes['depth_multiplier']]
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
             dims = [f'OUT_HEIGHT_{self.index}', f'N_CHAN_{self.index}']
         else:
-            shape = [self.attributes['n_chan'] * self.attributes['depth_multiplier'], self.attributes['out_width']]
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
@@ -658,6 +665,7 @@ class DepthwiseConv2D(Conv2D):
         Attribute('out_width'),
         Attribute('n_chan'),
         Attribute('depth_multiplier', default=1),
+        Attribute('n_filt'),  # = n_chan * depth_multiplier
         Attribute('filt_height'),
         Attribute('filt_width'),
         Attribute('stride_height'),
@@ -677,12 +685,12 @@ class DepthwiseConv2D(Conv2D):
             shape = [
                 self.attributes['out_height'],
                 self.attributes['out_width'],
-                self.attributes['n_chan'] * self.attributes['depth_multiplier'],
+                self.attributes['n_filt'],
             ]
             dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
             shape = [
-                self.attributes['n_chan'] * self.attributes['depth_multiplier'],
+                self.attributes['n_filt'],
                 self.attributes['out_height'],
                 self.attributes['out_width'],
             ]
@@ -1105,6 +1113,8 @@ class SimpleRNN(Layer):
 
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
+        if "pytorch" in self.attributes.keys():
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
 class LSTM(Layer):
@@ -1156,8 +1166,11 @@ class LSTM(Layer):
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
 
-        recurrent_bias = np.zeros(recurrent_weight.shape[1])
-        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+        if "pytorch" in self.attributes.keys():
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
+        else:
+            recurrent_bias = np.zeros(recurrent_weight.shape[1])
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
 
 class GRU(Layer):

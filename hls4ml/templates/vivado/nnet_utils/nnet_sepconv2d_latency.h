@@ -11,7 +11,7 @@ template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_conv_2d_latency_cl(
     data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
     res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],
+    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
 
     constexpr unsigned mult_n_in = CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan;
@@ -32,6 +32,8 @@ void depthwise_conv_2d_latency_cl(
 
     // Limit multipliers to control parallelization
     #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::mult_config::multiplier_limit
+
+    assert((CONFIG_T::n_filt == CONFIG_T::n_chan) && "only a depth multiplier of 1 is currently supported");
 
 PartitionLoop:
     for (int i_part = 0; i_part < CONFIG_T::n_partitions; i_part++) {

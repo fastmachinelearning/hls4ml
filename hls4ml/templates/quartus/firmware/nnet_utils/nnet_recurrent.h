@@ -87,6 +87,7 @@ struct gru_config {
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
+    static const bool pytorch_order = false;
     static const bool store_weights_in_bram = false;
 
     // Activation
@@ -133,7 +134,10 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     hls_register typename CONFIG_T::accum_t hadamard_r_h[CONFIG_T::n_units];
     #pragma unroll recurrent_unroll_factor
     for (int i = 0; i < (CONFIG_T::n_units); i++) {
-        hadamard_r_h[i] = z_r_act[i + CONFIG_T::n_units] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
+        if (CONFIG_T::pytorch_order)
+            hadamard_r_h[i] = z_r_act[i] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
+        else
+            hadamard_r_h[i] = z_r_act[i + CONFIG_T::n_units] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
     }
 
     // The candidate state; X * W_{hx} + hadmard(r(t), h_(t-1)) * W_{hh} + b_{h}
@@ -152,7 +156,11 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     // Update state
     #pragma unroll recurrent_unroll_factor
     for (int i = 0; i < (CONFIG_T::n_units); i++) {
-        h[i] = static_cast<res_T>(h_cand_act[i] * (1 - z_r_act[i]) + h[i] * z_r_act[i]);
+        if (CONFIG_T::pytorch_order)
+            h[i] = static_cast<res_T>(h_cand_act[i] * (1 - z_r_act[i + CONFIG_T::n_units]) +
+                                      h[i] * z_r_act[i + CONFIG_T::n_units]);
+        else
+            h[i] = static_cast<res_T>(h_cand_act[i] * (1 - z_r_act[i]) + h[i] * z_r_act[i]);
     }
 }
 
@@ -290,6 +298,131 @@ INIT_LOOP:
 
         // Do SimpleRNN
         simple_rnn_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias);
+
+        // Write result
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state[x][i + 1] = h[x];
+        }
+    }
+
+    if (CONFIG_T::return_sequences == 0) {
+        // Output when return_sequences is false
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            res[x] = hidden_state[x][CONFIG_T::n_timesteps];
+        }
+    } else {
+        // Output when return_sequences is true
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
+            #pragma unroll
+            for (int h = 0; h < CONFIG_T::n_out; h++) {
+                res[x * CONFIG_T::n_out + h] = hidden_state[h][x + 1];
+            }
+        }
+    }
+}
+//----------------------
+// SimpleRNN with pytorch biases
+//----------------------
+
+struct simpleRNN_pytorch_config {
+    // Internal data type definitions
+    typedef float weight_t;
+    typedef float bias_t;
+    typedef float accum_t;
+
+    // Layer Sizes
+    static const unsigned n_in = 1;
+    static const unsigned n_out = 1;
+    static const unsigned n_outputs = 1;
+    static const unsigned n_timesteps = 1;
+    static const bool return_sequences = false;
+
+    // Resource reuse info
+    static const unsigned io_type = io_parallel;
+    static const unsigned reuse_factor = 1;
+    static const bool store_weights_in_bram = false;
+
+    // Activation
+    template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
+
+    template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
+};
+
+template <class data_T, class res_T, typename CONFIG_T>
+void simple_rnn_pytorch_cell(data_T inputs[CONFIG_T::n_in], res_T hidden_state[CONFIG_T::n_out],
+                             res_T hidden_state_o[CONFIG_T::n_out],
+                             const typename CONFIG_T::weight_t kernel[CONFIG_T::n_in * CONFIG_T::n_out],
+                             const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
+                             const typename CONFIG_T::bias_t bias[CONFIG_T::n_out],
+                             const typename CONFIG_T::bias_t rec_bias[CONFIG_T::n_out]) {
+    // Weight multiplication
+    typename CONFIG_T::accum_t afterW[CONFIG_T::n_out] hls_register;
+    multiply_W<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(
+        inputs, afterW, kernel);
+
+    // Bias addition
+    typename CONFIG_T::accum_t afterBias[CONFIG_T::n_out] hls_register;
+    add_bias<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::bias_t, CONFIG_T::n_out>(
+        afterW, afterBias, bias);
+
+    // Hidden state
+    typename CONFIG_T::accum_t hiddenCand[CONFIG_T::n_out] hls_register;
+    multiply_U<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_out>(hidden_state, hiddenCand,
+                                                                                                 rec_kernel);
+
+    // Hidden state bias addition
+    typename CONFIG_T::accum_t hiddenBias[CONFIG_T::n_out] hls_register;
+    add_bias<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::bias_t, CONFIG_T::n_out>(
+        hiddenCand, hiddenBias, rec_bias);
+
+    // Vector addition
+    typename CONFIG_T::accum_t afterAdd[CONFIG_T::n_out];
+    add_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(afterBias, hiddenBias, afterAdd);
+
+    // Activation
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, data_T, typename CONFIG_T::ACT_CONFIG_T>::activation(
+        afterAdd, hidden_state_o);
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void simple_rnn_pytorch(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in],
+                        res_T res[CONFIG_T::n_outputs * CONFIG_T::n_out],
+                        const typename CONFIG_T::weight_t kernel[CONFIG_T::n_in * CONFIG_T::n_out],
+                        const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
+                        const typename CONFIG_T::bias_t bias[CONFIG_T::n_out],
+                        const typename CONFIG_T::bias_t rec_bias[CONFIG_T::n_out]) {
+    res_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
+    res_T hidden_state_temp[CONFIG_T::n_out] hls_register;
+    res_T h[CONFIG_T::n_out] hls_register;
+    data_T in[CONFIG_T::n_in] hls_register;
+
+// Set initially hidden state (output) to zero
+INIT_LOOP:
+    #pragma unroll
+    for (int x = 0; x < CONFIG_T::n_out; x++) {
+        hidden_state[x][0] = 0;
+    }
+
+    #pragma disable_loop_pipelining
+    for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
+
+        // Data at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_in; x++) {
+            in[x] = data[x + i * CONFIG_T::n_in];
+        }
+
+        // Hidden state at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state_temp[x] = hidden_state[x][i];
+        }
+
+        // Do SimpleRNN
+        simple_rnn_pytorch_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias, rec_bias);
 
         // Write result
         #pragma unroll

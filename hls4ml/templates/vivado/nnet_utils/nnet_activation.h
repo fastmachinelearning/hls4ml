@@ -442,6 +442,28 @@ template <class data_T, class res_T, typename CONFIG_T> void tanh(data_T data[CO
 }
 
 // *************************************************
+//       UnaryLUT Activation
+// *************************************************
+template <int table_size, class data_T> inline unsigned get_index_unary_lut(data_T x) {
+    // Slice the top N bits to get an index into the table
+    static constexpr int N = ceillog2(table_size);
+    return (unsigned)(x(x.width - 1, 0));
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void unary_lut(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
+               typename CONFIG_T::table_t table[CONFIG_T::table_size]) {
+    #pragma HLS function_instantiate variable=table
+    #pragma HLS ARRAY_PARTITION variable=table
+
+    for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        #pragma HLS UNROLL
+        unsigned index = get_index_unary_lut<CONFIG_T::table_size>(data[ii]);
+        res[ii] = (res_T)table[index];
+    }
+}
+
+// *************************************************
 //       Hard sigmoid Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
