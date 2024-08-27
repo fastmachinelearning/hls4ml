@@ -10,6 +10,8 @@ from hls4ml.converters.keras_to_hls import KerasReader  # noqa: F401
 from hls4ml.converters.keras_to_hls import get_supported_keras_layers  # noqa: F401
 from hls4ml.converters.keras_to_hls import parse_keras_model  # noqa: F401
 from hls4ml.converters.keras_to_hls import keras_to_hls, register_keras_layer_handler
+
+# from hls4ml.converters.pytorch_to_hls import parse_pytorch_model  # noqa: F401
 from hls4ml.model import ModelGraph
 from hls4ml.utils.config import create_config
 from hls4ml.utils.symbolic_utils import LUTFunction
@@ -238,7 +240,6 @@ def convert_from_keras_model(
 
 def convert_from_pytorch_model(
     model,
-    input_shape,
     output_dir='my-hls-test',
     project_name='myproject',
     input_data_tb=None,
@@ -251,7 +252,6 @@ def convert_from_pytorch_model(
 
     Args:
         model: PyTorch model to convert.
-        input_shape (list): The shape of the input tensor. First element is the batch size, needs to be None
         output_dir (str, optional): Output directory of the generated HLS project. Defaults to 'my-hls-test'.
         project_name (str, optional): Name of the HLS project. Defaults to 'myproject'.
         input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
@@ -293,7 +293,6 @@ def convert_from_pytorch_model(
     config = create_config(output_dir=output_dir, project_name=project_name, backend=backend, **kwargs)
 
     config['PytorchModel'] = model
-    config['InputShape'] = input_shape
     config['InputData'] = input_data_tb
     config['OutputPredictions'] = output_data_tb
     config['HLSConfig'] = {}
@@ -301,9 +300,9 @@ def convert_from_pytorch_model(
     if hls_config is None:
         hls_config = {}
 
-    model_config = hls_config.get('Model', None)
+    model_config = hls_config.get('Model')
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-
+    config['InputShape'] = hls_config.get('InputShape')
     _check_hls_config(config, hls_config)
 
     return pytorch_to_hls(config)

@@ -269,6 +269,7 @@ def config_from_keras_model(
 
 def config_from_pytorch_model(
     model,
+    input_shape,
     granularity='model',
     backend=None,
     default_precision='ap_fixed<16,6>',
@@ -284,6 +285,7 @@ def config_from_pytorch_model(
 
     Args:
         model: PyTorch model
+        input_shape (tuple or list of tuples): The shape of the input tensor, excluding the batch size.
         granularity (str, optional): Granularity of the created config. Defaults to 'model'.
             Can be set to 'model', 'type' and 'layer'.
 
@@ -321,6 +323,83 @@ def config_from_pytorch_model(
     model_config['Strategy'] = 'Latency'
 
     config['Model'] = model_config
+    config['PytorchModel'] = model
+    if not (isinstance(input_shape, tuple) or (isinstance(input_shape, list) and isinstance(input_shape[0], tuple))):
+        raise Exception('Input shape must be tuple (single input) or list of tuples (multiple inputs)')
+    config['InputShape'] = input_shape
+
+    if granularity.lower() not in ['model', 'type', 'name']:
+        raise Exception(
+            f'Invalid configuration granularity specified, expected "model", "type" or "name" got "{granularity}"'
+        )
+
+    if backend is not None:
+        backend = hls4ml.backends.get_backend(backend)
+
+    from hls4ml.converters.pytorch_to_hls import parse_pytorch_model
+
+    (
+        layer_list,
+        _,
+    ) = parse_pytorch_model(config, verbose=False)
+
+    def make_layer_config(layer):
+        cls_name = layer['class_name']
+        if 'config' in layer.keys():
+            if 'activation' in layer['config'].keys():
+                if layer['config']['activation'] == 'softmax':
+                    cls_name = 'Softmax'
+
+        layer_cls = hls4ml.model.layers.layer_map[cls_name]
+        if backend is not None:
+            layer_cls = backend.create_layer_class(layer_cls)
+
+        layer_config = {}
+
+        config_attrs = [a for a in layer_cls.expected_attributes if a.configurable]
+        for attr in config_attrs:
+            if isinstance(attr, hls4ml.model.attributes.TypeAttribute):
+                precision_cfg = layer_config.setdefault('Precision', {})
+                name = attr.name
+                if name.endswith('_t'):
+                    name = name[:-2]
+                if attr.default is None:
+                    precision_cfg[name] = default_precision
+                else:
+                    precision_cfg[name] = str(attr.default)
+            elif attr.name == 'reuse_factor':
+                layer_config[attr.config_name] = default_reuse_factor
+            else:
+                if attr.default is not None:
+                    layer_config[attr.config_name] = attr.default
+
+        if layer['class_name'] == 'Input':
+            dtype = layer['config']['dtype']
+            if dtype.startswith('int') or dtype.startswith('uint'):
+                typename = dtype[: dtype.index('int') + 3]
+                width = int(dtype[dtype.index('int') + 3 :])
+                layer_config['Precision']['result'] = f'ap_{typename}<{width}>'
+            # elif bool, q[u]int, ...
+
+        return layer_config
+
+    if granularity.lower() == 'type':
+        type_config = {}
+        for layer in layer_list:
+            if layer['class_name'] in type_config:
+                continue
+            layer_config = make_layer_config(layer)
+            type_config[layer['class_name']] = layer_config
+
+        config['LayerType'] = type_config
+
+    elif granularity.lower() == 'name':
+        name_config = {}
+        for layer in layer_list:
+            layer_config = make_layer_config(layer)
+            name_config[layer['name']] = layer_config
+
+        config['LayerName'] = name_config
 
     return config
 
