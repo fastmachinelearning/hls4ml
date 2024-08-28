@@ -278,7 +278,7 @@ def test_conv1d(padds, backend, io_type):
         act_index = 2
     assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
     assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv1D'
-    assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__
+    assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__.lower()
     if io_type == "io_stream" and (backend == "Vivado" or backend == "Vitis") and padds == 1:
         assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in + 2
     else:
@@ -425,7 +425,9 @@ def test_conv2d(padds, backend, io_type):
             act_index = 2
         assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
         assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv2D'
-        assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__
+        assert (
+            list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__.lower()
+        )
         assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in_width
         assert list(hls_model.get_layers())[conv_index].attributes["in_height"] == size_in_height
         assert list(hls_model.get_layers())[conv_index].attributes['filt_width'] == class_object_conv.kernel_size[1]
