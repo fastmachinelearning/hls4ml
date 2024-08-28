@@ -1,6 +1,9 @@
 from copy import copy
 
 import numpy as np
+import pandas as pd
+
+from hls4ml.model import ModelGraph
 
 from .precision import FixedPointPrecision
 from .symbolic_variable import Variable
@@ -36,23 +39,23 @@ def resource_bin_add(p1: FixedPointPrecision, p2: FixedPointPrecision):
 
 
 def resource_bin_mul(p1: FixedPointPrecision, p2: FixedPointPrecision):
-    return DictWrap(mul=p1.b * p2.b)
+    return DictWrap(mul=p1.b * p2.b, n_mul=1)
 
 
 def resource_bin_shift(p1: FixedPointPrecision, shift: int):
-    return DictWrap(shift=p1.b * abs(shift))
+    return DictWrap(shift=p1.b * abs(shift), n_shift=1)
 
 
 def resource_bin_max(p1: FixedPointPrecision, p2: FixedPointPrecision):
-    return DictWrap(max=max(p1.b, p2.b))
+    return DictWrap(max=max(p1.b, p2.b), n_max=1)
 
 
 def resource_bin_sub(p1: FixedPointPrecision, p2: FixedPointPrecision):
-    return DictWrap(sub=resource_bin_add(p1, p2)['add'])
+    return DictWrap(sub=resource_bin_add(p1, p2)['add'], n_sub=1)
 
 
 def resource_bin_neg(p1: FixedPointPrecision):
-    return DictWrap(neg=p1.b)
+    return DictWrap(neg=p1.b, n_neg=1)
 
 
 class ResourceSurrogate:
@@ -112,15 +115,41 @@ class ResourceSurrogate:
         recorded.add(v)
         return resource
 
-    def trace(self, r: list | np.ndarray, name: str):
+    def trace(self, r: list | np.ndarray, name: str, pf: int = 1):
         s = set()
         arr = np.array(r).ravel()
-        params: DictWrap = sum(self._trace(v, s) for v in arr)  # type: ignore
+        zero = DictWrap(add=0, sub=0, mul=0, shift=0, neg=0, max=0, depth=0)
+        zero = zero + {f'n_{k}': 0 for k in zero.keys()}
+        params: DictWrap = zero + sum(self._trace(v, s) for v in arr)  # type: ignore
         if params == 0:  # layer outputs const array, no operation performed. skip
             return
-        latency = max(v.depth for v in arr if isinstance(v, Variable))
-        params['latency'] = latency
+        depth = max(v.depth for v in arr if isinstance(v, Variable))
+        params['depth'] = depth
+        params['pf'] = pf
         self.layers[name] = params
+
+    def scan(self, model: ModelGraph):
+        for name, layer in model.graph.items():
+            r_variables = layer.attributes.attributes.get('r_variables')
+            if r_variables is None:
+                continue
+            pf = layer.attributes.attributes.get('parallelization_factor', 1)
+            self.trace(r_variables, name, pf)
+
+    def _summary(self):
+        df = pd.DataFrame.from_dict(self.layers, orient='index')
+        lut = np.round((df['add'] + df['neg'] + 2 * df['sub']) * 0.55).astype(int) * df['pf']
+        dsp = np.round(df['n_mul']).astype(int) * df['pf']
+        latency_ns = df['depth'] * 0.86
+        return df, pd.DataFrame({'LUT': lut, 'DSP': dsp, 'Latency (ns)': latency_ns})
+
+    def summary(self):
+        df, summary = self._summary()
+        return summary
+
+    def full_summary(self):
+        df, summary = self._summary()
+        return pd.concat([df, summary], axis=1)
 
 
 # def resource_addr(v: Variable):

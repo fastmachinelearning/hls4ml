@@ -9,6 +9,8 @@ from hls4ml.model.layers import Layer
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType
 
+ENABLE_PIXEL_UNROLL = False
+
 
 def _im2col(kernel_size: Sequence[int], arr: np.ndarray, buffer: np.ndarray, axis: int):
     w = kernel_size[0]
@@ -88,6 +90,9 @@ def get_input_KIF_idxs(model: ModelGraph, node: Layer) -> tuple[t_KIF, list[list
     *ker_inp_shape, n_out_chan = kernel.shape
     pf = node.attributes.attributes.get('parallelization_factor', 1)
     n_partition = node.attributes.attributes.get('n_partitions', 1)
+
+    if not ENABLE_PIXEL_UNROLL:
+        pf = 1
     if n_partition != 1 and pf != 1:
         warnings.warn(
             f'Parallelization factor {pf}!= 1 is not fully optimized for n_partition {n_partition}>1. Using one unrolled kernel for all partitions.',  # noqa: E501
@@ -135,3 +140,9 @@ def get_input_KIF_idxs(model: ModelGraph, node: Layer) -> tuple[t_KIF, list[list
     KIFs_in = tuple(tuple(x) for x in np.array([K, I, F]).transpose(1, 0, 2))
     idx = index.tolist() if index is not None else None
     return KIFs_in, idx
+
+
+def enable_pixel_unroll(enabled=True):
+    global ENABLE_PIXEL_UNROLL
+    ENABLE_PIXEL_UNROLL = enabled
+    return ENABLE_PIXEL_UNROLL

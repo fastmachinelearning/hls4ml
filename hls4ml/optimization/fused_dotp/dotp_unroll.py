@@ -5,6 +5,13 @@ import numpy as np
 from . import symbolic_variable
 from .symbolic_variable import Variable
 
+DSP_OFFLOAD_THRES = 5
+
+
+def set_dsp_offload_threshold(thres: int):
+    global DSP_OFFLOAD_THRES
+    DSP_OFFLOAD_THRES = thres
+
 
 def const_fp_bits(x):
     "Number of fp bits needed to represent x exactly."
@@ -128,7 +135,7 @@ def bit_reduction(combination_mask: np.ndarray, bit_mask: list[int], bit_loc: in
 
 def to_operations(arr: np.ndarray):
     """For a 2d array as linear operator, decompose it as a series of operations.
-    y = arr @ v is equivalent to:
+    y = v @ arr is equivalent to:
     Returns:
         `shift`, `gather_tos`, `extract_froms`, `bit_extract_order`
     ```
@@ -195,10 +202,23 @@ def balanced_reduction(vec: list):
 
 
 def _compile_dense(kernel: np.ndarray, inp: np.ndarray):
-    shifts, gather_tos, extract_froms, bit_extract_order = to_operations(kernel)
     ch_in, ch_out = kernel.shape
-    buf0 = inp * 2.0**shifts
     r: list[float | Variable | list[Variable]] = np.empty((ch_out, 0), dtype=object).tolist()
+
+    _, combination_mask = get_mat_shift_mask(kernel)
+    bits_k = np.sum(np.abs(combination_mask), axis=(2))
+    bits_i = np.array([v.b for v in inp])
+    bops = bits_k * bits_i[:, None]
+    offload = np.where(bops > DSP_OFFLOAD_THRES)
+    if len(offload[0]) > 0:
+        kernel = kernel.copy()
+    for i, j in zip(*offload):
+        c = kernel[i, j]
+        kernel[i, j] = 0
+        r[j].append(c * inp[i])
+    shifts, gather_tos, extract_froms, bit_extract_order = to_operations(kernel)
+
+    buf0 = inp * 2.0**shifts
     with symbolic_variable.fuse_associative_ops(False):
         for i, (gather_to, extract_from) in enumerate(zip(gather_tos, extract_froms)):
             _buf1 = [[] for _ in range(np.max(gather_to) + 1)]

@@ -8,6 +8,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 from ..codegen_backends import VitisCodegenBackend
 from .common import UnrollCodeGenPass
+from .pixel_unrolled_conv import ENABLE_PIXEL_UNROLL
 
 conf_template = """struct config{index}{postfix} {{
     static const unsigned n_in = {n_in};
@@ -26,7 +27,8 @@ class VitisUnrollCodeGen(UnrollCodeGenPass):
 class VitisFullyUnrolledConvToDense(OptimizerPass):
     def match(self, node: Layer):
         return (
-            node.get_attr('unrolled_codegen')
+            ENABLE_PIXEL_UNROLL
+            and node.get_attr('unrolled_codegen')
             and node.class_name in ('Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D')
             and node.get_attr('n_partitions') == 1
             and node.model.config.get_config_value("IOType") == 'io_parallel'
@@ -43,6 +45,7 @@ class VitisFullyUnrolledConvToDense(OptimizerPass):
             'unrolled_codegen': node.get_attr('unrolled_codegen'),
             'weight_data': node.get_attr('weight_data'),
             'bias_data': node.get_attr('weight_data'),
+            'r_variables': node.get_attr('r_variables'),
         }
         new_node = model.make_node(class_name, node.name, attrs, node.inputs.copy())
         new_node.attributes[name] = node.attributes[name]
