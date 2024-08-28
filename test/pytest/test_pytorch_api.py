@@ -64,6 +64,7 @@ def test_linear(backend, io_type):
     "activation_function",
     [
         nn.ReLU(),
+        nn.Tanh(),
         nn.LeakyReLU(negative_slope=1.0),
         nn.ELU(alpha=1.0),
         nn.PReLU(init=0.25),
@@ -102,7 +103,7 @@ def test_activations(activation_function, backend, io_type):
 
     assert nNodes - 1 == len(hls_model.get_layers())
 
-    if activation_function.__class__.__name__ == 'ReLU' or activation_function.__class__.__name__ == 'Sigmoid':
+    if activation_function.__class__.__name__ in ['ReLU', 'Sigmoid', 'Tanh']:
         assert list(hls_model.get_layers())[2].attributes['class_name'] == 'Activation'
     elif activation_function.__class__.__name__ == 'Threshold':
         assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ThresholdedReLU'
@@ -116,6 +117,14 @@ class ReLuModel(nn.Module):
 
     def forward(self, x):
         return nn.functional.relu(x)
+
+
+class TanHModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.tanh(x)
 
 
 class LeakyReLuModel(nn.Module):
@@ -154,6 +163,7 @@ class SigmoidModel(nn.Module):
     "activation_function",
     [
         ReLuModel(),
+        TanHModel(),
         LeakyReLuModel(),
         EluModel(),
         SigmoidModel(),
@@ -172,7 +182,7 @@ def test_activation_functionals(activation_function, backend, io_type):
 
     config = config_from_pytorch_model(model, (1,))
     fn_name = activation_function.__class__.__name__
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_relu_{backend}_{io_type}_{fn_name}')
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_{fn_name}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 

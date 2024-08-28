@@ -41,7 +41,6 @@ activation_layers = ['Softmax', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU'
 @pytorch_handler(*activation_layers)
 def parse_activation_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     layer = {}
-
     layer['class_name'] = operation
     layer['activation'] = layer['class_name']
     layer['name'] = layer_name
@@ -50,7 +49,9 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
     # if layer['class_name'] != 'Activation':
     #    layer['activation'] = layer['class_name']
     if node.op == 'call_module':
-        if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
+        if layer['class_name'] in ['ReLU', 'Sigmoid', 'Tanh']:
+            if layer['class_name'] == 'Tanh':
+                layer['activation'] = 'tanh'
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
             layer['activ_param'] = class_object.negative_slope
@@ -68,7 +69,9 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
         if hasattr(node, 'dim'):
             layer['axis'] = class_object.dim
     else:
-        if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
+        if layer['class_name'] in ['ReLU', 'Sigmoid', 'Tanh']:
+            if layer['class_name'] == 'Tanh':
+                layer['activation'] = 'tanh'
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
             layer['activ_param'] = node.kwargs['negative_slope']
