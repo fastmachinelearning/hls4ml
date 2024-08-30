@@ -175,7 +175,7 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     const int limit = pool_op_limit<CONFIG_T>();
     #pragma HLS ALLOCATION function instances=CONFIG_T::pool_op limit=limit
 
-        // Add padding and reduce input width to area covered by pooling function
+    // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
     static constexpr int full_padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
     static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
