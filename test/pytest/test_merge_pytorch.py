@@ -41,14 +41,16 @@ def test_merge(merge_op, io_type, backend):
         model = MergeModule(merge_op)
     model.eval()
 
-    batch_input_shape = (None,) + input_shape
     config = hls4ml.utils.config_from_pytorch_model(
-        model, default_precision='ap_fixed<32,16>', channels_last_conversion="internal", transpose_outputs=False
+        model,
+        [input_shape, input_shape],
+        default_precision='ap_fixed<32,16>',
+        channels_last_conversion="internal",
+        transpose_outputs=False,
     )
     output_dir = str(test_root_path / f'hls4mlprj_merge_pytorch_{merge_op}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model,
-        [batch_input_shape, batch_input_shape],
         hls_config=config,
         output_dir=output_dir,
         io_type=io_type,
