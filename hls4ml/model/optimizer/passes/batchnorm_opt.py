@@ -24,7 +24,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         """
 
         if not (len(node.inputs) == 5 and all(node.inputs)):
-            raise ValueError(f'All {len.node.inputs} BatchNormOnnnx inputs need to be defined')
+            raise ValueError('All 5 BatchNormOnnnx inputs need to be defined')
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
 
