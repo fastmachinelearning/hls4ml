@@ -29,7 +29,6 @@ activation_layers = [
     'Softmax',
     'Softsign',
     'Softplus',
-    # 'Clip',
 ]
 
 activation_map = {
@@ -45,7 +44,6 @@ activation_map = {
     'Softmax': 'Softmax',
     'Softsign': 'Activation',
     'Softplus': 'Activation',
-    # 'Clip': 'Clip',
 }
 # ---------
 
@@ -68,18 +66,6 @@ def parse_activation_layer(node, input_names, input_shapes, graph):
         elif layer['class_name'] in ['ELU', 'LeakyReLU', 'ThresholdedReLU']:
             layer['activation'] = layer['class_name']
             layer['activ_param'] = get_onnx_attribute(node, 'alpha', 0.01)
-
-        # # Don't yet support Clip
-        # elif layer['class_name'] == 'Clip':
-        #     clip_min_node = [x for x in graph.initializer if x.name in input_names]
-        #     clip_min = clip_min_node[0].float_data[0]
-
-        #     # Check if it's relu or not
-        #     if clip_min == 0.0:
-        #         layer['class_name'] = 'Activation'
-        #         layer['activation'] = 'ReLU'
-        #     else:
-        #         raise Exception('Clip with min != 0 is not supported yet!')
 
         else:
             layer['activation'] = layer['class_name']

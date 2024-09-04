@@ -7,8 +7,10 @@ from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, Unspeci
 
 class FuseBatchNormalization(OptimizerPass):
     """
-    OptimizerPass to merge BatchNormalization layers,
-    only if the earlier one does not have quantization specified
+    OptimizerPass to merge a BatchNormalization layer with Dense or Conv layer, only if the Dense or Conv layer does not
+    have the output type specified. There is a further check on the compatibility to merge: except in cases when merging a
+    weight/scale of 1 or a bias of 0, this optimizer does not merge nodes when both the weight and scale or both biases
+    are quantized.
 
     Note:  Consider restricting this to ApplyAlpha.  Batch Normalization quantization seems to be ignored.
 
@@ -48,11 +50,6 @@ class FuseBatchNormalization(OptimizerPass):
         parent_map = parent_node.get_output_use_map()
         if len(parent_map[parent_node.outputs[0]]) > 1:
             return False
-
-        # # Not sure why this part is needed
-        # node_map = node.get_output_use_map()
-        # if len(node_map[node.outputs[0]]) > 1:
-        #     return False
 
         parent_weight = parent_node.weights['weight']
         parent_bias = parent_node.weights['bias']

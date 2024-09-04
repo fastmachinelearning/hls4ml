@@ -30,7 +30,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
 
         gamma_node = node.get_input_node(node.inputs[1])
         if not isinstance(gamma_node, Constant):
-            raise TypeError('Only consant gammas supported')
+            raise TypeError('Only constant gammas supported')
         gamma = gamma_node.attributes['value']
         attributes['gamma_data'] = gamma
         attributes['gamma_quantizer'] = gamma_node.get_attr('quantizer')
@@ -40,7 +40,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
 
         beta_node = node.get_input_node(node.inputs[2])
         if not isinstance(beta_node, Constant):
-            raise TypeError('Only consant betas supported')
+            raise TypeError('Only constant betas supported')
         beta = beta_node.attributes['value']
         attributes['beta_data'] = beta
         attributes['beta_quantizer'] = beta_node.get_attr('quantizer')
@@ -49,7 +49,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
 
         moving_mean_node = node.get_input_node(node.inputs[3])
         if not isinstance(moving_mean_node, Constant):
-            raise TypeError('Only consant moving_means supported')
+            raise TypeError('Only constant moving_means supported')
         moving_mean = moving_mean_node.attributes['value']
         attributes['mean_data'] = moving_mean
         attributes['mean_quantizer'] = moving_mean_node.get_attr('quantizer')
@@ -58,7 +58,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
 
         moving_variance_node = node.get_input_node(node.inputs[4])
         if not isinstance(moving_variance_node, Constant):
-            raise TypeError('Only consant moving_variances supported')
+            raise TypeError('Only constant moving_variances supported')
         moving_variance = moving_variance_node.attributes['value']
         attributes['variance_data'] = moving_variance
         attributes['variance_quantizer'] = moving_variance_node.get_attr('quantizer')
@@ -147,12 +147,14 @@ class ConstantBatchNormFusion(OptimizerPass):
 
 class FuseConsecutiveBatchNormalization(OptimizerPass):
     """
-    OptimizerPass to merge consecutive BatchNormalization layers,
-    only if the earlier one does not have quantization specified
+    OptimizerPass to merge consecutive BatchNormalization layers, only if the earlier one does not have the output type
+    specified. There is a further check on the compatibility to merge: except in cases when merging a scale of 1 or a
+    bias of 0, this does not merge when both scales or both biases are quantized.
 
     Note:  Consider restricting this to ApplyAlpha.  Batch Normalization-style quantization seems to be ignored.
 
-    Note:  This optimizer may not be safe if weights are updateable. May need to turn off.
+    Note:  This optimizer may not be safe if weights are updateable, in particular if a scale can go from ones to other
+    values or if a bias can go from zeros to other values.
     """
 
     def match(self, node):
@@ -189,11 +191,6 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         prev_map = prev_node.get_output_use_map()
         if len(prev_map[prev_node.outputs[0]]) > 1:
             return False
-
-        # # Not sure why this part is needed
-        # node_map = node.get_output_use_map()
-        # if len(node_map[node.outputs[0]]) > 1:
-        #     return False
 
         s0 = prev_node.weights['scale'].data_unquantized
         b0 = prev_node.weights['bias'].data_unquantized
