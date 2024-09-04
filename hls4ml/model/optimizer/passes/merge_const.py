@@ -67,7 +67,7 @@ class MergeTwoConstants(OptimizerPass):
 
 
 class MergeToApplyAlpha(OptimizerPass):
-    """Convert Add, Sub, Mul, or Div Merges with consant to ApplyAlpha"""
+    """Convert Add, Sub, Mul, or Div Merges with constant to ApplyAlpha"""
 
     def match(self, node):
         is_match = (
@@ -178,7 +178,7 @@ class MergeToApplyAlpha(OptimizerPass):
 
 class MergeToApplyAlphaDiv(OptimizerPass):
     """
-    Convert Div Merges with consant to ApplyAlpha
+    Convert Div Merges with constant to ApplyAlpha
 
     TODO:  propagate precision
     """
