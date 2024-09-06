@@ -59,26 +59,24 @@ class PrecisionBase:
         return (self.max - self.min) / (self.partition - 1)
 
     @classmethod
-    def from_kif(cls, k: bool | int, i: int, f: int):
+    def from_kif(cls, k: bool | int, i: int, f: int, sym=False):
         "keep_negative, integer_bits, fractional_bits"
-        min = -(k * 2.0**i)
         max = 2.0**i - 2.0**-f
-        partition = 2 ** (k + i + f)
+        if sym:
+            min = -max
+        else:
+            min = -(k * 2.0**i)
+        partition = 2 ** (k + i + f) - sym
         if partition == 1:
             assert min == max, f'{min} != {max} when partition == 1'
             return min
         return cls(min, max, partition)
 
     @classmethod
-    def from_kbi(cls, k: bool | int, b: int, i: int):
+    def from_kbi(cls, k: bool | int, b: int, i: int, sym=False):
         "keep_negative, total_bits, integer_bits"
         i, f = i - k, b - i
-        return cls.from_kif(k, i, f)
-
-    # def __eq__(self, other: 'PrecisionBase'):
-    #     if not isinstance(other, PrecisionBase):
-    #         return False
-    #     return bool(np.all(self.minmax == other.minmax) and self.partition == other.partition)
+        return cls.from_kif(k, i, f, sym)
 
     def copy(self):
         return self.__class__(self.min, self.max, self.partition)
