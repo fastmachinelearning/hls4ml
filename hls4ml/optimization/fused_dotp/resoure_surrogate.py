@@ -31,7 +31,7 @@ class DictWrap(dict):
 def resource_bin_add(p1: FixedPointPrecision, p2: FixedPointPrecision):
     I1, I2 = p1.I, p2.I
     f1, f2 = p1.f, p2.f
-    return DictWrap(add=max(I1, I2) + max(f1, f2))
+    return DictWrap(add=max(I1, I2) + max(f1, f2), n_add=1)
 
     # H, h = max(I1, I2), min(I1, I2)
     # L = -min(f1, f2)
@@ -47,7 +47,7 @@ def resource_bin_shift(p1: FixedPointPrecision, shift: int):
 
 
 def resource_bin_max(p1: FixedPointPrecision, p2: FixedPointPrecision):
-    return DictWrap(max=max(p1.b, p2.b), n_max=1)
+    return DictWrap(cmp=max(p1.b, p2.b), n_cmp=1)
 
 
 def resource_bin_sub(p1: FixedPointPrecision, p2: FixedPointPrecision):
@@ -118,7 +118,7 @@ class ResourceSurrogate:
     def trace(self, r: list | np.ndarray, name: str, pf: int = 1):
         s = set()
         arr = np.array(r).ravel()
-        zero = DictWrap(add=0, sub=0, mul=0, shift=0, neg=0, max=0, depth=0)
+        zero = DictWrap(add=0, sub=0, mul=0, shift=0, neg=0, cmp=0, depth=0)
         zero = zero + {f'n_{k}': 0 for k in zero.keys()}
         params: DictWrap = zero + sum(self._trace(v, s) for v in arr)  # type: ignore
         if params == 0:  # layer outputs const array, no operation performed. skip
@@ -129,19 +129,46 @@ class ResourceSurrogate:
         self.layers[name] = params
 
     def scan(self, model: ModelGraph):
+        zero = DictWrap(add=0, sub=0, mul=0, shift=0, neg=0, cmp=0, depth=0)
+        zero = zero + {f'n_{k}': 0 for k in zero.keys()}
+        zero['pf'] = 1
         for name, layer in model.graph.items():
             r_variables = layer.attributes.attributes.get('r_variables')
-            if r_variables is None:
+            if r_variables is not None:
+                pf = layer.attributes.attributes.get('parallelization_factor', 1)
+                self.trace(r_variables, name, pf)
+
+            result_t = layer.attributes.attributes.get('result_t')
+            if result_t is None:
                 continue
-            pf = layer.attributes.attributes.get('parallelization_factor', 1)
-            self.trace(r_variables, name, pf)
+            overflow_mode = str(result_t.precision._saturation_mode)
+            # round_mode = str(result_t.precision._rounding_mode)
+            if not hasattr(layer.attributes.attributes[name], 'shape'):
+                # Some layer doesn't have output shape...
+                continue
+            size = np.prod(layer.attributes.attributes[name].shape)
+            width = result_t.precision.width
+            if layer.attributes.attributes.get('accum_t') is not None:
+                width = layer.attributes.attributes['accum_t'].precision.width
+            if 'SAT' in overflow_mode:
+                params = {'cmp': width * size * 2}
+                self.layers[name] = self.layers.get(name, zero) + DictWrap(params)
+            # if 'RND' in round_mode:
+            #     params = {'cmp': width * size}
+            #     self.layers[name] = self.layers.get(name, zero) + DictWrap(params)
 
     def _summary(self):
         df = pd.DataFrame.from_dict(self.layers, orient='index')
-        lut = np.round((df['add'] + df['neg'] + 2 * df['sub']) * 0.55).astype(int) * df['pf']
+        lut = np.round((df['add'] + df['neg'] + 2 * df['sub']) * 0.65 + df['cmp'] * 1.5).astype(int) * df['pf']
         dsp = np.round(df['n_mul']).astype(int) * df['pf']
         latency_ns = df['depth'] * 0.86
-        return df, pd.DataFrame({'LUT': lut, 'DSP': dsp, 'Latency (ns)': latency_ns})
+        summary = pd.DataFrame({'LUT': lut, 'DSP': dsp, 'Latency (ns)': latency_ns})
+
+        total_df = df.sum()
+        total_summary = summary.sum()
+        df.loc['Total'] = total_df
+        summary.loc['Total'] = total_summary
+        return df, summary
 
     def summary(self):
         df, summary = self._summary()
