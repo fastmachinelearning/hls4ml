@@ -118,8 +118,6 @@ class Variable(VariableBase):
         if self.operation == 'add':
             ancestors = self.ancestors
             const = self.const + other
-        elif self.operation == 'neg':
-            return -(self.ancestors[0] + (-other))
         else:
             ancestors = (self,)
             const = other
@@ -129,11 +127,6 @@ class Variable(VariableBase):
 
     @__add__.register(VariableBase)
     def _(self, other: 'Variable'):
-
-        if other.operation == 'neg':
-            if self.operation == 'neg':
-                return -(self.ancestors[0] + other.ancestors[0])
-            return self - other.ancestors[0]
 
         precision = self.precision + other.precision
 

@@ -5,12 +5,15 @@ import numpy as np
 from . import symbolic_variable
 from .symbolic_variable import Variable
 
-DSP_OFFLOAD_THRES = 5
+DSP_OFFLOAD_THRES = -1
+MINIMAL_LATENCY_COMPILE = False
 
 
-def set_dsp_offload_threshold(thres: int):
+def compiler_config(dsp_offload_thres: int, minimal_latency: bool = False):
     global DSP_OFFLOAD_THRES
-    DSP_OFFLOAD_THRES = thres
+    global MINIMAL_LATENCY_COMPILE
+    DSP_OFFLOAD_THRES = dsp_offload_thres
+    MINIMAL_LATENCY_COMPILE = minimal_latency
 
 
 def const_fp_bits(x):
@@ -26,7 +29,7 @@ def const_fp_bits(x):
     return l
 
 
-def binary_shift_decompose(x: int | float | np.number):
+def binary_shift_decompose(x: int | float | np.number, allow_ternary: bool = False):
     '''Given a number, return positive and negative bitshifts to represent another number multiplied by it:
     returns pos, neg such that `N*x = sum(x << pos) - sum(x << neg)` for some N
     '''
@@ -35,15 +38,19 @@ def binary_shift_decompose(x: int | float | np.number):
     x *= 2**f
     x = int(x)
     binary = np.array(list(bin(x)[2:])[::-1], dtype=np.int8)
-    binary_m1 = np.array(list(bin(abs(x - 1))[2:])[::-1], dtype=np.int8)
 
     idx_pos = (np.where(binary)[0] - f).astype(np.int8)
-    idx_neg = (np.where(binary_m1 == 0)[0] - f).astype(np.int8)
+    r = (idx_pos, np.array([], dtype=np.int8))
 
-    if len(idx_neg) + 1 < len(idx_pos):
-        r = (np.array([len(binary_m1) - f], dtype=np.int8), idx_neg)
-    else:
-        r = (idx_pos, np.array([], dtype=np.int8))
+    if allow_ternary:
+        binary_m1 = np.array(list(bin(abs(x - 1))[2:])[::-1], dtype=np.int8)
+        idx_neg = (np.where(binary_m1 == 0)[0] - f).astype(np.int8)
+
+        if len(idx_neg) + 1 < len(idx_pos):
+            r = (np.array([len(binary_m1) - f], dtype=np.int8), idx_neg)
+    # else:
+    #     assert np.all(sign >= 0), "Negative numbers are not supported if allow_ternary is False"
+
     if sign < 0:
         r = r[::-1]
     return r
@@ -161,7 +168,7 @@ def to_operations(arr: np.ndarray):
     shift, combination_mask = get_mat_shift_mask(arr)
     ch_in, ch_out, bw = combination_mask.shape
 
-    # hackey way to support 2d arrays. Turned out to be NOT optimal at all. should break into dotp for better performance
+    # hacky way to support 2d arrays. Turned out to be NOT optimal at all. should break into dotp for better performance
     combination_mask = combination_mask.reshape(ch_in, ch_out * bw)
 
     bit_mask = list(range(combination_mask.shape[-1]))
@@ -201,21 +208,69 @@ def balanced_reduction(vec: list):
     return vec[0] + bias if vec else bias  # type: ignore
 
 
-def _compile_dense(kernel: np.ndarray, inp: np.ndarray):
+def _min_latency_compile_dense(kernel: np.ndarray, inp: np.ndarray):
+    "Compile a matmul operation with Ternary decomposition"
+
+    global DSP_OFFLOAD_THRES
+    assert DSP_OFFLOAD_THRES < 0, "DSP_OFFLOAD_THRES be disabled (<0) for minimal latency compile"
     ch_in, ch_out = kernel.shape
+    inp = inp[:, 1]
+    r: list[float | Variable | list[Variable]] = np.empty((ch_out, 0), dtype=object).tolist()
+    for i in range(ch_out):
+        _kernel = kernel[:, i]
+        _r_pos = []
+        _r_neg = []
+        for c, v in zip(_kernel, inp):
+            pos_s, neg_s = binary_shift_decompose(c, allow_ternary=False)
+            _r_pos.extend(v << s for s in pos_s)
+            _r_neg.extend(v << s for s in neg_s)
+        _r = balanced_reduction(_r_pos) - balanced_reduction(_r_neg)
+        r[i] = _r
+    return r
+
+
+def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
+    "Compile a matmul operation with MAC Tree"
+    if minmal_latency:
+        return _min_latency_compile_dense(kernel, inp)
+    ch_in, ch_out = kernel.shape
+    assert ch_out == 1, 'Only single output channel is supported for each unrolled operation'
+    # ================ assign weight sign to inputs ================
+    # ===================== require ch_out = 1 =====================
+    if inp.ndim == 2:
+        signs = np.sign(kernel).ravel().astype(np.int8)
+        signs = (signs + 1) // 2  # -1 -> 0, 1 -> 1
+        inp = inp[np.arange(len(inp)), signs]
+        kernel = np.abs(kernel)
+    # ==============================================================
     r: list[float | Variable | list[Variable]] = np.empty((ch_out, 0), dtype=object).tolist()
 
-    _, combination_mask = get_mat_shift_mask(kernel)
-    bits_k = np.sum(np.abs(combination_mask), axis=(2))
-    bits_i = np.array([v.b for v in inp])
-    bops = bits_k * bits_i[:, None]
-    offload = np.where(bops > DSP_OFFLOAD_THRES)
-    if len(offload[0]) > 0:
-        kernel = kernel.copy()
-    for i, j in zip(*offload):
-        c = kernel[i, j]
-        kernel[i, j] = 0
-        r[j].append(c * inp[i])
+    shifts, combination_mask = get_mat_shift_mask(kernel)
+    _length = np.sum(np.any(combination_mask != 0, axis=(1, 2)))
+    if _length == 0:
+        return [0]
+    char_length = int(np.log2(_length))
+    kernel2 = None
+    n_bits = combination_mask.shape[-1]
+    if char_length < n_bits and char_length > 1:
+        kernel2 = 2.0 ** shifts[:, None] * np.sum(
+            2.0 ** np.arange(char_length, n_bits) * combination_mask[..., char_length:], axis=-1
+        )
+        kernel1 = 2.0 ** shifts[:, None] * np.sum(
+            2.0 ** np.arange(char_length) * combination_mask[..., :char_length], axis=-1
+        )
+        kernel = kernel1
+    if DSP_OFFLOAD_THRES >= 0:
+        bits_k = np.sum(np.abs(combination_mask), axis=(2))
+        bits_i = np.array([v.b for v in inp])
+        bops = bits_k * bits_i[:, None]
+        offload = np.where(bops > DSP_OFFLOAD_THRES)
+        if len(offload[0]) > 0:
+            kernel = kernel.copy()
+        for i, j in zip(*offload):
+            c = kernel[i, j]
+            kernel[i, j] = 0
+            r[j].append(c * inp[i])
     shifts, gather_tos, extract_froms, bit_extract_order = to_operations(kernel)
 
     buf0 = inp * 2.0**shifts
@@ -235,22 +290,30 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray):
             if isinstance(x, Variable):
                 x.fix_precision(recursive=True)
             r[i] = x
+
+    if kernel2 is not None:
+        r = (np.array(r) + np.array(_compile_dense(kernel2, inp, minmal_latency))).tolist()
     return r
 
 
-def compile_dense(kernel: np.ndarray, inp: np.ndarray):
+def compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
     out = []
+
+    inp = np.stack([-inp, inp], axis=1)
     for _kernel in kernel.T:  # ch_in, 1
-        out.append(_compile_dense(_kernel[:, None], inp)[0])
+        out.append(_compile_dense(_kernel[:, None], inp, minmal_latency=minmal_latency)[0])
     return np.array(out).T
 
 
-def compile_conv(kernel: np.ndarray, inp: list | np.ndarray):
+def compile_conv(kernel: np.ndarray, inp: list | np.ndarray, minimal_latency=None):
     """
     Apply a single kernel to the input x
     """
+    if minimal_latency is None:
+        global MINIMAL_LATENCY_COMPILE
+        minimal_latency = MINIMAL_LATENCY_COMPILE
     *_ch_in, ch_out = kernel.shape
     ch_in = int(np.prod(_ch_in))
     inp = np.reshape(inp, ch_in)
     kernel = np.reshape(kernel, (ch_in, ch_out))
-    return compile_dense(kernel, inp)
+    return compile_dense(kernel, inp, minmal_latency=minimal_latency)

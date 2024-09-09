@@ -165,6 +165,7 @@ class ResourceSurrogate:
         summary = pd.DataFrame({'LUT': lut, 'DSP': dsp, 'Latency (ns)': latency_ns})
 
         total_df = df.sum()
+        total_df['pf'] = -1
         total_summary = summary.sum()
         df.loc['Total'] = total_df
         summary.loc['Total'] = total_summary
