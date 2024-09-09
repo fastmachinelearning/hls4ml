@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from hls4ml.model.layers import BatchNormalization, BatchNormOnnx, Constant
@@ -94,11 +96,14 @@ class ConstantBatchNormFusion(OptimizerPass):
         """
         Remove the batch norm
         """
+        warnings.warn('ConstantBatchNormFusion should probably not be triggered. Check the optimizer order.', stacklevel=2)
         const_node = node.get_input_node(node.inputs[0])
 
         const_prec = const_node.get_output_variable().type.precision
 
-        new_val = const_node.value * node.weights['scale'].data_unquantized + node.weights['bias'].data_unquantized
+        new_val = (
+            const_node.attributes['value'] * node.weights['scale'].data_unquantized + node.weights['bias'].data_unquantized
+        )
 
         const_node.set_attr('value', new_val)
         const_node.set_attr('quantizer', node.get_attr('quantizer'))  # None if not defined
