@@ -40,7 +40,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.9.0.dev59+gd63033b3
+                0.9.0.dev60+g5d0bdb5c
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -483,37 +483,6 @@ bakends that implement special pointwise convolutions.</p>
 </dd></dl>
 
 </dd></dl>
-
-</section>
-<section id="module-hls4ml.model.optimizer.passes.precision_merge">
-<span id="hls4ml-model-optimizer-passes-precision-merge-module"></span><h2>hls4ml.model.optimizer.passes.precision_merge module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.precision_merge" title="Permalink to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.precision_merge.</span></span><span class="sig-name descname"><span class="pre">SetPrecisionConcat</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat.match" title="Permalink to this definition"></a></dt>
-<dd><p>Predicate to match on a given node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.precision_merge.SetPrecisionConcat.transform" title="Permalink to this definition"></a></dt>
-<dd><p>Set concat output precision</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.precision_merge.get_concat_type">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.precision_merge.</span></span><span class="sig-name descname"><span class="pre">get_concat_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">itype1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itype2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.precision_merge.get_concat_type" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </section>
 <section id="module-hls4ml.model.optimizer.passes.qkeras">
