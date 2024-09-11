@@ -287,10 +287,7 @@ def test_conv1d(padds, backend, io_type):
     assert list(hls_model.get_layers())[conv_index].attributes['n_chan'] == class_object_conv.in_channels
     assert list(hls_model.get_layers())[conv_index].attributes['n_filt'] == class_object_conv.out_channels
     assert list(hls_model.get_layers())[conv_index].attributes['stride_width'] == class_object_conv.stride[0]
-    if list(hls_model.get_layers())[conv_index].attributes['padding'] == 'valid':
-        padding = 0
-    else:
-        padding = 1
+    padding = padds
     if io_type == "io_stream" and (backend == "Vivado" or backend == "Vitis") and padds == 1:
         padding = 1
         padds = 0
@@ -436,10 +433,7 @@ def test_conv2d(padds, backend, io_type):
         assert list(hls_model.get_layers())[conv_index].attributes['n_filt'] == class_object_conv.out_channels
         assert list(hls_model.get_layers())[conv_index].attributes['stride_width'] == class_object_conv.stride[1]
         assert list(hls_model.get_layers())[conv_index].attributes['stride_height'] == class_object_conv.stride[0]
-        if list(hls_model.get_layers())[conv_index].attributes['padding'] == 'valid':
-            padding = 0
-        else:
-            padding = 1
+        padding = padds
         assert padding == class_object_conv.padding[0]
         assert list(hls_model.get_layers())[conv_index].attributes['data_format'] == 'channels_last'
 
