@@ -20,7 +20,11 @@ pytest.{}:
 
 n_test_files_per_yml = int(os.environ.get('N_TESTS_PER_YAML', 4))
 
+# Blacklisted tests will be skipped
 BLACKLIST = {'test_reduction'}
+
+# Long-running tests will not be bundled with other tests
+LONGLIST = {'test_hgq_layers'}
 
 
 def path_to_name(test_path):
@@ -43,9 +47,7 @@ def uses_example_model(test_filename):
 
 def generate_test_yaml(test_root='.'):
     test_root = Path(test_root)
-    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem not in BLACKLIST]
-    for path in test_paths:
-        print(path.name)
+    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem not in (BLACKLIST | LONGLIST)]
     need_example_models = [uses_example_model(path) for path in test_paths]
 
     idxs = list(range(len(need_example_models)))
@@ -63,6 +65,15 @@ def generate_test_yaml(test_root='.'):
             yml = diff_yml
         else:
             yml.update(diff_yml)
+
+    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in LONGLIST]
+    for path in test_paths:
+        name = path.stem.replace('test_', '')
+        test_file = str(path.relative_to(test_root))
+        needs_examples = uses_example_model(path)
+        diff_yml = yaml.safe_load(template.format(name, test_file, needs_examples))
+        yml.update(diff_yml)
+
     return yml
 
 
