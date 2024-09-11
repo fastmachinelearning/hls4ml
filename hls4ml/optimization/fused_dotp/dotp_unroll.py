@@ -1,4 +1,5 @@
 import heapq
+from functools import lru_cache
 
 import numpy as np
 
@@ -229,6 +230,17 @@ def _min_latency_compile_dense(kernel: np.ndarray, inp: np.ndarray):
     return r
 
 
+@lru_cache(maxsize=1024)
+def nadd_max(n, w_c):
+    chunk = int(np.log2(n) + 1)
+    if w_c <= chunk:
+        return n + 2 ** (w_c - 1) - 2, -1
+    else:
+        arr = np.array([nadd_max(n, chunk)[0] + nadd_max(n, w_c - chunk)[0] + 1 for chunk in range(1, w_c // 2 + 1)])
+        idx = np.argmin(arr)
+        return int(arr[idx]), int(idx + 1)
+
+
 def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
     "Compile a matmul operation with MAC Tree"
     if minmal_latency:
@@ -249,16 +261,15 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
     _length = np.sum(np.any(combination_mask != 0, axis=(1, 2)))
     if _length == 0:
         return [0]
-    char_length = int(np.log2(_length))
+    char_length = int(np.log2(_length) + 1)
     kernel2 = None
     n_bits = combination_mask.shape[-1]
     if char_length < n_bits and char_length > 1:
+        chunk_size = n_bits - nadd_max(_length, n_bits)[1]
         kernel2 = 2.0 ** shifts[:, None] * np.sum(
-            2.0 ** np.arange(char_length, n_bits) * combination_mask[..., char_length:], axis=-1
+            2.0 ** np.arange(chunk_size, n_bits) * combination_mask[..., chunk_size:], axis=-1
         )
-        kernel1 = 2.0 ** shifts[:, None] * np.sum(
-            2.0 ** np.arange(char_length) * combination_mask[..., :char_length], axis=-1
-        )
+        kernel1 = 2.0 ** shifts[:, None] * np.sum(2.0 ** np.arange(chunk_size) * combination_mask[..., :chunk_size], axis=-1)
         kernel = kernel1
     if DSP_OFFLOAD_THRES >= 0:
         bits_k = np.sum(np.abs(combination_mask), axis=(2))
@@ -292,6 +303,7 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
             r[i] = x
 
     if kernel2 is not None:
+        # return _compile_dense(kernel2, inp, minmal_latency)
         r = (np.array(r) + np.array(_compile_dense(kernel2, inp, minmal_latency))).tolist()
     return r
 
