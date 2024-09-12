@@ -57,25 +57,24 @@ register_flow(
 register_flow(
     'convert',
     [
-        'fuse_consecutive_batch_normalization',
-        'merge_linear_activation',
-        'fuse_batch_normalization',
-        'eliminate_linear_activation',
-        'qkeras_factorize_alpha',
-        'extract_ternary_threshold',
-        'replace_multidimensional_dense_with_conv',
-        'seperable_to_depthwise_and_conv',
-        # The ones above here need to be before infer_precision_types
-        'infer_precision_types',
         'channels_last_converter',
+        'merge_linear_activation',
+        'seperable_to_depthwise_and_conv',
         'remove_transpose_before_flatten',
         'remove_nop_transpose',
         'remove_single_channel_transpose',
         'fuse_bias_add',
         'expand_layer_group',
         'output_rounding_saturation_mode',
+        'qkeras_factorize_alpha',
+        'extract_ternary_threshold',
         'fuse_consecutive_batch_normalization',
+        'fuse_batch_normalization',
+        'replace_multidimensional_dense_with_conv',
         'enforce_proxy_model_embedded_config',
+        'eliminate_linear_activation',
+        # many of the above optimzers need to be done before this
+        'infer_precision_types',
     ],
     requires=['parse_qonnx'],
 )  # TODO Maybe not all QKeras optmizers belong here?
@@ -83,10 +82,7 @@ register_flow(
 register_flow(
     'optimize',
     [
-        'eliminate_linear_activation',
         'remove_nop_batch_normalization',
-        'infer_precision_types',
-        'set_precision_concat',
     ],
     requires=['convert'],
 )
