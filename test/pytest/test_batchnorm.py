@@ -36,7 +36,9 @@ def test_batchnorm(model, data, backend, io_type):
 
     center = model.layers[0].center
     scale = model.layers[0].scale
-    config = hls4ml.utils.config_from_keras_model(model, default_precision=default_precision, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(
+        model, default_precision=default_precision, granularity='name', backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_batchnorm_{backend}_{io_type}_center{center}_scale{scale}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, backend=backend, hls_config=config, io_type=io_type, output_dir=output_dir

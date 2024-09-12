@@ -38,6 +38,12 @@ def test_attributes():
     cfg['Model']['Strategy'] = strategy
     cfg['LayerName']['dense']['ReuseFactor'] = 1
 
+    # optimization doesn't yet support auto precision
+    for layer in cfg['LayerName'].values():
+        for key, prec in layer['Precision'].items():
+            if prec == 'auto':
+                layer['Precision'][key] = default_precision
+
     # Verify correct information for every layer
     model_attributes = get_attributes_from_keras_model_and_hls4ml_config(model, cfg)
     assert len(model_attributes) == 4

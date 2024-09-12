@@ -53,7 +53,9 @@ def keras_model_1d(request):
 def test_global_pool1d(backend, keras_model_1d, data_1d, io_type):
     model, model_type, keepdims = keras_model_1d
 
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,9>', granularity='name')
+    config = hls4ml.utils.config_from_keras_model(
+        model, default_precision='ap_fixed<32,9>', granularity='name', backend=backend
+    )
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
@@ -108,7 +110,9 @@ def keras_model_2d(request):
 def test_global_pool2d(backend, keras_model_2d, data_2d, io_type):
     model, model_type, keepdims = keras_model_2d
 
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,9>', granularity='name')
+    config = hls4ml.utils.config_from_keras_model(
+        model, default_precision='ap_fixed<32,9>', granularity='name', backend=backend
+    )
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
