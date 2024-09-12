@@ -84,6 +84,7 @@ def pytorch_handler(*args):
 # map names of operations between toch.nn and torch.nn.functionals
 layer_name_map = {
     'relu': 'ReLU',
+    'tanh': 'Tanh',
     'leaky_relu': 'LeakyReLU',
     'elu': 'ELU',
     'prelu': 'PReLU',

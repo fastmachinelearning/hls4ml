@@ -4,7 +4,14 @@ from typing import Iterable
 import numpy as np
 
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, PrecisionType, UnspecifiedPrecisionType
+from hls4ml.model.types import (
+    FixedPrecisionType,
+    IntegerPrecisionType,
+    PrecisionType,
+    RoundingMode,
+    SaturationMode,
+    UnspecifiedPrecisionType,
+)
 
 # TODO:  The code assumes everything is Fixed or Integer precision. Need to add checks
 
@@ -204,6 +211,8 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         n_ops = node.get_attr('filt_height', 1) * node.get_attr('filt_width')
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
+    # This function should generally not be called because we split sepconv to depthwise and regular (pointwise).
+    # It has not been updated.
     def _infer_sepconv_precision(self, node, types_to_infer):
         inferred_types = []
 
@@ -479,7 +488,12 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                 new_width = min(new_width, max_precision.width)
                 new_int = min(new_int, max_precision.integer)
 
-            out_precision = FixedPrecisionType(new_width, new_int, new_signed)
+            # some logic copied from former SetPrecisionConcat optimizer
+            newrmode = input_1.rounding_mode if input_1.rounding_mode != RoundingMode.TRN else input_2.rounding_mode
+            newsmode = input_1.saturation_mode if input_1.saturation_mode != SaturationMode.WRAP else input_2.saturation_mode
+            newsbits = input_1.saturation_bits if input_1.saturation_bits != 0 else input_2.saturation_bits
+
+            out_precision = FixedPrecisionType(new_width, new_int, new_signed, newrmode, newsmode, newsbits)
         else:
             out_precision = self._get_default_precision(node)
 

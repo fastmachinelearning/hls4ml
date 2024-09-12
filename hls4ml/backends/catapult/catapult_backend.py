@@ -110,6 +110,7 @@ class CatapultBackend(FPGABackend):
             'catapult:inplace_stream_flatten',
             'catapult:skip_softmax',
             'catapult:fix_softmax_table_size',
+            'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 

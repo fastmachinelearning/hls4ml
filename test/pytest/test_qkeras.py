@@ -77,7 +77,7 @@ def convert(load_jettagging_model, strategy):
     '''
     model = load_jettagging_model
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     config['Model']['Strategy'] = strategy
     config['LayerName']['softmax']['exp_table_t'] = 'ap_fixed<18,8>'
     config['LayerName']['softmax']['inv_table_t'] = 'ap_fixed<18,4>'
@@ -156,7 +156,7 @@ def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend, io_ty
     model.add(QActivation(activation=quantized_relu(bits, 0), name='relu1'))
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_single_dense_activation_exact_{bits}_{alpha}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -205,7 +205,7 @@ def test_quantizer_special(randX_1000_1, quantizer, backend, io_type):
     model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     output_dir = str(
         test_root_path / f'hls4mlprj_qkeras_quantizer_{quantizer.__class__.__name__}_{quantizer.bits}_{backend}_{io_type}'
     )
@@ -289,7 +289,7 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
     model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     output_dir = str(
         test_root_path
         / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}_{}'.format(
@@ -328,7 +328,7 @@ def test_relu_negative_slope(randX_1000_1, quantizer, backend, io_type):
     model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     output_dir = str(
         test_root_path
         / 'hls4mlprj_qkeras_leaky_relu_{}_{}_neg_slope_{}_{}_{}'.format(
@@ -375,7 +375,7 @@ def test_qactivation_kwarg(randX_100_10, activation_quantizer, weight_quantizer)
     )(inputs)
     model = Model(inputs, outputs)
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
 
     out_dir = str(test_root_path / f'hls4mlprj_qactivation_kwarg_{activation_quantizer}')
 
@@ -420,7 +420,9 @@ def test_quantizer_parsing(randX_100_10, backend, io_type):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_quant_parse_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -461,7 +463,9 @@ def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qconv2dbn_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -502,7 +506,9 @@ def test_qdepthwiseconv2d(randX_10_32_32_3, backend, io_type):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<24,8>')
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qdepthwiseconv2d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -540,7 +546,7 @@ def test_quantised_po2_bit_width(backend, io_type, strategy):
     y_keras = keras_model.predict(X)
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        keras_model, granularity='name', default_precision='ap_fixed<64, 32>', default_reuse_factor=1
+        keras_model, granularity='name', default_precision='ap_fixed<64, 32>', default_reuse_factor=1, backend=backend
     )
     hls_config['Model']['Strategy'] = strategy
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_quantised_po2_{backend}_{io_type}_{strategy}')
@@ -575,7 +581,9 @@ def test_qsimplernn(backend):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<16,1>")
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision="ap_fixed<16,1>", backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
@@ -609,7 +617,9 @@ def test_qlstm(backend):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<8,1>")
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision="ap_fixed<8,1>", backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
@@ -644,7 +654,9 @@ def test_qgru(backend):
     )
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision="ap_fixed<8,1>")
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision="ap_fixed<8,1>", backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
