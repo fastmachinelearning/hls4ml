@@ -8,13 +8,21 @@ from .symbolic_variable import Variable
 
 DSP_OFFLOAD_THRES = -1
 MINIMAL_LATENCY_COMPILE = False
+USE_TERNARY = False
+ALLOW_SPLIT = True
 
 
-def compiler_config(dsp_offload_thres: int, minimal_latency: bool = False):
+def compiler_config(
+    dsp_offload_thres: int, minimal_latency: bool = False, use_ternary: bool = False, allow_split: bool = True
+):
     global DSP_OFFLOAD_THRES
     global MINIMAL_LATENCY_COMPILE
+    global USE_TERNARY
+    global ALLOW_SPLIT
     DSP_OFFLOAD_THRES = dsp_offload_thres
     MINIMAL_LATENCY_COMPILE = minimal_latency
+    USE_TERNARY = use_ternary
+    ALLOW_SPLIT = allow_split
 
 
 def const_fp_bits(x):
@@ -49,8 +57,8 @@ def binary_shift_decompose(x: int | float | np.number, allow_ternary: bool = Fal
 
         if len(idx_neg) + 1 < len(idx_pos):
             r = (np.array([len(binary_m1) - f], dtype=np.int8), idx_neg)
-    # else:
-    #     assert np.all(sign >= 0), "Negative numbers are not supported if allow_ternary is False"
+    else:
+        assert np.all(sign >= 0), "Negative numbers are not supported if allow_ternary is False"
 
     if sign < 0:
         r = r[::-1]
@@ -76,7 +84,7 @@ def get_mat_shift_mask(arr: np.ndarray):
 
     for i, x in enumerate(arr_flat):
         i0 = np.unravel_index(i, shape)[0]
-        p, n = binary_shift_decompose(x)
+        p, n = binary_shift_decompose(x, allow_ternary=USE_TERNARY)
         shifts[i0] = min(*p[:1], *n[:1], shifts[i0], 127)
         poss.append(p)
         negs.append(n)
@@ -215,14 +223,15 @@ def _min_latency_compile_dense(kernel: np.ndarray, inp: np.ndarray):
     global DSP_OFFLOAD_THRES
     assert DSP_OFFLOAD_THRES < 0, "DSP_OFFLOAD_THRES be disabled (<0) for minimal latency compile"
     ch_in, ch_out = kernel.shape
-    inp = inp[:, 1]
+    if inp.ndim == 2:
+        inp = inp[:, 1]
     r: list[float | Variable | list[Variable]] = np.empty((ch_out, 0), dtype=object).tolist()
     for i in range(ch_out):
         _kernel = kernel[:, i]
         _r_pos = []
         _r_neg = []
         for c, v in zip(_kernel, inp):
-            pos_s, neg_s = binary_shift_decompose(c, allow_ternary=False)
+            pos_s, neg_s = binary_shift_decompose(c, allow_ternary=USE_TERNARY)
             _r_pos.extend(v << s for s in pos_s)
             _r_neg.extend(v << s for s in neg_s)
         _r = balanced_reduction(_r_pos) - balanced_reduction(_r_neg)
@@ -243,8 +252,6 @@ def nadd_max(n, w_c):
 
 def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
     "Compile a matmul operation with MAC Tree"
-    if minmal_latency:
-        return _min_latency_compile_dense(kernel, inp)
     ch_in, ch_out = kernel.shape
     assert ch_out == 1, 'Only single output channel is supported for each unrolled operation'
     # ================ assign weight sign to inputs ================
@@ -255,6 +262,9 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
         inp = inp[np.arange(len(inp)), signs]
         kernel = np.abs(kernel)
     # ==============================================================
+    if minmal_latency:
+        return _min_latency_compile_dense(kernel, inp)
+
     r: list[float | Variable | list[Variable]] = np.empty((ch_out, 0), dtype=object).tolist()
 
     shifts, combination_mask = get_mat_shift_mask(kernel)
@@ -264,7 +274,7 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
     char_length = int(np.log2(_length) + 1)
     kernel2 = None
     n_bits = combination_mask.shape[-1]
-    if char_length < n_bits and char_length > 1:
+    if ALLOW_SPLIT and char_length < n_bits and char_length > 1:
         chunk_size = n_bits - nadd_max(_length, n_bits)[1]
         kernel2 = 2.0 ** shifts[:, None] * np.sum(
             2.0 ** np.arange(chunk_size, n_bits) * combination_mask[..., chunk_size:], axis=-1
@@ -311,7 +321,8 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
 def compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
     out = []
 
-    inp = np.stack([-inp, inp], axis=1)
+    if not USE_TERNARY and np.any(kernel):
+        inp = np.stack([-inp, inp], axis=1)
     for _kernel in kernel.T:  # ch_in, 1
         out.append(_compile_dense(_kernel[:, None], inp, minmal_latency=minmal_latency)[0])
     return np.array(out).T
