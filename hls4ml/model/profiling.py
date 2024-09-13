@@ -232,6 +232,7 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
         else:
             suffix = ['w', 'b']
         name = layer.name
+        # print(name)
         for iw, weight in enumerate(layer.get_weights()):
             label = f'{name}/{suffix[iw]}'
             w = weight.data.flatten()
@@ -271,6 +272,18 @@ def _keras_batchnorm(layer):
 
 def _keras_layer(layer):
     return layer.get_weights(), ['w', 'b']
+
+
+def _keras_layernorm(layer):
+    weights = layer.get_weights()
+
+    gamma = weights[0]
+    beta = weights[1]
+
+    scale = gamma
+    bias = beta
+
+    return [scale, bias], ['s', 'b']
 
 
 def _keras_lstm(layer):

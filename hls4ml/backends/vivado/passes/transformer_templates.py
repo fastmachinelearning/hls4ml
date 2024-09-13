@@ -1,9 +1,8 @@
-
 from hls4ml.backends.backend import get_backend
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import MultiHeadAttention
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
-#dense layer template
+# dense layer template
 mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
@@ -21,7 +20,7 @@ mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
-#activation template
+# activation template
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = {table_size};
@@ -35,8 +34,8 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned exp_range = {exp_range};
 }};\n"""
 
-                                                                  
-mha_config_template = """struct config{index} : nnet::multiheadattention_config {{ 
+
+mha_config_template = """struct config{index} : nnet::multiheadattention_config {{
     typedef {accum_t.name} accum_t;
     typedef {attention_output_bias_t.name} bias_t;
     typedef {attention_output_weight_t.name} weight_t;
@@ -56,9 +55,11 @@ mha_config_template = """struct config{index} : nnet::multiheadattention_config 
 }};\n"""
 
 
-mha_function_template = 'nnet::multiheadattention<{input_t}, {output_t}, {config}>({input_q}, {input_kv}, {output}, {w_o}, {b_o}, {w_k}, {b_k}, {w_q}, {b_q}, {w_v}, {b_v});'
+mha_function_template = """nnet::multiheadattention<{input_t}, {output_t}, {config}>({input_q}, {input_kv},
+                            {output}, {w_o}, {b_o}, {w_k}, {b_k}, {w_q}, {b_q}, {w_v}, {b_v});"""
 
 mha_include_list = ['nnet_utils/nnet_multiheadattention.h']
+
 
 class MhaConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -67,7 +68,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         self.mult1_template = mult_config_template
         self.mult2_template = mult_config_template
         self.activ1_template = softmax_config_template
-    
+
     def format(self, node):
 
         params = self._default_config_params(node)
@@ -76,8 +77,8 @@ class MhaConfigTemplate(LayerConfigTemplate):
         params['head_dim_value'] = node.get_attr('head_dim_value')
         params['feature_dim'] = node.get_attr('feature_dim')
         params['seq_len'] = node.get_attr('seq_len')
-        params['config_mult_t1'] = 'config{}_1'.format(node.index)
-        params['config_mult_t2'] = 'config{}_2'.format(node.index)
+        params['config_mult_t1'] = f'config{node.index}_1'
+        params['config_mult_t2'] = f'config{node.index}_2'
         params['config_activ_t1'] = '{}_config{}'.format("softmax", node.index)
         params['strategy'] = node.get_attr('strategy')
         mha_config = self.template.format(**params)
@@ -88,11 +89,13 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params1['n_in'] = node.get_attr('feature_dim')
         mult_params1['n_out'] = node.get_attr('head_dim_key')
         mult_params1['seq_len'] = 1
-        mult_params1['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('query_weight').type.precision)
+        mult_params1['product_type'] = get_backend('vivado').product_type(
+            node.get_input_variable().type.precision, node.get_weights('query_weight').type.precision
+        )
         mult_params1['reuse'] = params['reuse']
         mult_params1['index'] = str(node.index)
         mult_params1['nzeros'] = 0
-        mult_params1['nonzeros'] = params['feature_dim']*params['num_heads']*params['head_dim_key']
+        mult_params1['nonzeros'] = params['feature_dim'] * params['num_heads'] * params['head_dim_key']
         mult_config1 = self.mult1_template.format(**mult_params1)
 
         mult_params2 = self._default_config_params(node)
@@ -101,20 +104,23 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params2['n_in'] = node.get_attr('head_dim_value') * node.get_attr('num_heads')
         mult_params2['n_out'] = node.get_attr('feature_dim')
         mult_params2['seq_len'] = 1
-        mult_params2['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('attention_output_weight').type.precision)
+        mult_params2['product_type'] = get_backend('vivado').product_type(
+            node.get_input_variable().type.precision, node.get_weights('attention_output_weight').type.precision
+        )
         mult_params2['reuse'] = params['reuse']
         mult_params2['index'] = str(node.index)
         mult_params2['nzeros'] = 0
-        mult_params2['nonzeros'] = params['feature_dim']*params['num_heads']*params['head_dim_key']
+        mult_params2['nonzeros'] = params['feature_dim'] * params['num_heads'] * params['head_dim_key']
         mult_config2 = self.mult2_template.format(**mult_params2)
 
         act_params = self._default_config_params(node)
         act_params['n_in'] = node.get_attr('seq_len')
         act_params['type'] = 'softmax'
-        act_params['implementation'] = 'legacy' #in MHA: latency,stable not work， legacy works
+        act_params['implementation'] = 'legacy'  # in MHA: latency,stable not work， legacy works
         act_config = self.activ1_template.format(**act_params)
 
         return mult_config1 + '\n' + mult_config2 + '\n' + act_config + '\n' + mha_config
+
 
 class MhaFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -124,10 +130,10 @@ class MhaFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = {}
         params.update(node.attributes)
-        params['config'] = 'config{}'.format(node.index)
+        params['config'] = f'config{node.index}'
         params['input_t'] = node.get_input_variable().type.name
         params['output_t'] = node.get_output_variable().type.name
-        
+
         params['input_q'] = node.model.get_layer_output_variable(node.inputs[0]).name
         params['input_kv'] = node.model.get_layer_output_variable(node.inputs[1]).name
         params['output'] = node.get_output_variable().name
@@ -141,4 +147,3 @@ class MhaFunctionTemplate(FunctionCallTemplate):
         params['b_v'] = node.get_weights('value_bias').name
 
         return self.template.format(**params)
-

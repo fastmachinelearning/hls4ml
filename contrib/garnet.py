@@ -322,7 +322,7 @@ class GarNetStack(GarNet):
             else:
                 input_feature_transform = NamedDense(p, name=('FLR%d' % it))
                 output_feature_transform = NamedDense(f, name=('Fout%d' % it))
-                output_activation_transform = keras.layers.Activation(self._output_activation)
+                # output_activation_transform = keras.layers.Activation(self._output_activation)
 
             aggregator_distance = NamedDense(a, name=('S%d' % it))
 
