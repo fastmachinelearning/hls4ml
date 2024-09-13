@@ -63,12 +63,6 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
    * - RNN (LSTM)
      - ``supported``
      - ``N/A``
-     - ``supported``
-     - ``supported``
-     - ``experimental``
-   * - RNN (LSTM)
-     - ``supported``
-     - ``N/A``
      - ``in development``
      - ``supported``
      - ``supported``
