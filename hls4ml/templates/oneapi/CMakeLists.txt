@@ -46,7 +46,7 @@ endif()
 set(USER_FPGA_FLAGS -Wno-unused-label ${USER_FPGA_FLAGS})
 
 # Use cmake -DUSER_FLAGS=<flags> to set extra flags for general compilation.
-set(USER_FLAGS -Wno-unused-label ${USER_FLAGS})
+set(USER_FLAGS -Wno-unused-label -fconstexpr-steps=134217728 ${USER_FLAGS})
 
 # Use cmake -DUSER_INCLUDE_PATHS=<paths> to set extra paths for general
 # compilation.
