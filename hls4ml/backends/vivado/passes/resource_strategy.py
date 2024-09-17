@@ -1,14 +1,17 @@
 import numpy as np
 
-from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense, SeparableConv1D, SeparableConv2D, MultiHeadAttention
+from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense, MultiHeadAttention, SeparableConv1D, SeparableConv2D
 from hls4ml.model.optimizer import OptimizerPass
+
 
 class ApplyResourceStrategy(OptimizerPass):
     '''Transposes the weights to use the dense_resource matrix multiply routine'''
 
     def match(self, node):
-        
-        node_matches = isinstance(node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU, MultiHeadAttention))
+
+        node_matches = isinstance(
+            node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU, MultiHeadAttention)
+        )
         is_resource_strategy = node.get_attr('strategy', '').lower() == 'resource'
         already_transformed = node.get_attr('_weights_transposed', False) is True
 
@@ -40,11 +43,12 @@ class ApplyResourceStrategy(OptimizerPass):
         elif isinstance(node, (LSTM, GRU)):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
             node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
-        elif isinstance(node, (MultiHeadAttention)):               
-        #     node.weights['key_weight'].data   = np.transpose(node.weights['key_weight'].data,   axes=[0, 2, 1])
-        #     node.weights['query_weight'].data = np.transpose(node.weights['query_weight'].data, axes=[0, 2, 1])
-        #     node.weights['value_weight'].data = np.transpose(node.weights['value_weight'].data, axes=[0, 2, 1])
-        #     node.weights['attention_output_weight'].data = np.transpose(node.weights['attention_output_weight'].data, axes=[2, 0, 1])
+        elif isinstance(node, (MultiHeadAttention)):
+            # node.weights['key_weight'].data   = np.transpose(node.weights['key_weight'].data,   axes=[0, 2, 1])
+            # node.weights['query_weight'].data = np.transpose(node.weights['query_weight'].data, axes=[0, 2, 1])
+            # node.weights['value_weight'].data = np.transpose(node.weights['value_weight'].data, axes=[0, 2, 1])
+            # node.weights['attention_output_weight'].data =
+            #     np.transpose(node.weights['attention_output_weight'].data, axes=[2, 0, 1])
             print("not transpose")
         else:
             raise Exception(f'Unexpected layer {node.class_name} with resource strategy')

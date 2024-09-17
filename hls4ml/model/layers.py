@@ -400,7 +400,6 @@ class Dense(Layer):
         Attribute('n_in'),
         Attribute('n_out'),
         Attribute('seq_len'),
-
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         TypeAttribute('weight'),
@@ -928,6 +927,7 @@ class BatchNormalization(Layer):
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
+
 class LayerNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -935,7 +935,6 @@ class LayerNormalization(Layer):
         Attribute('seq_len'),
         WeightAttribute('scale'),
         WeightAttribute('bias'),
-
         TypeAttribute('scale'),
         TypeAttribute('bias'),
     ]
@@ -954,7 +953,6 @@ class LayerNormalization(Layer):
 
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
-
 
 
 class Merge(Layer):
@@ -1450,7 +1448,6 @@ class MultiHeadAttention(Layer):
         Attribute('head_dim_value'),
         Attribute('feature_dim'),
         Attribute('seq_len'),
-
         WeightAttribute('attention_output_weight'),
         WeightAttribute('attention_output_bias'),
         WeightAttribute('key_weight'),
@@ -1459,7 +1456,6 @@ class MultiHeadAttention(Layer):
         WeightAttribute('query_bias'),
         WeightAttribute('value_weight'),
         WeightAttribute('value_bias'),
-
         TypeAttribute('attention_output_weight'),
         TypeAttribute('attention_output_bias'),
         TypeAttribute('key_weight'),
@@ -1472,18 +1468,18 @@ class MultiHeadAttention(Layer):
 
     def initialize(self):
         weights_source = [
-                ('attention_output', 'kernel'),
-                ('attention_output', 'bias'),
-                ('key', 'kernel'),
-                ('key', 'bias'),
-                ('query', 'kernel'),
-                ('query', 'bias'),
-                ('value', 'kernel'),
-                ('value', 'bias'),
-            ]
-        
-        for lname, wtype in weights_source:                         
-            data = self.model.get_weights_data(self.name, '{lname}/{wtype}'.format(lname=lname, wtype=wtype))
+            ('attention_output', 'kernel'),
+            ('attention_output', 'bias'),
+            ('key', 'kernel'),
+            ('key', 'bias'),
+            ('query', 'kernel'),
+            ('query', 'bias'),
+            ('value', 'kernel'),
+            ('value', 'bias'),
+        ]
+
+        for lname, wtype in weights_source:
+            data = self.model.get_weights_data(self.name, f'{lname}/{wtype}')
             if wtype == 'kernel':
                 vtype = 'weight'
                 if lname in ['key', 'query', 'value']:
@@ -1494,68 +1490,77 @@ class MultiHeadAttention(Layer):
             else:
                 vtype = 'bias'
 
-            name = '{}_{}'.format(lname, vtype)
-            var_name = '{}_{}{{index}}'.format(lname, vtype)
+            name = f'{lname}_{vtype}'
+            var_name = f'{lname}_{vtype}{{index}}'
             self.add_weights_variable(name=name, var_name=var_name, data=data)
-        
+
         shape = self.attributes['query_shape'][1:]
-        dims = ['seq_out_{}'.format(self.index), 'feature_out_{}'.format(self.index)]
+        dims = [f'seq_out_{self.index}', f'feature_out_{self.index}']
         self.add_output_variable(shape, dims)
 
+
 layer_map = {
-    'Input'                  : Input,
-    'InputLayer'             : Input,
-    'Activation'             : Activation,
-    'QActivation'            : Activation,
-    'LeakyReLU'              : ParametrizedActivation,
-    'ThresholdedReLU'        : ParametrizedActivation,
-    'ELU'                    : ParametrizedActivation,
-    'PReLU'                  : PReLU,
-    'Softmax'                : Softmax,
-    'TernaryTanh'            : TernaryTanh,
-    'Reshape'                : Reshape,
-    'Dense'                  : Dense,
-    'BinaryDense'            : Dense,
-    'TernaryDense'           : Dense,
-    'QDense'                 : Dense,
-    'Conv1D'                 : Conv1D,
-    'QConv1D'                : Conv1D,
-    'Conv2D'                 : Conv2D,
-    'BinaryConv2D'           : Conv2D,
-    'QConv2D'                : Conv2D,
-    'QConv2DBatchnorm'       : Conv2DBatchnorm,
-    'SeparableConv1D'        : SeparableConv1D,
-    'SeparableConv2D'        : SeparableConv2D,
-    'DepthwiseConv2D'        : DepthwiseConv2D,
-    'BatchNormalization'     : BatchNormalization,
-    'QBatchNormalization'    : BatchNormalization,
-    'MaxPooling1D'           : Pooling1D,
-    'AveragePooling1D'       : Pooling1D,
-    'MaxPooling2D'           : Pooling2D,
-    'AveragePooling2D'       : Pooling2D,
-    'GlobalMaxPooling1D'     : GlobalPooling1D,
-    'GlobalAveragePooling1D' : GlobalPooling1D,
-    'GlobalMaxPooling2D'     : GlobalPooling2D,
-    'GlobalAveragePooling2D' : GlobalPooling2D,
-    'ZeroPadding1D'          : ZeroPadding1D,
-    'ZeroPadding2D'          : ZeroPadding2D,
-    'Merge'                  : Merge,
-    'Dot'                    : Dot,
-    'Concatenate'            : Concatenate,
-    'Resize'                 : Resize,
-    'UpSampling1D'           : Resize,
-    'UpSampling2D'           : Resize,
-    'Transpose'              : Transpose,
-    'Embedding'              : Embedding,
-    'SimpleRNN'              : SimpleRNN,
-    'LSTM'                   : LSTM,
-    'GRU'                    : GRU,
-    'GarNet'                 : GarNet,
-    'GarNetStack'            : GarNetStack,
-    'MultiHeadAttention'     : MultiHeadAttention,
-    'LayerNormalization'     : LayerNormalization,
-
-
+    'Input': Input,
+    'InputLayer': Input,
+    'Activation': Activation,
+    'QActivation': Activation,
+    'LeakyReLU': ParametrizedActivation,
+    'ThresholdedReLU': ParametrizedActivation,
+    'ELU': ParametrizedActivation,
+    'PReLU': PReLU,
+    'Softmax': Softmax,
+    'TernaryTanh': TernaryTanh,
+    'HardActivation': HardActivation,
+    'Reshape': Reshape,
+    'Dense': Dense,
+    'BinaryDense': Dense,
+    'TernaryDense': Dense,
+    'QDense': Dense,
+    'Conv1D': Conv1D,
+    'QConv1D': Conv1D,
+    'Conv2D': Conv2D,
+    'BinaryConv2D': Conv2D,
+    'QConv2D': Conv2D,
+    'QConv2DBatchnorm': Conv2DBatchnorm,
+    'SeparableConv1D': SeparableConv1D,
+    'QSeparableConv1D': SeparableConv1D,
+    'DepthwiseConv1D': DepthwiseConv1D,
+    'SeparableConv2D': SeparableConv2D,
+    'QSeparableConv2D': SeparableConv2D,
+    'DepthwiseConv2D': DepthwiseConv2D,
+    'QDepthwiseConv2D': DepthwiseConv2D,
+    'BatchNormalization': BatchNormalization,
+    'QBatchNormalization': BatchNormalization,
+    'MaxPooling1D': Pooling1D,
+    'AveragePooling1D': Pooling1D,
+    'MaxPooling2D': Pooling2D,
+    'AveragePooling2D': Pooling2D,
+    'GlobalMaxPooling1D': GlobalPooling1D,
+    'GlobalAveragePooling1D': GlobalPooling1D,
+    'GlobalMaxPooling2D': GlobalPooling2D,
+    'GlobalAveragePooling2D': GlobalPooling2D,
+    'ZeroPadding1D': ZeroPadding1D,
+    'ZeroPadding2D': ZeroPadding2D,
+    'Merge': Merge,
+    'Dot': Dot,
+    'Concatenate': Concatenate,
+    'Resize': Resize,
+    'UpSampling1D': Resize,
+    'UpSampling2D': Resize,
+    'Transpose': Transpose,
+    'Embedding': Embedding,
+    'SimpleRNN': SimpleRNN,
+    'LSTM': LSTM,
+    'GRU': GRU,
+    'QSimpleRNN': SimpleRNN,
+    'QLSTM': LSTM,
+    'QGRU': GRU,
+    'GarNet': GarNet,
+    'GarNetStack': GarNetStack,
+    'LayerGroup': LayerGroup,
+    'SymbolicExpression': SymbolicExpression,
+    'MultiHeadAttention': MultiHeadAttention,
+    'LayerNormalization': LayerNormalization,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }

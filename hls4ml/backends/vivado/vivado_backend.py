@@ -21,14 +21,14 @@ from hls4ml.model.layers import (
     GarNet,
     GarNetStack,
     Layer,
+    LayerNormalization,
+    MultiHeadAttention,
     Pooling1D,
     Pooling2D,
     SeparableConv1D,
     SeparableConv2D,
     SimpleRNN,
     Softmax,
-    LayerNormalization, 
-    MultiHeadAttention
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
@@ -500,19 +500,19 @@ class VivadoBackend(FPGABackend):
         if 'inv_table_t' not in layer.attributes:
             layer.set_attr('inv_table_t', layer.get_attr('table_t'))
         if 'accum_t' not in layer.attributes:
-            layer.set_attr('accum_t', FixedPrecisionType(width=18, integer=8))  
+            layer.set_attr('accum_t', FixedPrecisionType(width=18, integer=8))
         if 'inv_range' not in layer.attributes:
-            layer.set_attr('inv_range', 128)  
+            layer.set_attr('inv_range', 128)
         if 'exp_range' not in layer.attributes:
-            layer.set_attr('exp_range', 8)  
+            layer.set_attr('exp_range', 8)
         if layer.model.config.is_resource_strategy(layer):
             # 'resource' strategy = 'latency' for Softmax
             # layer.set_attr('implementation', 'latency')
-            layer.set_attr('implementation', 'legacy') # latency legacy stable
-            
+            layer.set_attr('implementation', 'legacy')  # latency legacy stable
+
         else:
             # layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
-            layer.set_attr('implementation', 'legacy') # latency legacy stable
+            layer.set_attr('implementation', 'legacy')  # latency legacy stable
 
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert (
@@ -522,12 +522,13 @@ class VivadoBackend(FPGABackend):
     @layer_optimizer(LayerNormalization)
     def init_layernormalization(self, layer):
         if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=32, integer=8)))
+            layer.set_attr(
+                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=32, integer=8))
+            )
         if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 2048)  #table size
+            layer.set_attr('table_size', 2048)  # table size
         if 'table_range' not in layer.attributes:
-            layer.set_attr('table_range', 1.0)  #table range
-        
+            layer.set_attr('table_range', 1.0)  # table range
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
@@ -602,16 +603,15 @@ class VivadoBackend(FPGABackend):
         index_t = IntegerPrecisionType(width=1, signed=False)
         layer.set_attr('index_t', index_t)
         if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=24, integer=8)))
+            layer.set_attr(
+                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=24, integer=8))
+            )
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 2048)
         if 'accum_t' not in layer.attributes:
-            layer.set_attr('accum_t', FixedPrecisionType(width= 24, integer=8))  
+            layer.set_attr('accum_t', FixedPrecisionType(width=24, integer=8))
         if 'inv_range' not in layer.attributes:
-            layer.set_attr('inv_range', 128)  
+            layer.set_attr('inv_range', 128)
         if 'exp_range' not in layer.attributes:
             layer.set_attr('exp_range', 8)
-        layer.set_attr('strategy', 'resource')  #latency
-        
-
-
+        layer.set_attr('strategy', 'resource')  # latency
