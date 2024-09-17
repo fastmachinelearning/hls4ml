@@ -11,6 +11,12 @@
     "python_drivers": {"axi_stream":  "axi_stream_driver.py"},
     "c_drivers": {}
   },
+  "zcu216": {
+    "part": "xczu49dr-ffvf1760-2-e",
+    "tcl_scripts": { "axi_master": "axi_master_design.tcl", "axi_stream": "axi_stream_design.tcl"},
+    "python_drivers": {"axi_stream":  "axi_stream_driver.py"},
+    "c_drivers": {"axi_master": "axi_master_design.c"}
+  },
   "alveo-u50": {
     "part": "xcu50-fsvh2104-2-e",
     "tcl_scripts": {"axi_stream": "axi_stream_design.tcl"},
