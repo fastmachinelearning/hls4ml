@@ -125,7 +125,7 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
 
 
 @keras_handler('LayerNormalization')
-def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader):
     assert 'LayerNormalization' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -146,6 +146,9 @@ def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader, c
         layer['seq_len'] = 1
     layer['n_in'] = in_size
     layer['n_out'] = layer['n_in']
+
+    layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'gamma')
+    layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'beta')
 
     return layer, [shape for shape in input_shapes[0]]
 

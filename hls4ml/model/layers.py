@@ -931,7 +931,6 @@ class BatchNormalization(Layer):
 class LayerNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
-        # Attribute('axis', default=-1),
         Attribute('seq_len'),
         WeightAttribute('scale'),
         WeightAttribute('bias'),
@@ -945,14 +944,14 @@ class LayerNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
+        scale = self.get_attr('gamma_data')
+        bias = self.get_attr('beta_data')
 
-        scale = gamma
-        bias = beta
+        scale_precision = self.get_attr('scale_t', default=FixedPrecisionType(width=32, integer=4, signed=True))
+        bias_precision = self.get_attr('bias_t', default=FixedPrecisionType(width=32, integer=4, signed=True))
 
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        self.add_weights_variable(name='scale', var_name='s{index}', precision=scale_precision, data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', precision=bias_precision, data=bias)
 
 
 class Merge(Layer):

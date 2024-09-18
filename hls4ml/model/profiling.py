@@ -295,6 +295,7 @@ keras_process_layer_map = defaultdict(
     {
         'BatchNormalization': _keras_batchnorm,
         'QBatchNormalization': _keras_batchnorm,
+        'LayerNormalization': _keras_layernorm,
         'LSTM': _keras_lstm,
         'QLSTM': _keras_lstm,
     },
