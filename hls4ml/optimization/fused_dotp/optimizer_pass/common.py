@@ -11,6 +11,7 @@ from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, Source
 
 from ..codegen_backends import VitisCodegenBackend, code_gen
+from ..config import _global_config
 from ..dotp_unroll import compile_conv
 from ..precision import FixedPointPrecision
 from ..symbolic_variable import Variable
@@ -171,6 +172,8 @@ class UnrollCodeGenPass(OptimizerPass, metaclass=Singleton):
         self.backend = None
 
     def match(self, node: Layer):
+        if not _global_config.enabled:
+            return False
         return any(node.class_name == target for target in self.target)
 
     def get_stream_type_name(self, name: str) -> str:

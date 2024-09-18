@@ -4,25 +4,8 @@ from functools import lru_cache
 import numpy as np
 
 from . import symbolic_variable
+from .config import _global_config
 from .symbolic_variable import Variable
-
-DSP_OFFLOAD_THRES = -1
-MINIMAL_LATENCY_COMPILE = False
-USE_TERNARY = False
-ALLOW_SPLIT = True
-
-
-def compiler_config(
-    dsp_offload_thres: int, minimal_latency: bool = False, use_ternary: bool = False, allow_split: bool = True
-):
-    global DSP_OFFLOAD_THRES
-    global MINIMAL_LATENCY_COMPILE
-    global USE_TERNARY
-    global ALLOW_SPLIT
-    DSP_OFFLOAD_THRES = dsp_offload_thres
-    MINIMAL_LATENCY_COMPILE = minimal_latency
-    USE_TERNARY = use_ternary
-    ALLOW_SPLIT = allow_split
 
 
 def const_fp_bits(x):
@@ -84,7 +67,7 @@ def get_mat_shift_mask(arr: np.ndarray):
 
     for i, x in enumerate(arr_flat):
         i0 = np.unravel_index(i, shape)[0]
-        p, n = binary_shift_decompose(x, allow_ternary=USE_TERNARY)
+        p, n = binary_shift_decompose(x, allow_ternary=_global_config.use_ternary)
         shifts[i0] = min(*p[:1], *n[:1], shifts[i0], 127)
         poss.append(p)
         negs.append(n)
@@ -220,8 +203,7 @@ def balanced_reduction(vec: list):
 def _min_latency_compile_dense(kernel: np.ndarray, inp: np.ndarray):
     "Compile a matmul operation with Ternary decomposition"
 
-    global DSP_OFFLOAD_THRES
-    assert DSP_OFFLOAD_THRES < 0, "DSP_OFFLOAD_THRES be disabled (<0) for minimal latency compile"
+    assert _global_config.dsp_offload_thres < 0, "DSP_OFFLOAD_THRES be disabled (<0) for minimal latency compile"
     ch_in, ch_out = kernel.shape
     if inp.ndim == 2:
         inp = inp[:, 1]
@@ -231,7 +213,9 @@ def _min_latency_compile_dense(kernel: np.ndarray, inp: np.ndarray):
         _r_pos = []
         _r_neg = []
         for c, v in zip(_kernel, inp):
-            pos_s, neg_s = binary_shift_decompose(c, allow_ternary=USE_TERNARY)
+            if v == 0:
+                continue
+            pos_s, neg_s = binary_shift_decompose(c, allow_ternary=_global_config.use_ternary)
             _r_pos.extend(v << s for s in pos_s)
             _r_neg.extend(v << s for s in neg_s)
         _r = balanced_reduction(_r_pos) - balanced_reduction(_r_neg)
@@ -263,29 +247,29 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
         kernel = np.abs(kernel)
     # ==============================================================
     if minmal_latency:
-        return _min_latency_compile_dense(kernel, inp)
+        return [_min_latency_compile_dense(kernel, inp)]
 
     r: list[float | Variable | list[Variable]] = np.empty((ch_out, 0), dtype=object).tolist()
 
     shifts, combination_mask = get_mat_shift_mask(kernel)
     _length = np.sum(np.any(combination_mask != 0, axis=(1, 2)))
     if _length == 0:
-        return [0]
+        return [[0]]
     char_length = int(np.log2(_length) + 1)
     kernel2 = None
     n_bits = combination_mask.shape[-1]
-    if ALLOW_SPLIT and char_length < n_bits and char_length > 1:
+    if _global_config.allow_split and char_length < n_bits and char_length > 1:
         chunk_size = n_bits - nadd_max(_length, n_bits)[1]
         kernel2 = 2.0 ** shifts[:, None] * np.sum(
             2.0 ** np.arange(chunk_size, n_bits) * combination_mask[..., chunk_size:], axis=-1
         )
         kernel1 = 2.0 ** shifts[:, None] * np.sum(2.0 ** np.arange(chunk_size) * combination_mask[..., :chunk_size], axis=-1)
         kernel = kernel1
-    if DSP_OFFLOAD_THRES >= 0:
+    if _global_config.dsp_offload_thres >= 0:
         bits_k = np.sum(np.abs(combination_mask), axis=(2))
         bits_i = np.array([v.b for v in inp])
         bops = bits_k * bits_i[:, None]
-        offload = np.where(bops > DSP_OFFLOAD_THRES)
+        offload = np.where(bops > _global_config.dsp_offload_thres)
         if len(offload[0]) > 0:
             kernel = kernel.copy()
         for i, j in zip(*offload):
@@ -313,18 +297,20 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
             r[i] = x
 
     if kernel2 is not None:
-        # return _compile_dense(kernel2, inp, minmal_latency)
-        r = (np.array(r) + np.array(_compile_dense(kernel2, inp, minmal_latency))).tolist()
-    return r
+        return [r] + _compile_dense(kernel2, inp, minmal_latency)
+    else:
+        return [r]
 
 
 def compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
     out = []
 
-    if not USE_TERNARY and np.any(kernel):
+    if not _global_config.use_ternary and np.any(kernel):
         inp = np.stack([-inp, inp], axis=1)
     for _kernel in kernel.T:  # ch_in, 1
-        out.append(_compile_dense(_kernel[:, None], inp, minmal_latency=minmal_latency)[0])
+        r = _compile_dense(_kernel[:, None], inp, minmal_latency=minmal_latency)
+        r = balanced_reduction([x[0] for x in r])
+        out.append(r)
     return np.array(out).T
 
 
@@ -333,8 +319,7 @@ def compile_conv(kernel: np.ndarray, inp: list | np.ndarray, minimal_latency=Non
     Apply a single kernel to the input x
     """
     if minimal_latency is None:
-        global MINIMAL_LATENCY_COMPILE
-        minimal_latency = MINIMAL_LATENCY_COMPILE
+        minimal_latency = _global_config.minimal_latency_compile
     *_ch_in, ch_out = kernel.shape
     ch_in = int(np.prod(_ch_in))
     inp = np.reshape(inp, ch_in)

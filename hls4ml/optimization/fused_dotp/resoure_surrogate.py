@@ -123,8 +123,9 @@ class ResourceSurrogate:
         params: DictWrap = zero + sum(self._trace(v, s) for v in arr)  # type: ignore
         if params == 0:  # layer outputs const array, no operation performed. skip
             return
-        depth = max(v.depth for v in arr if isinstance(v, Variable))
-        params['depth'] = depth
+        if arr:
+            depth = max(v.depth for v in arr if isinstance(v, Variable))
+            params['depth'] = depth
         params['pf'] = pf
         self.layers[name] = params
 
@@ -158,6 +159,10 @@ class ResourceSurrogate:
             #     self.layers[name] = self.layers.get(name, zero) + DictWrap(params)
 
     def _summary(self):
+        if not self.layers:
+            raise ValueError(
+                'No layer is registered. If you have run `scan` already, the model contains no unrolled layer that this surrogate can analyze.'  # noqa: E501
+            )
         df = pd.DataFrame.from_dict(self.layers, orient='index')
         lut = np.round((df['add'] + df['neg'] + 2 * df['sub']) * 0.65 + df['cmp'] * 1.5).astype(int) * df['pf']
         dsp = np.round(df['n_mul']).astype(int) * df['pf']

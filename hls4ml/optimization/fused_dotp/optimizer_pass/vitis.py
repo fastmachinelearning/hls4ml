@@ -7,8 +7,8 @@ from hls4ml.model.layers import Layer
 from hls4ml.model.optimizer import OptimizerPass
 
 from ..codegen_backends import VitisCodegenBackend
+from ..config import _global_config
 from .common import UnrollCodeGenPass
-from .pixel_unrolled_conv import ENABLE_PIXEL_UNROLL
 
 conf_template = """struct config{index}{postfix} {{
     static const unsigned n_in = {n_in};
@@ -26,9 +26,10 @@ class VitisUnrollCodeGen(UnrollCodeGenPass):
 
 class VitisFullyUnrolledConvToDense(OptimizerPass):
     def match(self, node: Layer):
+        if not _global_config.enabled or _global_config.enable_pixel_unroll:
+            return False
         return (
-            ENABLE_PIXEL_UNROLL
-            and node.get_attr('unrolled_codegen')
+            node.get_attr('unrolled_codegen')
             and node.class_name in ('Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D')
             and node.get_attr('n_partitions') == 1
             and node.model.config.get_config_value("IOType") == 'io_parallel'
@@ -60,6 +61,8 @@ class VitisFullyUnrolledConvToDense(OptimizerPass):
 
 class VitisDensePreTemplate(OptimizerPass):
     def match(self, node: Layer):
+        if not _global_config.enabled:
+            return False
         return node.get_attr('unrolled_codegen') and node.class_name == 'Dense'
 
     def transform(self, model: ModelGraph, node: Layer):
@@ -102,6 +105,8 @@ class VitisDensePreTemplate(OptimizerPass):
 
 class VitisConvPreTemplate(OptimizerPass):
     def match(self, node: Layer):
+        if not _global_config.enabled:
+            return False
         if node.get_attr('implementation') != 'linebuffer':
             return False
         return node.get_attr('unrolled_codegen') and node.class_name in (
@@ -169,10 +174,10 @@ class VitisConvPreTemplate(OptimizerPass):
 unrolled_codegen = VitisUnrollCodeGen()
 vitis_dense_pre_template = VitisDensePreTemplate()
 vitis_conv_pre_template = VitisConvPreTemplate()
-# vivado_backend: FPGABackend = get_backend('vivado')
+vitis_fully_unrolled_conv = VitisFullyUnrolledConvToDense()
 vitis_backend: FPGABackend = get_backend('vitis')
 # Optimizer flow is shared
 vitis_backend.register_pass('unrolled_codegen', unrolled_codegen, flow='vivado:specific_types')
-vitis_backend.register_pass('fully_unrolled_conv_to_dense', VitisFullyUnrolledConvToDense(), flow='vivado:specific_types')
+vitis_backend.register_pass('fully_unrolled_conv_to_dense', vitis_fully_unrolled_conv, flow='vivado:specific_types')
 vitis_backend.register_pass('dense_pre_template', vitis_dense_pre_template, flow='vivado:specific_types')
 vitis_backend.register_pass('conv_pre_template', vitis_conv_pre_template, flow='vivado:specific_types')
