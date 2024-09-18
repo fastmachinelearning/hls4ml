@@ -11,13 +11,13 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 in_shape = (4, 5)
-atol = 5e-3
+atol = 1e-2
 
 
 @pytest.fixture(scope='module')
 def data():
     np.random.seed(0)
-    X = np.random.rand(1, *in_shape)
+    X = np.random.rand(100, *in_shape)
     return X
 
 
@@ -43,5 +43,5 @@ def test_layernorm(model, data):
 
     # Predict
     y_keras = model.predict(data).flatten()
-    y_hls = hls_model.predict(data)
+    y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)

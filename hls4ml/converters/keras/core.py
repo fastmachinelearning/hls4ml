@@ -150,6 +150,10 @@ def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader):
     layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'gamma')
     layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'beta')
 
+    layer['epsilon'] = keras_layer['config']['epsilon']
+    if layer['epsilon'] <= 0:
+        raise Exception('epsilon must be positive')
+
     return layer, [shape for shape in input_shapes[0]]
 
 

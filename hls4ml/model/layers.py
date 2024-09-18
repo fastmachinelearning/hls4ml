@@ -932,6 +932,7 @@ class LayerNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('seq_len'),
+        Attribute('epsilon', value_type=float, default=1e-3),
         WeightAttribute('scale'),
         WeightAttribute('bias'),
         TypeAttribute('scale'),
@@ -947,8 +948,8 @@ class LayerNormalization(Layer):
         scale = self.get_attr('gamma_data')
         bias = self.get_attr('beta_data')
 
-        scale_precision = self.get_attr('scale_t', default=FixedPrecisionType(width=32, integer=4, signed=True))
-        bias_precision = self.get_attr('bias_t', default=FixedPrecisionType(width=32, integer=4, signed=True))
+        scale_precision = self.get_attr('scale_t', default=FixedPrecisionType(width=16, integer=6, signed=True))
+        bias_precision = self.get_attr('bias_t', default=FixedPrecisionType(width=16, integer=6, signed=True))
 
         self.add_weights_variable(name='scale', var_name='s{index}', precision=scale_precision, data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', precision=bias_precision, data=bias)

@@ -14,7 +14,7 @@ struct layernorm_config {
     // Internal data type definitions
     typedef float bias_t;
     typedef float scale_t;
-    typedef ap_fixed<16, 8> mean_t;
+    typedef ap_fixed<24, 6> mean_t;
 
     // Layer Sizes
     static const unsigned n_in = 20;
@@ -29,19 +29,50 @@ struct layernorm_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-template <typename CONFIG_T, int N_TABLE> void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE]) {
-    float inv_range = CONFIG_T::table_range;
+template <typename CONFIG_T, int N_TABLE> void init_invert_sqr_table(
+    typename CONFIG_T::table_t table_in[N_TABLE],
+    typename CONFIG_T::table_t table_out[N_TABLE]) {
     // Inversion function:
     //   result = 1/sqrt(x)
+    // Use log spacing to get more precision at lower values
+    float log_min = log(CONFIG_T::epsilon);
+    float log_max = log(CONFIG_T::table_range);
+    float log_step = (log_max - log_min) / (float)(N_TABLE - 1);
+    float log_val = log_min;
     for (int ii = 0; ii < N_TABLE; ii++) {
-        // First, convert from table index to X-value (signed 8-bit, range 0 to +0.01)
-        float in_val = inv_range * ii / float(N_TABLE);
-        // Next, compute lookup table function
-        if (in_val > 0.0)
-            table_out[ii] = 1.0 / sqrt(in_val);
-        else
-            table_out[ii] = 0.0;
+        float in_val = exp(log_val);
+        table_in[ii] = (typename CONFIG_T::table_t)in_val;
+        table_out[ii] = (typename CONFIG_T::table_t)(1.0 / sqrt(in_val));
+        log_val += log_step;
     }
+}
+
+template <typename CONFIG_T> void lookup_invert_sqr(
+    typename CONFIG_T::mean_t x,
+    typename CONFIG_T::table_t &res,
+    typename CONFIG_T::table_t table_in[CONFIG_T::table_size],
+    typename CONFIG_T::table_t table_out[CONFIG_T::table_size]) {
+    if (x <= table_in[0]) {
+        res = table_out[0];
+        return;
+    } else if (x >= table_in[CONFIG_T::table_size - 1]) {
+        res = table_out[CONFIG_T::table_size - 1];
+        return;
+    }
+
+    // Binary search
+    int low = 0;
+    int high = CONFIG_T::table_size - 1;
+    while (high - low > 1) {
+        int mid = (low + high) / 2;
+        if (x > table_in[mid]) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+
+    res = table_out[low];
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -56,12 +87,14 @@ void layernorm_1d(data_T data[CONFIG_T::n_in / CONFIG_T::seq_len], res_T res[CON
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t invert_sqr_table[CONFIG_T::table_size];
+    typename CONFIG_T::table_t index_table[CONFIG_T::table_size];
 #else
     static bool initialized = false;
     static typename CONFIG_T::table_t invert_sqr_table[CONFIG_T::table_size];
+    static typename CONFIG_T::table_t index_table[CONFIG_T::table_size];
 #endif
     if (!initialized) {
-        init_invert_sqr_table<CONFIG_T, CONFIG_T::table_size>(invert_sqr_table);
+        init_invert_sqr_table<CONFIG_T, CONFIG_T::table_size>(index_table, invert_sqr_table);
         initialized = true;
     }
 
@@ -70,6 +103,7 @@ void layernorm_1d(data_T data[CONFIG_T::n_in / CONFIG_T::seq_len], res_T res[CON
     typename CONFIG_T::mean_t sum_cache2 = 0;
     typename CONFIG_T::mean_t var, mean, diff;
     typename CONFIG_T::mean_t data_diff[dim];
+    typename CONFIG_T::mean_t var_epsilon = (typename CONFIG_T::mean_t)CONFIG_T::epsilon;
 
     #pragma HLS ARRAY_PARTITION variable=data_diff complete
 
@@ -85,16 +119,7 @@ void layernorm_1d(data_T data[CONFIG_T::n_in / CONFIG_T::seq_len], res_T res[CON
         sum_cache2 += diff;
     }
     var = CONFIG_T::template product<typename CONFIG_T::mean_t, typename CONFIG_T::mean_t>::product(sum_cache2, k_inv);
-
-    int index = var * (CONFIG_T::table_size) * inv_range_inv;
-    if (CONFIG_T::table_range > 1)
-        index = var * (CONFIG_T::table_size) / (int)CONFIG_T::table_range;
-
-    if (index < 1) // Avoid division by zero
-        index = 1;
-    if (index > CONFIG_T::table_size - 1)
-        index = CONFIG_T::table_size - 1;
-    deno_inver = (typename CONFIG_T::table_t)invert_sqr_table[index];
+    lookup_invert_sqr<CONFIG_T>(var + var_epsilon, deno_inver, index_table, invert_sqr_table);
 
     for (int i = 0; i < dim; ++i) {
         res[i] = data_diff[i] * deno_inver * scale[i] + bias[i];

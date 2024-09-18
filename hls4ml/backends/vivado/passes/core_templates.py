@@ -126,6 +126,7 @@ layernorm_config_template = """struct config{index} : nnet::layernorm_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
+    static constexpr double epsilon = {epsilon};
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
     typedef {table_t.name} table_t;
