@@ -948,11 +948,8 @@ class LayerNormalization(Layer):
         scale = self.get_attr('gamma_data')
         bias = self.get_attr('beta_data')
 
-        scale_precision = self.get_attr('scale_t', default=FixedPrecisionType(width=16, integer=6, signed=True))
-        bias_precision = self.get_attr('bias_t', default=FixedPrecisionType(width=16, integer=6, signed=True))
-
-        self.add_weights_variable(name='scale', var_name='s{index}', precision=scale_precision, data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', precision=bias_precision, data=bias)
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
 
 class Merge(Layer):
@@ -1467,32 +1464,22 @@ class MultiHeadAttention(Layer):
     ]
 
     def initialize(self):
-        weights_source = [
-            ('attention_output', 'kernel'),
-            ('attention_output', 'bias'),
-            ('key', 'kernel'),
-            ('key', 'bias'),
-            ('query', 'kernel'),
-            ('query', 'bias'),
-            ('value', 'kernel'),
-            ('value', 'bias'),
+        weights = [
+            'attention_output_weight',
+            'attention_output_bias',
+            'key_weight',
+            'key_bias',
+            'query_weight',
+            'query_bias',
+            'value_weight',
+            'value_bias',
         ]
 
-        for lname, wtype in weights_source:
-            data = self.model.get_weights_data(self.name, f'{lname}/{wtype}')
-            if wtype == 'kernel':
-                vtype = 'weight'
-                if lname in ['key', 'query', 'value']:
-                    data = data.transpose((1, 0, 2))
-                #     data = data.transpose((0, 2, 1)) ###
-                # if lname in ['attention_output']:
-                #     data = data.transpose((2,0,1)) ###
-            else:
-                vtype = 'bias'
-
-            name = f'{lname}_{vtype}'
-            var_name = f'{lname}_{vtype}{{index}}'
-            self.add_weights_variable(name=name, var_name=var_name, data=data)
+        for w in weights:
+            data_name = f'{w}_data'
+            var_name = f'{w}{{index}}'
+            data = self.get_attr(data_name)
+            self.add_weights_variable(name=w, var_name=var_name, data=data)
 
         shape = self.attributes['query_shape'][1:]
         dims = [f'seq_out_{self.index}', f'feature_out_{self.index}']

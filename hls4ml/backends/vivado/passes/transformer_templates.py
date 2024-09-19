@@ -70,7 +70,6 @@ class MhaConfigTemplate(LayerConfigTemplate):
         self.activ1_template = softmax_config_template
 
     def format(self, node):
-
         params = self._default_config_params(node)
         params['num_heads'] = node.get_attr('num_heads')
         params['head_dim_key'] = node.get_attr('head_dim_key')

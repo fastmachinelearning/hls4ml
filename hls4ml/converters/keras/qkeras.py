@@ -160,7 +160,6 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
         layer['class_name'] = 'Activation'
         layer['activation'] = activation_config['class_name'].replace('quantized_', '')
     if activation_config['class_name'] == 'quantized_softmax':
-        # activation_config['class_name'] = 'softmax'
         layer['class_name'] = 'Softmax'
         layer['axis'] = keras_layer['config'].get('axis', -1)
     layer['activation_quantizer'] = activation_config

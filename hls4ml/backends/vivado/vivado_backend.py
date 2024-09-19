@@ -506,13 +506,9 @@ class VivadoBackend(FPGABackend):
         if 'exp_range' not in layer.attributes:
             layer.set_attr('exp_range', 8)
         if layer.model.config.is_resource_strategy(layer):
-            # 'resource' strategy = 'latency' for Softmax
-            # layer.set_attr('implementation', 'latency')
-            layer.set_attr('implementation', 'legacy')  # latency legacy stable
-
+            layer.set_attr('implementation', 'latency')
         else:
-            # layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
-            layer.set_attr('implementation', 'legacy')  # latency legacy stable
+            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
 
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert (

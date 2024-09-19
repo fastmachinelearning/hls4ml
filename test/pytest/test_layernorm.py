@@ -16,8 +16,7 @@ atol = 1e-2
 @pytest.fixture(scope='module')
 def data():
     np.random.seed(0)
-    X = np.random.rand(100, *in_shape)
-    return X
+    return np.random.rand(100, *in_shape)
 
 
 @pytest.fixture(scope='module')

@@ -130,7 +130,7 @@ void layernormalize(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
                     typename CONFIG_T::bias_t bias[CONFIG_T::n_in / CONFIG_T::seq_len]) {
     static const unsigned dim = CONFIG_T::n_in / CONFIG_T::seq_len;
     data_T in_val[dim];
-    data_T outval[dim];
+    res_T outval[dim];
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=scale,bias
 

@@ -22,6 +22,7 @@ from hls4ml.model.layers import (
     GarNetStack,
     GlobalPooling1D,
     GlobalPooling2D,
+    MultiHeadAttention,
     Pooling1D,
     Pooling2D,
     SeparableConv1D,
@@ -63,6 +64,7 @@ class FPGABackend(Backend):
             LSTM,
             GRU,
             Dot,
+            MultiHeadAttention,
         ]
 
         for layer in accum_layers:
