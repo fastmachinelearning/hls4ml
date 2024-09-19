@@ -30,3 +30,4 @@ class VitisWriter(VivadoWriter):
         """
         super().write_hls(model)
         self.write_nnet_utils_overrides(model)
+        self.write_tar(model)

@@ -35,11 +35,6 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     else:
         padding = class_object.padding
 
-    if padding == 0:  # No padding, i.e., 'VALID' padding in Keras/Tensorflow
-        layer['padding'] = 'valid'
-    else:  # Only 'valid' and 'same' padding are available in Keras
-        layer['padding'] = 'same'
-
     # Ouput info
     (layer['out_width'], pad_left, pad_right) = compute_padding_1d_pytorch(
         padding, layer['in_width'], layer['stride_width'], layer['filt_width'], layer['dilation']
@@ -83,11 +78,6 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['dilation'] = class_object.dilation[0]
     layer['pad_top'] = layer['pad_bottom'] = class_object.padding[0]
     layer['pad_left'] = layer['pad_right'] = class_object.padding[1]
-
-    if all(x == 0 for x in class_object.padding):  # No padding, i.e., 'VALID' padding in Keras/Tensorflow
-        layer['padding'] = 'valid'
-    else:  # Only 'valid' and 'same' padding are available in Keras
-        layer['padding'] = 'same'
 
     # Ouput info
     (layer['out_height'], layer['out_width'], _, _, _, _) = compute_padding_2d_pytorch(

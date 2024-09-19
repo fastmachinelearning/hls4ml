@@ -19,7 +19,7 @@ def generate_data(input_shape):
     return np.clip(d, -32, 31)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('strategy', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type',
@@ -41,7 +41,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
 
     table_type = f'fixed<{table_bits}, RND, SAT>'
 
-    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = table_type
     cfg['LayerName']['softmax']['exp_table_t'] = table_type
@@ -65,7 +65,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
     assert acc_hls4ml >= 0.98
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(backend, io_type):
     X = np.random.rand(100, 10)
@@ -74,7 +74,7 @@ def test_softmax_skipped(backend, io_type):
     model = tf.keras.models.Sequential([dense, softmax])
     model.compile()
 
-    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['skip'] = True
 
     odir = str(test_root_path / 'hls4mlprj_softmax_skipped_{}_{}').format(backend, io_type)

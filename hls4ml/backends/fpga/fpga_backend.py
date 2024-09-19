@@ -34,8 +34,10 @@ from hls4ml.model.types import (
     ExponentPrecisionType,
     FixedPrecisionType,
     IntegerPrecisionType,
+    PrecisionType,
     RoundingMode,
     SaturationMode,
+    UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
 from hls4ml.writer import get_writer
@@ -53,8 +55,6 @@ class FPGABackend(Backend):
             Dense,
             Conv1D,
             Conv2D,
-            SeparableConv1D,
-            SeparableConv2D,
             Pooling1D,
             Pooling2D,
             GlobalPooling1D,
@@ -75,6 +75,16 @@ class FPGABackend(Backend):
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('reuse_factor', default=1))
+            self.attribute_map[layer] = attrs
+
+        # seperable is kind of special because it is effectively two layers that will be split
+        for layer in (SeparableConv1D, SeparableConv2D):
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('depthwise_accum'))
+            attrs.append(TypeAttribute('pointwise_accum'))
+            attrs.append(TypeAttribute('depthwise_result'))
+            attrs.append(ConfigurableAttribute('depthwise_reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('pointwise_reuse_factor', default=1))
             self.attribute_map[layer] = attrs
 
         act_attrs = self.attribute_map.get(Activation, [])
@@ -290,8 +300,11 @@ class FPGABackend(Backend):
 
     @classmethod
     def convert_precision_string(cls, precision):
-        if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
+        if isinstance(precision, PrecisionType):
             return precision
+
+        if precision.lower() == 'auto':
+            return cls._convert_auto_type(precision)
 
         if precision.startswith('ac_'):
             return cls._convert_ac_type(precision)
@@ -365,6 +378,13 @@ class FPGABackend(Backend):
             return FixedPrecisionType(width, integer, signed, round_mode, sat_mode)
         elif 'int' in precision:
             return IntegerPrecisionType(width, signed)
+
+    @classmethod
+    def _convert_auto_type(cls, precision):
+        '''
+        Convert a "auto" precision string into the UnspecifiedPrecisionType
+        '''
+        return UnspecifiedPrecisionType()
 
     def product_type(self, data_T, weight_T):
         '''
@@ -673,7 +693,7 @@ class FPGABackend(Backend):
 
         The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
         to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
-        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        the result depends on the parameters of the convolution layer (the input size, the kernel size, stride etc),
         we need to do this for every convolution layer.
 
         Args:
@@ -770,7 +790,7 @@ class FPGABackend(Backend):
 
         The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
         to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
-        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        the result depends on the parameters of the convolution layer (the input size, the kernel size, stride etc),
         we need to do this for every convolution layer.
 
         Args:

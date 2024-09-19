@@ -91,6 +91,7 @@ def _config(args, extra_args):
         part=args.fpga,
         board=args.board,
         clock_period=args.clock,
+        write_tar=True,
     )
 
     if args.model.endswith('.h5'):

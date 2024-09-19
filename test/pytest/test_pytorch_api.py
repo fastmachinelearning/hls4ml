@@ -22,7 +22,7 @@ class LinearModel(nn.Module):
         return self.linear(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linear(backend, io_type):
     model = LinearModel()
@@ -32,12 +32,10 @@ def test_linear(backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (1,))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}')
 
-    hls_model = convert_from_pytorch_model(
-        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
 
@@ -66,6 +64,7 @@ def test_linear(backend, io_type):
     "activation_function",
     [
         nn.ReLU(),
+        nn.Tanh(),
         nn.LeakyReLU(negative_slope=1.0),
         nn.ELU(alpha=1.0),
         nn.PReLU(init=0.25),
@@ -73,7 +72,7 @@ def test_linear(backend, io_type):
         nn.Threshold(threshold=1.0, value=0.0),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(activation_function, backend, io_type):
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
@@ -83,13 +82,11 @@ def test_activations(activation_function, backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (1,))
     output_dir = str(
         test_root_path / f'hls4mlprj_pytorch_api_activations_{activation_function.__class__.__name__}_{backend}_{io_type}'
     )
-    hls_model = convert_from_pytorch_model(
-        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
     hls_prediction = hls_model.predict(X_input)
@@ -106,7 +103,7 @@ def test_activations(activation_function, backend, io_type):
 
     assert nNodes - 1 == len(hls_model.get_layers())
 
-    if activation_function.__class__.__name__ == 'ReLU' or activation_function.__class__.__name__ == 'Sigmoid':
+    if activation_function.__class__.__name__ in ['ReLU', 'Sigmoid', 'Tanh']:
         assert list(hls_model.get_layers())[2].attributes['class_name'] == 'Activation'
     elif activation_function.__class__.__name__ == 'Threshold':
         assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ThresholdedReLU'
@@ -120,6 +117,14 @@ class ReLuModel(nn.Module):
 
     def forward(self, x):
         return nn.functional.relu(x)
+
+
+class TanHModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.tanh(x)
 
 
 class LeakyReLuModel(nn.Module):
@@ -158,13 +163,14 @@ class SigmoidModel(nn.Module):
     "activation_function",
     [
         ReLuModel(),
+        TanHModel(),
         LeakyReLuModel(),
         EluModel(),
         SigmoidModel(),
         ThresholdModel(),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activation_functionals(activation_function, backend, io_type):
     model = activation_function
@@ -174,11 +180,10 @@ def test_activation_functionals(activation_function, backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_relu_{backend}_{io_type}')
-    hls_model = convert_from_pytorch_model(
-        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    config = config_from_pytorch_model(model, (1,))
+    fn_name = activation_function.__class__.__name__
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_{fn_name}_{backend}_{io_type}')
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
     hls_prediction = hls_model.predict(X_input)
@@ -200,7 +205,7 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(padds, backend, io_type):
     n_in = 2
@@ -216,14 +221,14 @@ def test_conv1d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(
+            model, (n_in, size_in), channels_last_conversion="internal", transpose_outputs=False
+        )
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion="full", transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv1d_{padds}_{backend}_{io_type}')
-    hls_model = convert_from_pytorch_model(
-        model, (None, n_in, size_in), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
     from torch.fx import symbolic_trace
@@ -241,7 +246,7 @@ def test_conv1d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         # Vivado inserts and additional layer for 'same' padding in io_stream
-        if backend == "Vivado" and padds == 1:
+        if (backend == "Vivado" or backend == "Vitis") and padds == 1:
             assert nNodes == len(hls_model.get_layers())
         else:
             assert nNodes - 1 == len(hls_model.get_layers())
@@ -268,13 +273,13 @@ def test_conv1d(padds, backend, io_type):
     # if not (backend == 'Vivado' and io_type == 'io_stream' and padds == 1):
     conv_index = 2
     act_index = 3
-    if io_type == "io_stream" and not (backend == "Vivado" and padds == 1):
+    if io_type == "io_stream" and not ((backend == "Vivado" or backend == "Vitis") and padds == 1):
         conv_index = 1
         act_index = 2
     assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
     assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv1D'
-    assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__
-    if io_type == "io_stream" and backend == "Vivado" and padds == 1:
+    assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__.lower()
+    if io_type == "io_stream" and (backend == "Vivado" or backend == "Vitis") and padds == 1:
         assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in + 2
     else:
         assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in
@@ -282,11 +287,8 @@ def test_conv1d(padds, backend, io_type):
     assert list(hls_model.get_layers())[conv_index].attributes['n_chan'] == class_object_conv.in_channels
     assert list(hls_model.get_layers())[conv_index].attributes['n_filt'] == class_object_conv.out_channels
     assert list(hls_model.get_layers())[conv_index].attributes['stride_width'] == class_object_conv.stride[0]
-    if list(hls_model.get_layers())[conv_index].attributes['padding'] == 'valid':
-        padding = 0
-    else:
-        padding = 1
-    if io_type == "io_stream" and backend == "Vivado" and padds == 1:
+    padding = padds
+    if io_type == "io_stream" and (backend == "Vivado" or backend == "Vitis") and padds == 1:
         padding = 1
         padds = 0
 
@@ -310,7 +312,7 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(padds, backend, io_type):
     n_in = 2
@@ -327,14 +329,17 @@ def test_conv2d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 3, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(
+            model, (n_in, size_in_height, size_in_width), channels_last_conversion="internal", transpose_outputs=False
+        )
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(
+            model, (n_in, size_in_height, size_in_width), channels_last_conversion="full", transpose_outputs=True
+        )
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv2d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
-        (None, n_in, size_in_height, size_in_width),
         hls_config=config,
         output_dir=output_dir,
         backend=backend,
@@ -408,7 +413,7 @@ def test_conv2d(padds, backend, io_type):
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
-    if not (backend == 'Vivado' and io_type == 'io_stream' and padds == 1):
+    if not ((backend == 'Vivado' or backend == 'Vitis') and io_type == 'io_stream' and padds == 1):
         # Vivado inserts and additional layer for 'same' padding in io_stream
         conv_index = 2
         act_index = 3
@@ -417,7 +422,9 @@ def test_conv2d(padds, backend, io_type):
             act_index = 2
         assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
         assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv2D'
-        assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__
+        assert (
+            list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__.lower()
+        )
         assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in_width
         assert list(hls_model.get_layers())[conv_index].attributes["in_height"] == size_in_height
         assert list(hls_model.get_layers())[conv_index].attributes['filt_width'] == class_object_conv.kernel_size[1]
@@ -426,10 +433,7 @@ def test_conv2d(padds, backend, io_type):
         assert list(hls_model.get_layers())[conv_index].attributes['n_filt'] == class_object_conv.out_channels
         assert list(hls_model.get_layers())[conv_index].attributes['stride_width'] == class_object_conv.stride[1]
         assert list(hls_model.get_layers())[conv_index].attributes['stride_height'] == class_object_conv.stride[0]
-        if list(hls_model.get_layers())[conv_index].attributes['padding'] == 'valid':
-            padding = 0
-        else:
-            padding = 1
+        padding = padds
         assert padding == class_object_conv.padding[0]
         assert list(hls_model.get_layers())[conv_index].attributes['data_format'] == 'channels_last'
 
@@ -463,7 +467,7 @@ pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_pooling(pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
@@ -477,20 +481,16 @@ def test_pooling(pooling, padds, backend):
         size_in_height = 0
 
     input_shape = (1, n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (1, n_in, size_in_width)
-    input_shape_forHLS = (
-        (None, n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (None, n_in, size_in_width)
-    )
+    input_shape_forHLS = (n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (n_in, size_in_width)
     X_input = np.random.rand(*input_shape)
 
     model = torch.nn.Sequential(pooling(2, padding=padds)).to()
     model.eval()
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, input_shape_forHLS)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_pooling_{pooling.__name__}_padds_{padds}_backend_{backend}')
-    hls_model = convert_from_pytorch_model(
-        model, input_shape_forHLS, hls_config=config, output_dir=output_dir, backend=backend
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
     from torch.fx import symbolic_trace
@@ -550,7 +550,7 @@ def test_pooling(pooling, padds, backend):
     # Verify correct parsing of layer
     hls_pool = list(hls_model.get_layers())[-2]
     if '2d' in pooling.__name__:
-        assert hls_pool.attributes['name'] == poolNode.name
+        assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
         assert hls_pool.attributes['class_name'][-2] == str(2)
         assert hls_pool.attributes['stride_height'] == class_object_pool.stride
         assert hls_pool.attributes['stride_width'] == class_object_pool.stride
@@ -560,14 +560,14 @@ def test_pooling(pooling, padds, backend):
 
     elif '1d' in pooling.__name__:
         if "Max" in pooling.__name__:
-            assert hls_pool.attributes['name'] == poolNode.name
+            assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride
             assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
         else:
-            assert hls_pool.attributes['name'] == poolNode.name
+            assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size[0]
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride[0]
@@ -587,7 +587,7 @@ class BatchNormModel(nn.Module):
         return self.bn(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bn(backend, io_type):
     model = BatchNormModel()
@@ -597,12 +597,10 @@ def test_bn(backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, (5,))
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_bn_{backend}_{io_type}')
 
-    hls_model = convert_from_pytorch_model(
-        model, (None, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
 
@@ -630,7 +628,7 @@ class SqueezeModel(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_squeeze(backend, io_type):
     model = SqueezeModel()
@@ -640,13 +638,11 @@ def test_squeeze(backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
-    config = config_from_pytorch_model(model)
-    del config['Model']['InputsChannelLast']  # We don't want anything touched for this test
+    config = config_from_pytorch_model(model, (5,))
+    del config['Model']['ChannelsLastConversion']  # We don't want anything touched for this test
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_squeeze_{backend}_{io_type}')
 
-    hls_model = convert_from_pytorch_model(
-        model, (None, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
 
@@ -666,16 +662,16 @@ def test_squeeze(backend, io_type):
         assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_flatten(backend):
     input = torch.randn(1, 1, 5, 5)
     model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
     pytorch_prediction = model(input).detach().numpy()
-    input_shape = (None, 1, 5, 5)
+    input_shape = (1, 5, 5)
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, input_shape)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_flatten_backend_{backend}')
-    hls_model = convert_from_pytorch_model(model, input_shape, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
     pred = hls_model.predict(input.detach().numpy())
@@ -710,21 +706,23 @@ class ModelSkippedLayers(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_skipped_layers(backend, io_type):
     model = ModelSkippedLayers()
     model.eval()
 
     input_shape = (3, 8)
-    batch_input_shape = (None,) + input_shape
     config = config_from_pytorch_model(
-        model, default_precision='ap_fixed<32,16>', inputs_channel_last=True, transpose_outputs=False
+        model,
+        input_shape,
+        default_precision='ap_fixed<32,16>',
+        channels_last_conversion="full",
+        transpose_outputs=False,
     )
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_skipped_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
-        batch_input_shape,
         hls_config=config,
         output_dir=output_dir,
         io_type=io_type,
@@ -734,9 +732,136 @@ def test_skipped_layers(backend, io_type):
     hls_model.compile()
 
     input = torch.randn(10, 3, 8)
-    hls_input = np.ascontiguousarray(torch.permute(input, (0, 2, 1)).detach().numpy())  # Transpose to channels_last
 
     pytorch_prediction = model(input).detach().numpy().flatten()
+    hls_prediction = hls_model.predict(input.detach().numpy()).flatten()
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])  # Only io_parallel for now
+@pytest.mark.parametrize('tensor_rank', [2, 3])
+def test_remove_transpose(backend, io_type, tensor_rank):
+    class TestModel(nn.Module):
+        def __init__(self, tensor_rank):
+            super().__init__()
+            if tensor_rank == 2:
+                self.conv1 = nn.Conv1d(in_channels=1, out_channels=4, kernel_size=3, bias=False)
+                self.relu1 = nn.ReLU()
+                self.flatten = nn.Flatten()
+                self.fc1 = nn.Linear(in_features=4 * 6, out_features=5, bias=False)
+                self.relu2 = nn.ReLU()
+            else:
+                self.conv1 = nn.Conv2d(in_channels=1, out_channels=4, kernel_size=3, bias=False)
+                self.relu1 = nn.ReLU()
+                self.flatten = nn.Flatten()
+                self.fc1 = nn.Linear(in_features=4 * 6 * 6, out_features=5, bias=False)
+                self.relu2 = nn.ReLU()
+
+        def forward(self, x):
+            # In the hls4ml model, there should be a Transpose node on the input tensor before conv1
+            x = self.conv1(x)
+            x = self.relu1(x)
+            x = self.flatten(x)  # This should result in a Transpose node that we aim to remove
+            x = self.fc1(x)
+            x = self.relu2(x)
+            return x
+
+    model = TestModel(tensor_rank=tensor_rank)
+    if tensor_rank == 2:
+        input_shape = (1, 8)
+        input_tensor = torch.randn(10, 1, 8)
+        hls_input = np.ascontiguousarray(torch.permute(input_tensor, (0, 2, 1)).detach().numpy())
+    else:
+        input_shape = (1, 8, 8)
+        input_tensor = torch.randn(10, 1, 8, 8)
+        hls_input = np.ascontiguousarray(torch.permute(input_tensor, (0, 2, 3, 1)).detach().numpy())
+
+    config = config_from_pytorch_model(
+        model,
+        input_shape,
+        default_precision='ap_fixed<32,16>',
+        channels_last_conversion="full",  # Crucial for testing if the first Transpose was removed
+    )
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_transpose_nop_{tensor_rank}d_{backend}_{io_type}')
+    hls_model = convert_from_pytorch_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        io_type=io_type,
+        backend=backend,
+    )
+
+    hls_model.compile()
+
+    # Test optimizers removed the two Transpose layers
+    transpose_layers = [layer for layer in list(hls_model.get_layers()) if layer.class_name == 'Transpose']
+    assert len(transpose_layers) == 0
+
+    # Test predictions match
+    pytorch_prediction = model(input_tensor).detach().numpy().flatten()
     hls_prediction = hls_model.predict(hls_input).flatten()
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_view(backend, io_type):
+
+    class TestModel(nn.Module):
+        def __init__(self, n_in, n_out, size_in):
+            super().__init__()
+            self.view_mult = n_out * size_in
+
+            self.conv1 = nn.Conv1d(
+                n_in,
+                n_out,
+                kernel_size=3,
+                padding=1,
+                bias=False,
+            )
+
+        def forward(self, x):
+            z = self.conv1(x)
+            z = z.view(-1, self.view_mult)
+            return z
+
+    n_in = 2
+    n_out = 4
+    size_in = 128
+    n_batch = 100
+
+    model = TestModel(n_in, n_out, size_in)
+    model = model.to(memory_format=torch.channels_last)
+    model.eval()
+
+    X_input = np.random.rand(n_batch, n_in, size_in)
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    # X_input is channels last
+    X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
+    config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion="internal", transpose_outputs=False)
+
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_view_{backend}_{io_type}')
+    hls_model = convert_from_pytorch_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        backend=backend,
+        io_type=io_type,
+    )
+
+    hls_model.compile()
+
+    # reshape hls prediction to channels last, then transpose, then reshape
+    # to match .view
+    hls_prediction = np.reshape(
+        np.transpose(np.reshape(hls_model.predict(X_input), (n_batch, size_in, n_out)), (0, 2, 1)),
+        (n_batch, size_in * n_out),
+    )
+
+    rtol = 0
+    atol = 5.0e-2
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=rtol, atol=atol)

@@ -25,10 +25,12 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def hls_model(keras_model, backend, io_type):
-    hls_config = hls4ml.utils.config_from_keras_model(keras_model, default_precision='ap_fixed<16,6>', granularity='name')
+    hls_config = hls4ml.utils.config_from_keras_model(
+        keras_model, default_precision='ap_fixed<16,6>', granularity='name', backend=backend
+    )
     hls_config['LayerName']['embedding_input']['Precision']['result'] = 'ap_uint<4>'
     out_dir = str(test_root_path / 'hls4mlprj_embed_{}_{}').format(backend, io_type)
     hls_model = hls4ml.converters.convert_from_keras_model(
@@ -39,7 +41,7 @@ def hls_model(keras_model, backend, io_type):
     return hls_model
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_embedding_accuracy(data, keras_model, hls_model):
     X = data

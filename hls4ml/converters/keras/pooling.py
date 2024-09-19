@@ -15,10 +15,9 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
 
         layer['pool_width'] = keras_layer['config']['pool_size'][0]
         layer['stride_width'] = keras_layer['config']['strides'][0]
-        layer['padding'] = keras_layer['config']['padding']
 
         (layer['n_out'], layer['pad_left'], layer['pad_right']) = compute_padding_1d(
-            layer['padding'], layer['n_in'], layer['stride_width'], layer['pool_width']
+            keras_layer['config']['padding'], layer['n_in'], layer['stride_width'], layer['pool_width']
         )
 
         if layer['data_format'] == 'channels_last':
@@ -32,7 +31,6 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['stride_width'] = keras_layer['config']['strides'][1]
         layer['pool_height'] = keras_layer['config']['pool_size'][0]
         layer['pool_width'] = keras_layer['config']['pool_size'][1]
-        layer['padding'] = keras_layer['config']['padding']
 
         (
             layer['out_height'],
@@ -42,7 +40,7 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
             layer['pad_left'],
             layer['pad_right'],
         ) = compute_padding_2d(
-            layer['padding'],
+            keras_layer['config']['padding'],
             layer['in_height'],
             layer['in_width'],
             layer['stride_height'],
