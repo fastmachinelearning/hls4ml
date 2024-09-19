@@ -50,7 +50,7 @@ class ChannelsLastConverter(OptimizerPass):
             perm = [1, 0]
             pre_transpose = model.make_node(
                 'Transpose',
-                f'pre_transpose_for_{node.get_attr('name')}',
+                f'pre_transpose_for_{node.get_attr("name")}',
                 {'perm': perm},
                 [node.get_input_node().name]
             )
@@ -64,7 +64,7 @@ class ChannelsLastConverter(OptimizerPass):
             ):
                 post_transpose = model.make_node(
                     'Transpose',
-                    f'post_transpose_for_{node.get_attr('name')}',
+                    f'post_transpose_for_{node.get_attr("name")}',
                     {'perm': perm},
                     [node.name]
                 )

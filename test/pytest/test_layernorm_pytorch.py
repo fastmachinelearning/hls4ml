@@ -17,7 +17,6 @@ atol = 1e-2
 def data():
     np.random.seed(0)
     X = np.random.rand(100, *in_shape)
-    print("X: ", X)
     return X
 
 
