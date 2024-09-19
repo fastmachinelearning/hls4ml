@@ -2,9 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import tensorflow as tf
-from tensorflow.keras.layers import Input, LayerNormalization
-from tensorflow.keras.models import Sequential
+import torch
+from torch import nn
 
 import hls4ml
 
@@ -18,28 +17,30 @@ atol = 1e-2
 def data():
     np.random.seed(0)
     X = np.random.rand(100, *in_shape)
+    print("X: ", X)
     return X
 
 
 @pytest.fixture(scope='module')
 def model():
-    model = Sequential()
-    model.add(LayerNormalization(input_shape=in_shape))
-    model.compile()
+    model = nn.Sequential(
+        nn.LayerNorm(in_shape[-1]),
+    ).to()
+    model.eval()
     return model
 
 # Currently only Vivado in io_parallel mode is supported
 def test_layernorm(model, data):
-    config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', backend='Vivado'
+    config = hls4ml.utils.config_from_pytorch_model(
+        model, in_shape, granularity='name', backend='Vivado'
     )
-    output_dir = str(test_root_path / f'hls4mlprj_layernorm_Vivado_io_parallel')
-    hls_model = hls4ml.converters.convert_from_keras_model(
+    output_dir = str(test_root_path / f'hls4mlprj_layernorm_pytorch_Vivado_io_parallel')
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
         model, backend='Vivado', hls_config=config, io_type='io_parallel', output_dir=output_dir
     )
     hls_model.compile()
 
     # Predict
-    y_keras = model.predict(data).flatten()
+    y_pytorch = model(torch.Tensor(data)).detach().numpy().flatten()
     y_hls = hls_model.predict(data).flatten()
-    np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
+    np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=atol, verbose=True)

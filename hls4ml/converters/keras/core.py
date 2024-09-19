@@ -133,19 +133,14 @@ def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader):
     in_size = 1
     for dim in input_shapes[0][1:]:
         in_size *= dim
-
-    layer['axis'] = keras_layer['config']['axis'] if (keras_layer['config']['axis'][0] == 2) else False
-    if layer['axis'] is False:
-        raise Exception('assigning the axis is not currently supported by hls4ml, only axis 2 is supported')
+    layer['n_in'] = layer['n_out'] = in_size
 
     if not ((len(input_shapes[0])) == 3):
         raise Exception('input size is not currently supported by hls4ml, only dim3 is supported')
-    if len(input_shapes[0]) == 3:
-        layer['seq_len'] = input_shapes[0][-2]
-    else:
-        layer['seq_len'] = 1
-    layer['n_in'] = in_size
-    layer['n_out'] = layer['n_in']
+    layer['seq_len'] = input_shapes[0][-2]
+
+    if not (keras_layer['config']['axis'][0] == 2):
+        raise Exception('assigning the axis is not currently supported by hls4ml, only axis 2 is supported')
 
     layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'gamma')
     layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'beta')
