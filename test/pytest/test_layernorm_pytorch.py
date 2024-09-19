@@ -28,12 +28,11 @@ def model():
     model.eval()
     return model
 
+
 # Currently only Vivado in io_parallel mode is supported
 def test_layernorm(model, data):
-    config = hls4ml.utils.config_from_pytorch_model(
-        model, in_shape, granularity='name', backend='Vivado'
-    )
-    output_dir = str(test_root_path / f'hls4mlprj_layernorm_pytorch_Vivado_io_parallel')
+    config = hls4ml.utils.config_from_pytorch_model(model, in_shape, granularity='name', backend='Vivado')
+    output_dir = str(test_root_path / 'hls4mlprj_layernorm_pytorch_Vivado_io_parallel')
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model, backend='Vivado', hls_config=config, io_type='io_parallel', output_dir=output_dir
     )

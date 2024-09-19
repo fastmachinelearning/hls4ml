@@ -29,9 +29,8 @@ struct layernorm_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-template <typename CONFIG_T, int N_TABLE> void init_invert_sqr_table(
-    typename CONFIG_T::table_t table_in[N_TABLE],
-    typename CONFIG_T::table_t table_out[N_TABLE]) {
+template <typename CONFIG_T, int N_TABLE>
+void init_invert_sqr_table(typename CONFIG_T::table_t table_in[N_TABLE], typename CONFIG_T::table_t table_out[N_TABLE]) {
     // Inversion function:
     //   result = 1/sqrt(x)
     // Use log spacing to get more precision at lower values
@@ -47,11 +46,10 @@ template <typename CONFIG_T, int N_TABLE> void init_invert_sqr_table(
     }
 }
 
-template <typename CONFIG_T> void lookup_invert_sqr(
-    typename CONFIG_T::mean_t x,
-    typename CONFIG_T::table_t &res,
-    typename CONFIG_T::table_t table_in[CONFIG_T::table_size],
-    typename CONFIG_T::table_t table_out[CONFIG_T::table_size]) {
+template <typename CONFIG_T>
+void lookup_invert_sqr(typename CONFIG_T::mean_t x, typename CONFIG_T::table_t &res,
+                       typename CONFIG_T::table_t table_in[CONFIG_T::table_size],
+                       typename CONFIG_T::table_t table_out[CONFIG_T::table_size]) {
     if (x <= table_in[0]) {
         res = table_out[0];
         return;

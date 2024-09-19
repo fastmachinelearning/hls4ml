@@ -156,7 +156,7 @@ def parse_layernorm_layer(operation, layer_name, input_names, input_shapes, node
 
     layer['gamma_data'] = class_object.weight.data.numpy()
     layer['beta_data'] = class_object.bias.data.numpy()
-    
+
     layer['epsilon'] = class_object.eps
     if layer['epsilon'] <= 0:
         raise Exception('epsilon must be positive')
