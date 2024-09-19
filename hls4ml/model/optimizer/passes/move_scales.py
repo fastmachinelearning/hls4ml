@@ -67,15 +67,16 @@ class ScaleDownMatMul(OptimizerPass):
             bias = np.array(bias1d[0])
 
         output = node.get_output_variable()
+        # to remove warning, since these get set again
+        new_attrs = {k: v for k, v in apply_alpha.attributes.items() if k not in ('trace', 'precision')}
 
         can_propagate = False
         if not bias.shape and bias == 0:
             # zero bias, propagate through, if possible
             # (always possible if scale is scalar)
             try:
-                np.broadcast_to(scale, output.shape)  # check size compatibility
-                newscale = scale
-                newbias = np.array(0)
+                newscale = np.broadcast_to(scale, output.shape)  # check size compatibility
+                newbias = np.zeros(output.shape)
                 can_propagate = True
             except ValueError:
                 can_propagate = False
@@ -84,10 +85,9 @@ class ScaleDownMatMul(OptimizerPass):
         if not can_propagate and isinstance(inp[other_idx], Constant):
             # can handle nonzero bias in some cases if other value is a Constant
             try:
-                np.broadcast_to(scale, output.shape)  # check size compatibility
-                newscale = scale
-                newbias = inp[other_idx].attributes['value'] * bias
-                np.broadcast_to(newbias, output.shape)
+                newscale = np.broadcast_to(scale, output.shape)  # check size compatibility
+                newbias = np.broadcast_to(inp[other_idx].attributes['value'] * bias, output.shape)
+                new_attrs.pop('bias_precision', None)  # remove special bias precision settings
                 can_propagate = True
             except ValueError:
                 can_propagate = False
@@ -97,9 +97,10 @@ class ScaleDownMatMul(OptimizerPass):
 
         model.remove_node(apply_alpha)
 
-        new_node = model.make_node('ApplyAlpha', apply_alpha.name, apply_alpha.attributes, [x for x in node.outputs])
-        new_node.add_weights(newscale)
-        new_node.add_bias(newbias)
+        new_attrs['scale_data'] = newscale
+        new_attrs['bias_data'] = newbias
+
+        new_node = model.make_node('ApplyAlpha', apply_alpha.name, new_attrs, [x for x in node.outputs])
         model.insert_node(new_node)
         return True
 
@@ -136,9 +137,11 @@ class ScaleDownAdd(OptimizerPass):
         model.remove_node(in0)
         model.remove_node(in1)
 
-        new_node = model.make_node('ApplyAlpha', in0.name, in0.attributes, [x for x in node.outputs])
-        new_node.add_weights(scale)
-        new_node.add_bias(bias)
+        new_attrs = in0.attributes
+        new_attrs['scale_data'] = scale
+        new_attrs['bias_data'] = bias
+
+        new_node = model.make_node('ApplyAlpha', in0.name, new_attrs, [x for x in node.outputs])
         model.insert_node(new_node)
         return True
 
@@ -170,15 +173,16 @@ class ScaleDownConv(OptimizerPass):
             bias = np.array(bias1d[0])
 
         output = node.get_output_variable()
+        # to remove warning, since these get set again
+        new_attrs = {k: v for k, v in apply_alpha.attributes.items() if k not in ('trace', 'precision')}
 
         can_propagate = False
         if not bias.shape and bias == 0:
             # zero bias, propagate through, if possible
             # (always possible if scale is scalar)
             try:
-                np.broadcast_to(scale, output.shape)  # check broadcastable
-                newscale = scale
-                newbias = np.array(0)
+                newscale = np.broadcast_to(scale, output.shape)  # check broadcastable
+                newbias = np.zeros(output.shape)
                 can_propagate = True
             except ValueError:
                 can_propagate = False
@@ -188,9 +192,10 @@ class ScaleDownConv(OptimizerPass):
 
         model.remove_node(apply_alpha)
 
-        new_node = model.make_node('ApplyAlpha', apply_alpha.name, apply_alpha.attributes, [x for x in node.outputs])
-        new_node.add_weights(newscale)
-        new_node.add_bias(newbias)
+        new_attrs['scale_data'] = newscale
+        new_attrs['bias_data'] = newbias
+
+        new_node = model.make_node('ApplyAlpha', apply_alpha.name, new_attrs, [x for x in node.outputs])
         model.insert_node(new_node)
         return True
 
@@ -224,15 +229,16 @@ class ScaleDownWeightConv(OptimizerPass):
             bias = np.array(bias1d[0])
 
         output = node.get_output_variable()
+        # to remove warning, since these get set again
+        new_attrs = {k: v for k, v in apply_alpha.attributes.items() if k not in ('trace', 'precision')}
 
         can_propagate = False
         if not bias.shape and bias == 0:
             # zero bias, propagate through, if possible
             # (always possible if scale is scalar)
             try:
-                np.broadcast_to(scale, output.shape)  # make sure broadcastable
-                newscale = scale
-                newbias = np.array(0)
+                newscale = np.broadcast_to(scale, output.shape)  # make sure broadcastable
+                newbias = np.zeros(output.shape)
                 can_propagate = True
             except ValueError:
                 can_propagate = False
@@ -242,9 +248,10 @@ class ScaleDownWeightConv(OptimizerPass):
 
         model.remove_node(apply_alpha)
 
-        new_node = model.make_node('ApplyAlpha', apply_alpha.name, apply_alpha.attributes, [x for x in node.outputs])
-        new_node.add_weights(newscale)
-        new_node.add_bias(newbias)
+        new_attrs['scale_data'] = newscale
+        new_attrs['bias_data'] = newbias
+
+        new_node = model.make_node('ApplyAlpha', apply_alpha.name, new_attrs, [x for x in node.outputs])
         model.insert_node(new_node)
         return True
 
@@ -278,14 +285,15 @@ class ScaleDownBiasConv(OptimizerPass):
             bias = np.array(bias1d[0])
 
         output = node.get_output_variable()
+        # to remove warning, since these get set again
+        new_attrs = {k: v for k, v in apply_alpha.attributes.items() if k not in ('trace', 'precision')}
 
         can_propagate = False
         if not scale.shape and scale == 1:
             # No scale, just additional bias
             try:
-                np.broadcast_to(bias, output.shape)
-                newscale = np.array(1)
-                newbias = bias
+                newscale = np.ones(output.shape)
+                newbias = np.broadcast_to(bias, output.shape)
                 can_propagate = True
             except ValueError:
                 can_propagate = False
@@ -295,8 +303,9 @@ class ScaleDownBiasConv(OptimizerPass):
 
         model.remove_node(apply_alpha)
 
-        new_node = model.make_node('ApplyAlpha', apply_alpha.name, apply_alpha.attributes, [x for x in node.outputs])
-        new_node.add_weights(newscale)
-        new_node.add_bias(newbias)
+        new_attrs['scale_data'] = newscale
+        new_attrs['bias_data'] = newbias
+
+        new_node = model.make_node('ApplyAlpha', apply_alpha.name, new_attrs, [x for x in node.outputs])
         model.insert_node(new_node)
         return True

@@ -252,11 +252,13 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         # but now add the ApplyAlhpas before and after
 
+        inshape = node.get_input_variable().shape
+
         scale = node.get_attr('scale')
         bias = node.get_attr('zeropt')
 
-        attributes_scale = {}
-        attributes_rescale = {}
+        attributes_scale = {'n_filt': -1}
+        attributes_rescale = {'n_filt': -1}
 
         scale_config = copy.deepcopy(config)
         scale_name = f'{node.name}_scale'
@@ -270,16 +272,16 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         firstscale = 1 / scale
         firstbias = bias
-        attributes_scale['scale_data'] = firstscale
-        attributes_scale['bias_data'] = firstbias
+        attributes_scale['scale_data'] = np.broadcast_to(firstscale, inshape)
+        attributes_scale['bias_data'] = np.broadcast_to(firstbias, inshape)
 
         scale_node = model.make_node(ApplyAlpha, scale_name, attributes_scale, [node.inputs[0]])
         model.insert_node(scale_node)
 
         rescale = scale
         rebias = -bias * scale
-        attributes_rescale['scale_data'] = rescale
-        attributes_rescale['bias_data'] = rebias
+        attributes_rescale['scale_data'] = np.broadcast_to(rescale, inshape)
+        attributes_rescale['bias_data'] = np.broadcast_to(rebias, inshape)
 
         rescale_node = model.make_node(ApplyAlpha, rescale_name, attributes_rescale, [new_node.outputs[0]])
         model.insert_node(rescale_node)
@@ -332,7 +334,9 @@ class ConstQuantToConstAlpha(OptimizerPass):
         const_node.types['result_t'].precision = precision
         const_node.get_output_variable().type.precision = precision
 
-        attributes_rescale = {}
+        inshape = node.get_input_variable().shape
+
+        attributes_rescale = {'n_filt': -1}
 
         rescale_config = copy.deepcopy(model.config.get_layer_config(node))
         rescale_name = f'{node.name}_rescale'
@@ -341,8 +345,8 @@ class ConstQuantToConstAlpha(OptimizerPass):
 
         rescale = scale
         rebias = -bias * scale
-        attributes_rescale['scale_data'] = rescale
-        attributes_rescale['bias_data'] = rebias
+        attributes_rescale['scale_data'] = np.broadcast_to(rescale, inshape)
+        attributes_rescale['bias_data'] = np.broadcast_to(rebias, inshape)
 
         rescale_node = model.make_node(
             ApplyAlpha, rescale_name, attributes_rescale, [x for x in node.inputs], [x for x in node.outputs]

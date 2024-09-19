@@ -976,7 +976,7 @@ class BatchNormOnnx(Layer):
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
-        Attribute('n_filt', default=0),
+        Attribute('n_filt', default=-1),
         WeightAttribute('scale'),
         WeightAttribute('bias'),
         TypeAttribute('scale'),
