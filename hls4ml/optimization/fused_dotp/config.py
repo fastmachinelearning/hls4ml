@@ -36,6 +36,7 @@ def compiler_config(
     minimal_latency: bool = False,
     use_ternary: bool = False,
     allow_split: bool = True,
+    flatten_conv: bool = False,
 ):
 
     _global_config.enabled = enabled
@@ -43,3 +44,4 @@ def compiler_config(
     _global_config.minimal_latency_compile = minimal_latency
     _global_config.use_ternary = use_ternary
     _global_config.allow_split = allow_split
+    _global_config.enable_pixel_unroll = flatten_conv

@@ -26,7 +26,7 @@ class VitisUnrollCodeGen(UnrollCodeGenPass):
 
 class VitisFullyUnrolledConvToDense(OptimizerPass):
     def match(self, node: Layer):
-        if not _global_config.enabled or _global_config.enable_pixel_unroll:
+        if not (_global_config.enabled and _global_config.enable_pixel_unroll):
             return False
         return (
             node.get_attr('unrolled_codegen')

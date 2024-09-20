@@ -123,7 +123,7 @@ class ResourceSurrogate:
         params: DictWrap = zero + sum(self._trace(v, s) for v in arr)  # type: ignore
         if params == 0:  # layer outputs const array, no operation performed. skip
             return
-        if arr:
+        if len(arr) > 0:
             depth = max(v.depth for v in arr if isinstance(v, Variable))
             params['depth'] = depth
         params['pf'] = pf
