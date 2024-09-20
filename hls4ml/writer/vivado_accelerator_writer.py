@@ -139,10 +139,12 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=in offset=slave bundle=IN_BUS\n'.format(
-                        model.get_input_variables()[0].pragma[1]
+                        #model.get_input_variables()[0].pragma[1]
+                        model.get_input_variables()[0].size()
                     )
                     newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=out offset=slave bundle=OUT_BUS\n'.format(
-                        model.get_output_variables()[0].pragma[1]
+                        #model.get_output_variables()[0].pragma[1]
+                        model.get_output_variables()[0].size()
                     )
                 elif self.vivado_accelerator_config.get_interface() == 'axi_stream':
                     newline = ''
