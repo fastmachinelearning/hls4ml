@@ -51,6 +51,7 @@ register_flow(
         'merge_to_apply_alpha_div',
         'matmul_const_to_dense',
         'conv_to_conv_x_d',
+        'conv_to_depthwise_conv_x_d',
     ],
 )
 

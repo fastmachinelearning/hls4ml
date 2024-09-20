@@ -21,12 +21,17 @@ def parse_conv_layer(node, input_names, input_shapes, graph):
     if dilations is None:
         dilations = [1] * len(layer['kernel_shape'])
 
-    if get_onnx_attribute(node, 'group') != 1:
-        raise ValueError("Only 1 group supported corrently")
-
     layer['in_width'] = input_shapes[0][-2]
     layer['n_chan'] = input_shapes[0][-1]
     layer['n_filt'] = input_shapes[1][0]
+
+    layer['group'] = int(get_onnx_attribute(node, 'group'))
+    if layer['group'] != 1:
+        layer['depth_multiplier'] = get_onnx_attribute(node, 'group') / layer['n_chan']
+        if not layer['depth_multiplier'].is_integer():
+            raise ValueError('Depth multiplier must be an integer')
+        else:
+            layer['depth_multiplier'] = int(layer['depth_multiplier'])
 
     layer['n_dim'] = len(input_shapes[0]) - 2  # 2 comes from channels and batch dimentions
     if layer['n_dim'] not in (1, 2):

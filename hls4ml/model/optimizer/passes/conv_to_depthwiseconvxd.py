@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.model.layers import Constant, Conv, Conv1D, Conv2D
+from hls4ml.model.layers import Constant, Conv, DepthwiseConv1D, DepthwiseConv2D
 from hls4ml.model.optimizer import OptimizerPass
 
 # these are attributes to copy
@@ -25,13 +25,14 @@ _base_attributes = (
 )
 
 
-class ConvToConvXD(OptimizerPass):
-    """Convert Conv with constant to a Conv1D or Conv2D layer"""
+class ConvToDepthwiseConvXD(OptimizerPass):
+    """Convert Conv with constant to a DepthwiseConv1D or DepthwiseConv2D layer"""
 
     def match(self, node):
         is_match = (
             isinstance(node, Conv)
-            and node.get_attr('group') == 1
+            and node.get_attr('group') == node.get_attr('n_chan')
+            and (node.get_attr('group') != 1)
             and (
                 (len(node.inputs) == 2 and isinstance(node.get_input_node(node.inputs[1]), Constant))
                 or (
@@ -45,7 +46,7 @@ class ConvToConvXD(OptimizerPass):
         return is_match
 
     def transform(self, model, node):
-        """Convert Conv with constant to a Conv1D or Conv2D layer"""
+        """Convert Conv with constant to a DepthwiseConv1D or DepthwiseConv2D layer"""
 
         weight_node = node.get_input_node(node.inputs[1])
         weight_data = weight_node.attributes['value']
@@ -58,12 +59,12 @@ class ConvToConvXD(OptimizerPass):
 
         # The ConvxD nodes expect the weight data to be in a different format, not (M, k1.., C)
         if node.attributes['n_dim'] == 1:
-            newtype = Conv1D
-            attributes['weight_data'] = np.transpose(weight_data, (1, 2, 0))
+            newtype = DepthwiseConv1D
+            attributes['depthwise_data'] = np.transpose(weight_data, (1, 2, 0))
         else:
-            newtype = Conv2D
-            attributes['weight_data'] = np.transpose(weight_data, (1, 2, 3, 0))
-        attributes['weight_quantizer'] = weight_node.get_attr('quantizer')
+            newtype = DepthwiseConv2D
+            attributes['depthwise_data'] = np.transpose(weight_data, (1, 2, 3, 0))
+        attributes['depthwise_quantizer'] = weight_node.get_attr('quantizer')
 
         if bias_node:
             attributes['bias_data'] = bias_node.attributes['value']
