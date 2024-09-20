@@ -21,9 +21,7 @@ def data():
 
 @pytest.fixture(scope='module')
 def model():
-    model = nn.Sequential(
-        nn.LayerNorm(in_shape[-1]),
-    ).to()
+    model = nn.Sequential(nn.LayerNorm(in_shape[-1]))
     model.eval()
     return model
 
