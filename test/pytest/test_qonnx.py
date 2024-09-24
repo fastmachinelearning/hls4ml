@@ -20,15 +20,12 @@ example_model_path = (test_root_path / '../../example-models').resolve()
 @pytest.fixture(scope='module')
 def sep_conv_model():
     """
-    Load separabale conv model
+    Load separabale conv model, already channels-last and cleaned
     """
     dl_file = str(example_model_path / "onnx/separable_conv_model_ch_last.onnx")
     assert os.path.isfile(dl_file)
-    out_file = str(test_root_path / "separable_conv_model_ch_last_clean.onnx")
 
-    # cleanup
-    qonnx.util.cleanup.cleanup(dl_file, out_file=out_file)
-    model = ModelWrapper(out_file)
+    model = ModelWrapper(dl_file)
 
     return model
 

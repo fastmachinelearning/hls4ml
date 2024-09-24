@@ -187,7 +187,7 @@ class FuseQuantWithConstant(OptimizerPass):
         integer = bitwidth
         scale = node.get_attr('scale')
         if _ALSO_MATCH_PO2 and not (scale == np.ones_like(scale)).all():
-            _, exp = np.frexp(np.squeeze(scale))
+            _, exp = np.frexp(scale[0])  # know that np.all(scale[0] == scale) must be true
             integer = bitwidth + exp - 1
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
