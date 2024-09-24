@@ -89,6 +89,9 @@ class ConstantBatchNormFusion(OptimizerPass):
             isinstance(node, BatchNormalization)
             and not any(node.inputs[1:])
             and isinstance(node.get_input_node(node.inputs[0]), Constant)
+            and isinstance(
+                node.get_input_node(node.inputs[0]).get_output_variable().type.precision, UnspecifiedPrecisionType
+            )
         )
         return is_match
 
