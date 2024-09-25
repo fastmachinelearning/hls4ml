@@ -1,5 +1,6 @@
 import os
 import sys
+from warnings import warn
 
 import numpy as np
 
@@ -154,7 +155,7 @@ class CatapultBackend(FPGABackend):
 
         if len(extras) > 0:
             for opt in extras:
-                print(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+                warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
         ip_flow_requirements = [
             'optimize',
