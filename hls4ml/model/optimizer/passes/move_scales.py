@@ -237,9 +237,21 @@ class ScaleDownWeightConv(OptimizerPass):
             # zero bias, propagate through, if possible
             # (always possible if scale is scalar)
             try:
-                newscale = np.broadcast_to(scale, output.shape)  # make sure broadcastable
+                if scale.ndim > 1:
+                    # undo any broadcast_to
+                    reduced_scale = _remove_redundant_dims(scale)
+                    if reduced_scale.shape[-1] == 1:
+                        reduced_scale = reduced_scale[..., 0]
+                        if node.attributes['n_dim'] == 1:
+                            scale_trans = np.transpose(reduced_scale, (1, 0))
+                        else:
+                            scale_trans = np.transpose(reduced_scale, (1, 2, 0))
+                        newscale = np.broadcast_to(scale_trans, output.shape)  # make sure broadcastable
+                        can_propagate = True
+                else:
+                    newscale = np.broadcast_to(scale, output.shape)  # make sure broadcastable
+                    can_propagate = True
                 newbias = np.zeros(output.shape)
-                can_propagate = True
             except ValueError:
                 can_propagate = False
 
@@ -309,3 +321,14 @@ class ScaleDownBiasConv(OptimizerPass):
         new_node = model.make_node('ApplyAlpha', apply_alpha.name, new_attrs, [x for x in node.outputs])
         model.insert_node(new_node)
         return True
+
+
+def _remove_redundant_dims(X):
+    """This is somewhat of the inverse of broadcast-to. It sets the dimension size to 1 if all values are identical"""
+
+    shape = X.shape
+    for i in range(len(shape)):
+        reduced = np.expand_dims(np.take(X, 0, axis=i), axis=i)
+        if np.all(reduced == X):
+            X = reduced
+    return X
