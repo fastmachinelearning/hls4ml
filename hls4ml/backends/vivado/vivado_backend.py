@@ -519,12 +519,16 @@ class VivadoBackend(FPGABackend):
     def init_layernormalization(self, layer):
         if 'table_t' not in layer.attributes:
             layer.set_attr(
-                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=32, integer=8))
+                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=30, integer=10))
             )
         if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 2048)  # table size
+            layer.set_attr('table_size', 1024)  # table size
         if 'table_range' not in layer.attributes:
             layer.set_attr('table_range', 1.0)  # table range
+        if 'mean_t' not in layer.attributes:
+            layer.set_attr(
+                'mean_t', NamedType(name=layer.name + '_mean_t', precision=FixedPrecisionType(width=19, integer=6))
+            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):

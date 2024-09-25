@@ -129,6 +129,7 @@ layernorm_config_template = """struct config{index} : nnet::layernorm_config {{
     static constexpr double epsilon = {epsilon};
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
+    typedef {mean_t.name} mean_t;
     typedef {table_t.name} table_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;

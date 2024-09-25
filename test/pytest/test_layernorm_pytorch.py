@@ -10,7 +10,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 in_shape = (4, 5)
-atol = 1e-2
+atol = 5e-2
 
 
 @pytest.fixture(scope='module')

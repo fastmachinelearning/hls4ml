@@ -14,7 +14,6 @@ struct layernorm_config {
     // Internal data type definitions
     typedef float bias_t;
     typedef float scale_t;
-    typedef ap_fixed<24, 6> mean_t;
 
     // Layer Sizes
     static const unsigned n_in = 20;
