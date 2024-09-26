@@ -43,6 +43,7 @@ register_flow(
         'constant_batch_norm_fusion',
         'merge_two_constants',
         'scale_down_add',
+        'bias_down_add',
         'scale_down_mat_mul',
         'scale_down_weight_conv',
         'scale_down_bias_conv',
