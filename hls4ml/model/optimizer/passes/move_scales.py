@@ -149,11 +149,8 @@ class BiasDownAdd(OptimizerPass):
         if is_match:
             in0 = node.get_input_node(node.inputs[0])
             in1 = node.get_input_node(node.inputs[1])
-            is_match = (
-                (isinstance(in0, ApplyAlpha)
-                 or isinstance(in1, ApplyAlpha))
-                and not (isinstance(in0, ApplyAlpha)
-                         and isinstance(in1, ApplyAlpha))
+            is_match = (isinstance(in0, ApplyAlpha) or isinstance(in1, ApplyAlpha)) and not (
+                isinstance(in0, ApplyAlpha) and isinstance(in1, ApplyAlpha)
             )  # only one ApplyAlpha
         return is_match
 
@@ -176,69 +173,18 @@ class BiasDownAdd(OptimizerPass):
 
 
 class ScaleDownConv(OptimizerPass):
-    '''Shift an ApplyAlpha on input below a Conv'''
-
-    def match(self, node):
-        '''Shift an ApplyAlpha from the Weight'''
-        is_match = isinstance(node, Conv) and isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha)
-
-        return is_match
-
-    def transform(self, model, node):
-        apply_alpha = node.get_input_node(node.inputs[0])
-
-        # Check if we can move
-        scale = apply_alpha.weights['scale'].data_unquantized
-        bias = apply_alpha.weights['bias'].data_unquantized
-
-        scale1d = np.ravel(scale)
-        if (scale1d[0] == scale).all():
-            # scalar scale
-            scale = np.array(scale1d[0])
-
-        bias1d = np.ravel(bias)
-        if (bias1d[0] == bias).all():
-            # scalar bias
-            bias = np.array(bias1d[0])
-
-        output = node.get_output_variable()
-        # to remove warning, since these get set again
-        new_attrs = {k: v for k, v in apply_alpha.attributes.items() if k not in ('trace', 'precision')}
-
-        can_propagate = False
-        if not bias.shape and bias == 0:
-            # zero bias, propagate through, if possible
-            # (always possible if scale is scalar)
-            try:
-                newscale = np.broadcast_to(scale, output.shape)  # check broadcastable
-                newbias = np.zeros(output.shape)
-                can_propagate = True
-            except ValueError:
-                can_propagate = False
-
-        if not can_propagate:
-            return False
-
-        model.remove_node(apply_alpha)
-
-        new_attrs['scale_data'] = newscale
-        new_attrs['bias_data'] = newbias
-
-        new_node = model.make_node('ApplyAlpha', apply_alpha.name, new_attrs, [x for x in node.outputs])
-        model.insert_node(new_node)
-        return True
-
-
-class ScaleDownConv(OptimizerPass):
     '''Shift an ApplyAlpha on a Conv with 2-3 inputs'''
 
     def match(self, node):
         '''Shift an ApplyAlpha from the Weight'''
         is_match = (
-            isinstance(node, Conv) and len(node.inputs) > 1 and
-            (isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha)
-             or isinstance(node.get_input_node(node.inputs[1]), ApplyAlpha)
-             or (len(node.inputs) == 3 and isinstance(node.get_input_node(node.inputs[2]), ApplyAlpha)))
+            isinstance(node, Conv)
+            and len(node.inputs) > 1
+            and (
+                isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha)
+                or isinstance(node.get_input_node(node.inputs[1]), ApplyAlpha)
+                or (len(node.inputs) == 3 and isinstance(node.get_input_node(node.inputs[2]), ApplyAlpha))
+            )
         )
         return is_match
 
@@ -272,14 +218,14 @@ class ScaleDownConv(OptimizerPass):
             scale2, bias2 = _make_scalar(scale2, bias2)
 
         output = node.get_output_variable()
-        if (aa0 and not aa1 and not aa2):
+        if aa0 and not aa1 and not aa2:
             # only datapath has a scale
             bias = in2.attributes['value'] if len(node.inputs) == 3 else 0
             conv_nobias = np.all(bias == 0)
 
             can_propagate = False
             if not bias0.shape and bias0 == 0:
-                # zero bias, propagate through, if possible
+                # No zero offset, propagate through, if possible
                 # (always possible if scale is scalar)
                 if conv_nobias:
                     try:
@@ -303,34 +249,58 @@ class ScaleDownConv(OptimizerPass):
             new_attrs = {k: v for k, v in in0.attributes.items() if k not in ('trace', 'precision')}
             new_name = in0.name
             model.remove_node(in0)
-        elif (not aa0 and aa1 and not aa2):
+
+        elif not aa0 and aa1 and not aa2:
             # only weights have a scale
             bias = in2.attributes['value'] if len(node.inputs) == 3 else 0
             conv_nobias = np.all(bias == 0)
-            
+
             can_propagate = False
             if not bias1.shape and bias1 == 0:
-                # zero bias, propagate through, if possible
+                # No zero offset, propagate through, if possible
                 # (always possible if scale is scalar)
-                try:
-                    if scale1.ndim > 1:
-                        # undo any broadcast_to
-                        reduced_scale = _remove_redundant_dims(scale1)
-                        if reduced_scale.shape[-1] == 1:
-                            reduced_scale = reduced_scale[..., 0]
-                            if node.attributes['n_dim'] == 1:
-                                scale_trans = np.transpose(reduced_scale, (1, 0))
-                            else:
-                                scale_trans = np.transpose(reduced_scale, (1, 2, 0))
-                            newscale = np.broadcast_to(scale_trans, output.shape)  # make sure broadcastable
+                if conv_nobias:
+                    try:
+                        if scale1.ndim > 1:
+                            # undo any broadcast_to
+                            reduced_scale0 = _remove_redundant_dims(scale0) if scale0.ndim > 1 else scale0
+                            reduced_scale1 = _remove_redundant_dims(scale1)
+                            reduced_scale = reduced_scale0 @ reduced_scale1
+                            if reduced_scale.shape[-1] == 1:
+                                reduced_scale = reduced_scale[..., 0]
+                                if node.attributes['n_dim'] == 1:
+                                    scale_trans = np.transpose(reduced_scale, (1, 0))
+                                else:
+                                    scale_trans = np.transpose(reduced_scale, (1, 2, 0))
+                                newscale = np.broadcast_to(scale_trans, output.shape)  # make sure broadcastable
+                                can_propagate = True
+                        elif scale0.ndim > 1:
+                            # scale1 is scalar
+                            # undo any broadcast_to
+                            reduced_scale0 = _remove_redundant_dims(scale0)
+                            reduced_scale = scale1 * reduced_scale0
+                            if reduced_scale.shape[-1] == 1:
+                                reduced_scale = reduced_scale[..., 0]
+                                if node.attributes['n_dim'] == 1:
+                                    scale_trans = np.transpose(reduced_scale, (1, 0))
+                                else:
+                                    scale_trans = np.transpose(reduced_scale, (1, 2, 0))
+                                newscale = np.broadcast_to(scale_trans, output.shape)  # make sure broadcastable
+                                can_propagate = True
+                        else:
+                            newscale = np.broadcast_to(scale0 * scale1, output.shape)  # make sure broadcastable
                             can_propagate = True
-                    else:
-                        newscale = np.broadcast_to(scale1, output.shape)  # make sure broadcastable
+                        newbias = np.zeros(output.shape)
+                    except ValueError:
+                        can_propagate = False
+                elif not scale0.shape and not scale1.shape:
+                    # scalar scale1
+                    try:
+                        newscale = np.broadcast_to(scale0 * scale1, output.shape)  # check broadcastable
+                        newbias = np.broadcast_to(bias * (1 - scale0 * scale1), output.shape)
                         can_propagate = True
-                    newbias = np.zeros(output.shape)
-                except ValueError:
-                    can_propagate = False
-
+                    except ValueError:
+                        can_propagate = False
             if not can_propagate:
                 return False
 
@@ -339,9 +309,9 @@ class ScaleDownConv(OptimizerPass):
             new_name = in1.name
             model.remove_node(in1)
 
-        elif (not aa0 and not aa1 and aa2):
+        elif not aa0 and not aa1 and aa2:
             # only bias has a scale
-            
+
             can_propagate = False
             if not scale2.shape and scale2 == 1:
                 # No scale, just additional bias
@@ -360,6 +330,51 @@ class ScaleDownConv(OptimizerPass):
             new_name = in2.name
             model.remove_node(in2)
 
+        elif aa0 and aa1 and not aa2:
+            # dataflow and weights have an ApplyAlpha
+            bias = in2.attributes['value'] if len(node.inputs) == 3 else 0
+            conv_nobias = np.all(bias == 0)
+
+            can_propagate = False
+            if not bias0.shape and bias0 == 0 and not bias1.shape and bias1 == 0:
+                # zero bias, propagate through, if possible
+                # (always possible if scale is scalar)
+                if conv_nobias:
+                    try:
+                        if scale1.ndim > 1:
+                            # undo any broadcast_to
+                            reduced_scale = _remove_redundant_dims(scale1)
+                            if reduced_scale.shape[-1] == 1:
+                                reduced_scale = reduced_scale[..., 0]
+                                if node.attributes['n_dim'] == 1:
+                                    scale_trans = np.transpose(reduced_scale, (1, 0))
+                                else:
+                                    scale_trans = np.transpose(reduced_scale, (1, 2, 0))
+                                newscale = np.broadcast_to(scale_trans, output.shape)  # make sure broadcastable
+                                can_propagate = True
+                        else:
+                            newscale = np.broadcast_to(scale1, output.shape)  # make sure broadcastable
+                            can_propagate = True
+                        newbias = np.zeros(output.shape)
+                    except ValueError:
+                        can_propagate = False
+                elif not scale1.shape:
+                    # scalar scale1
+                    try:
+                        newscale = np.broadcast_to(scale1, output.shape)  # check broadcastable
+                        newbias = np.broadcast_to(bias * (1 - scale1), output.shape)
+                        can_propagate = True
+                    except ValueError:
+                        can_propagate = False
+            if not can_propagate:
+                return False
+
+            # to remove warning, since these get set again
+            new_attrs = {k: v for k, v in in1.attributes.items() if k not in ('trace', 'precision')}
+            new_name = in1.name
+            model.remove_node(in1)
+
+        # after the big if-else above
         new_attrs['scale_data'] = newscale
         new_attrs['bias_data'] = newbias
 
