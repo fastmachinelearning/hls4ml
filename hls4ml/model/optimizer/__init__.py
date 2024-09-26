@@ -45,8 +45,6 @@ register_flow(
         'scale_down_add',
         'bias_down_add',
         'scale_down_mat_mul',
-        'scale_down_weight_conv',
-        'scale_down_bias_conv',
         'scale_down_conv',
         'merge_to_apply_alpha',
         'merge_to_apply_alpha_div',

@@ -418,6 +418,7 @@ class ScaleDownConv(OptimizerPass):
             new_attrs = {k: v for k, v in in1.attributes.items() if k not in ('trace', 'precision')}
             new_name = in1.name
             model.remove_node(in1)
+            model.remove_node(in2)
 
         elif aa0 and aa1 and aa2:
             # have all
@@ -447,9 +448,11 @@ class ScaleDownConv(OptimizerPass):
                 return False
 
             # to remove warning, since these get set again
-            new_attrs = {k: v for k, v in in1.attributes.items() if k not in ('trace', 'precision')}
-            new_name = in1.name
+            new_attrs = {k: v for k, v in in0.attributes.items() if k not in ('trace', 'precision')}
+            new_name = in0.name
+            model.remove_node(in0)
             model.remove_node(in1)
+            model.remove_node(in2)
 
         # after the big if-else above
         new_attrs['scale_data'] = newscale
