@@ -55,7 +55,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
         if layer['class_name'] == 'ELU':
             layer['activ_param'] = class_object.alpha
         if layer['class_name'] == 'PReLU':
-            layer['alpha_data'] = class_object.weight.data.numpy()
+            layer['param_data'] = class_object.weight.data.numpy()
         if layer['class_name'] == 'Threshold':
             layer['activ_param'] = class_object.threshold
             layer['class_name'] = 'ThresholdedReLU'
