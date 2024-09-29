@@ -134,8 +134,8 @@ EluActLoop:
     }
 }
 
-template <class data_T, class res_T, class param_T, typename CONFIG_T> void elu(stream<data_T> &data, stream<res_T> &res) {
-    elu<data_T, param_T, res_T, CONFIG_T>(data, 1.0, res);
+template <class data_T, class res_T, typename CONFIG_T> void elu(stream<data_T> &data, stream<res_T> &res) {
+    elu<data_T, ac_int<1, false>, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************

@@ -679,9 +679,8 @@ void elu(data_T data[CONFIG_T::n_in], const param_T alpha, res_T res[CONFIG_T::n
     }
 }
 
-template <class data_T, class param_T, class res_T, typename CONFIG_T>
-void elu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
-    elu<data_T, param_T, res_T, CONFIG_T>(data, 1.0, res);
+template <class data_T, class res_T, typename CONFIG_T> void elu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
+    elu<data_T, ap_uint<1>, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************

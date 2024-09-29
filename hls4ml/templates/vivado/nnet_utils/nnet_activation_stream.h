@@ -674,9 +674,8 @@ EluActLoop:
     }
 }
 
-template <class data_T, class param_T, class res_T, typename CONFIG_T>
-void elu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    elu<data_T, param_T, res_T, CONFIG_T>(data, 1.0, res);
+template <class data_T, class res_T, typename CONFIG_T> void elu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    elu<data_T, ap_uint<1>, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
