@@ -1,5 +1,6 @@
 import os
 import sys
+from warnings import warn
 
 import numpy as np
 
@@ -110,6 +111,7 @@ class CatapultBackend(FPGABackend):
             'catapult:inplace_stream_flatten',
             'catapult:skip_softmax',
             'catapult:fix_softmax_table_size',
+            'catapult:process_fixed_point_quantizer_layer',
             'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
@@ -120,6 +122,7 @@ class CatapultBackend(FPGABackend):
             'catapult:generate_conv_streaming_instructions',
             'catapult:apply_resource_strategy',
             'catapult:generate_conv_im2col',
+            'catapult:apply_winograd_kernel_transformation',
         ]
         catapult_types_flow = register_flow('specific_types', catapult_types, requires=[init_flow], backend=self.name)
 
@@ -153,9 +156,8 @@ class CatapultBackend(FPGABackend):
         ]
 
         if len(extras) > 0:
-            extras_flow = register_flow('extras', extras, requires=[init_flow], backend=self.name)
-        else:
-            extras_flow = None
+            for opt in extras:
+                warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
         ip_flow_requirements = [
             'optimize',
@@ -164,10 +166,8 @@ class CatapultBackend(FPGABackend):
             quantization_flow,
             optimization_flow,
             catapult_types_flow,
-            extras_flow,
             template_flow,
         ]
-        ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
