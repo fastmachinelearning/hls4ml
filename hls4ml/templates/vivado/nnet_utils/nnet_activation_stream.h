@@ -728,7 +728,7 @@ SeluActLoop:
 // *************************************************
 
 template <class data_T, class param_T, class res_T, typename CONFIG_T>
-void prelu(hls::stream<data_T> &data, param_T alpha[CONFIG_T::n_in], hls::stream<res_T> &res) {
+void prelu(hls::stream<data_T> &data, const param_T alpha[CONFIG_T::n_in], hls::stream<res_T> &res) {
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
