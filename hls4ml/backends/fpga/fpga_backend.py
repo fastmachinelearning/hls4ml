@@ -140,7 +140,7 @@ class FPGABackend(Backend):
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            cwd=model.config.get_output_dir()
+            cwd=model.config.get_output_dir(),
         )
         if ret_val.returncode != 0:
             print(ret_val.stdout)
