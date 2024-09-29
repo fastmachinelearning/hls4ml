@@ -102,12 +102,12 @@ def test_sep_conv(sep_conv_model, backend):
     model = sep_conv_model
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
-    # X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
     config = hls4ml.utils.config.config_from_onnx_model(
-        model, granularity='name', backend=backend, default_precision='fixed<16,6>'
+        model, granularity='name', backend=backend, default_precision='fixed<32,16>'
     )
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
