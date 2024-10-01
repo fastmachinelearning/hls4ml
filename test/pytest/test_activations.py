@@ -41,7 +41,7 @@ def test_activations(backend, activation, name, shape, io_type):
     activation = activation(input)
     keras_model = Model(inputs=input, outputs=activation)
 
-    hls_config = hls4ml.utils.config_from_keras_model(keras_model)
+    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     output_dir = str(test_root_path / 'hls4mlprj_activations_{}_{}_{}_{}').format(backend, io_type, str(shape), name)
 
     hls_model = hls4ml.converters.convert_from_keras_model(

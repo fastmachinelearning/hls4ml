@@ -52,8 +52,8 @@ ReLUActLoop:
 // *************************************************
 //       Leaky RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(stream<data_T> &data, const typename data_T::value_type alpha, stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void leaky_relu(stream<data_T> &data, param_T alpha, stream<res_T> &res) {
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = data_T::size / multiplier_limit;
 
@@ -79,8 +79,8 @@ LeakyReLUActLoop:
 // *************************************************
 //       Thresholded RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(stream<data_T> &data, const typename data_T::value_type theta, stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void thresholded_relu(stream<data_T> &data, param_T theta, stream<res_T> &res) {
 ThresholdedReLUActLoop:
     #pragma ii 1
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
@@ -103,8 +103,8 @@ ThresholdedReLUActLoop:
 // *************************************************
 //       ELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(stream<data_T> &data, const typename data_T::value_type alpha, stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void elu(stream<data_T> &data, param_T alpha, stream<res_T> &res) {
 #include "activation_tables/elu_table.tb"
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
@@ -135,7 +135,7 @@ EluActLoop:
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void elu(stream<data_T> &data, stream<res_T> &res) {
-    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
+    elu<data_T, ac_int<1, false>, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
@@ -171,8 +171,8 @@ SeluActLoop:
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void prelu(stream<data_T> &data, const typename data_T::value_type alpha[CONFIG_T::n_in], stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void prelu(stream<data_T> &data, const param_T alpha[CONFIG_T::n_in], stream<res_T> &res) {
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = data_T::size / multiplier_limit;
 

@@ -545,8 +545,8 @@ HardTanhActLoop:
 // *************************************************
 //       Leaky RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void leaky_relu(ac_channel<data_T> &data, param_T alpha, ac_channel<res_T> &res) {
 LeakyReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         //#pragma HLS PIPELINE
@@ -571,8 +571,8 @@ LeakyReLUActLoop:
 //       Thresholded RELU Activation
 // *************************************************
 
-template <class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(ac_channel<data_T> &data, typename data_T::value_type theta, ac_channel<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void thresholded_relu(ac_channel<data_T> &data, param_T theta, ac_channel<res_T> &res) {
 ThresholdedReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         //#pragma HLS PIPELINE
@@ -720,8 +720,8 @@ SoftsignActLoop:
 
 #ifndef USE_AC_MATH
 
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void elu(ac_channel<data_T> &data, param_T alpha, ac_channel<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -763,8 +763,8 @@ EluActLoop:
 }
 
 #else
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void elu(ac_channel<data_T> &data, param_T alpha, ac_channel<res_T> &res) {
 EluActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         data_T in_data = data.read();
@@ -845,8 +845,8 @@ SeluActLoop:
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void prelu(ac_channel<data_T> &data, typename data_T::value_type alpha[CONFIG_T::n_in], ac_channel<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void prelu(ac_channel<data_T> &data, const param_T alpha[CONFIG_T::n_in], ac_channel<res_T> &res) {
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         //#pragma HLS PIPELINE
