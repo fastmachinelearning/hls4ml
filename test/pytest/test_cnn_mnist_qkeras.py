@@ -58,7 +58,7 @@ def mnist_model():
 )
 def hls_model(mnist_model, backend, io_type, strategy):
     keras_model = mnist_model
-    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
+    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     hls_config['Model']['Strategy'] = strategy
     hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
     output_dir = str(test_root_path / f'hls4mlprj_cnn_mnist_qkeras_{backend}_{io_type}_{strategy}')

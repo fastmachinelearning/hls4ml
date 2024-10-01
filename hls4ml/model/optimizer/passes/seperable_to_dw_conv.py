@@ -33,7 +33,6 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
         'data_format',
         'depthwise_data',
         'depthwise_quantizer',
-        'padding',
     )
 
     _pw_attributes = ('out_width', 'n_filt', 'dilation_width', 'out_height', 'dilation_height', 'data_format', 'use_bias')

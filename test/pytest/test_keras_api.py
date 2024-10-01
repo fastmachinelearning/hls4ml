@@ -165,7 +165,6 @@ def test_conv1d(padds, backend, io_type):
         assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0].input_shape[2]
         assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
         assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[0]
-        assert list(hls_model.get_layers())[1].attributes['padding'] == model.layers[0].padding
         assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
         assert list(hls_model.get_layers())[1].attributes["out_width"] == list(model.layers[0].output_shape)[1]
 
@@ -235,7 +234,6 @@ def test_conv2d(chans, padds, backend, io_type):
     assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
     assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[1]
     assert list(hls_model.get_layers())[1].attributes['stride_height'] == model.layers[0].strides[0]
-    assert list(hls_model.get_layers())[1].attributes['padding'] == model.layers[0].padding
     assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
 
     if model.layers[0].data_format == 'channels_first':
@@ -310,7 +308,9 @@ def test_depthwise2d(backend, io_type):
     model.add(DepthwiseConv2D(kernel_size=(3, 3), input_shape=(32, 32, 3)))
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<32,12>')
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<32,12>', backend=backend
+    )
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -336,7 +336,7 @@ def test_depthwise1d(backend, io_type):
     model.add(DepthwiseConv1D(kernel_size=3, input_shape=(32, 3)))
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv1d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -390,7 +390,6 @@ def test_pooling(pooling, padds, chans, backend):
         assert hls_pool.attributes['stride_width'] == ker_pool.strides[1]
         assert hls_pool.attributes['pool_height'] == ker_pool.pool_size[1]
         assert hls_pool.attributes['pool_width'] == ker_pool.pool_size[0]
-        assert hls_pool.attributes['padding'] == ker_pool.padding
 
         if hls_pool.attributes['data_format'] == 'channels_last':
             assert hls_pool.attributes['in_height'] == ker_pool.input_shape[1]
@@ -401,7 +400,7 @@ def test_pooling(pooling, padds, chans, backend):
             assert hls_pool.attributes['in_width'] == ker_pool.input_shape[3]
             assert hls_pool.attributes['n_filt'] == ker_pool.input_shape[1]
 
-        if hls_pool.attributes['padding'] == 'same':
+        if ker_pool.padding == 'same':
             # Height
             in_height = ker_pool.input_shape[1]
             if ker_pool.data_format == 'channels_first':
@@ -432,7 +431,7 @@ def test_pooling(pooling, padds, chans, backend):
             assert pad_left == hls_pool.attributes['pad_left']
             assert pad_right == hls_pool.attributes['pad_right']
 
-        elif hls_pool.attributes['padding'] == 'valid':
+        elif ker_pool.padding == 'valid':
             if hls_pool.attributes['data_format'] == 'channels_first':
                 in_height = ker_pool.input_shape[2]
                 in_width = ker_pool.input_shape[3]
@@ -457,12 +456,11 @@ def test_pooling(pooling, padds, chans, backend):
         assert hls_pool.attributes['n_filt'] == ker_pool.input_shape[2]
         assert hls_pool.attributes['pool_width'] == ker_pool.pool_size[0]
         assert hls_pool.attributes['stride_width'] == ker_pool.strides[0]
-        assert hls_pool.attributes['padding'] == ker_pool.padding
 
         out_same = math.ceil(float(ker_pool.input_shape[1]) / float(ker_pool.strides[0]))
         out_valid = math.ceil(float(ker_pool.input_shape[1] - ker_pool.pool_size[0] + 1) / ker_pool.strides[0])
 
-        if hls_pool.attributes['padding'] == 'same':
+        if ker_pool.padding == 'same':
             assert hls_pool.attributes['n_out'] == out_same
             if ker_pool.input_shape[1] % ker_pool.strides[0] == 0:
                 pad_along_width = max(ker_pool.pool_size[0] - ker_pool.strides[0], 0)
@@ -471,7 +469,7 @@ def test_pooling(pooling, padds, chans, backend):
             assert hls_pool.attributes['pad_left'] == pad_along_width // 2
             assert hls_pool.attributes['pad_right'] == pad_along_width - pad_along_width // 2
 
-        elif hls_pool.attributes['padding'] == 'valid':
+        elif ker_pool.padding == 'valid':
             assert hls_pool.attributes['n_out'] == out_valid
             assert hls_pool.attributes['pad_left'] == 0
             assert hls_pool.attributes['pad_right'] == 0

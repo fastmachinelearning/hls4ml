@@ -19,7 +19,7 @@ def test_softsign(backend, input_shape, io_type):
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softsign', name='softsign'))
     model.compile()
 
-    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<20,4>')
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<20,4>', backend=backend)
     # Since softsign implementation is lookup-based increasing the precision and size of the table helps with accuracy
     cfg['LayerName']['softsign']['table_t'] = 'fixed<20,4>'
     cfg['LayerName']['softsign']['table_size'] = 2048
