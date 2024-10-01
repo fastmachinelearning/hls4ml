@@ -564,7 +564,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
     def _infer_par_act_precision(self, node, types_to_infer):
         inferred_types = []
 
-        # for now, only set if for threshold relu
+        # For threshold relu, set the parameter precision to be the input precision by default;
+        # for other parametrized activations, just allow the default precision to be used.
+        # Can override these values in the configuration by explicitly setting them.
         if 'param_t' in inferred_types and self.get_attr('activation').lower() == 'thresholdedrelu':
             in_type = node.get_input_variable().type.precision
             node.attributes['param_t'].type = in_type
