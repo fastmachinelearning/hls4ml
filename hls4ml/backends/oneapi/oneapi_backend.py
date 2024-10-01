@@ -1,5 +1,6 @@
 import subprocess
 from pathlib import Path
+from warnings import warn
 
 import numpy as np
 
@@ -7,7 +8,7 @@ from hls4ml.backends import FPGABackend
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
-from hls4ml.model.optimizer import layer_optimizer
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 
 # from hls4ml.report import parse_oneapi_report
@@ -68,13 +69,32 @@ class OneAPIBackend(FPGABackend):
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
+        templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
         writer_passes = ['make_stamp', 'oneapi:write_hls']
 
         self._writer_flow = register_flow('write', writer_passes, requires=['oneapi:ip'], backend=self.name)
 
-        extras_flow = None
+        all_passes = get_backend_passes(self.name)
+
+        extras = [
+            # Ideally this should be empty
+            opt_pass
+            for opt_pass in all_passes
+            if opt_pass
+            not in initializers
+            + streaming_passes
+            + oneapi_types
+            + quantization_passes
+            + templates
+            + optimization_passes
+            + writer_passes
+        ]
+
+        if len(extras) > 0:
+            for opt in extras:
+                warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
         ip_flow_requirements = [
             'optimize',
@@ -83,7 +103,6 @@ class OneAPIBackend(FPGABackend):
             quantization_flow,
             optimization_flow,
             oneapi_types_flow,
-            extras_flow,
             template_flow,
         ]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
