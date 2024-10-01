@@ -90,6 +90,8 @@ class OneAPIBackend(FPGABackend):
             + templates
             + optimization_passes
             + writer_passes
+            + ['oneapi:inplace_stream_flatten', 'oneapi:reshape_stream']  # not needed
+            + ['oneapi:process_fixed_point_quantizer_layer']  # not yet supported
         ]
 
         if len(extras) > 0:
