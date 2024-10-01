@@ -1,7 +1,9 @@
 import glob
 import os
+import stat
 import tarfile
 from collections import OrderedDict
+from pathlib import Path
 from shutil import copyfile, copytree, rmtree
 
 import numpy as np
@@ -877,32 +879,30 @@ class QuartusWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
 
+        filedir = Path(__file__).parent
+
         # Makefile
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir, '../templates/quartus/Makefile'))
-        fout = open(f'{model.config.get_output_dir()}/Makefile', 'w')
+        makefile_src = (filedir / '../templates/quartus/Makefile').resolve()
+        makefile_dst = Path(f'{model.config.get_output_dir()}/Makefile').resolve()
+        with open(makefile_src) as src, open(makefile_dst, 'w') as dst:
+            for line in src.readlines():
+                line = line.replace('myproject', model.config.get_project_name())
 
-        for line in f.readlines():
-            line = line.replace('myproject', model.config.get_project_name())
+                if 'DEVICE   :=' in line:
+                    line = 'DEVICE   := {}\n'.format(model.config.get_config_value('Part'))
 
-            if 'DEVICE   :=' in line:
-                line = 'DEVICE   := {}\n'.format(model.config.get_config_value('Part'))
-
-            fout.write(line)
-        f.close()
-        fout.close()
+                dst.write(line)
 
         # build_lib.sh
-        f = open(os.path.join(filedir, '../templates/quartus/build_lib.sh'))
-        fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
+        build_lib_src = (filedir / '../templates/quartus/build_lib.sh').resolve()
+        build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+        with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
+            for line in src.readlines():
+                line = line.replace('myproject', model.config.get_project_name())
+                line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
-        for line in f.readlines():
-            line = line.replace('myproject', model.config.get_project_name())
-            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
-
-            fout.write(line)
-        f.close()
-        fout.close()
+                dst.write(line)
+        build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def write_nnet_utils(self, model):
         """Copy the nnet_utils, AP types headers and any custom source to the project output directory
