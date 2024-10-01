@@ -845,6 +845,17 @@ class Activation(Layer):
 
 
 class ParametrizedActivation(Activation):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('activation', value_type=str),
+        TypeAttribute('param'),
+    ]
+
+    def initialize(self):
+        super().initialize()
+        param_t = NamedType(*reversed(self.model.config.get_precision(self, 'param')))
+        self.set_attr('param_t', param_t)
+
     def _get_act_function_name(self):
         act = self.get_attr('activation').lower()
         if act == 'leakyrelu':
@@ -882,9 +893,16 @@ class HardActivation(Activation):
 
 
 class PReLU(Activation):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('activation', value_type=str),
+        WeightAttribute('param'),
+        TypeAttribute('param'),
+    ]
+
     def initialize(self):
         super().initialize()
-        self.add_weights_variable(name='alpha', var_name='a{index}')
+        self.add_weights_variable(name='param', var_name='a{index}')
 
 
 class Softmax(Activation):

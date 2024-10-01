@@ -84,6 +84,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['SimpleRNN', 'LSTM', 'GRU']:
             return self._infer_rnn_precision(node, types_to_infer)
 
+        if node_class in ['ParametrizedActivation']:
+            return self._infer_par_act_precision(node, types_to_infer)
+
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -555,5 +558,18 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                 self._infer_default_type(node, f'{weightvar}_t')
                 node.weights[weightvar].update_precision(node.types[f'{weightvar}_t'].precision)
                 inferred_types.append(f'{weightvar}_t')
+
+        return inferred_types
+
+    def _infer_par_act_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        # For threshold relu, set the parameter precision to be the input precision by default;
+        # for other parametrized activations, just allow the default precision to be used.
+        # Can override these values in the configuration by explicitly setting them.
+        if 'param_t' in inferred_types and self.get_attr('activation').lower() == 'thresholdedrelu':
+            in_type = node.get_input_variable().type.precision
+            node.attributes['param_t'].type = in_type
+            inferred_types.append('param_t')
 
         return inferred_types
