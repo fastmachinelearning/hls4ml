@@ -7,14 +7,14 @@ namespace nnet {
 
 struct activ_config {
     // IO size
-    static const unsigned n_in = 10;
+    static constexpr unsigned n_in = 10;
 
     // Internal info
-    static const unsigned table_size = 512;
+    static constexpr unsigned table_size = 512;
 
     // Resource reuse info
-    static const unsigned io_type = io_parallel;
-    static const unsigned reuse_factor = 1;
+    static constexpr unsigned io_type = io_parallel;
+    static constexpr unsigned reuse_factor = 1;
 
     // Internal data type definitions
     typedef ac_fixed<16, 8> table_t;
@@ -70,7 +70,7 @@ template <class data_T, class res_T, typename CONFIG_T> void relu1(const data_T 
 //       Sigmoid Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void sigmoid(const data_T &data, res_T &res) {
-    static const int MAX_VALUE = 8;
+    static constexpr int MAX_VALUE = 8;
 #include "activation_tables/sigmoid_table.tb"
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
@@ -269,7 +269,7 @@ template <class data_T, class res_T, typename CONFIG_T> inline void softmax(cons
 //       TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void dense_tanh(const data_T &data, res_T &res) {
-    static const int MAX_VALUE = 4;
+    static constexpr int MAX_VALUE = 4;
 // Initialize the lookup table
 #include "activation_tables/tanh_table.tb"
     // Index into the lookup table based on data
@@ -325,7 +325,7 @@ template <class data_T, class res_T, typename CONFIG_T> void hard_tanh(const dat
 //       Leaky RELU Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(const data_T &data, typename data_T::value_type alpha, res_T &res) {
+void leaky_relu(const data_T &data, const typename CONFIG_T::param_t alpha, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto datareg = data[ii];
@@ -340,7 +340,7 @@ void leaky_relu(const data_T &data, typename data_T::value_type alpha, res_T &re
 //       Thresholded RELU Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(const data_T &data, typename data_T::value_type theta, res_T &res) {
+void thresholded_relu(const data_T &data, const typename CONFIG_T::param_t theta, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto datareg = data[ii];
@@ -374,7 +374,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softplus(const data
 //       Softsign Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void softsign(const data_T &data, res_T &res) {
-    static const int MAX_VALUE = 8;
+    static constexpr int MAX_VALUE = 8;
 // Initialize the lookup table
 #include "activation_tables/softsign_table.tb"
 
@@ -404,7 +404,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softsign(const data
 //       ELU Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
-void elu(const data_T &data, const typename res_T::value_type alpha, res_T &res) {
+void elu(const data_T &data, const typename CONFIG_T::param_t alpha, res_T &res) {
 // Initialize the lookup table
 #include "activation_tables/elu_table.tb"
     // Index into the lookup table based on data
@@ -420,10 +420,6 @@ void elu(const data_T &data, const typename res_T::value_type alpha, res_T &res)
             res[ii] = alpha * elu_table[index];
         }
     }
-}
-
-template <class data_T, class res_T, typename CONFIG_T> void elu(const data_T &data, res_T &res) {
-    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
@@ -451,7 +447,7 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(const data_T &
 //       PReLU Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
-void prelu(const data_T &data, const typename CONFIG_T::alpha_t &alpha, res_T &res) {
+void prelu(const data_T &data, const typename CONFIG_T::param_t &alpha, res_T &res) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto datareg = data[ii];

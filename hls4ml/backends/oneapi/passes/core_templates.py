@@ -6,24 +6,24 @@ from hls4ml.model.layers import Activation, BatchNormalization, Dense, HardActiv
 # Dense templates
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned n_zeros = {nzeros};
-    static const unsigned n_nonzeros = {nonzeros};
-    static const bool store_weights_in_bram = false;
+    static constexpr unsigned n_in = {n_in};
+    static constexpr unsigned n_out = {n_out};
+    static constexpr unsigned io_type = nnet::{iotype};
+    static constexpr unsigned n_zeros = {nzeros};
+    static constexpr unsigned n_nonzeros = {nonzeros};
+    static constexpr bool store_weights_in_bram = false;
 
-    static const unsigned rf_pad = {rfpad};
-    static const unsigned bf_pad = {bfpad};
+    static constexpr unsigned rf_pad = {rfpad};
+    static constexpr unsigned bf_pad = {bfpad};
 
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned compressed_block_factor = DIV_ROUNDUP(n_nonzeros, reuse_factor);
-    static const unsigned reuse_factor_rounded = reuse_factor + rf_pad;
-    static const unsigned block_factor = DIV_ROUNDUP(n_in*n_out, reuse_factor);
-    static const unsigned block_factor_rounded = block_factor + bf_pad;
-    static const unsigned multiplier_factor = MIN(n_in, reuse_factor);
-    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in*n_out, multiplier_factor);
-    static const unsigned multiplier_scale = multiplier_limit/n_out;
+    static constexpr unsigned reuse_factor = {reuse};
+    static constexpr unsigned compressed_block_factor = DIV_ROUNDUP(n_nonzeros, reuse_factor);
+    static constexpr unsigned reuse_factor_rounded = reuse_factor + rf_pad;
+    static constexpr unsigned block_factor = DIV_ROUNDUP(n_in*n_out, reuse_factor);
+    static constexpr unsigned block_factor_rounded = block_factor + bf_pad;
+    static constexpr unsigned multiplier_factor = MIN(n_in, reuse_factor);
+    static constexpr unsigned multiplier_limit = DIV_ROUNDUP(n_in*n_out, multiplier_factor);
+    static constexpr unsigned multiplier_scale = multiplier_limit/n_out;
 
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
@@ -96,11 +96,11 @@ class DenseStreamFunctionTemplate(StreamFunctionCallTemplate):
 # BatchNormalization templates
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_filt = {n_filt};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    static const bool store_weights_in_bram = false;
+    static constexpr unsigned n_in = {n_in};
+    static constexpr unsigned n_filt = {n_filt};
+    static constexpr unsigned io_type = nnet::{iotype};
+    static constexpr unsigned reuse_factor = {reuse};
+    static constexpr bool store_weights_in_bram = false;
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
     template<class x_T, class y_T>
@@ -168,38 +168,36 @@ class BatchNormalizationStreamFunctionTemplate(StreamFunctionCallTemplate):
 # Activation templates
 
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
+    static constexpr unsigned n_in = {n_in};
+    static constexpr unsigned table_size = {table_size};
+    static constexpr unsigned io_type = nnet::{iotype};
+    static constexpr unsigned reuse_factor = {reuse};
     typedef {table_t.name} table_t;
 }};\n"""
 
-prelu_activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
+param_activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static constexpr unsigned n_in = {n_in};
+    static constexpr unsigned table_size = {table_size};
+    static constexpr unsigned io_type = nnet::{iotype};
+    static constexpr unsigned reuse_factor = {reuse};
     typedef {table_t.name} table_t;
-    typedef {alpha_t.name} alpha_t;
+    typedef {param_t.name} param_t;
 }};\n"""
 
-hard_activ_config_template = """struct {type}_config{index} {{
-    static const unsigned n_in = {n_in};
-    static const {slope_t.name} slope;
-    static const {shift_t.name} shift;
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-}};
-const {slope_t.name} {type}_config{index}::slope = {slope};
-const {shift_t.name} {type}_config{index}::shift = {shift};\n"""
+hard_activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static constexpr unsigned n_in = {n_in};
+    static constexpr {slope_t.name} slope = {slope};
+    static constexpr {shift_t.name} shift = {shift};
+    static constexpr unsigned io_type = nnet::{iotype};
+    static constexpr unsigned reuse_factor = {reuse};
+}};\n"""
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
+    static constexpr unsigned n_in = {n_in};
+    static constexpr unsigned table_size = {table_size};
+    static constexpr unsigned io_type = nnet::{iotype};
+    static constexpr unsigned reuse_factor = {reuse};
+    static constexpr nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;
 }};\n"""
@@ -216,7 +214,7 @@ activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activatio
 
 class ActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((Activation, ParametrizedActivation))
+        super().__init__(Activation)
         self.template = activ_config_template
 
     def format(self, node):
@@ -226,10 +224,10 @@ class ActivationConfigTemplate(LayerConfigTemplate):
         return self.template.format(**params)
 
 
-class PreluActivationConfigTemplate(LayerConfigTemplate):
+class ParamActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__(PReLU)
-        self.template = prelu_activ_config_template
+        super().__init__((ParametrizedActivation, PReLU))
+        self.template = param_activ_config_template
 
     def format(self, node):
         params = self._default_config_params(node)
@@ -291,7 +289,7 @@ class PReLUFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
-        params['param'] = node.get_weights('alpha').name
+        params['param'] = node.get_weights('param').name
         params['config'] = f"{node.get_attr('activation')}_config{node.index}"
 
         return self.template.format(**params)

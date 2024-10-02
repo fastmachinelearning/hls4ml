@@ -52,8 +52,7 @@ ReLUActLoop:
 // *************************************************
 //       Leaky RELU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void leaky_relu_stream(const typename ExtractPipeType<data_pipe>::value_type::value_type alpha) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void leaky_relu_stream(typename CONFIG_T::param_t alpha) {
     constexpr unsigned multiplier_limit =
         DIV_ROUNDUP(std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{} / multiplier_limit;
@@ -83,7 +82,7 @@ LeakyReLUActLoop:
 //       Thresholded RELU Activation
 // *************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void thresholded_relu_stream(const typename ExtractPipeType<data_pipe>::value_type::value_type theta) {
+void thresholded_relu_stream(typename CONFIG_T::param_t theta) {
 ThresholdedReLUActLoop:
     [[intel::initiation_interval(
         1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; i++) {
@@ -106,8 +105,7 @@ ThresholdedReLUActLoop:
 // *************************************************
 //       ELU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void elu_stream(const typename ExtractPipeType<data_pipe>::value_type::value_type alpha) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void elu_stream(typename CONFIG_T::param_t alpha) {
 #include "activation_tables/elu_table.tb"
 
     constexpr unsigned multiplier_limit =
@@ -174,7 +172,7 @@ SeluActLoop:
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void prelu_stream(typename CONFIG_T::alpha_t alpha) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void prelu_stream(typename CONFIG_T::param_t alpha) {
     constexpr unsigned multiplier_limit =
         DIV_ROUNDUP(std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{} / multiplier_limit;
