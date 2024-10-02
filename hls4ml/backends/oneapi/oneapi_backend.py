@@ -312,6 +312,40 @@ class OneAPIBackend(FPGABackend):
             'n_partitions', 1
         )  # TODO Not used yet as there is no codegen implementation of CNNs for oneAPI backend
 
+
+    @layer_optimizer(SeparableConv2D)
+    def init_sepconv2d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+        if len(layer.weights['weight'].data.shape) == 2:
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0, 1))
+
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # impl_filt_width & impl_filt_height determine the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_height', layer.get_attr('filt_height'))
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
+        # Implementation:
+        # - combination - at compile-time, the decision between Winograd and im2col is made
+        # - im2col - specifically use im2col
+        # - Winograd - use Winograd, if possible
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'im2col'))
+
+        layer.set_attr(
+            'n_partitions', 1
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for oneAPI backend
+
+
+
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
