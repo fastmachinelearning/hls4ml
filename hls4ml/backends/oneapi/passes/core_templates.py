@@ -347,5 +347,5 @@ class PReLUActivationStreamFunctionTemplate(StreamFunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['param'] = node.get_weights('alpha').name
+        params['param'] = node.get_weights('param').name
         return self.template.format(**params)
