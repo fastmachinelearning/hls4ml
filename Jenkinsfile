@@ -16,7 +16,7 @@ pipeline {
           sh '''#!/bin/bash --login
               conda activate hls4ml-py310
               conda install -y jupyterhub pydot graphviz pytest pytest-cov
-              pip install pytest-randomly jupyter onnx>=1.4.0 matplotlib pandas seaborn pydigitalwavetools==1.1 pyyaml tensorflow==2.14 qonnx torch git+https://github.com/google/qkeras.git pyparsing
+              pip install pytest-randomly jupyter onnx>=1.4.0 matplotlib pandas seaborn pydigitalwavetools==1.1 pyyaml tensorflow==2.14 qonnx torch git+https://github.com/jmitrevs/qkeras.git@qrecurrent_unstack pyparsing
               pip install -U ../ --user
               ./convert-keras-models.sh -x -f keras-models.txt
               pip uninstall hls4ml -y'''
