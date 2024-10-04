@@ -21,10 +21,10 @@ First, we can define a simple neural network in Keras
     from tensorflow.keras.models import Sequential
 
     model = Sequential()
-    model.add(Dense(64, input_shape=(16,), name='fc1', activation='relu')
+    model.add(Dense(64, input_shape=(16,), name='fc1', activation='relu'))
     model.add(Dense(32, name='fc2', activation='relu'))
     model.add(Dense(32, name='fc3', activation='relu'))
-    model.add(Dense(5, name='fc3', activation='softmax'))
+    model.add(Dense(5, name='fc4', activation='softmax'))
 
 Then, we can convert the model, including the flow
 
