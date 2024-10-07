@@ -60,7 +60,7 @@ void conv_1d_buffer_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
                        typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    if (CONFIG_T::strategy == nnet::unrolled && CONFIG_T::reuse_factor > 1) {
+    if (CONFIG_T::strategy == nnet::resource_unrolled && CONFIG_T::reuse_factor > 1) {
         #pragma HLS allocation instances=compute_output_buffer_1d limit=1 function
     }
 

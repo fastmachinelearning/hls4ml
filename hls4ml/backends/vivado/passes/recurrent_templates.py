@@ -149,8 +149,8 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
             else:
                 mult_params1['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
-        elif node.get_attr('strategy').lower() == 'unrolled':
-            mult_params1['dense_function'] = f'dense_unrolled_{node.index}_1'
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params1['dense_function'] = f'dense_resource_unrolled_{node.index}_1'
 
         if node.get_attr('return_sequences'):
             mult_params2['n_in'] = node.get_output_variable().shape[1]
@@ -174,8 +174,8 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
             else:
                 mult_params2['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
-        elif node.get_attr('strategy').lower() == 'unrolled':
-            mult_params2['dense_function'] = f'dense_unrolled_{node.index}_2'
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params2['dense_function'] = f'dense_resource_unrolled_{node.index}_2'
 
         mult_config1 = self.mult1_template.format(**mult_params1)
         mult_config2 = self.mult2_template.format(**mult_params2)

@@ -16,10 +16,10 @@ test_root_path = Path(__file__).parent
     [
         (1, 'auto', 'io_stream', 'resource', None),  # io_stream should result in DATAFLOW pragma regardless of other params
         (2, 'auto', 'io_stream', 'latency', None),
-        (3, None, 'io_stream', 'unrolled', None),  # None should be interpreted as 'auto'
+        (3, None, 'io_stream', 'resource_unrolled', None),  # None should be interpreted as 'auto'
         (4, 'auto', 'io_parallel', 'resource', None),  # Should end up with DATAFLOW pragma
         (5, 'auto', 'io_parallel', 'latency', None),  # Should end up with PIPELINE pragma
-        (6, 'auto', 'io_parallel', 'unrolled', None),  # Should end up with PIPELINE pragma and II
+        (6, 'auto', 'io_parallel', 'resource_unrolled', None),  # Should end up with PIPELINE pragma and II
         (7, 'pipeline', 'io_stream', 'resource', None),  # Should result in a warning
         (8, 'pipeline', 'io_parallel', 'resource', None),  # Should result in a warning
         (9, 'pipeline', 'io_parallel', 'latency', None),  # No warning

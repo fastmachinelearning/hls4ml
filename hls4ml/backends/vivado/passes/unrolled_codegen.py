@@ -15,14 +15,14 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         # TODO - Extend (& test) for Separable Conv / Depthwise Conv / Recurrent layers
         layers_with_dense = (Dense, Conv1D, Conv2D, LSTM, GRU)
 
-        # Unrolled Dense mimicks the hardware implementation of Resource strategy -> apply after Resource optimizer
+        # Unrolled Dense mimics the hardware implementation of Resource strategy -> apply after Resource optimizer
         weights_transposed = node.get_attr('_weights_transposed', False)
 
         # RF = 1 will optimize DSPs anyway, so no need to unroll code
         rf_gt_one = node.get_attr('reuse_factor', 1) > 1
 
         # User requested unrolled implementation of Dense
-        is_unrolled = node.get_attr('strategy', 'latency') == 'unrolled'
+        is_unrolled = node.get_attr('strategy', 'latency') == 'resource_unrolled'
 
         return isinstance(node, layers_with_dense) and weights_transposed and rf_gt_one and is_unrolled
 
@@ -34,7 +34,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
             weights = node.weights['weight']
             code_str = self._generate_unrolled_function(n_in, n_out, reuse_factor, weights, str(node.index) + '_1')
             code_str = self._add_backend_specific_pragmas_to_generated_code(code_str, model.config.backend)
-            node.set_attr('unrolled_dense_resource_codegen_1', Source(code_str))
+            node.set_attr('resource_unrolled_dense_codegen_1', Source(code_str))
 
             recr_reuse_factor = node.get_attr('recurrent_reuse_factor')
             recr_weights = node.weights['recurrent_weight']
@@ -42,7 +42,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
                 n_in_recr, n_out_recr, recr_reuse_factor, recr_weights, str(node.index) + '_2'
             )
             code_str = self._add_backend_specific_pragmas_to_generated_code(code_str, model.config.backend)
-            node.set_attr('unrolled_dense_resource_codegen_2', Source(code_str))
+            node.set_attr('resource_unrolled_dense_codegen_2', Source(code_str))
 
         else:
             n_in, n_out = node.model.config.backend.get_layer_mult_size(node)
@@ -51,7 +51,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
 
             code_str = self._generate_unrolled_function(n_in, n_out, reuse_factor, weights, node.index)
             code_str = self._add_backend_specific_pragmas_to_generated_code(code_str, model.config.backend)
-            node.set_attr('unrolled_dense_resource_codegen', Source(code_str))
+            node.set_attr('resource_unrolled_dense_codegen', Source(code_str))
 
     def _generate_unrolled_function(self, n_in, n_out, reuse_factor, weights, function_suffix):
         """
@@ -72,7 +72,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         # Variable instantiation and function pragmas
         generated_code = (
             'template<class data_T, class res_T, typename CONFIG_T>\n'
-            'class dense_unrolled_{suffix} : public DenseKernel<data_T, res_T, CONFIG_T> {{{{\n'
+            'class dense_resource_unrolled_{suffix} : public DenseKernel<data_T, res_T, CONFIG_T> {{{{\n'
             '    public:\n'
             '    static void dense(\n'
             '    data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],\n'

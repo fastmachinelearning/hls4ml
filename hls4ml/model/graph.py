@@ -10,6 +10,7 @@ from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
+from hls4ml.utils.string_utils import convert_to_snake_case
 
 
 class HLSConfig:
@@ -35,7 +36,7 @@ class HLSConfig:
         self.layer_type_targ_cycles = {}
         self.layer_name_targ_cycles = {}
 
-        self.model_strategy = 'Latency'
+        self.model_strategy = convert_to_snake_case('Latency')
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
 
@@ -217,7 +218,7 @@ class HLSConfig:
 
         strategy = layer_cfg.get('Strategy')
         if strategy is not None:
-            self.layer_name_strategy[layer_name.lower()] = strategy
+            self.layer_name_strategy[layer_name.lower()] = convert_to_snake_case(strategy)
 
         conv_implementation = layer_cfg.get('ConvImplementation')
         if conv_implementation is not None:
@@ -265,7 +266,7 @@ class HLSConfig:
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_targ_cycles = model_cfg.get('TargetCycles')
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
-            self.model_strategy = model_cfg.get('Strategy', 'Latency')
+            self.model_strategy = convert_to_snake_case(model_cfg.get('Strategy', 'Latency'))
             self.model_compression = bool(model_cfg.get('Compression', 0))
             self.pipeline_style = model_cfg.get('PipelineStyle', 'auto')
             self.pipeline_ii = model_cfg.get('PipelineInterval', None)
@@ -290,7 +291,7 @@ class HLSConfig:
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
-                    self.layer_type_strategy[layer_type.lower()] = strategy
+                    self.layer_type_strategy[layer_type.lower()] = convert_to_snake_case(strategy)
 
                 conv_implementation = layer_cfg.get('ConvImplementation')
                 if conv_implementation is not None:

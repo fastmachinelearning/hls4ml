@@ -35,17 +35,17 @@ class ValidateResourceStrategy(OptimizerPass):
             )
 
 
-class ValidateUnrolledStrategy(OptimizerPass):
+class ValidateResourceUnrolledStrategy(OptimizerPass):
     _unrolled_layer_cls = ['Conv1D', 'Conv2D', 'Dense', 'GRU', 'LSTM']
 
     def match(self, node):
         is_unrolled_layer = len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
-        is_unrolled_strategy = node.get_attr('strategy', 'latency').lower() == 'unrolled'
+        is_unrolled_strategy = node.get_attr('strategy', 'latency').lower() == 'resource_unrolled'
 
         return is_unrolled_layer and is_unrolled_strategy
 
     def transform(self, model, node):
         print(
-            f'WARNING: "Unrolled" strategy in "{node.name}" ({node.class_name}) may have unexpected II in Vitis backend.\n'
-            'Verify that the final design satisfies the latency/II constraints.'
+            f'WARNING: "ResourceUnrolled" strategy in "{node.name}" ({node.class_name}) may have unexpected II in'
+            'Vitis backend.\nVerify that the final design satisfies the latency/II constraints.'
         )

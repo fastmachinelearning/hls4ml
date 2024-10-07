@@ -111,8 +111,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
             else:
                 mult_params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
-        elif node.get_attr('strategy').lower() == 'unrolled':
-            mult_params['dense_function'] = f'dense_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params['dense_function'] = f'dense_resource_unrolled_{node.index}'
 
         mult_config = self.mult_template.format(**mult_params)
 
@@ -236,8 +236,8 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
             else:
                 mult_params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
-        elif node.get_attr('strategy').lower() == 'unrolled':
-            mult_params['dense_function'] = f'dense_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params['dense_function'] = f'dense_resource_unrolled_{node.index}'
 
         mult_config = self.mult_template.format(**mult_params)
 

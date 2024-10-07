@@ -25,7 +25,7 @@ class SetPipelineStyle(ModelOptimizerPass):
             if self._maybe_set_dataflow_resource_strategy(model):
                 return True
 
-            if self._maybe_set_pipeline_unrolled_strategy(model):
+            if self._maybe_set_pipeline_resource_unrolled_strategy(model):
                 return True
 
             if self._maybe_set_pipeline_io_parallel(model):
@@ -65,10 +65,10 @@ class SetPipelineStyle(ModelOptimizerPass):
 
         return False
 
-    def _maybe_set_pipeline_unrolled_strategy(self, model):
+    def _maybe_set_pipeline_resource_unrolled_strategy(self, model):
         have_unrolled = False
         for layer in model.get_layers():
-            if model.config.get_strategy(layer).lower() == 'unrolled':
+            if model.config.get_strategy(layer).lower() == 'resource_unrolled':
                 self._set_pipeline_style(model, 'pipeline')
                 have_unrolled = True
                 break

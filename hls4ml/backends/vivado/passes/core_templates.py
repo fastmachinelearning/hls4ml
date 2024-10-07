@@ -51,8 +51,8 @@ class DenseConfigTemplate(LayerConfigTemplate):
             else:
                 params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
-        elif node.get_attr('strategy').lower() == 'unrolled':
-            params['dense_function'] = f'dense_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            params['dense_function'] = f'dense_resource_unrolled_{node.index}'
 
         return self.template.format(**params)
 
