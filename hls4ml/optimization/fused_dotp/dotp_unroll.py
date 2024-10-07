@@ -234,7 +234,7 @@ def nadd_max(n, w_c):
         return int(arr[idx]), int(idx + 1)
 
 
-def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
+def _compile_dense(kernel: np.ndarray, inp: np.ndarray):
     "Compile a matmul operation with MAC Tree"
     ch_in, ch_out = kernel.shape
     assert ch_out == 1, 'Only single output channel is supported for each unrolled operation'
@@ -246,7 +246,7 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
         inp = inp[np.arange(len(inp)), signs]
         kernel = np.abs(kernel)
     # ==============================================================
-    if minmal_latency:
+    if _global_config.minimal_latency_compile:
         return [_min_latency_compile_dense(kernel, inp)]
 
     r: list[float | Variable | list[Variable]] = np.empty((ch_out, 0), dtype=object).tolist()
@@ -297,18 +297,18 @@ def _compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
             r[i] = x
 
     if kernel2 is not None:
-        return [r] + _compile_dense(kernel2, inp, minmal_latency)
+        return [r] + _compile_dense(kernel2, inp)
     else:
         return [r]
 
 
-def compile_dense(kernel: np.ndarray, inp: np.ndarray, minmal_latency=False):
+def compile_dense(kernel: np.ndarray, inp: np.ndarray):
     out = []
 
     if not _global_config.use_ternary and np.any(kernel):
         inp = np.stack([-inp, inp], axis=1)
     for _kernel in kernel.T:  # ch_in, 1
-        r = _compile_dense(_kernel[:, None], inp, minmal_latency=minmal_latency)
+        r = _compile_dense(_kernel[:, None], inp)
         r = balanced_reduction([x[0] for x in r])
         out.append(r)
     return np.array(out).T
@@ -324,4 +324,4 @@ def compile_conv(kernel: np.ndarray, inp: list | np.ndarray, minimal_latency=Non
     ch_in = int(np.prod(_ch_in))
     inp = np.reshape(inp, ch_in)
     kernel = np.reshape(kernel, (ch_in, ch_out))
-    return compile_dense(kernel, inp, minmal_latency=minimal_latency)
+    return compile_dense(kernel, inp)

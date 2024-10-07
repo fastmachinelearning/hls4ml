@@ -35,6 +35,7 @@ class Variable(VariableBase):
         const: float | int = 0,
         id: str | None = None,
         depth=0,
+        n_depth=0,
     ):
         """
         precision: precision of the variable. If it is a number, the Variable will define a constant.
@@ -64,6 +65,7 @@ class Variable(VariableBase):
         self.const = const
         self.children: tuple[Variable, ...] = ()
         self.depth = depth
+        self.n_depth = n_depth
 
         self._proper_precision = False
 
@@ -123,7 +125,7 @@ class Variable(VariableBase):
             const = other
 
         precision = self.precision + other
-        return Variable(precision, ancestors, operation, const, depth=self.depth + 1)
+        return Variable(precision, ancestors, operation, const, n_depth=self.n_depth, depth=self.depth)
 
     @__add__.register(VariableBase)
     def _(self, other: 'Variable'):
@@ -151,8 +153,13 @@ class Variable(VariableBase):
 
         ancestors = (self, other)
         const = 0
-        depth = max(self.depth, other.depth) + 1
-        return Variable(precision, ancestors, 'add', const, depth=depth)
+        p1, p2 = self.precision, other.precision
+        I1, I2 = p1.I, p2.I
+        f1, f2 = p1.f, p2.f
+        ddepth = max(I1, I2) + max(f1, f2)
+        n_depth = max(self.n_depth, other.n_depth) + 1
+        depth = max(self.depth, other.depth) + ddepth
+        return Variable(precision, ancestors, 'add', const, depth=depth, n_depth=n_depth)
 
     @singledispatchmethod
     def __mul__(self, other) -> 'Variable|float|int':
@@ -230,13 +237,13 @@ class Variable(VariableBase):
     def __neg__(self) -> 'Variable':
         if self.operation == 'neg':
             return self.ancestors[0]
-        return Variable(-self.precision, (self,), 'neg', depth=self.depth)
+        return Variable(-self.precision, (self,), 'neg', depth=self.depth + self.precision.b, n_depth=self.n_depth + 1)
 
     def __sub__(self, other) -> 'Variable':
-        if not isinstance(other, Variable):
-            return self + (-other)
-        depth = max(self.depth, other.depth) + 1
-        return Variable(self.precision - other.precision, (self, other), 'sub', depth=depth)
+        # if not isinstance(other, Variable):
+        return self + (-other)
+        # depth = max(self.depth, other.depth) + 1
+        # return Variable(self.precision - other.precision, (self, other), 'sub', depth=depth)
 
     def __rsub__(self, other) -> 'Variable':
         return -self + other

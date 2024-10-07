@@ -125,7 +125,9 @@ class ResourceSurrogate:
             return
         if len(arr) > 0:
             depth = max(v.depth for v in arr if isinstance(v, Variable))
+            n_depth = sum(v.n_depth for v in arr if isinstance(v, Variable))
             params['depth'] = depth
+            params['n_depth'] = n_depth
         params['pf'] = pf
         self.layers[name] = params
 
