@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from hls4ml.optimization.knapsack import solve_knapsack
+from hls4ml.optimization.dsp_aware_pruning.knapsack import solve_knapsack
 
 
 # In the simple case below, both implementations give the optimal answer

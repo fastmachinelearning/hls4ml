@@ -16,10 +16,8 @@ void dense_wrapper(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-        dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else {
-        dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
+    CONFIG_T::template kernel<data_T, res_T, CONFIG_T>::dense(data, res, weights, biases);
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
