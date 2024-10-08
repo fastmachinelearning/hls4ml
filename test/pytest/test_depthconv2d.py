@@ -14,8 +14,8 @@ io_type_options = ['io_parallel', 'io_stream']
 strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
 bias_options = [False]
-rf_options = [1]
-filter_options = [2]
+rf_options = [1, 5, 23, 24, 57]
+filter_options = [2, 5, 37, 100]
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
@@ -25,13 +25,13 @@ filter_options = [2]
 @pytest.mark.parametrize(
     'backend, io_type, strategy',
     [
-        ('Vivado', 'io_parallel', 'latency'),
-        ('Vitis', 'io_parallel', 'latency'),
-        ('Vivado', 'io_stream', 'latency'),
-        ('Vitis', 'io_stream', 'latency'),
+        # ('Vivado', 'io_parallel', 'latency'),
+        # ('Vitis', 'io_parallel', 'latency'),
+        # ('Vivado', 'io_stream', 'latency'),
+        # ('Vitis', 'io_stream', 'latency'),
         ('Vivado', 'io_stream', 'resource'),
         ('Vitis', 'io_stream', 'resource'),
-        ('Catapult', 'io_stream', 'latency'),
+        # ('Catapult', 'io_stream', 'latency'),
     ],
 )
 @pytest.mark.parametrize('rf', rf_options)

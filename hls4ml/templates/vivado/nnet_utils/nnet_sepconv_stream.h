@@ -112,7 +112,7 @@ IndexLoop:
             outstep = 0;
         }
     }
-    
+
 int out_index = 0;
 
 ReuseLoop:

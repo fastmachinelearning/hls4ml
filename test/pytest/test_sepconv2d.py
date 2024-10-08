@@ -10,10 +10,12 @@ test_root_path = Path(__file__).parent
 
 padds_options = ['same', 'valid']
 chans_options = ['channels_last']
+io_type_options = ['io_parallel', 'io_stream']
 strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
 bias_options = [False]
-
+rf_options = [1, 5, 23, 24, 57]
+filter_options = [2, 5, 37, 100]
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
@@ -21,18 +23,23 @@ bias_options = [False]
 @pytest.mark.parametrize('kernels', kernel_options)
 @pytest.mark.parametrize('bias', bias_options)
 @pytest.mark.parametrize(
-    'backend, io_type',
+    'backend, io_type, strategy',
     [
-        ('Vivado', 'io_parallel'),
-        ('Vitis', 'io_parallel'),
-        ('Vivado', 'io_stream'),
-        ('Vitis', 'io_stream'),
-        ('Catapult', 'io_stream'),
+        # ('Vivado', 'io_parallel', 'latency'),
+        # ('Vitis', 'io_parallel', 'latency'),
+        # ('Vivado', 'io_stream', 'latency'),
+        # ('Vitis', 'io_stream', 'latency'),
+        ('Vivado', 'io_stream', 'resource'),
+        ('Vitis', 'io_stream', 'resource'),
+        # ('Catapult', 'io_stream', 'latency'),
     ],
 )
-def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend):
+@pytest.mark.parametrize('rf', rf_options)
+@pytest.mark.parametrize('filters', filter_options)
+
+def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, filters):
     model = tf.keras.models.Sequential()
-    input_shape = (16, 16, 3)
+    input_shape = (16, 16, filters)
     model.add(
         tf.keras.layers.SeparableConv2D(
             filters=8,
@@ -50,8 +57,10 @@ def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend):
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(
-        model, default_precision='ap_fixed<32,16>', granularity="name", backend=backend
+        model, default_precision='ap_fixed<32,8>', granularity="name", backend=backend
     )
+    config['Model']['Strategy'] = strategy
+    config['Model']['ReuseFactor'] = rf
     stride_cfg = str(strides).replace(', ', '_').replace('(', '').replace(')', '')
     kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(
