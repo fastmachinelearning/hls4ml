@@ -725,10 +725,13 @@ class VivadoWriter(Writer):
         # build_lib.sh
         build_lib_src = (filedir / '../templates/vivado/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+        weights_dir = (build_lib_dst.parent / 'firmware/weights').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
             for line in src.readlines():
                 line = line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
+                if line.startswith('WEIGHTS_DIR='):
+                    line = f'WEIGHTS_DIR=\\""{weights_dir}\\""\n'
 
                 dst.write(line)
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
