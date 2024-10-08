@@ -4,28 +4,6 @@
 #include "hls_stream.h"
 #include "nnet_common.h"
 #include "nnet_conv_stream.h"
-#include <iostream>
-#include <type_traits>
-
-template<int N>
-struct print_value;
-
-template<>
-struct print_value<true> {};
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
-template<int multiplier_limit, int nout, int rufactor, int n_chan, int nin>
-void check_values() {
-    // This will give a static_assert failure with values printed
-    static_assert((nin == multiplier_limit*rufactor), 
-                  "Static Assertion failed: multiplier_limit = " 
-                  TOSTRING(multiplier_limit) ", nout = " 
-                  TOSTRING(nout) ", n_chan = " 
-                  TOSTRING(n_chan) ", nin = " TOSTRING(nin));
-}
-
 namespace nnet {
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -41,9 +19,7 @@ void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * 
     const int block_factor = DIV_ROUNDUP(nin, CONFIG_T::reuse_factor);
     // const int multscale = multiplier_limit;
 
-    std::cout << "LT filters = " <<  CONFIG_T::n_chan << " rf = " << CONFIG_T::reuse_factor << " Block factor = " << block_factor << "\n";
-    check_values<multiplier_limit, nout, rufactor, CONFIG_T::n_chan, nin>();
-    assert((multiplier_limit % nout == 0 || rufactor > CONFIG_T::n_chan) && "The current Reuse Factor is not allowed");
+    // assert((multiplier_limit % nout == 0 || rufactor > CONFIG_T::n_chan) && "The current Reuse Factor is not allowed");
     assert((multiplier_limit == block_factor) && "This function is correct only for RF <= N_IN");
 
     #pragma HLS function_instantiate variable=weights,biases
@@ -107,9 +83,7 @@ void depthwise_product_resource_rf_geq_nchan_rem0(data_T data[CONFIG_T::kernel_s
     const int block_factor = DIV_ROUNDUP(nin, CONFIG_T::reuse_factor);
     // const int multscale = multiplier_limit;
 
-    std::cout << "REM0 filters = " <<  CONFIG_T::n_chan << " rf = " << CONFIG_T::reuse_factor << "\n";
-
-    assert((multiplier_limit % nout == 0 || rufactor >= CONFIG_T::n_chan) && "The current Reuse Factor is not allowed");
+    // assert((multiplier_limit % nout == 0 || rufactor >= CONFIG_T::n_chan) && "The current Reuse Factor is not allowed");
     assert((rufactor >= CONFIG_T::n_chan && rufactor % CONFIG_T::n_chan == 0) && "This function is correct only for RF >= N_IN && RF % N_IN == 0");
 
     #pragma HLS function_instantiate variable=weights,biases
@@ -128,26 +102,25 @@ InitAccum:
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
 
-// int outidx[rufactor];
-// int outstep = 0;
-// IndexLoop:
-//     for (int ir = 0; ir < rufactor; ir++) {
-//         outidx[ir] = outstep;
-//         outstep++;
-//         if (outstep == CONFIG_T::n_chan) {
-//             outstep = 0;
-//         }
-//     }
-// int out_index = -1;
+int outidx[rufactor];
+int outstep = 0;
+IndexLoop:
+    for (int ir = 0; ir < rufactor; ir++) {
+        outidx[ir] = outstep;
+        outstep++;
+        if (outstep == CONFIG_T::n_chan) {
+            outstep = 0;
+        }
+    }
+    
+int out_index = 0;
 
 ReuseLoop:
     for (int ir = 0; ir < rufactor; ir++) {
         #pragma HLS PIPELINE II=1 rewind
 
         int in_index = ir;
-
-        // out_index = outidx[ir];
-        int out_index = ir % CONFIG_T::n_chan;
+        out_index = outidx[ir];
 
     MultLoop:
         for (int im = 0; im < block_factor; im++) {
@@ -180,8 +153,6 @@ void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * 
     // const int multiplier_limit = DIV_ROUNDUP(nin, multfactor);
     const int block_factor = DIV_ROUNDUP(nin, CONFIG_T::reuse_factor);
     // const int multscale = multiplier_limit;
-
-    std::cout << "GT filters = " <<  CONFIG_T::n_chan << " rf = " << CONFIG_T::reuse_factor << "\n";
 
     // assert((multiplier_limit % nout == 0 || rufactor >= nin) && "The current Reuse Factor is not allowed");
     assert((rufactor > CONFIG_T::n_chan) && "This function is correct only for RF > N_IN");
