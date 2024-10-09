@@ -1,5 +1,6 @@
 import os
 from contextlib import contextmanager
+from warnings import warn
 
 import numpy as np
 
@@ -54,6 +55,7 @@ class QuartusBackend(FPGABackend):
             'quartus:transform_types',
             'quartus:register_bram_weights',
             'quartus:apply_resource_strategy',
+            'quartus:generate_conv_im2col',
             'quartus:apply_winograd_kernel_transformation',
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
@@ -73,6 +75,7 @@ class QuartusBackend(FPGABackend):
             'quartus:inplace_stream_flatten',
             'quartus:skip_softmax',
             'quartus:fix_softmax_table_size',
+            'quartus:process_fixed_point_quantizer_layer',
             'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
@@ -101,9 +104,8 @@ class QuartusBackend(FPGABackend):
         ]
 
         if len(extras) > 0:
-            extras_flow = register_flow('extras', extras, requires=[init_flow], backend=self.name)
-        else:
-            extras_flow = None
+            for opt in extras:
+                warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
         ip_flow_requirements = [
             'optimize',
@@ -112,10 +114,8 @@ class QuartusBackend(FPGABackend):
             quantization_flow,
             optimization_flow,
             quartus_types_flow,
-            extras_flow,
             template_flow,
         ]
-        ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
@@ -265,7 +265,17 @@ class QuartusBackend(FPGABackend):
         n_in, n_out = self.get_layer_mult_size(layer)
         self.set_target_reuse_factor(layer)
         self.set_closest_reuse_factor(layer, n_in, n_out)
-        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # Not overriding user parallelization factor, if already set and user has not specified a value
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        layer_pf = layer.get_attr('parallelization_factor', None)
+        chosen_pf = user_pf or layer_pf or 1
+        if user_pf is not None and layer_pf is not None:
+            if user_pf != layer_pf:
+                warn(
+                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
+                )
+        layer.set_attr('parallelization', chosen_pf)
 
         # impl_filt_width determines the filter size post-Winograd transformation
         layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
@@ -274,7 +284,7 @@ class QuartusBackend(FPGABackend):
         # - combination - at compile-time, the decision between Winograd and im2col is made
         # - im2col - specifically use im2col
         # - Winograd - use Winograd, if possible
-        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'im2col'))
 
         layer.set_attr(
             'n_partitions', 1
@@ -295,7 +305,17 @@ class QuartusBackend(FPGABackend):
         n_in, n_out = self.get_layer_mult_size(layer)
         self.set_target_reuse_factor(layer)
         self.set_closest_reuse_factor(layer, n_in, n_out)
-        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # Not overriding user parallelization factor, if already set and user has not specified a value
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        layer_pf = layer.get_attr('parallelization_factor', None)
+        chosen_pf = user_pf or layer_pf or 1
+        if user_pf is not None and layer_pf is not None:
+            if user_pf != layer_pf:
+                warn(
+                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
+                )
+        layer.set_attr('parallelization', chosen_pf)
 
         # impl_filt_width & impl_filt_height determine the filter size post-Winograd transformation
         layer.set_attr('impl_filt_height', layer.get_attr('filt_height'))
@@ -305,7 +325,7 @@ class QuartusBackend(FPGABackend):
         # - combination - at compile-time, the decision between Winograd and im2col is made
         # - im2col - specifically use im2col
         # - Winograd - use Winograd, if possible
-        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'im2col'))
 
         layer.set_attr(
             'n_partitions', 1

@@ -33,7 +33,7 @@ def garnet_models():
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     config['Model'] = {}
     config['Model']['ReuseFactor'] = 1
     config['Model']['Strategy'] = 'Latency'
@@ -68,7 +68,7 @@ def garnet_stack_models():
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     config['Model'] = {}
     config['Model']['ReuseFactor'] = 1
     config['Model']['Strategy'] = 'Latency'

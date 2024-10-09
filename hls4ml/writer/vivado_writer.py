@@ -1,7 +1,9 @@
 import glob
 import os
+import stat
 import tarfile
 from collections import OrderedDict
+from pathlib import Path
 from shutil import copyfile, copytree, rmtree
 
 import numpy as np
@@ -13,36 +15,40 @@ config_filename = 'hls4ml_config.yml'
 
 
 class VivadoWriter(Writer):
-    def print_array_to_cpp(self, var, odir, write_txt_file=True):
+    def print_array_to_cpp(self, var, odir, namespace=None, write_txt_file=True):
         """Write a weights array to C++ header files.
 
         Args:
             var (WeightVariable): Weight to write
             odir (str): Output directory
+            namespace (str, optional): Writes a namespace for the weights to avoid clashes with global variables.
             write_txt_file (bool, optional): Write txt files in addition to .h files. Defaults to True.
         """
 
-        h_file = open(f"{odir}/firmware/weights/{var.name}.h", "w")
+        h_file = open(f'{odir}/firmware/weights/{var.name}.h', 'w')
         if write_txt_file:
-            txt_file = open(f"{odir}/firmware/weights/{var.name}.txt", "w")
+            txt_file = open(f'{odir}/firmware/weights/{var.name}.txt', 'w')
 
         # meta data
-        h_file.write(f"//Numpy array shape {var.shape}\n")
-        h_file.write(f"//Min {np.min(var.min):.12f}\n")
-        h_file.write(f"//Max {np.max(var.max):.12f}\n")
-        h_file.write(f"//Number of zeros {var.nzeros}\n")
-        h_file.write("\n")
+        h_file.write(f'//Numpy array shape {var.shape}\n')
+        h_file.write(f'//Min {np.min(var.min):.12f}\n')
+        h_file.write(f'//Max {np.max(var.max):.12f}\n')
+        h_file.write(f'//Number of zeros {var.nzeros}\n')
+        h_file.write('\n')
 
-        h_file.write(f"#ifndef {var.name.upper()}_H_\n")
-        h_file.write(f"#define {var.name.upper()}_H_\n")
-        h_file.write("\n")
+        h_file.write(f'#ifndef {var.name.upper()}_H_\n')
+        h_file.write(f'#define {var.name.upper()}_H_\n')
+        h_file.write('\n')
+
+        if namespace is not None:
+            h_file.write(f'namespace {namespace} {{\n\n')
 
         if write_txt_file:
-            h_file.write("#ifndef __SYNTHESIS__\n")
-            h_file.write(var.definition_cpp() + ";\n")
-            h_file.write("#else\n")
+            h_file.write('#ifndef __SYNTHESIS__\n')
+            h_file.write(var.definition_cpp() + ';\n')
+            h_file.write('#else\n')
 
-        h_file.write(var.definition_cpp() + " = {")
+        h_file.write(var.definition_cpp() + ' = {')
 
         # fill c++ array.
         # not including internal brackets for multidimensional case
@@ -51,12 +57,17 @@ class VivadoWriter(Writer):
             h_file.write(sep + x)
             if write_txt_file:
                 txt_file.write(sep + x)
-            sep = ", "
-        h_file.write("};\n")
+            sep = ', '
+        h_file.write('};\n\n')
+
         if write_txt_file:
-            h_file.write("#endif\n")
+            h_file.write('#endif\n')
             txt_file.close()
-        h_file.write("\n#endif\n")
+
+        if namespace is not None:
+            h_file.write('}\n\n')
+
+        h_file.write('\n#endif\n')
         h_file.close()
 
     def write_project_dir(self, model):
@@ -124,6 +135,7 @@ class VivadoWriter(Writer):
             # Add headers to weights and biases
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+
             elif '// hls-fpga-machine-learning insert header' in line:
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
@@ -136,22 +148,52 @@ class VivadoWriter(Writer):
                     newline += ',\n' + brams_str
                 newline += '\n'
 
+            elif '// hls-fpga-machine-learning insert namespace-start' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += f'namespace {namespace} {{\n'
+
+            elif '// hls-fpga-machine-learning insert namespace-end' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += '}\n'
+
             elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
-                for layer in model.get_layers():
-                    for w in layer.get_weights():
-                        if w.weight_class == 'CompressedWeightVariable':
-                            newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
-                                w.type.name, w.nonzeros, w.name, w.name
-                            )
-                        elif w.weight_class == 'ExponentWeightVariable':
-                            newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
-                                w.type.name, w.data_length, w.name, w.name
-                            )
-                        else:
-                            newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
-                                w.type.name, w.data_length, w.name, w.name
-                            )
+                if model.config.get_writer_config()['WriteWeightsTxt']:
+
+                    newline += '#ifndef __SYNTHESIS__\n'
+                    newline += '    static bool loaded_weights = false;\n'
+                    newline += '    if (!loaded_weights) {\n'
+
+                    for layer in model.get_layers():
+                        for w in layer.get_weights():
+                            if w.weight_class == 'CompressedWeightVariable':
+                                newline += (
+                                    indent
+                                    + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                        w.type.name, w.nonzeros, w.name, w.name
+                                    )
+                                )
+                            elif w.weight_class == 'ExponentWeightVariable':
+                                newline += (
+                                    indent
+                                    + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                        w.type.name, w.data_length, w.name, w.name
+                                    )
+                                )
+                            else:
+                                newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                    w.type.name, w.data_length, w.name, w.name
+                                )
+
+                    newline += '        loaded_weights = true;'
+                    newline += '    }\n'
+                    newline += '#endif'
 
             # Add input/output type
             elif '// hls-fpga-machine-learning insert IO' in line:
@@ -242,8 +284,10 @@ class VivadoWriter(Writer):
         for line in f.readlines():
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
+
             elif 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+
             elif '// hls-fpga-machine-learning insert header' in line:
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
@@ -255,6 +299,21 @@ class VivadoWriter(Writer):
                 if len(model_brams) > 0:
                     newline += ',\n' + brams_str
                 newline += '\n'
+
+            elif '// hls-fpga-machine-learning insert namespace-start' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += f'namespace {namespace} {{\n'
+
+            elif '// hls-fpga-machine-learning insert namespace-end' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += '}\n'
+
             else:
                 newline = line
             fout.write(newline)
@@ -300,6 +359,20 @@ class VivadoWriter(Writer):
                 for used_type in all_precision.values():
                     newline += used_type.definition_cpp()
 
+            elif '// hls-fpga-machine-learning insert namespace-start' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += f'namespace {namespace} {{\n'
+
+            elif '// hls-fpga-machine-learning insert namespace-end' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += '}\n'
+
             else:
                 newline = line
             fout.write(newline)
@@ -336,6 +409,21 @@ class VivadoWriter(Writer):
                     if config:
                         newline += '// ' + layer.name + '\n'
                         newline += config + '\n'
+
+            elif '// hls-fpga-machine-learning insert namespace-start' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += f'namespace {namespace} {{\n'
+
+            elif '// hls-fpga-machine-learning insert namespace-end' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += '}\n'
+
             else:
                 newline = line
             fout.write(newline)
@@ -348,9 +436,13 @@ class VivadoWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
+        namespace = model.config.get_writer_config().get('Namespace', None)
+        write_txt = model.config.get_writer_config().get('WriteWeightsTxt', True)
         for layer in model.get_layers():
             for weights in layer.get_weights():
-                self.print_array_to_cpp(weights, model.config.get_output_dir())
+                self.print_array_to_cpp(
+                    weights, model.config.get_output_dir(), namespace=namespace, write_txt_file=write_txt
+                )
 
     def __make_dat_file(self, original_path, project_path):
         """
@@ -420,10 +512,12 @@ class VivadoWriter(Writer):
             # Insert numbers
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
                 offset = 0
@@ -435,6 +529,7 @@ class VivadoWriter(Writer):
                     offset += inp.size()
                 for out in model_outputs:
                     newline += '      ' + out.definition_cpp() + ';\n'
+
             elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model_inputs:
@@ -442,6 +537,7 @@ class VivadoWriter(Writer):
                     newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
                     newline += '    ' + out.definition_cpp() + ';\n'
+
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
@@ -455,6 +551,7 @@ class VivadoWriter(Writer):
                 top_level = indent + f'{model.config.get_project_name()}({all_vars});\n'
 
                 newline += top_level
+
             elif '// hls-fpga-machine-learning insert predictions' in line:
                 newline = line
                 for out in model_outputs:
@@ -462,12 +559,14 @@ class VivadoWriter(Writer):
                     newline += indent + '  std::cout << pr[i] << " ";\n'
                     newline += indent + '}\n'
                     newline += indent + 'std::cout << std::endl;\n'
+
             elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 for out in model_outputs:
                     newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
                         out.type.name, out.size_cpp(), out.name
                     )  # TODO enable this
+
             elif (
                 '// hls-fpga-machine-learning insert output' in line
                 or '// hls-fpga-machine-learning insert quantized' in line
@@ -477,6 +576,14 @@ class VivadoWriter(Writer):
                     newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, true);\n'.format(
                         out.type.name, out.size_cpp(), out.name
                     )
+
+            elif '// hls-fpga-machine-learning insert namespace' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += indent + f'using namespace {namespace};\n'
+
             else:
                 newline = line
             fout.write(newline)
@@ -503,12 +610,15 @@ class VivadoWriter(Writer):
         for line in f.readlines():
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
+
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
+
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
                 inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
@@ -517,6 +627,7 @@ class VivadoWriter(Writer):
                 newline = ''
                 newline += indent + inputs_str + ',\n'
                 newline += indent + outputs_str + '\n'
+
             elif '// hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
@@ -548,6 +659,7 @@ class VivadoWriter(Writer):
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(
                         o.type.name, dtype, o.size_cpp(), o.name, o.name
                     )
+
             elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
@@ -560,6 +672,13 @@ class VivadoWriter(Writer):
                                 + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
                                 + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
                             )
+
+            elif '// hls-fpga-machine-learning insert namespace' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += indent + f'using namespace {namespace};\n'
 
             else:
                 newline = line
@@ -575,47 +694,46 @@ class VivadoWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
 
-        filedir = os.path.dirname(os.path.abspath(__file__))
+        filedir = Path(__file__).parent
 
         # project.tcl
-        f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
-        f.write('variable project_name\n')
-        f.write(f'set project_name "{model.config.get_project_name()}"\n')
-        f.write('variable backend\n')
-        f.write('set backend "vivado"\n')
-        f.write('variable part\n')
-        f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
-        f.write('variable clock_period\n')
-        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
-        f.write('variable clock_uncertainty\n')
-        f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
-        f.write('variable version\n')
-        f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
-        f.write('variable maximum_size\n')
-        f.write('set maximum_size {}\n'.format(model.config.get_config_value('MaximumSize', '4096')))
-        f.close()
+        prj_tcl_dst = Path(f'{model.config.get_output_dir()}/project.tcl')
+        with open(prj_tcl_dst, 'w') as f:
+            f.write('variable project_name\n')
+            f.write(f'set project_name "{model.config.get_project_name()}"\n')
+            f.write('variable backend\n')
+            f.write('set backend "vivado"\n')
+            f.write('variable part\n')
+            f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
+            f.write('variable clock_period\n')
+            f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+            f.write('variable clock_uncertainty\n')
+            f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
+            f.write('variable version\n')
+            f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
+            f.write('variable maximum_size\n')
+            f.write('set maximum_size {}\n'.format(model.config.get_config_value('MaximumSize', '4096')))
 
         # build_prj.tcl
-        srcpath = os.path.join(filedir, '../templates/vivado/build_prj.tcl')
+        srcpath = (filedir / '../templates/vivado/build_prj.tcl').resolve()
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
 
         # vivado_synth.tcl
-        srcpath = os.path.join(filedir, '../templates/vivado/vivado_synth.tcl')
+        srcpath = (filedir / '../templates/vivado/vivado_synth.tcl').resolve()
         dstpath = f'{model.config.get_output_dir()}/vivado_synth.tcl'
         copyfile(srcpath, dstpath)
 
         # build_lib.sh
-        f = open(os.path.join(filedir, '../templates/vivado/build_lib.sh'))
-        fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
+        build_lib_src = (filedir / '../templates/vivado/build_lib.sh').resolve()
+        build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+        with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
+            for line in src.readlines():
+                line = line.replace('myproject', model.config.get_project_name())
+                line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
-        for line in f.readlines():
-            line = line.replace('myproject', model.config.get_project_name())
-            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
-
-            fout.write(line)
-        f.close()
-        fout.close()
+                dst.write(line)
+        build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def write_nnet_utils(self, model):
         """Copy the nnet_utils, AP types headers and any custom source to the project output directory
@@ -709,8 +827,13 @@ class VivadoWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
 
-        with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
-            archive.add(model.config.get_output_dir(), recursive=True)
+        write_tar = model.config.get_writer_config().get('WriteTar', False)
+        if write_tar:
+            tar_path = model.config.get_output_dir() + '.tar.gz'
+            if os.path.exists(tar_path):
+                os.remove(tar_path)
+            with tarfile.open(tar_path, mode='w:gz') as archive:
+                archive.add(model.config.get_output_dir(), recursive=True)
 
     def write_hls(self, model):
         print('Writing HLS project')

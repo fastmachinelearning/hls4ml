@@ -1,6 +1,6 @@
 import math
-import os
 import re
+import subprocess
 from bisect import bisect_left
 from collections.abc import Iterable
 
@@ -55,8 +55,6 @@ class FPGABackend(Backend):
             Dense,
             Conv1D,
             Conv2D,
-            SeparableConv1D,
-            SeparableConv2D,
             Pooling1D,
             Pooling2D,
             GlobalPooling1D,
@@ -77,6 +75,16 @@ class FPGABackend(Backend):
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('reuse_factor', default=1))
+            self.attribute_map[layer] = attrs
+
+        # seperable is kind of special because it is effectively two layers that will be split
+        for layer in (SeparableConv1D, SeparableConv2D):
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('depthwise_accum'))
+            attrs.append(TypeAttribute('pointwise_accum'))
+            attrs.append(TypeAttribute('depthwise_result'))
+            attrs.append(ConfigurableAttribute('depthwise_reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('pointwise_reuse_factor', default=1))
             self.attribute_map[layer] = attrs
 
         act_attrs = self.attribute_map.get(Activation, [])
@@ -123,19 +131,22 @@ class FPGABackend(Backend):
         Returns:
             string: Returns the name of the compiled library.
         """
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
 
         lib_name = None
-        try:
-            ret_val = os.system('bash build_lib.sh')
-            if ret_val != 0:
-                raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
-            lib_name = '{}/firmware/{}-{}.so'.format(
-                model.config.get_output_dir(), model.config.get_project_name(), model.config.get_config_value('Stamp')
-            )
-        finally:
-            os.chdir(curr_dir)
+        ret_val = subprocess.run(
+            ['./build_lib.sh'],
+            shell=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=model.config.get_output_dir(),
+        )
+        if ret_val.returncode != 0:
+            print(ret_val.stdout)
+            raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
+        lib_name = '{}/firmware/{}-{}.so'.format(
+            model.config.get_output_dir(), model.config.get_project_name(), model.config.get_config_value('Stamp')
+        )
 
         return lib_name
 
@@ -685,7 +696,7 @@ class FPGABackend(Backend):
 
         The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
         to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
-        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        the result depends on the parameters of the convolution layer (the input size, the kernel size, stride etc),
         we need to do this for every convolution layer.
 
         Args:
@@ -782,7 +793,7 @@ class FPGABackend(Backend):
 
         The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
         to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
-        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        the result depends on the parameters of the convolution layer (the input size, the kernel size, stride etc),
         we need to do this for every convolution layer.
 
         Args:

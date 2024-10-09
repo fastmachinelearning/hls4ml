@@ -1,5 +1,7 @@
 import glob
 import os
+import stat
+from pathlib import Path
 from shutil import copyfile, copytree, rmtree
 
 from hls4ml.backends import get_backend
@@ -56,49 +58,48 @@ class SymbolicExpressionWriter(VivadoWriter):
             model (ModelGraph): the hls4ml model.
         """
 
-        filedir = os.path.dirname(os.path.abspath(__file__))
+        filedir = Path(__file__).parent
+
+        # project.tcl
+        prj_tcl_dst = Path(f'{model.config.get_output_dir()}/project.tcl')
+        with open(prj_tcl_dst, 'w') as f:
+            f.write('variable project_name\n')
+            f.write(f'set project_name "{model.config.get_project_name()}"\n')
+            f.write('variable backend\n')
+            f.write('set backend "vivado"\n')
+            f.write('variable part\n')
+            f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
+            f.write('variable clock_period\n')
+            f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+            f.write('variable clock_uncertainty\n')
+            f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '0%')))
+            f.write('variable version\n')
+            f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
 
         # build_prj.tcl
-        f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
-        f.write('variable project_name\n')
-        f.write(f'set project_name "{model.config.get_project_name()}"\n')
-        f.write('variable backend\n')
-        f.write('set backend "vivado"\n')
-        f.write('variable part\n')
-        f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
-        f.write('variable clock_period\n')
-        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
-        f.write('variable clock_uncertainty\n')
-        f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '0%')))
-        f.write('variable version\n')
-        f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
-        f.close()
-
-        # build_prj.tcl
-        srcpath = os.path.join(filedir, '../templates/vivado/build_prj.tcl')
+        srcpath = (filedir / '../templates/vivado/build_prj.tcl').resolve()
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
 
         # vivado_synth.tcl
-        srcpath = os.path.join(filedir, '../templates/vivado/vivado_synth.tcl')
+        srcpath = (filedir / '../templates/vivado/vivado_synth.tcl').resolve()
         dstpath = f'{model.config.get_output_dir()}/vivado_synth.tcl'
         copyfile(srcpath, dstpath)
 
         # build_lib.sh
-        f = open(os.path.join(filedir, '../templates/symbolic/build_lib.sh'))
-        fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
+        build_lib_src = (filedir / '../templates/symbolic/build_lib.sh').resolve()
+        build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+        with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
+            for line in src.readlines():
+                line = line.replace('myproject', model.config.get_project_name())
+                line = line.replace('mystamp', model.config.get_config_value('Stamp'))
+                line = line.replace('mylibspath', model.config.get_config_value('HLSLibsPath'))
 
-        for line in f.readlines():
-            line = line.replace('myproject', model.config.get_project_name())
-            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
-            line = line.replace('mylibspath', model.config.get_config_value('HLSLibsPath'))
+                if 'LDFLAGS=' in line and not os.path.exists(model.config.get_config_value('HLSLibsPath')):
+                    line = 'LDFLAGS=\n'
 
-            if 'LDFLAGS=' in line and not os.path.exists(model.config.get_config_value('HLSLibsPath')):
-                line = 'LDFLAGS=\n'
-
-            fout.write(line)
-        f.close()
-        fout.close()
+                dst.write(line)
+        build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def write_hls(self, model):
         print('Writing HLS project')
