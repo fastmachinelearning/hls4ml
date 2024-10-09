@@ -82,9 +82,3 @@ class PointwiseConv2D(Conv2D):
 
     # Nothing to do, will pick up function and config from class name
     pass
-
-class DepthwiseConv2D(Conv2D):
-    '''depthwise2d.'''
-
-    # Nothing to do, will pick up function and config from class name
-    pass
