@@ -29,6 +29,7 @@ bias_options = [False]
         ('Vivado', 'io_stream'),
         ('Vitis', 'io_stream'),
         ('Catapult', 'io_stream'),
+        ('oneAPI', 'io_parallel')
     ],
 )
 def test_depthconv2d(chans, padds, strides, kernels, bias, io_type, backend):

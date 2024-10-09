@@ -254,7 +254,7 @@ sepconv_config_template = """struct config{index} {{
     typedef {pointwise_config} pointwise_config;
 }};\n"""
 
-sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_resource.h', 'nnet_utils/nnet_sepconv2d.h', 'nnet_utils/nnet_sepconv2d_latency.h']
+sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_resource.h', 'nnet_utils/nnet_depthconv2d.h', 'nnet_utils/nnet_depthconv2d_resource.h']
 
 
 class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):

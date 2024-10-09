@@ -7,7 +7,7 @@ import numpy as np
 from hls4ml.backends import FPGABackend
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
-from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
+from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, SeparableConv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 
