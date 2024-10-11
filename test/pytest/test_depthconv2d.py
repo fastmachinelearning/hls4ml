@@ -27,8 +27,8 @@ filter_options = [2, 5, 37, 100]
     [
         # ('Vivado', 'io_parallel', 'latency'),
         # ('Vitis', 'io_parallel', 'latency'),
-        # ('Vivado', 'io_stream', 'latency'),
-        # ('Vitis', 'io_stream', 'latency'),
+        ('Vivado', 'io_stream', 'latency'),
+        ('Vitis', 'io_stream', 'latency'),
         ('Vivado', 'io_stream', 'resource'),
         ('Vitis', 'io_stream', 'resource'),
         # ('Catapult', 'io_stream', 'latency'),
@@ -64,8 +64,7 @@ def test_depthconv2d(chans, padds, strides, kernels, bias, io_type, backend, str
     kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(
         test_root_path
-        / 'hls4mlprj_depthconv2d_{}_strides_{}_kernels_{}_{}_padding_{}_{}'.format(
-            chans, stride_cfg, kernel_cfg, padds, backend, io_type
+        / f'hls4mlprj_depthconv2d_{chans}_strides_{stride_cfg}_kernels_{kernel_cfg}_padding_{padds}_backend_{backend}_io_{io_type}_strategy_{strategy}_rf_{rf}_filters_{filters}'.format(
         )
     )
     hls_model = hls4ml.converters.convert_from_keras_model(

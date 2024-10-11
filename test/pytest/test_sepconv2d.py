@@ -15,7 +15,7 @@ strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
 bias_options = [False]
 rf_options = [1, 5, 23, 24, 57]
-filter_options = [2, 5, 37, 100]
+input_size_options = [2, 5, 37, 100]
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
@@ -35,11 +35,11 @@ filter_options = [2, 5, 37, 100]
     ],
 )
 @pytest.mark.parametrize('rf', rf_options)
-@pytest.mark.parametrize('filters', filter_options)
+@pytest.mark.parametrize('input_size', input_size_options)
 
-def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, filters):
+def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, input_size):
     model = tf.keras.models.Sequential()
-    input_shape = (16, 16, filters)
+    input_shape = (16, 16, input_size)
     model.add(
         tf.keras.layers.SeparableConv2D(
             filters=8,
@@ -65,8 +65,7 @@ def test_sepconv2d(chans, padds, strides, kernels, bias, io_type, backend, strat
     kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(
         test_root_path
-        / 'hls4mlprj_sepconv2d_{}_strides_{}_kernels_{}_{}_padding_{}_{}'.format(
-            chans, stride_cfg, kernel_cfg, padds, backend, io_type
+        / f'hls4mlprj_sepconv2d_{chans}_strides_{stride_cfg}_kernels_{kernel_cfg}_padding_{padds}_backend_{backend}_io_{io_type}_strategy_{strategy}_rf_{rf}_input_size_{input_size}'.format(
         )
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
