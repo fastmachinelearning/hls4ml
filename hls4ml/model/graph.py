@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 import numpy as np
 import numpy.ctypeslib as npc
+import copy
 
 from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
@@ -402,13 +403,13 @@ class ModelGraph(Serializable):
         outputs (list, optional):  The outputs to the model. If None, determined from layer_list
     """
 
-    def __init__(self, config, inputs=None, outputs=None):
+    def __init__(self, config, inputs=None, outputs=None, initial_index=0):
         self.config = config
         self.inputs = inputs
         self.outputs = outputs
         self.graph = OrderedDict()
         self._applied_flows = []  # keep track of the applied flows
-        self.index = 0
+        self.index = initial_index
         self.output_vars = {}
         self._top_function_lib = None
 
@@ -1028,3 +1029,86 @@ class ModelGraph(Serializable):
         from hls4ml.utils.serialization import serialize_model
 
         serialize_model(self, file_path)
+
+    @classmethod
+    def make_multi_graph(cls, config, layer_list, output_shapes, split_layer_names):
+        """Splits the layer list at the specified layers and creates multiple ModelGraphs.
+
+        Args:
+            config (dict): The configuration dictionary.
+            layer_list (list(dict)): The list of layers.
+            split_layer_names (List[str]): The names of the layers to split at.
+
+        Returns:
+            List[ModelGraph]: List of ModelGraph instances resulting from the splits.
+        """
+        if not split_layer_names:
+            raise ValueError("No split layer names provided.")
+
+        layer_names = [layer['name'] for layer in layer_list]
+
+        # NOTE - Might need to validate again that split layer names exist in layer list
+        for name in split_layer_names:
+            if name not in layer_names:
+                raise ValueError(f"Layer '{name}' not found in the model.")
+
+        # Get split indices and sort them
+        split_indices = sorted([layer_names.index(name) for name in split_layer_names])
+
+        # Add start and end indices to cover the entire layer list
+        indices = [0] + split_indices + [len(layer_list)]
+
+        # Split the layer_list into subgraphs
+        subgraphs_layer_lists = []
+        for i in range(len(indices) - 1):
+            start = indices[i]
+            end = indices[i + 1]
+            sub_layer_list = layer_list[start:end]
+            subgraphs_layer_lists.append(sub_layer_list)
+
+        # Create ModelGraphs for each subgraph
+        model_graphs = []
+        original_OutputDir = config['OutputDir']
+        original_ProjectName = config['ProjectName']
+        current_index = 0
+        for idx, sub_layer_list in enumerate(subgraphs_layer_lists):
+            # For subgraphs after the first one, insert a new input layer
+            if idx > 0:
+                # Get the previous layer's name and output shape
+                previous_layer_index = indices[idx] - 1
+                previous_layer = layer_list[previous_layer_index]
+                previous_layer_name = previous_layer['name']
+                input_shape = output_shapes.get(previous_layer_name, None)
+                #NOTE - Verify that the input shape is correctly identified
+                if input_shape is None:
+                    raise ValueError(f"Could not find input_shape of '{split_layer_names[idx - 1]}'.")
+                
+                current_split_layer = sub_layer_list[0]
+                input_layer_dict = {
+                    'name': current_split_layer['name'] + '_input',
+                    'class_name': 'InputLayer',
+                    'data_format': 'channels_last',
+                    'input_shape': input_shape[1:],
+                }
+                # Reset the inputs of the split layer in the current graph
+                #NOTE - Better allow it to automatically determine its inputs
+                sub_layer_list[0]['inputs'] = []
+                # Then insert the new input layer at the beginning
+                sub_layer_list.insert(0, input_layer_dict)
+
+            # Create a shallow copy of the config for each subgraph
+            sub_config = copy.copy(config)
+            sub_config['OutputDir'] = f"{original_OutputDir}_graph{idx + 1}"
+            sub_config['ProjectName'] = f"{original_ProjectName}_graph{idx + 1}"
+            hls_model = ModelGraph(sub_config, sub_layer_list, None, None, initial_index=current_index)
+            
+            # Update the current index for the next graph
+            # Get the index of the last element in the graph
+            layer_indices = [layer.index for layer in hls_model.graph.values()]
+            if layer_indices:
+                max_index = max(layer_indices)
+                current_index = max_index - 1 # we have the input layer as well
+            
+            model_graphs.append(hls_model)
+
+        return model_graphs
