@@ -322,9 +322,44 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config):
+def keras_to_hls(config, split_layer_name = 'fc2'):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
+    
     print('Creating HLS model...')
-    hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
+    if split_layer_name is not None:
+        
+        if 'conv' not in split_layer_name and 'fc' not in split_layer_name:
+            raise ValueError(f"Split layer must be done on conv or dense layers")
+
+        # Find the index of the split layer in layer_list
+        split_index = next((i for i, layer in enumerate(layer_list) if layer['name'] == split_layer_name), None)
+        if split_index is None:
+            raise ValueError(f"Layer '{split_layer_name}' not found in the model. Split must be done on conv or dense layers")
+        
+        # Split layer_list into two parts
+        layer_list1 = layer_list[:split_index]  
+        layer_list2 = layer_list[split_index:]  # Include the split layer in the second subgraph
+
+        print(layer_list[0], layer_list2[0], layer_list[-1])
+
+        # Create a new input layer for the second subgraph
+        input_layer_dict = {
+            'name': layer_list2[0]['name']+'_input',
+            'class_name': 'InputLayer',
+            'data_format': 'channels_last',
+            'input_shape': [layer_list2[0]['n_in']],
+        }
+
+        # Insert the new input layer at the beginning of layer_list2
+        layer_list2.insert(0, input_layer_dict)
+
+        # Create two ModelGraphs
+        hls_model1 = ModelGraph(config, layer_list1, None, None)
+        hls_model2 = ModelGraph(config, layer_list2, None, None)
+
+        return hls_model1, hls_model2
+
+    else:
+        hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
     return hls_model
