@@ -498,8 +498,8 @@ void hard_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
 // *************************************************
 //       Leaky RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(data_T data[CONFIG_T::n_in], data_T alpha, res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void leaky_relu(data_T data[CONFIG_T::n_in], param_T alpha, res_T res[CONFIG_T::n_in]) {
     #pragma HLS PIPELINE
 
     data_T datareg;
@@ -515,8 +515,8 @@ void leaky_relu(data_T data[CONFIG_T::n_in], data_T alpha, res_T res[CONFIG_T::n
 // *************************************************
 //       Thresholded RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(data_T data[CONFIG_T::n_in], data_T theta, res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void thresholded_relu(data_T data[CONFIG_T::n_in], param_T theta, res_T res[CONFIG_T::n_in]) {
     #pragma HLS PIPELINE
 
     data_T datareg;
@@ -645,8 +645,8 @@ template <typename CONFIG_T, int N_TABLE> void init_elu_table(typename CONFIG_T:
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void elu(data_T data[CONFIG_T::n_in], const param_T alpha, res_T res[CONFIG_T::n_in]) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -679,7 +679,7 @@ void elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_i
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void elu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
-    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
+    elu<data_T, ap_uint<1>, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
@@ -737,8 +737,8 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(data_T data[CO
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void prelu(data_T data[CONFIG_T::n_in], data_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void prelu(data_T data[CONFIG_T::n_in], param_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     #pragma HLS PIPELINE
 
     data_T datareg;
