@@ -16,6 +16,7 @@ bias_options = [False]
 rf_options = [1, 5, 23, 24, 57]
 input_size_options = [2, 5, 37, 100]
 
+
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('strides', strides_options)
@@ -55,16 +56,16 @@ def test_sepconv1d(chans, padds, strides, kernels, bias, io_type, backend, strat
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,8>')
-        
+
     config['Model']['Strategy'] = strategy
     config['Model']['ReuseFactor'] = rf
-    
+
     stride_cfg = str(strides).replace(', ', '_').replace('(', '').replace(')', '')
     kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(
         test_root_path
-        / f'hls4mlprj_sepconv1d_{chans}_strides_{stride_cfg}_kernels_{kernel_cfg}_padding_{padds}_backend_{backend}_io_{io_type}_strategy_{strategy}_rf_{rf}_input_size_{input_size}'.format(
-        )
+        / f'hls4mlprj_sepconv1d_{chans}_strides_{stride_cfg}_kernels_{kernel_cfg}_padding_{padds}_'
+        / f'backend_{backend}_io_{io_type}_strategy_{strategy}_rf_{rf}_input_size_{input_size}'
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend

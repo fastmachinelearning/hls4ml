@@ -7,10 +7,11 @@
 namespace nnet {
 
 template <class data_T, class res_T, typename CONFIG_T>
-void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                       typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                       typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
-                    
+void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan],
+                                            res_T res[CONFIG_T::n_chan],
+                                            typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
+                                            typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+
     const int nin = CONFIG_T::kernel_size * CONFIG_T::n_chan;
     const int nout = CONFIG_T::n_chan;
     const int rufactor = MIN(CONFIG_T::reuse_factor, nin);
@@ -31,8 +32,8 @@ void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * 
 
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=acc type=complete
-    
-InitAccum:  
+
+InitAccum:
     for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
         #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
@@ -48,16 +49,17 @@ ReuseLoop:
     MultLoop:
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
-            
-            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(data[in_index], weights[in_index]));
 
-            in_index+=rufactor;
-            out_index+=rufactor;
+            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
+                CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
+                    data[in_index], weights[in_index]));
+
+            in_index += rufactor;
+            out_index += rufactor;
 
             if (out_index >= CONFIG_T::n_chan) {
                 out_index -= CONFIG_T::n_chan;
             }
-            
         }
     }
 
@@ -70,9 +72,10 @@ Result:
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void depthwise_product_resource_rf_geq_nchan_rem0(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                       typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                       typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+void depthwise_product_resource_rf_geq_nchan_rem0(
+    data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
+    typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
+    typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
 
     const int nin = CONFIG_T::kernel_size * CONFIG_T::n_chan;
     const int nout = CONFIG_T::n_chan;
@@ -84,7 +87,8 @@ void depthwise_product_resource_rf_geq_nchan_rem0(data_T data[CONFIG_T::kernel_s
     // const int multscale = multiplier_limit;
 
     // assert((multiplier_limit % nout == 0 || rufactor >= CONFIG_T::n_chan) && "The current Reuse Factor is not allowed");
-    assert((rufactor >= CONFIG_T::n_chan && rufactor % CONFIG_T::n_chan == 0) && "This function is correct only for RF >= N_IN && RF % N_IN == 0");
+    assert((rufactor >= CONFIG_T::n_chan && rufactor % CONFIG_T::n_chan == 0) &&
+           "This function is correct only for RF >= N_IN && RF % N_IN == 0");
 
     #pragma HLS function_instantiate variable=weights,biases
     //#pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
@@ -96,14 +100,14 @@ void depthwise_product_resource_rf_geq_nchan_rem0(data_T data[CONFIG_T::kernel_s
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=acc type=complete
 
-InitAccum:  
+InitAccum:
     for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
         #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
 
-int outidx[rufactor];
-int outstep = 0;
+    int outidx[rufactor];
+    int outstep = 0;
 IndexLoop:
     for (int ir = 0; ir < rufactor; ir++) {
         outidx[ir] = outstep;
@@ -113,7 +117,7 @@ IndexLoop:
         }
     }
 
-int out_index = 0;
+    int out_index = 0;
 
 ReuseLoop:
     for (int ir = 0; ir < rufactor; ir++) {
@@ -125,10 +129,12 @@ ReuseLoop:
     MultLoop:
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
-            
-            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(data[in_index], weights[in_index]));
 
-            in_index+=rufactor;         
+            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
+                CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
+                    data[in_index], weights[in_index]));
+
+            in_index += rufactor;
         }
     }
 
@@ -141,9 +147,10 @@ Result:
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                       typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                       typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan],
+                                            res_T res[CONFIG_T::n_chan],
+                                            typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
+                                            typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
 
     const int nin = CONFIG_T::kernel_size * CONFIG_T::n_chan;
     const int nout = CONFIG_T::n_chan;
@@ -166,17 +173,17 @@ void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * 
 
     typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=acc type=complete
-    
-InitAccum:  
+
+InitAccum:
     for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
         #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
 
-const int remainder = CONFIG_T::reuse_factor % CONFIG_T::n_chan;
+    const int remainder = CONFIG_T::reuse_factor % CONFIG_T::n_chan;
 
-int outidx[rufactor];
-int outstep = 0;
+    int outidx[rufactor];
+    int outstep = 0;
 IndexLoop:
     for (int ir = 0; ir < rufactor; ir++) {
         outidx[ir] = outstep;
@@ -192,13 +199,15 @@ ReuseLoop:
 
         int in_index = ir;
         int out_index = outidx[ir];
-        
+
     MultLoop:
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
 
             // out_index = in_index % CONFIG_T::n_chan;
-            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(data[in_index], weights[in_index]));
+            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
+                CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
+                    data[in_index], weights[in_index]));
 
             in_index += rufactor;
             out_index += remainder;
@@ -218,8 +227,8 @@ Result:
 
 template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_product_latency(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                       typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                       typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+                               typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
+                               typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
     #pragma HLS INLINE
 
     typename CONFIG_T::accum_t mult[CONFIG_T::kernel_size * CONFIG_T::n_chan];
@@ -269,8 +278,8 @@ Result:
 
 template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_product_resource(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                       typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                       typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
+                                typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
+                                typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
 
     #pragma HLS INLINE recursive
 
@@ -303,9 +312,11 @@ InitData:
 
     #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
-        depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights, biases);
+        depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights,
+                                                                                                     biases);
     } else {
-        depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights, biases);
+        depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights,
+                                                                                                      biases);
     }
 
 CastLoop:
@@ -427,11 +438,11 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, hls::stream<res_T
         // Dense multiply
         #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
-            depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out,
-                                                                                                 weights, biases);
+            depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+                kernel_data, res_out, weights, biases);
         } else {
-            depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out,
-                                                                                           weights, biases);
+            depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+                kernel_data, res_out, weights, biases);
         }
 
     // Pack output
@@ -493,11 +504,11 @@ void compute_depthwise_output_buffer_2d(const data_T &in_elem,
         // Dense multiply
         #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
-            depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out,
-                                                                                                 weights, biases);
+            depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+                kernel_data, res_out, weights, biases);
         } else {
-            depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out,
-                                                                                                 weights, biases);
+            depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+                kernel_data, res_out, weights, biases);
         }
 
     // Pack output
