@@ -325,6 +325,6 @@ def parse_keras_model(model_arch, reader):
 def keras_to_hls(config):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
-    print('Creating HLS model')
+    print('Creating HLS model...')
     hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
     return hls_model
