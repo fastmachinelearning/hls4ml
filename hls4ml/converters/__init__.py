@@ -234,7 +234,10 @@ def convert_from_keras_model(
 
     _check_hls_config(config, hls_config)
 
-    return keras_to_hls(config)
+    # Retrieve 'split_layer_name' from kwargs, if provided, for multi-graph creation
+    split_layer_name = kwargs.get('split_layer_name', None)
+
+    return keras_to_hls(config, split_layer_name=split_layer_name)
 
 
 def convert_from_pytorch_model(
