@@ -5,13 +5,13 @@ from collections import OrderedDict
 
 import numpy as np
 import numpy.ctypeslib as npc
+import copy
 
 from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
 from hls4ml.utils.string_utils import convert_to_snake_case
-
 
 class HLSConfig:
     """The configuration class as stored in the ModelGraph.
@@ -897,3 +897,54 @@ class ModelGraph:
             self.write()
 
         return self.config.backend.build(self, **kwargs)
+
+    @classmethod
+    def make_multi_graph(cls, config, layer_list, split_layer_name):
+        """Splits the layer list into two at the specified layer and creates two ModelGraphs. 
+
+        Args:
+            config (dict): The configuration dictionary.
+            layer_list (list(dict)): The list of layers.
+            split_layer_name (str): The name of the layer to split at.
+
+        Returns:
+            Tuple[ModelGraph, ModelGraph]: Two ModelGraph instances resulting from the split.
+        """
+        layer_names = [layer['name'] for layer in layer_list]
+        if split_layer_name is None or split_layer_name not in layer_names:
+            raise ValueError(f"Layer '{split_layer_name}' not found in the model.")
+
+        split_index = layer_names.index(split_layer_name)
+        layer_list1 = layer_list[:split_index]
+        layer_list2 = layer_list[split_index:]  # Include the split layer in the second subgraph
+
+        # Create new input layer for the second subgraph
+        split_layer = layer_list2[0]
+
+        #NOTE - Additional testing needed to verify that the input shape is correctly identified
+        input_shape = split_layer.get('n_in', None)
+        if input_shape is None:
+            raise ValueError(f"Could not find input_shape of '{split_layer_name}'.")
+        
+        input_layer_dict = {
+            'name': split_layer['name'] + '_input',
+            'class_name': 'InputLayer',
+            'data_format': 'channels_last',
+            'input_shape': [input_shape],
+        }
+
+        # Insert the new input layer at the beginning of layer_list2
+        layer_list2.insert(0, input_layer_dict)
+
+        # Create two ModelGraphs
+        #NOTE - Maybe create a method inside HLSConfig class that sets OutputDir value
+        original_OutputDir = config['OutputDir']
+
+        hls_model1 = ModelGraph(config, layer_list1, None, None)
+        hls_model2 = ModelGraph(copy.copy(config), layer_list2, None, None) # copy only the top-level objects with shallow copy
+
+        # Change output directory of each graph.
+        hls_model1.config.config['OutputDir'] = original_OutputDir + '_graph1'
+        hls_model2.config.config['OutputDir'] = original_OutputDir + '_graph2'
+
+        return hls_model1, hls_model2
