@@ -322,17 +322,19 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config, split_layer_name = None):
+def keras_to_hls(config, split_layer_names = []):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
     
     print('Creating HLS model...')
-    if split_layer_name is not None:
-        if 'conv' not in split_layer_name and 'fc' not in split_layer_name:
-            raise ValueError(f"Split layer must be either Conv. or FC layers")
-
-        hls_model1, hls_model2 = ModelGraph.make_multi_graph(config, layer_list, split_layer_name)
-        return hls_model1, hls_model2
+    if split_layer_names:
+        if all(name.startswith('fc') or name.startswith('dense') for name in split_layer_names):
+            hls_models = ModelGraph.make_multi_graph(config, layer_list, split_layer_names)
+            print('Multi-graph HLS model created.')
+            return hls_models
+        else:
+            raise ValueError(f"Split layer must be either dense or fc layers")
     else:
         hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
+        print('HLS model created.')
         return hls_model
