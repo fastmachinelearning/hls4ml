@@ -39,11 +39,11 @@ def test_trace(backend, activation):
 
     keras_prediction = model.predict(X_input)
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     for layer in config['LayerName'].keys():
         config['LayerName'][layer]['Trace'] = True
 
-    output_dir = str(test_root_path / f'hls4mlprj_trace_{backend}')
+    output_dir = str(test_root_path / f'hls4mlprj_trace_{backend}_{activation}')
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
 

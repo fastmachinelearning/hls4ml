@@ -112,7 +112,7 @@ def _get_precision_from_quantizer(quantizer):
 
 
 def config_from_keras_model(
-    model, granularity='model', backend=None, default_precision='fixed<16,6>', default_reuse_factor=1
+    model, granularity='model', backend=None, default_precision='fixed<16,6>', default_reuse_factor=1, max_precision=None
 ):
     """Create an HLS conversion config given the Keras model.
 
@@ -132,8 +132,11 @@ def config_from_keras_model(
             will generate config keys for every layer separately, allowing for highly specific
             configuration tweaks.
         backend(str, optional): Name of the backend to use
-        default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
+        default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'. Note, this must
+            be an explicit precision: 'auto' is not allowed.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
+        max_precision (str or None, optional): Maximum width precision to use. Defaults to None, meaning no maximum.
+            Note:  Only integer and fixed precisions are supported
 
     Raises:
         Exception: If Keras model has layers not supported by hls4ml.
@@ -182,9 +185,11 @@ def config_from_keras_model(
                 if name.endswith('_t'):
                     name = name[:-2]
                 if attr.default is None:
-                    precision_cfg[name] = default_precision
+                    precision_cfg[name] = 'auto'
                 else:
                     precision_cfg[name] = str(attr.default)
+            elif attr.name == 'reuse_factor':
+                layer_config[attr.config_name] = default_reuse_factor
             else:
                 if attr.default is not None:
                     layer_config[attr.config_name] = attr.default
@@ -238,7 +243,10 @@ def config_from_keras_model(
     config = {}
 
     model_config = {}
-    model_config['Precision'] = default_precision
+    model_config['Precision'] = {}
+    model_config['Precision']['default'] = default_precision
+    if max_precision is not None:
+        model_config['Precision']['maximum'] = max_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
     model_config['BramFactor'] = 1_000_000_000

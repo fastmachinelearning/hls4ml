@@ -147,9 +147,8 @@ class VivadoBackend(FPGABackend):
         ]
 
         if len(extras) > 0:
-            extras_flow = register_flow('extras', extras, requires=[init_flow], backend=self.name)
-        else:
-            extras_flow = None
+            for opt in extras:
+                warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
         ip_flow_requirements = [
             'optimize',
@@ -158,10 +157,8 @@ class VivadoBackend(FPGABackend):
             quantization_flow,
             optimization_flow,
             vivado_types_flow,
-            extras_flow,
             template_flow,
         ]
-        ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
