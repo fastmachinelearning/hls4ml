@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.optimization package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -119,40 +114,123 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-optimization-package">
-<h1>hls4ml.optimization package<a class="headerlink" href="#hls4ml-optimization-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.optimization package<a class="headerlink" href="#hls4ml-optimization-package" title="Link to this heading"></a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.optimization.keras.html">hls4ml.optimization.keras package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.builder">hls4ml.optimization.keras.builder module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.config">hls4ml.optimization.keras.config module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.masking">hls4ml.optimization.keras.masking module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.reduction">hls4ml.optimization.keras.reduction module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.regularizers">hls4ml.optimization.keras.regularizers module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.utils">hls4ml.optimization.keras.utils module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.builder">hls4ml.optimization.keras.builder module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.HyperOptimizationModel"><code class="docutils literal notranslate"><span class="pre">HyperOptimizationModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.HyperOptimizationModel.build"><code class="docutils literal notranslate"><span class="pre">HyperOptimizationModel.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.build_optimizable_model"><code class="docutils literal notranslate"><span class="pre">build_optimizable_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.remove_custom_regularizers"><code class="docutils literal notranslate"><span class="pre">remove_custom_regularizers()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.config">hls4ml.optimization.keras.config module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.config.SUPPORTED_LAYERS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_LAYERS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.config.SUPPORTED_METRICS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_METRICS</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.masking">hls4ml.optimization.keras.masking module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.masking.get_model_masks"><code class="docutils literal notranslate"><span class="pre">get_model_masks()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.reduction">hls4ml.optimization.keras.reduction module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.reduction.reduce_model"><code class="docutils literal notranslate"><span class="pre">reduce_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.regularizers">hls4ml.optimization.keras.regularizers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.Conv2DRegularizer"><code class="docutils literal notranslate"><span class="pre">Conv2DRegularizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.Conv2DRegularizer.get_config"><code class="docutils literal notranslate"><span class="pre">Conv2DRegularizer.get_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.DenseRegularizer"><code class="docutils literal notranslate"><span class="pre">DenseRegularizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.DenseRegularizer.get_config"><code class="docutils literal notranslate"><span class="pre">DenseRegularizer.get_config()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.utils">hls4ml.optimization.keras.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_last_layer_with_weights"><code class="docutils literal notranslate"><span class="pre">get_last_layer_with_weights()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_model_gradients"><code class="docutils literal notranslate"><span class="pre">get_model_gradients()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_model_hessians"><code class="docutils literal notranslate"><span class="pre">get_model_hessians()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_model_sparsity"><code class="docutils literal notranslate"><span class="pre">get_model_sparsity()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.keras.html#module-hls4ml.optimization.keras">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.MaskedBackprop"><code class="docutils literal notranslate"><span class="pre">MaskedBackprop</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.MaskedBackprop.update_masks"><code class="docutils literal notranslate"><span class="pre">MaskedBackprop.update_masks()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.keras.html#hls4ml.optimization.keras.optimize_model"><code class="docutils literal notranslate"><span class="pre">optimize_model()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.optimization.objectives.html">hls4ml.optimization.objectives package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.objectives.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.gpu_objectives">hls4ml.optimization.objectives.gpu_objectives module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.vivado_objectives">hls4ml.optimization.objectives.vivado_objectives module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.gpu_objectives">hls4ml.optimization.objectives.gpu_objectives module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator"><code class="docutils literal notranslate"><span class="pre">GPUFLOPEstimator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.is_layer_optimizable"><code class="docutils literal notranslate"><span class="pre">GPUFLOPEstimator.is_layer_optimizable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_resources"><code class="docutils literal notranslate"><span class="pre">GPUFLOPEstimator.layer_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_savings"><code class="docutils literal notranslate"><span class="pre">GPUFLOPEstimator.layer_savings()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.vivado_objectives">hls4ml.optimization.objectives.vivado_objectives module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator"><code class="docutils literal notranslate"><span class="pre">VivadoDSPEstimator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.is_layer_optimizable"><code class="docutils literal notranslate"><span class="pre">VivadoDSPEstimator.is_layer_optimizable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_resources"><code class="docutils literal notranslate"><span class="pre">VivadoDSPEstimator.layer_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_savings"><code class="docutils literal notranslate"><span class="pre">VivadoDSPEstimator.layer_savings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator"><code class="docutils literal notranslate"><span class="pre">VivadoFFEstimator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.is_layer_optimizable"><code class="docutils literal notranslate"><span class="pre">VivadoFFEstimator.is_layer_optimizable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_resources"><code class="docutils literal notranslate"><span class="pre">VivadoFFEstimator.layer_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_savings"><code class="docutils literal notranslate"><span class="pre">VivadoFFEstimator.layer_savings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator"><code class="docutils literal notranslate"><span class="pre">VivadoMultiObjectiveEstimator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.is_layer_optimizable"><code class="docutils literal notranslate"><span class="pre">VivadoMultiObjectiveEstimator.is_layer_optimizable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_resources"><code class="docutils literal notranslate"><span class="pre">VivadoMultiObjectiveEstimator.layer_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_savings"><code class="docutils literal notranslate"><span class="pre">VivadoMultiObjectiveEstimator.layer_savings()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator"><code class="docutils literal notranslate"><span class="pre">ObjectiveEstimator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator.is_layer_optimizable"><code class="docutils literal notranslate"><span class="pre">ObjectiveEstimator.is_layer_optimizable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator.layer_resources"><code class="docutils literal notranslate"><span class="pre">ObjectiveEstimator.layer_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator.layer_savings"><code class="docutils literal notranslate"><span class="pre">ObjectiveEstimator.layer_savings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator"><code class="docutils literal notranslate"><span class="pre">ParameterEstimator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator.is_layer_optimizable"><code class="docutils literal notranslate"><span class="pre">ParameterEstimator.is_layer_optimizable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator.layer_resources"><code class="docutils literal notranslate"><span class="pre">ParameterEstimator.layer_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator.layer_savings"><code class="docutils literal notranslate"><span class="pre">ParameterEstimator.layer_savings()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </div>
 </section>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.optimization.attributes">
-<span id="hls4ml-optimization-attributes-module"></span><h2>hls4ml.optimization.attributes module<a class="headerlink" href="#module-hls4ml.optimization.attributes" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-optimization-attributes-module"></span><h2>hls4ml.optimization.attributes module<a class="headerlink" href="#module-hls4ml.optimization.attributes" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.attributes.LayerAttributes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">LayerAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inbound_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.LayerAttributes" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">LayerAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inbound_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.LayerAttributes" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A class for storing layer information</p>
 <dl class="field-list simple">
@@ -174,14 +252,14 @@ e.g. hls4mlAttributes; dictionary so it can be generic enough for different plat
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.attributes.LayerAttributes.update_args">
-<span class="sig-name descname"><span class="pre">update_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">updates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.LayerAttributes.update_args" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">updates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.LayerAttributes.update_args" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.attributes.OptimizationAttributes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">OptimizationAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">structure_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SUPPORTED_STRUCTURES.UNSTRUCTURED</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_sharing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consecutive_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.OptimizationAttributes" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">OptimizationAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">structure_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SUPPORTED_STRUCTURES.UNSTRUCTURED</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_sharing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consecutive_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.OptimizationAttributes" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A class for storing layer optimization attributes</p>
 <dl class="field-list simple">
@@ -205,7 +283,7 @@ e.g. hls4mlAttributes; dictionary so it can be generic enough for different plat
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.optimization.attributes.get_attributes_from_keras_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">get_attributes_from_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.get_attributes_from_keras_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">get_attributes_from_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.get_attributes_from_keras_model" title="Link to this definition"></a></dt>
 <dd><p>Given a Keras model, builds a dictionary of class attributes
 Additional arguments (e.g. reuse factor), depend on the target hardware platform and are inserted later
 Per-layer pruning sype (structured, pattern etc.), depend on the pruning objective and are inserted later</p>
@@ -224,7 +302,7 @@ Per-layer pruning sype (structured, pattern etc.), depend on the pruning objecti
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.optimization.attributes.get_attributes_from_keras_model_and_hls4ml_config">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">get_attributes_from_keras_model_and_hls4ml_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.get_attributes_from_keras_model_and_hls4ml_config" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">get_attributes_from_keras_model_and_hls4ml_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.get_attributes_from_keras_model_and_hls4ml_config" title="Link to this definition"></a></dt>
 <dd><p>Given a Keras model and hls4ml configuration, builds a dictionary of class attributes
 Per-layer pruning sype (structured, pruning etc.), depend on the pruning objective and are inserted later</p>
 <dl class="field-list simple">
@@ -245,7 +323,7 @@ Per-layer pruning sype (structured, pruning etc.), depend on the pruning objecti
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.attributes.hls4mlAttributes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">hls4mlAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelization_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.hls4mlAttributes" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.attributes.</span></span><span class="sig-name descname"><span class="pre">hls4mlAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelization_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.attributes.hls4mlAttributes" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A class for storing hls4ml information of a single layer</p>
 <dl class="field-list simple">
@@ -266,40 +344,40 @@ Per-layer pruning sype (structured, pruning etc.), depend on the pruning objecti
 
 </section>
 <section id="module-hls4ml.optimization.config">
-<span id="hls4ml-optimization-config-module"></span><h2>hls4ml.optimization.config module<a class="headerlink" href="#module-hls4ml.optimization.config" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-optimization-config-module"></span><h2>hls4ml.optimization.config module<a class="headerlink" href="#module-hls4ml.optimization.config" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.config.SUPPORTED_STRUCTURES">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.config.</span></span><span class="sig-name descname"><span class="pre">SUPPORTED_STRUCTURES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.config.</span></span><span class="sig-name descname"><span class="pre">SUPPORTED_STRUCTURES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>An enumeration.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.optimization.config.SUPPORTED_STRUCTURES.BLOCK">
-<span class="sig-name descname"><span class="pre">BLOCK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'block'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.BLOCK" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">BLOCK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'block'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.BLOCK" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.optimization.config.SUPPORTED_STRUCTURES.PATTERN">
-<span class="sig-name descname"><span class="pre">PATTERN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pattern'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.PATTERN" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">PATTERN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pattern'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.PATTERN" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.optimization.config.SUPPORTED_STRUCTURES.STRUCTURED">
-<span class="sig-name descname"><span class="pre">STRUCTURED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'structured'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.STRUCTURED" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">STRUCTURED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'structured'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.STRUCTURED" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.optimization.config.SUPPORTED_STRUCTURES.UNSTRUCTURED">
-<span class="sig-name descname"><span class="pre">UNSTRUCTURED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unstructured'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.UNSTRUCTURED" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">UNSTRUCTURED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unstructured'</span></em><a class="headerlink" href="#hls4ml.optimization.config.SUPPORTED_STRUCTURES.UNSTRUCTURED" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="module-hls4ml.optimization.knapsack">
-<span id="hls4ml-optimization-knapsack-module"></span><h2>hls4ml.optimization.knapsack module<a class="headerlink" href="#module-hls4ml.optimization.knapsack" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-optimization-knapsack-module"></span><h2>hls4ml.optimization.knapsack module<a class="headerlink" href="#module-hls4ml.optimization.knapsack" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.optimization.knapsack.solve_knapsack">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.knapsack.</span></span><span class="sig-name descname"><span class="pre">solve_knapsack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CBC_MIP'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.knapsack.solve_knapsack" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.knapsack.</span></span><span class="sig-name descname"><span class="pre">solve_knapsack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CBC_MIP'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.knapsack.solve_knapsack" title="Link to this definition"></a></dt>
 <dd><p>A function for solving the Knapsack problem</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -386,17 +464,17 @@ All of the values should be scaled by an appropriate scaling factor</p>
 
 </section>
 <section id="module-hls4ml.optimization.scheduler">
-<span id="hls4ml-optimization-scheduler-module"></span><h2>hls4ml.optimization.scheduler module<a class="headerlink" href="#module-hls4ml.optimization.scheduler" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-optimization-scheduler-module"></span><h2>hls4ml.optimization.scheduler module<a class="headerlink" href="#module-hls4ml.optimization.scheduler" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.BinaryScheduler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">BinaryScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.BinaryScheduler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">BinaryScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.BinaryScheduler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.scheduler.OptimizationScheduler" title="hls4ml.optimization.scheduler.OptimizationScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationScheduler</span></code></a></p>
 <p>Sparsity updated by binary halving the search space; constantly updates lower and upper bounds
 In the update step, sparsity is incremented, as the midpoint between previous sparsity and target sparsity (upper bound)
 In the repair step, sparsity is decrement, as the midpoint between between the lower bound and previous sparsity</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.BinaryScheduler.repair_step">
-<span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.BinaryScheduler.repair_step" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.BinaryScheduler.repair_step" title="Link to this definition"></a></dt>
 <dd><p>Method used when the neural architecture does not meet satisfy performance requirement for a given sparsity.
 Then, the target sparsity is decreased according to the rule.</p>
 <p class="rubric">Examples</p>
@@ -418,7 +496,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.BinaryScheduler.update_step">
-<span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.BinaryScheduler.update_step" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.BinaryScheduler.update_step" title="Link to this definition"></a></dt>
 <dd><p>Increments the current sparsity, according to the rule.</p>
 <p class="rubric">Examples</p>
 <ul class="simple">
@@ -441,7 +519,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.ConstantScheduler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">ConstantScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.ConstantScheduler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">ConstantScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.ConstantScheduler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.scheduler.OptimizationScheduler" title="hls4ml.optimization.scheduler.OptimizationScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationScheduler</span></code></a></p>
 <dl class="simple">
 <dt>Sparsity updated by a constant term, until</dt><dd><ol class="lowerroman simple">
@@ -452,7 +530,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.ConstantScheduler.repair_step">
-<span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.ConstantScheduler.repair_step" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.ConstantScheduler.repair_step" title="Link to this definition"></a></dt>
 <dd><p>Method used when the neural architecture does not meet satisfy performance requirement for a given sparsity.
 Then, the target sparsity is decreased according to the rule.</p>
 <p class="rubric">Examples</p>
@@ -474,7 +552,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.ConstantScheduler.update_step">
-<span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.ConstantScheduler.update_step" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.ConstantScheduler.update_step" title="Link to this definition"></a></dt>
 <dd><p>Increments the current sparsity, according to the rule.</p>
 <p class="rubric">Examples</p>
 <ul class="simple">
@@ -497,17 +575,17 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.OptimizationScheduler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">OptimizationScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">OptimizationScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Baseline class handling logic regarding target sparsity and its updates at every step</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.OptimizationScheduler.get_sparsity">
-<span class="sig-name descname"><span class="pre">get_sparsity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler.get_sparsity" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_sparsity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler.get_sparsity" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.OptimizationScheduler.repair_step">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler.repair_step" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler.repair_step" title="Link to this definition"></a></dt>
 <dd><p>Method used when the neural architecture does not meet satisfy performance requirement for a given sparsity.
 Then, the target sparsity is decreased according to the rule.</p>
 <p class="rubric">Examples</p>
@@ -529,7 +607,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.OptimizationScheduler.update_step">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler.update_step" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.OptimizationScheduler.update_step" title="Link to this definition"></a></dt>
 <dd><p>Increments the current sparsity, according to the rule.</p>
 <p class="rubric">Examples</p>
 <ul class="simple">
@@ -552,7 +630,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.PolynomialScheduler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">PolynomialScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">maximum_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.PolynomialScheduler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.scheduler.</span></span><span class="sig-name descname"><span class="pre">PolynomialScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">maximum_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.PolynomialScheduler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.scheduler.OptimizationScheduler" title="hls4ml.optimization.scheduler.OptimizationScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationScheduler</span></code></a></p>
 <dl class="simple">
 <dt>Sparsity updated by at a polynomial decay, until</dt><dd><ol class="lowerroman simple">
@@ -571,7 +649,7 @@ The model’s performance over several sparsity levels optimization is tracked a
 toped after high loss over several trials (see top level pruning/optimization function)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.PolynomialScheduler.repair_step">
-<span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.PolynomialScheduler.repair_step" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">repair_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.PolynomialScheduler.repair_step" title="Link to this definition"></a></dt>
 <dd><p>Method used when the neural architecture does not meet satisfy performance requirement for a given sparsity.
 Then, the target sparsity is decreased according to the rule.</p>
 <p class="rubric">Examples</p>
@@ -593,7 +671,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.scheduler.PolynomialScheduler.update_step">
-<span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.PolynomialScheduler.update_step" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.scheduler.PolynomialScheduler.update_step" title="Link to this definition"></a></dt>
 <dd><p>Increments the current sparsity, according to the rule.</p>
 <p class="rubric">Examples</p>
 <ul class="simple">
@@ -616,23 +694,23 @@ Then, the target sparsity is decreased according to the rule.</p>
 
 </section>
 <section id="module-hls4ml.optimization">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.optimization" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.optimization" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.optimization.optimize_keras_model_for_hls4ml">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.</span></span><span class="sig-name descname"><span class="pre">optimize_keras_model_for_hls4ml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">increasing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'l1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewinding_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_bad_trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hls4ml-optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Bayesian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knapsack_solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CBC_MIP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1e-06,</span> <span class="pre">1.8478497974222906e-06,</span> <span class="pre">3.414548873833601e-06,</span> <span class="pre">6.30957344480193e-06,</span> <span class="pre">1.165914401179831e-05,</span> <span class="pre">2.1544346900318823e-05,</span> <span class="pre">3.9810717055349695e-05,</span> <span class="pre">7.356422544596421e-05,</span> <span class="pre">0.00013593563908785255,</span> <span class="pre">0.00025118864315095795,</span> <span class="pre">0.00046415888336127773,</span> <span class="pre">0.0008576958985908938,</span> <span class="pre">0.001584893192461114,</span> <span class="pre">0.0029286445646252374,</span> <span class="pre">0.0054116952654646375,</span> <span class="pre">0.01]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.optimize_keras_model_for_hls4ml" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.</span></span><span class="sig-name descname"><span class="pre">optimize_keras_model_for_hls4ml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">increasing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'l1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewinding_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_bad_trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hls4ml-optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Bayesian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knapsack_solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CBC_MIP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1e-06,</span> <span class="pre">1.8478497974222906e-06,</span> <span class="pre">3.414548873833601e-06,</span> <span class="pre">6.30957344480193e-06,</span> <span class="pre">1.165914401179831e-05,</span> <span class="pre">2.1544346900318823e-05,</span> <span class="pre">3.9810717055349695e-05,</span> <span class="pre">7.356422544596421e-05,</span> <span class="pre">0.00013593563908785255,</span> <span class="pre">0.00025118864315095795,</span> <span class="pre">0.00046415888336127773,</span> <span class="pre">0.0008576958985908938,</span> <span class="pre">0.001584893192461114,</span> <span class="pre">0.0029286445646252374,</span> <span class="pre">0.0054116952654646375,</span> <span class="pre">0.01]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.optimize_keras_model_for_hls4ml" title="Link to this definition"></a></dt>
 <dd><p>Top-level function for optimizing a Keras model, given hls4ml config and a hardware objective(s)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>keras_model</strong> (<em>keras.Model</em>) – Model to be optimized</p></li>
 <li><p><strong>hls_config</strong> (<em>dict</em>) – hls4ml configuration, obtained from hls4ml.utils.config.config_from_keras_model(…)</p></li>
-<li><p><strong>objective</strong> (<a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator" title="hls4ml.optimization.objectives.ObjectiveEstimator"><em>hls4ml.optimization.objectives.ObjectiveEstimator</em></a>) – </p></li>
-<li><p><strong>Parameter</strong> – </p></li>
-<li><p><strong>optimization</strong> (<em>hardware</em><em> or </em><em>user-defined objective of</em>) – </p></li>
-<li><p><strong>scheduler</strong> (<em>Sparsity</em>) – </p></li>
-<li><p><strong>scheduler</strong> – </p></li>
-<li><p><strong>constant</strong> (<em>choose between</em>) – </p></li>
-<li><p><strong>binary</strong> (<em>polynomial and</em>) – </p></li>
+<li><p><strong>objective</strong> (<a class="reference internal" href="hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator" title="hls4ml.optimization.objectives.ObjectiveEstimator"><em>hls4ml.optimization.objectives.ObjectiveEstimator</em></a>)</p></li>
+<li><p><strong>Parameter</strong></p></li>
+<li><p><strong>optimization</strong> (<em>hardware</em><em> or </em><em>user-defined objective of</em>)</p></li>
+<li><p><strong>scheduler</strong> (<em>Sparsity</em>)</p></li>
+<li><p><strong>scheduler</strong></p></li>
+<li><p><strong>constant</strong> (<em>choose between</em>)</p></li>
+<li><p><strong>binary</strong> (<em>polynomial and</em>)</p></li>
 <li><p><strong>X_train</strong> (<em>np.array</em>) – Training inputs</p></li>
 <li><p><strong>y_train</strong> (<em>np.array</em>) – Training labels</p></li>
 <li><p><strong>X_val</strong> (<em>np.array</em>) – Validation inputs</p></li>
@@ -646,7 +724,7 @@ Then, the target sparsity is decreased according to the rule.</p>
 e.g. accuracy -&gt; increasing = True, MSE -&gt; increasing = False</p></li>
 <li><p><strong>rtol</strong> (<em>float</em>) – Relative tolerance;
 pruning stops when pruned_validation_metric &lt; (or &gt;) rtol * baseline_validation_metric</p></li>
-<li><p><strong>callbacks</strong> (<em>list of keras.callbacks.Callback</em>) – </p></li>
+<li><p><strong>callbacks</strong> (<em>list</em><em> of </em><em>keras.callbacks.Callback</em>)</p></li>
 <li><p><strong>ranking_metric</strong> (<em>string</em>) – Metric used for ranking weights and structures;
 currently supported l1, l2, saliency and Oracle</p></li>
 <li><p><strong>local</strong> (<em>boolean</em>) – Layer-wise or global pruning</p></li>

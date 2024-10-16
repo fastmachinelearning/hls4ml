@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -117,9 +112,9 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-backends-package">
-<h1>hls4ml.backends package<a class="headerlink" href="#hls4ml-backends-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.backends package<a class="headerlink" href="#hls4ml-backends-package" title="Link to this heading"></a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.catapult.html">hls4ml.backends.catapult package</a><ul>
@@ -148,8 +143,61 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult.catapult_backend">hls4ml.backends.catapult.catapult_backend module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult.catapult_types">hls4ml.backends.catapult.catapult_types module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult.catapult_backend">hls4ml.backends.catapult.catapult_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend"><code class="docutils literal notranslate"><span class="pre">CatapultBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.build"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.create_initial_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_default_flow"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.get_default_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.get_writer_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_base_layer"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_base_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv1d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_conv1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv2d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_conv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_dense"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_dense()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_depconv2d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_depconv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_embed"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_embed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_garnet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet_stack"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_garnet_stack()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling1d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_global_pooling1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling2d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_global_pooling2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_gru"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_gru()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_lstm"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_lstm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling1d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_pooling1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling2d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_pooling2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv1d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_sepconv1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv2d"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_sepconv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_softmax"><code class="docutils literal notranslate"><span class="pre">CatapultBackend.init_softmax()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult.catapult_types">hls4ml.backends.catapult.catapult_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">CatapultArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">CatapultArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">CatapultArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">CatapultInplaceArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">CatapultInplaceArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">CatapultInplaceArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">CatapultInplaceStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">CatapultInplaceStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">CatapultInplaceStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">CatapultStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">CatapultStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">CatapultStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableConverter"><code class="docutils literal notranslate"><span class="pre">CatapultStructMemberVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition"><code class="docutils literal notranslate"><span class="pre">CatapultStructMemberVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">CatapultStructMemberVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult">Module contents</a></li>
 </ul>
 </li>
@@ -176,9 +224,134 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga.fpga_backend">hls4ml.backends.fpga.fpga_backend module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga.fpga_layers">hls4ml.backends.fpga.fpga_layers module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga.fpga_types">hls4ml.backends.fpga.fpga_types module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga.fpga_backend">hls4ml.backends.fpga.fpga_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend"><code class="docutils literal notranslate"><span class="pre">FPGABackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.compile"><code class="docutils literal notranslate"><span class="pre">FPGABackend.compile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.compute_conv1d_instructions"><code class="docutils literal notranslate"><span class="pre">FPGABackend.compute_conv1d_instructions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.compute_conv2d_instructions"><code class="docutils literal notranslate"><span class="pre">FPGABackend.compute_conv2d_instructions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string"><code class="docutils literal notranslate"><span class="pre">FPGABackend.convert_precision_string()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.create_layer_class"><code class="docutils literal notranslate"><span class="pre">FPGABackend.create_layer_class()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv1d_line_buffer_fn"><code class="docutils literal notranslate"><span class="pre">FPGABackend.generate_conv1d_line_buffer_fn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv2d_line_buffer_fn"><code class="docutils literal notranslate"><span class="pre">FPGABackend.generate_conv2d_line_buffer_fn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_closest_reuse_factor"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_closest_reuse_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_layer_mult_size"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_layer_mult_size()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_valid_conv_partition_splits"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_valid_conv_partition_splits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_valid_reuse_factors"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_valid_reuse_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_writer_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.product_type"><code class="docutils literal notranslate"><span class="pre">FPGABackend.product_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.set_closest_reuse_factor"><code class="docutils literal notranslate"><span class="pre">FPGABackend.set_closest_reuse_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.set_target_reuse_factor"><code class="docutils literal notranslate"><span class="pre">FPGABackend.set_target_reuse_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.write"><code class="docutils literal notranslate"><span class="pre">FPGABackend.write()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.write_hls"><code class="docutils literal notranslate"><span class="pre">FPGABackend.write_hls()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga.fpga_layers">hls4ml.backends.fpga.fpga_layers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationQuantizedTanh</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.initialize"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationQuantizedTanh.initialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationQuantizedTanh.set_thresholds()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.PointwiseConv1D"><code class="docutils literal notranslate"><span class="pre">PointwiseConv1D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.PointwiseConv2D"><code class="docutils literal notranslate"><span class="pre">PointwiseConv2D</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga.fpga_types">hls4ml.backends.fpga.fpga_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ACFixedPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">ACFixedPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ACFixedPrecisionDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">ACFixedPrecisionDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ACIntegerPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">ACIntegerPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ACIntegerPrecisionDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">ACIntegerPrecisionDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ACTypeConverter"><code class="docutils literal notranslate"><span class="pre">ACTypeConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APFixedPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">APFixedPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APFixedPrecisionDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">APFixedPrecisionDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APIntegerPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">APIntegerPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APIntegerPrecisionDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">APIntegerPrecisionDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APTypeConverter"><code class="docutils literal notranslate"><span class="pre">APTypeConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">ArrayVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter"><code class="docutils literal notranslate"><span class="pre">BramWeightVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">BramWeightVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.CompressedTypeConverter"><code class="docutils literal notranslate"><span class="pre">CompressedTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.CompressedTypeConverter.convert_precision"><code class="docutils literal notranslate"><span class="pre">CompressedTypeConverter.convert_precision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.CompressedTypeConverter.definition_cpp"><code class="docutils literal notranslate"><span class="pre">CompressedTypeConverter.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ExponentTypeConverter"><code class="docutils literal notranslate"><span class="pre">ExponentTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ExponentTypeConverter.convert_precision"><code class="docutils literal notranslate"><span class="pre">ExponentTypeConverter.convert_precision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ExponentTypeConverter.definition_cpp"><code class="docutils literal notranslate"><span class="pre">ExponentTypeConverter.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.FixedPrecisionConverter"><code class="docutils literal notranslate"><span class="pre">FixedPrecisionConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.FixedPrecisionConverter.convert"><code class="docutils literal notranslate"><span class="pre">FixedPrecisionConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.HLSTypeConverter"><code class="docutils literal notranslate"><span class="pre">HLSTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.HLSTypeConverter.convert"><code class="docutils literal notranslate"><span class="pre">HLSTypeConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">InplaceStreamVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">InplaceStreamVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.NamedTypeConverter"><code class="docutils literal notranslate"><span class="pre">NamedTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.NamedTypeConverter.definition_cpp"><code class="docutils literal notranslate"><span class="pre">NamedTypeConverter.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PackedTypeConverter"><code class="docutils literal notranslate"><span class="pre">PackedTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PackedTypeConverter.definition_cpp"><code class="docutils literal notranslate"><span class="pre">PackedTypeConverter.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionConverter"><code class="docutils literal notranslate"><span class="pre">PrecisionConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionConverter.convert"><code class="docutils literal notranslate"><span class="pre">PrecisionConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">PrecisionDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter"><code class="docutils literal notranslate"><span class="pre">StaticWeightVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">StaticWeightVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StaticWeightVariableDefinition"><code class="docutils literal notranslate"><span class="pre">StaticWeightVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StaticWeightVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">StaticWeightVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">StreamVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StreamVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">StreamVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter"><code class="docutils literal notranslate"><span class="pre">StructMemberVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">StructMemberVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypeDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">TypeDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter.convert_precision"><code class="docutils literal notranslate"><span class="pre">TypePrecisionConverter.convert_precision()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">VariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga">Module contents</a></li>
 </ul>
 </li>
@@ -203,8 +376,55 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.html#module-hls4ml.backends.quartus.quartus_backend">hls4ml.backends.quartus.quartus_backend module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.html#module-hls4ml.backends.quartus.quartus_types">hls4ml.backends.quartus.quartus_types module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.html#module-hls4ml.backends.quartus.quartus_backend">hls4ml.backends.quartus.quartus_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend"><code class="docutils literal notranslate"><span class="pre">QuartusBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.build"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.create_initial_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.get_default_flow"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.get_default_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.get_writer_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_activation"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_activation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_base_layer"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_base_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_conv1d"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_conv1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_conv2d"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_conv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_dense"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_dense()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_embed"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_embed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_gru"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_gru()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_lstm"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_lstm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_simple_rnn"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_simple_rnn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.QuartusBackend.init_softmax"><code class="docutils literal notranslate"><span class="pre">QuartusBackend.init_softmax()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.chdir"><code class="docutils literal notranslate"><span class="pre">chdir()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.html#module-hls4ml.backends.quartus.quartus_types">hls4ml.backends.quartus.quartus_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">QuartusArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">QuartusArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">QuartusArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">QuartusInplaceArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">QuartusInplaceArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">QuartusInplaceArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">QuartusInplaceStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">QuartusInplaceStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">QuartusInplaceStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">QuartusStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">QuartusStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">QuartusStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableConverter"><code class="docutils literal notranslate"><span class="pre">QuartusStructMemberVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableDefinition"><code class="docutils literal notranslate"><span class="pre">QuartusStructMemberVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">QuartusStructMemberVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.html#module-hls4ml.backends.quartus">Module contents</a></li>
 </ul>
 </li>
@@ -220,7 +440,16 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.symbolic.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.symbolic.html#module-hls4ml.backends.symbolic.symbolic_backend">hls4ml.backends.symbolic.symbolic_backend module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.symbolic.html#module-hls4ml.backends.symbolic.symbolic_backend">hls4ml.backends.symbolic.symbolic_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend"><code class="docutils literal notranslate"><span class="pre">SymbolicExpressionBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.build"><code class="docutils literal notranslate"><span class="pre">SymbolicExpressionBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">SymbolicExpressionBackend.create_initial_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.get_default_flow"><code class="docutils literal notranslate"><span class="pre">SymbolicExpressionBackend.get_default_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.symbolic.html#hls4ml.backends.symbolic.symbolic_backend.SymbolicExpressionBackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">SymbolicExpressionBackend.get_writer_flow()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.symbolic.html#module-hls4ml.backends.symbolic">Module contents</a></li>
 </ul>
 </li>
@@ -235,7 +464,14 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vitis.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vitis.html#module-hls4ml.backends.vitis.vitis_backend">hls4ml.backends.vitis.vitis_backend module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vitis.html#module-hls4ml.backends.vitis.vitis_backend">hls4ml.backends.vitis.vitis_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend"><code class="docutils literal notranslate"><span class="pre">VitisBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend.build"><code class="docutils literal notranslate"><span class="pre">VitisBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">VitisBackend.create_initial_config()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vitis.html#module-hls4ml.backends.vitis">Module contents</a></li>
 </ul>
 </li>
@@ -264,8 +500,55 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.html#module-hls4ml.backends.vivado.vivado_backend">hls4ml.backends.vivado.vivado_backend module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.html#module-hls4ml.backends.vivado.vivado_types">hls4ml.backends.vivado.vivado_types module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.html#module-hls4ml.backends.vivado.vivado_backend">hls4ml.backends.vivado.vivado_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend"><code class="docutils literal notranslate"><span class="pre">VivadoBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.build"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.create_initial_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.get_default_flow"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.get_default_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.get_writer_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_base_layer"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_base_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_conv1d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_conv1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_conv2d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_conv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_dense"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_dense()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_depconv1d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_depconv1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_depconv2d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_depconv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_embed"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_embed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_garnet"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_garnet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_garnet_stack"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_garnet_stack()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_gru"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_gru()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_lstm"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_lstm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_pooling1d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_pooling1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_pooling2d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_pooling2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_sepconv1d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_sepconv1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_sepconv2d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_sepconv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_softmax"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_softmax()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.html#module-hls4ml.backends.vivado.vivado_types">hls4ml.backends.vivado.vivado_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">VivadoArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">VivadoArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">VivadoArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">VivadoInplaceArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">VivadoInplaceArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">VivadoInplaceArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">VivadoInplaceStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">VivadoInplaceStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">VivadoInplaceStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">VivadoStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">VivadoStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">VivadoStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.html#module-hls4ml.backends.vivado">Module contents</a></li>
 </ul>
 </li>
@@ -280,8 +563,38 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_backend">hls4ml.backends.vivado_accelerator.vivado_accelerator_backend module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_config">hls4ml.backends.vivado_accelerator.vivado_accelerator_config module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_backend">hls4ml.backends.vivado_accelerator.vivado_accelerator_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.build"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorBackend.create_initial_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.get_default_flow"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorBackend.get_default_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorBackend.get_writer_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.make_xclbin"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorBackend.make_xclbin()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_config">hls4ml.backends.vivado_accelerator.vivado_accelerator_config module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_board"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_board()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_board_info"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_board_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_clock_period"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_clock_period()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_corrected_types"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_corrected_types()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_driver()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver_file"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_driver_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver_path"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_driver_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_input_type"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_input_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_interface"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_interface()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_io_bitwidth"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_io_bitwidth()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_krnl_rtl_src_dir"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_krnl_rtl_src_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_output_type"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_output_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_part"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_part()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_platform"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_platform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_tcl_file_path"><code class="docutils literal notranslate"><span class="pre">VivadoAcceleratorConfig.get_tcl_file_path()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator">Module contents</a></li>
 </ul>
 </li>
@@ -289,24 +602,24 @@
 </div>
 </section>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.backends.backend">
-<span id="hls4ml-backends-backend-module"></span><h2>hls4ml.backends.backend module<a class="headerlink" href="#module-hls4ml.backends.backend" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-backends-backend-module"></span><h2>hls4ml.backends.backend module<a class="headerlink" href="#module-hls4ml.backends.backend" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">Backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">Backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.create_initial_config">
-<span class="sig-name descname"><span class="pre">create_initial_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.create_initial_config" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">create_initial_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.create_initial_config" title="Link to this definition"></a></dt>
 <dd><p>Create the minimal conversion config for the backend.</p>
 <p>Subclasses should implement this method to provide the initial configuration for the conversion.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.create_layer_class">
-<span class="sig-name descname"><span class="pre">create_layer_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.create_layer_class" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">create_layer_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.create_layer_class" title="Link to this definition"></a></dt>
 <dd><p>Wrap the original layer class into the backend-specific layer class.</p>
 <p>Backends should extend base layer classes with new attributes and variables as needed. These new classes are then
 used within the model.</p>
@@ -319,7 +632,7 @@ used within the model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.get_available_flows">
-<span class="sig-name descname"><span class="pre">get_available_flows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_available_flows" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_available_flows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_available_flows" title="Link to this definition"></a></dt>
 <dd><p>Returns the list of flows registered for this backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -333,7 +646,7 @@ used within the model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.get_custom_source">
-<span class="sig-name descname"><span class="pre">get_custom_source</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_custom_source" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_custom_source</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_custom_source" title="Link to this definition"></a></dt>
 <dd><p>Returns the registered custom source files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -351,14 +664,14 @@ used within the model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.get_default_flow">
-<span class="sig-name descname"><span class="pre">get_default_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_default_flow" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_default_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_default_flow" title="Link to this definition"></a></dt>
 <dd><p>The name of the default flow of the backend.</p>
 <p>Default flow is used as the conversion target if the target flow has not been specified.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.register_pass">
-<span class="sig-name descname"><span class="pre">register_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_pass" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">register_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_pass" title="Link to this definition"></a></dt>
 <dd><p>Register an optimizer path for the backend.</p>
 <p>Note that user-provided optimizers registered without specifying any flow will not be invoked.</p>
 <dl class="field-list simple">
@@ -374,7 +687,7 @@ used within the model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.register_source">
-<span class="sig-name descname"><span class="pre">register_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nnet_utils'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_source" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">register_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nnet_utils'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_source" title="Link to this definition"></a></dt>
 <dd><p>Register custom source that is not part of the backend’s templates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -392,7 +705,7 @@ Defaults to ‘nnet_utils’.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.Backend.register_template">
-<span class="sig-name descname"><span class="pre">register_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_template" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">register_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_template" title="Link to this definition"></a></dt>
 <dd><p>Register a template “optimizer”.</p>
 <p>E.g., function call template or op configuration template.</p>
 <dl class="field-list simple">
@@ -406,17 +719,17 @@ Defaults to ‘nnet_utils’.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.get_available_backends">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">get_available_backends</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.get_available_backends" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">get_available_backends</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.get_available_backends" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.get_backend">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">get_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.get_backend" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">get_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.get_backend" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.backends.backend.register_backend">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">register_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.register_backend" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">register_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.register_backend" title="Link to this definition"></a></dt>
 <dd><p>Create the backend instance and add it to the registry.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -433,14 +746,14 @@ Defaults to ‘nnet_utils’.</p></li>
 
 </section>
 <section id="module-hls4ml.backends.template">
-<span id="hls4ml-backends-template-module"></span><h2>hls4ml.backends.template module<a class="headerlink" href="#module-hls4ml.backends.template" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-backends-template-module"></span><h2>hls4ml.backends.template module<a class="headerlink" href="#module-hls4ml.backends.template" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.template.FunctionCallTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">FunctionCallTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.FunctionCallTemplate" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">FunctionCallTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.FunctionCallTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.template.Template" title="hls4ml.backends.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.template.FunctionCallTemplate.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.FunctionCallTemplate.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.FunctionCallTemplate.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -457,27 +770,27 @@ Defaults to ‘nnet_utils’.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.template.LayerConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">LayerConfigTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.LayerConfigTemplate" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">LayerConfigTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.LayerConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.template.Template" title="hls4ml.backends.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.template.Template">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">Template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">Template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.template.Template.format">
-<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.format" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.format" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.template.Template.get_name">
-<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.get_name" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.get_name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.template.Template.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.match" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.match" title="Link to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -488,7 +801,7 @@ Defaults to ‘nnet_utils’.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.template.Template.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -505,7 +818,7 @@ Defaults to ‘nnet_utils’.</p></li>
 
 </section>
 <section id="module-hls4ml.backends">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends" title="Link to this heading"></a></h2>
 </section>
 </section>
 

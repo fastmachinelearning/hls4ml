@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.utils package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -120,15 +115,15 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-utils-package">
-<h1>hls4ml.utils package<a class="headerlink" href="#hls4ml-utils-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.utils package<a class="headerlink" href="#hls4ml-utils-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.utils.config">
-<span id="hls4ml-utils-config-module"></span><h2>hls4ml.utils.config module<a class="headerlink" href="#module-hls4ml.utils.config" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-utils-config-module"></span><h2>hls4ml.utils.config module<a class="headerlink" href="#module-hls4ml.utils.config" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.config.config_from_keras_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_keras_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_keras_model" title="Link to this definition"></a></dt>
 <dd><p>Create an HLS conversion config given the Keras model.</p>
 <p>This function serves as the initial step in creating the custom conversion configuration.
 Users are advised to inspect the returned object to tweak the conversion configuration.
@@ -168,7 +163,7 @@ Note:  Only integer and fixed precisions are supported</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.config.config_from_onnx_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_onnx_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_onnx_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_onnx_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_onnx_model" title="Link to this definition"></a></dt>
 <dd><p>Create an HLS conversion config given the ONNX model.</p>
 <p>This function serves as the initial step in creating the custom conversion configuration.
 Users are advised to inspect the returned object to tweak the conversion configuration.
@@ -205,7 +200,7 @@ configuration tweaks.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.config.config_from_pytorch_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_last_conversion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transpose_outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_pytorch_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_last_conversion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transpose_outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_pytorch_model" title="Link to this definition"></a></dt>
 <dd><p>Create an HLS conversion config given the PyTorch model.</p>
 <p>This function serves as the initial step in creating the custom conversion configuration.
 Users are advised to inspect the returned object to tweak the conversion configuration.
@@ -214,7 +209,7 @@ The return object can be passed as <cite>hls_config</cite> parameter to <cite>co
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – PyTorch model</p></li>
-<li><p><strong>input_shape</strong> (<em>tuple</em><em> or </em><em>list of tuples</em>) – The shape of the input tensor, excluding the batch size.</p></li>
+<li><p><strong>input_shape</strong> (<em>tuple</em><em> or </em><em>list</em><em> of </em><em>tuples</em>) – The shape of the input tensor, excluding the batch size.</p></li>
 <li><p><strong>granularity</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Granularity of the created config. Defaults to ‘model’.
 Can be set to ‘model’, ‘type’ and ‘layer’.</p>
 <p>Granularity can be used to generate a more verbose config that can be fine-tuned.
@@ -228,14 +223,14 @@ configuration tweaks.</p>
 <li><p><strong>default_precision</strong> (<em>str</em><em>, </em><em>optional</em>) – Default precision to use. Defaults to ‘fixed&lt;16,6&gt;’.</p></li>
 <li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Default reuse factor. Defaults to 1.</p></li>
 <li><p><strong>channels_last_conversion</strong> (<em>string</em><em>, </em><em>optional</em>) – Configures the conversion of pytorch layers to</p></li>
-<li><p><strong>'full'</strong> (<em>or 'off'. If</em>) – </p></li>
-<li><p><strong>'internal'</strong> (<em>and internal layers will be converted. If</em>) – </p></li>
-<li><p><strong>'full'</strong> – </p></li>
-<li><p><strong>inputs</strong> (<em>both the</em>) – </p></li>
-<li><p><strong>'internal'</strong> – </p></li>
-<li><p><strong>this</strong> (<em>only internal layers will be converted;</em>) – </p></li>
-<li><p><strong>'off'</strong> (<em>assumes the inputs are converted by the user. If</em>) – </p></li>
-<li><p><strong>performed.</strong> (<em>no conversion is</em>) – </p></li>
+<li><p><strong>'full'</strong> (<em>or 'off'. If</em>)</p></li>
+<li><p><strong>'internal'</strong> (<em>and internal layers will be converted. If</em>)</p></li>
+<li><p><strong>'full'</strong></p></li>
+<li><p><strong>inputs</strong> (<em>both the</em>)</p></li>
+<li><p><strong>'internal'</strong></p></li>
+<li><p><strong>this</strong> (<em>only internal layers will be converted;</em>)</p></li>
+<li><p><strong>'off'</strong> (<em>assumes the inputs are converted by the user. If</em>)</p></li>
+<li><p><strong>performed.</strong> (<em>no conversion is</em>)</p></li>
 <li><p><strong>transpose_outputs</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to ‘False’ if the output should not be transposed from
 channels_last into channels_first data format. Defaults to ‘False’. If False, outputs needs
 to be transposed manually.</p></li>
@@ -255,7 +250,7 @@ to be transposed manually.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.config.create_config">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">create_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1.0.0'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.create_config" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">create_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1.0.0'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.create_config" title="Link to this definition"></a></dt>
 <dd><p>Create an initial configuration to guide the conversion process.</p>
 <p>The resulting configuration will contain general information about the project (like project name and output directory)
 as well as the backend-specific configuration (part numbers, clocks etc). Extra arguments of this function will be
@@ -287,15 +282,15 @@ Defaults to ‘1.0.0’.</p></li>
 
 </section>
 <section id="module-hls4ml.utils.example_models">
-<span id="hls4ml-utils-example-models-module"></span><h2>hls4ml.utils.example_models module<a class="headerlink" href="#module-hls4ml.utils.example_models" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-utils-example-models-module"></span><h2>hls4ml.utils.example_models module<a class="headerlink" href="#module-hls4ml.utils.example_models" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.example_models.fetch_example_list">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.example_models.</span></span><span class="sig-name descname"><span class="pre">fetch_example_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_list" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.example_models.</span></span><span class="sig-name descname"><span class="pre">fetch_example_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_list" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.example_models.fetch_example_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.example_models.</span></span><span class="sig-name descname"><span class="pre">fetch_example_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.example_models.</span></span><span class="sig-name descname"><span class="pre">fetch_example_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_model" title="Link to this definition"></a></dt>
 <dd><p>Download an example model (and example data &amp; configuration if available) from github repo to working directory,
 and return the corresponding configuration:</p>
 <p><a class="reference external" href="https://github.com/fastmachinelearning/example-models">https://github.com/fastmachinelearning/example-models</a></p>
@@ -318,10 +313,10 @@ and return the corresponding configuration:</p>
 
 </section>
 <section id="module-hls4ml.utils.fixed_point_utils">
-<span id="hls4ml-utils-fixed-point-utils-module"></span><h2>hls4ml.utils.fixed_point_utils module<a class="headerlink" href="#module-hls4ml.utils.fixed_point_utils" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-utils-fixed-point-utils-module"></span><h2>hls4ml.utils.fixed_point_utils module<a class="headerlink" href="#module-hls4ml.utils.fixed_point_utils" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.FixedPointEmulator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">FixedPointEmulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integer_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimal_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">FixedPointEmulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integer_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimal_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Default constructor
 :param - N: Total number of bits in the fixed point number
@@ -332,54 +327,54 @@ and return the corresponding configuration:</p>
 :param - self.decimal_bits: Bits corresponding to the decimal part of the number</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.exp_float">
-<span class="sig-name descname"><span class="pre">exp_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sig_figs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.exp_float" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">exp_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sig_figs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.exp_float" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.inv_float">
-<span class="sig-name descname"><span class="pre">inv_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sig_figs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.inv_float" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">inv_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sig_figs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.inv_float" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits">
-<span class="sig-name descname"><span class="pre">set_msb_bits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_msb_bits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.to_float">
-<span class="sig-name descname"><span class="pre">to_float</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.to_float" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">to_float</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.to_float" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.ceil_log2">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">ceil_log2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.ceil_log2" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">ceil_log2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.ceil_log2" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.uint_to_binary">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">uint_to_binary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.uint_to_binary" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">uint_to_binary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.uint_to_binary" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="module-hls4ml.utils.plot">
-<span id="hls4ml-utils-plot-module"></span><h2>hls4ml.utils.plot module<a class="headerlink" href="#module-hls4ml.utils.plot" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-utils-plot-module"></span><h2>hls4ml.utils.plot module<a class="headerlink" href="#module-hls4ml.utils.plot" title="Link to this heading"></a></h2>
 <p>Utilities related to model visualization.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.plot.add_edge">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.add_edge" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.add_edge" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.plot.check_pydot">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">check_pydot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.check_pydot" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">check_pydot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.check_pydot" title="Link to this definition"></a></dt>
 <dd><p>Returns True if PyDot and Graphviz are available.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.plot.model_to_dot">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">model_to_dot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subgraph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.model_to_dot" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">model_to_dot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subgraph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.model_to_dot" title="Link to this definition"></a></dt>
 <dd><p>Convert a HLS model to dot format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -409,7 +404,7 @@ a <cite>pydot.Cluster</cite> instance representing nested model if
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.plot.plot_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">plot_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.plot_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">plot_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.plot_model" title="Link to this definition"></a></dt>
 <dd><p>Converts a HLS model to dot format and save to a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -435,10 +430,10 @@ This enables in-line display of the model plots in notebooks.</p>
 
 </section>
 <section id="module-hls4ml.utils.string_utils">
-<span id="hls4ml-utils-string-utils-module"></span><h2>hls4ml.utils.string_utils module<a class="headerlink" href="#module-hls4ml.utils.string_utils" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-utils-string-utils-module"></span><h2>hls4ml.utils.string_utils module<a class="headerlink" href="#module-hls4ml.utils.string_utils" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.string_utils.convert_to_pascal_case">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_pascal_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snake_case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.string_utils.convert_to_pascal_case" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_pascal_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snake_case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.string_utils.convert_to_pascal_case" title="Link to this definition"></a></dt>
 <dd><p>Convert string in snake_case to PascalCase</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -455,7 +450,7 @@ This enables in-line display of the model plots in notebooks.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.string_utils.convert_to_snake_case">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_snake_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pascal_case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.string_utils.convert_to_snake_case" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_snake_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pascal_case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.string_utils.convert_to_snake_case" title="Link to this definition"></a></dt>
 <dd><p>Convert string in PascalCase to snake_case</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -472,16 +467,16 @@ This enables in-line display of the model plots in notebooks.</p>
 
 </section>
 <section id="module-hls4ml.utils.symbolic_utils">
-<span id="hls4ml-utils-symbolic-utils-module"></span><h2>hls4ml.utils.symbolic_utils module<a class="headerlink" href="#module-hls4ml.utils.symbolic_utils" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-utils-symbolic-utils-module"></span><h2>hls4ml.utils.symbolic_utils module<a class="headerlink" href="#module-hls4ml.utils.symbolic_utils" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.LUTFunction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">LUTFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">math_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.LUTFunction" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">LUTFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">math_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.LUTFunction" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.generate_operator_complexity">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">generate_operator_complexity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unary_operators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_operators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_include_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_libs_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.generate_operator_complexity" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">generate_operator_complexity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unary_operators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_operators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_include_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_libs_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.generate_operator_complexity" title="Link to this definition"></a></dt>
 <dd><p>Generates HLS projects and synthesizes them to obtain operator complexity (clock cycles per given math operation).</p>
 <p>This function can be used to obtain a list of operator complexity for a given FPGA part at a given precision.</p>
 <dl class="field-list simple">
@@ -506,7 +501,7 @@ This enables in-line display of the model plots in notebooks.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.init_pysr_lut_functions">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">init_pysr_lut_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_definitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.init_pysr_lut_functions" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">init_pysr_lut_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_definitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.init_pysr_lut_functions" title="Link to this definition"></a></dt>
 <dd><p>Register LUT-based approximations with PySR.</p>
 <p>Functions should be in the form of:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">func_name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">math_lut</span><span class="p">(</span><span class="o">&lt;</span><span class="n">func</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">=&lt;</span><span class="n">table_size</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">range_start</span><span class="o">=&lt;</span><span class="n">start</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">range_end</span><span class="o">=&lt;</span><span class="n">end</span><span class="o">&gt;</span><span class="p">)</span>
@@ -530,12 +525,12 @@ Defaults to None.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.symbolic_utils.register_pysr_lut_function">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">register_pysr_lut_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">julia_main</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.register_pysr_lut_function" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.symbolic_utils.</span></span><span class="sig-name descname"><span class="pre">register_pysr_lut_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">julia_main</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.symbolic_utils.register_pysr_lut_function" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="module-hls4ml.utils">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.utils" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.utils" title="Link to this heading"></a></h2>
 </section>
 </section>
 

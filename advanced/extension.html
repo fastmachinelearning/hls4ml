@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Extension API &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -113,7 +108,7 @@
            <div itemprop="articleBody">
              
   <section id="extension-api">
-<h1>Extension API<a class="headerlink" href="#extension-api" title="Permalink to this heading"></a></h1>
+<h1>Extension API<a class="headerlink" href="#extension-api" title="Link to this heading"></a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> natively supports a large number of neural network layers.
 But what if a desired layer is not supported?
 If it is standard enough and its implementation would benefit the community as a whole, we would welcome a contribution to add it to the standard set of supported layers.
@@ -130,11 +125,11 @@ To implement a custom layer in <code class="docutils literal notranslate"><span 
 <li><p>Registration of layer, source code, and templates</p></li>
 </ul>
 <section id="complete-example">
-<h2>Complete example<a class="headerlink" href="#complete-example" title="Permalink to this heading"></a></h2>
+<h2>Complete example<a class="headerlink" href="#complete-example" title="Link to this heading"></a></h2>
 <p>For concreteness, let’s say our custom layer <code class="docutils literal notranslate"><span class="pre">KReverse</span></code> is implemented in Keras and reverses the order of the last dimension of the input.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Keras implementation of a custom layer</span>
 <span class="k">class</span> <span class="nc">KReverse</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Keras implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Keras implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -150,7 +145,7 @@ To implement a custom layer in <code class="docutils literal notranslate"><span 
 We can define the equivalent layer in hls4ml <code class="docutils literal notranslate"><span class="pre">HReverse</span></code>, which inherits from <code class="docutils literal notranslate"><span class="pre">hls4ml.model.layers.Layer</span></code>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hls4ml layer implementation</span>
 <span class="k">class</span> <span class="nc">HReverse</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;hls4ml implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;hls4ml implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_variable</span><span class="p">()</span>
@@ -180,25 +175,25 @@ In this case, there a single output with the same shape as the input.</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifndef NNET_REVERSE_H_</span>
 <span class="cp">#define NNET_REVERSE_H_</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;nnet_common.h&quot;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;nnet_common.h&quot;</span>
 
-<span class="k">namespace</span><span class="w"> </span><span class="nn">nnet</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">nnet</span><span class="w"> </span><span class="p">{</span>
 
-<span class="k">struct</span><span class="w"> </span><span class="nc">reverse_config</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">reverse_config</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+<span class="p">};</span>
 
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">data_T</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span><span class="w"> </span><span class="nc">CONFIG_T</span><span class="o">&gt;</span><span class="w"></span>
-<span class="kt">void</span><span class="w"> </span><span class="n">reverse</span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><span class="n">data_T</span><span class="w"> </span><span class="n">input</span><span class="p">[</span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="p">],</span><span class="w"></span>
-<span class="w">    </span><span class="n">data_T</span><span class="w"> </span><span class="n">reversed</span><span class="p">[</span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="p">]</span><span class="w"></span>
-<span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">reversed</span><span class="p">[</span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">data_T</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span><span class="w"> </span><span class="nc">CONFIG_T</span><span class="o">&gt;</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reverse</span><span class="p">(</span>
+<span class="w">    </span><span class="n">data_T</span><span class="w"> </span><span class="n">input</span><span class="p">[</span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="p">],</span>
+<span class="w">    </span><span class="n">data_T</span><span class="w"> </span><span class="n">reversed</span><span class="p">[</span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="p">]</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">reversed</span><span class="p">[</span><span class="n">CONFIG_T</span><span class="o">::</span><span class="n">n_in</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 
-<span class="p">}</span><span class="w"></span>
+<span class="p">}</span>
 
 <span class="cp">#endif</span>
 </pre></div>

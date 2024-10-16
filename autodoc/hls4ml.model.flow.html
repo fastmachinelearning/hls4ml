@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.model.flow package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -122,56 +117,56 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-model-flow-package">
-<h1>hls4ml.model.flow package<a class="headerlink" href="#hls4ml-model-flow-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.model.flow package<a class="headerlink" href="#hls4ml-model-flow-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.model.flow.flow">
-<span id="hls4ml-model-flow-flow-module"></span><h2>hls4ml.model.flow.flow module<a class="headerlink" href="#module-hls4ml.model.flow.flow" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-model-flow-flow-module"></span><h2>hls4ml.model.flow.flow module<a class="headerlink" href="#module-hls4ml.model.flow.flow" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.DynamicFlow">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">DynamicFlow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.DynamicFlow" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">DynamicFlow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.DynamicFlow" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.flow.flow.Flow" title="hls4ml.model.flow.flow.Flow"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flow</span></code></a></p>
 <p>A dynamically updated flow.</p>
 <p>This flow will get the list of optimizers by calling optimizer_func. Useful to represent a view of all available
 optimizers of a certain type.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.DynamicFlow.optimizers">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizers</span></span><a class="headerlink" href="#hls4ml.model.flow.flow.DynamicFlow.optimizers" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizers</span></span><a class="headerlink" href="#hls4ml.model.flow.flow.DynamicFlow.optimizers" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.Flow">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">Flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.Flow" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">Flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.Flow" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class represents a collection of optimizers. The flow can optionally depend on other flows.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.Flow.optimizers">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizers</span></span><a class="headerlink" href="#hls4ml.model.flow.flow.Flow.optimizers" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizers</span></span><a class="headerlink" href="#hls4ml.model.flow.flow.Flow.optimizers" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.get_available_flows">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">get_available_flows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_available_flows" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">get_available_flows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_available_flows" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.get_backend_flows">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">get_backend_flows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_backend_flows" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">get_backend_flows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_backend_flows" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.get_flow">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">get_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_flow" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">get_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_flow" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.register_flow">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">register_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.register_flow" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">register_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.register_flow" title="Link to this definition"></a></dt>
 <dd><p>Create a flow and add it to the registry.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -197,7 +192,7 @@ appended to the name of the registered flow. Defaults to None.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.flow.flow.update_flow">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">update_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_optimizers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_optimizers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.update_flow" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.flow.flow.</span></span><span class="sig-name descname"><span class="pre">update_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_optimizers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_optimizers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.update_flow" title="Link to this definition"></a></dt>
 <dd><p>Add or remove optimizers to/from an existing flow.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -212,7 +207,7 @@ appended to the name of the registered flow. Defaults to None.</p></li>
 
 </section>
 <section id="module-hls4ml.model.flow">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.model.flow" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.model.flow" title="Link to this heading"></a></h2>
 </section>
 </section>
 

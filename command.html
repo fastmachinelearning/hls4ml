@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Command Line Interface (deprecated) &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -39,9 +37,6 @@
             
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -117,12 +112,12 @@
            <div itemprop="articleBody">
              
   <section id="command-line-interface-deprecated">
-<h1>Command Line Interface (deprecated)<a class="headerlink" href="#command-line-interface-deprecated" title="Permalink to this heading"></a></h1>
+<h1>Command Line Interface (deprecated)<a class="headerlink" href="#command-line-interface-deprecated" title="Link to this heading"></a></h1>
 <p>The command line interface to <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> has been deprecated. Users are advised to use the python API. This page
 documents all the commands that <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports as a reference for those that have not migrated.</p>
 <hr class="docutils" />
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
 <p>To start you can just type in <code class="docutils literal notranslate"><span class="pre">hls4ml</span> <span class="pre">-h</span></code> or <code class="docutils literal notranslate"><span class="pre">hls4ml</span>&#160; <span class="pre">--help</span></code> in your command line, a message will show up like below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">hls4ml</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">version</span><span class="p">]</span> <span class="p">{</span><span class="n">config</span><span class="p">,</span><span class="n">convert</span><span class="p">,</span><span class="n">build</span><span class="p">,</span><span class="n">report</span><span class="p">}</span> <span class="o">...</span>
 
@@ -151,7 +146,7 @@ documents all the commands that <code class="docutils literal notranslate"><span
 </section>
 <hr class="docutils" />
 <section id="hls4ml-config">
-<h2>hls4ml config<a class="headerlink" href="#hls4ml-config" title="Permalink to this heading"></a></h2>
+<h2>hls4ml config<a class="headerlink" href="#hls4ml-config" title="Link to this heading"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hls4ml</span> <span class="n">config</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MODEL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span> <span class="n">WEIGHTS</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -166,7 +161,7 @@ documents all the commands that <code class="docutils literal notranslate"><span
 </section>
 <hr class="docutils" />
 <section id="hls4ml-convert">
-<h2>hls4ml convert<a class="headerlink" href="#hls4ml-convert" title="Permalink to this heading"></a></h2>
+<h2>hls4ml convert<a class="headerlink" href="#hls4ml-convert" title="Link to this heading"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hls4ml</span> <span class="n">convert</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -182,7 +177,7 @@ documents all the commands that <code class="docutils literal notranslate"><span
 </section>
 <hr class="docutils" />
 <section id="hls4ml-build">
-<h2>hls4ml build<a class="headerlink" href="#hls4ml-build" title="Permalink to this heading"></a></h2>
+<h2>hls4ml build<a class="headerlink" href="#hls4ml-build" title="Link to this heading"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hls4ml</span> <span class="n">build</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PROJECT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">a</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">reset</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -206,7 +201,7 @@ documents all the commands that <code class="docutils literal notranslate"><span
 </section>
 <hr class="docutils" />
 <section id="hls4ml-report">
-<h2>hls4ml report<a class="headerlink" href="#hls4ml-report" title="Permalink to this heading"></a></h2>
+<h2>hls4ml report<a class="headerlink" href="#hls4ml-report" title="Link to this heading"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hls4ml</span> <span class="n">report</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PROJECT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span>
 </pre></div>
 </div>

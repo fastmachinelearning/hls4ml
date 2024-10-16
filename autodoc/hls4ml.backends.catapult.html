@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends.catapult package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -118,29 +113,282 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-backends-catapult-package">
-<h1>hls4ml.backends.catapult package<a class="headerlink" href="#hls4ml-backends-catapult-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.backends.catapult package<a class="headerlink" href="#hls4ml-backends-catapult-package" title="Link to this heading"></a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.catapult.passes.html">hls4ml.backends.catapult.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.broadcast_stream">hls4ml.backends.catapult.passes.broadcast_stream module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.conv_same_pad">hls4ml.backends.catapult.passes.conv_same_pad module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.conv_stream">hls4ml.backends.catapult.passes.conv_stream module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.convolution_templates">hls4ml.backends.catapult.passes.convolution_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.convolution_winograd">hls4ml.backends.catapult.passes.convolution_winograd module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.core_templates">hls4ml.backends.catapult.passes.core_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.fifo_depth_optimization">hls4ml.backends.catapult.passes.fifo_depth_optimization module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.garnet_templates">hls4ml.backends.catapult.passes.garnet_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.merge_templates">hls4ml.backends.catapult.passes.merge_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.pointwise">hls4ml.backends.catapult.passes.pointwise module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.pooling_templates">hls4ml.backends.catapult.passes.pooling_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.quantization_templates">hls4ml.backends.catapult.passes.quantization_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.recurrent_templates">hls4ml.backends.catapult.passes.recurrent_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.reshaping_templates">hls4ml.backends.catapult.passes.reshaping_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.resource_strategy">hls4ml.backends.catapult.passes.resource_strategy module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.transform_types">hls4ml.backends.catapult.passes.transform_types module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.broadcast_stream">hls4ml.backends.catapult.passes.broadcast_stream module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.Broadcast"><code class="docutils literal notranslate"><span class="pre">Broadcast</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.Broadcast.initialize"><code class="docutils literal notranslate"><span class="pre">Broadcast.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastConfigTemplate"><code class="docutils literal notranslate"><span class="pre">BroadcastConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">BroadcastConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">BroadcastFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">BroadcastFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastStream"><code class="docutils literal notranslate"><span class="pre">BroadcastStream</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastStream.match"><code class="docutils literal notranslate"><span class="pre">BroadcastStream.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastStream.transform"><code class="docutils literal notranslate"><span class="pre">BroadcastStream.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.register_broadcast_stream"><code class="docutils literal notranslate"><span class="pre">register_broadcast_stream()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.conv_same_pad">hls4ml.backends.catapult.passes.conv_same_pad module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv1D</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv1D.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.name"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv1D.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.transform"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv1D.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv2D</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.match"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv2D.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv2D.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.transform"><code class="docutils literal notranslate"><span class="pre">InsertZeroPaddingBeforeConv2D.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.conv_stream">hls4ml.backends.catapult.passes.conv_stream module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_stream.GenerateConvStreamingInstructions"><code class="docutils literal notranslate"><span class="pre">GenerateConvStreamingInstructions</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_stream.GenerateConvStreamingInstructions.match"><code class="docutils literal notranslate"><span class="pre">GenerateConvStreamingInstructions.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_stream.GenerateConvStreamingInstructions.transform"><code class="docutils literal notranslate"><span class="pre">GenerateConvStreamingInstructions.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.convolution_templates">hls4ml.backends.catapult.passes.convolution_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv1DConfigTemplate"><code class="docutils literal notranslate"><span class="pre">Conv1DConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv1DConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">Conv1DConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv1DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">Conv1DFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv1DFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">Conv1DFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv2DConfigTemplate"><code class="docutils literal notranslate"><span class="pre">Conv2DConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv2DConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">Conv2DConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv2DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">Conv2DFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv2DFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">Conv2DFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.DepthwiseConv1DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">DepthwiseConv1DFunctionTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.DepthwiseConv2DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">DepthwiseConv2DFunctionTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv1DConfigTemplate"><code class="docutils literal notranslate"><span class="pre">SeparableConv1DConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv1DConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">SeparableConv1DConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv1DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">SeparableConv1DFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv1DFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">SeparableConv1DFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv2DConfigTemplate"><code class="docutils literal notranslate"><span class="pre">SeparableConv2DConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv2DConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">SeparableConv2DConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv2DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">SeparableConv2DFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.SeparableConv2DFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">SeparableConv2DFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.convolution_winograd">hls4ml.backends.catapult.passes.convolution_winograd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_winograd.ApplyWinogradKernelTransformation"><code class="docutils literal notranslate"><span class="pre">ApplyWinogradKernelTransformation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_winograd.ApplyWinogradKernelTransformation.match"><code class="docutils literal notranslate"><span class="pre">ApplyWinogradKernelTransformation.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_winograd.ApplyWinogradKernelTransformation.transform"><code class="docutils literal notranslate"><span class="pre">ApplyWinogradKernelTransformation.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.core_templates">hls4ml.backends.catapult.passes.core_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ActivationConfigTemplate"><code class="docutils literal notranslate"><span class="pre">ActivationConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ActivationConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">ActivationConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ActivationFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">ActivationFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ActivationFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">ActivationFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.BatchNormalizationConfigTemplate"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.BatchNormalizationConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.BatchNormalizationFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.BatchNormalizationFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.DenseConfigTemplate"><code class="docutils literal notranslate"><span class="pre">DenseConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.DenseConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">DenseConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.DenseFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">DenseFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.DenseFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">DenseFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.HardActivationConfigTemplate"><code class="docutils literal notranslate"><span class="pre">HardActivationConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.HardActivationConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">HardActivationConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.PReLUFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">PReLUFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.PReLUFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">PReLUFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ParamActivationConfigTemplate"><code class="docutils literal notranslate"><span class="pre">ParamActivationConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ParamActivationConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">ParamActivationConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ParametrizedActivationFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">ParametrizedActivationFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ParametrizedActivationFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">ParametrizedActivationFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.SoftmaxConfigTemplate"><code class="docutils literal notranslate"><span class="pre">SoftmaxConfigTemplate</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.fifo_depth_optimization">hls4ml.backends.catapult.passes.fifo_depth_optimization module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.FifoDepthOptimization"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.FifoDepthOptimization.transform"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimization.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.generate_max_depth_file"><code class="docutils literal notranslate"><span class="pre">generate_max_depth_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.get_vcd_data"><code class="docutils literal notranslate"><span class="pre">get_vcd_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.populate_values"><code class="docutils literal notranslate"><span class="pre">populate_values()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.set_big_fifos"><code class="docutils literal notranslate"><span class="pre">set_big_fifos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.set_fifo_depth"><code class="docutils literal notranslate"><span class="pre">set_fifo_depth()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.garnet_templates">hls4ml.backends.catapult.passes.garnet_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetConfigTemplate"><code class="docutils literal notranslate"><span class="pre">GarNetConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">GarNetConfigTemplate.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetConfigTemplate.get_transforms_config"><code class="docutils literal notranslate"><span class="pre">GarNetConfigTemplate.get_transforms_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">GarNetFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">GarNetFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetStackConfigTemplate"><code class="docutils literal notranslate"><span class="pre">GarNetStackConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetStackConfigTemplate.get_transforms_config"><code class="docutils literal notranslate"><span class="pre">GarNetStackConfigTemplate.get_transforms_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetStackFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">GarNetStackFunctionTemplate</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.merge_templates">hls4ml.backends.catapult.passes.merge_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.ConcatenateConfigTemplate"><code class="docutils literal notranslate"><span class="pre">ConcatenateConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.ConcatenateConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">ConcatenateConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.DotConfigTemplate"><code class="docutils literal notranslate"><span class="pre">DotConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.DotConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">DotConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.MergeConfigTemplate"><code class="docutils literal notranslate"><span class="pre">MergeConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.MergeConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">MergeConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.MergeFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">MergeFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.MergeFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">MergeFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.pointwise">hls4ml.backends.catapult.passes.pointwise module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.OptimizePointwiseConv"><code class="docutils literal notranslate"><span class="pre">OptimizePointwiseConv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.OptimizePointwiseConv.match"><code class="docutils literal notranslate"><span class="pre">OptimizePointwiseConv.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.OptimizePointwiseConv.transform"><code class="docutils literal notranslate"><span class="pre">OptimizePointwiseConv.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.PointwiseConv1DConfigTemplate"><code class="docutils literal notranslate"><span class="pre">PointwiseConv1DConfigTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.PointwiseConv1DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">PointwiseConv1DFunctionTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.PointwiseConv2DConfigTemplate"><code class="docutils literal notranslate"><span class="pre">PointwiseConv2DConfigTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.PointwiseConv2DFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">PointwiseConv2DFunctionTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.register_pointwise"><code class="docutils literal notranslate"><span class="pre">register_pointwise()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.pooling_templates">hls4ml.backends.catapult.passes.pooling_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pooling_templates.PoolingConfigTemplate"><code class="docutils literal notranslate"><span class="pre">PoolingConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pooling_templates.PoolingConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">PoolingConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pooling_templates.PoolingFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">PoolingFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pooling_templates.PoolingFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">PoolingFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.quantization_templates">hls4ml.backends.catapult.passes.quantization_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.quantization_templates.ApplyAlphaConfigTemplate"><code class="docutils literal notranslate"><span class="pre">ApplyAlphaConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.quantization_templates.ApplyAlphaConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">ApplyAlphaConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.quantization_templates.ApplyAlphaFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">ApplyAlphaFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.quantization_templates.ApplyAlphaFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">ApplyAlphaFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.recurrent_templates">hls4ml.backends.catapult.passes.recurrent_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.recurrent_templates.RecurrentConfigTemplate"><code class="docutils literal notranslate"><span class="pre">RecurrentConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.recurrent_templates.RecurrentConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">RecurrentConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.recurrent_templates.RecurrentFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">RecurrentFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.recurrent_templates.RecurrentFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">RecurrentFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.reshaping_templates">hls4ml.backends.catapult.passes.reshaping_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ResizeConfigTemplate"><code class="docutils literal notranslate"><span class="pre">ResizeConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ResizeConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">ResizeConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ResizeFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">ResizeFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ResizeFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">ResizeFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.TransposeConfigTemplate"><code class="docutils literal notranslate"><span class="pre">TransposeConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.TransposeConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">TransposeConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.TransposeFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">TransposeFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.TransposeFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">TransposeFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ZeroPaddingConfigTemplate"><code class="docutils literal notranslate"><span class="pre">ZeroPaddingConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ZeroPaddingConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">ZeroPaddingConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ZeroPaddingFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">ZeroPaddingFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.reshaping_templates.ZeroPaddingFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">ZeroPaddingFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.resource_strategy">hls4ml.backends.catapult.passes.resource_strategy module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.resource_strategy.ApplyResourceStrategy"><code class="docutils literal notranslate"><span class="pre">ApplyResourceStrategy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.resource_strategy.ApplyResourceStrategy.match"><code class="docutils literal notranslate"><span class="pre">ApplyResourceStrategy.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.resource_strategy.ApplyResourceStrategy.transform"><code class="docutils literal notranslate"><span class="pre">ApplyResourceStrategy.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.transform_types">hls4ml.backends.catapult.passes.transform_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.transform_types.TransformTypes"><code class="docutils literal notranslate"><span class="pre">TransformTypes</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.transform_types.TransformTypes.transform"><code class="docutils literal notranslate"><span class="pre">TransformTypes.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes">Module contents</a></li>
 </ul>
 </li>
@@ -148,216 +396,216 @@
 </div>
 </section>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.backends.catapult.catapult_backend">
-<span id="hls4ml-backends-catapult-catapult-backend-module"></span><h2>hls4ml.backends.catapult.catapult_backend module<a class="headerlink" href="#module-hls4ml.backends.catapult.catapult_backend" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-backends-catapult-catapult-backend-module"></span><h2>hls4ml.backends.catapult.catapult_backend module<a class="headerlink" href="#module-hls4ml.backends.catapult.catapult_backend" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_backend.</span></span><span class="sig-name descname"><span class="pre">CatapultBackend</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_backend.</span></span><span class="sig-name descname"><span class="pre">CatapultBackend</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend" title="hls4ml.backends.fpga.fpga_backend.FPGABackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGABackend</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhdl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vsynth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bitfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ran_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sw_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">da</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.build" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhdl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vsynth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bitfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ran_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sw_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">da</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.build" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.create_initial_config">
-<span class="sig-name descname"><span class="pre">create_initial_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tech</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fpga'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'xcku115-flvb2104-2-i'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asiclibs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nangate-45nm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clock_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'io_parallel'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.create_initial_config" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">create_initial_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tech</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fpga'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'xcku115-flvb2104-2-i'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asiclibs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nangate-45nm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clock_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'io_parallel'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.create_initial_config" title="Link to this definition"></a></dt>
 <dd><p>Create the minimal conversion config for the backend.</p>
 <p>Subclasses should implement this method to provide the initial configuration for the conversion.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_default_flow">
-<span class="sig-name descname"><span class="pre">get_default_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_default_flow" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_default_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_default_flow" title="Link to this definition"></a></dt>
 <dd><p>The name of the default flow of the backend.</p>
 <p>Default flow is used as the conversion target if the target flow has not been specified.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_writer_flow">
-<span class="sig-name descname"><span class="pre">get_writer_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_writer_flow" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_writer_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.get_writer_flow" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_base_layer">
-<span class="sig-name descname"><span class="pre">init_base_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_base_layer" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_base_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_base_layer" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv1d">
-<span class="sig-name descname"><span class="pre">init_conv1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv1d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_conv1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv1d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv2d">
-<span class="sig-name descname"><span class="pre">init_conv2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv2d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_conv2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv2d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_dense">
-<span class="sig-name descname"><span class="pre">init_dense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_dense" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_dense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_dense" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_depconv2d">
-<span class="sig-name descname"><span class="pre">init_depconv2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_depconv2d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_depconv2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_depconv2d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_embed">
-<span class="sig-name descname"><span class="pre">init_embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_embed" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_embed" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet">
-<span class="sig-name descname"><span class="pre">init_garnet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_garnet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet_stack">
-<span class="sig-name descname"><span class="pre">init_garnet_stack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet_stack" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_garnet_stack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_garnet_stack" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling1d">
-<span class="sig-name descname"><span class="pre">init_global_pooling1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling1d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_global_pooling1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling1d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling2d">
-<span class="sig-name descname"><span class="pre">init_global_pooling2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling2d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_global_pooling2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_global_pooling2d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_gru">
-<span class="sig-name descname"><span class="pre">init_gru</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_gru" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_gru</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_gru" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_lstm">
-<span class="sig-name descname"><span class="pre">init_lstm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_lstm" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_lstm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_lstm" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling1d">
-<span class="sig-name descname"><span class="pre">init_pooling1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling1d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_pooling1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling1d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling2d">
-<span class="sig-name descname"><span class="pre">init_pooling2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling2d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_pooling2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_pooling2d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv1d">
-<span class="sig-name descname"><span class="pre">init_sepconv1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv1d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_sepconv1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv1d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv2d">
-<span class="sig-name descname"><span class="pre">init_sepconv2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv2d" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_sepconv2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_sepconv2d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_softmax">
-<span class="sig-name descname"><span class="pre">init_softmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_softmax" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_softmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_softmax" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="module-hls4ml.backends.catapult.catapult_types">
-<span id="hls4ml-backends-catapult-catapult-types-module"></span><h2>hls4ml.backends.catapult.catapult_types module<a class="headerlink" href="#module-hls4ml.backends.catapult.catapult_types" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-backends-catapult-catapult-types-module"></span><h2>hls4ml.backends.catapult.catapult_types module<a class="headerlink" href="#module-hls4ml.backends.catapult.catapult_types" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableConverter" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition.definition_cpp">
-<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultArrayVariableDefinition.definition_cpp" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableConverter" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition.definition_cpp">
-<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceArrayVariableDefinition.definition_cpp" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InplaceStreamVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition.definition_cpp">
-<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultInplaceStreamVariableDefinition.definition_cpp" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultStreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.StreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition.definition_cpp">
-<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStreamVariableDefinition.definition_cpp" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStructMemberVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableConverter" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStructMemberVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter" title="hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StructMemberVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStructMemberVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.catapult.catapult_types.</span></span><span class="sig-name descname"><span class="pre">CatapultStructMemberVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition.definition_cpp">
-<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.catapult.catapult_types.CatapultStructMemberVariableDefinition.definition_cpp" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="module-hls4ml.backends.catapult">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.catapult" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.catapult" title="Link to this heading"></a></h2>
 </section>
 </section>
 

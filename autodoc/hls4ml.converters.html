@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.converters package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -119,34 +114,106 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-converters-package">
-<h1>hls4ml.converters package<a class="headerlink" href="#hls4ml-converters-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.converters package<a class="headerlink" href="#hls4ml-converters-package" title="Link to this heading"></a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.keras.html">hls4ml.converters.keras package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.convolution">hls4ml.converters.keras.convolution module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.core">hls4ml.converters.keras.core module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.graph">hls4ml.converters.keras.graph module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.hgq_proxy_model">hls4ml.converters.keras.hgq_proxy_model module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.merge">hls4ml.converters.keras.merge module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.model">hls4ml.converters.keras.model module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.pooling">hls4ml.converters.keras.pooling module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.qkeras">hls4ml.converters.keras.qkeras module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.recurrent">hls4ml.converters.keras.recurrent module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.reshape">hls4ml.converters.keras.reshape module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.reshaping">hls4ml.converters.keras.reshaping module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.convolution">hls4ml.converters.keras.convolution module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv1d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv1d_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv2d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv2d_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.core">hls4ml.converters.keras.core module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_activation_layer"><code class="docutils literal notranslate"><span class="pre">parse_activation_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_batchnorm_layer"><code class="docutils literal notranslate"><span class="pre">parse_batchnorm_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_dense_layer"><code class="docutils literal notranslate"><span class="pre">parse_dense_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_embedding_layer"><code class="docutils literal notranslate"><span class="pre">parse_embedding_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_input_layer"><code class="docutils literal notranslate"><span class="pre">parse_input_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.graph">hls4ml.converters.keras.graph module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.graph.parse_garnet_layer"><code class="docutils literal notranslate"><span class="pre">parse_garnet_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.hgq_proxy_model">hls4ml.converters.keras.hgq_proxy_model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.hgq_proxy_model.fixedpoint_quantizer_handler"><code class="docutils literal notranslate"><span class="pre">fixedpoint_quantizer_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.hgq_proxy_model.unary_lut_keras_handler"><code class="docutils literal notranslate"><span class="pre">unary_lut_keras_handler()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.merge">hls4ml.converters.keras.merge module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.merge.parse_merge_layer"><code class="docutils literal notranslate"><span class="pre">parse_merge_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.model">hls4ml.converters.keras.model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.model.parse_model_layer"><code class="docutils literal notranslate"><span class="pre">parse_model_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.pooling">hls4ml.converters.keras.pooling module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.pooling.parse_global_pooling_layer"><code class="docutils literal notranslate"><span class="pre">parse_global_pooling_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.pooling.parse_pooling_layer"><code class="docutils literal notranslate"><span class="pre">parse_pooling_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.qkeras">hls4ml.converters.keras.qkeras module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.get_quantizer_from_config"><code class="docutils literal notranslate"><span class="pre">get_quantizer_from_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qactivation_layer"><code class="docutils literal notranslate"><span class="pre">parse_qactivation_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qbatchnorm_layer"><code class="docutils literal notranslate"><span class="pre">parse_qbatchnorm_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qconv2dbatchnorm_layer"><code class="docutils literal notranslate"><span class="pre">parse_qconv2dbatchnorm_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qconv_layer"><code class="docutils literal notranslate"><span class="pre">parse_qconv_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qdense_layer"><code class="docutils literal notranslate"><span class="pre">parse_qdense_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qdepthwiseqconv_layer"><code class="docutils literal notranslate"><span class="pre">parse_qdepthwiseqconv_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qrnn_layer"><code class="docutils literal notranslate"><span class="pre">parse_qrnn_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qsepconv_layer"><code class="docutils literal notranslate"><span class="pre">parse_qsepconv_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.recurrent">hls4ml.converters.keras.recurrent module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer"><code class="docutils literal notranslate"><span class="pre">parse_rnn_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.reshape">hls4ml.converters.keras.reshape module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_flatten_layer"><code class="docutils literal notranslate"><span class="pre">parse_flatten_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_permute_layer"><code class="docutils literal notranslate"><span class="pre">parse_permute_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_reshape_layer"><code class="docutils literal notranslate"><span class="pre">parse_reshape_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_upsampling1d_layer"><code class="docutils literal notranslate"><span class="pre">parse_upsampling1d_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_upsampling2d_layer"><code class="docutils literal notranslate"><span class="pre">parse_upsampling2d_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.reshaping">hls4ml.converters.keras.reshaping module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.reshaping.parse_zeropadding1d_layer"><code class="docutils literal notranslate"><span class="pre">parse_zeropadding1d_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.reshaping.parse_zeropadding2d_layer"><code class="docutils literal notranslate"><span class="pre">parse_zeropadding2d_layer()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.convolution">hls4ml.converters.onnx.convolution module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.core">hls4ml.converters.onnx.core module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.merge">hls4ml.converters.onnx.merge module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.pooling">hls4ml.converters.onnx.pooling module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.reshape">hls4ml.converters.onnx.reshape module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.convolution">hls4ml.converters.onnx.convolution module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.convolution.parse_conv_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.core">hls4ml.converters.onnx.core module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_activation_layer"><code class="docutils literal notranslate"><span class="pre">parse_activation_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_batchnorm_layer"><code class="docutils literal notranslate"><span class="pre">parse_batchnorm_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_gemm_layer"><code class="docutils literal notranslate"><span class="pre">parse_gemm_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.merge">hls4ml.converters.onnx.merge module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.merge.parse_merge_layer"><code class="docutils literal notranslate"><span class="pre">parse_merge_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.pooling">hls4ml.converters.onnx.pooling module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.pooling.parse_global_pooling_layer"><code class="docutils literal notranslate"><span class="pre">parse_global_pooling_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.pooling.parse_pool_layer"><code class="docutils literal notranslate"><span class="pre">parse_pool_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.reshape">hls4ml.converters.onnx.reshape module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_reshape_layer"><code class="docutils literal notranslate"><span class="pre">parse_reshape_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_transpose_layer"><code class="docutils literal notranslate"><span class="pre">parse_transpose_layer()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx">Module contents</a></li>
 </ul>
 </li>
@@ -165,57 +232,57 @@
 </div>
 </section>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.converters.keras_to_hls">
-<span id="hls4ml-converters-keras-to-hls-module"></span><h2>hls4ml.converters.keras_to_hls module<a class="headerlink" href="#module-hls4ml.converters.keras_to_hls" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-converters-keras-to-hls-module"></span><h2>hls4ml.converters.keras_to_hls module<a class="headerlink" href="#module-hls4ml.converters.keras_to_hls" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasFileReader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasFileReader" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasFileReader" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasReader" title="hls4ml.converters.keras_to_hls.KerasReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasReader</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_data">
-<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_data" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasModelReader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasModelReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasModelReader" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasModelReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasModelReader" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasReader" title="hls4ml.converters.keras_to_hls.KerasReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasReader</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data">
-<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasNestedFileReader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasNestedFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasNestedFileReader" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasNestedFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasNestedFileReader" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasFileReader" title="hls4ml.converters.keras_to_hls.KerasFileReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasFileReader</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasReader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasReader</span></span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasReader" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasReader</span></span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasReader" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasReader.get_weights_data">
-<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasReader.get_weights_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasReader.get_weights_data" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_model_arch">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_model_arch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_model_arch" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_model_arch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_model_arch" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_supported_keras_layers">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_supported_keras_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_supported_keras_layers" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_supported_keras_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_supported_keras_layers" title="Link to this definition"></a></dt>
 <dd><p>Returns the list of Keras layers that the converter can parse.</p>
 <p>The returned list contains all Keras layers that can be parsed into the hls4ml internal representation. Support for
 computation of these layers may vary across hls4ml backends and conversion configuration.</p>
@@ -231,32 +298,32 @@ computation of these layers may vary across hls4ml backends and conversion confi
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_weights_data">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_weights_data" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_weights_data" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.keras_handler">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">keras_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.keras_handler" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">keras_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.keras_handler" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.keras_to_hls">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">keras_to_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.keras_to_hls" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">keras_to_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.keras_to_hls" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.parse_default_keras_layer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">parse_default_keras_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.parse_default_keras_layer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">parse_default_keras_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.parse_default_keras_layer" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.parse_keras_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">parse_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.parse_keras_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">parse_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.parse_keras_model" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.register_keras_layer_handler">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">register_keras_layer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_cname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.register_keras_layer_handler" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">register_keras_layer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_cname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.register_keras_layer_handler" title="Link to this definition"></a></dt>
 <dd><p>Register a handler function for the given layer class name.</p>
 <dl class="simple">
 <dt>The handler function should have the following signature:</dt><dd><p>parse_func(keras_layer, input_names, input_shapes, data_reader, config):</p>
@@ -277,20 +344,20 @@ computation of these layers may vary across hls4ml backends and conversion confi
 
 </section>
 <section id="module-hls4ml.converters.onnx_to_hls">
-<span id="hls4ml-converters-onnx-to-hls-module"></span><h2>hls4ml.converters.onnx_to_hls module<a class="headerlink" href="#module-hls4ml.converters.onnx_to_hls" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-converters-onnx-to-hls-module"></span><h2>hls4ml.converters.onnx_to_hls module<a class="headerlink" href="#module-hls4ml.converters.onnx_to_hls" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.ONNXDataReader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">ONNXDataReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">ONNXDataReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>ONNX data reader to be used for extracting relevant information during conversion.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.ONNXDataReader.add_input">
-<span class="sig-name descname"><span class="pre">add_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transpose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader.add_input" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transpose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader.add_input" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.ONNXDataReader.get_weights_data">
-<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader.get_weights_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader.get_weights_data" title="Link to this definition"></a></dt>
 <dd><p>Extract weights data from ONNX model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -312,51 +379,51 @@ computation of these layers may vary across hls4ml backends and conversion confi
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.compute_pads_1d">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">compute_pads_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.compute_pads_1d" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">compute_pads_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.compute_pads_1d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.compute_pads_2d">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">compute_pads_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.compute_pads_2d" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">compute_pads_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.compute_pads_2d" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.get_input_shape">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_input_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_input_shape" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_input_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_input_shape" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.get_onnx_attribute">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_onnx_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_onnx_attribute" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_onnx_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_onnx_attribute" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.get_onnx_input_name">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_onnx_input_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_onnx_input_name" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_onnx_input_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_onnx_input_name" title="Link to this definition"></a></dt>
 <dd><p>In ONNX, when calling node.input, it returns the node input’s index in the graph instead of the input’s name.
 However, the input’s name is used for indexing in ModelGraph’s graph. This function return the input node’s name instead.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.get_out_layer_name">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_out_layer_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_out_layer_name" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_out_layer_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_out_layer_name" title="Link to this definition"></a></dt>
 <dd><p>Get the output layer’s name for the model.
 graph.output only returns the output’s node index</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.get_supported_onnx_layers">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_supported_onnx_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_supported_onnx_layers" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_supported_onnx_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_supported_onnx_layers" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.onnx_handler">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">onnx_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.onnx_handler" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">onnx_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.onnx_handler" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.onnx_to_hls">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">onnx_to_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.onnx_to_hls" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">onnx_to_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.onnx_to_hls" title="Link to this definition"></a></dt>
 <dd><p>Convert onnx model to hls model from configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -376,29 +443,29 @@ graph.output only returns the output’s node index</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.register_onnx_layer_handler">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">register_onnx_layer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.register_onnx_layer_handler" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">register_onnx_layer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.register_onnx_layer_handler" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.replace_char_inconsitency">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">replace_char_inconsitency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.replace_char_inconsitency" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">replace_char_inconsitency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.replace_char_inconsitency" title="Link to this definition"></a></dt>
 <dd><p>Replace some inconsistent characters that cause issues when writing into HLS.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.onnx_to_hls.sanitize_layer_name">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">sanitize_layer_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.sanitize_layer_name" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.onnx_to_hls.</span></span><span class="sig-name descname"><span class="pre">sanitize_layer_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.sanitize_layer_name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="hls4ml-converters-pytorch-to-hls-module">
-<h2>hls4ml.converters.pytorch_to_hls module<a class="headerlink" href="#hls4ml-converters-pytorch-to-hls-module" title="Permalink to this heading"></a></h2>
+<h2>hls4ml.converters.pytorch_to_hls module<a class="headerlink" href="#hls4ml-converters-pytorch-to-hls-module" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.converters.utils">
-<span id="hls4ml-converters-utils-module"></span><h2>hls4ml.converters.utils module<a class="headerlink" href="#module-hls4ml.converters.utils" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-converters-utils-module"></span><h2>hls4ml.converters.utils module<a class="headerlink" href="#module-hls4ml.converters.utils" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_1d">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_1d" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_1d" title="Link to this definition"></a></dt>
 <dd><p>Computes the amount of padding required on each side of the 1D input tensor.</p>
 <p>In case of <code class="docutils literal notranslate"><span class="pre">same</span></code> padding, this routine tries to pad evenly left and right, but if the amount of columns to be added
 is odd, it will add the extra column to the right.</p>
@@ -425,12 +492,12 @@ is odd, it will add the extra column to the right.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_1d_pytorch">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_1d_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_1d_pytorch" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_1d_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_1d_pytorch" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_2d">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_2d" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_2d" title="Link to this definition"></a></dt>
 <dd><p>Computes the amount of padding required on each side of the 2D input tensor.</p>
 <p>In case of <code class="docutils literal notranslate"><span class="pre">same</span></code> padding, this routine tries to pad evenly left and right (top and bottom), but if the amount of
 columns to be added is odd, it will add the extra column to the right/bottom.</p>
@@ -460,12 +527,12 @@ columns to be added is odd, it will add the extra column to the right/bottom.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_2d_pytorch">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_2d_pytorch" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_2d_pytorch" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.parse_data_format">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">parse_data_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'channels_last'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.parse_data_format" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">parse_data_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'channels_last'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.parse_data_format" title="Link to this definition"></a></dt>
 <dd><p>Parses the given input shape according to the specified data format.</p>
 <p>This function can be used to ensure the shapes of convolutional and pooling layers is correctly parsed. If the first
 element of the given <code class="docutils literal notranslate"><span class="pre">input_shape</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> it is interpreted as a batch dimension and discarded.The returned tuple
@@ -492,10 +559,10 @@ Defaults to ‘channels_last’.</p></li>
 
 </section>
 <section id="module-hls4ml.converters">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.converters" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.converters" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_config">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_config" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_config" title="Link to this definition"></a></dt>
 <dd><p>Convert to hls4ml model based on the provided configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -513,7 +580,7 @@ the filesystem or a dict containing the parsed configuration.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_keras_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_keras_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_keras_model" title="Link to this definition"></a></dt>
 <dd><p>Convert Keras model to hls4ml model based on the provided configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -558,7 +625,7 @@ Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_onnx_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_onnx_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_onnx_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_onnx_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_onnx_model" title="Link to this definition"></a></dt>
 <dd><p>Convert Keras model to hls4ml model based on the provided configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -603,7 +670,7 @@ Defaults to 12.5% for Vivado HLS, 27% for Vitis HLS; unused for others</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_pytorch_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_pytorch_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_pytorch_model" title="Link to this definition"></a></dt>
 <dd><p>Convert PyTorch model to hls4ml model based on the provided configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -656,7 +723,7 @@ io_stream.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_symbolic_expression">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_symbolic_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lut_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_built_in_lut_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_symbolic_expression" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_symbolic_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lut_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_built_in_lut_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_symbolic_expression" title="Link to this definition"></a></dt>
 <dd><p>Converts a given (SymPy or string) expression to hls4ml model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -716,7 +783,7 @@ location of the <cite>compiler</cite> used. Defaults to None.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.parse_yaml_config">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">parse_yaml_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.parse_yaml_config" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">parse_yaml_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.parse_yaml_config" title="Link to this definition"></a></dt>
 <dd><p>Parse conversion configuration from the provided YAML file.</p>
 <p>This function parses the conversion configuration contained in the YAML
 file provided as an argument. It ensures proper serialization of hls4ml

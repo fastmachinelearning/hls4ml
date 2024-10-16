@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends.symbolic.passes package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -119,23 +114,23 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-backends-symbolic-passes-package">
-<h1>hls4ml.backends.symbolic.passes package<a class="headerlink" href="#hls4ml-backends-symbolic-passes-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.backends.symbolic.passes package<a class="headerlink" href="#hls4ml-backends-symbolic-passes-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="hls4ml-backends-symbolic-passes-expr-templates-module">
-<h2>hls4ml.backends.symbolic.passes.expr_templates module<a class="headerlink" href="#hls4ml-backends-symbolic-passes-expr-templates-module" title="Permalink to this heading"></a></h2>
+<h2>hls4ml.backends.symbolic.passes.expr_templates module<a class="headerlink" href="#hls4ml-backends-symbolic-passes-expr-templates-module" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.backends.symbolic.passes.validate_lut">
-<span id="hls4ml-backends-symbolic-passes-validate-lut-module"></span><h2>hls4ml.backends.symbolic.passes.validate_lut module<a class="headerlink" href="#module-hls4ml.backends.symbolic.passes.validate_lut" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-backends-symbolic-passes-validate-lut-module"></span><h2>hls4ml.backends.symbolic.passes.validate_lut module<a class="headerlink" href="#module-hls4ml.backends.symbolic.passes.validate_lut" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.symbolic.passes.validate_lut.</span></span><span class="sig-name descname"><span class="pre">ValidateUserLookupTable</span></span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.symbolic.passes.validate_lut.</span></span><span class="sig-name descname"><span class="pre">ValidateUserLookupTable</span></span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurableOptimizerPass</span></code></a></p>
 <p>Validates the precision of user-defined LUTs is adequate</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.match" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.match" title="Link to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -146,7 +141,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -163,7 +158,7 @@
 
 </section>
 <section id="module-hls4ml.backends.symbolic.passes">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.symbolic.passes" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.symbolic.passes" title="Link to this heading"></a></h2>
 </section>
 </section>
 

@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.optimization.objectives package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -120,19 +115,19 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-optimization-objectives-package">
-<h1>hls4ml.optimization.objectives package<a class="headerlink" href="#hls4ml-optimization-objectives-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.optimization.objectives package<a class="headerlink" href="#hls4ml-optimization-objectives-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.optimization.objectives.gpu_objectives">
-<span id="hls4ml-optimization-objectives-gpu-objectives-module"></span><h2>hls4ml.optimization.objectives.gpu_objectives module<a class="headerlink" href="#module-hls4ml.optimization.objectives.gpu_objectives" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-optimization-objectives-gpu-objectives-module"></span><h2>hls4ml.optimization.objectives.gpu_objectives module<a class="headerlink" href="#module-hls4ml.optimization.objectives.gpu_objectives" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.gpu_objectives.</span></span><span class="sig-name descname"><span class="pre">GPUFLOPEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.gpu_objectives.</span></span><span class="sig-name descname"><span class="pre">GPUFLOPEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.objectives.ObjectiveEstimator" title="hls4ml.optimization.objectives.ObjectiveEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectiveEstimator</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.is_layer_optimizable">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.is_layer_optimizable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.is_layer_optimizable" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
 Furthermore, it returns the type of optimization (structured, unstructured etc.)
 Most suitable for minimizing the objective(s).</p>
@@ -171,7 +166,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_resources">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_resources" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_resources" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are used, given a generic weight matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -190,7 +185,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_savings">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_savings" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_savings" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are saved, when optimizing one structure
 The structure type, alongside its parameters (e.g. block shape) are stored in layer attributes
 For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable</p>
@@ -219,14 +214,14 @@ For best results, OptimizationAttributes in layer_attribtues should be obtained 
 
 </section>
 <section id="module-hls4ml.optimization.objectives.vivado_objectives">
-<span id="hls4ml-optimization-objectives-vivado-objectives-module"></span><h2>hls4ml.optimization.objectives.vivado_objectives module<a class="headerlink" href="#module-hls4ml.optimization.objectives.vivado_objectives" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-optimization-objectives-vivado-objectives-module"></span><h2>hls4ml.optimization.objectives.vivado_objectives module<a class="headerlink" href="#module-hls4ml.optimization.objectives.vivado_objectives" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.vivado_objectives.</span></span><span class="sig-name descname"><span class="pre">VivadoDSPEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.vivado_objectives.</span></span><span class="sig-name descname"><span class="pre">VivadoDSPEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.objectives.ObjectiveEstimator" title="hls4ml.optimization.objectives.ObjectiveEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectiveEstimator</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.is_layer_optimizable">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.is_layer_optimizable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.is_layer_optimizable" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
 Furthermore, it returns the type of optimization (structured, unstructured etc.)
 Most suitable for minimizing the objective(s).</p>
@@ -265,7 +260,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_resources">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_resources" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_resources" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are used, given a generic weight matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -284,7 +279,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_savings">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_savings" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_savings" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are saved, when optimizing one structure
 The structure type, alongside its parameters (e.g. block shape) are stored in layer attributes
 For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable</p>
@@ -313,11 +308,11 @@ For best results, OptimizationAttributes in layer_attribtues should be obtained 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.vivado_objectives.</span></span><span class="sig-name descname"><span class="pre">VivadoFFEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.vivado_objectives.</span></span><span class="sig-name descname"><span class="pre">VivadoFFEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.objectives.ObjectiveEstimator" title="hls4ml.optimization.objectives.ObjectiveEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectiveEstimator</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.is_layer_optimizable">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.is_layer_optimizable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.is_layer_optimizable" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
 Furthermore, it returns the type of optimization (structured, unstructured etc.)
 Most suitable for minimizing the objective(s).</p>
@@ -356,7 +351,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_resources">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_resources" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_resources" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are used, given a generic weight matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -375,7 +370,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_savings">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_savings" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_savings" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are saved, when optimizing one structure
 The structure type, alongside its parameters (e.g. block shape) are stored in layer attributes
 For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable</p>
@@ -404,11 +399,11 @@ For best results, OptimizationAttributes in layer_attribtues should be obtained 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.vivado_objectives.</span></span><span class="sig-name descname"><span class="pre">VivadoMultiObjectiveEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.vivado_objectives.</span></span><span class="sig-name descname"><span class="pre">VivadoMultiObjectiveEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.objectives.ObjectiveEstimator" title="hls4ml.optimization.objectives.ObjectiveEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectiveEstimator</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.is_layer_optimizable">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.is_layer_optimizable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.is_layer_optimizable" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
 Furthermore, it returns the type of optimization (structured, unstructured etc.)
 Most suitable for minimizing the objective(s).</p>
@@ -447,7 +442,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_resources">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_resources" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_resources" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are used, given a generic weight matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -466,7 +461,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_savings">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_savings" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_savings" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are saved, when optimizing one structure
 The structure type, alongside its parameters (e.g. block shape) are stored in layer attributes
 For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable</p>
@@ -495,10 +490,10 @@ For best results, OptimizationAttributes in layer_attribtues should be obtained 
 
 </section>
 <section id="module-hls4ml.optimization.objectives">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.optimization.objectives" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.optimization.objectives" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ObjectiveEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.</span></span><span class="sig-name descname"><span class="pre">ObjectiveEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.</span></span><span class="sig-name descname"><span class="pre">ObjectiveEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Abstract class with methods for estimating the utilization and savings of a certain layer, with respect to some objective
 For each objective, an inherited class is written with the correct implementation of the below methods
@@ -506,7 +501,7 @@ The objectives can be multi-dimensional, e.g. DSPs and BRAM
 Care needs to be taken when optimizing several objectives, especially if conflicting</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ObjectiveEstimator.is_layer_optimizable">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator.is_layer_optimizable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator.is_layer_optimizable" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
 Furthermore, it returns the type of optimization (structured, unstructured etc.)
 Most suitable for minimizing the objective(s).</p>
@@ -545,7 +540,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ObjectiveEstimator.layer_resources">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator.layer_resources" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator.layer_resources" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are used, given a generic weight matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -564,7 +559,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ObjectiveEstimator.layer_savings">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator.layer_savings" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ObjectiveEstimator.layer_savings" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are saved, when optimizing one structure
 The structure type, alongside its parameters (e.g. block shape) are stored in layer attributes
 For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable</p>
@@ -593,13 +588,13 @@ For best results, OptimizationAttributes in layer_attribtues should be obtained 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ParameterEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.</span></span><span class="sig-name descname"><span class="pre">ParameterEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.optimization.objectives.</span></span><span class="sig-name descname"><span class="pre">ParameterEstimator</span></span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.optimization.objectives.ObjectiveEstimator" title="hls4ml.optimization.objectives.ObjectiveEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectiveEstimator</span></code></a></p>
 <p>A class containing objective estimation with the goal of minimizing
 The number of non-zero weights in a layer [corresponds to unstructured pruning]</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ParameterEstimator.is_layer_optimizable">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator.is_layer_optimizable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_layer_optimizable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator.is_layer_optimizable" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
 Furthermore, it returns the type of optimization (structured, unstructured etc.)
 Most suitable for minimizing the objective(s).</p>
@@ -638,7 +633,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ParameterEstimator.layer_resources">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator.layer_resources" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator.layer_resources" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are used, given a generic weight matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -657,7 +652,7 @@ Most suitable for minimizing the objective(s).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.optimization.objectives.ParameterEstimator.layer_savings">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator.layer_savings" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">layer_savings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.optimization.objectives.ParameterEstimator.layer_savings" title="Link to this definition"></a></dt>
 <dd><p>For a given layer, how many units of the metric are saved, when optimizing one structure
 The structure type, alongside its parameters (e.g. block shape) are stored in layer attributes
 For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable</p>

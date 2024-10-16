@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Optimizer Passes and Flows &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -39,9 +37,6 @@
             
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -115,9 +110,9 @@
            <div itemprop="articleBody">
              
   <section id="optimizer-passes-and-flows">
-<h1>Optimizer Passes and Flows<a class="headerlink" href="#optimizer-passes-and-flows" title="Permalink to this heading"></a></h1>
+<h1>Optimizer Passes and Flows<a class="headerlink" href="#optimizer-passes-and-flows" title="Link to this heading"></a></h1>
 <section id="internal-structure">
-<h2>Internal Structure<a class="headerlink" href="#internal-structure" title="Permalink to this heading"></a></h2>
+<h2>Internal Structure<a class="headerlink" href="#internal-structure" title="Link to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> library will parse models from Keras, PyTorch or ONNX into an internal execution graph. This model graph is represented with the
 <a class="reference internal" href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelGraph</span></code></a> class. The nodes in this graph, corresponding to the layer and operations of the input model are represented
 by classes derived from the <a class="reference internal" href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a> base class.</p>
@@ -126,7 +121,7 @@ about the layer’s state and configuration is stored in its attributes. All wei
 Layers can define expected attributes and can be verified for correctness, or to produce a list of configurable attributes that user can tweak.</p>
 </section>
 <section id="optimizer-passes">
-<h2>Optimizer passes<a class="headerlink" href="#optimizer-passes" title="Permalink to this heading"></a></h2>
+<h2>Optimizer passes<a class="headerlink" href="#optimizer-passes" title="Link to this heading"></a></h2>
 <p>To reach a state from which the code can be generated, the internal model graph undergoes a series of optimizations (transformations), dubbed
 <em>optimization passes</em>. All transformations of the model and any modification to any layer’s attributes must be implemented through an optimization
 pass. All optimizer passes derive from the <a class="reference internal" href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a> class. Optimizer passes are usually applied to
@@ -157,7 +152,7 @@ also exist as decorators that wrap a function.</p>
 <p>New optimizers can be registered with the <a class="reference internal" href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.register_pass" title="hls4ml.model.optimizer.optimizer.register_pass"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_pass()</span></code></a>. Optimizers should be assigned to a flow (see below).</p>
 </section>
 <section id="flows">
-<h2>Flows<a class="headerlink" href="#flows" title="Permalink to this heading"></a></h2>
+<h2>Flows<a class="headerlink" href="#flows" title="Link to this heading"></a></h2>
 <p>A <a class="reference internal" href="autodoc/hls4ml.model.flow.html#hls4ml.model.flow.flow.Flow" title="hls4ml.model.flow.flow.Flow"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flow</span></code></a> is an ordered set of optimizers that represents a single stage in the conversion process. The optimizers
 from a flow are applied in sequence until they no longer make changes to the model graph (controlled by the <code class="docutils literal notranslate"><span class="pre">transform</span></code> return value), after which
 the next flow (stage) can start. Flows may require that other flows are applied before them, ensuring the model graph is in a desired state before a

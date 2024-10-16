@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.model.optimizer package &mdash; hls4ml 0.8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
   
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -39,9 +37,6 @@
             
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                0.9.0.dev65+gafed23b1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -122,25 +117,152 @@
            <div itemprop="articleBody">
              
   <section id="hls4ml-model-optimizer-package">
-<h1>hls4ml.model.optimizer package<a class="headerlink" href="#hls4ml-model-optimizer-package" title="Permalink to this heading"></a></h1>
+<h1>hls4ml.model.optimizer package<a class="headerlink" href="#hls4ml-model-optimizer-package" title="Link to this heading"></a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">hls4ml.model.optimizer.passes.convert_to_channels_last module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">hls4ml.model.optimizer.passes.expand_layer_group module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.hgq_proxy_model">hls4ml.model.optimizer.passes.hgq_proxy_model module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.infer_precision">hls4ml.model.optimizer.passes.infer_precision module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.multi_dense">hls4ml.model.optimizer.passes.multi_dense module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.qkeras">hls4ml.model.optimizer.passes.qkeras module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">hls4ml.model.optimizer.passes.seperable_to_dw_conv module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.stamp">hls4ml.model.optimizer.passes.stamp module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.transpose_opt">hls4ml.model.optimizer.passes.transpose_opt module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization"><code class="docutils literal notranslate"><span class="pre">FuseBatchNormalization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match"><code class="docutils literal notranslate"><span class="pre">FuseBatchNormalization.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform"><code class="docutils literal notranslate"><span class="pre">FuseBatchNormalization.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">hls4ml.model.optimizer.passes.convert_to_channels_last module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter"><code class="docutils literal notranslate"><span class="pre">ChannelsLastConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter.match"><code class="docutils literal notranslate"><span class="pre">ChannelsLastConverter.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter.transform"><code class="docutils literal notranslate"><span class="pre">ChannelsLastConverter.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.RemoveTransposeBeforeFlatten"><code class="docutils literal notranslate"><span class="pre">RemoveTransposeBeforeFlatten</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.RemoveTransposeBeforeFlatten.match"><code class="docutils literal notranslate"><span class="pre">RemoveTransposeBeforeFlatten.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.RemoveTransposeBeforeFlatten.transform"><code class="docutils literal notranslate"><span class="pre">RemoveTransposeBeforeFlatten.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">hls4ml.model.optimizer.passes.expand_layer_group module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup"><code class="docutils literal notranslate"><span class="pre">ExpandLayerGroup</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup.match"><code class="docutils literal notranslate"><span class="pre">ExpandLayerGroup.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup.transform"><code class="docutils literal notranslate"><span class="pre">ExpandLayerGroup.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd"><code class="docutils literal notranslate"><span class="pre">FuseBiasAdd</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.match"><code class="docutils literal notranslate"><span class="pre">FuseBiasAdd.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform"><code class="docutils literal notranslate"><span class="pre">FuseBiasAdd.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.hgq_proxy_model">hls4ml.model.optimizer.passes.hgq_proxy_model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.EnforceProxyModelEmbeddedConfig"><code class="docutils literal notranslate"><span class="pre">EnforceProxyModelEmbeddedConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.EnforceProxyModelEmbeddedConfig.match"><code class="docutils literal notranslate"><span class="pre">EnforceProxyModelEmbeddedConfig.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.EnforceProxyModelEmbeddedConfig.transform"><code class="docutils literal notranslate"><span class="pre">EnforceProxyModelEmbeddedConfig.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.FixedPointQuantizer"><code class="docutils literal notranslate"><span class="pre">FixedPointQuantizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.FixedPointQuantizer.initialize"><code class="docutils literal notranslate"><span class="pre">FixedPointQuantizer.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.UnaryLUT"><code class="docutils literal notranslate"><span class="pre">UnaryLUT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.UnaryLUT.initialize"><code class="docutils literal notranslate"><span class="pre">UnaryLUT.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.register_hgq_proxy_model"><code class="docutils literal notranslate"><span class="pre">register_hgq_proxy_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.to_hls4ml_fixed"><code class="docutils literal notranslate"><span class="pre">to_hls4ml_fixed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.userconf_ifdef"><code class="docutils literal notranslate"><span class="pre">userconf_ifdef()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.infer_precision">hls4ml.model.optimizer.passes.infer_precision module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes"><code class="docutils literal notranslate"><span class="pre">InferPrecisionTypes</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes.match"><code class="docutils literal notranslate"><span class="pre">InferPrecisionTypes.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes.transform"><code class="docutils literal notranslate"><span class="pre">InferPrecisionTypes.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.multi_dense">hls4ml.model.optimizer.passes.multi_dense module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv"><code class="docutils literal notranslate"><span class="pre">ReplaceMultidimensionalDenseWithConv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match"><code class="docutils literal notranslate"><span class="pre">ReplaceMultidimensionalDenseWithConv.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.transform"><code class="docutils literal notranslate"><span class="pre">ReplaceMultidimensionalDenseWithConv.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.match"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.transform"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.qkeras">hls4ml.model.optimizer.passes.qkeras module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_bias"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.add_bias()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_weights"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.add_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.initialize"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold"><code class="docutils literal notranslate"><span class="pre">ExtractTernaryThreshold</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.match"><code class="docutils literal notranslate"><span class="pre">ExtractTernaryThreshold.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.transform"><code class="docutils literal notranslate"><span class="pre">ExtractTernaryThreshold.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.match"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.transform"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode"><code class="docutils literal notranslate"><span class="pre">OutputRoundingSaturationMode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.match"><code class="docutils literal notranslate"><span class="pre">OutputRoundingSaturationMode.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.precision_string_modify"><code class="docutils literal notranslate"><span class="pre">OutputRoundingSaturationMode.precision_string_modify()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.transform"><code class="docutils literal notranslate"><span class="pre">OutputRoundingSaturationMode.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha"><code class="docutils literal notranslate"><span class="pre">QKerasFactorizeAlpha</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.match"><code class="docutils literal notranslate"><span class="pre">QKerasFactorizeAlpha.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.transform"><code class="docutils literal notranslate"><span class="pre">QKerasFactorizeAlpha.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.register_qkeras"><code class="docutils literal notranslate"><span class="pre">register_qkeras()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">hls4ml.model.optimizer.passes.seperable_to_dw_conv module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv"><code class="docutils literal notranslate"><span class="pre">SeperableToDepthwiseAndConv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.match"><code class="docutils literal notranslate"><span class="pre">SeperableToDepthwiseAndConv.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.transform"><code class="docutils literal notranslate"><span class="pre">SeperableToDepthwiseAndConv.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.stamp">hls4ml.model.optimizer.passes.stamp module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.stamp.MakeStamp"><code class="docutils literal notranslate"><span class="pre">MakeStamp</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.stamp.MakeStamp.transform"><code class="docutils literal notranslate"><span class="pre">MakeStamp.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.transpose_opt">hls4ml.model.optimizer.passes.transpose_opt module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveNopTranspose"><code class="docutils literal notranslate"><span class="pre">RemoveNopTranspose</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveNopTranspose.match"><code class="docutils literal notranslate"><span class="pre">RemoveNopTranspose.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveNopTranspose.transform"><code class="docutils literal notranslate"><span class="pre">RemoveNopTranspose.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveSingleChannelTranspose"><code class="docutils literal notranslate"><span class="pre">RemoveSingleChannelTranspose</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveSingleChannelTranspose.match"><code class="docutils literal notranslate"><span class="pre">RemoveSingleChannelTranspose.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveSingleChannelTranspose.transform"><code class="docutils literal notranslate"><span class="pre">RemoveSingleChannelTranspose.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes">Module contents</a></li>
 </ul>
 </li>
@@ -148,37 +270,37 @@
 </div>
 </section>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-hls4ml.model.optimizer.optimizer">
-<span id="hls4ml-model-optimizer-optimizer-module"></span><h2>hls4ml.model.optimizer.optimizer module<a class="headerlink" href="#module-hls4ml.model.optimizer.optimizer" title="Permalink to this heading"></a></h2>
+<span id="hls4ml-model-optimizer-optimizer-module"></span><h2>hls4ml.model.optimizer.optimizer module<a class="headerlink" href="#module-hls4ml.model.optimizer.optimizer" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ConfigurableOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ConfigurableOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>An optimizer that can be configured.</p>
 <p>Existing instances of this class in the registry can be configured with the configure() method. Multiple instances
 with different configuration can co-exist if registered with different names.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.configure">
-<span class="sig-name descname"><span class="pre">configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.configure" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.configure" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.get_config">
-<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.get_config" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.get_config" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">GlobalOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">GlobalOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Global optimizer that matches on every node in the model graph.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass.match" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass.match" title="Link to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -191,7 +313,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.LayerOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">LayerOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.LayerOptimizerPass" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">LayerOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.LayerOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">WrappedOptimizerPass</span></code></a></p>
 <p>An wrapper optimizer specific to a layer class.</p>
 <p>Commonly used by backends to add extra initialization to a layer instance.</p>
@@ -199,13 +321,13 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.ModelOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ModelOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ModelOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>A special optimizer that works with the model itself.</p>
 <p>Examples include writing the model to C++/HLS.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.ModelOptimizerPass.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -222,17 +344,17 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">OptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">OptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base optimizer class from which all other optimizer types are derived.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass.get_name">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.get_name" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.get_name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.match" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.match" title="Link to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -243,12 +365,12 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.name" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -265,18 +387,18 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">WrappedOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">WrappedOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>An optimizer class created by wrapping a function call.</p>
 <p>Users should generally not create any wrapped optimizer passes manually.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.get_name">
-<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.get_name" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.get_name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.match" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.match" title="Link to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -287,7 +409,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -304,17 +426,17 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.extract_optimizers_from_object">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">extract_optimizers_from_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clazz</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.extract_optimizers_from_object" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">extract_optimizers_from_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clazz</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.extract_optimizers_from_object" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.extract_optimizers_from_path">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">extract_optimizers_from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.extract_optimizers_from_path" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">extract_optimizers_from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.extract_optimizers_from_path" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.get_available_passes">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_available_passes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_available_passes" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_available_passes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_available_passes" title="Link to this definition"></a></dt>
 <dd><p>Return the list of all registered optimizer passes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -328,7 +450,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.get_backend_passes">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_backend_passes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_backend_passes" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_backend_passes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_backend_passes" title="Link to this definition"></a></dt>
 <dd><p>Returns the list of optimizer passes belonging to a backend</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -345,7 +467,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.get_optimizer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_optimizer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_optimizer" title="Link to this definition"></a></dt>
 <dd><p>Return the optimizer instance registered with the given name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -365,7 +487,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.layer_optimizer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">layer_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.layer_optimizer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">layer_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.layer_optimizer" title="Link to this definition"></a></dt>
 <dd><p>Decorator to turn a function into the optimization pass.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@layer_optimizer</span><span class="p">(</span><span class="n">MyLayer</span><span class="p">)</span>
@@ -382,13 +504,13 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.model_optimizer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">model_optimizer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.model_optimizer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">model_optimizer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.model_optimizer" title="Link to this definition"></a></dt>
 <dd><p>Decorator to turn a function into a model optimizer.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.optimize_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">optimize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.optimize_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">optimize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.optimize_model" title="Link to this definition"></a></dt>
 <dd><p>Optimize a given model with the given passes.</p>
 <p>The passes are attempted until all passes no longer match or no changes to the model graph occur.</p>
 <dl class="field-list simple">
@@ -409,12 +531,12 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.optimizer_pass">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">optimizer_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.optimizer_pass" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">optimizer_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.optimizer_pass" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.register_pass">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">register_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.register_pass" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">register_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.register_pass" title="Link to this definition"></a></dt>
 <dd><p>Register a new optimizer pass.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -439,7 +561,7 @@ will be appended to the name of the registered flow. Defaults to None.</p></li>
 
 </section>
 <section id="module-hls4ml.model.optimizer">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.model.optimizer" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.model.optimizer" title="Link to this heading"></a></h2>
 </section>
 </section>
 
