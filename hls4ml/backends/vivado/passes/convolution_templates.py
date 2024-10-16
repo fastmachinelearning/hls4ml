@@ -22,6 +22,8 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
+    template<class data_T, class res_T, class CONFIG_T>
+    using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -100,6 +102,18 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+
+        if node.get_attr('strategy').lower() == 'latency':
+            mult_params['dense_function'] = 'DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
+                mult_params['dense_function'] = 'DenseResource_rf_leq_nin'
+            else:
+                mult_params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+            # The 3rd case is never used
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params['dense_function'] = f'dense_resource_unrolled_{node.index}'
+
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -213,6 +227,18 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+
+        if node.get_attr('strategy').lower() == 'latency':
+            mult_params['dense_function'] = 'DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
+                mult_params['dense_function'] = 'DenseResource_rf_leq_nin'
+            else:
+                mult_params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+            # The 3rd case is never used
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params['dense_function'] = f'dense_resource_unrolled_{node.index}'
+
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -297,6 +323,8 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
             params['scale_index_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_depthwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_config = self.depthwise_template.format(**params)
 
         # Depthwise mult config
@@ -309,6 +337,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to depthwise Conv1D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
@@ -338,6 +369,8 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
             params['scale_index_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_pointwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_config = self.pointwise_template.format(**params)
 
         # Pointwise mult config
@@ -350,6 +383,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to separable Conv1D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+
         pointwise_mult_config = self.pointwise_mult_template.format(**mult_params)
 
         return (
@@ -425,6 +461,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
             params['scale_index_width_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_depthwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_config = self.depthwise_template.format(**params)
 
         # Depthwise mult config
@@ -437,6 +475,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to depthwise Conv2D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
@@ -474,6 +514,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
         params['config_t'] = f'config{node.index}_pointwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_config = self.pointwise_template.format(**params)
 
         # Pointwise mult config
@@ -486,6 +528,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to separable Conv2D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_mult_config = self.pointwise_mult_template.format(**mult_params)
 
         return (

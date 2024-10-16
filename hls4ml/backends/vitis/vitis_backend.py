@@ -15,7 +15,8 @@ class VitisBackend(VivadoBackend):
     def _register_flows(self):
         validation_passes = [
             'vitis:validate_conv_implementation',
-            'vitis:validate_strategy',
+            'vitis:validate_resource_strategy',
+            'vitis:validate_resource_unrolled_strategy',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
 

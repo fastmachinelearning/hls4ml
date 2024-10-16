@@ -10,6 +10,7 @@ from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
+from hls4ml.utils.string_utils import convert_to_snake_case
 
 
 class HLSConfig:
@@ -35,7 +36,7 @@ class HLSConfig:
         self.layer_type_targ_cycles = {}
         self.layer_name_targ_cycles = {}
 
-        self.model_strategy = 'Latency'
+        self.model_strategy = convert_to_snake_case('Latency')
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
 
@@ -49,7 +50,8 @@ class HLSConfig:
 
         self.trace_output = self.get_config_value('TraceOutput', False)
 
-        self.pipeline_style = 'pipeline'
+        self.pipeline_style = 'auto'
+        self.pipeline_ii = None
 
         if 'WriterConfig' in self.config:
             self.writer_config = self.config['WriterConfig']
@@ -61,7 +63,6 @@ class HLSConfig:
             }
 
         self._parse_hls_config()
-        self._validate_hls_config()
 
     def get_config_value(self, key, default=None):
         return self.config.get(key, default)
@@ -217,7 +218,7 @@ class HLSConfig:
 
         strategy = layer_cfg.get('Strategy')
         if strategy is not None:
-            self.layer_name_strategy[layer_name.lower()] = strategy
+            self.layer_name_strategy[layer_name.lower()] = convert_to_snake_case(strategy)
 
         conv_implementation = layer_cfg.get('ConvImplementation')
         if conv_implementation is not None:
@@ -265,9 +266,10 @@ class HLSConfig:
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_targ_cycles = model_cfg.get('TargetCycles')
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
-            self.model_strategy = model_cfg.get('Strategy', 'Latency')
+            self.model_strategy = convert_to_snake_case(model_cfg.get('Strategy', 'Latency'))
             self.model_compression = bool(model_cfg.get('Compression', 0))
-            self.pipeline_style = model_cfg.get('PipelineStyle', 'pipeline')
+            self.pipeline_style = model_cfg.get('PipelineStyle', 'auto')
+            self.pipeline_ii = model_cfg.get('PipelineInterval', None)
 
         layer_type_cfg = hls_config.get('LayerType')
         if layer_type_cfg is not None:
@@ -289,7 +291,7 @@ class HLSConfig:
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
-                    self.layer_type_strategy[layer_type.lower()] = strategy
+                    self.layer_type_strategy[layer_type.lower()] = convert_to_snake_case(strategy)
 
                 conv_implementation = layer_cfg.get('ConvImplementation')
                 if conv_implementation is not None:
@@ -303,50 +305,6 @@ class HLSConfig:
         if layer_name_cfg is not None:
             for layer_name, layer_cfg in layer_name_cfg.items():
                 self.parse_name_config(layer_name, layer_cfg)
-
-    def _validate_hls_config(self):
-        use_dataflow = False
-        if self.pipeline_style.lower() == 'pipeline' and self.model_compression:
-            print('WARNING: Compression enabled while pipeline style set to "pipeline".')
-            use_dataflow = True
-        for layer_type, strategy in self.layer_type_strategy.items():
-            if strategy.lower() == 'resource' and self.pipeline_style.lower() == 'pipeline':
-                print(
-                    'WARNING: Strategy for layer type {} set to "Resource", while pipeline style set to "pipeline".'.format(
-                        layer_type
-                    )
-                )
-                use_dataflow = True
-
-        for layer_name, strategy in self.layer_name_strategy.items():
-            if strategy.lower() == 'resource' and self.pipeline_style.lower() == 'pipeline':
-                print(
-                    'WARNING: Strategy for layer {} set to "Resource", while pipeline style set to "pipeline".'.format(
-                        layer_name
-                    )
-                )
-                use_dataflow = True
-
-        for layer_type, compression in self.layer_type_compression.items():
-            if compression and self.pipeline_style.lower() == 'pipeline':
-                print(
-                    'WARNING: Compression enabled for layer type {}, while pipeline style set to "pipeline".'.format(
-                        layer_type
-                    )
-                )
-                use_dataflow = True
-
-        for layer_name, compression in self.layer_name_compression.items():
-            if compression and self.pipeline_style.lower() == 'pipeline':
-                print(f'WARNING: Compression enabled for layer {layer_name}, while pipeline style set to "pipeline".')
-                use_dataflow = True
-
-        if self.model_strategy.lower() == 'resource':
-            use_dataflow = True
-
-        if use_dataflow:
-            print('WARNING: Changing pipeline style to "dataflow".')
-            self.pipeline_style = 'dataflow'
 
 
 class ModelGraph:

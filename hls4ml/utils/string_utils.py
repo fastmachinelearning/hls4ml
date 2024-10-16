@@ -10,7 +10,8 @@ def convert_to_snake_case(pascal_case):
     Returns:
         str: converted string
     """
-    return re.sub(r'(?<!^)(?=[A-Z])', '_', pascal_case).lower()
+    camel_case = re.sub(r'(?<!^)(?=[A-Z])', '_', pascal_case).lower()
+    return re.sub(r'_{2,}', '_', camel_case)  # Removes duplicate underscores
 
 
 def convert_to_pascal_case(snake_case):
