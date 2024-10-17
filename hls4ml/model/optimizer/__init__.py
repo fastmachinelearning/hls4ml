@@ -31,9 +31,34 @@ del module_path
 del optimizers
 
 register_flow(
+    'parse_qonnx',
+    [
+        'reshape_constant',
+        'quant_constant_parameters',
+        'quant_to_activation',
+        'fuse_quant_with_constant',
+        'const_quant_to_const_alpha',
+        'quant_to_alpha_activation_alpha',
+        'batch_norm_onnx_constant_parameters',
+        'constant_batch_norm_fusion',
+        'merge_two_constants',
+        'scale_down_add',
+        'bias_down_add',
+        'scale_down_mat_mul',
+        'scale_down_conv',
+        'merge_to_apply_alpha',
+        'merge_to_apply_alpha_div',
+        'matmul_const_to_dense',
+        'conv_to_conv_x_d',
+        'conv_to_depthwise_conv_x_d',
+    ],
+)
+
+register_flow(
     'convert',
     [
         'channels_last_converter',
+        'merge_linear_activation',
         'seperable_to_depthwise_and_conv',
         'remove_transpose_before_flatten',
         'remove_nop_transpose',
@@ -51,10 +76,13 @@ register_flow(
         # many of the above optimzers need to be done before this
         'infer_precision_types',
     ],
+    requires=['parse_qonnx'],
 )  # TODO Maybe not all QKeras optmizers belong here?
 
 register_flow(
     'optimize',
-    [],
+    [
+        'remove_nop_batch_normalization',
+    ],
     requires=['convert'],
 )

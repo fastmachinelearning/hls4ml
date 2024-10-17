@@ -356,8 +356,10 @@ def test_relu_negative_slope(randX_1000_1, quantizer, backend, io_type):
     ],
 )
 def test_qactivation_kwarg(randX_100_10, activation_quantizer, weight_quantizer):
-    if activation_quantizer in ['binary', 'ternary']:
+    if activation_quantizer in ['binary']:
         name = 'bnbt_qdense_alpha'
+    elif activation_quantizer in ['ternary']:
+        name = 'bnbt_qdense_ternary_scale'
     else:
         name = f'qdense_{eval(activation_quantizer).__class__.__name__}'
 
