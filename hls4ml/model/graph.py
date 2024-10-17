@@ -899,7 +899,7 @@ class ModelGraph:
         return self.config.backend.build(self, **kwargs)
 
     @classmethod
-    def make_multi_graph(cls, config, layer_list, split_layer_names):
+    def make_multi_graph(cls, config, layer_list, output_shapes, split_layer_names):
         """Splits the layer list at the specified layers and creates multiple ModelGraphs.
 
         Args:
@@ -923,7 +923,7 @@ class ModelGraph:
         # Get split indices and sort them
         split_indices = sorted([layer_names.index(name) for name in split_layer_names])
 
-        # Add start and end indices one after the other to cover the entire layer list
+        # Add start and end indices to cover the entire layer list
         indices = [0] + split_indices + [len(layer_list)]
 
         # Split the layer_list into subgraphs
@@ -941,19 +941,26 @@ class ModelGraph:
         for idx, sub_layer_list in enumerate(subgraphs_layer_lists):
             # For subgraphs after the first one, insert a new input layer
             if idx > 0:
-                current_split_layer = sub_layer_list[0]
-                input_shape = current_split_layer.get('n_in', None)
-                print(current_split_layer)
+                # Get the previous layer's name and output shape
+                previous_layer_index = indices[idx] - 1
+                previous_layer = layer_list[previous_layer_index]
+                previous_layer_name = previous_layer['name']
+                input_shape = output_shapes.get(previous_layer_name, None)
                 #NOTE - Verify that the input shape is correctly identified
                 if input_shape is None:
                     raise ValueError(f"Could not find input_shape of '{split_layer_names[idx - 1]}'.")
+                
+                current_split_layer = sub_layer_list[0]
                 input_layer_dict = {
                     'name': current_split_layer['name'] + '_input',
                     'class_name': 'InputLayer',
                     'data_format': 'channels_last',
-                    'input_shape': [input_shape],
+                    'input_shape': input_shape[1:],
                 }
-                # Insert the new input layer at the beginning
+                # Reset the inputs of the split layer in the current graph
+                #NOTE - Better allow it to automatically determine its inputs
+                sub_layer_list[0]['inputs'] = []
+                # Then insert the new input layer at the beginning
                 sub_layer_list.insert(0, input_layer_dict)
 
             # Create a shallow copy of the config for each subgraph
