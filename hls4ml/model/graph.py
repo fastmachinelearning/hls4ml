@@ -318,7 +318,7 @@ class ModelGraph:
         outputs (list, optional):  The outputs to the model. If None, determined from layer_list
     """
 
-    def __init__(self, config, layer_list, inputs=None, outputs=None):
+    def __init__(self, config, layer_list, inputs=None, outputs=None, initial_index=0):
         self.config = HLSConfig(config)
 
         # keep track of the applied flows
@@ -337,7 +337,7 @@ class ModelGraph:
             )
         self.outputs = self._find_output_variable_names(layer_list, output_layers)
 
-        self.index = 0
+        self.index = initial_index
         self.graph = OrderedDict()  # where the nodes are stored
         self.output_vars = {}
 
@@ -938,6 +938,7 @@ class ModelGraph:
         model_graphs = []
         original_OutputDir = config['OutputDir']
         original_ProjectName = config['ProjectName']
+        current_index = 0
         for idx, sub_layer_list in enumerate(subgraphs_layer_lists):
             # For subgraphs after the first one, insert a new input layer
             if idx > 0:
@@ -967,7 +968,15 @@ class ModelGraph:
             sub_config = copy.copy(config)
             sub_config['OutputDir'] = f"{original_OutputDir}_graph{idx + 1}"
             sub_config['ProjectName'] = f"{original_ProjectName}_graph{idx + 1}"
-            hls_model = ModelGraph(sub_config, sub_layer_list, None, None)
+            hls_model = ModelGraph(sub_config, sub_layer_list, None, None, initial_index=current_index)
+            
+            # Update the current index for the next graph
+            # Get the index of the last element in the graph
+            layer_indices = [layer.index for layer in hls_model.graph.values()]
+            if layer_indices:
+                max_index = max(layer_indices)
+                current_index = max_index - 1 # we have the input layer as well
+            
             model_graphs.append(hls_model)
 
         return model_graphs
