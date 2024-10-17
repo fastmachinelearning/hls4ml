@@ -324,12 +324,12 @@ def parse_keras_model(model_arch, reader):
 
 def keras_to_hls(config, split_layer_names = []):
     model_arch, reader = get_model_arch(config)
-    layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
+    layer_list, input_layers, output_layers, output_shapes = parse_keras_model(model_arch, reader)
     
     print('Creating HLS model...')
     if split_layer_names:
         if all(name.startswith('fc') or name.startswith('dense') for name in split_layer_names):
-            hls_models = ModelGraph.make_multi_graph(config, layer_list, split_layer_names)
+            hls_models = ModelGraph.make_multi_graph(config, layer_list, output_shapes, split_layer_names)
             print('Multi-graph HLS model created.')
             return hls_models
         else:
