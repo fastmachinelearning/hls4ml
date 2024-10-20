@@ -19,6 +19,7 @@ test_root_path = Path(__file__).parent
     [
         (ReLU(), 'relu'),
         (LeakyReLU(alpha=1.5), 'leaky_relu'),
+        (Activation('leaky_relu'), 'leaky_relu_act'),
         (ThresholdedReLU(theta=0.75), 'threshold_relu'),
         (ELU(alpha=1.25), 'elu'),
         (Activation('selu'), 'selu'),
