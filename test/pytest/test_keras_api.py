@@ -67,7 +67,7 @@ def test_dense(backend, io_type):
     assert len(model.layers) + 1 == len(hls_model.get_layers())
     assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
     assert list(hls_model.get_layers())[1].attributes["class_name"] == model.layers[0]._name
-    assert list(hls_model.get_layers())[2].attributes['class_name'] == model.layers[1]._name
+    assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ELU'
     assert list(hls_model.get_layers())[0].attributes['input_shape'] == list(model.layers[0].input_shape[1:])
     assert list(hls_model.get_layers())[1].attributes['n_in'] == model.layers[0].input_shape[1:][0]
     assert list(hls_model.get_layers())[1].attributes['n_out'] == model.layers[0].output_shape[1:][0]
