@@ -6,6 +6,15 @@ from hls4ml.backends.template import Template
 
 
 class StreamFunctionCallTemplate(Template):
+    """Base class for the streaming function call templates in oneAPI:  provides the 'stream_function_cpp' attribute.
+    This generally provides the async call to the task sequence that executes the streaming function.
+
+    Note:  the include header files are specified in the regular FunctionCallTemplate, not here.
+
+    Args:
+        layer_class (Layer or list, tuple, or set of Layers): The Layers that this template handles.
+    """
+
     def __init__(self, layer_class):
         if isinstance(layer_class, (list, tuple, set)):
             name = '_'.join([cls.__name__.lower() for cls in layer_class])
@@ -24,6 +33,13 @@ class StreamFunctionCallTemplate(Template):
 
 
 class TaskSequenceTemplate(Template):
+    """Base class for the task sequence definition in oneAPI:  provides the 'task_sequence_cpp' attribute.
+    This defines the task sequence that is then called by the StreamFunctionCallTemplate.
+
+    Args:
+        layer_class (Layer or list, tuple, or set of Layers): The Layers that this template handles.
+    """
+
     def __init__(self, layer_class):
         if isinstance(layer_class, (list, tuple, set)):
             name = '_'.join([cls.__name__.lower() for cls in layer_class])
