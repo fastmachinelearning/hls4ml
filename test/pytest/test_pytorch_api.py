@@ -63,6 +63,7 @@ def test_linear(backend, io_type):
 @pytest.mark.parametrize(
     "activation_function",
     [
+        nn.Softmax(dim=-1),
         nn.ReLU(),
         nn.Tanh(),
         nn.LeakyReLU(negative_slope=1.0),
@@ -74,6 +75,7 @@ def test_linear(backend, io_type):
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+
 def test_activations(activation_function, backend, io_type):
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
     model.eval()
@@ -118,6 +120,12 @@ class ReLuModel(nn.Module):
     def forward(self, x):
         return nn.functional.relu(x)
 
+class SoftmaxModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.softmax(x,dim=-1)
 
 class TanHModel(nn.Module):
     def __init__(self):
@@ -162,6 +170,7 @@ class SigmoidModel(nn.Module):
 @pytest.mark.parametrize(
     "activation_function",
     [
+        SoftmaxModel(),
         ReLuModel(),
         TanHModel(),
         LeakyReLuModel(),

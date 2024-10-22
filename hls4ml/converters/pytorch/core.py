@@ -61,17 +61,21 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
             layer['class_name'] = 'ThresholdedReLU'
             layer['activation'] = 'ThresholdedReLU'
             if layer['activ_param'] < 0:
-                raise Exception('negative threshold values not supported')
-
-        if hasattr(node, 'dim'):
+                raise Exception('negative threshold values not supported') 
+        if hasattr(class_object, 'dim'):
             layer['axis'] = class_object.dim
+            if layer['class_name'] == 'Softmax' and layer['axis'] is None:
+                 layer['axis'] = -1
+            if 'IOType' in config:     
+                if  layer['class_name'] == 'Softmax' and config['IOType'] == 'io_stream' and layer['axis'] != -1:
+                    raise Exception('dim needs to be -1 for io_stream')  
     else:
         if layer['class_name'] in ['ReLU', 'Sigmoid', 'Tanh']:
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
             layer['activ_param'] = node.kwargs['negative_slope']
         if layer['class_name'] == 'ELU':
-            layer['activ_param'] = node.kwargs['alpha']
+            layer['activ_param'] = node.kwargs['alpha']      
         if layer['class_name'] == 'Threshold':
             layer['activ_param'] = node.args[1]
             if layer['activ_param'] < 0:
@@ -80,7 +84,12 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
             layer['activation'] = 'ThresholdedReLU'
         if 'dim' in node.kwargs:
             layer['axis'] = node.kwargs['dim']
-
+            if layer['class_name'] == 'Softmax' and layer['axis'] is None:
+                 layer['axis'] = -1
+            if 'IOType' in config:     
+                if  layer['class_name'] == 'Softmax' and config['IOType'] == 'io_stream' and layer['axis'] != -1:
+                    raise Exception('dim needs to be -1 for io_stream')  
+                             
     output_shape = input_shapes[0]
     return layer, output_shape
 
