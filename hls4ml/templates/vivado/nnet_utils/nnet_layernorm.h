@@ -57,19 +57,18 @@ void lookup_invert_sqr(typename CONFIG_T::mean_t x, typename CONFIG_T::table_t &
         return;
     }
 
-    // Binary search
-    int low = 0;
-    int high = CONFIG_T::table_size - 1;
-    while (high - low > 1) {
-        int mid = (low + high) / 2;
-        if (x > table_in[mid]) {
-            low = mid;
-        } else {
-            high = mid;
+    #pragma HLS PIPELINE
+LAYERNORM_LOOKUP:
+    for (int i = 0; i < CONFIG_T::table_size - 1; i++) {
+        #pragma HLS UNROLL factor=4
+        if (x <= table_in[i + 1] && x >= table_in[i]) {
+            res = table_out[i];
+            return;
         }
     }
 
-    res = table_out[low];
+    res = table_out[CONFIG_T::table_size - 1];
+    return;
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -105,11 +104,14 @@ void layernorm_1d(data_T data[CONFIG_T::n_in / CONFIG_T::seq_len], res_T res[CON
     #pragma HLS ARRAY_PARTITION variable=data_diff complete
 
     const typename CONFIG_T::mean_t k_inv = 1.0 / dim;
+
+LAYERNORM_1D_SUM:
     for (int i = 0; i < dim; ++i) {
         sum_cache += static_cast<typename CONFIG_T::mean_t>(data[i]);
     }
     mean = CONFIG_T::template product<typename CONFIG_T::mean_t, typename CONFIG_T::mean_t>::product(sum_cache, k_inv);
 
+LAYERNORM_1D_VAR:
     for (int i = 0; i < dim; ++i) {
         data_diff[i] = static_cast<typename CONFIG_T::mean_t>(data[i]) - mean;
         diff = data_diff[i] * data_diff[i];
@@ -118,6 +120,7 @@ void layernorm_1d(data_T data[CONFIG_T::n_in / CONFIG_T::seq_len], res_T res[CON
     var = CONFIG_T::template product<typename CONFIG_T::mean_t, typename CONFIG_T::mean_t>::product(sum_cache2, k_inv);
     lookup_invert_sqr<CONFIG_T>(var + var_epsilon, deno_inver, index_table, invert_sqr_table);
 
+LAYERNORM_1D_RESULT:
     for (int i = 0; i < dim; ++i) {
         res[i] = data_diff[i] * deno_inver * scale[i] + bias[i];
     }
@@ -138,15 +141,16 @@ void layernormalize(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
     #pragma HLS ARRAY_PARTITION variable=in_val complete
     #pragma HLS ARRAY_PARTITION variable=outval complete
 
+LAYERNORM_SEQ_LOOP:
     for (int j = 0; j < CONFIG_T::seq_len; ++j) {
         #pragma HLS PIPELINE
-    load:
+    LAYERNORM_LOAD:
         for (int i = 0; i < dim; ++i) {
             #pragma HLS UNROLL
             in_val[i] = data[j * dim + i];
         }
         layernorm_1d<data_T, res_T, CONFIG_T>(in_val, outval, scale, bias);
-    store:
+    LAYERNORM_STORE:
         for (int i = 0; i < dim; ++i) {
             #pragma HLS UNROLL
             res[j * dim + i] = outval[i];
