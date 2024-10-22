@@ -63,6 +63,7 @@ def test_linear(backend, io_type):
 @pytest.mark.parametrize(
     "activation_function",
     [
+        nn.Softmax(dim=-1),
         nn.ReLU(),
         nn.Tanh(),
         nn.LeakyReLU(negative_slope=1.0),
@@ -119,6 +120,14 @@ class ReLuModel(nn.Module):
         return nn.functional.relu(x)
 
 
+class SoftmaxModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.softmax(x, dim=-1)
+
+
 class TanHModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -162,6 +171,7 @@ class SigmoidModel(nn.Module):
 @pytest.mark.parametrize(
     "activation_function",
     [
+        SoftmaxModel(),
         ReLuModel(),
         TanHModel(),
         LeakyReLuModel(),
