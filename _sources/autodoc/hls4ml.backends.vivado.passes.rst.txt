@@ -68,6 +68,14 @@ hls4ml.backends.vivado.passes.merge\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.vivado.passes.pipeline\_style module
+----------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.pipeline_style
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.vivado.passes.pointwise module
 ----------------------------------------------
 
@@ -120,6 +128,14 @@ hls4ml.backends.vivado.passes.transform\_types module
 -----------------------------------------------------
 
 .. automodule:: hls4ml.backends.vivado.passes.transform_types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.vivado.passes.unrolled\_codegen module
+------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.unrolled_codegen
    :members:
    :undoc-members:
    :show-inheritance:

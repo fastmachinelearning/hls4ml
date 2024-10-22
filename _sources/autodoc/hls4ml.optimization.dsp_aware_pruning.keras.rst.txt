@@ -1,0 +1,61 @@
+hls4ml.optimization.dsp\_aware\_pruning.keras package
+=====================================================
+
+Submodules
+----------
+
+hls4ml.optimization.dsp\_aware\_pruning.keras.builder module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.keras.builder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.keras.config module
+-----------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.keras.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.keras.masking module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.keras.masking
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.keras.reduction module
+--------------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.keras.reduction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.keras.regularizers module
+-----------------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.keras.regularizers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.keras.utils module
+----------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.keras.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.keras
+   :members:
+   :undoc-members:
+   :show-inheritance:

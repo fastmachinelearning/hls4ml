@@ -264,9 +264,9 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer">BinaryQuantizer (class in hls4ml.model.quantizers)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.BinaryScheduler">BinaryScheduler (class in hls4ml.optimization.scheduler)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.BinaryScheduler">BinaryScheduler (class in hls4ml.optimization.dsp_aware_pruning.scheduler)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.config.SUPPORTED_STRUCTURES.BLOCK">BLOCK (hls4ml.optimization.config.SUPPORTED_STRUCTURES attribute)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES.BLOCK">BLOCK (hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES attribute)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter">BramWeightVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
@@ -311,10 +311,10 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.build">(hls4ml.model.graph.ModelGraph method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.HyperOptimizationModel.build">(hls4ml.optimization.keras.builder.HyperOptimizationModel method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.builder.HyperOptimizationModel.build">(hls4ml.optimization.dsp_aware_pruning.keras.builder.HyperOptimizationModel method)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.build_optimizable_model">build_optimizable_model() (in module hls4ml.optimization.keras.builder)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.builder.build_optimizable_model">build_optimizable_model() (in module hls4ml.optimization.dsp_aware_pruning.keras.builder)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -424,7 +424,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.ConstantScheduler">ConstantScheduler (class in hls4ml.optimization.scheduler)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.ConstantScheduler">ConstantScheduler (class in hls4ml.optimization.dsp_aware_pruning.scheduler)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1D">Conv1D (class in hls4ml.model.layers)</a>
 </li>
@@ -464,7 +464,7 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate">(class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.Conv2DRegularizer">Conv2DRegularizer (class in hls4ml.optimization.keras.regularizers)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.regularizers.Conv2DRegularizer">Conv2DRegularizer (class in hls4ml.optimization.dsp_aware_pruning.keras.regularizers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.convolution_templates.conv_mult_config_template">conv_mult_config_template (in module hls4ml.backends.quartus.passes.convolution_templates)</a>
 </li>
@@ -616,7 +616,7 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.core_templates.DenseFunctionTemplate">(class in hls4ml.backends.vivado.passes.core_templates)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.DenseRegularizer">DenseRegularizer (class in hls4ml.optimization.keras.regularizers)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.regularizers.DenseRegularizer">DenseRegularizer (class in hls4ml.optimization.dsp_aware_pruning.keras.regularizers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.DepthwiseConv1D">DepthwiseConv1D (class in hls4ml.model.layers)</a>
 </li>
@@ -1038,11 +1038,13 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions">(class in hls4ml.backends.vivado.passes.conv_stream)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource">GenerateUnrolledDenseResource (class in hls4ml.backends.vivado.passes.unrolled_codegen)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_attr">get_attr() (hls4ml.model.layers.Layer method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.attributes.get_attributes_from_keras_model">get_attributes_from_keras_model() (in module hls4ml.optimization.attributes)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.attributes.get_attributes_from_keras_model">get_attributes_from_keras_model() (in module hls4ml.optimization.dsp_aware_pruning.attributes)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.attributes.get_attributes_from_keras_model_and_hls4ml_config">get_attributes_from_keras_model_and_hls4ml_config() (in module hls4ml.optimization.attributes)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.attributes.get_attributes_from_keras_model_and_hls4ml_config">get_attributes_from_keras_model_and_hls4ml_config() (in module hls4ml.optimization.dsp_aware_pruning.attributes)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.backend.get_available_backends">get_available_backends() (in module hls4ml.backends.backend)</a>
 </li>
@@ -1075,9 +1077,9 @@
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.get_config">get_config() (hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass method)</a>
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.Conv2DRegularizer.get_config">(hls4ml.optimization.keras.regularizers.Conv2DRegularizer method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.regularizers.Conv2DRegularizer.get_config">(hls4ml.optimization.dsp_aware_pruning.keras.regularizers.Conv2DRegularizer method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.regularizers.DenseRegularizer.get_config">(hls4ml.optimization.keras.regularizers.DenseRegularizer method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.regularizers.DenseRegularizer.get_config">(hls4ml.optimization.dsp_aware_pruning.keras.regularizers.DenseRegularizer method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.get_config_value">get_config_value() (hls4ml.model.graph.HLSConfig method)</a>
@@ -1126,7 +1128,7 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_krnl_rtl_src_dir">get_krnl_rtl_src_dir() (hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_last_layer_with_weights">get_last_layer_with_weights() (in module hls4ml.optimization.keras.utils)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.utils.get_last_layer_with_weights">get_last_layer_with_weights() (in module hls4ml.optimization.dsp_aware_pruning.keras.utils)</a>
 </li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.catapult_report.get_latest_project_prj_directory">get_latest_project_prj_directory() (in module hls4ml.report.catapult_report)</a>
 </li>
@@ -1150,13 +1152,13 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_model_arch">get_model_arch() (in module hls4ml.converters.keras_to_hls)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_model_gradients">get_model_gradients() (in module hls4ml.optimization.keras.utils)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.utils.get_model_gradients">get_model_gradients() (in module hls4ml.optimization.dsp_aware_pruning.keras.utils)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_model_hessians">get_model_hessians() (in module hls4ml.optimization.keras.utils)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.utils.get_model_hessians">get_model_hessians() (in module hls4ml.optimization.dsp_aware_pruning.keras.utils)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.masking.get_model_masks">get_model_masks() (in module hls4ml.optimization.keras.masking)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.masking.get_model_masks">get_model_masks() (in module hls4ml.optimization.dsp_aware_pruning.keras.masking)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.utils.get_model_sparsity">get_model_sparsity() (in module hls4ml.optimization.keras.utils)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.utils.get_model_sparsity">get_model_sparsity() (in module hls4ml.optimization.dsp_aware_pruning.keras.utils)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.get_name">get_name() (hls4ml.backends.template.Template method)</a>
 
@@ -1202,7 +1204,7 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.get_shape">get_shape() (hls4ml.model.types.TensorVariable method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.OptimizationScheduler.get_sparsity">get_sparsity() (hls4ml.optimization.scheduler.OptimizationScheduler method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.OptimizationScheduler.get_sparsity">get_sparsity() (hls4ml.optimization.dsp_aware_pruning.scheduler.OptimizationScheduler method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.get_strategy">get_strategy() (hls4ml.model.graph.HLSConfig method)</a>
 </li>
@@ -1276,7 +1278,7 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.GlobalPooling2D">GlobalPooling2D (class in hls4ml.model.layers)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator">GPUFLOPEstimator (class in hls4ml.optimization.objectives.gpu_objectives)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives.GPUFLOPEstimator">GPUFLOPEstimator (class in hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.GRU">GRU (class in hls4ml.model.layers)</a>
 </li>
@@ -1826,6 +1828,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.vivado.passes.pipeline_style
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pipeline_style">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.vivado.passes.pointwise
 
       <ul>
@@ -1875,6 +1884,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.vivado.passes.unrolled_codegen
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.unrolled_codegen">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.vivado.vivado_backend
 
       <ul>
@@ -1888,6 +1904,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#module-hls4ml.backends.vivado.vivado_types">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator
 
@@ -1895,8 +1913,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator.passes
 
@@ -2255,101 +2271,108 @@
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.attributes
+    hls4ml.optimization.dsp_aware_pruning
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.attributes">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.config
+    hls4ml.optimization.dsp_aware_pruning.attributes
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.config">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.attributes">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.keras
+    hls4ml.optimization.dsp_aware_pruning.config
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.config">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.keras.builder
+    hls4ml.optimization.dsp_aware_pruning.keras
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.builder">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.keras.config
+    hls4ml.optimization.dsp_aware_pruning.keras.builder
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.config">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.builder">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.keras.masking
+    hls4ml.optimization.dsp_aware_pruning.keras.config
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.masking">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.config">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.keras.reduction
+    hls4ml.optimization.dsp_aware_pruning.keras.masking
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.reduction">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.masking">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.keras.regularizers
+    hls4ml.optimization.dsp_aware_pruning.keras.reduction
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.regularizers">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.reduction">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.keras.utils
+    hls4ml.optimization.dsp_aware_pruning.keras.regularizers
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.utils">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.regularizers">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.knapsack
+    hls4ml.optimization.dsp_aware_pruning.keras.utils
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.knapsack">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.utils">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.objectives
+    hls4ml.optimization.dsp_aware_pruning.knapsack
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.knapsack">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.objectives.gpu_objectives
+    hls4ml.optimization.dsp_aware_pruning.objectives
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.gpu_objectives">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#module-hls4ml.optimization.dsp_aware_pruning.objectives">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.objectives.vivado_objectives
+    hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.vivado_objectives">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#module-hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives">module</a>
 </li>
       </ul></li>
       <li>
-    hls4ml.optimization.scheduler
+    hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.scheduler">module</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#module-hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.optimization.dsp_aware_pruning.scheduler
+
+      <ul>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.scheduler">module</a>
 </li>
       </ul></li>
       <li>
@@ -2485,13 +2508,13 @@
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.writers">module</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.attributes.hls4mlAttributes">hls4mlAttributes (class in hls4ml.optimization.attributes)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.attributes.hls4mlAttributes">hls4mlAttributes (class in hls4ml.optimization.dsp_aware_pruning.attributes)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig">HLSConfig (class in hls4ml.model.graph)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.HLSTypeConverter">HLSTypeConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.HyperOptimizationModel">HyperOptimizationModel (class in hls4ml.optimization.keras.builder)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.builder.HyperOptimizationModel">HyperOptimizationModel (class in hls4ml.optimization.dsp_aware_pruning.keras.builder)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -2743,18 +2766,18 @@
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.inv_float">inv_float() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.is_layer_optimizable">is_layer_optimizable() (hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator class method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives.GPUFLOPEstimator.is_layer_optimizable">is_layer_optimizable() (hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives.GPUFLOPEstimator class method)</a>
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator.is_layer_optimizable">(hls4ml.optimization.objectives.ObjectiveEstimator method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ObjectiveEstimator.is_layer_optimizable">(hls4ml.optimization.dsp_aware_pruning.objectives.ObjectiveEstimator method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator.is_layer_optimizable">(hls4ml.optimization.objectives.ParameterEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ParameterEstimator.is_layer_optimizable">(hls4ml.optimization.dsp_aware_pruning.objectives.ParameterEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.is_layer_optimizable">(hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoDSPEstimator.is_layer_optimizable">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoDSPEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.is_layer_optimizable">(hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoFFEstimator.is_layer_optimizable">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoFFEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.is_layer_optimizable">(hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.is_layer_optimizable">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoMultiObjectiveEstimator class method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.is_resource_strategy">is_resource_strategy() (hls4ml.model.graph.HLSConfig method)</a>
@@ -2789,37 +2812,37 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.layer_optimizer">layer_optimizer() (in module hls4ml.model.optimizer.optimizer)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_resources">layer_resources() (hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator class method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives.GPUFLOPEstimator.layer_resources">layer_resources() (hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives.GPUFLOPEstimator class method)</a>
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator.layer_resources">(hls4ml.optimization.objectives.ObjectiveEstimator method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ObjectiveEstimator.layer_resources">(hls4ml.optimization.dsp_aware_pruning.objectives.ObjectiveEstimator method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator.layer_resources">(hls4ml.optimization.objectives.ParameterEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ParameterEstimator.layer_resources">(hls4ml.optimization.dsp_aware_pruning.objectives.ParameterEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_resources">(hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoDSPEstimator.layer_resources">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoDSPEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_resources">(hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoFFEstimator.layer_resources">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoFFEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_resources">(hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_resources">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoMultiObjectiveEstimator class method)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator.layer_savings">layer_savings() (hls4ml.optimization.objectives.gpu_objectives.GPUFLOPEstimator class method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives.GPUFLOPEstimator.layer_savings">layer_savings() (hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives.GPUFLOPEstimator class method)</a>
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator.layer_savings">(hls4ml.optimization.objectives.ObjectiveEstimator method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ObjectiveEstimator.layer_savings">(hls4ml.optimization.dsp_aware_pruning.objectives.ObjectiveEstimator method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator.layer_savings">(hls4ml.optimization.objectives.ParameterEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ParameterEstimator.layer_savings">(hls4ml.optimization.dsp_aware_pruning.objectives.ParameterEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator.layer_savings">(hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoDSPEstimator.layer_savings">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoDSPEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator.layer_savings">(hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoFFEstimator.layer_savings">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoFFEstimator class method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_savings">(hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator class method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoMultiObjectiveEstimator.layer_savings">(hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoMultiObjectiveEstimator class method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.attributes.LayerAttributes">LayerAttributes (class in hls4ml.optimization.attributes)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.attributes.LayerAttributes">LayerAttributes (class in hls4ml.optimization.dsp_aware_pruning.attributes)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate">LayerConfigTemplate (class in hls4ml.backends.template)</a>
 </li>
@@ -2847,7 +2870,7 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.stamp.MakeStamp">MakeStamp (class in hls4ml.model.optimizer.passes.stamp)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.MaskedBackprop">MaskedBackprop (class in hls4ml.optimization.keras)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.MaskedBackprop">MaskedBackprop (class in hls4ml.optimization.dsp_aware_pruning.keras)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.BroadcastStream.match">match() (hls4ml.backends.catapult.passes.broadcast_stream.BroadcastStream method)</a>
 
@@ -2902,7 +2925,9 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation.match">(hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateStrategy.match">(hls4ml.backends.vitis.passes.feature_check.ValidateStrategy method)</a>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy.match">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy.match">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.match">(hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream method)</a>
 </li>
@@ -2915,6 +2940,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.match">(hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.match">(hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource.match">(hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass.match">(hls4ml.model.optimizer.optimizer.GlobalOptimizerPass method)</a>
 </li>
@@ -3139,6 +3166,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.merge_templates">hls4ml.backends.vivado.passes.merge_templates</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pipeline_style">hls4ml.backends.vivado.passes.pipeline_style</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pointwise">hls4ml.backends.vivado.passes.pointwise</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">hls4ml.backends.vivado.passes.pooling_templates</a>
@@ -3152,6 +3181,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.resource_strategy">hls4ml.backends.vivado.passes.resource_strategy</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.transform_types">hls4ml.backends.vivado.passes.transform_types</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.unrolled_codegen">hls4ml.backends.vivado.passes.unrolled_codegen</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#module-hls4ml.backends.vivado.vivado_backend">hls4ml.backends.vivado.vivado_backend</a>
 </li>
@@ -3261,33 +3292,35 @@
 </li>
         <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization">hls4ml.optimization</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.attributes">hls4ml.optimization.attributes</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning">hls4ml.optimization.dsp_aware_pruning</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.config">hls4ml.optimization.config</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.attributes">hls4ml.optimization.dsp_aware_pruning.attributes</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras">hls4ml.optimization.keras</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.config">hls4ml.optimization.dsp_aware_pruning.config</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.builder">hls4ml.optimization.keras.builder</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras">hls4ml.optimization.dsp_aware_pruning.keras</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.config">hls4ml.optimization.keras.config</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.builder">hls4ml.optimization.dsp_aware_pruning.keras.builder</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.masking">hls4ml.optimization.keras.masking</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.config">hls4ml.optimization.dsp_aware_pruning.keras.config</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.reduction">hls4ml.optimization.keras.reduction</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.masking">hls4ml.optimization.dsp_aware_pruning.keras.masking</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.regularizers">hls4ml.optimization.keras.regularizers</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.reduction">hls4ml.optimization.dsp_aware_pruning.keras.reduction</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#module-hls4ml.optimization.keras.utils">hls4ml.optimization.keras.utils</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.regularizers">hls4ml.optimization.dsp_aware_pruning.keras.regularizers</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.knapsack">hls4ml.optimization.knapsack</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#module-hls4ml.optimization.dsp_aware_pruning.keras.utils">hls4ml.optimization.dsp_aware_pruning.keras.utils</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives">hls4ml.optimization.objectives</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.knapsack">hls4ml.optimization.dsp_aware_pruning.knapsack</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.gpu_objectives">hls4ml.optimization.objectives.gpu_objectives</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#module-hls4ml.optimization.dsp_aware_pruning.objectives">hls4ml.optimization.dsp_aware_pruning.objectives</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.objectives.html#module-hls4ml.optimization.objectives.vivado_objectives">hls4ml.optimization.objectives.vivado_objectives</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#module-hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives">hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#module-hls4ml.optimization.scheduler">hls4ml.optimization.scheduler</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#module-hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives">hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives</a>
+</li>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#module-hls4ml.optimization.dsp_aware_pruning.scheduler">hls4ml.optimization.dsp_aware_pruning.scheduler</a>
 </li>
         <li><a href="autodoc/hls4ml.report.html#module-hls4ml.report">hls4ml.report</a>
 </li>
@@ -3370,7 +3403,7 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ObjectiveEstimator">ObjectiveEstimator (class in hls4ml.optimization.objectives)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ObjectiveEstimator">ObjectiveEstimator (class in hls4ml.optimization.dsp_aware_pruning.objectives)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.onnx_handler">onnx_handler() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
@@ -3378,16 +3411,16 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.ONNXDataReader">ONNXDataReader (class in hls4ml.converters.onnx_to_hls)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.attributes.OptimizationAttributes">OptimizationAttributes (class in hls4ml.optimization.attributes)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.attributes.OptimizationAttributes">OptimizationAttributes (class in hls4ml.optimization.dsp_aware_pruning.attributes)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.OptimizationScheduler">OptimizationScheduler (class in hls4ml.optimization.scheduler)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.OptimizationScheduler">OptimizationScheduler (class in hls4ml.optimization.dsp_aware_pruning.scheduler)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.optimize_keras_model_for_hls4ml">optimize_keras_model_for_hls4ml() (in module hls4ml.optimization)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.optimize_keras_model_for_hls4ml">optimize_keras_model_for_hls4ml() (in module hls4ml.optimization.dsp_aware_pruning)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.optimize_model">optimize_model() (in module hls4ml.model.optimizer.optimizer)</a>
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.optimize_model">(in module hls4ml.optimization.keras)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.optimize_model">(in module hls4ml.optimization.dsp_aware_pruning.keras)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -3430,7 +3463,7 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.core_templates.ParamActivationConfigTemplate">(class in hls4ml.backends.vivado.passes.core_templates)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.ParameterEstimator">ParameterEstimator (class in hls4ml.optimization.objectives)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.ParameterEstimator">ParameterEstimator (class in hls4ml.optimization.dsp_aware_pruning.objectives)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.ParametrizedActivation">ParametrizedActivation (class in hls4ml.model.layers)</a>
 </li>
@@ -3544,7 +3577,7 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshaping.parse_zeropadding2d_layer">parse_zeropadding2d_layer() (in module hls4ml.converters.keras.reshaping)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.config.SUPPORTED_STRUCTURES.PATTERN">PATTERN (hls4ml.optimization.config.SUPPORTED_STRUCTURES attribute)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES.PATTERN">PATTERN (hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES attribute)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.plot.plot_model">plot_model() (in module hls4ml.utils.plot)</a>
 </li>
@@ -3584,7 +3617,7 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.PointwiseConv2DFunctionTemplate">(class in hls4ml.backends.vivado.passes.pointwise)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.PolynomialScheduler">PolynomialScheduler (class in hls4ml.optimization.scheduler)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.PolynomialScheduler">PolynomialScheduler (class in hls4ml.optimization.dsp_aware_pruning.scheduler)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Pooling1D">Pooling1D (class in hls4ml.model.layers)</a>
 </li>
@@ -3722,7 +3755,7 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate">(class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.reduction.reduce_model">reduce_model() (in module hls4ml.optimization.keras.reduction)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.reduction.reduce_model">reduce_model() (in module hls4ml.optimization.dsp_aware_pruning.keras.reduction)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.GarNet.ref_impl">ref_impl (hls4ml.model.layers.GarNet attribute)</a>
 </li>
@@ -3786,7 +3819,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights">RegisterBramWeights (class in hls4ml.backends.fpga.passes.bram_weights)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.builder.remove_custom_regularizers">remove_custom_regularizers() (in module hls4ml.optimization.keras.builder)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.builder.remove_custom_regularizers">remove_custom_regularizers() (in module hls4ml.optimization.dsp_aware_pruning.keras.builder)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.remove_node">remove_node() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
@@ -3802,14 +3835,14 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate">RepackFunctionTemplate (class in hls4ml.backends.fpga.passes.repack_stream)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.BinaryScheduler.repair_step">repair_step() (hls4ml.optimization.scheduler.BinaryScheduler method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.BinaryScheduler.repair_step">repair_step() (hls4ml.optimization.dsp_aware_pruning.scheduler.BinaryScheduler method)</a>
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.ConstantScheduler.repair_step">(hls4ml.optimization.scheduler.ConstantScheduler method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.ConstantScheduler.repair_step">(hls4ml.optimization.dsp_aware_pruning.scheduler.ConstantScheduler method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.OptimizationScheduler.repair_step">(hls4ml.optimization.scheduler.OptimizationScheduler method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.OptimizationScheduler.repair_step">(hls4ml.optimization.dsp_aware_pruning.scheduler.OptimizationScheduler method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.PolynomialScheduler.repair_step">(hls4ml.optimization.scheduler.PolynomialScheduler method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.PolynomialScheduler.repair_step">(hls4ml.optimization.dsp_aware_pruning.scheduler.PolynomialScheduler method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.replace_char_inconsitency">replace_char_inconsitency() (in module hls4ml.converters.onnx_to_hls)</a>
@@ -3944,6 +3977,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds">set_thresholds() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle">SetPipelineStyle (class in hls4ml.backends.vivado.passes.pipeline_style)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SimpleRNN">SimpleRNN (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.recurrent_templates.SimpleRNNConfigTemplate">SimpleRNNConfigTemplate (class in hls4ml.backends.quartus.passes.recurrent_templates)</a>
@@ -3966,7 +4001,7 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.core_templates.SoftmaxConfigTemplate">(class in hls4ml.backends.vivado.passes.core_templates)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.knapsack.solve_knapsack">solve_knapsack() (in module hls4ml.optimization.knapsack)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.knapsack.solve_knapsack">solve_knapsack() (in module hls4ml.optimization.dsp_aware_pruning.knapsack)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Source">Source (class in hls4ml.model.types)</a>
 </li>
@@ -3980,13 +4015,13 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter">StructMemberVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.config.SUPPORTED_STRUCTURES.STRUCTURED">STRUCTURED (hls4ml.optimization.config.SUPPORTED_STRUCTURES attribute)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES.STRUCTURED">STRUCTURED (hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES attribute)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.config.SUPPORTED_LAYERS">SUPPORTED_LAYERS (in module hls4ml.optimization.keras.config)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.config.SUPPORTED_LAYERS">SUPPORTED_LAYERS (in module hls4ml.optimization.dsp_aware_pruning.keras.config)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.config.SUPPORTED_METRICS">SUPPORTED_METRICS (in module hls4ml.optimization.keras.config)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.config.SUPPORTED_METRICS">SUPPORTED_METRICS (in module hls4ml.optimization.dsp_aware_pruning.keras.config)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.config.SUPPORTED_STRUCTURES">SUPPORTED_STRUCTURES (class in hls4ml.optimization.config)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES">SUPPORTED_STRUCTURES (class in hls4ml.optimization.dsp_aware_pruning.config)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SymbolicExpression">SymbolicExpression (class in hls4ml.model.layers)</a>
 </li>
@@ -4079,7 +4114,9 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateStrategy.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateStrategy method)</a>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.transform">(hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream method)</a>
 </li>
@@ -4091,11 +4128,15 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization.transform">(hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle.transform">(hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.transform">(hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.transform">(hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.transform_types.TransformTypes.transform">(hls4ml.backends.vivado.passes.transform_types.TransformTypes method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource.transform">(hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization.transform">(hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization method)</a>
 </li>
@@ -4194,26 +4235,26 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.UnspecifiedPrecisionType">UnspecifiedPrecisionType (class in hls4ml.model.types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.config.SUPPORTED_STRUCTURES.UNSTRUCTURED">UNSTRUCTURED (hls4ml.optimization.config.SUPPORTED_STRUCTURES attribute)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES.UNSTRUCTURED">UNSTRUCTURED (hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES attribute)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.attributes.LayerAttributes.update_args">update_args() (hls4ml.optimization.attributes.LayerAttributes method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.attributes.LayerAttributes.update_args">update_args() (hls4ml.optimization.dsp_aware_pruning.attributes.LayerAttributes method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.flow.html#hls4ml.model.flow.flow.update_flow">update_flow() (in module hls4ml.model.flow.flow)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.optimization.keras.html#hls4ml.optimization.keras.MaskedBackprop.update_masks">update_masks() (hls4ml.optimization.keras.MaskedBackprop method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.keras.html#hls4ml.optimization.dsp_aware_pruning.keras.MaskedBackprop.update_masks">update_masks() (hls4ml.optimization.dsp_aware_pruning.keras.MaskedBackprop method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.WeightVariable.update_precision">update_precision() (hls4ml.model.types.WeightVariable method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.BinaryScheduler.update_step">update_step() (hls4ml.optimization.scheduler.BinaryScheduler method)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.BinaryScheduler.update_step">update_step() (hls4ml.optimization.dsp_aware_pruning.scheduler.BinaryScheduler method)</a>
 
       <ul>
-        <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.ConstantScheduler.update_step">(hls4ml.optimization.scheduler.ConstantScheduler method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.ConstantScheduler.update_step">(hls4ml.optimization.dsp_aware_pruning.scheduler.ConstantScheduler method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.OptimizationScheduler.update_step">(hls4ml.optimization.scheduler.OptimizationScheduler method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.OptimizationScheduler.update_step">(hls4ml.optimization.dsp_aware_pruning.scheduler.OptimizationScheduler method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.optimization.html#hls4ml.optimization.scheduler.PolynomialScheduler.update_step">(hls4ml.optimization.scheduler.PolynomialScheduler method)</a>
+        <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.scheduler.PolynomialScheduler.update_step">(hls4ml.optimization.dsp_aware_pruning.scheduler.PolynomialScheduler method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.userconf_ifdef">userconf_ifdef() (in module hls4ml.model.optimizer.passes.hgq_proxy_model)</a>
@@ -4232,7 +4273,9 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation">ValidateConvImplementation (class in hls4ml.backends.vitis.passes.feature_check)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateStrategy">ValidateStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy">ValidateResourceStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy">ValidateResourceUnrolledStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable">ValidateUserLookupTable (class in hls4ml.backends.symbolic.passes.validate_lut)</a>
 </li>
@@ -4250,19 +4293,19 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig">VivadoAcceleratorConfig (class in hls4ml.backends.vivado_accelerator.vivado_accelerator_config)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter">VivadoAcceleratorWriter (class in hls4ml.writer.vivado_accelerator_writer)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter">VivadoAcceleratorWriter (class in hls4ml.writer.vivado_accelerator_writer)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoArrayVariableConverter">VivadoArrayVariableConverter (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoArrayVariableDefinition">VivadoArrayVariableDefinition (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend">VivadoBackend (class in hls4ml.backends.vivado.vivado_backend)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoDSPEstimator">VivadoDSPEstimator (class in hls4ml.optimization.objectives.vivado_objectives)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoDSPEstimator">VivadoDSPEstimator (class in hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoFFEstimator">VivadoFFEstimator (class in hls4ml.optimization.objectives.vivado_objectives)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoFFEstimator">VivadoFFEstimator (class in hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceArrayVariableConverter">VivadoInplaceArrayVariableConverter (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>
@@ -4272,7 +4315,7 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceStreamVariableDefinition">VivadoInplaceStreamVariableDefinition (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.optimization.objectives.html#hls4ml.optimization.objectives.vivado_objectives.VivadoMultiObjectiveEstimator">VivadoMultiObjectiveEstimator (class in hls4ml.optimization.objectives.vivado_objectives)</a>
+      <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.objectives.html#hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives.VivadoMultiObjectiveEstimator">VivadoMultiObjectiveEstimator (class in hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoStreamVariableConverter">VivadoStreamVariableConverter (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>

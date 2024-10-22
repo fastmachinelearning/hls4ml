@@ -1,0 +1,54 @@
+hls4ml.optimization.dsp\_aware\_pruning package
+===============================================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hls4ml.optimization.dsp_aware_pruning.keras
+   hls4ml.optimization.dsp_aware_pruning.objectives
+
+Submodules
+----------
+
+hls4ml.optimization.dsp\_aware\_pruning.attributes module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.attributes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.config module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.knapsack module
+-------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.knapsack
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.optimization.dsp\_aware\_pruning.scheduler module
+--------------------------------------------------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning.scheduler
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.optimization.dsp_aware_pruning
+   :members:
+   :undoc-members:
+   :show-inheritance:
