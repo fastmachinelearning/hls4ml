@@ -1,6 +1,6 @@
 import math
-import os
 import re
+import subprocess
 from bisect import bisect_left
 from collections.abc import Iterable
 
@@ -131,19 +131,22 @@ class FPGABackend(Backend):
         Returns:
             string: Returns the name of the compiled library.
         """
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
 
         lib_name = None
-        try:
-            ret_val = os.system('bash build_lib.sh')
-            if ret_val != 0:
-                raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
-            lib_name = '{}/firmware/{}-{}.so'.format(
-                model.config.get_output_dir(), model.config.get_project_name(), model.config.get_config_value('Stamp')
-            )
-        finally:
-            os.chdir(curr_dir)
+        ret_val = subprocess.run(
+            ['./build_lib.sh'],
+            shell=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=model.config.get_output_dir(),
+        )
+        if ret_val.returncode != 0:
+            print(ret_val.stdout)
+            raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
+        lib_name = '{}/firmware/{}-{}.so'.format(
+            model.config.get_output_dir(), model.config.get_project_name(), model.config.get_config_value('Stamp')
+        )
 
         return lib_name
 
