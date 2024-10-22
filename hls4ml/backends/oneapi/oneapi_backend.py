@@ -35,6 +35,17 @@ class OneAPIBackend(FPGABackend):
             attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
             self.attribute_map[layer] = attrs
 
+        # Add ParallelizationFactor to Conv1D/2D
+        pf_layers = [
+            Conv1D,
+            Conv2D,
+        ]
+
+        for layer in pf_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('parallelization_factor', default=1))
+            self.attribute_map[layer] = attrs
+
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
