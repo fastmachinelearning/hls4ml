@@ -62,8 +62,13 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
 
     if layer['class_name'] != 'Activation':
         layer['activation'] = layer['class_name']
+
+    if layer['activation'] == 'elu':
+        layer['class_name'] = 'ELU'  # always use ELU type for elu, even if passed as activation
+
     if layer['class_name'] == 'LeakyReLU':
-        layer['activ_param'] = keras_layer['config'].get('alpha', 0.3)
+        # the name changes for version 3
+        layer['activ_param'] = keras_layer['config'].get('negative_slope', keras_layer['config'].get('alpha', 0.3))
     elif layer['class_name'] == 'ThresholdedReLU':
         layer['activ_param'] = keras_layer['config'].get('theta', 1.0)
     elif layer['class_name'] == 'ELU':
@@ -79,6 +84,10 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['class_name'] = 'HardActivation'
     if layer['class_name'] == 'Softmax':
         layer['axis'] = keras_layer['config'].get('axis', -1)
+    if layer['class_name'] == 'Activation' and layer['activation'] == 'leaky_relu':
+        layer['class_name'] = 'LeakyReLU'
+        # The parameter name changes for API v3; the default is different than in LeakyReLU layer
+        layer['activ_param'] = keras_layer['config'].get('negative_slope', keras_layer['config'].get('alpha', 0.2))
 
     return layer, [shape for shape in input_shapes[0]]
 
