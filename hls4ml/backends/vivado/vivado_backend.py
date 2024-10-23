@@ -502,10 +502,6 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('inv_range', 128)
         if 'exp_range' not in layer.attributes:
             layer.set_attr('exp_range', 8)
-        if layer.model.config.is_resource_strategy(layer):
-            layer.set_attr('implementation', 'latency')
-        else:
-            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
 
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert (

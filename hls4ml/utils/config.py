@@ -72,11 +72,7 @@ def _get_precision_from_quantizer(quantizer):
     overflow = "AP_WRAP"
 
     if quantizer['class_name'] in supported_quantizers:
-        bits = quantizer['config']['bits']
-        if isinstance(bits, list):
-            bits = int(bits[0])
-        else:
-            bits = int(bits)
+        bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits - 1)) + 1
         # for quantizers use the following default rounding and overflow

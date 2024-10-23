@@ -232,7 +232,6 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
         else:
             suffix = ['w', 'b']
         name = layer.name
-        # print(name)
         for iw, weight in enumerate(layer.get_weights()):
             label = f'{name}/{suffix[iw]}'
             w = weight.data.flatten()

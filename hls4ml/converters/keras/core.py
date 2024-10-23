@@ -47,10 +47,6 @@ def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['bias_quantizer'] = None
     output_shape = input_shapes[0][:]
     output_shape[-1] = layer['n_out']
-    if len(input_shapes[0]) == 3:
-        layer['seq_len'] = output_shape[-2]
-    else:
-        layer['seq_len'] = 1
 
     return layer, output_shape
 

@@ -5,7 +5,7 @@
 #include "nnet_common.h"
 #include "nnet_dense_latency.h"
 #include "nnet_dense_resource.h"
-#include "nnet_dense_seq.h"
+#include "nnet_function_stubs.h"
 #include "nnet_helpers.h"
 #include "nnet_mult.h"
 #include <math.h>

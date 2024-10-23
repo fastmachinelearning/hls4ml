@@ -6,7 +6,6 @@ from hls4ml.model.layers import MultiHeadAttention
 mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
-    static const unsigned seq_len = {seq_len};
     static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
@@ -16,6 +15,8 @@ mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     typedef {attention_output_bias_t.name} bias_t;
     typedef {attention_output_weight_t.name} weight_t;
     typedef ap_{index_t} index_t;
+    template<class data_T, class res_T, class CONFIG_T>
+    using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -87,7 +88,6 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params1['mNum'] = '1'
         mult_params1['n_in'] = node.get_attr('feature_dim')
         mult_params1['n_out'] = node.get_attr('head_dim_key')
-        mult_params1['seq_len'] = 1
         mult_params1['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('query_weight').type.precision
         )
@@ -95,6 +95,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params1['index'] = str(node.index)
         mult_params1['nzeros'] = 0
         mult_params1['nonzeros'] = params['feature_dim'] * params['num_heads'] * params['head_dim_key']
+        mult_params1['dense_function'] = 'DenseLatency'
         mult_config1 = self.mult1_template.format(**mult_params1)
 
         mult_params2 = self._default_config_params(node)
@@ -102,7 +103,6 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params2['mNum'] = '2'
         mult_params2['n_in'] = node.get_attr('head_dim_value') * node.get_attr('num_heads')
         mult_params2['n_out'] = node.get_attr('feature_dim')
-        mult_params2['seq_len'] = 1
         mult_params2['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('attention_output_weight').type.precision
         )
@@ -110,6 +110,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params2['index'] = str(node.index)
         mult_params2['nzeros'] = 0
         mult_params2['nonzeros'] = params['feature_dim'] * params['num_heads'] * params['head_dim_key']
+        mult_params2['dense_function'] = 'DenseLatency'
         mult_config2 = self.mult2_template.format(**mult_params2)
 
         act_params = self._default_config_params(node)

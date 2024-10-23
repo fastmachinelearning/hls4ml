@@ -1,8 +1,7 @@
 from qkeras.quantizers import get_quantizer
 
 from hls4ml.converters.keras.convolution import parse_conv1d_layer, parse_conv2d_layer
-from hls4ml.converters.keras.core import parse_batchnorm_layer, parse_dense_layer, parse_layernorm_layer
-from hls4ml.converters.keras.multiheadattention import parse_mutiheadattention_layer
+from hls4ml.converters.keras.core import parse_batchnorm_layer, parse_dense_layer
 from hls4ml.converters.keras.recurrent import parse_rnn_layer
 from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
 from hls4ml.model.quantizers import QKerasBinaryQuantizer, QKerasPO2Quantizer, QKerasQuantizer
@@ -99,7 +98,6 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
         'quantized_bits',
         'binary',
         'ternary',
-        'quantized_softmax',
     ]
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -159,9 +157,6 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
     else:
         layer['class_name'] = 'Activation'
         layer['activation'] = activation_config['class_name'].replace('quantized_', '')
-    if activation_config['class_name'] == 'quantized_softmax':
-        layer['class_name'] = 'Softmax'
-        layer['axis'] = keras_layer['config'].get('axis', -1)
     layer['activation_quantizer'] = activation_config
     return layer, [shape for shape in input_shapes[0]]
 
@@ -186,31 +181,3 @@ def parse_qconv2dbatchnorm_layer(keras_layer, input_names, input_shapes, data_re
     temp_shape = intermediate_shape
     batch_layer, out_shape = parse_batchnorm_layer(keras_layer, input_names, temp_shape, data_reader)
     return {**conv_layer, **batch_layer}, out_shape
-
-
-@keras_handler('QMultiHeadAttention')
-def parse_qmultiheadattention_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert 'QMultiHeadAttention' in keras_layer['class_name']
-    assert input_shapes[0] == keras_layer['config']['query_shape']
-
-    layer, output_shape = parse_mutiheadattention_layer(keras_layer, input_names, input_shapes, data_reader, config)
-
-    layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    if keras_layer['config']['bias_quantizer'] is not None:
-        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
-    else:
-        layer['bias_quantizer'] = None
-
-    return layer, output_shape
-
-
-@keras_handler('QLayerNormalization')
-def parse_qlayernorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    layer, output_shape = parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader, config)
-
-    layer['mean_quantizer'] = get_quantizer_from_config(keras_layer, 'mean')
-    layer['variance_quantizer'] = get_quantizer_from_config(keras_layer, 'variance')
-    layer['beta_quantizer'] = get_quantizer_from_config(keras_layer, 'beta')
-    layer['gamma_quantizer'] = get_quantizer_from_config(keras_layer, 'gamma')
-
-    return layer, output_shape
