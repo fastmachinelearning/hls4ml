@@ -16,18 +16,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../example-models').resolve()
 
-
-@pytest.fixture(scope='module')
-def sep_conv_model():
-    """
-    Load separabale conv model, already channels-last and cleaned
-    """
-    dl_file = str(example_model_path / "onnx/separable_conv_model_ch_last.onnx")
-    assert os.path.isfile(dl_file)
-
-    model = ModelWrapper(dl_file)
-
-    return model
+# The models
 
 
 @pytest.fixture(scope='module')
@@ -97,31 +86,33 @@ def jettagging_model():
     return model
 
 
-@pytest.mark.parametrize('backend', ['Vitis'])
-def test_sep_conv(sep_conv_model, backend):
-    model = sep_conv_model
-    ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
-    X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
-    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
-    idict = {model.graph.input[0].name: X}
-    y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+@pytest.fixture(scope='module')
+def sep_conv_model():
+    """
+    Load separabale conv model, already channels-last and cleaned
+    """
+    dl_file = str(example_model_path / "onnx/separable_conv_model_ch_last.onnx")
+    assert os.path.isfile(dl_file)
 
-    config = hls4ml.utils.config.config_from_onnx_model(
-        model, granularity='name', backend=backend, default_precision='fixed<32,16>'
-    )
+    model = ModelWrapper(dl_file)
 
-    hls_model = hls4ml.converters.convert_from_onnx_model(
-        model,
-        output_dir=str(test_root_path / f'hls4mlprj_qonnx_sep_conv_{backend}'),
-        io_type='io_stream',
-        backend=backend,
-        hls_config=config,
-    )
-    hls_model.compile()
-    y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
+    return model
 
-    np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
-    print('test')
+
+@pytest.fixture(scope='module')
+def three_layer_keras_model():
+    """
+    Load a simple, originally keras unquantized model
+    """
+    dl_file = str(example_model_path / "onnx/three_layer_keras.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+# The actual tests
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
@@ -192,6 +183,61 @@ def test_jet_tagging(jettagging_model, backend):
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model, output_dir=str(test_root_path / f'hls4mlprj_qonnx_jettag_{backend}'), backend=backend, hls_config=config
+    )
+    hls_model.compile()
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
+
+@pytest.mark.parametrize('backend', ['Vitis'])
+def test_sep_conv(sep_conv_model, backend):
+    model = sep_conv_model
+    ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
+    X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
+    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+    idict = {model.graph.input[0].name: X}
+    y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+
+    config = hls4ml.utils.config.config_from_onnx_model(
+        model, granularity='name', backend=backend, default_precision='fixed<32,16>'
+    )
+
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model,
+        output_dir=str(test_root_path / f'hls4mlprj_qonnx_sep_conv_{backend}'),
+        io_type='io_stream',
+        backend=backend,
+        hls_config=config,
+    )
+    hls_model.compile()
+    y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
+
+    np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
+
+@pytest.mark.parametrize('backend', ['Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_three_layer_keras(three_layer_keras_model, io_type, backend):
+    model = three_layer_keras_model
+    ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
+    X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
+    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+    idict = {model.graph.input[0].name: X}
+    y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+
+    config = hls4ml.utils.config.config_from_onnx_model(
+        model, granularity='name', backend=backend, default_precision='fixed<32,16>'
+    )
+
+    config['LayerName']['Softmax_0']['Implementation'] = 'legacy'
+
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model,
+        output_dir=str(test_root_path / f'hls4mlprj_onnx_three_layer_keras_{io_type}_{backend}'),
+        io_type=io_type,
+        backend=backend,
+        hls_config=config,
     )
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
