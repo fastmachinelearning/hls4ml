@@ -2,7 +2,7 @@ import numpy as np
 from tensorflow.keras.layers import Conv2D, Dense
 from tensorflow.keras.models import Sequential
 
-from hls4ml.optimization.keras.utils import get_last_layer_with_weights
+from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_last_layer_with_weights
 
 
 def reduce_model(model):

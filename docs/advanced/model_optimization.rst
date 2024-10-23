@@ -13,11 +13,11 @@ The code block below showcases three use cases of the hls4ml Optimization API - 
     from tensorflow.keras.optimizers import Adam
     from tensorflow.keras.metrics import CategoricalAccuracy
     from tensorflow.keras.losses import CategoricalCrossentropy
-    from hls4ml.optimization.keras import optimize_model
-    from hls4ml.optimization.keras.utils import get_model_sparsity
-    from hls4ml.optimization.attributes import get_attributes_from_keras_model
-    from hls4ml.optimization.objectives import ParameterEstimator
-    from hls4ml.optimization.scheduler import PolynomialScheduler
+    from hls4ml.optimization.dsp_aware_pruning.keras import optimize_model
+    from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_model_sparsity
+    from hls4ml.optimization.dsp_aware_pruning.attributes import get_attributes_from_keras_model
+    from hls4ml.optimization.dsp_aware_pruning.objectives import ParameterEstimator
+    from hls4ml.optimization.dsp_aware_pruning.scheduler import PolynomialScheduler
     # Define baseline model and load data
     # X_train, y_train = ...
     # X_val, y_val = ...
@@ -75,7 +75,7 @@ To optimize GPU FLOPs, the code is similar to above:
 
 .. code-block:: Python
 
-    from hls4ml.optimization.objectives.gpu_objectives import GPUFLOPEstimator
+    from hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives import GPUFLOPEstimator
 
     # Optimize model
     # Note the change from ParameterEstimator to GPUFLOPEstimator
@@ -98,7 +98,7 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
 .. code-block:: Python
 
     from hls4ml.utils.config import config_from_keras_model
-    from hls4ml.optimization.objectives.vivado_objectives import VivadoDSPEstimator
+    from hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives import VivadoDSPEstimator
 
     # Note the change from optimize_model to optimize_keras_model_for_hls4ml
     # The function optimize_keras_model_for_hls4ml acts as a wrapper for the function, parsing hls4ml config to model attributes
@@ -130,5 +130,5 @@ Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used
 .. code-block:: Python
 
     hls_config = config_from_keras_model(optimized_model)
-    hls_config['Model']['DenseResourceImplementation'] = 'Unrolled'
-    # Any addition hls4ml config, such as strategy, reuse factor etc...
+    hls_config['Model']['Strategy'] = 'Unrolled'
+    # Any addition hls4ml config, reuse factor etc...
