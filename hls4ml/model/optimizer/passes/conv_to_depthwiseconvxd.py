@@ -55,7 +55,7 @@ class ConvToDepthwiseConvXD(OptimizerPass):
             bias_node = node.get_input_node(node.inputs[2])
 
         # creating the attributes
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
+        attributes = {k: node.attributes[k] for k in _base_attributes if k in node.attributes}
 
         # The ConvxD nodes expect the weight data to be in a different format, not (M, k1.., C)
         if node.attributes['n_dim'] == 1:

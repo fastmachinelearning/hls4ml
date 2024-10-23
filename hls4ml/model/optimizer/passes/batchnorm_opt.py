@@ -28,7 +28,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         if not (len(node.inputs) == 5 and all(node.inputs)):
             raise ValueError('All 5 BatchNormOnnnx inputs need to be defined')
 
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
+        attributes = {k: node.attributes[k] for k in _base_attributes if k in node.attributes}
 
         gamma_node = node.get_input_node(node.inputs[1])
         if not isinstance(gamma_node, Constant):

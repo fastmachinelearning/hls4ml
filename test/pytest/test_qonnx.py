@@ -10,6 +10,8 @@ import qonnx.util.to_channels_last
 
 # To conveniently run QONNX inference
 from qonnx.core.modelwrapper import ModelWrapper
+from qonnx.transformation.channels_last import ConvertToChannelsLastAndClean
+from qonnx.transformation.gemm_to_matmul import GemmToMatMul
 
 import hls4ml
 
@@ -100,14 +102,105 @@ def sep_conv_model():
 
 
 @pytest.fixture(scope='module')
+def two_layer_keras_model():
+    """
+    Load a simple, two-layer, originally keras, unquantized model
+    """
+    dl_file = str(example_model_path / "onnx/two_layer_keras.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
 def three_layer_keras_model():
     """
-    Load a simple, originally keras unquantized model
+    Load a simple, three-layer, originally keras, unquantized model
     """
     dl_file = str(example_model_path / "onnx/three_layer_keras.onnx")
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
+def two_layer_pytorch_model():
+    """
+    Load a simple, two-layer, originally pytorch, unquantized model
+    """
+    dl_file = str(example_model_path / "onnx/two_layer_keras.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    model = model.transform(GemmToMatMul())
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
+def three_layer_pytorch_model():
+    """
+    Load a simple, three-layer, originally pytorch, unquantized model
+    """
+    dl_file = str(example_model_path / "onnx/three_layer_pytorch.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    model = model.transform(GemmToMatMul())
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
+def conv1d_small_keras_model():
+    """
+    Load a simple conv1d, originally keras, unquantized model
+    """
+    dl_file = str(example_model_path / "onnx/conv1d_small_keras.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    model = model.transform(ConvertToChannelsLastAndClean())
+    model = model.transform(GemmToMatMul())
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
+def conv2d_small_keras_model():
+    """
+    Load a simple conv2d, originally keras, unquantized model
+    """
+    dl_file = str(example_model_path / "onnx/conv2d_small_keras.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    model = model.transform(ConvertToChannelsLastAndClean())
+    model = model.transform(GemmToMatMul())
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
+def conv2d_small_mp_keras_model():
+    """
+    Load a conv2d model with max pooling, originally keras, unquantized model
+    """
+    dl_file = str(example_model_path / "onnx/conv2d_small_mp_keras.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    model = model.transform(ConvertToChannelsLastAndClean())
+    model = model.transform(GemmToMatMul())
     model = qonnx.util.cleanup.cleanup_model(model)
     return model
 
@@ -216,25 +309,43 @@ def test_sep_conv(sep_conv_model, backend):
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 
+@pytest.mark.parametrize(
+    'model_name',
+    [
+        'two_layer_keras_model',
+        'three_layer_keras_model',
+        'two_layer_pytorch_model',
+        'three_layer_pytorch_model',
+        'conv1d_small_keras_model',
+        'conv2d_small_keras_model',
+        'conv2d_small_mp_keras_model',
+    ],
+)
 @pytest.mark.parametrize('backend', ['Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_three_layer_keras(three_layer_keras_model, io_type, backend):
-    model = three_layer_keras_model
+def test_simple_model(model_name, io_type, backend, request):
+    if model_name == 'conv2d_small_mp_keras_model' and io_type == 'io_stream':
+        # Not yet supported due to an issue with channels last conversion
+        # There is a qonnx PR.
+        pytest.skip()
+    model = request.getfixturevalue(model_name)
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
-    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+    X = (np.round(X * 2**10) * 2**-10).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
     config = hls4ml.utils.config.config_from_onnx_model(
-        model, granularity='name', backend=backend, default_precision='fixed<32,16>'
+        model, granularity='name', backend=backend, default_precision='fixed<16,6>'
     )
 
-    config['LayerName']['Softmax_0']['Implementation'] = 'legacy'
+    for layer in config['LayerName']:
+        if layer.startswith('Softmax'):
+            config['LayerName'][layer]['Implementation'] = 'legacy'
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
-        output_dir=str(test_root_path / f'hls4mlprj_onnx_three_layer_keras_{io_type}_{backend}'),
+        output_dir=str(test_root_path / f'hls4mlprj_onnx_{model_name}_{io_type}_{backend}'),
         io_type=io_type,
         backend=backend,
         hls_config=config,
