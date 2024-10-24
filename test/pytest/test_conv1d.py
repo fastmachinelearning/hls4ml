@@ -33,6 +33,8 @@ def keras_model():
     [
         ('Quartus', 'io_parallel', 'resource'),
         ('Quartus', 'io_stream', 'resource'),
+        ('oneAPI', 'io_parallel', 'resource'),
+        ('oneAPI', 'io_stream', 'resource'),
         ('Vivado', 'io_parallel', 'resource'),
         ('Vivado', 'io_parallel', 'latency'),
         ('Vivado', 'io_stream', 'latency'),
@@ -85,6 +87,8 @@ def hls_model(keras_model, backend, io_type, strategy):
     [
         ('Quartus', 'io_parallel', 'resource'),
         ('Quartus', 'io_stream', 'resource'),
+        ('oneAPI', 'io_parallel', 'resource'),
+        ('oneAPI', 'io_stream', 'resource'),
         ('Vivado', 'io_parallel', 'resource'),
         ('Vivado', 'io_parallel', 'latency'),
         ('Vivado', 'io_stream', 'latency'),

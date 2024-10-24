@@ -9,7 +9,7 @@ from hls4ml.converters import convert_from_keras_model
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 def test_repack_precision(backend: str):
     inp = keras.Input(shape=(3, 3), name='inp')
     out = keras.layers.Reshape((3, 3), name='reshape')(inp)
@@ -33,16 +33,29 @@ def test_repack_precision(backend: str):
         io_type='io_stream',
     )
     model_hls.write()  # Not needed for this test, but useful for debugging
-    assert 'repack_reshape' in model_hls.graph, 'repack_reshape not found in graph'
-    repack_precision = model_hls.graph['repack_reshape'].attributes['result_t'].precision
+
+    reshape_name = 'reshape' if backend == 'oneAPI' else 'repack_reshape'
+    assert reshape_name in model_hls.graph, f'{reshape_name} not found in graph'
+    repack_precision = model_hls.graph[reshape_name].attributes['result_t'].precision
     assert repack_precision.integer == 10, 'Precision mismatch'
     assert repack_precision.fractional == 10, 'Precision mismatch'
     assert repack_precision.width == 20, 'Precision mismatch'
     assert repack_precision.signed is True, 'Precision mismatch'
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+@pytest.mark.parametrize(
+    'backend, strategy',
+    [
+        ('Quartus', 'Resource'),
+        ('oneAPI', 'Resource'),
+        ('Vivado', 'Resource'),
+        ('Vitis', 'Resource'),
+        ('Vivado', 'Latency'),
+        ('Vitis', 'Latency'),
+        ('Catapult', 'Latency'),
+        ('Catapult', 'Resource'),
+    ],
+)
 def test_repack(backend: str, strategy: str):
     inp1 = keras.Input(shape=(4,), name='inp1')
     inp2 = keras.Input(shape=(4,), name='inp2')

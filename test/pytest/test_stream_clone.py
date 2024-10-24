@@ -40,7 +40,7 @@ def data():
     return X
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
 def test_multi_clone(model_multi_clone, data, backend: str):
     output_dir = str(test_root_path / f'hls4mlprj_stream_clone_multiclone_{backend}')
     hls_config = {'Model': {'Precision': 'fixed<32,5>', 'ReuseFactor': 1}}
@@ -58,7 +58,7 @@ def test_multi_clone(model_multi_clone, data, backend: str):
     assert np.allclose(r_hls, r_keras, atol=1e-5, rtol=0)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
 def test_clone_precision_inherition(model_clone_precision_inherition, data, backend: str):
     output_dir = str(test_root_path / f'hls4mlprj_stream_clone_precision_{backend}')
     layer_config = {

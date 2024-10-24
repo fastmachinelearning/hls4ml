@@ -32,7 +32,7 @@ def keras_model_1d(request):
     return model, model_type, keepdims
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize(
     'keras_model_1d',
     [
@@ -89,7 +89,7 @@ def keras_model_2d(request):
     return model, model_type, keepdims
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize(
     'keras_model_2d',
     [

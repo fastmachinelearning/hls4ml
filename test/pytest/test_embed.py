@@ -25,7 +25,7 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def hls_model(keras_model, backend, io_type):
     hls_config = hls4ml.utils.config_from_keras_model(
@@ -41,7 +41,7 @@ def hls_model(keras_model, backend, io_type):
     return hls_model
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_embedding_accuracy(data, keras_model, hls_model):
     X = data
