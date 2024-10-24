@@ -1,5 +1,3 @@
-from copy import copy
-
 from hls4ml.backends.catapult.passes.convolution_templates import (
     Conv1DConfigTemplate,
     Conv1DFunctionTemplate,
@@ -75,8 +73,10 @@ class OptimizePointwiseConv(OptimizerPass):
 
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:]  # '1D' or '2D'
-        pw_node = model.make_node('PointwiseConv' + dim, node.name, copy(node.attributes), node.inputs.copy())
-        pw_node.weights['bias'].data = node.weights['bias'].data
+        new_attrs = {k: v for k, v in node.attributes.items() if k not in ('trace', 'precision', 'reuse_factor')}
+        pw_node = model.make_node(
+            'PointwiseConv' + dim, node.name, new_attrs, node.inputs.copy(), outputs=node.outputs.copy()
+        )
         # Set strategy to ensure lowercase string is passed to the template
         if model.config.is_resource_strategy(pw_node):
             pw_node.set_attr('strategy', 'resource')
