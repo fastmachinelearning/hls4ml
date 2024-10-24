@@ -676,6 +676,9 @@ class CatapultWriter(Writer):
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
+            elif '// hls-fpga-machine-learning insert weights dir' in line:
+                weights_dir = (Path(fout.name).parent / 'firmware/weights').resolve()
+                newline = f'static std::string s_weights_dir = "{weights_dir}";\n'
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
