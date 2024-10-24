@@ -8,8 +8,8 @@ from qkeras.utils import _add_supported_quantized_objects
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import Conv2D, Dense
 
-from hls4ml.optimization.keras.config import SUPPORTED_LAYERS, TMP_DIRECTORY
-from hls4ml.optimization.keras.regularizers import Conv2DRegularizer, DenseRegularizer
+from hls4ml.optimization.dsp_aware_pruning.keras.config import SUPPORTED_LAYERS, TMP_DIRECTORY
+from hls4ml.optimization.dsp_aware_pruning.keras.regularizers import Conv2DRegularizer, DenseRegularizer
 
 co = {}
 _add_supported_quantized_objects(co)
