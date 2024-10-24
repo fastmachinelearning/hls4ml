@@ -362,7 +362,10 @@ def keras_to_hls(config, split_layer_names = []):
     
     print('Creating HLS model...')
     if split_layer_names:
-        if all(name.startswith('fc') or name.startswith('dense') or name.startswith('conv') for name in split_layer_names):
+        if all(name.startswith('fc') or name.startswith('dense') or 
+               name.startswith('conv') or
+               name.startswith('activation') or name.startswith('relu') 
+               for name in split_layer_names):
             hls_models = ModelGraph.make_multi_graph(config, layer_list, output_shapes, split_layer_names)
             print('Multi-graph HLS model created.')
             return hls_models

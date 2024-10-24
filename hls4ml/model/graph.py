@@ -6,6 +6,10 @@ from collections import OrderedDict
 import numpy as np
 import numpy.ctypeslib as npc
 import copy
+import re
+import warnings
+import concurrent.futures
+import threading
 
 from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
@@ -1071,8 +1075,15 @@ class ModelGraph(Serializable):
         original_OutputDir = config['OutputDir']
         original_ProjectName = config['ProjectName']
         current_index = 0
+        last_output_precision = None
         for idx, sub_layer_list in enumerate(subgraphs_layer_lists):
-            # For subgraphs after the first one, insert a new input layer
+            
+            # Create a shallow copy of the config for each subgraph
+            sub_config = copy.copy(config)
+            sub_config['OutputDir'] = f"{original_OutputDir}_graph{idx + 1}"
+            sub_config['ProjectName'] = f"{original_ProjectName}_graph{idx + 1}"
+
+            # For subgraphs after the first one, configure new input layer
             if idx > 0:
                 # Get the previous layer's name and output shape
                 previous_layer_index = indices[idx] - 1
@@ -1084,8 +1095,9 @@ class ModelGraph(Serializable):
                     raise ValueError(f"Could not find input_shape of '{split_layer_names[idx - 1]}'.")
                 
                 current_split_layer = sub_layer_list[0]
+                input_layer_name = current_split_layer['name'] + '_input'
                 input_layer_dict = {
-                    'name': current_split_layer['name'] + '_input',
+                    'name': input_layer_name,
                     'class_name': 'InputLayer',
                     'data_format': 'channels_last',
                     'input_shape': input_shape[1:],
@@ -1096,12 +1108,35 @@ class ModelGraph(Serializable):
                 # Then insert the new input layer at the beginning
                 sub_layer_list.insert(0, input_layer_dict)
 
-            # Create a shallow copy of the config for each subgraph
-            sub_config = copy.copy(config)
-            sub_config['OutputDir'] = f"{original_OutputDir}_graph{idx + 1}"
-            sub_config['ProjectName'] = f"{original_ProjectName}_graph{idx + 1}"
-            hls_model = ModelGraph(sub_config, sub_layer_list, None, None, initial_index=current_index)
+                # Copy 'Precision' and 'Trace' from the previous layer's config to the new input layer's config
+                if 'LayerName' in sub_config['HLSConfig']:    
+                    if previous_layer_name in sub_config['HLSConfig']['LayerName']:
+                        prev_layer_config = sub_config['HLSConfig']['LayerName'][previous_layer_name]
+                        new_layer_config = {}
+                        new_layer_config['Precision'] = prev_layer_config['Precision']
+                        #NOTE - We copy Trace as well but it might be better to reset it
+                        new_layer_config['Trace'] = prev_layer_config['Trace'] 
+                        # copy last layer config from previous graph to the new input layer config of current graph 
+                        sub_config['HLSConfig']['LayerName'][input_layer_name] = new_layer_config
+                    else:
+                        raise KeyError(f"Layer '{previous_layer_name}' not found in subconfig.")
+                else:
+                    pass # case of granularity='Model'
             
+            hls_model = ModelGraph(sub_config, sub_layer_list, None, None, initial_index=current_index)
+
+            # After creating subgraph, get the precision from the last layer's output. 
+            if hls_model.graph:
+                try:
+                    last_layer = next(reversed(hls_model.graph.values()))
+                    last_output_precision = last_layer.attributes['precision']['result']
+                except (KeyError, AttributeError):
+                    warnings.warn(
+                    "Could not find precision in the last layer. "
+                    "Setting 'last_output_precision' to 'auto'."
+                    )
+                    last_output_precision = 'auto'  
+
             # Update the current index for the next graph
             # Get the index of the last element in the graph
             layer_indices = [layer.index for layer in hls_model.graph.values()]
@@ -1111,4 +1146,92 @@ class ModelGraph(Serializable):
             
             model_graphs.append(hls_model)
 
-        return model_graphs
+        return MultiModelGraph(model_graphs)
+
+
+class MultiModelGraph:
+    def __init__(self, graphs):
+        self.graphs = graphs
+        self.project_name = re.sub(r'_graph\d+$', '_stitched', graphs[0].config.get_project_name())
+        self.output_dir = graphs[0].config.get_output_dir().split('/')[0]
+        self.backend = self.graphs[0].config.backend
+
+    def build(self, max_workers=None, **kwargs):
+        # Build all ModelGraph instances in parallel.
+        build_results = {}
+        total_builds = len(self.graphs)
+        status = {}
+        status_lock = threading.Lock()
+
+        # Initialize statuses
+        for g in self.graphs:
+            project_name = g.config.get_project_name()
+            status[project_name] = 'Pending'
+
+        def build_wrapper(g, **kwargs):
+            project_name = g.config.get_project_name()
+            with status_lock:
+                status[project_name] = 'Running'
+                self._print_status(status)
+            try:
+                result = g.build(**kwargs)
+                with status_lock:
+                    status[project_name] = 'Completed'
+                    self._print_status(status)
+                return result
+            except Exception as exc:
+                with status_lock:
+                    status[project_name] = 'Failed'
+                    self._print_status(status)
+                raise
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_g = {executor.submit(build_wrapper, g, **kwargs): g for g in self.graphs}
+            for future in concurrent.futures.as_completed(future_to_g):
+                g = future_to_g[future]
+                project_name = g.config.get_project_name()
+                try:
+                    result = future.result()
+                    build_results[project_name] = result
+                except Exception as exc:
+                    build_results[project_name] = None
+        return build_results
+
+    def compile(self):
+        for g in self.graphs:
+            g.compile()
+
+    def predict(self, x):
+        # Pass the data through each ModelGraph in sequence
+        input_data = x
+        for g in self.graphs:
+            # Predict with the current ModelGraph
+            output_data = g.predict(input_data)
+            input_data = output_data
+        return output_data
+
+    def trace(self, x):
+        # Pass the data through each ModelGraph in sequence
+        input_data = x
+        trace_output = []
+        for g in self.graphs:
+            # Trace with the current ModelGraph
+            output_data, curr_trace_output = g.trace(input_data)
+            input_data = output_data
+            trace_output.append(curr_trace_output)
+        return output_data, trace_output
+    
+    def stitch_design(self, export = False, **kwargs):
+        self.backend.stitch_design(self.output_dir, self.project_name, export = export, **kwargs)
+        
+    def _print_status(self, status):
+        # Clear the terminal line and print build status
+        print('\r', end='')
+        status_icons = {
+            'Pending': '○',
+            'Running': '⌛',
+            'Completed': '✅',
+            'Failed': '❌'
+        }
+        status_str = ' | '.join(f'{proj}: {status_icons.get(stat, "?")}' for proj, stat in status.items())
+        print(status_str, flush=True)
