@@ -2,6 +2,7 @@
 #define NNET_CLONE_H
 
 #include "nnet_common.h"
+#include <cstdio>
 
 namespace nnet {
 

@@ -46,7 +46,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned dilation = {dilation};
 
     static const unsigned reuse_factor = {reuse};
-    static const unsigned parallelisation_factor = {parallelization};
+    static const unsigned parallelization_factor = {parallelization};
     static const bool store_weights_in_bram = false;
 
     static const nnet::conv1d_implementation implementation = nnet::conv1d_implementation::{implementation};
@@ -127,7 +127,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned stride_width = {stride_width};
 
     static const unsigned reuse_factor = {reuse};
-    static const unsigned parallelisation_factor = {parallelization};
+    static const unsigned parallelization_factor = {parallelization};
     static const bool store_weights_in_bram = false;
 
     static const nnet::conv2d_implementation implementation = nnet::conv2d_implementation::{implementation};

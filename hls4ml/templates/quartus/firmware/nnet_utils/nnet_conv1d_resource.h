@@ -46,8 +46,8 @@ void conv_1d_im2col_cl(
     // im2col performs no filter transformations; therefore, filter size remains constant
     assert(CONFIG_T::filt_width == CONFIG_T::impl_filt_width);
 
-    // Unroll factor for loop traversing input image, derived from parallelisation_factor
-    static constexpr int pf = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
+    // Unroll factor for loop traversing input image, derived from parallelization_factor
+    static constexpr int pf = MIN(CONFIG_T::parallelization_factor, CONFIG_T::out_width);
 
 ColLoop:
     #pragma unroll pf
@@ -97,8 +97,8 @@ void winograd_conv1d_3x1_kernel_cl(
     assert(CONFIG_T::stride_width == 1);
     assert(CONFIG_T::out_width > 2);
 
-    // Unroll factor for loop traversing input image, derived from parallelisation_factor
-    static constexpr int pf = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
+    // Unroll factor for loop traversing input image, derived from parallelization_factor
+    static constexpr int pf = MIN(CONFIG_T::parallelization_factor, CONFIG_T::out_width);
 
     // Initialise result to bias
     // Unroll fully, as loop performs a simple operation - assigning the outputs to a constant value
@@ -184,8 +184,8 @@ void pointwise_conv_1d_resource_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_
                                    const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::filt_width == 1);
 
-    // Unroll factor for loop traversing input image, derived from parallelisation_factor
-    static constexpr int pf = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
+    // Unroll factor for loop traversing input image, derived from parallelization_factor
+    static constexpr int pf = MIN(CONFIG_T::parallelization_factor, CONFIG_T::out_width);
 
 ColLoop:
     #pragma unroll pf
