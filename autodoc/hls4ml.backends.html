@@ -66,6 +66,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 </ul>
@@ -121,6 +122,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.catapult.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.passes.html">hls4ml.backends.catapult.passes package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.bn_quant">hls4ml.backends.catapult.passes.bn_quant module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.broadcast_stream">hls4ml.backends.catapult.passes.broadcast_stream module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.conv_same_pad">hls4ml.backends.catapult.passes.conv_same_pad module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.conv_stream">hls4ml.backends.catapult.passes.conv_stream module</a></li>
@@ -205,7 +207,6 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.passes.html">hls4ml.backends.fpga.passes package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bn_quant">hls4ml.backends.fpga.passes.bn_quant module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bram_weights">hls4ml.backends.fpga.passes.bram_weights module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.clone">hls4ml.backends.fpga.passes.clone module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.codegen">hls4ml.backends.fpga.passes.codegen module</a></li>
@@ -355,10 +356,133 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.html#module-hls4ml.backends.fpga">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.oneapi.html">hls4ml.backends.oneapi package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.oneapi.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html">hls4ml.backends.oneapi.passes package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.bn_quant">hls4ml.backends.oneapi.passes.bn_quant module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.clone_templates">hls4ml.backends.oneapi.passes.clone_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.convolution_templates">hls4ml.backends.oneapi.passes.convolution_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.convolution_winograd">hls4ml.backends.oneapi.passes.convolution_winograd module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.core_templates">hls4ml.backends.oneapi.passes.core_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.embedding_templates">hls4ml.backends.oneapi.passes.embedding_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.merge_templates">hls4ml.backends.oneapi.passes.merge_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.pointwise">hls4ml.backends.oneapi.passes.pointwise module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.pooling_templates">hls4ml.backends.oneapi.passes.pooling_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.quantization_templates">hls4ml.backends.oneapi.passes.quantization_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.recurrent_templates">hls4ml.backends.oneapi.passes.recurrent_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.reshaping_templates">hls4ml.backends.oneapi.passes.reshaping_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.resource_strategy">hls4ml.backends.oneapi.passes.resource_strategy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.transform_types">hls4ml.backends.oneapi.passes.transform_types module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.oneapi.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_backend">hls4ml.backends.oneapi.oneapi_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.build"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.compile"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.compile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.create_initial_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.get_default_flow"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.get_default_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.get_writer_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_activation"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_activation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_base_layer"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_base_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_conv1d"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_conv1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_conv2d"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_conv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_dense"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_dense()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_embed"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_embed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_gru"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_gru()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_lstm"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_lstm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_simple_rnn"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_simple_rnn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.init_softmax"><code class="docutils literal notranslate"><span class="pre">OneAPIBackend.init_softmax()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_template">hls4ml.backends.oneapi.oneapi_template module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_template.StreamFunctionCallTemplate"><code class="docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_template.StreamFunctionCallTemplate.transform"><code class="docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_template.TaskSequenceTemplate"><code class="docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_template.TaskSequenceTemplate.transform"><code class="docutils literal notranslate"><span class="pre">TaskSequenceTemplate.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_types">hls4ml.backends.oneapi.oneapi_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.ACExponentPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">ACExponentPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.ACExponentPrecisionDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">ACExponentPrecisionDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">AggregratedArrayVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">AggregratedArrayVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIACTypeConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIACTypeConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">OneAPIArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPICompressedTypeConverter"><code class="docutils literal notranslate"><span class="pre">OneAPICompressedTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPICompressedTypeConverter.convert_precision"><code class="docutils literal notranslate"><span class="pre">OneAPICompressedTypeConverter.convert_precision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPICompressedTypeConverter.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPICompressedTypeConverter.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIExponentTypeConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIExponentTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIExponentTypeConverter.convert_precision"><code class="docutils literal notranslate"><span class="pre">OneAPIExponentTypeConverter.convert_precision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIExponentTypeConverter.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIExponentTypeConverter.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIHLSTypeConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIHLSTypeConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIInplaceArrayVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableDefinition"><code class="docutils literal notranslate"><span class="pre">OneAPIInplaceArrayVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIInplaceArrayVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIInplaceStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">OneAPIInplaceStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIInplaceStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIInterfaceVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableDefinition"><code class="docutils literal notranslate"><span class="pre">OneAPIInterfaceVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableDefinition.declare_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIInterfaceVariableDefinition.declare_cpp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIInterfaceVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIPackedTypeConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIPackedTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIPackedTypeConverter.convert_precision"><code class="docutils literal notranslate"><span class="pre">OneAPIPackedTypeConverter.convert_precision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIPackedTypeConverter.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIPackedTypeConverter.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIStaticWeightVariableConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter.convert"><code class="docutils literal notranslate"><span class="pre">OneAPIStaticWeightVariableConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableDefinition"><code class="docutils literal notranslate"><span class="pre">OneAPIStaticWeightVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIStaticWeightVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableConverter"><code class="docutils literal notranslate"><span class="pre">OneAPIStreamVariableConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableDefinition"><code class="docutils literal notranslate"><span class="pre">OneAPIStreamVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableDefinition.declare_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIStreamVariableDefinition.declare_cpp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableDefinition.definition_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIStreamVariableDefinition.definition_cpp()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.html">hls4ml.backends.quartus package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.passes.html">hls4ml.backends.quartus.passes package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.bn_quant">hls4ml.backends.quartus.passes.bn_quant module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.convolution_templates">hls4ml.backends.quartus.passes.convolution_templates module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.convolution_winograd">hls4ml.backends.quartus.passes.convolution_winograd module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.core_templates">hls4ml.backends.quartus.passes.core_templates module</a></li>
@@ -479,6 +603,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.passes.html">hls4ml.backends.vivado.passes package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.bn_quant">hls4ml.backends.vivado.passes.bn_quant module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.broadcast_stream">hls4ml.backends.vivado.passes.broadcast_stream module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.conv_same_pad">hls4ml.backends.vivado.passes.conv_same_pad module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.conv_stream">hls4ml.backends.vivado.passes.conv_stream module</a></li>
@@ -753,6 +878,15 @@ Defaults to ‘nnet_utils’.</p></li>
 <dt class="sig sig-object py" id="hls4ml.backends.template.FunctionCallTemplate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">FunctionCallTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.FunctionCallTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.template.Template" title="hls4ml.backends.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a></p>
+<p>Base class for function call templates:  provides the ‘function_cpp’ attribute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer_class</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a><em> or </em><em>list</em><em>, </em><em>tuple</em><em>, or </em><em>set</em><em> of </em><em>Layers</em>) – The Layers that this template handles.</p></li>
+<li><p><strong>include_header</strong> (<em>list</em><em>, </em><em>tuple</em><em>, or </em><em>set</em><em> of </em><em>str</em><em>, or </em><em>None</em>) – The list of needed include files</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.template.FunctionCallTemplate.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.FunctionCallTemplate.transform" title="Link to this definition"></a></dt>
@@ -774,12 +908,28 @@ Defaults to ‘nnet_utils’.</p></li>
 <dt class="sig sig-object py" id="hls4ml.backends.template.LayerConfigTemplate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">LayerConfigTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.LayerConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.template.Template" title="hls4ml.backends.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a></p>
+<p>Base class for layer config templates:  provides the ‘config_cpp’ attribute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>layer_class</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a><em> or </em><em>list</em><em>, </em><em>tuple</em><em>, or </em><em>set</em><em> of </em><em>Layers</em>) – The Layers that this template handles.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.template.Template">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.template.</span></span><span class="sig-name descname"><span class="pre">Template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>The Template base class, should not be instantiated directly</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the template.</p></li>
+<li><p><strong>layer_class</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a><em> or </em><em>list</em><em>, </em><em>tuple</em><em>, or </em><em>aet</em><em> of </em><em>Layers</em>) – The Layers that this template handles.</p></li>
+<li><p><strong>attribute_name</strong> (<em>str</em>) – The type of attribute provided</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.template.Template.format">
 <span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.format" title="Link to this definition"></a></dt>

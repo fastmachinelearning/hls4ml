@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="hls4ml.backends.quartus.passes package" href="hls4ml.backends.quartus.passes.html" />
-    <link rel="prev" title="hls4ml.backends.fpga.passes package" href="hls4ml.backends.fpga.passes.html" /> 
+    <link rel="prev" title="hls4ml.backends.oneapi.passes package" href="hls4ml.backends.oneapi.passes.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -66,6 +66,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 </ul>
@@ -120,6 +121,28 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.passes.html">hls4ml.backends.quartus.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.bn_quant">hls4ml.backends.quartus.passes.bn_quant module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationQuantizedTanhConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationQuantizedTanhConfigTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationQuantizedTanhFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">BatchNormalizationQuantizedTanhFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh"><code class="docutils literal notranslate"><span class="pre">MergeBatchNormAndQuantizedTanh</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match"><code class="docutils literal notranslate"><span class="pre">MergeBatchNormAndQuantizedTanh.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform"><code class="docutils literal notranslate"><span class="pre">MergeBatchNormAndQuantizedTanh.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput"><code class="docutils literal notranslate"><span class="pre">QuantizeDenseOutput</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput.match"><code class="docutils literal notranslate"><span class="pre">QuantizeDenseOutput.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput.transform"><code class="docutils literal notranslate"><span class="pre">QuantizeDenseOutput.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.bn_quant.register_bn_quant"><code class="docutils literal notranslate"><span class="pre">register_bn_quant()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.convolution_templates">hls4ml.backends.quartus.passes.convolution_templates module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.convolution_templates.Conv1DConfigTemplate"><code class="docutils literal notranslate"><span class="pre">Conv1DConfigTemplate</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.convolution_templates.Conv1DConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">Conv1DConfigTemplate.format()</span></code></a></li>
@@ -526,7 +549,7 @@ device resources</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="hls4ml.backends.fpga.passes.html" class="btn btn-neutral float-left" title="hls4ml.backends.fpga.passes package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.backends.oneapi.passes.html" class="btn btn-neutral float-left" title="hls4ml.backends.oneapi.passes package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="hls4ml.backends.quartus.passes.html" class="btn btn-neutral float-right" title="hls4ml.backends.quartus.passes package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

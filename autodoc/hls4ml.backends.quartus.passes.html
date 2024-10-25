@@ -66,6 +66,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 </ul>
@@ -117,6 +118,100 @@
 <h1>hls4ml.backends.quartus.passes package<a class="headerlink" href="#hls4ml-backends-quartus-passes-package" title="Link to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.backends.quartus.passes.bn_quant">
+<span id="hls4ml-backends-quartus-passes-bn-quant-module"></span><h2>hls4ml.backends.quartus.passes.bn_quant module<a class="headerlink" href="#module-hls4ml.backends.quartus.passes.bn_quant" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">MergeBatchNormAndQuantizedTanh</span></span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">QuantizeDenseOutput</span></span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.QuantizeDenseOutput.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.quartus.passes.bn_quant.register_bn_quant">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">register_bn_quant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.passes.bn_quant.register_bn_quant" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-hls4ml.backends.quartus.passes.convolution_templates">
 <span id="hls4ml-backends-quartus-passes-convolution-templates-module"></span><h2>hls4ml.backends.quartus.passes.convolution_templates module<a class="headerlink" href="#module-hls4ml.backends.quartus.passes.convolution_templates" title="Link to this heading"></a></h2>

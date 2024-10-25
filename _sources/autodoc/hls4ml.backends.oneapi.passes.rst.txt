@@ -1,0 +1,125 @@
+hls4ml.backends.oneapi.passes package
+=====================================
+
+Submodules
+----------
+
+hls4ml.backends.oneapi.passes.bn\_quant module
+----------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.bn_quant
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.clone\_templates module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.clone_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.convolution\_templates module
+-----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.convolution_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.convolution\_winograd module
+----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.convolution_winograd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.core\_templates module
+----------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.core_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.embedding\_templates module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.embedding_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.merge\_templates module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.merge_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.pointwise module
+----------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.pointwise
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.pooling\_templates module
+-------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.pooling_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.quantization\_templates module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.quantization_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.recurrent\_templates module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.recurrent_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.reshaping\_templates module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.reshaping_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.resource\_strategy module
+-------------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.resource_strategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.transform\_types module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.transform_types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.oneapi.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

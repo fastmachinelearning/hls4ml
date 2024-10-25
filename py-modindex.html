@@ -66,6 +66,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced/oneapi.html">oneAPI Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 </ul>
@@ -149,6 +150,11 @@
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="autodoc/hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes"><code class="xref">hls4ml.backends.catapult.passes</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.bn_quant"><code class="xref">hls4ml.backends.catapult.passes.bn_quant</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -258,11 +264,6 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bn_quant"><code class="xref">hls4ml.backends.fpga.passes.bn_quant</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
        <a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bram_weights"><code class="xref">hls4ml.backends.fpga.passes.bram_weights</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
@@ -323,12 +324,112 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi"><code class="xref">hls4ml.backends.oneapi</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_backend"><code class="xref">hls4ml.backends.oneapi.oneapi_backend</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_template"><code class="xref">hls4ml.backends.oneapi.oneapi_template</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_types"><code class="xref">hls4ml.backends.oneapi.oneapi_types</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes"><code class="xref">hls4ml.backends.oneapi.passes</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.bn_quant"><code class="xref">hls4ml.backends.oneapi.passes.bn_quant</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.clone_templates"><code class="xref">hls4ml.backends.oneapi.passes.clone_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.convolution_templates"><code class="xref">hls4ml.backends.oneapi.passes.convolution_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.convolution_winograd"><code class="xref">hls4ml.backends.oneapi.passes.convolution_winograd</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.core_templates"><code class="xref">hls4ml.backends.oneapi.passes.core_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.embedding_templates"><code class="xref">hls4ml.backends.oneapi.passes.embedding_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.merge_templates"><code class="xref">hls4ml.backends.oneapi.passes.merge_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.pointwise"><code class="xref">hls4ml.backends.oneapi.passes.pointwise</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.pooling_templates"><code class="xref">hls4ml.backends.oneapi.passes.pooling_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.quantization_templates"><code class="xref">hls4ml.backends.oneapi.passes.quantization_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.recurrent_templates"><code class="xref">hls4ml.backends.oneapi.passes.recurrent_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.reshaping_templates"><code class="xref">hls4ml.backends.oneapi.passes.reshaping_templates</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.resource_strategy"><code class="xref">hls4ml.backends.oneapi.passes.resource_strategy</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.oneapi.passes.html#module-hls4ml.backends.oneapi.passes.transform_types"><code class="xref">hls4ml.backends.oneapi.passes.transform_types</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
        <a href="autodoc/hls4ml.backends.quartus.html#module-hls4ml.backends.quartus"><code class="xref">hls4ml.backends.quartus</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="autodoc/hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes"><code class="xref">hls4ml.backends.quartus.passes</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes.bn_quant"><code class="xref">hls4ml.backends.quartus.passes.bn_quant</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -449,6 +550,11 @@
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes"><code class="xref">hls4ml.backends.vivado.passes</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.bn_quant"><code class="xref">hls4ml.backends.vivado.passes.bn_quant</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -944,6 +1050,11 @@
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.catapult_writer"><code class="xref">hls4ml.writer.catapult_writer</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.oneapi_writer"><code class="xref">hls4ml.writer.oneapi_writer</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>

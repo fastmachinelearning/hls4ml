@@ -66,6 +66,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 </ul>
@@ -350,7 +351,26 @@ and return the corresponding configuration:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.ceil_log2">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">ceil_log2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.ceil_log2" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Returns log2(i), rounding up
+:param - i: Number</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>representing ceil(log2(i))</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>val</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.next_pow2">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.fixed_point_utils.</span></span><span class="sig-name descname"><span class="pre">next_pow2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.next_pow2" title="Link to this definition"></a></dt>
+<dd><p>Return the next bigger power of 2 of an integer</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.fixed_point_utils.uint_to_binary">
