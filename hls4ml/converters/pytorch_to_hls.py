@@ -1,5 +1,3 @@
-import torch
-
 from hls4ml.model import ModelGraph
 
 
@@ -26,6 +24,8 @@ class PyTorchModelReader:
 
 class PyTorchFileReader(PyTorchModelReader):  # Inherit get_weights_data method
     def __init__(self, config):
+        import torch
+
         self.config = config
 
         if not torch.cuda.is_available():
