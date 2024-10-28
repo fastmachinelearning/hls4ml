@@ -1,4 +1,8 @@
+from tensorflow.python.ops.numpy_ops import np_config
+
 from hls4ml import converters, report, utils  # noqa: F401
+
+np_config.enable_numpy_behavior()
 
 try:
     from ._version import version as __version__
