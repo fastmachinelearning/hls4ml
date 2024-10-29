@@ -974,16 +974,20 @@ class ModelGraph:
                 sub_layer_list.insert(0, input_layer_dict)
 
                 # Copy 'Precision' and 'Trace' from the previous layer's config to the new input layer's config
-                if previous_layer_name in sub_config['HLSConfig']['LayerName']:
-                    prev_layer_config = sub_config['HLSConfig']['LayerName'][previous_layer_name]
-                    new_layer_config = {}
-                    new_layer_config['Precision'] = prev_layer_config['Precision']
-                    #NOTE - We copy Trace as well but it might be better to reset it
-                    new_layer_config['Trace'] = prev_layer_config['Trace'] 
-                    # copy last layer config from previous graph to the new input layer config of current graph 
-                    sub_config['HLSConfig']['LayerName'][input_layer_name] = new_layer_config
+                if 'LayerName' in sub_config['HLSConfig']:    
+                    if previous_layer_name in sub_config['HLSConfig']['LayerName']:
+                        prev_layer_config = sub_config['HLSConfig']['LayerName'][previous_layer_name]
+                        new_layer_config = {}
+                        new_layer_config['Precision'] = prev_layer_config['Precision']
+                        #NOTE - We copy Trace as well but it might be better to reset it
+                        new_layer_config['Trace'] = prev_layer_config['Trace'] 
+                        # copy last layer config from previous graph to the new input layer config of current graph 
+                        sub_config['HLSConfig']['LayerName'][input_layer_name] = new_layer_config
+                    else:
+                        raise KeyError(f"Layer '{previous_layer_name}' not found in subconfig.")
                 else:
-                    raise KeyError(f"Layer '{previous_layer_name}' not found in subconfig.")
+                    # case of granularity='Model'
+                    pass
             
             hls_model = ModelGraph(sub_config, sub_layer_list, None, None, initial_index=current_index)
 
@@ -994,7 +998,7 @@ class ModelGraph:
                     last_output_precision = last_layer.attributes['precision']['result']
                 except (KeyError, AttributeError):
                     warnings.warn(
-                    "Could not find precision in the last layer."
+                    "Could not find precision in the last layer. "
                     "Setting 'last_output_precision' to 'auto'."
                     )
                     last_output_precision = 'auto'  
