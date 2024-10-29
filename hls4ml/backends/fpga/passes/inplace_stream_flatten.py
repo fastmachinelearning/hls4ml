@@ -12,10 +12,8 @@ class InplaceStreamFlatten(OptimizerPass):
 
     def match(self, node):
         # Reshape acts as a Flatten layer when the result has 1 dimension
-        if not (isinstance(node, Reshape)):
+        if not (isinstance(node, Reshape) and len(node.get_output_variable().shape)) == 1:
             # Reshape with multiple outputs will be kept as is, or repack cannot handle different shapes
-            return False
-        if len(node.get_output_variable().shape) + (node.name in node.model.outputs) != 1:
             return False
         io_type = node.model.config.get_config_value('IOType')
         return io_type == 'io_stream'
