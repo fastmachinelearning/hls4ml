@@ -15,7 +15,7 @@ class InplaceStreamFlatten(OptimizerPass):
         if not (isinstance(node, Reshape)):
             # Reshape with multiple outputs will be kept as is, or repack cannot handle different shapes
             return False
-        if len(node.get_output_variable().shape) + node.name in node.model.outputs != 1:
+        if len(node.get_output_variable().shape) + (node.name in node.model.outputs) != 1:
             return False
         io_type = node.model.config.get_config_value('IOType')
         return io_type == 'io_stream'
