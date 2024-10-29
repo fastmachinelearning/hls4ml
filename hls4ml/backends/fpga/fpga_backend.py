@@ -238,10 +238,12 @@ class FPGABackend(Backend):
         else:
             return before
 
-    def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor'):
+    def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor', include_max_rf=True):
         assert attribute is not None, 'Reuse factor attribute cannot be None'
 
         valid_rf = self.get_valid_reuse_factors(n_in, n_out)
+        if not include_max_rf:
+            valid_rf.pop()
         chosen_rf = layer.get_attr(attribute)
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)

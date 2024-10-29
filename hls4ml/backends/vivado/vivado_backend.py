@@ -68,7 +68,6 @@ class VivadoBackend(FPGABackend):
 
         # Add ConvImplementation to Convolution+Pooling layers
         cnn_layers = [Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Pooling1D, Pooling2D]
-
         for layer in cnn_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(
@@ -116,6 +115,8 @@ class VivadoBackend(FPGABackend):
             'vivado:apply_resource_strategy',
             'vivado:generate_conv_im2col',
             'vivado:generate_pointwise_conv1_d',
+            'vivado:generate_unrolled_dense_resource',
+            'vivado:set_pipeline_style',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -246,11 +247,6 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    def _validate_conv_strategy(self, layer):
-        if layer.model.config.pipeline_style.lower() != 'dataflow':
-            print(f'WARNING: Layer {layer.name} requires "dataflow" pipeline style. Switching to "dataflow" pipeline style.')
-            layer.model.config.pipeline_style = 'dataflow'
-
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
@@ -272,6 +268,22 @@ class VivadoBackend(FPGABackend):
                 index_t = layer.get_weights('weight').type.index_precision
             else:
                 layer.set_attr('strategy', 'resource')
+        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+            use_resource_instead = False
+            if layer.get_attr('reuse_factor', 1) == 1:
+                print(
+                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
+                    'Using "resource" strategy instead.'
+                )
+                use_resource_instead = True
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_target_reuse_factor(layer)
+            if use_resource_instead:
+                self.set_closest_reuse_factor(layer, n_in, n_out)
+                layer.set_attr('strategy', 'resource')
+            else:
+                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
+                layer.set_attr('strategy', 'resource_unrolled')
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))
@@ -287,6 +299,28 @@ class VivadoBackend(FPGABackend):
             n_in, n_out = self.get_layer_mult_size(layer)
             self.set_target_reuse_factor(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
+        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+            use_resource_instead = False
+            if layer.get_attr('reuse_factor', 1) == 1:
+                print(
+                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}".'
+                    'Using "resource" strategy instead.'
+                )
+                use_resource_instead = True
+            elif layer.model.config.get_config_value('IOType') == 'io_parallel':
+                print(
+                    f'Unrolled resource strategy cannot be combined with io_parallel in layer "{layer.name}". '
+                    'Using "resource" strategy instead.'
+                )
+                use_resource_instead = True
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_target_reuse_factor(layer)
+            if use_resource_instead:
+                self.set_closest_reuse_factor(layer, n_in, n_out)
+                layer.set_attr('strategy', 'resource')
+            else:
+                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
+                layer.set_attr('strategy', 'resource_unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -316,8 +350,6 @@ class VivadoBackend(FPGABackend):
         layer.set_attr('parallelization_factor', closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
-
-        self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
@@ -388,6 +420,28 @@ class VivadoBackend(FPGABackend):
             self.set_target_reuse_factor(layer)
             n_in, n_out = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
+        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+            use_resource_instead = False
+            if layer.get_attr('reuse_factor', 1) == 1:
+                print(
+                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
+                    'Using "resource" strategy instead.'
+                )
+                use_resource_instead = True
+            elif layer.model.config.get_config_value('IOType') == 'io_parallel':
+                print(
+                    f'Unrolled resource strategy cannot be combined with io_parallel in layer "{layer.name}". '
+                    'Using "resource" strategy instead.'
+                )
+                use_resource_instead = True
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_target_reuse_factor(layer)
+            if use_resource_instead:
+                self.set_closest_reuse_factor(layer, n_in, n_out)
+                layer.set_attr('strategy', 'resource')
+            else:
+                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
+                layer.set_attr('strategy', 'resource_unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -419,8 +473,6 @@ class VivadoBackend(FPGABackend):
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
-        self._validate_conv_strategy(layer)
-
     @layer_optimizer(SeparableConv2D)
     def init_sepconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
@@ -443,8 +495,8 @@ class VivadoBackend(FPGABackend):
             )
         else:
             closest_pf = chosen_pf
-        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
 
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
         # Set the output type of the depthwise phase
@@ -513,6 +565,25 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.set_attr('strategy', 'resource')
+        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+            use_resource_instead = False
+            if layer.get_attr('reuse_factor', 1) == 1:
+                print(
+                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
+                    'Using "resource" strategy instead.'
+                )
+                use_resource_instead = True
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            if use_resource_instead:
+                self.set_closest_reuse_factor(layer, n_in, n_out)
+                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+                layer.set_attr('strategy', 'resource')
+            else:
+                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
+                self.set_closest_reuse_factor(
+                    layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
+                )
+                layer.set_attr('strategy', 'resource_unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -528,6 +599,25 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.set_attr('strategy', 'resource')
+        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+            use_resource_instead = False
+            if layer.get_attr('reuse_factor', 1) == 1:
+                print(
+                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
+                    'Using "resource" strategy instead.'
+                )
+                use_resource_instead = True
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            if use_resource_instead:
+                self.set_closest_reuse_factor(layer, n_in, n_out)
+                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+                layer.set_attr('strategy', 'resource')
+            else:
+                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
+                self.set_closest_reuse_factor(
+                    layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
+                )
+                layer.set_attr('strategy', 'resource_unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 

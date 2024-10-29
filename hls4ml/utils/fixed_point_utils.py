@@ -125,14 +125,17 @@ def uint_to_binary(i, N):
     return bits
 
 
-'''
+def ceil_log2(i):
+    """
     Returns log2(i), rounding up
     Args:
         - i : Number
     Returns:
         - val : representing ceil(log2(i))
-'''
-
-
-def ceil_log2(i):
+    """
     return i.bit_length() - 1
+
+
+def next_pow2(x):
+    """Return the next bigger power of 2 of an integer"""
+    return 1 << (x - 1).bit_length()
