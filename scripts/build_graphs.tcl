@@ -43,32 +43,36 @@ cd $project_name
 create_project $project_name . -part $part
 
 # Add repositories
-# Initialize the repo count
+# Loop through each project directory
 set repo_count 0
-# Loop through potential project directories
-for {set i 1} {[file exists "$base_dir/hls4ml_prj_graph$i/myproject_graph${i}_prj"]} {incr i} {
-    set repo_path "$base_dir/hls4ml_prj_graph$i/myproject_graph${i}_prj/solution1/impl/ip"
+foreach dir $project_dirs { 
+    # Check if we have exactly one _prj directory
+    set prj_dirs [glob -directory $dir -type d "*_prj"]
+    if {[llength $prj_dirs] != 1} {
+        error "Expected exactly one *_prj directory, but found [llength $prj_dirs] in directory: $dir"
+    }
+    # If exactly one *_prj is found, proceed to construct the repo_path
+    set first_prj_dir [lindex $prj_dirs 0]
+    set repo_path "${first_prj_dir}/solution1/impl/ip"
+    
     # Check if the repository path exists
     if {[file isdirectory $repo_path]} {
         # Add repository path to current project's IP repository paths
         set_property ip_repo_paths [concat [get_property ip_repo_paths [current_project]] $repo_path] [current_project]
-        
-        # Increment the repo count
         incr repo_count
-
-        puts "Added IP repository path: $repo_path"
     } else {
         puts "Directory does not exist: $repo_path"
     }
 }
+
+# Rescan repositories
+update_ip_catalog
 
 if { $repo_count == 0 } {
     puts "No IP repositories were found in the specified directories."
 } else {
     puts "Total IP repositories added: $repo_count"
 }
-# Rescan repositories
-update_ip_catalog
 
 # Name of the block design 
 set bd_name "design_1"
