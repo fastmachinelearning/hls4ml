@@ -536,7 +536,7 @@ class ModelGraph:
         inp_var = node.get_input_variable()
         out_var = node.get_output_variable()
 
-        assert inp_var.shape == out_var.shape, f'Input and output shapes do not match for {node.name}'
+        assert np.prod(inp_var.shape) == np.prod(out_var.shape), f'Input and output shapes do not match for {node.name}'
 
         if len(inputs) > 1 or len(outputs) > 1:
             raise Exception('Cannot delete a node with multiple inputs/outputs')
