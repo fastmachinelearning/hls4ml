@@ -11,12 +11,11 @@ class InplaceParallelReshape(OptimizerPass):
     """
 
     def match(self, node):
-        return isinstance(node, Reshape)
+        if not isinstance(node, Reshape):
+            return
+        return node.model.config.get_config_value('IOType') == 'io_parallel'
 
     def transform(self, model, node):
-        if model.config.get_config_value('IOType') != 'io_parallel':
-            return False
-
         outvar = node.get_output_variable()
         invar = node.get_input_variable()
         newoutvar = InplaceTensorVariable(outvar, invar)
