@@ -25,13 +25,30 @@ def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], v
     prj_name = config['ProjectName']
     prj_top_path = prj_path / f'firmware/{prj_name}.cpp'
     jit_bridge_path = prj_path / f'{prj_name}_jit_bridge.cpp'
+    backend = config['Backend'].lower()
 
     cppyy.cppdef("#define HLS4ML_EXTERNAL_WEIGHT_LOAD")
     cppyy.add_include_path(str(prj_path))
-    if (prj_path / 'firmware/ap_types').exists():
-        cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
-    if (prj_path / 'firmware/ac_types').exists():
-        cppyy.add_include_path(str(prj_path / 'firmware/ac_types'))
+
+    print(f'Compiling {prj_top_path} for {backend} backend')
+    match backend:
+        case 'vivado' | 'vitis':
+            print('Adding Vivado paths')
+            cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
+        case 'quartus':
+            cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
+            cppyy.add_include_path(str(prj_path / 'firmware/ac_types'))
+        # case 'catapult':                          # Doesn't work, unknown error
+        #     print('Adding MGC paths')
+        #     MGC_HOME = os.environ.get('MGC_HOME', '')
+        #     if MGC_HOME:
+        #         cppyy.add_include_path(f'{MGC_HOME}/shared/include')
+        #         cppyy.add_include_path(f'{MGC_HOME}/shared/include/nnet_utils')
+        #     cppyy.add_include_path(str(prj_path / 'firmware/ac_types/include'))
+        #     cppyy.add_include_path(str(prj_path / 'firmware/ac_math/include'))
+        #     cppyy.add_include_path(str(prj_path / 'firmware/ac_simutils/include'))
+        #     cppyy.add_include_path(str(prj_path / 'firmware/nnet_utils'))
+
     cppyy.include(str(prj_top_path))
     cppyy.include(str(jit_bridge_path))
 
@@ -774,8 +791,9 @@ class ModelGraph:
         config = {
             'OutputDir': self.config.config['OutputDir'],
             'ProjectName': self.config.config['ProjectName'],
-            'Namespace': self.config.config['WriterConfig'].get('Namespace', None) or 'nnet',
-            'WriteWeightsTxt': self.config.config['WriterConfig'].get('WriteWeightsTxt', False),
+            'Namespace': self.config.writer_config.get('Namespace', None) or 'nnet',
+            'WriteWeightsTxt': self.config.writer_config.get('WriteWeightsTxt', False),
+            'Backend': self.config.config['Backend'],
         }
 
         self._jit_process.apply(compile_worker, (config, var_types, var_names, var_values))
@@ -874,8 +892,7 @@ class ModelGraph:
     def jit_predict(self, x: np.ndarray | Sequence[np.ndarray]):
 
         assert self._jit_process is not None, 'Model not jit compiled'
-        namespace: str | None = self.config.writer_config['Namespace']  # type: ignore
-        assert namespace is not None, 'Namespace must be set in the writer config for jit_predict to work'
+        namespace: str = self.config.writer_config.get('Namespace', None) or 'nnet'  # type: ignore
 
         output_shapes = [out.shape for out in self.get_output_variables()]
         n_inputs = len(self.get_input_variables())

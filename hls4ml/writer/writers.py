@@ -1,3 +1,4 @@
+import re
 import typing
 from math import prod
 from pathlib import Path
@@ -23,63 +24,63 @@ def create_jit_bridge_fn(model: 'ModelGraph'):
 
     input_def = '\n    '.join(f'std::vector<T> {v.name}, ' for v in inp_vars)[:-2]
 
-    inp_size_def = '\n        '.join(f'constexpr size_t {n}_size = {s};' for n, s in zip(inp_names, inp_sizes))
-    out_size_def = '\n        '.join(f'constexpr size_t {n}_size = {s};' for n, s in zip(out_names, out_sizes))
+    inp_size_def = '\n    '.join(f'constexpr size_t {n}_size = {s};' for n, s in zip(inp_names, inp_sizes))
+    out_size_def = '\n    '.join(f'constexpr size_t {n}_size = {s};' for n, s in zip(out_names, out_sizes))
 
-    ptr_buf_def = '\n        '.join(f'T* {v.name}_ptr = {v.name}.data();' for v in inp_vars + out_vars)
+    ptr_buf_def = '\n    '.join(f'T* {v.name}_ptr = {v.name}.data();' for v in inp_vars + out_vars)
     n_samples_def = f'{inp_vars[0].name}.size() / {inp_vars[0].name}_size'
 
-    assertions_def = ' ||\n            '.join(f'({n}.size() != {n}_size * n_samples)' for n in inp_names)
+    assertions_def = ' ||\n    '.join(f'({n}.size() != {n}_size * n_samples)' for n in inp_names)
 
     inp_args_def_list = [f'{n}_ptr + i * {n}_size,' for n in inp_names]
     out_args_def_list = [f'{n}_ptr + i * {n}_size,' for n in out_names]
     args_def = ('\n' + ' ' * 12).join(inp_args_def_list + out_args_def_list)[:-1]
 
-    out_var_def = '\n        '.join(f'std::vector<T> {v.name}({v.name}_size * n_samples);' for v in out_vars)
+    out_var_def = '\n    '.join(f'std::vector<T> {v.name}({v.name}_size * n_samples);' for v in out_vars)
 
     _ret_template_arg = ('std::vector<T>, ' * n_out)[:-2]
     _ret_tuple_arg = ', '.join(out_names)
     return_def = f'std::tuple<{_ret_template_arg}>({_ret_tuple_arg})'
 
     cpp_fn = f"""
-    template <typename T>
-    auto batch_inference(
-        {input_def}
-    ){{
-        {inp_size_def}
-        {out_size_def}
+template <typename T>
+auto batch_inference(
+    {input_def}
+){{
+    {inp_size_def}
+    {out_size_def}
 
-        size_t n_samples = {n_samples_def};
+    size_t n_samples = {n_samples_def};
 
-        if (
-            {assertions_def}
-        )
-            throw std::runtime_error("Invalid input sizes: number of samples or input sizes do not match");
+    if (
+        {assertions_def}
+    )
+        throw std::runtime_error("Invalid input sizes: number of samples or input sizes do not match");
 
-        {out_var_def}
+    {out_var_def}
 
-        {ptr_buf_def}
+    {ptr_buf_def}
 
-        for (int i = 0; i < n_samples; i++) {{
-            myproject_float(
-                {args_def}
-            );
-        }}
-
-        return {return_def};
+    for (int i = 0; i < n_samples; i++) {{
+        myproject_float(
+            {args_def}
+        );
     }}
+
+    return {return_def};
+}}
 """
     return cpp_fn
 
 
 def create_jit_weight_filler(model: 'ModelGraph'):
     filler_fn = """
-    template <typename T>
-    void fill_weight(T weight[], std::vector<float> vec) {{
-        for (size_t i = 0; i < vec.size(); i++) {{
-            weight[i] = vec[i];
-        }}
+template <typename T>
+void fill_weight(T weight[], std::vector<float> vec) {{
+    for (size_t i = 0; i < vec.size(); i++) {{
+        weight[i] = vec[i];
     }}
+}}
 """
     return filler_fn
 
@@ -103,12 +104,18 @@ class Writer:
 
         cpp_source_bridge = path_c_bridge.read_text()
 
+        # Remove the unsigned short &const_size_... arguments from the function signature
+        # For Quartus
+        m = re.compile(r',\s*unsigned short &const_size_\w+', re.MULTILINE)
+        cpp_source_bridge = m.sub('', cpp_source_bridge)
+
         jit_bridge_fn = create_jit_bridge_fn(model)
         weight_filler_fn = create_jit_weight_filler(model)
 
-        _plugin_code = f'namespace {namespace} {{\n' + jit_bridge_fn + '\n\n' + weight_filler_fn + '\n'
+        _plugin_code = f'namespace {namespace} {{\n' + jit_bridge_fn + '\n\n' + weight_filler_fn + '\n}\n#endif'
 
-        cpp_source_bridge = cpp_source_bridge.replace('extern "C" {', _plugin_code)
+        cpp_source_bridge = cpp_source_bridge.replace('extern "C" {', f'namespace {namespace} {{')
+        cpp_source_bridge = cpp_source_bridge.replace('#endif', _plugin_code)
 
         path_jit_bridge.write_text(cpp_source_bridge)
 
