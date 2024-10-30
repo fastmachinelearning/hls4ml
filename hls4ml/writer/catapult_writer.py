@@ -921,6 +921,7 @@ class CatapultWriter(Writer):
         self.write_parameters(model)
         self.write_test_bench(model)
         self.write_bridge(model)
+        self.write_jit_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
         self.write_generated_code(model)

@@ -165,11 +165,6 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 if model.config.get_writer_config()['WriteWeightsTxt']:
-
-                    newline += '#ifndef __SYNTHESIS__\n'
-                    newline += '    static bool loaded_weights = false;\n'
-                    newline += '    if (!loaded_weights) {\n'
-
                     for layer in model.get_layers():
                         for w in layer.get_weights():
                             if w.weight_class == 'CompressedWeightVariable':
@@ -190,10 +185,6 @@ class VivadoWriter(Writer):
                                 newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
                                     w.type.name, w.data_length, w.name, w.name
                                 )
-
-                    newline += '        loaded_weights = true;'
-                    newline += '    }\n'
-                    newline += '#endif'
 
             # Add input/output type
             elif '// hls-fpga-machine-learning insert IO' in line:
@@ -853,6 +844,7 @@ class VivadoWriter(Writer):
         self.write_parameters(model)
         self.write_test_bench(model)
         self.write_bridge(model)
+        self.write_jit_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
         self.write_generated_code(model)

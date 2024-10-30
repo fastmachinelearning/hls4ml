@@ -220,6 +220,13 @@ def convert_from_keras_model(
         ModelGraph: hls4ml model.
     """
 
+    if os.environ.get('HLS4ML_USE_JIT', '0') == '1':
+        import random
+        import string
+
+        rand_namespace = ''.join(random.choices(string.ascii_lowercase + string.ascii_uppercase, k=16))
+        kwargs.setdefault('namespace', rand_namespace)
+
     config = create_config(output_dir=output_dir, project_name=project_name, backend=backend, **kwargs)
 
     config['KerasModel'] = model

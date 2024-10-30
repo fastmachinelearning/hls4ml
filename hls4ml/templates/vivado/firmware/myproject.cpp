@@ -11,8 +11,15 @@ void myproject(
 
     // hls-fpga-machine-learning insert IO
 
-    // hls-fpga-machine-learning insert load weights
-
+#ifndef HLS4ML_EXTERNAL_WEIGHT_LOAD
+#ifndef __SYNTHESIS__
+    static bool loaded_weights = false;
+    if (!loaded_weights) {
+        // hls-fpga-machine-learning insert load weights
+        loaded_weights = true;
+    }
+#endif
+#endif
     // ****************************************
     // NETWORK INSTANTIATION
     // ****************************************

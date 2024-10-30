@@ -1,7 +1,10 @@
 import ctypes
 import os
 import platform
+import sys
 from collections import OrderedDict
+from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 import numpy.ctypeslib as npc
@@ -347,6 +350,8 @@ class ModelGraph:
         for flow in self.config.flows:
             self.apply_flow(flow)
 
+        self._is_jitted = False
+
     def _find_output_variable_names(self, layer_list, layer_names):
         """Given a list of all layers, and a list input/output names, find the names of their outputs that will be used
         as the name of the output variables."""
@@ -677,15 +682,53 @@ class ModelGraph:
 
         self.config.backend.write(self)
 
-    def compile(self):
+    def compile(self, jit=None):
         """Compile the generated project and link the library into current environment.
 
         Users should call this function if they want to use `predict` functionality for simulation.
         """
         self.write()
-        self._compile()
+        self._compile(jit=jit)
 
-    def _compile(self):
+    def _compile(self, jit=None):
+        if jit is None:
+            jit = os.environ.get('HLS4ML_USE_JIT', '0') == '1'
+        if jit:
+            self.jit_compile()
+        else:
+            self.compile_shared_lib()
+
+    def jit_compile(self):
+        if self._is_jitted:
+            print('INFO: JIT Compilation does not support recompilation at the moment, skipping', file=sys.stderr)
+            return
+        import cppyy
+
+        prj_path = Path(self.config.config['OutputDir']).absolute()
+        prj_name = self.config.config['ProjectName']
+        prj_top_path = prj_path / f'firmware/{prj_name}.cpp'
+        jit_bridge_path = prj_path / f'{prj_name}_jit_bridge.cpp'
+
+        cppyy.cppdef("#define HLS4ML_EXTERNAL_WEIGHT_LOAD")
+        cppyy.add_include_path(str(prj_path))
+        cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
+        cppyy.include(str(prj_top_path))
+        cppyy.include(str(jit_bridge_path))
+
+        cpp_namespace = getattr(cppyy.gbl, self.config.writer_config['Namespace'])
+
+        # Load weights from to c arrays, if not initialized in headers
+        if self.config.config['WriterConfig']['WriteWeightsTxt']:
+            for w in self.get_weight_variables():
+                cpp_w = getattr(cpp_namespace, w.name, None)
+                if cpp_w is None:
+                    continue
+                fill_fn = cpp_namespace.fill_weight[w.type.name]
+                fill_fn(cpp_w, w.data.ravel().astype(np.float32))
+
+        self._is_jitted = True
+
+    def compile_shared_lib(self):
         lib_name = self.config.backend.compile(self)
         if self._top_function_lib is not None:
             if platform.system() == "Linux":
@@ -757,7 +800,61 @@ class ModelGraph:
 
         return int(n_sample)
 
-    def predict(self, x):
+    def predict(self, x, jit=None) -> np.ndarray | list[np.ndarray]:
+        """Predict with the cpp-compiled model.
+        The exact prediction method depends on the backend used to compile the model:
+
+        - Vivado/Vitis/Quartus/Catapult: The model can be compiled with g++/clang++, or cling (cppyy). This function will call the compiled model directly, depending on which backend was used.
+
+        - OneAPI: The model must be compiled with icpx. This function will call the compiled model directly.
+        """  # noqa: E501
+
+        if jit is None:
+            jit = self._is_jitted
+
+        if jit:
+            return self.jit_predict(x)
+        else:
+            return self.ctypes_predict(x)
+
+    def jit_predict(self, x: np.ndarray | Sequence[np.ndarray]):
+        import cppyy
+
+        assert cppyy.gbl, 'cppyy not initialized, please call model.jit_compile() or model.compile(jit=True) first'
+        namespace: str | None = self.config.writer_config['Namespace']  # type: ignore
+        assert namespace is not None, 'Namespace must be set in the writer config for jit_predict to work'
+        assert hasattr(
+            cppyy.gbl, namespace
+        ), f'Namespace {namespace} not found in cppyy.gbl. Did you call model.jit_compile()?'
+        cpp_namespace = getattr(cppyy.gbl, namespace)
+        top_fn_template = cpp_namespace.batch_inference
+
+        output_shapes = [out.shape for out in self.get_output_variables()]
+        n_inputs = len(self.get_input_variables())
+        n_outputs = len(output_shapes)
+
+        dtype = np.float32
+        cpp_dtype = cppyy.gbl.float
+        if getattr(x[0], 'dtype', None) != np.float32:
+            dtype = np.float64
+            cpp_dtype = cppyy.gbl.double
+
+        top_fn = top_fn_template[cpp_dtype]
+
+        if n_inputs > 1:
+            assert len(x) == n_inputs, f'Expected {n_inputs} inputs, got {len(x)}.'
+            args = (np.ascontiguousarray(xi, dtype=dtype) for xi in x)
+            ret = top_fn(*args)
+
+        else:
+            ret = top_fn(np.ascontiguousarray(x, dtype=dtype))
+
+        if n_outputs == 1:
+            return np.array(ret[0]).reshape(-1, *output_shapes[0])
+        else:
+            return [np.array(r).reshape(-1, *s) for r, s in zip(ret, output_shapes)]
+
+    def ctypes_predict(self, x):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
