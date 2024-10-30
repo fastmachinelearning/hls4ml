@@ -59,6 +59,8 @@ def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], v
         for w_type, w_name, w_val in zip(var_types, var_names, var_vals):
             cpp_w = getattr(cpp_namespace, w_name, None)
             if cpp_w is None:
+                cpp_w = getattr(cppyy.gbl, w_name, None)
+            if cpp_w is None:
                 continue
             fill_fn = cpp_namespace.fill_weight[w_type]
             fill_fn(cpp_w, w_val.ravel().astype(np.float32))
