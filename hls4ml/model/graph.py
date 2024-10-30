@@ -4,7 +4,7 @@ import os
 import platform
 import sys
 from collections import OrderedDict
-from multiprocessing import Pool, shared_memory
+from multiprocessing import Pool
 from pathlib import Path
 from typing import Sequence
 
@@ -18,9 +18,8 @@ from hls4ml.model.optimizer import get_available_passes, optimize_model
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 
-def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], shm_names: Sequence[str]):
+def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], var_vals: Sequence[np.ndarray]):
     import cppyy
-    import numpy as np
 
     prj_path = Path(config['OutputDir']).absolute()
     prj_name = config['ProjectName']
@@ -40,16 +39,12 @@ def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], s
 
     # Load weights from to c arrays, if not initialized in headers
     if config['WriteWeightsTxt']:
-        for w_type, w_name, shm_name in zip(var_types, var_names, shm_names):
-            shm = shared_memory.SharedMemory(name=shm_name, create=False)
-            wval = np.ndarray((shm.size // np.dtype(np.float32).itemsize,), dtype=np.float32, buffer=shm.buf)
+        for w_type, w_name, w_val in zip(var_types, var_names, var_vals):
             cpp_w = getattr(cpp_namespace, w_name, None)
             if cpp_w is None:
                 continue
             fill_fn = cpp_namespace.fill_weight[w_type]
-            fill_fn(cpp_w, wval.ravel().astype(np.float32))
-            shm.close()
-            shm.unlink()
+            fill_fn(cpp_w, w_val.ravel().astype(np.float32))
     import gc
 
     gc.collect()
@@ -776,13 +771,6 @@ class ModelGraph:
         var_names = [v.name for v in variables]
         var_values = [v.data.astype(np.float32) for v in variables]
 
-        shm_names = []
-        for wval in var_values:
-            shm = shared_memory.SharedMemory(create=True, size=wval.nbytes)
-            np.ndarray(wval.size, dtype=wval.dtype, buffer=shm.buf)[:] = wval.ravel()
-            shm_names.append(shm.name)
-            shm.close()
-
         config = {
             'OutputDir': self.config.config['OutputDir'],
             'ProjectName': self.config.config['ProjectName'],
@@ -790,7 +778,7 @@ class ModelGraph:
             'WriteWeightsTxt': self.config.config['WriterConfig'].get('WriteWeightsTxt', False),
         }
 
-        self._jit_process.apply(compile_worker, (config, var_types, var_names, shm_names))
+        self._jit_process.apply(compile_worker, (config, var_types, var_names, var_values))
 
         gc.collect()
 
@@ -886,12 +874,8 @@ class ModelGraph:
     def jit_predict(self, x: np.ndarray | Sequence[np.ndarray]):
 
         assert self._jit_process is not None, 'Model not jit compiled'
-        # assert cppyy.gbl, 'cppyy not initialized, please call model.jit_compile() or model.compile(jit=True) first'
         namespace: str | None = self.config.writer_config['Namespace']  # type: ignore
         assert namespace is not None, 'Namespace must be set in the writer config for jit_predict to work'
-        # assert hasattr(
-        #     cppyy.gbl, namespace
-        # ), f'Namespace {namespace} not found in cppyy.gbl. Did you call model.jit_compile()?'
 
         output_shapes = [out.shape for out in self.get_output_variables()]
         n_inputs = len(self.get_input_variables())
