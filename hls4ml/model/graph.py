@@ -1,8 +1,10 @@
 import ctypes
+import gc
 import os
 import platform
 import sys
 from collections import OrderedDict
+from multiprocessing import Pool, shared_memory
 from pathlib import Path
 from typing import Sequence
 
@@ -14,6 +16,64 @@ from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
 from hls4ml.utils.string_utils import convert_to_snake_case
+
+
+def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], shm_names: Sequence[str]):
+    import cppyy
+    import numpy as np
+
+    prj_path = Path(config['OutputDir']).absolute()
+    prj_name = config['ProjectName']
+    prj_top_path = prj_path / f'firmware/{prj_name}.cpp'
+    jit_bridge_path = prj_path / f'{prj_name}_jit_bridge.cpp'
+
+    cppyy.cppdef("#define HLS4ML_EXTERNAL_WEIGHT_LOAD")
+    cppyy.add_include_path(str(prj_path))
+    if (prj_path / 'firmware/ap_types').exists():
+        cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
+    if (prj_path / 'firmware/ac_types').exists():
+        cppyy.add_include_path(str(prj_path / 'firmware/ac_types'))
+    cppyy.include(str(prj_top_path))
+    cppyy.include(str(jit_bridge_path))
+
+    cpp_namespace = getattr(cppyy.gbl, config['Namespace'])
+
+    # Load weights from to c arrays, if not initialized in headers
+    if config['WriteWeightsTxt']:
+        for w_type, w_name, shm_name in zip(var_types, var_names, shm_names):
+            shm = shared_memory.SharedMemory(name=shm_name, create=False)
+            wval = np.ndarray((shm.size // np.dtype(np.float32).itemsize,), dtype=np.float32, buffer=shm.buf)
+            cpp_w = getattr(cpp_namespace, w_name, None)
+            if cpp_w is None:
+                continue
+            fill_fn = cpp_namespace.fill_weight[w_type]
+            fill_fn(cpp_w, wval.ravel().astype(np.float32))
+            shm.close()
+            shm.unlink()
+    import gc
+
+    gc.collect()
+
+
+def inference_worker(namespace: str, *args: list[np.ndarray]):
+    import cppyy
+
+    cpp_namespace = getattr(cppyy.gbl, namespace)
+    top_fn_template = cpp_namespace.batch_inference
+
+    cpp_dtype = cppyy.gbl.float
+    if getattr(args[0], 'dtype', None) != np.float32:
+        cpp_dtype = cppyy.gbl.double
+
+    top_fn = top_fn_template[cpp_dtype]
+
+    ret = top_fn(*args)
+
+    import gc
+
+    gc.collect()
+
+    return [np.array(r) for r in ret]
 
 
 class HLSConfig:
@@ -350,7 +410,7 @@ class ModelGraph:
         for flow in self.config.flows:
             self.apply_flow(flow)
 
-        self._is_jitted = False
+        self._jit_process = None
 
     def _find_output_variable_names(self, layer_list, layer_names):
         """Given a list of all layers, and a list input/output names, find the names of their outputs that will be used
@@ -693,40 +753,46 @@ class ModelGraph:
     def _compile(self, jit=None):
         if jit is None:
             jit = os.environ.get('HLS4ML_USE_JIT', '0') == '1'
+
+        if self.config.config['Backend'].lower() == 'oneapi':
+            print('INFO: OneAPI backend does not support JIT compilation, using shared library compilation', file=sys.stderr)
+            jit = False
+
         if jit:
             self.jit_compile()
         else:
             self.compile_shared_lib()
 
     def jit_compile(self):
-        if self._is_jitted:
-            print('INFO: JIT Compilation does not support recompilation at the moment, skipping', file=sys.stderr)
-            return
-        import cppyy
+        if self._jit_process is not None:
+            self._jit_process.close()
+            self._jit_process.join()
+            self._jit_process = None
+            gc.collect()
 
-        prj_path = Path(self.config.config['OutputDir']).absolute()
-        prj_name = self.config.config['ProjectName']
-        prj_top_path = prj_path / f'firmware/{prj_name}.cpp'
-        jit_bridge_path = prj_path / f'{prj_name}_jit_bridge.cpp'
+        self._jit_process = Pool(1)
+        variables = self.get_weight_variables()
+        var_types = [v.type.name for v in variables]
+        var_names = [v.name for v in variables]
+        var_values = [v.data.astype(np.float32) for v in variables]
 
-        cppyy.cppdef("#define HLS4ML_EXTERNAL_WEIGHT_LOAD")
-        cppyy.add_include_path(str(prj_path))
-        cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
-        cppyy.include(str(prj_top_path))
-        cppyy.include(str(jit_bridge_path))
+        shm_names = []
+        for wval in var_values:
+            shm = shared_memory.SharedMemory(create=True, size=wval.nbytes)
+            np.ndarray(wval.size, dtype=wval.dtype, buffer=shm.buf)[:] = wval.ravel()
+            shm_names.append(shm.name)
+            shm.close()
 
-        cpp_namespace = getattr(cppyy.gbl, self.config.writer_config['Namespace'])
+        config = {
+            'OutputDir': self.config.config['OutputDir'],
+            'ProjectName': self.config.config['ProjectName'],
+            'Namespace': self.config.config['WriterConfig']['Namespace'],
+            'WriteWeightsTxt': self.config.config['WriterConfig'].get('WriteWeightsTxt', False),
+        }
 
-        # Load weights from to c arrays, if not initialized in headers
-        if self.config.config['WriterConfig']['WriteWeightsTxt']:
-            for w in self.get_weight_variables():
-                cpp_w = getattr(cpp_namespace, w.name, None)
-                if cpp_w is None:
-                    continue
-                fill_fn = cpp_namespace.fill_weight[w.type.name]
-                fill_fn(cpp_w, w.data.ravel().astype(np.float32))
+        self._jit_process.apply(compile_worker, (config, var_types, var_names, shm_names))
 
-        self._is_jitted = True
+        gc.collect()
 
     def compile_shared_lib(self):
         lib_name = self.config.backend.compile(self)
@@ -810,7 +876,7 @@ class ModelGraph:
         """  # noqa: E501
 
         if jit is None:
-            jit = self._is_jitted
+            jit = self._jit_process is not None
 
         if jit:
             return self.jit_predict(x)
@@ -818,36 +884,31 @@ class ModelGraph:
             return self.ctypes_predict(x)
 
     def jit_predict(self, x: np.ndarray | Sequence[np.ndarray]):
-        import cppyy
 
-        assert cppyy.gbl, 'cppyy not initialized, please call model.jit_compile() or model.compile(jit=True) first'
+        assert self._jit_process is not None, 'Model not jit compiled'
+        # assert cppyy.gbl, 'cppyy not initialized, please call model.jit_compile() or model.compile(jit=True) first'
         namespace: str | None = self.config.writer_config['Namespace']  # type: ignore
         assert namespace is not None, 'Namespace must be set in the writer config for jit_predict to work'
-        assert hasattr(
-            cppyy.gbl, namespace
-        ), f'Namespace {namespace} not found in cppyy.gbl. Did you call model.jit_compile()?'
-        cpp_namespace = getattr(cppyy.gbl, namespace)
-        top_fn_template = cpp_namespace.batch_inference
+        # assert hasattr(
+        #     cppyy.gbl, namespace
+        # ), f'Namespace {namespace} not found in cppyy.gbl. Did you call model.jit_compile()?'
 
         output_shapes = [out.shape for out in self.get_output_variables()]
         n_inputs = len(self.get_input_variables())
         n_outputs = len(output_shapes)
 
         dtype = np.float32
-        cpp_dtype = cppyy.gbl.float
         if getattr(x[0], 'dtype', None) != np.float32:
             dtype = np.float64
-            cpp_dtype = cppyy.gbl.double
 
-        top_fn = top_fn_template[cpp_dtype]
+        if n_inputs == 1:
+            if isinstance(x, np.ndarray):
+                x = (x,)
 
-        if n_inputs > 1:
-            assert len(x) == n_inputs, f'Expected {n_inputs} inputs, got {len(x)}.'
-            args = (np.ascontiguousarray(xi, dtype=dtype) for xi in x)
-            ret = top_fn(*args)
+        assert len(x) == n_inputs, f'Expected {n_inputs} inputs, got {len(x)}.'
+        args = (np.ascontiguousarray(xi, dtype=dtype) for xi in x)
 
-        else:
-            ret = top_fn(np.ascontiguousarray(x, dtype=dtype))
+        ret = self._jit_process.apply(inference_worker, (namespace, *args))
 
         if n_outputs == 1:
             return np.array(ret[0]).reshape(-1, *output_shapes[0])
@@ -891,7 +952,7 @@ class ModelGraph:
     def trace(self, x):
         print(f'Recompiling {self.config.get_project_name()} with tracing')
         self.config.trace_output = True
-        self.compile()
+        self.compile(jit=False)
 
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
@@ -982,3 +1043,10 @@ class ModelGraph:
             self.write()
 
         return self.config.backend.build(self, **kwargs)
+
+    def __del__(self):
+        if self._jit_process is not None:
+            self._jit_process.close()
+            self._jit_process.join()
+            self._jit_process = None
+        gc.collect()
