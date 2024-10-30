@@ -36,7 +36,6 @@ def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], v
             print('Adding Vivado paths')
             cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
         case 'quartus':
-            cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
             cppyy.add_include_path(str(prj_path / 'firmware/ac_types'))
         # case 'catapult':                          # Doesn't work, unknown error
         #     print('Adding MGC paths')

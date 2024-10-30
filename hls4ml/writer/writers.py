@@ -15,21 +15,21 @@ def create_jit_bridge_fn(model: 'ModelGraph'):
     inp_shapes = [tuple(v.shape) for v in inp_vars]
     out_shapes = [tuple(v.shape) for v in out_vars]
 
-    inp_names = [v.name for v in inp_vars]
-    out_names = [v.name for v in out_vars]
+    inp_names = [v.name.replace('.', '_') for v in inp_vars]
+    out_names = [v.name.replace('.', '_') for v in out_vars]
 
     inp_sizes = [prod(s) for s in inp_shapes]
     out_sizes = [prod(s) for s in out_shapes]
 
     n_out = len(out_names)
 
-    input_def = '\n    '.join(f'std::vector<T> {v.name}, ' for v in inp_vars)[:-2]
+    input_def = '\n    '.join(f'std::vector<T> {name}, ' for name in inp_names)[:-2]
 
     inp_size_def = '\n    '.join(f'constexpr size_t {n}_size = {s};' for n, s in zip(inp_names, inp_sizes))
     out_size_def = '\n    '.join(f'constexpr size_t {n}_size = {s};' for n, s in zip(out_names, out_sizes))
 
-    ptr_buf_def = '\n    '.join(f'T* {v.name}_ptr = {v.name}.data();' for v in inp_vars + out_vars)
-    n_samples_def = f'{inp_vars[0].name}.size() / {inp_vars[0].name}_size'
+    ptr_buf_def = '\n    '.join(f'T* {name}_ptr = {name}.data();' for name in inp_names + out_names)
+    n_samples_def = f'{inp_names[0]}.size() / {inp_names[0]}_size'
 
     assertions_def = ' ||\n    '.join(f'({n}.size() != {n}_size * n_samples)' for n in inp_names)
 
@@ -37,7 +37,7 @@ def create_jit_bridge_fn(model: 'ModelGraph'):
     out_args_def_list = [f'{n}_ptr + i * {n}_size,' for n in out_names]
     args_def = ('\n' + ' ' * 12).join(inp_args_def_list + out_args_def_list)[:-1]
 
-    out_var_def = '\n    '.join(f'std::vector<T> {v.name}({v.name}_size * n_samples);' for v in out_vars)
+    out_var_def = '\n    '.join(f'std::vector<T> {name}({name}_size * n_samples);' for name in out_names)
 
     _ret_template_arg = ('std::vector<T>, ' * n_out)[:-2]
     _ret_tuple_arg = ', '.join(out_names)
