@@ -232,16 +232,17 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
 
+        namespace = params['namespace']
         if node.get_attr('strategy').lower() == 'latency':
-            mult_params['dense_function'] = 'DenseLatency'
+            mult_params['dense_function'] = 'nnet::DenseLatency'
         elif node.get_attr('strategy').lower() == 'resource':
             if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
-                mult_params['dense_function'] = 'DenseResource_rf_leq_nin'
+                mult_params['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
             else:
-                mult_params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+                mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
-            mult_params['dense_function'] = f'dense_resource_unrolled_{node.index}'
+            mult_params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
 
         mult_config = self.mult_template.format(**mult_params)
 
