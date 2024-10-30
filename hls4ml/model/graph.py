@@ -774,7 +774,7 @@ class ModelGraph:
         config = {
             'OutputDir': self.config.config['OutputDir'],
             'ProjectName': self.config.config['ProjectName'],
-            'Namespace': self.config.config['WriterConfig']['Namespace'],
+            'Namespace': self.config.config['WriterConfig'].get('Namespace', None) or 'nnet',
             'WriteWeightsTxt': self.config.config['WriterConfig'].get('WriteWeightsTxt', False),
         }
 
