@@ -771,13 +771,19 @@ class ModelGraph:
             if backend == 'vivado' or backend == 'vitis':
                 jit = os.environ.get('HLS4ML_USE_JIT', '0') == '1'
 
-        if self.config.config['Backend'].lower() not in ['vivado', 'vitis', 'quartus']:
-            if jit:
-                print(
-                    'JIT compilation is not supported for this backend, falling back to normal compilation', file=sys.stderr
-                )
-                jit = False
+        if self.config.config['Backend'].lower() not in ['vivado', 'vitis', 'quartus'] and jit:
+            print(
+                'JIT compilation is not supported for this backend, falling back to normal compilation', file=sys.stderr
+            )
+            jit = False
 
+        write_weights_txt = self.config.writer_config.get('WriteWeightsTxt', False)
+        if write_weights_txt and any(w.type.name.startswith('exponent_') for w in self.get_weight_variables()) and jit:
+            print(
+                'JIT compilation is not supported for models with exponent weights, falling back to normal compilation',
+                file=sys.stderr,
+            )
+            jit = False
         if jit:
             self.jit_compile()
         else:
