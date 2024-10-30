@@ -893,7 +893,14 @@ class ModelGraph:
             jit = self._jit_process is not None
 
         if jit:
-            return self.jit_predict(x)
+            r = self.jit_predict(x)
+
+            # Match original predict output shape
+            if isinstance(r, np.ndarray):
+                if len(r) == 1:
+                    return r[0]
+                return r.reshape(r.shape[0], -1)
+            return [ri.reshape(ri.shape[0], -1) for ri in r]
         else:
             return self.ctypes_predict(x)
 
@@ -1055,7 +1062,9 @@ class ModelGraph:
 
     def __del__(self):
         if self._jit_process is not None:
-            self._jit_process.close()
-            self._jit_process.join()
-            self._jit_process = None
+            try:
+                self._jit_process.close()
+                self._jit_process.join()
+            except Exception:
+                pass
         gc.collect()

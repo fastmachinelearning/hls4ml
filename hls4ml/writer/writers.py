@@ -10,6 +10,7 @@ if typing.TYPE_CHECKING:
 def create_jit_bridge_fn(model: 'ModelGraph'):
     inp_vars = model.get_input_variables()
     out_vars = model.get_output_variables()
+    prj_name = model.config.config['ProjectName']
 
     inp_shapes = [tuple(v.shape) for v in inp_vars]
     out_shapes = [tuple(v.shape) for v in out_vars]
@@ -61,12 +62,20 @@ auto batch_inference(
 
     {ptr_buf_def}
 
-    for (int i = 0; i < n_samples; i++) {{
-        myproject_float(
-            {args_def}
-        );
+    if (std::is_same<T, double>::value) {{
+        for (int i = 0; i < n_samples; i++)
+            {prj_name}_double(
+                {args_def}
+            );
+    }} else if (std::is_same<T, float>::value) {{
+        for (int i = 0; i < n_samples; i++)
+            {prj_name}_float(
+                {args_def}
+            );
+    }} else {{
+        throw std::runtime_error("Unsupported type");
     }}
-
+    
     return {return_def};
 }}
 """
