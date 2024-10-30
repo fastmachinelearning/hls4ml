@@ -79,7 +79,7 @@ class ProcessFixedPointQuantizerCall(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        namespace = node.model.config.get_writer_config.get('Namespace', None) or 'nnet'
+        namespace = node.model.config.writer_config.get('Namespace', None) or 'nnet'
         params['namespace'] = namespace
 
         return self.template.format(**params)
