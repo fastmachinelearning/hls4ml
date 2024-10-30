@@ -62,18 +62,19 @@ auto batch_inference(
 
     {ptr_buf_def}
 
-    if (std::is_same<T, double>::value) {{
-        for (int i = 0; i < n_samples; i++)
+    #pragma omp parallel for
+    for (int i = 0; i < n_samples; i++) {{
+        if (std::is_same<T, double>::value) {{
             {prj_name}_double(
                 {args_def}
             );
-    }} else if (std::is_same<T, float>::value) {{
-        for (int i = 0; i < n_samples; i++)
+        }} else if (std::is_same<T, float>::value) {{
             {prj_name}_float(
                 {args_def}
             );
-    }} else {{
-        throw std::runtime_error("Unsupported type");
+        }} else {{
+            throw std::runtime_error("Unsupported type");
+        }}
     }}
     
     return {return_def};
