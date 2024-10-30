@@ -764,11 +764,17 @@ class ModelGraph:
 
     def _compile(self, jit=None):
         if jit is None:
-            jit = os.environ.get('HLS4ML_USE_JIT', '0') == '1'
-
-        if self.config.config['Backend'].lower() == 'oneapi':
-            print('INFO: OneAPI backend does not support JIT compilation, using shared library compilation', file=sys.stderr)
             jit = False
+            backend = self.config.config['Backend'].lower()
+            if backend == 'vivado' or backend == 'vitis':
+                jit = os.environ.get('HLS4ML_USE_JIT', '0') == '1'
+
+        if self.config.config['Backend'].lower() not in ['vivado', 'vitis', 'quartus']:
+            if jit:
+                print(
+                    'JIT compilation is not supported for this backend, falling back to normal compilation', file=sys.stderr
+                )
+                jit = False
 
         if jit:
             self.jit_compile()
