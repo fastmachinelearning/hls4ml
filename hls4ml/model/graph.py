@@ -771,9 +771,7 @@ class ModelGraph:
                 jit = os.environ.get('HLS4ML_USE_JIT', '0') == '1'
 
         if self.config.config['Backend'].lower() not in ['vivado', 'vitis', 'quartus'] and jit:
-            print(
-                'JIT compilation is not supported for this backend, falling back to normal compilation', file=sys.stderr
-            )
+            print('JIT compilation is not supported for this backend, falling back to normal compilation', file=sys.stderr)
             jit = False
 
         write_weights_txt = self.config.writer_config.get('WriteWeightsTxt', False)

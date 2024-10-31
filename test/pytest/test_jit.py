@@ -34,7 +34,11 @@ def test_jit(model, data, backend: str, io_type: str, strategy: str):
     output_dir = str(test_root_path / f'hls4mlprj_jit_{backend}_{io_type}_{strategy}')
 
     model_hls = convert_from_keras_model(
-        model, backend=backend, output_dir=output_dir, io_type=io_type, hls_config={'Model': {'Strategy': strategy, 'ReuseFactor': 1, 'Precision': 'ap_fixed<16,6>'}}
+        model,
+        backend=backend,
+        output_dir=output_dir,
+        io_type=io_type,
+        hls_config={'Model': {'Strategy': strategy, 'ReuseFactor': 1, 'Precision': 'ap_fixed<16,6>'}},
     )
 
     model_hls.write()

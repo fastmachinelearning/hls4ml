@@ -76,7 +76,7 @@ auto batch_inference(
             throw std::runtime_error("Unsupported type");
         }}
     }}
-    
+
     return {return_def};
 }}
 """
