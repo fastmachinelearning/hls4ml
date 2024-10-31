@@ -7,6 +7,8 @@ import numpy as np
 import numpy.ctypeslib as npc
 import copy
 import warnings
+import concurrent.futures
+import threading
 
 from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
@@ -983,8 +985,7 @@ class ModelGraph:
                     else:
                         raise KeyError(f"Layer '{previous_layer_name}' not found in subconfig.")
                 else:
-                    # case of granularity='Model'
-                    pass
+                    pass # case of granularity='Model'
             
             hls_model = ModelGraph(sub_config, sub_layer_list, None, None, initial_index=current_index)
 
@@ -1009,4 +1010,92 @@ class ModelGraph:
             
             model_graphs.append(hls_model)
 
-        return model_graphs
+        return MultiModelGraph(model_graphs)
+
+
+class MultiModelGraph:
+    def __init__(self, graphs):
+        self.graphs = graphs
+
+    def build(self, max_workers=None, **kwargs):
+        # Build all ModelGraph instances in parallel.
+        build_results = {}
+        total_builds = len(self.graphs)
+        status = {}
+        status_lock = threading.Lock()
+
+        # Initialize statuses
+        for g in self.graphs:
+            project_name = g.config.get_project_name()
+            status[project_name] = 'Pending'
+
+        def build_wrapper(g, **kwargs):
+            project_name = g.config.get_project_name()
+            with status_lock:
+                status[project_name] = 'Running'
+                self._print_status(status)
+            try:
+                result = g.build(**kwargs)
+                with status_lock:
+                    status[project_name] = 'Completed'
+                    self._print_status(status)
+                return result
+            except Exception as exc:
+                with status_lock:
+                    status[project_name] = 'Failed'
+                    self._print_status(status)
+                raise
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_g = {executor.submit(build_wrapper, g, **kwargs): g for g in self.graphs}
+            for future in concurrent.futures.as_completed(future_to_g):
+                g = future_to_g[future]
+                project_name = g.config.get_project_name()
+                try:
+                    result = future.result()
+                    build_results[project_name] = result
+                except Exception as exc:
+                    build_results[project_name] = None
+        return build_results
+
+    def _print_status(self, status):
+        # Clear the terminal line and print build status
+        print('\r', end='')
+        status_str = ' | '.join(f'{proj}: {stat}' for proj, stat in status.items())
+        print(status_str, end='', flush=True)
+
+    def compile(self):
+        for g in self.graphs:
+            g.compile()
+
+    def predict(self, x):
+        # Pass the data through each ModelGraph in sequence
+        input_data = x
+        for g in self.graphs:
+            # Predict with the current ModelGraph
+            output_data = g.predict(input_data)
+            input_data = output_data
+        return output_data
+
+    def trace(self, x):
+        # Pass the data through each ModelGraph in sequence
+        input_data = x
+        trace_output = []
+        for g in self.graphs:
+            # Trace with the current ModelGraph
+            output_data, curr_trace_output = g.trace(input_data)
+            input_data = output_data
+            trace_output.append(curr_trace_output)
+        return output_data, trace_output
+    
+    def _print_status(self, status):
+        # Clear the terminal line and print build status
+        print('\r', end='')
+        status_icons = {
+            'Pending': '○',
+            'Running': '⌛',
+            'Completed': '✅',
+            'Failed': '❌'
+        }
+        status_str = ' | '.join(f'{proj}: {status_icons.get(stat, "?")}' for proj, stat in status.items())
+        print(status_str, flush=True)
