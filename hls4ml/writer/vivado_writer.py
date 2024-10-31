@@ -165,11 +165,6 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 if model.config.get_writer_config()['WriteWeightsTxt']:
-
-                    newline += '#ifndef __SYNTHESIS__\n'
-                    newline += '    static bool loaded_weights = false;\n'
-                    newline += '    if (!loaded_weights) {\n'
-
                     for layer in model.get_layers():
                         for w in layer.get_weights():
                             if w.weight_class == 'CompressedWeightVariable':
@@ -190,10 +185,6 @@ class VivadoWriter(Writer):
                                 newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
                                     w.type.name, w.data_length, w.name, w.name
                                 )
-
-                    newline += '        loaded_weights = true;'
-                    newline += '    }\n'
-                    newline += '#endif'
 
             # Add input/output type
             elif '// hls-fpga-machine-learning insert IO' in line:
@@ -790,6 +781,7 @@ class VivadoWriter(Writer):
         contents = f.readlines()
         f.close()
         f = open(path, 'w')
+        namespace = model.config.get_writer_config().get('Namespace', None)
 
         for line in contents:
             if '// hls4ml insert code' in line:
@@ -799,6 +791,9 @@ class VivadoWriter(Writer):
                         newline += str(generated_code)
             else:
                 newline = line
+            if namespace is not None:
+                if 'namespace nnet' in newline:
+                    newline = newline.replace('namespace nnet', f'namespace {namespace}')
             f.write(newline)
         f.close()
 
@@ -849,6 +844,7 @@ class VivadoWriter(Writer):
         self.write_parameters(model)
         self.write_test_bench(model)
         self.write_bridge(model)
+        self.write_jit_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
         self.write_generated_code(model)

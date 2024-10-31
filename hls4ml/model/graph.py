@@ -1,7 +1,12 @@
 import ctypes
+import gc
 import os
 import platform
+import sys
 from collections import OrderedDict
+from multiprocessing import Pool
+from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 import numpy.ctypeslib as npc
@@ -11,6 +16,77 @@ from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
 from hls4ml.utils.string_utils import convert_to_snake_case
+
+
+def compile_worker(config, var_types: Sequence[str], var_names: Sequence[str], var_vals: Sequence[np.ndarray]):
+    import cppyy
+
+    prj_path = Path(config['OutputDir']).absolute()
+    prj_name = config['ProjectName']
+    prj_top_path = prj_path / f'firmware/{prj_name}.cpp'
+    jit_bridge_path = prj_path / f'{prj_name}_jit_bridge.cpp'
+    backend = config['Backend'].lower()
+
+    cppyy.cppdef("#define HLS4ML_EXTERNAL_WEIGHT_LOAD")
+    cppyy.add_include_path(str(prj_path))
+
+    print(f'Compiling {prj_top_path} for {backend} backend')
+    match backend:
+        case 'vivado' | 'vitis':
+            print('Adding Vivado paths')
+            cppyy.add_include_path(str(prj_path / 'firmware/ap_types'))
+        case 'quartus':
+            cppyy.add_include_path(str(prj_path / 'firmware/ac_types'))
+        # case 'catapult':                          # Doesn't work, unknown error
+        #     print('Adding MGC paths')
+        #     MGC_HOME = os.environ.get('MGC_HOME', '')
+        #     if MGC_HOME:
+        #         cppyy.add_include_path(f'{MGC_HOME}/shared/include')
+        #         cppyy.add_include_path(f'{MGC_HOME}/shared/include/nnet_utils')
+        #     cppyy.add_include_path(str(prj_path / 'firmware/ac_types/include'))
+        #     cppyy.add_include_path(str(prj_path / 'firmware/ac_math/include'))
+        #     cppyy.add_include_path(str(prj_path / 'firmware/ac_simutils/include'))
+        #     cppyy.add_include_path(str(prj_path / 'firmware/nnet_utils'))
+
+    cppyy.include(str(prj_top_path))
+    cppyy.include(str(jit_bridge_path))
+
+    cpp_namespace = getattr(cppyy.gbl, config['Namespace'])
+
+    # Load weights from to c arrays, if not initialized in headers
+    if config['WriteWeightsTxt']:
+        for w_type, w_name, w_val in zip(var_types, var_names, var_vals):
+            cpp_w = getattr(cpp_namespace, w_name, None)
+            if cpp_w is None:
+                cpp_w = getattr(cppyy.gbl, w_name, None)
+            if cpp_w is None:
+                continue
+            fill_fn = cpp_namespace.fill_weight[w_type]
+            fill_fn(cpp_w, w_val.ravel().astype(np.float32))
+    import gc
+
+    gc.collect()
+
+
+def inference_worker(namespace: str, *args: list[np.ndarray]):
+    import cppyy
+
+    cpp_namespace = getattr(cppyy.gbl, namespace)
+    top_fn_template = cpp_namespace.batch_inference
+
+    cpp_dtype = cppyy.gbl.float
+    if getattr(args[0], 'dtype', None) != np.float32:
+        cpp_dtype = cppyy.gbl.double
+
+    top_fn = top_fn_template[cpp_dtype]
+
+    ret = top_fn(*args)
+
+    import gc
+
+    gc.collect()
+
+    return [np.array(r) for r in ret]
 
 
 class HLSConfig:
@@ -347,6 +423,8 @@ class ModelGraph:
         for flow in self.config.flows:
             self.apply_flow(flow)
 
+        self._jit_process = None
+
     def _find_output_variable_names(self, layer_list, layer_names):
         """Given a list of all layers, and a list input/output names, find the names of their outputs that will be used
         as the name of the output variables."""
@@ -677,15 +755,63 @@ class ModelGraph:
 
         self.config.backend.write(self)
 
-    def compile(self):
+    def compile(self, jit=None):
         """Compile the generated project and link the library into current environment.
 
         Users should call this function if they want to use `predict` functionality for simulation.
         """
         self.write()
-        self._compile()
+        self._compile(jit=jit)
 
-    def _compile(self):
+    def _compile(self, jit=None):
+        if jit is None:
+            jit = False
+            backend = self.config.config['Backend'].lower()
+            if backend == 'vivado' or backend == 'vitis':
+                jit = os.environ.get('HLS4ML_USE_JIT', '0') == '1'
+
+        if self.config.config['Backend'].lower() not in ['vivado', 'vitis', 'quartus'] and jit:
+            print('JIT compilation is not supported for this backend, falling back to normal compilation', file=sys.stderr)
+            jit = False
+
+        write_weights_txt = self.config.writer_config.get('WriteWeightsTxt', False)
+        if write_weights_txt and any(w.type.name.startswith('exponent_') for w in self.get_weight_variables()) and jit:
+            print(
+                'JIT compilation is not supported for models with exponent weights, falling back to normal compilation',
+                file=sys.stderr,
+            )
+            jit = False
+        if jit:
+            self.jit_compile()
+        else:
+            self.compile_shared_lib()
+
+    def jit_compile(self):
+        if self._jit_process is not None:
+            self._jit_process.close()
+            self._jit_process.join()
+            self._jit_process = None
+            gc.collect()
+
+        self._jit_process = Pool(1)
+        variables = self.get_weight_variables()
+        var_types = [v.type.name for v in variables]
+        var_names = [v.name for v in variables]
+        var_values = [v.data.astype(np.float32) for v in variables]
+
+        config = {
+            'OutputDir': self.config.config['OutputDir'],
+            'ProjectName': self.config.config['ProjectName'],
+            'Namespace': self.config.writer_config.get('Namespace', None) or 'nnet',
+            'WriteWeightsTxt': self.config.writer_config.get('WriteWeightsTxt', False),
+            'Backend': self.config.config['Backend'],
+        }
+
+        self._jit_process.apply(compile_worker, (config, var_types, var_names, var_values))
+
+        gc.collect()
+
+    def compile_shared_lib(self):
         lib_name = self.config.backend.compile(self)
         if self._top_function_lib is not None:
             if platform.system() == "Linux":
@@ -757,7 +883,58 @@ class ModelGraph:
 
         return int(n_sample)
 
-    def predict(self, x):
+    def predict(self, x, jit=None) -> np.ndarray | list[np.ndarray]:
+        """Predict with the cpp-compiled model.
+        The exact prediction method depends on the backend used to compile the model:
+
+        - Vivado/Vitis/Quartus/Catapult: The model can be compiled with g++/clang++, or cling (cppyy). This function will call the compiled model directly, depending on which backend was used.
+
+        - OneAPI: The model must be compiled with icpx. This function will call the compiled model directly.
+        """  # noqa: E501
+
+        if jit is None:
+            jit = self._jit_process is not None
+
+        if jit:
+            r = self.jit_predict(x)
+
+            # Match original predict output shape
+            if isinstance(r, np.ndarray):
+                if len(r) == 1:
+                    return r[0]
+                return r.reshape(r.shape[0], -1)
+            return [ri.reshape(ri.shape[0], -1) for ri in r]
+        else:
+            return self.ctypes_predict(x)
+
+    def jit_predict(self, x: np.ndarray | Sequence[np.ndarray]):
+
+        assert self._jit_process is not None, 'Model not jit compiled'
+        namespace: str = self.config.writer_config.get('Namespace', None) or 'nnet'  # type: ignore
+
+        output_shapes = [out.shape for out in self.get_output_variables()]
+        n_inputs = len(self.get_input_variables())
+        n_outputs = len(output_shapes)
+
+        dtype = np.float32
+        if getattr(x[0], 'dtype', None) != np.float32:
+            dtype = np.float64
+
+        if n_inputs == 1:
+            if isinstance(x, np.ndarray):
+                x = (x,)
+
+        assert len(x) == n_inputs, f'Expected {n_inputs} inputs, got {len(x)}.'
+        args = (np.ascontiguousarray(xi, dtype=dtype) for xi in x)
+
+        ret = self._jit_process.apply(inference_worker, (namespace, *args))
+
+        if n_outputs == 1:
+            return np.array(ret[0]).reshape(-1, *output_shapes[0])
+        else:
+            return [np.array(r).reshape(-1, *s) for r, s in zip(ret, output_shapes)]
+
+    def ctypes_predict(self, x):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
@@ -794,7 +971,7 @@ class ModelGraph:
     def trace(self, x):
         print(f'Recompiling {self.config.get_project_name()} with tracing')
         self.config.trace_output = True
-        self.compile()
+        self.compile(jit=False)
 
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
@@ -885,3 +1062,12 @@ class ModelGraph:
             self.write()
 
         return self.config.backend.build(self, **kwargs)
+
+    def __del__(self):
+        if self._jit_process is not None:
+            try:
+                self._jit_process.close()
+                self._jit_process.join()
+            except Exception:
+                pass
+        gc.collect()
