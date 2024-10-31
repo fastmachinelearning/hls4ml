@@ -413,7 +413,7 @@ def config_from_pytorch_model(
 
 
 def config_from_onnx_model(
-    model, granularity='model', backend=None, default_precision='ap_fixed<16,6>', default_reuse_factor=1
+    model, granularity='name', backend=None, default_precision='ap_fixed<16,6>', default_reuse_factor=1
 ):
     """Create an HLS conversion config given the ONNX model.
 
@@ -423,8 +423,8 @@ def config_from_onnx_model(
 
     Args:
         model: ONNX model
-        granularity (str, optional): Granularity of the created config. Defaults to 'model'.
-            Can be set to 'model', 'type' and 'layer'.
+        granularity (str, optional): Granularity of the created config. Defaults to 'name'.
+            Can be set to 'model', 'type' and 'name'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
             The default granularity ('model') will generate config keys that apply to the whole
@@ -443,6 +443,16 @@ def config_from_onnx_model(
         [dict]: The created config.
     """
 
+    if granularity.lower() not in ['model', 'type', 'name']:
+        raise Exception(
+            f'Invalid configuration granularity specified, expected "model", "type" or "name" got "{granularity}"'
+        )
+
+    if backend is not None:
+        backend = hls4ml.backends.get_backend(backend)
+    elif granularity.lower() != 'model':
+        print('Warning:  it is recommended to pass the backend to "config_from_onnx_model"')
+
     config = {}
 
     model_config = {}
@@ -451,5 +461,57 @@ def config_from_onnx_model(
     model_config['Strategy'] = 'Latency'
 
     config['Model'] = model_config
+
+    layer_list, _, _ = hls4ml.converters.parse_onnx_model(model)
+
+    def make_layer_config(layer):
+        cls_name = layer['class_name']
+
+        layer_cls = hls4ml.model.layers.layer_map[cls_name]
+        if backend is not None:
+            layer_cls = backend.create_layer_class(layer_cls)
+
+        layer_config = {}
+
+        # set the default precision of the layer to auto?
+        # (not really necessary if we set the backend appropriately)
+        # layer_config['Precision'] = {'default': 'auto'}
+
+        config_attrs = [a for a in layer_cls.expected_attributes if a.configurable]
+        for attr in config_attrs:
+            if isinstance(attr, hls4ml.model.attributes.TypeAttribute):
+                precision_cfg = layer_config.setdefault('Precision', {})
+                name = attr.name
+                if name.endswith('_t'):
+                    name = name[:-2]
+                if attr.default is None:
+                    precision_cfg[name] = 'auto'
+                else:
+                    precision_cfg[name] = str(attr.default)
+            elif attr.name == 'reuse_factor':
+                layer_config[attr.config_name] = default_reuse_factor
+            else:
+                if attr.default is not None:
+                    layer_config[attr.config_name] = attr.default
+
+        return layer_config
+
+    if granularity.lower() == 'type':
+        type_config = {}
+        for layer in layer_list:
+            if layer['class_name'] in type_config:
+                continue
+            layer_config = make_layer_config(layer)
+            type_config[layer['class_name']] = layer_config
+
+        config['LayerType'] = type_config
+
+    elif granularity.lower() == 'name':
+        name_config = {}
+        for layer in layer_list:
+            layer_config = make_layer_config(layer)
+            name_config[layer['name']] = layer_config
+
+        config['LayerName'] = name_config
 
     return config
