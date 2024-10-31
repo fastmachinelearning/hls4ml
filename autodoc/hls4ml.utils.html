@@ -64,6 +64,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
@@ -164,7 +165,7 @@ Note:  Only integer and fixed precisions are supported</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.config.config_from_onnx_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_onnx_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_onnx_model" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_onnx_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'name'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_onnx_model" title="Link to this definition"></a></dt>
 <dd><p>Create an HLS conversion config given the ONNX model.</p>
 <p>This function serves as the initial step in creating the custom conversion configuration.
 Users are advised to inspect the returned object to tweak the conversion configuration.
@@ -173,8 +174,8 @@ The return object can be passed as <cite>hls_config</cite> parameter to <cite>co
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – ONNX model</p></li>
-<li><p><strong>granularity</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Granularity of the created config. Defaults to ‘model’.
-Can be set to ‘model’, ‘type’ and ‘layer’.</p>
+<li><p><strong>granularity</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Granularity of the created config. Defaults to ‘name’.
+Can be set to ‘model’, ‘type’ and ‘name’.</p>
 <p>Granularity can be used to generate a more verbose config that can be fine-tuned.
 The default granularity (‘model’) will generate config keys that apply to the whole
 model, so changes to the keys will affect the entire model. ‘type’ granularity will

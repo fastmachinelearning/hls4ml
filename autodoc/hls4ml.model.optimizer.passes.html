@@ -64,6 +64,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
@@ -123,12 +124,142 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
+<section id="module-hls4ml.model.optimizer.passes.batchnorm_opt">
+<span id="hls4ml-model-optimizer-passes-batchnorm-opt-module"></span><h2>hls4ml.model.optimizer.passes.batchnorm_opt module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.batchnorm_opt" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.batchnorm_opt.</span></span><span class="sig-name descname"><span class="pre">BatchNormOnnxConstantParameters</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Remove Constant from the BatchNormalization node parameters (but not input[0])</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove Constant from the BatchNormalization node parameters (but not input[0])</p>
+<p>TODO:  Currently the quantizers are not actually used by the underlying layer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.batchnorm_opt.</span></span><span class="sig-name descname"><span class="pre">ConstantBatchNormFusion</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Merge BatchNorm into Const (after parameters have already been merged in BatchNormalization)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove the batch norm</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.batchnorm_opt.</span></span><span class="sig-name descname"><span class="pre">FuseConsecutiveBatchNormalization</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>OptimizerPass to merge consecutive BatchNormalization layers, only if the earlier one does not have the output type
+specified. There is a further check on the compatibility to merge: except in cases when merging a scale of 1 or a
+bias of 0, this does not merge when both scales or both biases are quantized.</p>
+<p>Note:  Consider restricting this to ApplyAlpha.  Batch Normalization-style quantization seems to be ignored.</p>
+<p>Note:  This optimizer may not be safe if weights are updateable, in particular if a scale can go from ones to other
+values or if a bias can go from zeros to other values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.batchnorm_opt.</span></span><span class="sig-name descname"><span class="pre">RemoveNopBatchNormalization</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>OptimizerPass to remove batch normalizations that do nothing (scale 1, bias 0)</p>
+<p>Note:  This optimizer may not be safe if weights are updateable.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.model.optimizer.passes.bn_fuse">
 <span id="hls4ml-model-optimizer-passes-bn-fuse-module"></span><h2>hls4ml.model.optimizer.passes.bn_fuse module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.bn_fuse" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bn_fuse.</span></span><span class="sig-name descname"><span class="pre">FuseBatchNormalization</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>OptimizerPass to merge a BatchNormalization layer with Dense or Conv layer, only if the Dense or Conv layer does not
+have the output type specified. There is a further check on the compatibility to merge: except in cases when merging a
+weight/scale of 1 or a bias of 0, this optimizer does not merge nodes when both the weight and scale or both biases
+are quantized.</p>
+<p>Note:  Consider restricting this to ApplyAlpha.  Batch Normalization quantization seems to be ignored.</p>
+<p>Note:  This optimizer may not be safe if weights are updateable. May need to turn off.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match" title="Link to this definition"></a></dt>
@@ -143,16 +274,61 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform" title="Link to this definition"></a></dt>
-<dd><p>Transformation to apply if matching was successful.</p>
-<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dd><p>Fuse weight and bias of Dense/Conv1D/Conv2D layer with BN values.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.model.optimizer.passes.conv_to_convxd">
+<span id="hls4ml-model-optimizer-passes-conv-to-convxd-module"></span><h2>hls4ml.model.optimizer.passes.conv_to_convxd module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.conv_to_convxd" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.conv_to_convxd.</span></span><span class="sig-name descname"><span class="pre">ConvToConvXD</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Convert Conv with constant to a Conv1D or Conv2D layer</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD.transform" title="Link to this definition"></a></dt>
+<dd><p>Convert Conv with constant to a Conv1D or Conv2D layer</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd">
+<span id="hls4ml-model-optimizer-passes-conv-to-depthwiseconvxd-module"></span><h2>hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.</span></span><span class="sig-name descname"><span class="pre">ConvToDepthwiseConvXD</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Convert Conv with constant to a DepthwiseConv1D or DepthwiseConv2D layer</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD.transform" title="Link to this definition"></a></dt>
+<dd><p>Convert Conv with constant to a DepthwiseConv1D or DepthwiseConv2D layer</p>
 </dd></dl>
 
 </dd></dl>
@@ -408,6 +584,313 @@ In this case we can remove the expensive transpose and instead transpose the wei
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.model.optimizer.passes.linear">
+<span id="hls4ml-model-optimizer-passes-linear-module"></span><h2>hls4ml.model.optimizer.passes.linear module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.linear" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.linear.EliminateLinearActivation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.linear.</span></span><span class="sig-name descname"><span class="pre">EliminateLinearActivation</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.linear.EliminateLinearActivation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.linear.EliminateLinearActivation.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.linear.EliminateLinearActivation.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.linear.EliminateLinearActivation.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.linear.EliminateLinearActivation.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.linear.MergeLinearActivation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.linear.</span></span><span class="sig-name descname"><span class="pre">MergeLinearActivation</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.linear.MergeLinearActivation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>For many objects it’s safe to change the output precision independently of the calculation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.linear.MergeLinearActivation.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.linear.MergeLinearActivation.match" title="Link to this definition"></a></dt>
+<dd><p>Only match if the parent is safe and the precision is not explicitly set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.linear.MergeLinearActivation.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.linear.MergeLinearActivation.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.model.optimizer.passes.matmul_const_to_dense">
+<span id="hls4ml-model-optimizer-passes-matmul-const-to-dense-module"></span><h2>hls4ml.model.optimizer.passes.matmul_const_to_dense module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.matmul_const_to_dense" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.matmul_const_to_dense.</span></span><span class="sig-name descname"><span class="pre">MatmulConstToDense</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Convert MatMul with constant to a dense layer. Note, this only supports the second input
+being the constant. If needed, one could add transposes to make that be the case in
+other yet to be written optimizers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense.transform" title="Link to this definition"></a></dt>
+<dd><p>Substitute Matmul + Constant for a single dense</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.model.optimizer.passes.merge_const">
+<span id="hls4ml-model-optimizer-passes-merge-const-module"></span><h2>hls4ml.model.optimizer.passes.merge_const module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.merge_const" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.merge_const.</span></span><span class="sig-name descname"><span class="pre">MergeToApplyAlpha</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Convert Add, Sub, Mul, or Div Merges with constant to ApplyAlpha</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.merge_const.</span></span><span class="sig-name descname"><span class="pre">MergeToApplyAlphaDiv</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Convert Div Merges with constant to ApplyAlpha</p>
+<p>TODO:  propagate precision</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.merge_const.</span></span><span class="sig-name descname"><span class="pre">MergeTwoConstants</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Merge of two constants makes another constant</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants.transform" title="Link to this definition"></a></dt>
+<dd><p>Merge of two constants makes another constant.</p>
+<p>Note:  full precision is used in the calculation, and precision is not propagated.
+The precision</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.model.optimizer.passes.move_scales">
+<span id="hls4ml-model-optimizer-passes-move-scales-module"></span><h2>hls4ml.model.optimizer.passes.move_scales module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.move_scales" title="Link to this heading"></a></h2>
+<p>This file includes optimizations related to moving the ApplyAphas across MatMul and Conv nodes.</p>
+<p>TODO:  Check that biases are properly handled. (Attempt to do it via Merge)</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.BiasDownAdd">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.move_scales.</span></span><span class="sig-name descname"><span class="pre">BiasDownAdd</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Shift a ApplyAlpha with only bias below a Merge (Add)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.BiasDownAdd.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd.match" title="Link to this definition"></a></dt>
+<dd><p>Match if there is only one ApplyAlpha. If there are two, if the scale of both is 0, they would
+match the ScaleDownAdd, so this optimizer does not need to handle that case.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.BiasDownAdd.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.move_scales.</span></span><span class="sig-name descname"><span class="pre">ScaleDownAdd</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Shift an identical ApplyAlpha below a Merge (Add)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd.match" title="Link to this definition"></a></dt>
+<dd><p>Check to see if we have an add with two ApplyAlphas with identical scale</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownConv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.move_scales.</span></span><span class="sig-name descname"><span class="pre">ScaleDownConv</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Shift an ApplyAlpha on a Conv with 2-3 inputs</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownConv.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv.match" title="Link to this definition"></a></dt>
+<dd><p>Shift an ApplyAlpha from the Weight</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownConv.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.move_scales.</span></span><span class="sig-name descname"><span class="pre">ScaleDownMatMul</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Shift an ApplyAlpha below a MatMul</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul.match" title="Link to this definition"></a></dt>
+<dd><p>Check to see if we have a MatMul with at least one input ApplyAlpha.
+Note, if both are this optimizer runs twice.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.model.optimizer.passes.multi_dense">
 <span id="hls4ml-model-optimizer-passes-multi-dense-module"></span><h2>hls4ml.model.optimizer.passes.multi_dense module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.multi_dense" title="Link to this heading"></a></h2>
 <dl class="py class">
@@ -446,66 +929,8 @@ bakends that implement special pointwise convolutions.</p>
 </dd></dl>
 
 </section>
-<section id="module-hls4ml.model.optimizer.passes.nop">
-<span id="hls4ml-model-optimizer-passes-nop-module"></span><h2>hls4ml.model.optimizer.passes.nop module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.nop" title="Link to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.nop.EliminateLinearActivation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.nop.</span></span><span class="sig-name descname"><span class="pre">EliminateLinearActivation</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.match" title="Link to this definition"></a></dt>
-<dd><p>Predicate to match on a given node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.transform" title="Link to this definition"></a></dt>
-<dd><p>Transformation to apply if matching was successful.</p>
-<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
 <section id="module-hls4ml.model.optimizer.passes.qkeras">
 <span id="hls4ml-model-optimizer-passes-qkeras-module"></span><h2>hls4ml.model.optimizer.passes.qkeras module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.qkeras" title="Link to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.ApplyAlpha">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.qkeras.</span></span><span class="sig-name descname"><span class="pre">ApplyAlpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.BatchNormalization" title="hls4ml.model.layers.BatchNormalization"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNormalization</span></code></a></p>
-<p>A custom layer to scale the output of a QDense layer which used ‘alpha != 1’
-Inference computation uses BatchNormalization methods</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_bias">
-<span class="sig-name descname"><span class="pre">add_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bias</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_bias" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_weights">
-<span class="sig-name descname"><span class="pre">add_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_weights" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.initialize">
-<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.initialize" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.qkeras.</span></span><span class="sig-name descname"><span class="pre">ExtractTernaryThreshold</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold" title="Link to this definition"></a></dt>
@@ -529,41 +954,6 @@ layer configured with the correct threshold.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.transform" title="Link to this definition"></a></dt>
-<dd><p>Transformation to apply if matching was successful.</p>
-<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.qkeras.</span></span><span class="sig-name descname"><span class="pre">FuseConsecutiveBatchNormalization</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>OptimizerPass to merge consecutive BatchNormalization layers.
-These may exist in a model after QKerasFactorizeAlpha layer.
-Scale and Bias of each layer are combined into scale and bias of a single layer.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.match" title="Link to this definition"></a></dt>
-<dd><p>Predicate to match on a given node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
@@ -663,6 +1053,175 @@ and an ‘ApplyAlpha’ layer is inserted to reapply the scale.</p>
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.register_qkeras">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.qkeras.</span></span><span class="sig-name descname"><span class="pre">register_qkeras</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.register_qkeras" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.model.optimizer.passes.quant_opt">
+<span id="hls4ml-model-optimizer-passes-quant-opt-module"></span><h2>hls4ml.model.optimizer.passes.quant_opt module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.quant_opt" title="Link to this heading"></a></h2>
+<p>This file includes optimizations related to quant nodes.</p>
+<p>As a first step, QuantConstantParameters converts the extra inputs to attributes.</p>
+<p>The next step differs between the case of (1) (positive) power-of-2 scale and zero offset, or (2) other cases. In the first
+case no explicit scaling is required, so a Quant node logically becomes a linear activation. (Cases when the scale is a
+power of 2 not equal to one are implicitly scaled with fixed precision types.) When the activation is applied to a constant
+weight, the activation is immediately merged with the weight, quantizing the weights. In case (2), we need to explicitly
+scale and unscale, so the Quant node becomes 3 nodes, an ApplyAlpha node to apply a scale/shift, a Linear node to apply the
+quantization, and another ApplyAlpha to unscale/shift. We depend on optimization steps to move the unscaling ApplyAlpha
+down as needed so that we can do integer or fixed-point calculations. When the Quant is a applied to a weight, the scaling
+and Linear nodes are immediately merged into the Constant.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">ConstQuantToConstAlpha</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is not power-of-2 or zeropt is not 0. It is a a 1:3 transformation of
+a Quant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to unscale), but an input
+consts allows for optimization, so the ApplyAlpha (to scale), Activation are
+optimized away right away.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.transform" title="Link to this definition"></a></dt>
+<dd><p>Change Constant + Quant node to Constant, ApplyAlpha</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">FuseQuantWithConstant</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is a positive power of 2 and zeropt is 0.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.transform" title="Link to this definition"></a></dt>
+<dd><p>Fuse Quant with Constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">QuantConstantParameters</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Remove Constant from the Qaunt node parameters (but not input[0])</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove Constant from the Quant node parameters (but not input[0])</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToActivation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">QuantToActivation</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a a 1:1 transformation of
+a Quant to an Activation.</p>
+<p>As an optimization, this is not called when the input is constant.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.transform" title="Link to this definition"></a></dt>
+<dd><p>Change quant node to Activation</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">QuantToAlphaActivationAlpha</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is not power-of-2 or zeropt is not 0. It is a a 1:3 transformation of
+a Quant to an ApplyAlpha (to scale), Activatio, ApplyAlpho (to rescale).</p>
+<p>NOTE:  It needs to be scheduled after QuantToActivation (or we need to make the match criteria stricter)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha.transform" title="Link to this definition"></a></dt>
+<dd><p>Change quant node to ApplyAlhpa, Activation, ApplyAlpha</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.model.optimizer.passes.reshape_const">
+<span id="hls4ml-model-optimizer-passes-reshape-const-module"></span><h2>hls4ml.model.optimizer.passes.reshape_const module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.reshape_const" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.reshape_const.</span></span><span class="sig-name descname"><span class="pre">ReshapeConstant</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>ONNX has the target shape come as an input, not a parameter. This removes
+the Constant input from new shape input. (Non-constant inputs are not supported.)
+The constant value was already used; this is just a cleanup uptimization.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove Constant from new shape input. Note, input shape node is already used on initialize</p>
+</dd></dl>
+
+</dd></dl>
 
 </section>
 <section id="module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">

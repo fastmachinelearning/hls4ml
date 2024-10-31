@@ -62,6 +62,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
@@ -280,20 +281,17 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.onnx_to_hls">hls4ml.converters.onnx_to_hls module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.ONNXDataReader"><code class="docutils literal notranslate"><span class="pre">ONNXDataReader</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.ONNXDataReader.add_input"><code class="docutils literal notranslate"><span class="pre">ONNXDataReader.add_input()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.ONNXDataReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">ONNXDataReader.get_weights_data()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.compute_pads_1d"><code class="docutils literal notranslate"><span class="pre">compute_pads_1d()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.compute_pads_2d"><code class="docutils literal notranslate"><span class="pre">compute_pads_2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_constant_value"><code class="docutils literal notranslate"><span class="pre">get_constant_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_global_input_shape"><code class="docutils literal notranslate"><span class="pre">get_global_input_shape()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_input_shape"><code class="docutils literal notranslate"><span class="pre">get_input_shape()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_onnx_attribute"><code class="docutils literal notranslate"><span class="pre">get_onnx_attribute()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_onnx_input_name"><code class="docutils literal notranslate"><span class="pre">get_onnx_input_name()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_out_layer_name"><code class="docutils literal notranslate"><span class="pre">get_out_layer_name()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_supported_onnx_layers"><code class="docutils literal notranslate"><span class="pre">get_supported_onnx_layers()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.onnx_handler"><code class="docutils literal notranslate"><span class="pre">onnx_handler()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.onnx_to_hls"><code class="docutils literal notranslate"><span class="pre">onnx_to_hls()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.parse_onnx_model"><code class="docutils literal notranslate"><span class="pre">parse_onnx_model()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.register_onnx_layer_handler"><code class="docutils literal notranslate"><span class="pre">register_onnx_layer_handler()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.replace_char_inconsitency"><code class="docutils literal notranslate"><span class="pre">replace_char_inconsitency()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.onnx_to_hls.sanitize_layer_name"><code class="docutils literal notranslate"><span class="pre">sanitize_layer_name()</span></code></a></li>
@@ -408,6 +406,16 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Activation.initialize"><code class="docutils literal notranslate"><span class="pre">Activation.initialize()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.ApplyAlpha"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.ApplyAlpha.add_bias"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.add_bias()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.ApplyAlpha.add_weights"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.add_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.ApplyAlpha.initialize"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.BatchNormOnnx"><code class="docutils literal notranslate"><span class="pre">BatchNormOnnx</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.BatchNormOnnx.initialize"><code class="docutils literal notranslate"><span class="pre">BatchNormOnnx.initialize()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.BatchNormalization"><code class="docutils literal notranslate"><span class="pre">BatchNormalization</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.BatchNormalization.initialize"><code class="docutils literal notranslate"><span class="pre">BatchNormalization.initialize()</span></code></a></li>
 </ul>
@@ -418,6 +426,14 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Concatenate"><code class="docutils literal notranslate"><span class="pre">Concatenate</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Concatenate.initialize"><code class="docutils literal notranslate"><span class="pre">Concatenate.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Constant.initialize"><code class="docutils literal notranslate"><span class="pre">Constant.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Conv"><code class="docutils literal notranslate"><span class="pre">Conv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Conv.initialize"><code class="docutils literal notranslate"><span class="pre">Conv.initialize()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Conv1D"><code class="docutils literal notranslate"><span class="pre">Conv1D</span></code></a><ul>
@@ -506,6 +522,10 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.LayerGroup.initialize"><code class="docutils literal notranslate"><span class="pre">LayerGroup.initialize()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.MatMul"><code class="docutils literal notranslate"><span class="pre">MatMul</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.MatMul.initialize"><code class="docutils literal notranslate"><span class="pre">MatMul.initialize()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Merge"><code class="docutils literal notranslate"><span class="pre">Merge</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Merge.initialize"><code class="docutils literal notranslate"><span class="pre">Merge.initialize()</span></code></a></li>
 </ul>
@@ -524,6 +544,10 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling2D"><code class="docutils literal notranslate"><span class="pre">Pooling2D</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling2D.initialize"><code class="docutils literal notranslate"><span class="pre">Pooling2D.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Quant"><code class="docutils literal notranslate"><span class="pre">Quant</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Quant.initialize"><code class="docutils literal notranslate"><span class="pre">Quant.initialize()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Reshape"><code class="docutils literal notranslate"><span class="pre">Reshape</span></code></a><ul>
@@ -580,6 +604,7 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.quantizers.QKerasBinaryQuantizer"><code class="docutils literal notranslate"><span class="pre">QKerasBinaryQuantizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.quantizers.QKerasPO2Quantizer"><code class="docutils literal notranslate"><span class="pre">QKerasPO2Quantizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.quantizers.QKerasQuantizer"><code class="docutils literal notranslate"><span class="pre">QKerasQuantizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.quantizers.QuantNodeQuantizer"><code class="docutils literal notranslate"><span class="pre">QuantNodeQuantizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.quantizers.Quantizer"><code class="docutils literal notranslate"><span class="pre">Quantizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.quantizers.TernaryQuantizer"><code class="docutils literal notranslate"><span class="pre">TernaryQuantizer</span></code></a></li>
 </ul>

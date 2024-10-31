@@ -4,10 +4,34 @@ hls4ml.model.optimizer.passes package
 Submodules
 ----------
 
+hls4ml.model.optimizer.passes.batchnorm\_opt module
+---------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.batchnorm_opt
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.bn\_fuse module
 ---------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.bn_fuse
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.conv\_to\_convxd module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.conv_to_convxd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.conv\_to\_depthwiseconvxd module
+--------------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd
    :members:
    :undoc-members:
    :show-inheritance:
@@ -52,6 +76,38 @@ hls4ml.model.optimizer.passes.infer\_precision module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.linear module
+-------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.linear
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.matmul\_const\_to\_dense module
+-------------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.matmul_const_to_dense
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.merge\_const module
+-------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.merge_const
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.move\_scales module
+-------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.move_scales
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.multi\_dense module
 -------------------------------------------------
 
@@ -60,18 +116,26 @@ hls4ml.model.optimizer.passes.multi\_dense module
    :undoc-members:
    :show-inheritance:
 
-hls4ml.model.optimizer.passes.nop module
-----------------------------------------
-
-.. automodule:: hls4ml.model.optimizer.passes.nop
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 hls4ml.model.optimizer.passes.qkeras module
 -------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.qkeras
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.quant\_opt module
+-----------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.quant_opt
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.reshape\_const module
+---------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.reshape_const
    :members:
    :undoc-members:
    :show-inheritance:

@@ -64,6 +64,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
@@ -125,10 +126,49 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.batchnorm_opt">hls4ml.model.optimizer.passes.batchnorm_opt module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters"><code class="docutils literal notranslate"><span class="pre">BatchNormOnnxConstantParameters</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters.match"><code class="docutils literal notranslate"><span class="pre">BatchNormOnnxConstantParameters.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters.transform"><code class="docutils literal notranslate"><span class="pre">BatchNormOnnxConstantParameters.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion"><code class="docutils literal notranslate"><span class="pre">ConstantBatchNormFusion</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion.match"><code class="docutils literal notranslate"><span class="pre">ConstantBatchNormFusion.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion.transform"><code class="docutils literal notranslate"><span class="pre">ConstantBatchNormFusion.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.match"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.transform"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization"><code class="docutils literal notranslate"><span class="pre">RemoveNopBatchNormalization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.match"><code class="docutils literal notranslate"><span class="pre">RemoveNopBatchNormalization.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.transform"><code class="docutils literal notranslate"><span class="pre">RemoveNopBatchNormalization.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization"><code class="docutils literal notranslate"><span class="pre">FuseBatchNormalization</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match"><code class="docutils literal notranslate"><span class="pre">FuseBatchNormalization.match()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform"><code class="docutils literal notranslate"><span class="pre">FuseBatchNormalization.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.conv_to_convxd">hls4ml.model.optimizer.passes.conv_to_convxd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD"><code class="docutils literal notranslate"><span class="pre">ConvToConvXD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD.match"><code class="docutils literal notranslate"><span class="pre">ConvToConvXD.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD.transform"><code class="docutils literal notranslate"><span class="pre">ConvToConvXD.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd">hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD"><code class="docutils literal notranslate"><span class="pre">ConvToDepthwiseConvXD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD.match"><code class="docutils literal notranslate"><span class="pre">ConvToDepthwiseConvXD.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD.transform"><code class="docutils literal notranslate"><span class="pre">ConvToDepthwiseConvXD.transform()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -189,6 +229,68 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.linear">hls4ml.model.optimizer.passes.linear module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.linear.EliminateLinearActivation"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.linear.EliminateLinearActivation.match"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.linear.EliminateLinearActivation.transform"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.linear.MergeLinearActivation"><code class="docutils literal notranslate"><span class="pre">MergeLinearActivation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.linear.MergeLinearActivation.match"><code class="docutils literal notranslate"><span class="pre">MergeLinearActivation.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.linear.MergeLinearActivation.transform"><code class="docutils literal notranslate"><span class="pre">MergeLinearActivation.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.matmul_const_to_dense">hls4ml.model.optimizer.passes.matmul_const_to_dense module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense"><code class="docutils literal notranslate"><span class="pre">MatmulConstToDense</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense.match"><code class="docutils literal notranslate"><span class="pre">MatmulConstToDense.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.matmul_const_to_dense.MatmulConstToDense.transform"><code class="docutils literal notranslate"><span class="pre">MatmulConstToDense.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.merge_const">hls4ml.model.optimizer.passes.merge_const module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha"><code class="docutils literal notranslate"><span class="pre">MergeToApplyAlpha</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha.match"><code class="docutils literal notranslate"><span class="pre">MergeToApplyAlpha.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlpha.transform"><code class="docutils literal notranslate"><span class="pre">MergeToApplyAlpha.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv"><code class="docutils literal notranslate"><span class="pre">MergeToApplyAlphaDiv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv.match"><code class="docutils literal notranslate"><span class="pre">MergeToApplyAlphaDiv.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeToApplyAlphaDiv.transform"><code class="docutils literal notranslate"><span class="pre">MergeToApplyAlphaDiv.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants"><code class="docutils literal notranslate"><span class="pre">MergeTwoConstants</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants.match"><code class="docutils literal notranslate"><span class="pre">MergeTwoConstants.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants.transform"><code class="docutils literal notranslate"><span class="pre">MergeTwoConstants.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.move_scales">hls4ml.model.optimizer.passes.move_scales module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd"><code class="docutils literal notranslate"><span class="pre">BiasDownAdd</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd.match"><code class="docutils literal notranslate"><span class="pre">BiasDownAdd.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd.transform"><code class="docutils literal notranslate"><span class="pre">BiasDownAdd.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd"><code class="docutils literal notranslate"><span class="pre">ScaleDownAdd</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd.match"><code class="docutils literal notranslate"><span class="pre">ScaleDownAdd.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd.transform"><code class="docutils literal notranslate"><span class="pre">ScaleDownAdd.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv"><code class="docutils literal notranslate"><span class="pre">ScaleDownConv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv.match"><code class="docutils literal notranslate"><span class="pre">ScaleDownConv.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv.transform"><code class="docutils literal notranslate"><span class="pre">ScaleDownConv.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul"><code class="docutils literal notranslate"><span class="pre">ScaleDownMatMul</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul.match"><code class="docutils literal notranslate"><span class="pre">ScaleDownMatMul.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul.transform"><code class="docutils literal notranslate"><span class="pre">ScaleDownMatMul.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.multi_dense">hls4ml.model.optimizer.passes.multi_dense module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv"><code class="docutils literal notranslate"><span class="pre">ReplaceMultidimensionalDenseWithConv</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match"><code class="docutils literal notranslate"><span class="pre">ReplaceMultidimensionalDenseWithConv.match()</span></code></a></li>
@@ -197,29 +299,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.match"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation.match()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.transform"><code class="docutils literal notranslate"><span class="pre">EliminateLinearActivation.transform()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.qkeras">hls4ml.model.optimizer.passes.qkeras module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_bias"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.add_bias()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.add_weights"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.add_weights()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ApplyAlpha.initialize"><code class="docutils literal notranslate"><span class="pre">ApplyAlpha.initialize()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold"><code class="docutils literal notranslate"><span class="pre">ExtractTernaryThreshold</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.match"><code class="docutils literal notranslate"><span class="pre">ExtractTernaryThreshold.match()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.transform"><code class="docutils literal notranslate"><span class="pre">ExtractTernaryThreshold.transform()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.match"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization.match()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.FuseConsecutiveBatchNormalization.transform"><code class="docutils literal notranslate"><span class="pre">FuseConsecutiveBatchNormalization.transform()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode"><code class="docutils literal notranslate"><span class="pre">OutputRoundingSaturationMode</span></code></a><ul>
@@ -234,6 +317,42 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.register_qkeras"><code class="docutils literal notranslate"><span class="pre">register_qkeras()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.quant_opt">hls4ml.model.optimizer.passes.quant_opt module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha"><code class="docutils literal notranslate"><span class="pre">ConstQuantToConstAlpha</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.match"><code class="docutils literal notranslate"><span class="pre">ConstQuantToConstAlpha.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.transform"><code class="docutils literal notranslate"><span class="pre">ConstQuantToConstAlpha.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant"><code class="docutils literal notranslate"><span class="pre">FuseQuantWithConstant</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.match"><code class="docutils literal notranslate"><span class="pre">FuseQuantWithConstant.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.transform"><code class="docutils literal notranslate"><span class="pre">FuseQuantWithConstant.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters"><code class="docutils literal notranslate"><span class="pre">QuantConstantParameters</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters.match"><code class="docutils literal notranslate"><span class="pre">QuantConstantParameters.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters.transform"><code class="docutils literal notranslate"><span class="pre">QuantConstantParameters.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation"><code class="docutils literal notranslate"><span class="pre">QuantToActivation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.match"><code class="docutils literal notranslate"><span class="pre">QuantToActivation.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.transform"><code class="docutils literal notranslate"><span class="pre">QuantToActivation.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha"><code class="docutils literal notranslate"><span class="pre">QuantToAlphaActivationAlpha</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha.match"><code class="docutils literal notranslate"><span class="pre">QuantToAlphaActivationAlpha.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha.transform"><code class="docutils literal notranslate"><span class="pre">QuantToAlphaActivationAlpha.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.reshape_const">hls4ml.model.optimizer.passes.reshape_const module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant"><code class="docutils literal notranslate"><span class="pre">ReshapeConstant</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant.match"><code class="docutils literal notranslate"><span class="pre">ReshapeConstant.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.reshape_const.ReshapeConstant.transform"><code class="docutils literal notranslate"><span class="pre">ReshapeConstant.transform()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">hls4ml.model.optimizer.passes.seperable_to_dw_conv module</a><ul>

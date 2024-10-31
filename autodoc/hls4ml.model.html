@@ -64,6 +64,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
@@ -147,15 +148,23 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.optimizer.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.batchnorm_opt">hls4ml.model.optimizer.passes.batchnorm_opt module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.conv_to_convxd">hls4ml.model.optimizer.passes.conv_to_convxd module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd">hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">hls4ml.model.optimizer.passes.convert_to_channels_last module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">hls4ml.model.optimizer.passes.expand_layer_group module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.hgq_proxy_model">hls4ml.model.optimizer.passes.hgq_proxy_model module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.infer_precision">hls4ml.model.optimizer.passes.infer_precision module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.linear">hls4ml.model.optimizer.passes.linear module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.matmul_const_to_dense">hls4ml.model.optimizer.passes.matmul_const_to_dense module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.merge_const">hls4ml.model.optimizer.passes.merge_const module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.move_scales">hls4ml.model.optimizer.passes.move_scales module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.multi_dense">hls4ml.model.optimizer.passes.multi_dense module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.qkeras">hls4ml.model.optimizer.passes.qkeras module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.quant_opt">hls4ml.model.optimizer.passes.quant_opt module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.reshape_const">hls4ml.model.optimizer.passes.reshape_const module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">hls4ml.model.optimizer.passes.seperable_to_dw_conv module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.stamp">hls4ml.model.optimizer.passes.stamp module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.transpose_opt">hls4ml.model.optimizer.passes.transpose_opt module</a></li>
@@ -676,6 +685,42 @@ directory specified in the <cite>config</cite>.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.ApplyAlpha">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">ApplyAlpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.ApplyAlpha" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.BatchNormalization" title="hls4ml.model.layers.BatchNormalization"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNormalization</span></code></a></p>
+<p>A custom layer to scale the output of a QDense layer which used ‘alpha != 1’
+Inference computation uses BatchNormalization methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.ApplyAlpha.add_bias">
+<span class="sig-name descname"><span class="pre">add_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bias</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.ApplyAlpha.add_bias" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.ApplyAlpha.add_weights">
+<span class="sig-name descname"><span class="pre">add_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.ApplyAlpha.add_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.ApplyAlpha.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.ApplyAlpha.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.BatchNormOnnx">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">BatchNormOnnx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.BatchNormOnnx" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A transient layer formed from ONNX BatchNormalization that gets converted to
+BatchNormalization after the scale and bias are determined</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.BatchNormOnnx.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.BatchNormOnnx.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.layers.BatchNormalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">BatchNormalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.BatchNormalization" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
@@ -704,6 +749,31 @@ directory specified in the <cite>config</cite>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.layers.Concatenate.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Concatenate.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.Constant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">Constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Constant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.Constant.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Constant.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.Conv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">Conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Conv" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>This is for the ONNX Conv node. Currently, it is only supported as an intermediate
+form that gets converted to an explicit ConvXD.</p>
+<p>Note:  these are always channels-last.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.Conv.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Conv.initialize" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1005,6 +1075,19 @@ Note:  they don’t necessarily correspond 1:1 with the network layers.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.MatMul">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">MatMul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.MatMul" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>This is a matrix multiply. Currently, it is only supported as an intermediate
+form that gets converted to a Dense layer.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.MatMul.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.MatMul.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.layers.Merge">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">Merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Merge" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
@@ -1055,6 +1138,19 @@ Note:  they don’t necessarily correspond 1:1 with the network layers.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.layers.Pooling2D.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Pooling2D.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.Quant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">Quant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Quant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>This is a QONNX quantization layer. Optimizations should convert it
+before HLS is produced.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.Quant.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Quant.initialize" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1249,6 +1345,14 @@ behave like simple wrappers.</p>
 <dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config of the QKeras quantizer to wrap.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.quantizers.QuantNodeQuantizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.quantizers.</span></span><span class="sig-name descname"><span class="pre">QuantNodeQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.quantizers.QuantNodeQuantizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.quantizers.Quantizer" title="hls4ml.model.quantizers.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
+<p>This implements a quantizer for a FixedPrecisionType with width==integer</p>
+<p>This is based on the sample implementation in finn-base</p>
 </dd></dl>
 
 <dl class="py class">
