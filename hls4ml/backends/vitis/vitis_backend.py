@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
@@ -82,14 +83,29 @@ class VitisBackend(VivadoBackend):
             if found != 0:
                 raise Exception('Vitis HLS installation not found. Make sure "vitis_hls" is on PATH.')
 
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
-        os.system(
-            (
-                'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-                'validation={validation} export={export} vsynth={vsynth}"'
-            ).format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
-        )
-        os.chdir(curr_dir)
+        build_command = (
+            'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
+            'validation={validation} export={export} vsynth={vsynth}"'
+        ).format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
 
-        return parse_vivado_report(model.config.get_output_dir())
+        output_dir = model.config.get_output_dir()
+        # Define log file paths
+        # NOTE - 'build_stdout.log' is the same as 'vitis_hls.log'
+        stdout_log = os.path.join(output_dir, 'build_stdout.log')
+        stderr_log = os.path.join(output_dir, 'build_stderr.log')
+        
+        with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
+            # Use subprocess.Popen to capture output
+            process = subprocess.Popen(
+                build_command,
+                shell=True,
+                cwd=output_dir,
+                stdout=stdout_file,
+                stderr=stderr_file,
+                text=True
+            )
+            process.communicate()
+            if process.returncode != 0:
+                raise Exception(f'Build failed for {model.config.get_project_name()}. See logs for details.')
+
+        return parse_vivado_report(output_dir)
