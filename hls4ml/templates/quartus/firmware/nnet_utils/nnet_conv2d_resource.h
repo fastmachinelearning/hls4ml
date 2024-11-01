@@ -1,6 +1,8 @@
 #ifndef NNET_CONV2D_RESOURCE_H_
 #define NNET_CONV2D_RESOURCE_H_
 
+#include <cstdint>
+
 #include "nnet_common.h"
 #include "nnet_dense.h"
 #include "nnet_helpers.h"
