@@ -54,13 +54,8 @@ void pointwise_conv_1d_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
     #pragma HLS INLINE region
 
     if (CONFIG_T::strategy == nnet::latency) {
-        if (CONFIG_T::implementation == conv_implementation::pointwise) {
-            // Use pointwise unrolled implementation
-            CONFIG_T::template pointwise_conv<data_T, res_T, CONFIG_T>::pointwise_conv(data, res, weights, biases);
-        } else {
-            // Use standard unrolled implementation
-            conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-        }
+        // Use pointwise unrolled implementation
+        CONFIG_T::template pointwise_conv<data_T, res_T, CONFIG_T>::pointwise_conv(data, res, weights, biases);
     } else {
         conv_1d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
