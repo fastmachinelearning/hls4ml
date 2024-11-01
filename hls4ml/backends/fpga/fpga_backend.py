@@ -13,6 +13,8 @@ from hls4ml.model.layers import (
     LSTM,
     Activation,
     BatchNormalization,
+    BatchNormOnnx,
+    Conv,
     Conv1D,
     Conv2D,
     Dense,
@@ -22,8 +24,11 @@ from hls4ml.model.layers import (
     GarNetStack,
     GlobalPooling1D,
     GlobalPooling2D,
+    MatMul,
+    Merge,
     Pooling1D,
     Pooling2D,
+    Quant,
     SeparableConv1D,
     SeparableConv2D,
     SimpleRNN,
@@ -63,6 +68,8 @@ class FPGABackend(Backend):
             LSTM,
             GRU,
             Dot,
+            Conv,
+            MatMul,
         ]
 
         for layer in accum_layers:
@@ -70,7 +77,16 @@ class FPGABackend(Backend):
             attrs.append(TypeAttribute('accum'))
             self.attribute_map[layer] = attrs
 
-        rf_layers = accum_layers + [BatchNormalization, Activation, Embedding, GarNet, GarNetStack]
+        rf_layers = accum_layers + [
+            BatchNormalization,
+            Activation,
+            Embedding,
+            GarNet,
+            GarNetStack,
+            Quant,
+            BatchNormOnnx,
+            Merge,
+        ]
 
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])
@@ -238,10 +254,12 @@ class FPGABackend(Backend):
         else:
             return before
 
-    def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor'):
+    def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor', include_max_rf=True):
         assert attribute is not None, 'Reuse factor attribute cannot be None'
 
         valid_rf = self.get_valid_reuse_factors(n_in, n_out)
+        if not include_max_rf:
+            valid_rf.pop()
         chosen_rf = layer.get_attr(attribute)
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)

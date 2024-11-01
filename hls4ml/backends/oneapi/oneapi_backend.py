@@ -7,7 +7,7 @@ import numpy as np
 from hls4ml.backends import FPGABackend
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
-from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, SeparableConv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
+from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 
@@ -33,6 +33,17 @@ class OneAPIBackend(FPGABackend):
             attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
             attrs.append(ConfigurableAttribute('table_size', default=1024))
             attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+            self.attribute_map[layer] = attrs
+
+        # Add ParallelizationFactor to Conv1D/2D
+        pf_layers = [
+            Conv1D,
+            Conv2D,
+        ]
+
+        for layer in pf_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('parallelization_factor', default=1))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -311,8 +322,6 @@ class OneAPIBackend(FPGABackend):
         layer.set_attr(
             'n_partitions', 1
         )  # TODO Not used yet as there is no codegen implementation of CNNs for oneAPI backend
-
-
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):

@@ -5,9 +5,8 @@ from hls4ml.model.layers import (
     Conv1D,
     Conv2D,
     Conv2DBatchnorm,
-    DepthwiseConv2D,
-    SeparableConv2D,
-)
+    DepthwiseConv2D
+    )
 # TODO - Dilation rate ?
 
 ''' Shared mutliplication config '''
