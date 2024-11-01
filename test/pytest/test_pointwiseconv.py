@@ -27,8 +27,8 @@ strides2d_options = [(1, 1), (2, 2)]
         ('oneAPI', 'io_stream', 'resource', 1),
         ('Vivado', 'io_parallel', 'resource', 1),
         ('Vitis', 'io_parallel', 'resource', 1),
-        ('Vivado', 'io_parallel', 'latency',  1),
-        ('Vitis', 'io_parallel', 'latency',  1),
+        ('Vivado', 'io_parallel', 'latency', 1),
+        ('Vitis', 'io_parallel', 'latency', 1),
         ('Vivado', 'io_parallel', 'latency', 14),
         ('Vitis', 'io_parallel', 'latency', 14),
         ('Vivado', 'io_stream', 'latency', 1),
@@ -66,8 +66,7 @@ def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, rf):
     config['LayerName']['pointwise1d']['ReuseFactor'] = rf
 
     output_dir = str(
-        test_root_path
-        / f'hls4mlprj_pointwise1d_{chans}_{strides[0]}_{padds}_{backend}_{io_type}_{strategy}_rf{rf}'
+        test_root_path / f'hls4mlprj_pointwise1d_{chans}_{strides[0]}_{padds}_{backend}_{io_type}_{strategy}_rf{rf}'
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
