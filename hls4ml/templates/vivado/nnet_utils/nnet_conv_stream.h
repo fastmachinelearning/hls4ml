@@ -58,7 +58,7 @@ template <unsigned K, unsigned S, unsigned W> unsigned scale_index_K_lt_S(const 
 template <unsigned K, unsigned S, unsigned W> class scale_index_regular {
   public:
     static unsigned scale_index(const unsigned idx) {
-#pragma HLS INLINE
+        #pragma HLS INLINE
 
         if (K >= S) {
             return scale_index_K_gte_S<K, S, W>(idx);
