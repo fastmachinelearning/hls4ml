@@ -31,10 +31,6 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
 
     output_shape = input_shapes[0][:]
     output_shape[-1] = layer['n_out']
-    if len(input_shapes[0]) == 3:
-        layer['seq_len'] = output_shape[-1]
-    else:
-        layer['seq_len'] = 1
 
     return layer, output_shape
 
