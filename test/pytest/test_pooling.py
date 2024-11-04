@@ -32,7 +32,7 @@ def keras_model_1d(request):
     return model, model_type, pads
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize(
     'keras_model_1d',
     [
@@ -71,6 +71,39 @@ def test_pool1d(backend, keras_model_1d, data_1d, io_type):
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
 
 
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'oneAPI'])
+@pytest.mark.parametrize(
+    'keras_model_1d',
+    [
+        {'model_type': 'max', 'padding': 'valid'},
+        {'model_type': 'avg', 'padding': 'valid'},
+    ],
+    ids=[
+        'model_type-max-padding-valid',
+        'model_type-avg-padding-valid',
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_pool1d_stream(backend, keras_model_1d, data_1d, io_type):
+    model, model_type, padding = keras_model_1d
+
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,9>', granularity='name')
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        io_type=io_type,
+        output_dir=str(test_root_path / f'hls4mlprj_globalplool1d_{backend}_{io_type}_{model_type}_padding_{padding}'),
+        backend=backend,
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(data_1d)
+    y_hls = hls_model.predict(data_1d).reshape(y_keras.shape)
+    np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
+
+
 @pytest.fixture(scope='module')
 def data_2d():
     return np.random.rand(100, in_shape, in_shape, in_filt)
@@ -89,7 +122,7 @@ def keras_model_2d(request):
     return model, model_type, pads
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize(
     'keras_model_2d',
     [
@@ -113,6 +146,39 @@ def test_pool2d(backend, keras_model_2d, data_2d, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, default_precision='ap_fixed<32,9>', granularity='name', backend=backend
     )
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        io_type=io_type,
+        output_dir=str(test_root_path / f'hls4mlprj_globalplool2d_{backend}_{io_type}_{model_type}_padding_{padding}'),
+        backend=backend,
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(data_2d)
+    y_hls = hls_model.predict(data_2d).reshape(y_keras.shape)
+    np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
+
+
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'oneAPI'])
+@pytest.mark.parametrize(
+    'keras_model_2d',
+    [
+        {'model_type': 'max', 'padding': 'valid'},
+        {'model_type': 'avg', 'padding': 'valid'},
+    ],
+    ids=[
+        'model_type-max-padding-valid',
+        'model_type-avg-padding-valid',
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_pool2d_stream(backend, keras_model_2d, data_2d, io_type):
+    model, model_type, padding = keras_model_2d
+
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,9>', granularity='name')
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,

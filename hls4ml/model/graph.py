@@ -121,7 +121,8 @@ class HLSConfig:
         type_name = layer.name.lower() + '_' + var + '_t'
         if precision is None:
             precision = self.layer_name_precision.get(layer.name.lower() + '_default')
-            type_name = layer.name.lower() + '_default_t'
+            # I think it is better to keep these unique still to avoid inadvertent updates
+            # type_name = layer.name.lower() + '_default_t'
 
         if precision is None:
             precision = self.layer_type_precision.get(layer.class_name.lower() + '_' + var)
@@ -763,32 +764,24 @@ class ModelGraph:
         n_inputs = len(self.get_input_variables())
         n_outputs = len(self.get_output_variables())
 
-        curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir() + '/firmware')
-
         output = []
         if n_samples == 1 and n_inputs == 1:
             x = [x]
 
-        try:
-            for i in range(n_samples):
-                predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
-                if n_inputs == 1:
-                    inp = [np.asarray(x[i])]
-                else:
-                    inp = [np.asarray(xj[i]) for xj in x]
-                argtuple = inp
-                argtuple += predictions
-                argtuple = tuple(argtuple)
-                top_function(*argtuple)
-                output.append(predictions)
+        for i in range(n_samples):
+            predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
+            if n_inputs == 1:
+                inp = [np.asarray(x[i])]
+            else:
+                inp = [np.asarray(xj[i]) for xj in x]
+            argtuple = inp
+            argtuple += predictions
+            argtuple = tuple(argtuple)
+            top_function(*argtuple)
+            output.append(predictions)
 
-            # Convert to list of numpy arrays (one for each output)
-            output = [
-                np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)
-            ]
-        finally:
-            os.chdir(curr_dir)
+        # Convert to list of numpy arrays (one for each output)
+        output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
 
         if n_samples == 1 and n_outputs == 1:
             return output[0][0]

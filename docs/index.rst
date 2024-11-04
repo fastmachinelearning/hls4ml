@@ -22,8 +22,10 @@
     :hidden:
     :caption: Advanced Features
 
+    advanced/qonnx
     advanced/fifo_depth
     advanced/extension
+    advanced/oneapi
     advanced/accelerator
     advanced/model_optimization
 

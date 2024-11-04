@@ -1,6 +1,8 @@
 #ifndef NNET_CONV2D_RESOURCE_H_
 #define NNET_CONV2D_RESOURCE_H_
 
+#include <cstdint>
+
 #include "nnet_common.h"
 #include "nnet_dense.h"
 #include "nnet_helpers.h"
@@ -58,10 +60,10 @@ void conv_2d_im2col_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CO
     // im2col performs no filter transformations; therefore, filter size remains constant
     assert(CONFIG_T::filt_height == CONFIG_T::impl_filt_height && CONFIG_T::filt_width == CONFIG_T::impl_filt_width);
 
-    // Unroll factors for loop traversing input image, derived from parallelisation_factor
+    // Unroll factors for loop traversing input image, derived from parallelization_factor
     // Outer loop only gets unrolled after inner loop is fully unrolled
-    static constexpr int pfc = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
-    static constexpr int pfr = MIN((CONFIG_T::parallelisation_factor / pfc), CONFIG_T::out_height);
+    static constexpr int pfc = MIN(CONFIG_T::parallelization_factor, CONFIG_T::out_width);
+    static constexpr int pfr = MIN((CONFIG_T::parallelization_factor / pfc), CONFIG_T::out_height);
 
 HeightLoop:
     #pragma unroll pfr
@@ -133,10 +135,10 @@ void winograd_conv2d_3x3_kernel_cl(
     assert(CONFIG_T::pad_left == CONFIG_T::pad_right && CONFIG_T::pad_top == CONFIG_T::pad_bottom);
     assert(CONFIG_T::out_height > 2 && CONFIG_T::out_width > 2);
 
-    // Unroll factor for loop traversing input image, derived from parallelisation_factor
+    // Unroll factor for loop traversing input image, derived from parallelization_factor
     // Outer loop only gets unrolled after inner loop is fully unrolled
-    static constexpr int pfc = MIN(CONFIG_T::parallelisation_factor, DIV_ROUNDUP(CONFIG_T::out_width, 2));
-    static constexpr int pfr = MIN((CONFIG_T::parallelisation_factor / pfc), DIV_ROUNDUP(CONFIG_T::out_height, 2));
+    static constexpr int pfc = MIN(CONFIG_T::parallelization_factor, DIV_ROUNDUP(CONFIG_T::out_width, 2));
+    static constexpr int pfr = MIN((CONFIG_T::parallelization_factor / pfc), DIV_ROUNDUP(CONFIG_T::out_height, 2));
 
     // Initialise result to bias
     // Unroll fully, as loop performs a simple operation - assigning the outputs to a constant value
@@ -241,10 +243,10 @@ void pointwise_conv_2d_resource_cl(data_T data[CONFIG_T::in_height * CONFIG_T::i
                                    const typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::filt_height == 1 && CONFIG_T::filt_width == 1);
 
-    // Unroll factors for loop traversing input image, derived from parallelisation_factor
+    // Unroll factors for loop traversing input image, derived from parallelization_factor
     // Outer loop only gets unrolled after inner loop is fully unrolled
-    static constexpr int pfc = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
-    static constexpr int pfr = MIN((CONFIG_T::parallelisation_factor / pfc), CONFIG_T::out_height);
+    static constexpr int pfc = MIN(CONFIG_T::parallelization_factor, CONFIG_T::out_width);
+    static constexpr int pfr = MIN((CONFIG_T::parallelization_factor / pfc), CONFIG_T::out_height);
 
 HeightLoop:
     #pragma unroll pfr
