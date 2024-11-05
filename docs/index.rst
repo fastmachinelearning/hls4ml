@@ -6,9 +6,6 @@
     status
     setup
     release_notes
-    details
-    flows
-    command
     reference
 
 .. toctree::
@@ -16,18 +13,23 @@
     :glob:
     :caption: Quick API Reference
 
-    api/*
+    api/configuration
+    api/details
+    api/hls-model
+    api/profiling
 
 .. toctree::
     :hidden:
     :caption: Advanced Features
 
+    advanced/flows
     advanced/qonnx
     advanced/fifo_depth
     advanced/extension
     advanced/oneapi
     advanced/accelerator
     advanced/model_optimization
+    advanced/command
 
 .. toctree::
     :hidden:

@@ -107,76 +107,77 @@ Done! You've built your first project using ``hls4ml``! To learn more about our 
 
 If you want to configure your model further, check out our :doc:`Configuration <api/configuration>` page.
 
-Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:
+..
+   Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:
 
-Getting started with hls4ml CLI (deprecated)
---------------------------------------------
+   Getting started with hls4ml CLI (deprecated)
+   --------------------------------------------
 
-As an alternative to the recommended Python PI, the command-line interface is provided via the ``hls4ml`` command.
+   As an alternative to the recommended Python PI, the command-line interface is provided via the ``hls4ml`` command.
 
-To follow this tutorial, you must first download our ``example-models`` repository:
+   To follow this tutorial, you must first download our ``example-models`` repository:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git clone https://github.com/fastmachinelearning/example-models
+      git clone https://github.com/fastmachinelearning/example-models
 
-Alternatively, you can clone the ``hls4ml`` repository with submodules
+   Alternatively, you can clone the ``hls4ml`` repository with submodules
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git clone --recurse-submodules https://github.com/fastmachinelearning/hls4ml
+      git clone --recurse-submodules https://github.com/fastmachinelearning/hls4ml
 
-The model files, along with other configuration parameters, are defined in the ``.yml`` files.
-Further information about ``.yml`` files can be found in :doc:`Configuration <api/configuration>` page.
+   The model files, along with other configuration parameters, are defined in the ``.yml`` files.
+   Further information about ``.yml`` files can be found in :doc:`Configuration <api/configuration>` page.
 
-In order to create an example HLS project, first go to ``example-models/`` from the main directory:
+   In order to create an example HLS project, first go to ``example-models/`` from the main directory:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   cd example-models/
+      cd example-models/
 
-And use this command to translate a Keras model:
+   And use this command to translate a Keras model:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   hls4ml convert -c keras-config.yml
+      hls4ml convert -c keras-config.yml
 
-This will create a new HLS project directory with an implementation of a model from the ``example-models/keras/`` directory.
-To build the HLS project, do:
+   This will create a new HLS project directory with an implementation of a model from the ``example-models/keras/`` directory.
+   To build the HLS project, do:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   hls4ml build -p my-hls-test -a
+      hls4ml build -p my-hls-test -a
 
-This will create a Vivado HLS project with your model implementation!
+   This will create a Vivado HLS project with your model implementation!
 
-**NOTE:** For the last step, you can alternatively do the following to build the HLS project:
+   **NOTE:** For the last step, you can alternatively do the following to build the HLS project:
 
-.. code-block:: Bash
+   .. code-block:: Bash
 
-   cd my-hls-test
-   vivado_hls -f build_prj.tcl
+      cd my-hls-test
+      vivado_hls -f build_prj.tcl
 
-``vivado_hls`` can be controlled with:
+   ``vivado_hls`` can be controlled with:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   vivado_hls -f build_prj.tcl "csim=1 synth=1 cosim=1 export=1 vsynth=1"
+      vivado_hls -f build_prj.tcl "csim=1 synth=1 cosim=1 export=1 vsynth=1"
 
-Setting the additional parameters from ``1`` to ``0`` disables that step, but disabling ``synth`` also disables ``cosim`` and ``export``.
+   Setting the additional parameters from ``1`` to ``0`` disables that step, but disabling ``synth`` also disables ``cosim`` and ``export``.
 
-Further help
-^^^^^^^^^^^^
+   Further help
+   ^^^^^^^^^^^^
 
-* For further information about how to use ``hls4ml``\ , do: ``hls4ml --help`` or ``hls4ml -h``
-* If you need help for a particular ``command``\ , ``hls4ml command -h`` will show help for the requested ``command``
-* We provide a detailed documentation for each of the command in the :doc:`Command Help <../command>` section
+   * For further information about how to use ``hls4ml``\ , do: ``hls4ml --help`` or ``hls4ml -h``
+   * If you need help for a particular ``command``\ , ``hls4ml command -h`` will show help for the requested ``command``
+   * We provide a detailed documentation for each of the command in the :doc:`Command Help <advanced/command>` section
 
 Existing examples
 -----------------
 
-* Examples of model files and weights can be found in `example_models <https://github.com/fastmachinelearning/example-models>`_ directory.
 * Training codes and examples of resources needed to train the models can be found in the `tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
+* Examples of model files and weights can be found in `example_models <https://github.com/fastmachinelearning/example-models>`_ directory.
 
 Uninstalling
 ------------
