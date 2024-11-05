@@ -43,23 +43,30 @@ version can be installed directly from ``git``:
 Dependencies
 ============
 
-The ``hls4ml`` library depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed
+The ``hls4ml`` library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed
 by ``pip`` or ``conda``.
 
-* `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.4 and newer) and `QKeras <https://pypi.org/project/qkeras/>`_ are required by the Keras converter.
+* `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) and `QKeras <https://pypi.org/project/qkeras/>`_ are required by the Keras converter. One may want to install newer versions of QKeras from GitHub. Newer versions of TensorFlow can be used, but QKeras and hl4ml do not currently support Keras v3.
+
 * `ONNX <https://pypi.org/project/onnx/>`_ (version 1.4.0 and newer) is required by the ONNX converter.
+
 * `PyTorch <https://pytorch.org/get-started>`_ package is optional. If not installed, the PyTorch converter will not be available.
 
 Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent
-Linux should work. On MacOS, the *clang*-based ``g++`` is enough.
+Linux should work. On MacOS, the *clang*-based ``g++`` is enough. For the oneAPI backend, one must have oneAPI installed, along with the FPGA compiler,
+to run C/SYCL simulations.
 
 To run FPGA synthesis, installation of following tools is required:
 
-* Xilinx Vivado HLS 2018.2 to 2020.1 for synthesis for Xilinx FPGAs
+* Xilinx Vivado HLS 2018.2 to 2020.1 for synthesis for Xilinx FPGAs using the ``Vivado`` backend.
 
-  * Vitis HLS 2022.2 or newer is required for synthesis for Xilinx FPGAs using the ``Vitis`` backend.
+* Vitis HLS 2022.2 or newer is required for synthesis for Xilinx FPGAs using the ``Vitis`` backend.
 
-* Intel Quartus 20.1 to 21.4 for the synthesis for Intel FPGAs
+* Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
+
+* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altara Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend.
+
+Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 
 
 Quick Start
