@@ -121,7 +121,8 @@ class HLSConfig:
         type_name = layer.name.lower() + '_' + var + '_t'
         if precision is None:
             precision = self.layer_name_precision.get(layer.name.lower() + '_default')
-            type_name = layer.name.lower() + '_default_t'
+            # I think it is better to keep these unique still to avoid inadvertent updates
+            # type_name = layer.name.lower() + '_default_t'
 
         if precision is None:
             precision = self.layer_type_precision.get(layer.class_name.lower() + '_' + var)

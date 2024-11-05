@@ -119,9 +119,19 @@ padds_options = ['same', 'valid']
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize(
+    'backend,strategy',
+    [
+        ('Vivado', 'Resource'),
+        ('Vivado', 'Latency'),
+        ('Vitis', 'Resource'),
+        ('Vitis', 'Latency'),
+        ('Quartus', 'Resource'),
+        ('oneAPI', 'Resource'),
+    ],
+)
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv1d(padds, backend, io_type):
+def test_conv1d(padds, backend, strategy, io_type):
     model = tf.keras.models.Sequential()
     input_shape = (10, 128, 4)
     model.add(
@@ -144,7 +154,8 @@ def test_conv1d(padds, backend, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{io_type}')
+    config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{strategy}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -192,9 +203,19 @@ padds_options = ['same', 'valid']
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize(
+    'backend,strategy',
+    [
+        ('Vivado', 'Resource'),
+        ('Vivado', 'Latency'),
+        ('Vitis', 'Resource'),
+        ('Vitis', 'Latency'),
+        ('Quartus', 'Resource'),
+        ('oneAPI', 'Resource'),
+    ],
+)
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv2d(chans, padds, backend, io_type):
+def test_conv2d(chans, padds, backend, strategy, io_type):
     model = tf.keras.models.Sequential()
     input_shape = (28, 28, 3)
     model.add(
@@ -215,7 +236,8 @@ def test_conv2d(chans, padds, backend, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv2d_{backend}_{chans}_{padds}_{io_type}')
+    config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv2d_{backend}_{strategy}_{chans}_{padds}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )

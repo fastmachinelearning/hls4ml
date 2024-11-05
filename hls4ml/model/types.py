@@ -88,6 +88,7 @@ class IntegerPrecisionType(PrecisionType):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
+    # Does this need to make sure other is also an IntegerPrecisionType? I could see a match between Fixed and Integer
     def __eq__(self, other):
         if isinstance(other, IntegerPrecisionType):
             return super().__eq__(other)
@@ -135,6 +136,8 @@ class FixedPrecisionType(PrecisionType):
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
+
+    # make this a property to avoid inconsistencies
 
     @property
     def fractional(self):
@@ -204,6 +207,7 @@ class XnorPrecisionType(PrecisionType):
         super().__init__(width=1, signed=False)
         self.integer = 1
 
+    # TODO:  this should really be a specific type
     def __str__(self):
         typestring = 'uint<1>'
         return typestring
@@ -218,6 +222,7 @@ class ExponentPrecisionType(PrecisionType):
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
 
+    # TODO:  this should really be a specific type, not int
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
