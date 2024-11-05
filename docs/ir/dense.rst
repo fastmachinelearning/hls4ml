@@ -17,7 +17,7 @@ smaller or bigger than the input size. The two Xilinx backends and Catapult also
 io_stream
 ---------
 
-The io_stream implementation only wraps the io_parallel implementation with streams or pipes for communication. The data is still transferred in parallel. 
+The io_stream implementation only wraps the io_parallel implementation with streams or pipes for communication. The data is still transferred in parallel.
 
 Multi-dimensional Dense Layers
 ==============================

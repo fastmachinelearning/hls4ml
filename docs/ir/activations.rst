@@ -12,4 +12,3 @@ Softmax has four implementations that the user can choose from by setting the ``
 * **stable**:  Slower but with better accuracy, useful in scenarios where higher accuracy is needed.
 * **legacy**:  An older implementation with poor accuracy, but good performance. Usually the latency implementation is preferred.
 * **argmax**:  If you don't care about normalized outputs and only care about which one has the highest value, using argmax saves a lot of resources. This sets the highest value to 1, the others to 0.
-
