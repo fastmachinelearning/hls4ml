@@ -45,8 +45,8 @@ This python dictionary can be edited as needed. A more advanced configuration ca
         default_precision='fixed<16,6>',
         backend='Vitis')
 
-This will include per-layer configuration based on the model. Including the backend is recommended because some configation options depend on the backend. Note, the precisions at the
-higher granularites usually default to 'auto', which means that ``hls4ml`` will try to set it automatically. Note that higher granularity settings take precendence
+This will include per-layer configuration based on the model. Including the backend is recommended because some configuration options depend on the backend. Note, the precisions at the
+higher granularites usually default to 'auto', which means that ``hls4ml`` will try to set it automatically (see :ref:`Automatic precision inference`). Note that higher granularity settings take precedence
 over model-level settings. See :py:class:`~hls4ml.utils.config.config_from_keras_model` for more information on the various options.
 
 One can override specific values before using the configuration:

@@ -14,9 +14,19 @@
     :caption: Quick API Reference
 
     api/configuration
+    api/auto
     api/details
     api/hls-model
     api/profiling
+
+.. toctree::
+    :hidden:
+    :glob:
+    :caption: Internal Layers
+
+    ir/dense
+    ir/activations
+    ir/conv
 
 .. toctree::
     :hidden:
