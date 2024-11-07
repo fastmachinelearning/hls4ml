@@ -1,8 +1,11 @@
 import json
+from warnings import warn
 
 import h5py
 
 from hls4ml.model import ModelGraph
+
+from .keras_v3_to_hls import parse_keras_v3_model
 
 MAXMULT = 4096
 
@@ -228,8 +231,8 @@ def parse_keras_model(model_arch, reader):
         layer_config = model_arch['config']
         if 'layers' in layer_config:  # Newer Keras versions have 'layers' in 'config' key
             layer_config = layer_config['layers']
-        # Sequential doesn't have InputLayer in TF < 2.3 (Keras 2.4.0)
         if layer_config[0]['class_name'] != 'InputLayer':
+            warn(DeprecationWarning('keras < 2.4.0 (tf 2.3) is deprecated. Please use a newer version.'))
             input_layer = {}
             input_layer['name'] = 'input1'
             input_layer['class_name'] = 'InputLayer'
@@ -241,25 +244,33 @@ def parse_keras_model(model_arch, reader):
         layer_config = model_arch['config']['layers']
         input_layers = [inp[0] for inp in model_arch['config']['input_layers']]
         output_layers = [out[0] for out in model_arch['config']['output_layers']]
+    else:
+        raise Exception(f'ERROR: Model class not supported: {model_arch["class_name"]}')
 
     # Get input shape and check for unsupported layer type
     for keras_layer in layer_config:
         if keras_layer['class_name'] not in supported_layers:
-            raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer['class_name']))
+            raise Exception(f'ERROR: Unsupported layer type: {keras_layer["class_name"]}')
 
     output_shapes = {}
     output_shape = None
 
     print('Topology:')
     for keras_layer in layer_config:
-        if 'batch_input_shape' in keras_layer['config']:
+        if 'batch_input_shape' in keras_layer['config'] or 'batch_shape' in keras_layer['config']:
             if 'inbound_nodes' in keras_layer and len(keras_layer['inbound_nodes']) > 0:
                 input_shapes = [output_shapes[inbound_node[0]] for inbound_node in keras_layer['inbound_nodes'][0]]
             else:
-                input_shapes = [keras_layer['config']['batch_input_shape']]
+                _input_shapes = keras_layer['config'].get('batch_input_shape', None)
+                input_shapes = _input_shapes or keras_layer['config']['batch_shape']
         else:
             if 'inbound_nodes' in keras_layer:
-                input_shapes = [output_shapes[inbound_node[0]] for inbound_node in keras_layer['inbound_nodes'][0]]
+                if 'args' in keras_layer['inbound_nodes'][0]:
+                    # keras v3
+                    input_shapes = [arg['config']['shape'] for arg in keras_layer['inbound_nodes'][0]['args']]
+                else:
+                    # keras v2
+                    input_shapes = [output_shapes[inbound_node[0]] for inbound_node in keras_layer['inbound_nodes'][0]]
             else:
                 # Sequential model, so output_shape from the previous layer is still valid
                 input_shapes = [output_shape]
@@ -323,6 +334,13 @@ def parse_keras_model(model_arch, reader):
 
 
 def keras_to_hls(config):
+    if 'KerasModel' in config:
+        import keras
+
+        if keras.__version__ >= '3.0':
+            layer_list, input_layers, output_layers, _ = parse_keras_v3_model(config['KerasModel'])
+            return ModelGraph(config, layer_list, input_layers, output_layers)
+
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
     print('Creating HLS model')
