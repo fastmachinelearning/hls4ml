@@ -13,37 +13,35 @@ void depthwise_conv_2d_resource_cl(const data_T &data, res_T &res, const typenam
 
 
     int depth_multiplier = CONFIG_T::n_filt/CONFIG_T::n_chan;
+    [[intel::fpga_register]] int res_idx = 0;
 
-    
-    //#pragma unroll
+    DM_LOOP:
+    #pragma unroll
     for (int dm = 0; dm < depth_multiplier; dm++) {
 
-        //#pragma unroll
+        CHAN_LOOP:
+        #pragma unroll
         for (int c = 0; c < CONFIG_T::n_chan; c++) {
-
-            //#pragma unroll
+            HEIGHT_LOOP:
+            #pragma unroll
             for (int h = 0; h < CONFIG_T::out_height; h++) {
-
-                //#pragma unroll
+                WIDTH_LOOP:
+                #pragma unroll
                 for (int w = 0; w < CONFIG_T::out_width; w++) {
 
-                    
-                    //res[(h * CONFIG_T::out_width * CONFIG_T::n_chan) + (w * CONFIG_T::n_chan) + c] = 0;
-
-                    int res_idx = (h * CONFIG_T::out_width * CONFIG_T::n_filt) + 
+            
+                    res_idx = (h * CONFIG_T::out_width * CONFIG_T::n_filt) + 
                                     (w * CONFIG_T::n_filt) + 
                                     (c * depth_multiplier) + dm;
 
-                    //res[res_idx] = 0;
-                    //res[res_idx] = biases[(dm * depth_multiplier) + c]; 
 
                     res[res_idx] = biases[c * depth_multiplier + dm];
 
-                    
-                    //#pragma unroll
+                    KERNEL_H_LOOP:
+                    #pragma unroll
                     for (int kh = 0; kh < CONFIG_T::filt_height; kh++) {
-
-                        //#pragma unroll
+                        KERNEL_W_LOOP:
+                        #pragma unroll
                         for (int kw = 0; kw < CONFIG_T::filt_width; kw++)  {
 
                             int h_in = h * CONFIG_T::stride_height + kh - CONFIG_T::pad_top;
@@ -52,8 +50,7 @@ void depthwise_conv_2d_resource_cl(const data_T &data, res_T &res, const typenam
                             if ((h_in >= 0) && (h_in < CONFIG_T::in_height) 
                             && (w_in >= 0) && (w_in < CONFIG_T::in_width)) {
 
-                                res[res_idx] = 
-                                res[res_idx] +
+                                res[res_idx] +=
                                 data[(h_in)*CONFIG_T::in_width * CONFIG_T::n_chan + (w_in)*CONFIG_T::n_chan+c] 
                                 * weights[(dm * CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan) + 
                                           (kh * CONFIG_T::filt_width * CONFIG_T::n_chan) +
@@ -64,9 +61,6 @@ void depthwise_conv_2d_resource_cl(const data_T &data, res_T &res, const typenam
 
 
                     }
-
-                    //res[res_idx] = res[res_idx] + biases[c * depth_multiplier + dm];
-
 
                 }
             }
