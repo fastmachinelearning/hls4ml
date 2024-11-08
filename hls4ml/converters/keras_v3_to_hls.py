@@ -168,7 +168,7 @@ class KerasV3HandlerDispatcher:
                 for w in layer.weights:
                     if var_name in w.name:
                         return np.array(w)
-                raise ValueError(f"Variable {var_name} not found in layer {layer.name}")
+                return None
 
         reader = DummyReader()
         input_shapes = [list(t.shape) for t in inp_tensors]
