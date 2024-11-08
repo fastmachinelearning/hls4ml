@@ -533,11 +533,6 @@ class ModelGraph:
         inputs = [inp for inp in node.inputs if inp]
         outputs = [outp for outp in node.outputs if outp]
 
-        inp_var = node.get_input_variable()
-        out_var = node.get_output_variable()
-
-        assert np.prod(inp_var.shape) == np.prod(out_var.shape), f'Input and output shapes do not match for {node.name}'
-
         if len(inputs) > 1 or len(outputs) > 1:
             raise Exception('Cannot delete a node with multiple inputs/outputs')
 
@@ -547,6 +542,14 @@ class ModelGraph:
                 self.outputs = [inputs[0] if name == node.name else name for name in self.outputs]
 
         if len(outputs) == 1 and len(inputs) == 1:
+            inp_var = node.get_input_variable()
+            out_var = node.get_output_variable()
+
+            # fmt: off
+            assert (np.prod(inp_var.shape) == np.prod(out_var.shape)), \
+                f'Input and output shapes do not match for {node.name}: {inp_var.shape} -> {out_var.shape}'
+            # fmt: on
+
             next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
             for next_node in next_nodes:
                 # Connect inputs -> next
