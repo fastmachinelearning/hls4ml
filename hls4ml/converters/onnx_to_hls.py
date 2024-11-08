@@ -75,6 +75,7 @@ def get_input_shape(graph, node):
 
 def get_constant_value(graph, constant_name):
     from onnx import numpy_helper
+
     tensor = next((x for x in graph.initializer if x.name == constant_name), None)
     return numpy_helper.to_array(tensor)  # type: ignore
 
