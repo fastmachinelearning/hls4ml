@@ -1,5 +1,6 @@
 import typing
 from itertools import chain
+from types import FunctionType
 from typing import Any, Callable, Sequence
 
 if typing.TYPE_CHECKING:
@@ -154,7 +155,10 @@ class KerasV3HandlerDispatcher:
         self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
     ):
         # keras v2 handlers fallback
-        print("v2 handler")
+        print(f"v2 handler used for layer {layer.name}")
+
+        import keras
+
         config = layer.get_config()
         layer_dict = {'config': config, 'class_name': layer.__class__.__name__}
 
@@ -176,16 +180,22 @@ class KerasV3HandlerDispatcher:
             return None
 
         ret, _ = handler(layer_dict, input_names, input_shapes, reader)
-        ret['outputs'] = output_names
+        ret['output_keras_tensor_names'] = output_names
+        ret['input_keras_tensor_names'] = input_names
         ret = (ret,)
 
         activation = getattr(layer, 'activation', None)
         if activation not in (keras.activations.linear, None):
-            act_cls_name = activation.__class__.__name__
+            assert isinstance(activation, FunctionType), f"Activation function for layer {layer.name} is not a function"
+            intermediate_tensor_name = f'{output_names[0]}_activation'
+            ret[0]['output_keras_tensor_names'] = (intermediate_tensor_name,)
+            act_cls_name = activation.__name__
             act_config = {
                 'class_name': 'Activation',
                 'activation': act_cls_name,
                 'name': f'{layer.name}_{act_cls_name}',
+                'input_keras_tensor_names': (intermediate_tensor_name,),
+                'output_keras_tensor_names': output_names,
             }
             ret = *ret, act_config
         return ret
@@ -212,6 +222,13 @@ def parse_keras_v3_model(model: 'keras.Model'):
         If a circular dependency is detected.
     """
 
+    assert model.built, "Model must be built before parsing"
+
+    import keras
+
+    if isinstance(model, keras.Sequential):
+        model = model._functional  # everything is functional under the hood lol
+
     from .keras_to_hls import layer_handlers as v2_layer_handlers  # Delayed import to avoid circular import
 
     keras_v3_dispatcher = KerasV3HandlerDispatcher(v3_layer_handlers, v2_layer_handlers)
@@ -219,12 +236,12 @@ def parse_keras_v3_model(model: 'keras.Model'):
     model_inputs, model_outputs, dependency, tensors = resolve_dependency_relation(model)
 
     satisfied = set()
-    total = len(tensors)
 
     unique_name = UniqueName()
 
     layer_list: list[dict[str, Any]] = []
-    while len(satisfied) < total:
+
+    while any(t not in satisfied for t in model_outputs):
         # Until all tensors in the model are satisfied
         for i, (layer_name, in_tensor_names, out_tensor_names) in enumerate(dependency):
             if not all(t in satisfied for t in in_tensor_names):
@@ -237,13 +254,10 @@ def parse_keras_v3_model(model: 'keras.Model'):
             out_tensors = [tensors[t] for t in out_tensor_names]
 
             _configs = keras_v3_dispatcher(layer, inp_tensors, out_tensors)
-            # Dispatch to v3 handler if available, else fallback to v2
-            # handler
+            # Dispatch to v3 handler if available, else fallback to v2 handler
 
-            # Prevent name conflicts. If a layer is used multiple times,
-            # add a suffix to the name At this stage, connections
-            # between modules are recorded by i/o keras tensor names
-            # (guaranteed unique), thus we can safely rename the layers
+            # Prevent name conflicts. If a layer is used multiple times, add a suffix to the name.
+            # At this stage connections between modules are recorded by i/o keras tensor names
             for _conf in _configs:
                 _conf['name'] = unique_name(_conf['name'])
 
