@@ -1,3 +1,4 @@
+import inspect
 import typing
 from typing import Any, Sequence
 
@@ -89,3 +90,115 @@ class KV3MergeHandler(KerasV3LayerHandler):
 
         config['class_name'] = class_name
         return config
+
+
+@register
+class KV3ActivationHandler(KerasV3LayerHandler):
+    handles = ('keras.src.layers.activations.activation.Activation',)
+
+    def handle(
+        self,
+        layer: 'keras.layers.Activation',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        import keras
+
+        config = {}
+        config.update(self.default_config)
+
+        activation = getattr(layer, 'activation', keras.activations.linear)
+        match activation:
+            case keras.activations.softmax:
+                class_name = 'Softmax'
+                config['axis'] = -1
+            case keras.activations.hard_sigmoid:
+                class_name = 'HardActivation'
+            case keras.activations.leaky_relu:
+                class_name = 'LeakyReLU'
+                signature = inspect.signature(keras.activations.leaky_relu)
+                config['activ_param'] = signature.parameters['negative_slope'].default
+            case keras.activations.elu:
+                class_name = 'ELU'
+                signature = inspect.signature(keras.activations.elu)
+                config['activ_param'] = signature.parameters['alpha'].default
+            case _:
+                class_name = 'Activation'
+
+        config['activation'] = activation.__name__
+        config['class_name'] = class_name
+        return (config,)
+
+
+@register
+class KV3ReLUHandler(KerasV3LayerHandler):
+    handles = (
+        'keras.src.layers.activations.leaky_relu.LeakyReLU',
+        'keras.src.layers.activations.prelu.PReLU',
+        'keras.src.layers.activations.relu.ReLU',
+    )
+
+    def handle(
+        self,
+        layer: 'keras.layers.ReLU',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        config = {}
+        config.update(self.default_config)
+
+        if layer.__class__.__name__ == 'ReLU':
+            config['class_name'] = 'Activation'
+            config['activation'] = 'relu'
+            return config
+
+        if layer.__class__.__name__ == 'PReLU':
+            config['class_name'] = 'PReLU'
+            config['param_data'] = np.array(layer.alpha)
+            config['activation'] = 'prelu'
+        else:
+            config['class_name'] = 'LeakyReLU'
+            config['activ_param'] = float(layer.negative_slope)
+            config['activation'] = 'leaky_relu'
+
+        return (config,)
+
+
+@register
+class KV3SoftmaxHandler(KerasV3LayerHandler):
+    handles = ('keras.src.layers.activations.softmax.Softmax',)
+
+    def handle(
+        self,
+        layer: 'keras.layers.Softmax',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        config = {}
+        config.update(self.default_config)
+
+        config['class_name'] = 'Softmax'
+        config['axis'] = layer.axis
+        config['activation'] = 'softmax'
+
+        return (config,)
+
+
+@register
+class KV3HardActivationHandler(KerasV3LayerHandler):
+    handles = ('keras.src.layers.activations.elu.ELU',)
+
+    def handle(
+        self,
+        layer: 'keras.layers.ELU',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        config = {}
+        config.update(self.default_config)
+
+        config['class_name'] = 'ELU'
+        config['activ_param'] = float(layer.alpha)
+        config['activation'] = 'elu'
+
+        return (config,)
