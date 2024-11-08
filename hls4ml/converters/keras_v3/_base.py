@@ -1,5 +1,19 @@
 import typing
-from typing import Any, Callable, Sequence
+from types import FunctionType
+from typing import Any, Callable, Sequence, TypedDict
+
+
+class DefaultConfig(TypedDict, total=False):
+    name: str
+    class_name: str
+    module: str
+    input_keras_tensor_names: list[str]
+    input_shape: list[list[int]]
+    output_keras_tensor_names: list[str]
+    epsilon: float
+    use_bias: bool
+    data_format: str
+
 
 if typing.TYPE_CHECKING:
     import keras
@@ -49,7 +63,7 @@ def register(cls: str | type):
     return deco
 
 
-def maybe_add_attrs(config: dict[str, Any], obj: Any, *attrs: str):
+def maybe_add_attrs(config: dict[str, Any] | DefaultConfig, obj: Any, *attrs: str):
     for attr in attrs:
         if attr not in config and hasattr(obj, attr):
             config[attr] = getattr(obj, attr)
@@ -103,36 +117,55 @@ class KerasV3LayerHandler:
         """  # noqa: E501
         import keras
 
-        config0 = self.handle(layer, in_tensors, out_tensors)
-        if isinstance(config0, tuple):
-            return config0
-
         name = layer.name
         class_name = layer.__class__.__name__
         module = layer.__module__
-        config1 = {
+
+        default_config: DefaultConfig = {
             'name': name,
             'class_name': class_name,
             'module': module,
             'input_keras_tensor_names': [t.name for t in in_tensors],
-            'input_shape': [list(t.shape[1:]) for t in in_tensors],
+            'input_shape': [list(t.shape[1:]) for t in in_tensors],  # type: ignore
             'output_keras_tensor_names': [t.name for t in out_tensors],
         }
 
-        maybe_add_attrs(config1, layer, 'epsilon', 'use_bias', 'data_format')
+        maybe_add_attrs(default_config, layer, 'epsilon', 'use_bias', 'data_format')
 
-        config1.update(config0)
-        ret = (config1,)
+        mandatory_keys = ['name', 'class_name', 'output_keras_tensor_names', 'input_keras_tensor_names']
 
+        self.default_config = default_config
+        config0 = self.handle(layer, in_tensors, out_tensors)
+        del self.default_config
+
+        if isinstance(config0, tuple):
+            for conf in config0:
+                for key in mandatory_keys:
+                    assert key in conf, f"Key {key} missing from layer {name} handled by {self.__class__.__name__}"
+            return config0
+
+        config = {}
+        config.update(default_config)
+        config.update(config0)
+        ret = (config,)
+
+        # If activation exists, append it
         activation = getattr(layer, 'activation', None)
         if activation not in (keras.activations.linear, None):
-            act_cls_name = activation.__class__.__name__
+            assert len(out_tensors) == 1, f"Layer {name} has more than one output, but has an activation function"
+            assert isinstance(activation, FunctionType), f"Activation function for layer {name} is not a function"
+            intermediate_tensor_name = f'{out_tensors[0].name}_activation'
+            ret[0]['output_keras_tensor_names'] = [intermediate_tensor_name]
+            act_cls_name = activation.__name__
             act_config = {
                 'class_name': 'Activation',
                 'activation': act_cls_name,
                 'name': f'{name}_{act_cls_name}',
+                'input_keras_tensor_names': [intermediate_tensor_name],
+                'output_keras_tensor_names': [out_tensors[0].name],
             }
             ret = *ret, act_config
+
         return ret
 
     def handle(
