@@ -86,13 +86,13 @@ class CloneOutput(OptimizerPass):
             out_var = node.get_output_variable(output)
             attrs = {'size': np.prod(out_var.shape)}
 
-            i0 = 1
+            init_stream_idx = 1
             if in_output:
                 # If the value is used as output, add one extra stream
                 idx = node.model.outputs.index(node.name)
                 node.model.outputs[idx] = node.name + '_cpy1'
-                i0 = 2
-            for i, layer in enumerate(output_map[output], i0):
+                init_stream_idx = 2
+            for i, layer in enumerate(output_map[output], init_stream_idx):
                 idx = layer.inputs.index(output)
                 layer.inputs[idx] = output + f'_cpy{i}'
 

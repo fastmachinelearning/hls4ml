@@ -520,15 +520,18 @@ class ModelGraph:
     def remove_node(self, node, rewire=True):
         """Remove a node from a graph.
 
-        By default, this function can connect the outputs of previous node to the input of next one. If the removed node has multiple inputs/outputs tensors, an exception is raised.
+        By default, this function can connect the outputs of previous
+        node to the input of next one. If the removed node has multiple
+        inputs/outputs tensors, an exception is raised.
 
         Args:
-            node (Layer): The node to remove
-            rewire (bool, optional): Deprecated, no effect
+            node (Layer): The node to remove rewire (bool, optional):
+            Deprecated, no effect
 
         Raises:
-            Exception: If an attempt is made to rewire a node with multiple inputs/outputs.
-        """  # noqa: E501
+            Exception: If an attempt is made to rewire a node with
+            multiple inputs/outputs.
+        """
 
         inputs = [inp for inp in node.inputs if inp]
         outputs = [outp for outp in node.outputs if outp]
