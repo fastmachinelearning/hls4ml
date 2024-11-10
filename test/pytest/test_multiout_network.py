@@ -20,7 +20,7 @@ def model():
 
 
 @pytest.fixture(scope='module')
-def model2():
+def model_corner_cases():
     in1 = keras.layers.Input(shape=(24, 8))
     in2 = keras.layers.Input(shape=(16))
     out1 = keras.layers.Conv1D(1, 3)(in1)
@@ -40,7 +40,7 @@ def data():
 
 
 @pytest.fixture(scope='module')
-def data2():
+def data_corner_cases():
     X1 = np.random.normal(0, 1, (1000, 24, 8))
     X2 = np.random.normal(0, 1, (1000, 16))
     X1 = np.clip(X1, -16, 15)
@@ -70,18 +70,24 @@ def test_multi_output_nn(model, data, backend: str, io_type: str):
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'Catapult', 'OneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])
-def test_multi_output_nn_2(model2, data2, backend: str, io_type: str, strategy: str):
-    """Cover corner case where a flatten layer is cloned multiple times, and used as model output"""
+def test_multi_output_nn_corner_cases(model_corner_cases, data_corner_cases, backend: str, io_type: str, strategy: str):
+    """Cover corner cases, when:
+    - a layer outputs both to the next layer(s) and to the model output
+       - when an node removal/insertion is triggered internally
+    - a reshape in io_parallel, or flatten in io_stream layer's output is used multiple times
+       - and as layer output
+       - and  by layer taking multiple inputs
+    """
     output_dir = str(test_root_path / f'hls4mlprj_multiout_network_2_{backend}_{io_type}_{strategy}')
     hls_config = {'Model': {'Precision': 'fixed<32,5>', 'ReuseFactor': 1}, 'Strategy': strategy}
 
     model_hls = convert_from_keras_model(
-        model2, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type
+        model_corner_cases, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type
     )
 
     model_hls.compile()
-    r_hls = model_hls.predict(data2)
-    r_keras = model2.predict(data2, verbose=0, batch_size=1000)
+    r_hls = model_hls.predict(data_corner_cases)
+    r_keras = model_corner_cases.predict(data_corner_cases, verbose=0, batch_size=1000)
 
     assert np.allclose(r_hls[0], r_keras[0], atol=1e-5, rtol=0)
     assert np.allclose(r_hls[1], r_keras[1], atol=1e-5, rtol=0)

@@ -12,7 +12,7 @@ class InplaceParallelReshape(OptimizerPass):
 
     def match(self, node):
         if not isinstance(node, Reshape):
-            return
+            return False
         return node.model.config.get_config_value('IOType') == 'io_parallel'
 
     def transform(self, model, node):
@@ -24,6 +24,8 @@ class InplaceParallelReshape(OptimizerPass):
             prev_node = node.get_input_node()
             assert (
                 prev_node.name not in model.outputs
-            ), f"Cannot output node {prev_node.name}: reshape is a no-op in io_parallel. As a result, the previous node {prev_node.name}'s output will be used as the output. However, this node is already an output."  # noqa: E501
+            ), f"Cannot output node {prev_node.name}: reshape is a no-op in io_parallel.\
+            As a result, the previous node {prev_node.name}'s output will be used as the\
+            output. However, this node is already an output."
             model.outputs = [name if name != node.name else prev_node.name for name in model.outputs]
         return False
