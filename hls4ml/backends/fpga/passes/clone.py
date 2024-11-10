@@ -1,4 +1,4 @@
-import numpy as np
+from math import prod
 
 from hls4ml.backends.template import FunctionCallTemplate
 from hls4ml.model.layers import Layer, register_layer
@@ -80,11 +80,12 @@ class CloneOutput(OptimizerPass):
             if n_outputs == 1:
                 continue
             if n_outputs > 3:
-                msg = f'ERROR: Cloning output {output} of {node.__class__.__name__} ({node.name}) more than 3 times not currently supported'  # noqa: E501
+                msg = f'ERROR: Cloning output {output} of {node.class_name}\
+                      ({node.name}) more than 3 times not currently supported'
                 raise ValueError(msg)
 
             out_var = node.get_output_variable(output)
-            attrs = {'size': np.prod(out_var.shape)}
+            attrs = {'size': prod(out_var.shape)}
 
             init_stream_idx = 1
             if in_output:
