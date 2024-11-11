@@ -7,6 +7,7 @@ namespace nnet {
 
 struct merge_config {
     static const unsigned n_elem = 10;
+    static const unsigned reuse_factor = 1;
 };
 
 struct dot_config {
