@@ -103,6 +103,19 @@ def sep_conv_model():
 
 
 @pytest.fixture(scope='module')
+def branched_model():
+    """
+    Load branched model using separable convs, already channels-last and cleaned
+    """
+    dl_file = str(example_model_path / "onnx/branched_model_ch_last.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+
+    return model
+
+
+@pytest.fixture(scope='module')
 def tiny_unet_model():
     """
     Load tiny unet model, already channels-last and cleaned
@@ -323,24 +336,53 @@ def test_sep_conv(sep_conv_model, backend):
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 
+class EmptyFilledRoI(Transformation):
+    "Remove RoI tensor of Resize node added for shape inference"
+
+    def apply(self, model):
+        graph_modified = False
+        for node in model.graph.node:
+            if node.op_type == 'Resize':
+                # Assuming 'roi' is the second input
+                if len(node.input) > 2 and node.input[1] != '':
+                    init_names = [x.name for x in model.graph.initializer]
+                    i = init_names.index(node.input[1])
+                    init_to_remove = model.graph.initializer[i]
+                    model.graph.initializer.remove(init_to_remove)
+                    node.input[1] = ''
+                    graph_modified = True
+        return (model, graph_modified)
+
+
+@pytest.mark.parametrize('backend', ['Vitis'])
+def test_branched_model(branched_model, backend):
+    model = branched_model
+    ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
+    X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
+    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+    idict = {model.graph.input[0].name: X}
+    y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+
+    config = hls4ml.utils.config.config_from_onnx_model(
+        model, granularity='name', backend=backend, default_precision='fixed<32,16>'
+    )
+
+    model = model.transform(EmptyFilledRoI())
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model,
+        output_dir=str(test_root_path / f'hls4mlprj_qonnx_branched_model_{backend}'),
+        io_type='io_stream',
+        backend=backend,
+        hls_config=config,
+    )
+    hls_model.compile()
+    y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
+
+    np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
+
+
 @pytest.mark.parametrize('backend', ['Vitis'])
 def test_tiny_unet_model(tiny_unet_model, backend):
-    class EmptyFilledRoI(Transformation):
-        "Remove RoI tensor of Resize node added for shape inference"
-
-        def apply(self, model):
-            graph_modified = False
-            for node in model.graph.node:
-                if node.op_type == 'Resize':
-                    # Assuming 'roi' is the second input
-                    if len(node.input) > 2 and node.input[1] != '':
-                        init_names = [x.name for x in model.graph.initializer]
-                        i = init_names.index(node.input[1])
-                        init_to_remove = model.graph.initializer[i]
-                        model.graph.initializer.remove(init_to_remove)
-                        node.input[1] = ''
-                        graph_modified = True
-            return (model, graph_modified)
 
     model = tiny_unet_model
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
@@ -364,7 +406,7 @@ def test_tiny_unet_model(tiny_unet_model, backend):
     hls_model.compile()
     y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
 
-    np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+    np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
 
 
 @pytest.mark.parametrize(
