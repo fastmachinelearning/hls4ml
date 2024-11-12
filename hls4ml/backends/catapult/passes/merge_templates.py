@@ -6,6 +6,7 @@ from hls4ml.model.layers import Concatenate, Dot, Merge
 
 merge_config_template = """struct config{index} : nnet::merge_config {{
     static const unsigned n_elem = {n_elem};
+    static const unsigned reuse_factor = {reuse};
 }};\n"""
 
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
