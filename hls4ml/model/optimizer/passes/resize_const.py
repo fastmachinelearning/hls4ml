@@ -1,11 +1,13 @@
 from hls4ml.model.layers import Constant, Resize
 from hls4ml.model.optimizer import OptimizerPass
 
+
 class ResizeConstant(OptimizerPass):
     """
     To compute the output shape of resize is necessary to access the scales, that
     are stored as initilizer, later on converted as constant inputs.
     """
+
     def match(self, node):
         is_match = isinstance(node, Resize) and len(node.inputs) > 1 and node.get_input_node(node.inputs[-1])
         return is_match

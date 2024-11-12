@@ -10,9 +10,9 @@ import qonnx.util.to_channels_last
 
 # To conveniently run QONNX inference
 from qonnx.core.modelwrapper import ModelWrapper
+from qonnx.transformation.base import Transformation
 from qonnx.transformation.channels_last import ConvertToChannelsLastAndClean
 from qonnx.transformation.gemm_to_matmul import GemmToMatMul
-from qonnx.transformation.base import Transformation
 
 import hls4ml
 
@@ -100,6 +100,7 @@ def sep_conv_model():
     model = ModelWrapper(dl_file)
 
     return model
+
 
 @pytest.fixture(scope='module')
 def tiny_unet_model():
@@ -331,7 +332,7 @@ def test_tiny_unet_model(tiny_unet_model, backend):
             graph_modified = False
             for node in model.graph.node:
                 if node.op_type == 'Resize':
-                    # Assuming 'roi' is the second input 
+                    # Assuming 'roi' is the second input
                     if len(node.input) > 2 and node.input[1] != '':
                         init_names = [x.name for x in model.graph.initializer]
                         i = init_names.index(node.input[1])
