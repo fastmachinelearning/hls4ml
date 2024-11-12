@@ -1,8 +1,10 @@
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
 import numpy as np
 
+from hls4ml.converters.pytorch_to_hls import pytorch_handler
+
+
 @pytorch_handler('Constant')
-#def parse_constant_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+# def parse_constant_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
 def parse_constant_layer(operation, layer_name, node):
     assert 'Constant' in operation
 
@@ -16,6 +18,7 @@ def parse_constant_layer(operation, layer_name, node):
     output_shape = constant.shape
 
     return layer, output_shape
+
 
 @pytorch_handler('Linear')
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
