@@ -2,6 +2,17 @@
 # The script connects the output ports of each subgraph IP
 # instance to the input ports of the next one in sequence.
 #
+# Modifications:
+# - Connect and make external signals starting with 'ap_clk' and 'ap_rst'.
+# - For AXI Stream interfaces:
+#   - Connect and make external signals starting with 'ap_start'.
+#   - Make external the input of the first IP and the output of the last IP.
+# - For unpacked interfaces:
+#   - Connect 'ap_done' of ip_i to 'ap_start' of ip_i_plus1.
+#   - Make external 'ap_start' of the first IP and 'ap_done' of the last IP.
+#   - Make external the inputs of the first IP and outputs of the last IP (including 'vld' signals).
+# - Make external the 'ap_done' signal of the last IP.
+#
 # Run this script from the base directory containing the
 # subgraph project folders (e.g., {proj_name}_graph1, etc.)
 # ======================================================
@@ -36,6 +47,7 @@ puts "###########################################################"
 puts "#   Starting the IP connection process...                  "
 puts "###########################################################"
 
+
 # Create New Vivado Project
 set project_name "vivado_final_graph"
 file mkdir $project_name
@@ -43,39 +55,35 @@ cd $project_name
 create_project $project_name . -part $part
 
 # Add repositories
-# Loop through each project directory
+# Initialize the repo count
 set repo_count 0
-foreach dir $project_dirs { 
-    # Check if we have exactly one _prj directory
-    set prj_dirs [glob -directory $dir -type d "*_prj"]
-    if {[llength $prj_dirs] != 1} {
-        error "Expected exactly one *_prj directory, but found [llength $prj_dirs] in directory: $dir"
-    }
-    # If exactly one *_prj is found, proceed to construct the repo_path
-    set first_prj_dir [lindex $prj_dirs 0]
-    set repo_path "${first_prj_dir}/solution1/impl/ip"
-    
+# Loop through potential project directories
+for {set i 1} {[file exists "$base_dir/hls4ml_prj_graph$i/myproject_graph${i}_prj"]} {incr i} {
+    set repo_path "$base_dir/hls4ml_prj_graph$i/myproject_graph${i}_prj/solution1/impl/ip"
     # Check if the repository path exists
     if {[file isdirectory $repo_path]} {
         # Add repository path to current project's IP repository paths
         set_property ip_repo_paths [concat [get_property ip_repo_paths [current_project]] $repo_path] [current_project]
+        
+        # Increment the repo count
         incr repo_count
+
+        puts "Added IP repository path: $repo_path"
     } else {
         puts "Directory does not exist: $repo_path"
     }
 }
-
-# Rescan repositories
-update_ip_catalog
 
 if { $repo_count == 0 } {
     puts "No IP repositories were found in the specified directories."
 } else {
     puts "Total IP repositories added: $repo_count"
 }
+# Rescan repositories
+update_ip_catalog
 
 # Name of the block design 
-set bd_name "design_1"
+set bd_name "stitched_design"
 create_bd_design $bd_name
 
 # Add IPs to block design
@@ -89,6 +97,56 @@ set ip_instances {}
 for {set i 1} {$i <= $repo_count} {incr i} {
     set ip_name "myproject_graph${i}_0"
     lappend ip_instances $ip_name
+}
+
+# Collect 'ap_clk' and 'ap_rst' signals from all IPs
+set ap_clk_ports {}
+set ap_rst_ports {}
+
+foreach ip $ip_instances {
+    set ip_cell [get_bd_cells $ip]
+    set ip_pins [get_bd_pins -of $ip_cell]
+    foreach pin $ip_pins {
+        set pin_name [get_property NAME $pin]
+        if {[string match "ap_clk" $pin_name]} {
+            lappend ap_clk_ports $pin
+        } elseif {[string match "ap_rst" $pin_name]} {
+            lappend ap_rst_ports $pin
+        }
+    }
+}
+
+# Create external ports for 'ap_clk' and 'ap_rst'
+# ap_clk
+if {[llength $ap_clk_ports] > 0} {
+    create_bd_port -dir I -type clk -freq_hz 100000000 ap_clk
+    set ap_clk_port [get_bd_ports ap_clk]
+    # Connect all 'ap_clk' pins to the 'ap_clk' port
+    foreach clk_pin $ap_clk_ports {
+        connect_bd_net $ap_clk_port $clk_pin
+    }
+}
+
+# ap_rst
+if {[llength $ap_rst_ports] > 0} {
+    # Get the CONFIG.POLARITY property from one of the IP's 'ap_rst' pins
+    set sample_rst_pin [lindex $ap_rst_ports 0]
+    set rst_polarity [get_property CONFIG.POLARITY $sample_rst_pin]
+    # Create the 'ap_rst' port
+    create_bd_port -dir I -type rst ap_rst
+    set ap_rst_port [get_bd_ports ap_rst]
+    
+    # Set the CONFIG.POLARITY property of the 'ap_rst' port based on the retrieved polarity
+    if {$rst_polarity ne ""} {
+        set_property CONFIG.POLARITY $rst_polarity $ap_rst_port
+    } else {
+        # Fallback to ACTIVE_HIGH if the retrieved polarity is not defined
+        set_property CONFIG.POLARITY ACTIVE_HIGH $ap_rst_port
+    }
+    # Connect all 'ap_rst' pins to the 'ap_rst' port
+    foreach rst_pin $ap_rst_ports {
+        connect_bd_net $ap_rst_port $rst_pin
+    }
 }
 
 # Determine interface type
@@ -113,6 +171,19 @@ if {$interface_type == "unknown"} {
     exit 1
 } else {
     puts "Interface type detected: $interface_type"
+}
+
+# Collect 'ap_start' signals from all IPs
+set ap_start_ports {}
+foreach ip $ip_instances {
+    set ip_cell [get_bd_cells $ip]
+    set ip_pins [get_bd_pins -of $ip_cell]
+    foreach pin $ip_pins {
+        set pin_name [get_property NAME $pin]
+        if {[string match "ap_start" $pin_name]} {
+            lappend ap_start_ports $pin
+        }
+    }
 }
 
 # Loop over IP instances to connect outputs to inputs
@@ -186,6 +257,36 @@ for {set i 0} {$i < [expr {[llength $ip_instances] - 1}]} {incr i} {
                 puts "Warning: No matching input ap_vld port found for output [get_property NAME $out_vld_port]"
             }
         }
+
+        # Connect 'ap_done' of ip_i to 'ap_start' of ip_i_plus1
+        # Get 'ap_done' pin of ip_i
+        set ip_i_pins [get_bd_pins -of $ip_i_cell]
+        set ap_done_pin ""
+        foreach pin $ip_i_pins {
+            set pin_name [get_property NAME $pin]
+            if {[string match "ap_done" $pin_name]} {
+                set ap_done_pin $pin
+                break
+            }
+        }
+
+        # Get 'ap_start' pin of ip_i_plus1
+        set ip_i_plus1_pins [get_bd_pins -of $ip_i_plus1_cell]
+        set ap_start_pin ""
+        foreach pin $ip_i_plus1_pins {
+            set pin_name [get_property NAME $pin]
+            if {[string match "ap_start" $pin_name]} {
+                set ap_start_pin $pin
+                break
+            }
+        }
+
+        # Connect 'ap_done' of ip_i to 'ap_start' of ip_i_plus1
+        if {[string length $ap_done_pin] > 0 && [string length $ap_start_pin] > 0} {
+            connect_bd_net $ap_done_pin $ap_start_pin
+        } else {
+            puts "Warning: Could not find 'ap_done' or 'ap_start' pin for IPs $ip_i and $ip_i_plus1"
+        }
     } elseif {$interface_type == "axi_stream"} {
         # Get AXI Stream interface pins from ip_i and ip_i_plus1
         set ip_i_intf_pins [get_bd_intf_pins -of $ip_i_cell]
@@ -226,13 +327,142 @@ for {set i 0} {$i < [expr {[llength $ip_instances] - 1}]} {incr i} {
     }
 }
 
+if {$interface_type == "axi_stream"} {
+    # Create external port for 'ap_start' and connect all 'ap_start' pins
+    if {[llength $ap_start_ports] > 0} {
+        create_bd_port -dir I ap_start
+        set ap_start_port [get_bd_ports ap_start]
+        foreach start_pin $ap_start_ports {
+            connect_bd_net $ap_start_port $start_pin
+        }
+    }
+
+    # Make external the input interface of the first IP
+    set first_ip_cell [get_bd_cells [lindex $ip_instances 0]]
+    set first_ip_intf_pins [get_bd_intf_pins -of $first_ip_cell]
+    set first_ip_axis_slave ""
+    foreach intf_pin $first_ip_intf_pins {
+        set pin_name [get_property NAME $intf_pin]
+        if {[string match "*input" $pin_name]} {
+            set first_ip_axis_slave $intf_pin
+            break
+        }
+    }
+    if {[string length $first_ip_axis_slave] > 0} {
+        create_bd_intf_port -mode Slave -vlnv [get_property VLNV $first_ip_axis_slave] [get_property NAME $first_ip_axis_slave]
+        set external_intf_port [get_bd_intf_ports [get_property NAME $first_ip_axis_slave]]
+        connect_bd_intf_net $external_intf_port $first_ip_axis_slave
+    } else {
+        puts "Warning: Could not find input AXI Stream interface for first IP"
+    }
+
+    # Make external the output interface of the last IP
+    set last_ip_cell [get_bd_cells [lindex $ip_instances end]]
+    set last_ip_intf_pins [get_bd_intf_pins -of $last_ip_cell]
+    set last_ip_axis_master ""
+    foreach intf_pin $last_ip_intf_pins {
+        set pin_name [get_property NAME $intf_pin]
+        if {[string match "*out" $pin_name]} {
+            set last_ip_axis_master $intf_pin
+            break
+        }
+    }
+    if {[string length $last_ip_axis_master] > 0} {
+        create_bd_intf_port -mode Master -vlnv [get_property VLNV $last_ip_axis_master] [get_property NAME $last_ip_axis_master]
+        set external_intf_port [get_bd_intf_ports [get_property NAME $last_ip_axis_master]]
+        connect_bd_intf_net $external_intf_port $last_ip_axis_master
+    } else {
+        puts "Warning: Could not find output AXI Stream interface for last IP"
+    }
+
+    # Make external the 'ap_done' signal of the last IP
+    set last_ip_pins [get_bd_pins -of $last_ip_cell]
+    set last_ap_done_pin ""
+    foreach pin $last_ip_pins {
+        set pin_name [get_property NAME $pin]
+        if {[string match "ap_done" $pin_name]} {
+            set last_ap_done_pin $pin
+            break
+        }
+    }
+    if {[string length $last_ap_done_pin] > 0} {
+        create_bd_port -dir O ap_done
+        set ap_done_port [get_bd_ports ap_done]
+        connect_bd_net $ap_done_port $last_ap_done_pin
+    } else {
+        puts "Warning: Could not find 'ap_done' pin for last IP"
+    }
+} elseif {$interface_type == "unpacked"} {
+    # Make 'ap_start' of the first IP external
+    set first_ip_cell [get_bd_cells [lindex $ip_instances 0]]
+    set first_ip_pins [get_bd_pins -of $first_ip_cell]
+    set first_ap_start_pin ""
+    foreach pin $first_ip_pins {
+        set pin_name [get_property NAME $pin]
+        if {[string match "ap_start" $pin_name]} {
+            set first_ap_start_pin $pin
+            break
+        }
+    }
+    if {[string length $first_ap_start_pin] > 0} {
+        create_bd_port -dir I ap_start
+        set ap_start_port [get_bd_ports ap_start]
+        connect_bd_net $ap_start_port $first_ap_start_pin
+    } else {
+        puts "Warning: Could not find 'ap_start' pin for first IP"
+    }
+
+    # Make 'ap_done' of the last IP external
+    set last_ip_cell [get_bd_cells [lindex $ip_instances end]]
+    set last_ip_pins [get_bd_pins -of $last_ip_cell]
+    set last_ap_done_pin ""
+    foreach pin $last_ip_pins {
+        set pin_name [get_property NAME $pin]
+        if {[string match "ap_done" $pin_name]} {
+            set last_ap_done_pin $pin
+            break
+        }
+    }
+    if {[string length $last_ap_done_pin] > 0} {
+        create_bd_port -dir O ap_done
+        set ap_done_port [get_bd_ports ap_done]
+        connect_bd_net $ap_done_port $last_ap_done_pin
+    } else {
+        puts "Warning: Could not find 'ap_done' pin for last IP"
+    }
+
+    # Make external the inputs of the first IP (including 'vld' signals)
+    set first_ip_input_ports [get_bd_pins -of $first_ip_cell]
+    foreach pin $first_ip_input_ports {
+        set pin_name [get_property NAME $pin]
+        if {[regexp {^\w+_input_(\d+)$} $pin_name all index]} {
+            create_bd_port -dir I $pin_name
+            set external_port [get_bd_ports $pin_name]
+            connect_bd_net $external_port $pin
+        } elseif {[regexp {^\w+_input_(\d+)_ap_vld$} $pin_name all index]} {
+            create_bd_port -dir I $pin_name
+            set external_port [get_bd_ports $pin_name]
+            connect_bd_net $external_port $pin
+        }
+    }
+
+    # Make external the outputs of the last IP (including 'vld' signals)
+    set last_ip_output_ports [get_bd_pins -of $last_ip_cell]
+    foreach pin $last_ip_output_ports {
+        set pin_name [get_property NAME $pin]
+        if {[regexp {^layer(?:\d+_)?out_(\d+)$} $pin_name all index]} {
+            create_bd_port -dir O $pin_name
+            set external_port [get_bd_ports $pin_name]
+            connect_bd_net $external_port $pin
+        } elseif {[regexp {^layer(?:\d+_)?out_(\d+)_ap_vld$} $pin_name all index]} {
+            create_bd_port -dir O $pin_name
+            set external_port [get_bd_ports $pin_name]
+            connect_bd_net $external_port $pin
+        }
+    }
+}
+
 save_bd_design
 
 regenerate_bd_layout
 close_project
-
-puts "###########################################################"                                     
-puts "#   Successfully connected the ports of each IP instance   "
-puts "#   from '[lindex $ip_instances 0]' to '[lindex $ip_instances [expr {$repo_count - 1}]]'."
-puts "#   A total of $repo_count IPs were connected.             "
-puts "###########################################################"

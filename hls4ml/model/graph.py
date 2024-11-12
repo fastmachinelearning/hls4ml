@@ -1058,12 +1058,6 @@ class MultiModelGraph:
                     build_results[project_name] = None
         return build_results
 
-    def _print_status(self, status):
-        # Clear the terminal line and print build status
-        print('\r', end='')
-        status_str = ' | '.join(f'{proj}: {stat}' for proj, stat in status.items())
-        print(status_str, end='', flush=True)
-
     def compile(self):
         for g in self.graphs:
             g.compile()
