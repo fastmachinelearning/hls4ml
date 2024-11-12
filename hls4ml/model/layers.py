@@ -357,7 +357,7 @@ class Input(Layer):
 
 
 class Constant(Layer):
-    # one could consider making this a weight attribute, but given it's transient nature, I am not sure it helps
+    # one could consider making this a weight attribute, but given its transient nature, I am not sure it helps
     _expected_attributes = [
         Attribute('value', value_type=np.ndarray),
     ]
@@ -370,6 +370,10 @@ class Constant(Layer):
             self.set_attr('value', np.array([value]))
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
         quantizer = self.get_attr('quantizer')
+
+        # the graph._make_graph function sets the input node to the previous node
+        # if it is not set. That is incorrect for Constant nodes, so remove the input node
+        self.inputs = []
 
         # Should the else clause below be None or UnspecifiedPrecisionType
         precision = quantizer.hls_type if quantizer is not None else UnspecifiedPrecisionType()

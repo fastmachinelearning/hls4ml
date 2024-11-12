@@ -413,7 +413,7 @@ def config_from_pytorch_model(
 
 
 def config_from_onnx_model(
-    model, granularity='name', backend=None, default_precision='ap_fixed<16,6>', default_reuse_factor=1
+    model, granularity='name', backend=None, default_precision='fixed<16,6>', default_reuse_factor=1, max_precision=None
 ):
     """Create an HLS conversion config given the ONNX model.
 
@@ -435,6 +435,8 @@ def config_from_onnx_model(
         backend(str, optional): Name of the backend to use
         default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
+        max_precision (str or None, optional): Maximum width precision to use. Defaults to None, meaning no maximum.
+            Note:  Only integer and fixed precisions are supported
 
     Raises:
         Exception: If ONNX model has layers not supported by hls4ml.
@@ -456,9 +458,14 @@ def config_from_onnx_model(
     config = {}
 
     model_config = {}
-    model_config['Precision'] = default_precision
+    model_config['Precision'] = {}
+    model_config['Precision']['default'] = default_precision
+    if max_precision is not None:
+        model_config['Precision']['maximum'] = max_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
+    model_config['BramFactor'] = 1_000_000_000
+    model_config['TraceOutput'] = False
 
     config['Model'] = model_config
 
