@@ -68,6 +68,7 @@ def get_input_shape(graph, node):
         # array. It might be better handled in QONNX, refers to this issue for more details:
         # https://github.com/fastmachinelearning/qonnx/issues/150
         if inp == '':
+            rv.append([])
             continue
         try:
             value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == inp))
