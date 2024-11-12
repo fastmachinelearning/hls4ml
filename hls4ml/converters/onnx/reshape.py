@@ -51,7 +51,8 @@ def parse_resize_layer(node, input_names, input_shapes, graph):
     layer['out_height'] = input_shapes[0][2]
     layer['n_chan'] = input_shapes[0][3]
     layer['algorithm'] = get_onnx_attribute(node, 'mode')
-    # The followin is used in initialize() method. Probably a better solution would be to have a channels last parameter at QONNX level
+    # The following is used in initialize() method. 
+    # Probably a better solution would be to have a channels last parameter at QONNX level
     layer['data_format'] = (
         'channels_last' if any(node.domain == 'qonnx.custom_op.channels_last' for node in graph.node) else 'channels_first'
     )
