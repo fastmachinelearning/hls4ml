@@ -8,6 +8,7 @@ def parse_constant_layer(operation, layer_name, node):
     assert 'Constant' in operation
 
     layer = {}
+    layer['inputs'] = []
 
     layer['class_name'] = 'Constant'
     layer['name'] = layer_name

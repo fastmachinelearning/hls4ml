@@ -164,7 +164,7 @@ def parse_pytorch_model(config, verbose=True):
     merge_layers = ['add', 'mul', 'sub', 'fmin', 'fmax']
     i = 0  # count number of consts and use it in the name
     for node in traced_model.graph.nodes:
-        if node.name in merge_layers:
+        if node.name.split("_")[0] in merge_layers:
             for arg in node.args:
                 if np.isscalar(arg):
                     # add an input node with the constant value
