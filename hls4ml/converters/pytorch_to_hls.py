@@ -160,8 +160,6 @@ def parse_pytorch_model(config, verbose=True):
 
     n_inputs = 0
 
-    print(traced_model.graph)
-
     # check for constant nodes
     merge_layers = ['add', 'mul', 'sub', 'fmin', 'fmax']
     i = 0  # count number of consts and use it in the name
@@ -177,8 +175,6 @@ def parse_pytorch_model(config, verbose=True):
                     node.update_arg(1, new_node)
                     i += 1
 
-    print(traced_model.graph)
-    # import pdb; breakpoint()
     traced_model.graph.lint()
 
     for node in traced_model.graph.nodes:
