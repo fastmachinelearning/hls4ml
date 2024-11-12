@@ -87,7 +87,7 @@ class CloneOutput(OptimizerPass):
                 )
                 for i in range(len(output_map[output])):
                     key = output + '_cpy' + str(i + 1)
-                    clone_layer.attributes[key].type = node.attributes['result_t']
+                    clone_layer.attributes[key].type = node.get_output_variable().type
                 model.insert_node(clone_layer)
                 transformed = True
 

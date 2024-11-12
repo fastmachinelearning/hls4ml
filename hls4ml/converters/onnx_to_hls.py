@@ -63,6 +63,12 @@ def get_input_shape(graph, node):
     """
     rv = []
     for inp in node.input:
+        # this couple of lines doesn't look very nice but I don't think it would be considered as wrong.
+        # It is necessary for `Resize` node, since RoI input is empty but necessary to specify also scales
+        # array. It might be better handled in QONNX, refers to this issue for more details:
+        # https://github.com/fastmachinelearning/qonnx/issues/150
+        if inp == '':
+            continue
         try:
             value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == inp))
             dim = list(d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim)
