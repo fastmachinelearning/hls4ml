@@ -269,7 +269,7 @@ def parse_pytorch_model(config, verbose=True):
             input_layer['name'] = node.name
 
             if 'const' in node.name:
-                pytorch_class = "Constant"
+                pytorch_class = 'Constant'
                 layer, output_shape = layer_handlers[pytorch_class](pytorch_class, node.name, node)
 
                 layer_list.append(layer)
