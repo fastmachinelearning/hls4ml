@@ -12,7 +12,7 @@ all_layers = list(dict.fromkeys(layers.layer_map.values()))
 class AttrList:
     def __init__(self, cls_name, cls_attrs) -> None:
         self.cls_name = cls_name
-        self.config_attrs = [attr for attr in cls_attrs if attr.configurable == True]
+        self.config_attrs = [attr for attr in cls_attrs if attr.configurable is True]
         self.type_attrs = [attr for attr in cls_attrs if attr.__class__.__name__ == 'TypeAttribute']
         self.weight_attrs = [attr for attr in cls_attrs if attr.__class__.__name__ == 'WeightAttribute']
         self.base_attrs = [attr for attr in cls_attrs if attr not in self.config_attrs + self.type_attrs + self.weight_attrs]
