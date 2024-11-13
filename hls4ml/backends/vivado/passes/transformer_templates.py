@@ -6,10 +6,13 @@ from hls4ml.model.layers import MultiHeadAttention
 mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
+    static const unsigned seq_len = {seq_len};
+    static const unsigned io_type = nnet::{iotype};
     static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
+    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
     static const bool store_weights_in_bram = false;
     typedef {accum_t.name} accum_t;
     typedef {attention_output_bias_t.name} bias_t;
@@ -20,7 +23,6 @@ mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
-
 # activation template
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
@@ -96,6 +98,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params1['nzeros'] = 0
         mult_params1['nonzeros'] = params['feature_dim'] * params['num_heads'] * params['head_dim_key']
         mult_params1['dense_function'] = 'DenseLatency'
+        print (mult_params1)
         mult_config1 = self.mult1_template.format(**mult_params1)
 
         mult_params2 = self._default_config_params(node)
