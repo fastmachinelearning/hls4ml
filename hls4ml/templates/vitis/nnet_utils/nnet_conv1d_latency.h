@@ -127,11 +127,12 @@ ConvOut:
                     (ii * CONFIG_T::stride_width) >= (CONFIG_T::pad_left + CONFIG_T::in_width)) {
                     mult[index_mult] = 0;
                 } else {
-                    mult[index_mult] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[index_data], weights[index_weight]);
+                    mult[index_mult] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
+                        data[index_data], weights[index_weight]);
                 }
             } // end channel loop
-        }     // end filter loop
-    }         // end output loop
+        } // end filter loop
+    } // end output loop
 
     // Initialize accumulator with input biases
     for (int ii = 0; ii < CONFIG_T::out_width / CONFIG_T::reuse_factor; ii++) {
@@ -152,8 +153,8 @@ AccumOut:
                 int index_mult = ii * CONFIG_T::n_filt * CONFIG_T::n_chan + ff * CONFIG_T::n_chan + cc;
                 acc[ii][ff] += mult[index_mult];
             } // end channel loop
-        }     // end filter loop
-    }         // end output loop
+        } // end filter loop
+    } // end output loop
 
     // Cast to "res_t" type
     for (int ii = 0; ii < CONFIG_T::out_width / CONFIG_T::reuse_factor; ii++) {
