@@ -28,7 +28,9 @@ def model_corner_cases():
     out2 = keras.layers.Dense(16, activation='relu')(out1)
     out2 = keras.layers.Add()([out2, in2])
     out3 = keras.layers.Dense(2)(out1)
-    model = keras.models.Model(inputs=[in1, in2], outputs=[out1, out2, out3])
+    out4 = keras.layers.Dense(2)(out2)
+    out4 = keras.layers.Flatten()(out4)
+    model = keras.models.Model(inputs=[in1, in2], outputs=[out1, out2, out3, out4])
     return model
 
 
@@ -76,7 +78,8 @@ def test_multi_output_nn_corner_cases(model_corner_cases, data_corner_cases, bac
        - when an node removal/insertion is triggered internally
     - a reshape in io_parallel, or flatten in io_stream layer's output is used multiple times
        - and as layer output
-       - and  by layer taking multiple inputs
+       - and by layer taking multiple inputs
+    - a Flatten layer outputs to the model output in io_stream
     """
     output_dir = str(test_root_path / f'hls4mlprj_multiout_network_2_{backend}_{io_type}_{strategy}')
     hls_config = {'Model': {'Precision': 'fixed<32,5>', 'ReuseFactor': 1}, 'Strategy': strategy}
@@ -92,3 +95,4 @@ def test_multi_output_nn_corner_cases(model_corner_cases, data_corner_cases, bac
     assert np.allclose(r_hls[0], r_keras[0], atol=1e-5, rtol=0)
     assert np.allclose(r_hls[1], r_keras[1], atol=1e-5, rtol=0)
     assert np.allclose(r_hls[2], r_keras[2], atol=1e-5, rtol=0)
+    assert np.allclose(r_hls[3], r_keras[3], atol=1e-5, rtol=0)

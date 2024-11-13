@@ -545,6 +545,8 @@ class ModelGraph:
         if len(inputs) == 1:
             # Connect inputs -> $outputs
             if node.name in self.outputs:
+                msg = f'Remove leaf node {node.name} will connect its input node {inputs[0]} to output, but it already is.'
+                assert inputs[0] not in self.outputs, msg
                 self.outputs = [inputs[0] if name == node.name else name for name in self.outputs]
 
         if len(outputs) == 1 and len(inputs) == 1:
