@@ -17,7 +17,6 @@ from hls4ml.model.optimizer.passes.hgq_proxy_model import UnaryLUT
 dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
-    static const unsigned seq_len = {seq_len};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};

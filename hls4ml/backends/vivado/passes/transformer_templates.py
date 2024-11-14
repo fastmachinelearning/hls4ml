@@ -6,7 +6,6 @@ from hls4ml.model.layers import MultiHeadAttention
 mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
-    static const unsigned seq_len = {seq_len};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
