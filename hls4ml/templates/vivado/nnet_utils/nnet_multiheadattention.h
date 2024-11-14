@@ -274,6 +274,13 @@ void multiheadattention(
     hls::stream<datapack<CONFIG_T::head_dim_value, res_T>> v_proj[CONFIG_T::num_heads];
     res_T qk_mul[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::seq_len];
     hls::stream<res_T> matr_out[CONFIG_T::num_heads][CONFIG_T::head_dim_value];
+    #pragma HLS stream variable=d_value type=fifo depth=CONFIG_T::feature_dim
+    #pragma HLS stream variable=d_query type=fifo depth=CONFIG_T::feature_dim
+    #pragma HLS stream variable=q_proj type=fifo depth=CONFIG_T::num_heads
+    #pragma HLS stream variable=k_proj type=fifo depth=CONFIG_T::num_heads
+    #pragma HLS stream variable=v_proj type=fifo depth=CONFIG_T::num_heads
+    #pragma HLS stream variable=matr_out type=fifo depth=CONFIG_T::head_dim_value
+ 
 
     #pragma HLS DATAFLOW
     #pragma HLS ARRAY_PARTITION variable=d_query complete dim=1
@@ -282,7 +289,6 @@ void multiheadattention(
     #pragma HLS ARRAY_PARTITION variable=k_proj complete dim=1
     #pragma HLS ARRAY_PARTITION variable=qk_mul complete dim=1
     #pragma HLS ARRAY_PARTITION variable=matr_out complete dim=1
-
 prepq:
     for (int i = 0; i < CONFIG_T::num_heads; ++i) {
         #pragma HLS UNROLL
