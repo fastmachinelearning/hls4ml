@@ -126,7 +126,7 @@ ConvOut:
                     (ii * CONFIG_T::stride_width) >= (CONFIG_T::pad_left + CONFIG_T::in_width)) {
                     mult[index_mult] = 0;
                 } else {
-                    mult[index_mult] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
+                    mult[index_mult] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::weight_t>::product(
                         data[index_data], weights[index_weight]);
                 }
             } // end channel loop
