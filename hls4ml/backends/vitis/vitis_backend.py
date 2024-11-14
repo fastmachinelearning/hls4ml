@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import importlib.util
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
@@ -109,3 +110,27 @@ class VitisBackend(VivadoBackend):
                 raise Exception(f'Build failed for {model.config.get_project_name()}. See logs for details.')
 
         return parse_vivado_report(output_dir)
+    
+    def stitch_design(self, output_dir, project_name):
+        os.makedirs(output_dir, exist_ok=True)
+
+        spec = importlib.util.find_spec("hls4ml")
+        hls4ml_path = os.path.dirname(spec.origin)
+        stitch_command = 'vivado -mode batch -nojournal -nolog -notrace -source ' + hls4ml_path + '/../scripts/ip_stitcher.tcl'
+
+        stdout_log = os.path.join(output_dir, 'stitcher_stdout.log')
+        stderr_log = os.path.join(output_dir, 'stitcher_stderr.log')
+        
+        with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
+            # Use subprocess.Popen to capture output
+            process = subprocess.Popen(
+                stitch_command,
+                shell=True,
+                cwd=output_dir,
+                stdout=stdout_file,
+                stderr=stderr_file,
+                text=True
+            )
+            process.communicate()
+            if process.returncode != 0:
+                raise Exception(f'Stitching failed for {project_name}. See logs for details.')
