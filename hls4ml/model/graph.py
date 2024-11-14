@@ -6,6 +6,7 @@ from collections import OrderedDict
 import numpy as np
 import numpy.ctypeslib as npc
 import copy
+import re
 import warnings
 import concurrent.futures
 import threading
@@ -1019,6 +1020,9 @@ class ModelGraph:
 class MultiModelGraph:
     def __init__(self, graphs):
         self.graphs = graphs
+        self.project_name = re.sub(r'_graph\d+$', '_stitched', graphs[0].config.get_project_name())
+        self.output_dir = graphs[0].config.get_output_dir().split('/')[0]
+        self.backend = self.graphs[0].config.backend
 
     def build(self, max_workers=None, **kwargs):
         # Build all ModelGraph instances in parallel.
@@ -1085,6 +1089,9 @@ class MultiModelGraph:
             trace_output.append(curr_trace_output)
         return output_data, trace_output
     
+    def stitch_design(self, **kwargs):
+        self.backend.stitch_design(self.output_dir, self.project_name, **kwargs)
+        
     def _print_status(self, status):
         # Clear the terminal line and print build status
         print('\r', end='')

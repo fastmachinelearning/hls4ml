@@ -39,7 +39,7 @@ puts "###########################################################"
 
 
 # Create New Vivado Project
-set project_name "vivado_final_graph"
+set project_name "vivado_stitched_design"
 file mkdir $project_name
 cd $project_name
 create_project $project_name . -part $part
@@ -274,6 +274,7 @@ for {set i 0} {$i < [expr {[llength $ip_instances] - 1}]} {incr i} {
         # Connect 'ap_done' of ip_i to 'ap_start' of ip_i_plus1
         if {[string length $ap_done_pin] > 0 && [string length $ap_start_pin] > 0} {
             connect_bd_net $ap_done_pin $ap_start_pin
+            puts "Connected 'ap_done' of $ip_i to 'ap_start' of $ip_i_plus1"
         } else {
             puts "Warning: Could not find 'ap_done' or 'ap_start' pin for IPs $ip_i and $ip_i_plus1"
         }
@@ -281,8 +282,6 @@ for {set i 0} {$i < [expr {[llength $ip_instances] - 1}]} {incr i} {
         # Get AXI Stream interface pins from ip_i and ip_i_plus1
         set ip_i_intf_pins [get_bd_intf_pins -of $ip_i_cell]
         set ip_i_plus1_intf_pins [get_bd_intf_pins -of $ip_i_plus1_cell]
-
-        # Initialize variables
         set ip_i_axis_master ""
         set ip_i_plus1_axis_slave ""
 
@@ -307,7 +306,7 @@ for {set i 0} {$i < [expr {[llength $ip_instances] - 1}]} {incr i} {
         }
 
         # Check if both interfaces are found
-        if {[string length $ip_i_axis_master] && [string length $ip_i_plus1_axis_slave]} {
+        if {[string length $ip_i_axis_master] > 0 && [string length $ip_i_plus1_axis_slave] > 0} {
             # Connect the AXI Stream interfaces
             connect_bd_intf_net $ip_i_axis_master $ip_i_plus1_axis_slave
             puts "Connected AXI Stream interface between $ip_i and $ip_i_plus1"
@@ -319,6 +318,7 @@ for {set i 0} {$i < [expr {[llength $ip_instances] - 1}]} {incr i} {
 
 if {$interface_type == "axi_stream"} {
     # Create external port for 'ap_start' and connect all 'ap_start' pins
+    # ap_start in streaming IPs needs to be constantly high
     if {[llength $ap_start_ports] > 0} {
         create_bd_port -dir I ap_start
         set ap_start_port [get_bd_ports ap_start]
@@ -347,7 +347,7 @@ if {$interface_type == "axi_stream"} {
         make_bd_intf_pins_external $first_ip_axis_slave
         # Retrieve the external interface port
         set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
-        # Change name to base_name and associate clock
+        # Change name to base_name
         set_property NAME $pin_name $external_intf_port
         set input_pin_name $pin_name
     } else {
@@ -374,9 +374,8 @@ if {$interface_type == "axi_stream"} {
     if {[string length $last_ip_axis_master] > 0} {
         # Make the interface pin external
         make_bd_intf_pins_external $last_ip_axis_master
-        # Retrieve the external interface port
+        # Retrieve the external interface port and change name to base name
         set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
-        # Change name to base_name and associate clock
         set_property NAME $pin_name $external_intf_port
         set output_pin_name $pin_name
     } else {
@@ -384,8 +383,9 @@ if {$interface_type == "axi_stream"} {
         return
     }
 
-    # associate input and output bus interfaces to run at ap_clk
+    # associate input, output and ap_rst to run at 'ap_clk'
     set_property CONFIG.ASSOCIATED_BUSIF [list "${input_pin_name}:${output_pin_name}"] [get_bd_ports /ap_clk]
+    set_property CONFIG.ASSOCIATED_RESET {ap_rst} [get_bd_ports /ap_clk]
     
     # Make external the 'ap_done' signal of the last IP
     set last_ip_pins [get_bd_pins -of $last_ip_cell]
@@ -444,47 +444,32 @@ if {$interface_type == "axi_stream"} {
         puts "Warning: Could not find 'ap_done' pin for last IP"
     }
 
-    # Make external the inputs of the first IP (including 'vld' signals)
-    set first_ip_input_ports [get_bd_pins -of $first_ip_cell]
-    foreach pin $first_ip_input_ports {
-         set pin_name [get_property NAME $pin]
-         # Match patterns for inputs and input valid pins
-         if {[regexp {^\w+_input_(\d+)$} $pin_name] || [regexp {^\w+_input_(\d+)_ap_vld$} $pin_name]} {
-             # Get pin properties
-             set pin_dir [get_property DIR $pin]
-             set pin_left [get_property LEFT $pin]
-             set pin_right [get_property RIGHT $pin]
-             set pin_type [get_property TYPE $pin]
-             if {$pin_left ne "" && $pin_right ne ""} {
-                 # Create an external port with the same name, bit range and type
-                 set ext_port [create_bd_port -dir $pin_dir -from $pin_left -to $pin_right -type $pin_type $pin_name]
-             } else {
-                 # For single-bit signals where LEFT and RIGHT may not be defined
-                 set ext_port [create_bd_port -dir $pin_dir -type $pin_type $pin_name]
-             }
-             connect_bd_net $ext_port $pin
-         }
+
+    # Make external the input of the first IP (including 'vld' signals)
+    set first_ip_pins [get_bd_pins -of $first_ip_cell]
+    foreach pin $first_ip_pins {
+        set pin_name [get_property NAME $pin]
+        # Match patterns for inputs and input valid pins
+        if {[regexp {^\w+_input_(\d+)$} $pin_name] || [regexp {^\w+_input_(\d+)_ap_vld$} $pin_name]} {
+            # Make the pin external
+            make_bd_pins_external $pin
+            # Retrieve the external port and change name to base name
+            set external_port [get_bd_ports -filter "NAME =~ \"${pin_name}*\""]
+            set_property NAME $pin_name $external_port
+        }
     }
 
-    # Make external the outputs of the last IP (including 'vld' signals)
-    set last_ip_output_ports [get_bd_pins -of $last_ip_cell]
-    foreach pin $last_ip_output_ports {
+    # Make external the output of the last IP (including 'vld' signals)
+    set last_ip_pins [get_bd_pins -of $last_ip_cell]
+    foreach pin $last_ip_pins {
         set pin_name [get_property NAME $pin]
-         # Match patterns for ouputs and output valid pins
+        # Match patterns for inputs and input valid pins
         if {[regexp {^layer(?:\d+_)?out_(\d+)$} $pin_name] || [regexp {^layer(?:\d+_)?out_(\d+)_ap_vld$} $pin_name]} {
-             # Get pin properties
-             set pin_dir [get_property DIR $pin]
-             set pin_left [get_property LEFT $pin]
-             set pin_right [get_property RIGHT $pin]
-             set pin_type [get_property TYPE $pin]
-             if {$pin_left ne "" && $pin_right ne ""} {
-                 # Create an external port with the same name, bit range and type
-                 set ext_port [create_bd_port -dir $pin_dir -from $pin_left -to $pin_right -type $pin_type $pin_name]
-             } else {
-                 # For single-bit signals where LEFT and RIGHT may not be defined
-                 set ext_port [create_bd_port -dir $pin_dir -type $pin_type $pin_name]
-             }
-             connect_bd_net $ext_port $pin
+            # Make the pin external
+            make_bd_pins_external $pin
+            # Retrieve the external port and change name to base name
+            set external_port [get_bd_ports -filter "NAME =~ \"${pin_name}*\""]
+            set_property NAME $pin_name $external_port
         }
     }
 }
