@@ -276,9 +276,9 @@ void multiheadattention(
     hls::stream<res_T> matr_out[CONFIG_T::num_heads][CONFIG_T::head_dim_value];
     #pragma HLS stream variable=d_value type=fifo depth=CONFIG_T::feature_dim
     #pragma HLS stream variable=d_query type=fifo depth=CONFIG_T::feature_dim
-    #pragma HLS stream variable=q_proj type=fifo depth=CONFIG_T::num_heads
-    #pragma HLS stream variable=k_proj type=fifo depth=CONFIG_T::num_heads
-    #pragma HLS stream variable=v_proj type=fifo depth=CONFIG_T::num_heads
+    #pragma HLS stream variable=q_proj type=fifo depth=CONFIG_T::seq_len
+    #pragma HLS stream variable=k_proj type=fifo depth=CONFIG_T::seq_len
+    #pragma HLS stream variable=v_proj type=fifo depth=CONFIG_T::seq_len
     #pragma HLS stream variable=matr_out type=fifo depth=CONFIG_T::head_dim_value
  
 
