@@ -10,7 +10,6 @@ import qonnx.util.to_channels_last
 
 # To conveniently run QONNX inference
 from qonnx.core.modelwrapper import ModelWrapper
-from qonnx.transformation.base import Transformation
 from qonnx.transformation.channels_last import ConvertToChannelsLastAndClean
 from qonnx.transformation.gemm_to_matmul import GemmToMatMul
 
@@ -336,24 +335,6 @@ def test_sep_conv(sep_conv_model, backend):
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 
-class EmptyFilledRoI(Transformation):
-    "Remove RoI tensor of Resize node added for shape inference"
-
-    def apply(self, model):
-        graph_modified = False
-        for node in model.graph.node:
-            if node.op_type == 'Resize':
-                # Assuming 'roi' is the second input
-                if len(node.input) > 2 and node.input[1] != '':
-                    init_names = [x.name for x in model.graph.initializer]
-                    i = init_names.index(node.input[1])
-                    init_to_remove = model.graph.initializer[i]
-                    model.graph.initializer.remove(init_to_remove)
-                    node.input[1] = ''
-                    graph_modified = True
-        return (model, graph_modified)
-
-
 @pytest.mark.parametrize('backend', ['Vitis'])
 def test_branched_model(branched_model, backend):
     model = branched_model
@@ -366,8 +347,6 @@ def test_branched_model(branched_model, backend):
     config = hls4ml.utils.config.config_from_onnx_model(
         model, granularity='name', backend=backend, default_precision='fixed<32,16>'
     )
-
-    model = model.transform(EmptyFilledRoI())
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
         output_dir=str(test_root_path / f'hls4mlprj_qonnx_branched_model_{backend}'),
@@ -395,7 +374,6 @@ def test_tiny_unet_model(tiny_unet_model, backend):
         model, granularity='name', backend=backend, default_precision='fixed<32,16>'
     )
 
-    model = model.transform(EmptyFilledRoI())
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
         output_dir=str(test_root_path / f'hls4mlprj_qonnx_tiny_unet_model_{backend}'),

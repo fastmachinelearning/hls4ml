@@ -1149,27 +1149,38 @@ class Resize(Layer):
 
         if len(self.inputs) > 1:
             # get the scales of Resize node from QONNX frontend
-            scales = self.get_input_node(self.inputs[-1]).get_attr('value')
+            # see doc here: https://onnx.ai/onnx/operators/onnx__Resize.html
+            scales_idx = 2 if len(self.inputs) == 3 or len(self.inputs) == 4 else 1
+            scales = self.get_input_node(self.inputs[scales_idx]).get_attr('value')
+            if len(scales) == 4:  # Resize 2D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('out_height', int(self.get_attr('in_height') * scales[2]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[3]))
+            elif len(scales) == 3:  # Resize 1D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[2]))
+            else:
+                raise Exception('Resize 1D and Resize 2D are the ones supported in hls4ml')
             if self.get_attr('data_format') == 'channels_last':
                 if len(inp.shape) == 2:  # 1D -> width + chan
-                    shape = [int(self.get_attr('out_width') * scales[1]), int(self.get_attr('n_chan') * scales[2])]
+                    shape = [int(self.get_attr('out_width')), int(self.get_attr('n_chan'))]
                     dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
                 elif len(inp.shape) == 3:  # 2D -> height + width + chan
                     shape = [
-                        int(self.get_attr('out_height') * scales[1]),
-                        int(self.get_attr('out_width') * scales[2]),
-                        int(self.get_attr('n_chan') * scales[3]),
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
+                        int(self.get_attr('n_chan')),
                     ]
                     dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
             else:
                 if len(inp.shape) == 2:  # 1D -> width + chan
-                    shape = [int(self.get_attr('n_chan') * scales[1]), int(self.get_attr('out_width') * scales[2])]
+                    shape = [int(self.get_attr('n_chan')), int(self.get_attr('out_width'))]
                     dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
                 elif len(inp.shape) == 3:  # 2D -> height + width + chan
                     shape = [
-                        int(self.get_attr('n_chan') * scales[1]),
-                        int(self.get_attr('out_height') * scales[2]),
-                        int(self.get_attr('out_width') * scales[3]),
+                        int(self.get_attr('n_chan')),
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
                     ]
                     dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         else:
