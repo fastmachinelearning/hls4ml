@@ -127,7 +127,7 @@ const unsigned* const {config_name}::perm_strides = {config_name}_perm_strides;
 transpose_function_template = 'nnet::transpose<{input_t}, {output_t}, {config_name}>({input}, {output});'
 
 
-def permute_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
+def transpose_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
     new_shape = tuple(shape[i] for i in perm)
     strides = np.cumprod((shape[1:] + (1,))[::-1])[::-1]
     perm_strides = tuple(int(strides[i]) for i in perm)
@@ -151,7 +151,7 @@ class TransposeConfigTemplate(LayerConfigTemplate):
         shape = tuple(node.get_input_variable().shape)
         perm = tuple(node.get_attr('perm'))
         name = f'config{node.index}'
-        return permute_config_gen(name, shape, perm)
+        return transpose_config_gen(name, shape, perm)
 
 
 class TransposeFunctionTemplate(FunctionCallTemplate):
