@@ -76,7 +76,6 @@ class CloneOutput(OptimizerPass):
 
         transformed = False
         for output in node.outputs:
-
             n_outputs = len(output_map[output]) + in_output
             if n_outputs == 1:
                 continue
