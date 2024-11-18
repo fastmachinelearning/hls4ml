@@ -1,12 +1,8 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import (
-    Conv1D,
-    Conv2D,
-    Conv2DBatchnorm,
-    DepthwiseConv2D
-    )
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv2D
+
 # TODO - Dilation rate ?
 
 ''' Shared mutliplication config '''
@@ -242,11 +238,15 @@ class Conv2DTaskSequenceTemplate(TaskSequenceTemplate):
 depthconv2d_function_template = (
     'nnet::depthwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 )
-depthconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_resource.h', 'nnet_utils/nnet_depthconv2d.h', 'nnet_utils/nnet_depthconv2d_resource.h']
+depthconv2d_include_list = [
+    'nnet_utils/nnet_conv2d.h',
+    'nnet_utils/nnet_conv2d_resource.h',
+    'nnet_utils/nnet_depthconv2d.h',
+    'nnet_utils/nnet_depthconv2d_resource.h',
+]
 
 
 class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):
     def __init__(self):
         super(Conv2DFunctionTemplate, self).__init__(DepthwiseConv2D, include_header=depthconv2d_include_list)
         self.template = depthconv2d_function_template
-
