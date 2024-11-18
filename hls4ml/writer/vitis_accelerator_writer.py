@@ -40,7 +40,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
                 newline += f'static const unsigned N_OUT = {out.size()};\n'
                 if self.vitis_accelerator_config.get_interface() == 'axi_stream':
-                    newline += f'typedef hls::axis<{inp_axi_t}, 0, 0, 0> my_pkt;;\n'
+                    newline += f'typedef hls::axis<float, 0, 0, 0> my_pkt;\n'
                 else: # TODO: handle this case
                     newline += f'typedef {inp_axi_t} input_axi_t;\n'
                     newline += f'typedef {out_axi_t} output_axi_t;\n'
@@ -277,20 +277,23 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = indent_amount + f'{model.config.get_project_name()}_axi(inputs,outputs);\n'
             elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
                 newline = (
-                    line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'hls::stream< my_pkt >')
+                    line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'my_pkt')
                 )
             elif out.size_cpp() in line or out.name in line or out.type.name in line:
                 newline = (
-                    line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'hls::stream< my_pkt >')
+                    line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'my_pkt')
                 )
             else:
                 newline = line
             if self.vitis_accelerator_config.get_interface() == 'axi_stream':
                 if 'nnet::fill_zero' in line:
-                    indent = line.split('n')[0]
-                    newline = indent + 'inputs[N_IN-1].last = 1;\n'
+                    newline = newline.replace("nnet::fill_zero<", f"nnet::fill_zero<{inp.type.name}, ")
+                    # indent = line.split('n')[0]
+                    # newline = indent + indent + 'inputs[N_IN-1].last = 1;\n'
                 if 'copy_data' in line:
-                    newline = newline.replace('copy_data', 'copy_data_axi')
+                    newline = newline.replace('copy_data', 'copy_data_axi').replace("0,", "")
+                if 'print_result' in line:
+                    newline = newline.replace("print_result<", f"print_result<{out.type.name}, ")
             fout.write(newline)
 
         f.close()
