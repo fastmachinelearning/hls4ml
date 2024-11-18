@@ -378,7 +378,7 @@ class VitisAcceleratorWriter(VitisWriter):
         )
 
     def write_new_tar(self, model):
-        os.remove(model.config.get_output_dir() + '.tar.gz')
+        # os.remove(model.config.get_output_dir() + '.tar.gz')
         super().write_tar(model)
 
     def write_hls(self, model):
