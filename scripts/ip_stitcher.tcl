@@ -337,7 +337,7 @@ if {$interface_type == "axi_stream"} {
     set first_ip_axis_slave ""
     foreach intf_pin $first_ip_intf_pins {
         set pin_name [get_property NAME $intf_pin]
-        if {[string match "*s_axis*" $pin_name] || [string match "*input*" $pin_name]} {
+        if {[string match "*s_axis*" $pin_name] || [string match "*inp*" $pin_name]} {
             set first_ip_axis_slave $intf_pin
             break
         }
@@ -450,7 +450,7 @@ if {$interface_type == "axi_stream"} {
     foreach pin $first_ip_pins {
         set pin_name [get_property NAME $pin]
         # Match patterns for inputs and input valid pins
-        if {[regexp {^\w+_input_(\d+)$} $pin_name] || [regexp {^\w+_input_(\d+)_ap_vld$} $pin_name]} {
+        if {[regexp {^\w+_(input|inp|layer)(?:_(\d+))?(?:_ap_vld)?$} $pin_name]} {
             # Make the pin external
             make_bd_pins_external $pin
             # Retrieve the external port and change name to base name
@@ -464,7 +464,7 @@ if {$interface_type == "axi_stream"} {
     foreach pin $last_ip_pins {
         set pin_name [get_property NAME $pin]
         # Match patterns for inputs and input valid pins
-        if {[regexp {^layer(?:\d+_)?out_(\d+)$} $pin_name] || [regexp {^layer(?:\d+_)?out_(\d+)_ap_vld$} $pin_name]} {
+        if {[regexp {^layer(?:\d+_)?out(?:_(\d+))?(?:_ap_vld)?$} $pin_name]} {
             # Make the pin external
             make_bd_pins_external $pin
             # Retrieve the external port and change name to base name
