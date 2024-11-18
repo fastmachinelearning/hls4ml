@@ -22,8 +22,8 @@ class ResizeRemoveConstants(OptimizerPass):
         if not isinstance(scales_node, Constant):
             raise RuntimeError("Non-constant shape inputs are not supported")
         model.remove_node(scales_node, rewire=False)
-        if len(node.inputs) == 3 and node.inputs[1] != '':
-            # RoI is present only if 3 inputs are specified
+        if len(node.inputs) >= 2 and node.inputs[1] != '':
+            # RoI is present only if at least 2 inputs are specified
             # RoI position is always 1 when present
             roi_node = node.get_input_node(node.inputs[1])
             node.inputs[1] = ''
