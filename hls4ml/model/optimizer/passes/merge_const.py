@@ -54,7 +54,6 @@ class MergeTwoConstants(OptimizerPass):
         const_node0.set_attr('quantizer', quantizer)  # overwrite the quantizer
         if quantizer:
             const_node0.set_attr('quantizer', quantizer)
-            const_node0.types['result_t'] = quantizer.hls_type
             const_node0.get_output_variable().type.precision = quantizer.hls_type
         const_node0.set_attr('value', new_val)
 

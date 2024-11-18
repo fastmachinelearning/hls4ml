@@ -11,14 +11,21 @@ class InplaceParallelReshape(OptimizerPass):
     """
 
     def match(self, node):
-        return isinstance(node, Reshape)
+        if not isinstance(node, Reshape):
+            return False
+        return node.model.config.get_config_value('IOType') == 'io_parallel'
 
     def transform(self, model, node):
-        if model.config.get_config_value('IOType') != 'io_parallel':
-            return False
-
         outvar = node.get_output_variable()
         invar = node.get_input_variable()
         newoutvar = InplaceTensorVariable(outvar, invar)
         node.set_attr(node.outputs[0], newoutvar)
+        if node.name in model.outputs:
+            prev_node = node.get_input_node()
+            assert (
+                prev_node.name not in model.outputs
+            ), f"Cannot output node {prev_node.name}: reshape is a no-op in io_parallel.\
+            As a result, the previous node {prev_node.name}'s output will be used as the\
+            output. However, this node is already an output."
+            model.outputs = [name if name != node.name else prev_node.name for name in model.outputs]
         return False

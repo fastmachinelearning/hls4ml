@@ -11,13 +11,20 @@ class InplaceStreamFlatten(OptimizerPass):
     """
 
     def match(self, node):
-        # Reshape acts as a Flatten layer when the result has 1 dimension
-        return isinstance(node, Reshape) and len(node.get_output_variable().shape) == 1
+        # Layers require flatten data can gather it from the stream, no need for repacking.
+        # Reshape acts as a Flatten layer when the result has 1 dimension. Make it a inplace tensor if it happens.
+
+        if node.model.config.get_config_value('IOType') != 'io_stream':
+            return False
+        if not (isinstance(node, Reshape) and len(node.get_output_variable().shape) == 1):
+            # If is not flatten
+            return False
+        if node.name in node.model.outputs:
+            # If used as model output. Output shape shall be preserved in this case.
+            return False
+        return True
 
     def transform(self, model, node):
-        if model.config.get_config_value('IOType') != 'io_stream':
-            return False
-
         outvar = node.get_output_variable()
         invar = node.get_input_variable()
         newoutvar = InplaceTensorVariable(outvar, invar)
