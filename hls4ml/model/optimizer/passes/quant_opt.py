@@ -194,7 +194,6 @@ class FuseQuantWithConstant(OptimizerPass):
 
         const_node = node.get_input_node(node.inputs[0])
         const_node.set_attr('quantizer', quantizer)
-        const_node.set_attr('result_t', precision)
         const_node.get_output_variable().type.precision = precision
 
         # Should we update the configuration to reflect the new precision? I don't think it's necessary
@@ -331,7 +330,6 @@ class ConstQuantToConstAlpha(OptimizerPass):
         const_node.set_attr('value', new_val)
         const_node.set_attr('quantizer', quantizer)
 
-        const_node.types['result_t'].precision = precision
         const_node.get_output_variable().type.precision = precision
 
         inshape = node.get_input_variable().shape
