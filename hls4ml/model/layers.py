@@ -1148,6 +1148,8 @@ class Resize(Layer):
         inp = self.get_input_variable()
 
         if len(self.inputs) > 1:
+            if len(self.inputs) == 4:
+                raise Exception('Sizes parameter is not supported. Use scales instead')
             # get the scales of Resize node from QONNX frontend
             # see doc here: https://onnx.ai/onnx/operators/onnx__Resize.html
             scales_idx = 2 if len(self.inputs) == 3 or len(self.inputs) == 4 else 1
