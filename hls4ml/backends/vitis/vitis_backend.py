@@ -131,13 +131,15 @@ class VitisBackend(VivadoBackend):
     
     def stitch_design(self, output_dir, project_name):
         os.makedirs(output_dir, exist_ok=True)
+        vivado_stitched_dir = os.path.join(output_dir, 'vivado_stitched_design')
+        os.makedirs(vivado_stitched_dir, exist_ok=True)
 
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
         stitch_command = 'vivado -mode batch -nojournal -nolog -notrace -source ' + hls4ml_path + '/../scripts/ip_stitcher.tcl'
 
-        stdout_log = os.path.join(output_dir, 'stitcher_stdout.log')
-        stderr_log = os.path.join(output_dir, 'stitcher_stderr.log')
+        stdout_log = os.path.join(vivado_stitched_dir, 'stitcher_stdout.log')
+        stderr_log = os.path.join(vivado_stitched_dir, 'stitcher_stderr.log')
         
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
             # Use subprocess.Popen to capture output
