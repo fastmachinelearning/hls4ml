@@ -5,9 +5,9 @@ from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vivado_report
 
 
-class VitisAcceleratorBackend(VitisBackend):
+class VitisAcceleratorIPFlowBackend(VitisBackend):
     def __init__(self):
-        super(VivadoBackend, self).__init__(name='VitisAccelerator')
+        super(VivadoBackend, self).__init__(name='VitisAcceleratorIPFlow')
         self._register_layer_attributes()
         self._register_flows()
 
@@ -21,7 +21,7 @@ class VitisAcceleratorBackend(VitisBackend):
         validation=False,
         export=False,
         vsynth=False,
-        fifo_opt=False,
+        # fifo_opt=False,
         bitfile=False,
     ):
         # run the VitisBackend build
@@ -37,9 +37,9 @@ class VitisAcceleratorBackend(VitisBackend):
             # fifo_opt=fifo_opt,
         )
         # Get Config to view Board and Platform
-        from hls4ml.backends import VitisAcceleratorConfig
+        from hls4ml.backends import VitisAcceleratorIPFlowConfig
 
-        vitis_accelerator_config = VitisAcceleratorConfig(
+        vitis_accelerator_ip_flow_config = VitisAcceleratorIPFlowConfig(
             model.config, model.get_input_variables(), model.get_output_variables()
         )
         # now make a bitfile
@@ -154,7 +154,7 @@ class VitisAcceleratorBackend(VitisBackend):
 
     def _register_flows(self):
         vivado_ip = 'vivado:ip'
-        writer_passes = ['make_stamp', 'vitisaccelerator:write_hls']
+        writer_passes = ['make_stamp', 'vitisacceleratoripflow:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=[vivado_ip], backend=self.name)
         self._default_flow = vivado_ip
 

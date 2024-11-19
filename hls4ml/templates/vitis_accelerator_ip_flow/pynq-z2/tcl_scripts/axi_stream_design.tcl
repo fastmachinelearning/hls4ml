@@ -2,7 +2,7 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-create_project project_1 ${project_name}_vitis_accelerator -part xc7z020clg400-1 -force
+create_project project_1 ${project_name}_vitis_accelerator_ip_flow -part xc7z020clg400-1 -force
 
 # set_property board_part tul.com.tw:pynq-z2:part0:1.0 [current_project]
 set_property  ip_repo_paths  ${project_name}_prj [current_project]
@@ -53,11 +53,11 @@ endgroup
 
 validate_bd_design
 
-open_bd_design {./${project_name}_vitis_accelerator/project_1.srcs/sources_1/bd/design_1/design_1.bd}
+open_bd_design {./${project_name}_vitis_accelerator_ip_flow/project_1.srcs/sources_1/bd/design_1/design_1.bd}
 
-make_wrapper -files [get_files ./${project_name}_vitis_accelerator/project_1.srcs/sources_1/bd/design_1/design_1.bd] -top
+make_wrapper -files [get_files ./${project_name}_vitis_accelerator_ip_flow/project_1.srcs/sources_1/bd/design_1/design_1.bd] -top
 
-add_files -norecurse ./${project_name}_vitis_accelerator/project_1.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
+add_files -norecurse ./${project_name}_vitis_accelerator_ip_flow/project_1.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
 
 reset_run impl_1
 reset_run synth_1

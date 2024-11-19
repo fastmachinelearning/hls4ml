@@ -6,7 +6,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     CFLAGS="-O3 -fPIC -std=c++11"
 fi
-VITIS_ACCELERATOR_FLAGS="VITIS_ACCELERATOR"
+VITIS_ACCELERATOR_FLAGS="VITIS_ACCELERATOR_IP_FLOW"
 CFLAGS="$CFLAGS -D$VITIS_ACCELERATOR_FLAGS"
 
 INCFLAGS="-Ifirmware/ap_types/"

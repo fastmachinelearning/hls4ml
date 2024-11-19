@@ -6,17 +6,17 @@ from shutil import copyfile
 from hls4ml.writer.vitis_writer import VitisWriter
 
 
-class VitisAcceleratorWriter(VitisWriter):
+class VitisAcceleratorIPFlowWriter(VitisWriter):
     def __init__(self):
         super().__init__()
-        self.vitis_accelerator_config = None
+        self.vitis_accelerator_ip_flow_config = None
 
     def write_axi_wrapper(self, model):
         '''Write a top level HLS C++ file to wrap the hls4ml project with AXI interfaces
         Args:
             model : The ModelGraph to write the wrapper for
         '''
-        inp_axi_t, out_axi_t, inp, out = self.vitis_accelerator_config.get_corrected_types()
+        inp_axi_t, out_axi_t, inp, out = self.vitis_accelerator_ip_flow_config.get_corrected_types()
         indent = '    '
 
         #######################
@@ -24,7 +24,7 @@ class VitisAcceleratorWriter(VitisWriter):
         #######################
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir, '../templates/vitis_accelerator/myproject_axi.h'))
+        f = open(os.path.join(filedir, '../templates/vitis_accelerator_ip_flow/myproject_axi.h'))
         fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}_axi.h', 'w')
 
         for line in f.readlines():
@@ -39,7 +39,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = ''
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
                 newline += f'static const unsigned N_OUT = {out.size()};\n'
-                if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                     newline += f'typedef hls::axis<float, 0, 0, 0> my_pkt;\n'
                 else: # TODO: handle this case
                     newline += f'typedef {inp_axi_t} input_axi_t;\n'
@@ -54,7 +54,7 @@ class VitisAcceleratorWriter(VitisWriter):
         # myproject_axi.cpp
         #######################
 
-        f = open(os.path.join(filedir, '../templates/vitis_accelerator/myproject_axi.cpp'))
+        f = open(os.path.join(filedir, '../templates/vitis_accelerator_ip_flow/myproject_axi.cpp'))
         fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}_axi.cpp', 'w')
 
         io_type = model.config.get_config_value("IOType")
@@ -66,7 +66,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 newline = f'#include "{model.config.get_project_name()}_axi.h"\n'
             elif '// hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
-                # if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                # if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                 #     newline += indent + 'bool is_last = false;\n'
                 if io_type == 'io_parallel': # TODO: handle io_parallel
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
@@ -83,12 +83,12 @@ class VitisAcceleratorWriter(VitisWriter):
             elif '// hls-fpga-machine-learning insert call' in line:
                 newline = indent + f'{model.config.get_project_name()}(in_local, out_local);\n'
             elif '// hls-fpga-machine-learning insert interface' in line:
-                if self.vitis_accelerator_config.get_interface() == 'axi_lite': # TODO: handle axi_lite
+                if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_lite': # TODO: handle axi_lite
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=in\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=out\n'
-                elif self.vitis_accelerator_config.get_interface() == 'axi_master': # TODO: handle axi_master
+                elif self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_master': # TODO: handle axi_master
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=in offset=slave bundle=IN_BUS\n'.format(
@@ -97,7 +97,7 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=out offset=slave bundle=OUT_BUS\n'.format(
                         model.get_output_variables()[0].pragma[1]
                     )
-                elif self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                elif self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE axis port=in\n'
                     newline += indent + '#pragma HLS INTERFACE axis port=out\n'
@@ -109,7 +109,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 if io_type == 'io_parallel': # TODO: handle io_parallel
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN; i++){\n'
-                    if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                    if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                         newline += indent + indent + '#pragma HLS PIPELINE\n'
                         newline += indent + indent + 'in_local[i] = in[i].data; // Read input with cast\n'
                         newline += indent + indent + 'is_last |= (in[i].last == 1)? true: false;\n'
@@ -130,7 +130,7 @@ class VitisAcceleratorWriter(VitisWriter):
                     # newline += indent + indent + 'pragma HLS aggregate variable=ctype compact=auto' # TODO: check if needed
                     newline += indent + indent + 'for(unsigned j = 0; j < {input_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n' # TODO: check if needed
-                    if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                    if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                         newline += (
                             indent
                             + indent
@@ -164,7 +164,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 if io_type == 'io_parallel':  # TODO: handle this case
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_OUT; i++){\n'
-                    if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                    if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                         newline += indent + indent + '#pragma HLS PIPELINE\n'
                         newline += indent + indent + 'out[i].data = out_local[i]; // Write output with cast\n'
                         newline += indent + indent + 'out[i].last = (is_last && (i == N_OUT - 1))? true : false;\n'
@@ -179,7 +179,7 @@ class VitisAcceleratorWriter(VitisWriter):
                     newline += indent + indent + '{result_t} ctype = out_local.read();\n'
                     newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
-                    if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+                    if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                         newline += (
                             indent + indent + indent + f'tmp_b.data = ({inp_axi_t}) (ctype[j]);\n'
                         )
@@ -235,7 +235,7 @@ class VitisAcceleratorWriter(VitisWriter):
         # build_lib.sh
         ###################
 
-        f = open(os.path.join(filedir, '../templates/vitis_accelerator/build_lib.sh'))
+        f = open(os.path.join(filedir, '../templates/vitis_accelerator_ip_flow/build_lib.sh'))
         fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
 
         for line in f.readlines():
@@ -253,7 +253,7 @@ class VitisAcceleratorWriter(VitisWriter):
         oldfile = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp'
         newfile = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test_wrapper.cpp'
         
-        inp_axi_t, out_axi_t, inp, out = self.vitis_accelerator_config.get_corrected_types()
+        inp_axi_t, out_axi_t, inp, out = self.vitis_accelerator_ip_flow_config.get_corrected_types()
 
         f = open(oldfile)
         fout = open(newfile, 'w')
@@ -285,7 +285,7 @@ class VitisAcceleratorWriter(VitisWriter):
                 )
             else:
                 newline = line
-            if self.vitis_accelerator_config.get_interface() == 'axi_stream':
+            if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                 if 'nnet::fill_zero' in line:
                     newline = newline.replace("nnet::fill_zero<", f"nnet::fill_zero<{inp.type.name}, ")
                     # indent = line.split('n')[0]
@@ -338,16 +338,16 @@ class VitisAcceleratorWriter(VitisWriter):
 
     def write_board_script(self, model):
         '''
-        Write the tcl scripts and kernel sources to create a Vivado IPI project for the VitisAccelerator
+        Write the tcl scripts and kernel sources to create a Vivado IPI project for the VitisAcceleratorIPFlow
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(
-            os.path.join(filedir, self.vitis_accelerator_config.get_tcl_file_path()),
+            os.path.join(filedir, self.vitis_accelerator_ip_flow_config.get_tcl_file_path()),
             f'{model.config.get_output_dir()}/design.tcl',
         )
         # Generic alveo board
-        if self.vitis_accelerator_config.get_board().startswith('alveo'):
-            src_dir = os.path.join(filedir, self.vitis_accelerator_config.get_krnl_rtl_src_dir())
+        if self.vitis_accelerator_ip_flow_config.get_board().startswith('alveo'):
+            src_dir = os.path.join(filedir, self.vitis_accelerator_ip_flow_config.get_krnl_rtl_src_dir())
             dst_dir = os.path.abspath(model.config.get_output_dir()) + '/src'
             copy_tree(src_dir, dst_dir)
 
@@ -358,17 +358,17 @@ class VitisAcceleratorWriter(VitisWriter):
         f.write('variable project_name\n')
         f.write(f'set project_name "{model.config.get_project_name()}"\n')
         f.write('variable backend\n')
-        f.write('set backend "vitisaccelerator"\n')
+        f.write('set backend "vitisacceleratoripflow"\n')
         f.write('variable part\n')
-        f.write(f'set part "{self.vitis_accelerator_config.get_part()}"\n')
+        f.write(f'set part "{self.vitis_accelerator_ip_flow_config.get_part()}"\n')
         f.write('variable clock_period\n')
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.write('variable clock_uncertainty\n')
         f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
         f.write('variable version\n')
         f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
-        if self.vitis_accelerator_config.get_interface() == 'axi_stream':
-            in_bit, out_bit = self.vitis_accelerator_config.get_io_bitwidth()
+        if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
+            in_bit, out_bit = self.vitis_accelerator_ip_flow_config.get_io_bitwidth()
             f.write(f'set bit_width_hls_output {in_bit}\n')
             f.write(f'set bit_width_hls_input {out_bit}\n')
         f.close()
@@ -376,8 +376,8 @@ class VitisAcceleratorWriter(VitisWriter):
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(
-            os.path.join(filedir, self.vitis_accelerator_config.get_driver_path()),
-            ('{}/' + self.vitis_accelerator_config.get_driver_file()).format(model.config.get_output_dir()),
+            os.path.join(filedir, self.vitis_accelerator_ip_flow_config.get_driver_path()),
+            ('{}/' + self.vitis_accelerator_ip_flow_config.get_driver_file()).format(model.config.get_output_dir()),
         )
 
     def write_new_tar(self, model):
@@ -386,12 +386,12 @@ class VitisAcceleratorWriter(VitisWriter):
 
     def write_hls(self, model):
         """
-        Write the HLS project. Calls the VivadoBackend writer, and extra steps for VitisAccelerator/AXI interface
+        Write the HLS project. Calls the VivadoBackend writer, and extra steps for VitisAcceleratorIPFlow/AXI interface
         """
         # TODO temporarily move config import here to avoid cyclic dependency, until config is moved to its own package
-        from hls4ml.backends import VitisAcceleratorConfig
+        from hls4ml.backends import VitisAcceleratorIPFlowConfig
 
-        self.vitis_accelerator_config = VitisAcceleratorConfig(
+        self.vitis_accelerator_ip_flow_config = VitisAcceleratorIPFlowConfig(
             model.config, model.get_input_variables(), model.get_output_variables()
         )
         super().write_hls(model)

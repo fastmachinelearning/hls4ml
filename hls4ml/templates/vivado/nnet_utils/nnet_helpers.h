@@ -12,8 +12,8 @@
 #include <vector>
 
 // this header cannot be included by Vivado HLS
-// "VITIS_ACCELERATOR" is defined on the build_lib.sh of the Vitis Accelerator backend files
-#ifdef VITIS_ACCELERATOR
+// "VITIS_ACCELERATOR_IP_FLOW" is defined on the build_lib.sh of the `Vitis Accelerator` template files
+#ifdef VITIS_ACCELERATOR_IP_FLOW
 #include "ap_axi_sdata.h"
 #endif
 namespace nnet {
@@ -166,7 +166,7 @@ template <class srcType, class dstType, size_t SIZE> void convert_data(hls::stre
     }
 }
 
-#ifdef VITIS_ACCELERATOR
+#ifdef VITIS_ACCELERATOR_IP_FLOW
 template <class srcType, typename dstType, size_t SIZE> void convert_data(srcType *src, hls::stream<hls::axis<float, 0, 0, 0>> &dst) {
     for (size_t i = 0; i < SIZE; i++) {
         hls::axis<float, 0, 0, 0> ctype;
