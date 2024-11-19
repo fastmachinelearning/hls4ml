@@ -1150,9 +1150,14 @@ class Resize(Layer):
         if len(self.inputs) > 1:
             # In order to be correctly ingested by hls4ml the QONNX resize node should have 3 inputs set with RoI left empty
             if len(self.inputs) == 2:
-                raise Exception('RoI parameter is not supported. Use scales instead')
+                raise Exception(
+                    'The number of inputs to Resize node is equal to 2. '
+                    'In this case, either one is trying to use a version 10 node '
+                    'or one is using the RoI parameter to perform the resize operation, '
+                    'both not supported in hls4ml'
+                )
             if len(self.inputs) == 4:
-                raise Exception('Sizes parameter is not supported. Use scales instead')
+                raise Exception('Sizes parameter is not supported by hls4ml. Use scales instead')
             # get the scales of Resize node from QONNX frontend
             # see doc here: https://onnx.ai/onnx/operators/onnx__Resize.html
             scales_idx = 2 if len(self.inputs) == 3 or len(self.inputs) == 4 else 1
