@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <vector>
 
+// this header cannot be included by Vivado HLS
+// "VITIS_ACCELERATOR" is defined on the build_lib.sh of the Vitis Accelerator backend files
 #ifdef VITIS_ACCELERATOR
 #include "ap_axi_sdata.h"
 #endif
@@ -289,18 +291,17 @@ void copy_data(std::vector<src_T> src, hls::stream<dst_T> &dst) {
     }
 }
 
-// template <class src_T, class dst_T, size_t OFFSET, size_t SIZE> void copy_data_axi(std::vector<src_T> src, dst_T dst[SIZE]) {
-//     for (auto i = 0; i < SIZE; i++) {
-//         dst[i].data = src[i];
-//         if (i == SIZE - 1) {
-//             dst[i].last = 1;
-//         } else {
-//             dst[i].last = 0;
-//         }
-//     }
-// }
+template <class src_T, class dst_T, size_t OFFSET, size_t SIZE> void copy_data_axi(std::vector<src_T> src, dst_T dst[SIZE]) {
+    for (auto i = 0; i < SIZE; i++) {
+        dst[i].data = src[i];
+        if (i == SIZE - 1) {
+            dst[i].last = 1;
+        } else {
+            dst[i].last = 0;
+        }
+    }
+}
 
-// #ifdef VITIS_ACCELERATOR
 template <class src_T, class dst_T, size_t SIZE> void copy_data_axi(std::vector<src_T> src, hls::stream<dst_T> &dst) {
     for (auto i = 0; i < SIZE; i++) {
         dst_T pack;
@@ -313,7 +314,6 @@ template <class src_T, class dst_T, size_t SIZE> void copy_data_axi(std::vector<
         dst.write(pack);
     }
 }
-// #endif
 
 template <class res_T, size_t SIZE> void print_result(res_T result[SIZE], std::ostream &out, bool keep = false) {
     for (int i = 0; i < SIZE; i++) {
@@ -322,20 +322,20 @@ template <class res_T, size_t SIZE> void print_result(res_T result[SIZE], std::o
     out << std::endl;
 }
 
-// template <class res_T, size_t SIZE> void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
-//     for (int i = 0; i < SIZE / res_T::size; i++) {
-//         res_T res_pack = result.read();
-//         for (int j = 0; j < res_T::size; j++) {
-//             out << res_pack[j] << " ";
-//         }
-//         if (keep) {
-//             result.write(res_pack);
-//         }           
-//     }
-//     out << std::endl;
-// }
+template <class res_T, size_t SIZE> void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
+    for (int i = 0; i < SIZE / res_T::size; i++) {
+        res_T res_pack = result.read();
+        for (int j = 0; j < res_T::size; j++) {
+            out << res_pack[j] << " ";
+        }
+        if (keep) {
+            result.write(res_pack);
+        }           
+    }
+    out << std::endl;
+}
 
-// #ifdef VITIS_ACCELERATOR
+// compatible with Vitis Accelerator for res_T = hls::axis<underlying_data_T, ...>
 template <class underlying_res_T, class res_T, size_t SIZE> void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
     for (int i = 0; i < SIZE / underlying_res_T::size; i++) {
         res_T res_pack;
@@ -349,21 +349,20 @@ template <class underlying_res_T, class res_T, size_t SIZE> void print_result(hl
     }
     out << std::endl;
 }
-// #endif
 
 template <class data_T, size_t SIZE> void fill_zero(data_T data[SIZE]) { std::fill_n(data, SIZE, 0.); }
 
-// template <class data_T, size_t SIZE> void fill_zero(hls::stream<data_T> &data) {
-//     for (int i = 0; i < SIZE / data_T::size; i++) {
-//         data_T data_pack;
-//         for (int j = 0; j < data_T::size; j++) {
-//             data_pack[j] = 0.;
-//         }
-//         data.write(data_pack);
-//     }
-// }
+template <class data_T, size_t SIZE> void fill_zero(hls::stream<data_T> &data) {
+    for (int i = 0; i < SIZE / data_T::size; i++) {
+        data_T data_pack;
+        for (int j = 0; j < data_T::size; j++) {
+            data_pack[j] = 0.;
+        }
+        data.write(data_pack);
+    }
+}
 
-// #ifdef VITIS_ACCELERATOR
+// compatible with Vitis Accelerator for res_T = hls::axis<underlying_data_T, ...>
 template <class underlying_data_T, class data_T, size_t SIZE> void fill_zero(hls::stream<data_T> &data) {
     for (int i = 0; i < SIZE / underlying_data_T::size; i++) {
         data_T data_pack;
@@ -380,7 +379,6 @@ template <class underlying_data_T, class data_T, size_t SIZE> void fill_zero(hls
         
     }
 }
-// #endif
 
 template <class dataType, unsigned int nrows> int read_file_1D(const char *filename, dataType data[nrows]) {
     FILE *fp;
