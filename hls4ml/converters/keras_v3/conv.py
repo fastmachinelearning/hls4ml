@@ -2,8 +2,6 @@ import typing
 from math import ceil
 from typing import Sequence
 
-import numpy as np
-
 from ._base import KerasV3LayerHandler, register
 
 if typing.TYPE_CHECKING:
@@ -40,9 +38,9 @@ class KV3ConvHandler(KerasV3LayerHandler):
         assert all(isinstance(x, int) for x in in_shape), f"Layer {layer.name} has non-fixed size input: {in_shape}"
         assert all(isinstance(x, int) for x in out_shape), f"Layer {layer.name} has non-fixed size output: {out_shape}"
 
-        kernel = np.array(layer.kernel)
+        kernel = self.load_weight(layer, 'kernel')
         if layer.use_bias:
-            bias = np.array(layer.bias)
+            bias = self.load_weight(layer, 'bias')
         else:
             bias = None
 
@@ -113,7 +111,7 @@ class KV3ConvHandler(KerasV3LayerHandler):
             config['depth_multiplier'] = layer.depth_multiplier
         elif isinstance(layer, BaseSeparableConv):
             config['depthwise_data'] = kernel
-            config['pointwise_data'] = np.array(layer.pointwise_kernel)
+            config['pointwise_data'] = self.load_weight(layer, 'pointwise_kernel')
             config['depth_multiplier'] = layer.depth_multiplier
         elif isinstance(layer, BaseConv):
             config['weight_data'] = kernel
