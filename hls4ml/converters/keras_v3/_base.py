@@ -1,6 +1,6 @@
 import typing
 from types import FunctionType
-from typing import Any, Callable, Sequence, TypedDict
+from typing import Any, Callable, Sequence, TypedDict, overload
 
 
 class DefaultConfig(TypedDict, total=False):
@@ -24,6 +24,14 @@ T_kv3_handler = Callable[
 ]
 
 registry: dict[str, T_kv3_handler] = {}
+
+
+@overload
+def register(cls: type) -> type: ...
+
+
+@overload
+def register(cls: str) -> Callable[[T_kv3_handler], T_kv3_handler]: ...
 
 
 def register(cls: str | type):
@@ -51,11 +59,13 @@ def register(cls: str | type):
     ```
     """
 
-    def deco(func: T_kv3_handler):
+    def deco(func):
         if isinstance(cls, str):
             registry[cls] = func
         for k in getattr(func, 'handles', ()):
             registry[k] = func
+        if isinstance(cls, type):
+            return cls
         return func
 
     if isinstance(cls, type):
@@ -79,7 +89,7 @@ class KerasV3LayerHandler:
         layer: 'keras.Layer',
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
-    ):
+    ) -> tuple[dict[str, Any], ...]:
         """Handle a keras layer. Return a tuple of dictionaries, each
         dictionary representing a layer (module) in the HLS model. One
         layer may correspond one or more dictionaries (e.g., layers with
@@ -114,8 +124,7 @@ class KerasV3LayerHandler:
         dict[str, Any] | tuple[dict[str, Any], ...]
             layer configuration(s) for the HLS model to be consumed by
             the ModelGraph constructor
-        """  # noqa: E501
-        import keras
+        """
 
         name = layer.name
         class_name = layer.__class__.__name__
@@ -150,12 +159,23 @@ class KerasV3LayerHandler:
         ret = (config,)
 
         # If activation exists, append it
+
+        act_config, intermediate_tensor_name = self.maybe_get_activation_config(layer, out_tensors)
+        if act_config is not None:
+            ret[0]['output_keras_tensor_names'] = [intermediate_tensor_name]
+            ret = *ret, act_config
+
+        return ret
+
+    def maybe_get_activation_config(self, layer, out_tensors):
+        import keras
+
         activation = getattr(layer, 'activation', None)
+        name = layer.name
         if activation not in (keras.activations.linear, None):
             assert len(out_tensors) == 1, f"Layer {name} has more than one output, but has an activation function"
             assert isinstance(activation, FunctionType), f"Activation function for layer {name} is not a function"
             intermediate_tensor_name = f'{out_tensors[0].name}_activation'
-            ret[0]['output_keras_tensor_names'] = [intermediate_tensor_name]
             act_cls_name = activation.__name__
             act_config = {
                 'class_name': 'Activation',
@@ -164,9 +184,8 @@ class KerasV3LayerHandler:
                 'input_keras_tensor_names': [intermediate_tensor_name],
                 'output_keras_tensor_names': [out_tensors[0].name],
             }
-            ret = *ret, act_config
-
-        return ret
+            return act_config, intermediate_tensor_name
+        return None, None
 
     def handle(
         self,
@@ -175,3 +194,22 @@ class KerasV3LayerHandler:
         out_tensors: Sequence['KerasTensor'],
     ) -> dict[str, Any] | tuple[dict[str, Any], ...]:
         return {}
+
+    def load_weight(self, layer: 'keras.Layer', key: str):
+        """Load a weight from a layer.
+
+        Parameters
+        ----------
+        layer : keras.Layer
+            The layer to load the weight from.
+        key : str
+            The key of the weight to load.
+
+        Returns
+        -------
+        np.ndarray
+            The weight.
+        """
+        import keras
+
+        return keras.ops.convert_to_numpy(getattr(layer, key))

@@ -39,8 +39,6 @@ class KV3EinsumDenseHandler(KerasV3LayerHandler):
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
-        import keras
-
         assert len(in_tensors) == 1, 'EinsumDense layer must have exactly one input tensor'
         assert len(out_tensors) == 1, 'EinsumDense layer must have exactly one output tensor'
 
@@ -56,11 +54,11 @@ class KV3EinsumDenseHandler(KerasV3LayerHandler):
 
         equation = strip_batch_dim(layer.equation)
 
-        kernel = keras.ops.convert_to_numpy(layer.kernel)
+        kernel = self.load_weight(layer, 'kernel')
 
         bias = None
         if layer.bias_axes:
-            bias = keras.ops.convert_to_numpy(layer.bias)
+            bias = self.load_weight(layer, 'bias')
 
         return {
             'class_name': 'EinsumDense',
