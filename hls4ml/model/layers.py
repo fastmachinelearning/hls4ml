@@ -1153,7 +1153,7 @@ class Resize(Layer):
                 raise Exception(
                     'The number of inputs to Resize node is equal to 2. '
                     'In this case, either one is trying to use a version 10 node '
-                    'or one is using the RoI parameter to perform the resize operation, '
+                    'or one is using the RoI parameter only to perform the resize operation, '
                     'both not supported in hls4ml'
                 )
             if len(self.inputs) == 4:

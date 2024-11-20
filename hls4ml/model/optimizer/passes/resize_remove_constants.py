@@ -1,3 +1,5 @@
+from warnings import warn
+
 from hls4ml.model.layers import Constant, Resize
 from hls4ml.model.optimizer import OptimizerPass
 
@@ -16,20 +18,21 @@ class ResizeRemoveConstants(OptimizerPass):
         Remove RoI and Scale Constant from new shape input.
         """
         # see doc here: https://onnx.ai/onnx/operators/onnx__Resize.html
-        scales_idx = 2 if len(node.inputs) == 3 or len(node.inputs) == 4 else 1
+        roi_index = 1
+        scales_idx = 2
         scales_node = node.get_input_node(node.inputs[scales_idx])
         node.inputs[scales_idx] = ''
         if not isinstance(scales_node, Constant):
             raise RuntimeError("Non-constant shape inputs are not supported")
         model.remove_node(scales_node, rewire=False)
-        if len(node.inputs) >= 2 and node.inputs[1] != '':
-            # RoI is present only if at least 2 inputs are specified
-            # RoI position is always 1 when present
-            roi_node = node.get_input_node(node.inputs[1])
-            node.inputs[1] = ''
-            if not isinstance(roi_node, Constant):
-                raise RuntimeError("Non-constant RoI inputs are not supported")
-            model.remove_node(roi_node, rewire=False)
+        # RoI position is always 1 when present
+        roi_node = node.get_input_node(node.inputs[roi_index])
+        if roi_node.get_attr('value'):
+            warn('RoI value vector is not empty. Consider that RoI is not supported in hls4ml', stacklevel=2)
+        node.inputs[roi_index] = ''
+        if not isinstance(roi_node, Constant):
+            raise RuntimeError("Non-constant RoI inputs are not supported")
+        model.remove_node(roi_node, rewire=False)
         # Clean all the '' inputs
         node.inputs = list(filter(None, node.inputs))
         return True
