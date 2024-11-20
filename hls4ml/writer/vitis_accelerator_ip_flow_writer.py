@@ -66,11 +66,12 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                 newline = f'#include "{model.config.get_project_name()}_axi.h"\n'
             elif '// hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
-                # if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
-                #     newline += indent + 'bool is_last = false;\n'
+                if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
+                    newline += indent + 'bool is_last = false;\n'
                 if io_type == 'io_parallel': # TODO: handle io_parallel
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
-                    newline += indent + out.type.name + ' out_local[N_OUT];\n'
+                    newline += indent + out.type.name + ' out_local[N_OUT];\n'             
+                    newline += indent + 'my_pkt tmp;\n'
                 elif io_type == 'io_stream':
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
                     newline += indent + 'hls::stream<' + out.type.name + '> out_local("output_1");\n\n'
@@ -111,17 +112,17 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                     newline += indent + 'for(unsigned i = 0; i < N_IN; i++){\n'
                     if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                         newline += indent + indent + '#pragma HLS PIPELINE\n'
-                        newline += indent + indent + 'in_local[i] = in[i].data; // Read input with cast\n'
-                        newline += indent + indent + 'is_last |= (in[i].last == 1)? true: false;\n'
+                        newline += indent + indent + 'tmp = in.read(); // Read input with cast\n'
+                        newline += indent + indent + 'in_local[i] = tmp.data;\n'
+                        newline += indent + indent + 'is_last = tmp.last;\n'
                     else:
                         newline += indent + indent + '#pragma HLS UNROLL\n'
                         newline += indent + indent + 'in_local[i] = in[i].data; // Read input with cast\n'
                     newline += indent + '}\n'
+                    newline += indent + 'tmp.last = 0;\n'
                 elif io_type == 'io_stream':
                     newline = ''
-                    newline += indent + 'my_pkt tmp_a;\n'
-
-                    newline += indent + 'my_pkt tmp_b;\n'
+                    newline += indent + 'my_pkt tmp;\n'
 
                     newline += indent + 'for(unsigned i = 0; i < N_IN / {input_t}::size; ++i) {{\n'
                     # newline += indent + indent + '#pragma HLS PIPELINE\n' # TODO: check if needed
@@ -135,17 +136,17 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                             indent
                             + indent
                             + indent
-                            + 'in.read(tmp_a);\n'
+                            + 'in.read(tmp);\n'
                         )
                         newline += (
                             indent
                             + indent
                             + indent
-                            + 'ctype[j] = tmp_a.data;\n'
+                            + 'ctype[j] = tmp.data;\n'
                         )
-                        # newline += (
-                        #     indent + indent + indent + 'is_last |= (in[i * input_t::size + j].last == 1)? true : false;\n'
-                        # )
+                        newline += (
+                            indent + indent + indent + 'is_last = tmp.last;\n'
+                        )
                     else: # TODO: handle this case
                         newline += (
                             indent
@@ -156,8 +157,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                     newline += indent + indent + '}}\n'
                     newline += indent + indent + 'in_local.write(ctype);\n'
                     newline += indent + '}}\n'
-                    newline += indent + 'tmp_b = tmp_a;\n'
-                    newline += indent + 'tmp_b.last = 0;\n'
+                    newline += indent + 'tmp.last = 0;\n'
                     newline = newline.format(input_t=inp.type.name)
             elif '// hls-fpga-machine-learning insert dequeue' in line:
                 io_type = model.config.get_config_value("IOType")
@@ -166,8 +166,9 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                     newline += indent + 'for(unsigned i = 0; i < N_OUT; i++){\n'
                     if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                         newline += indent + indent + '#pragma HLS PIPELINE\n'
-                        newline += indent + indent + 'out[i].data = out_local[i]; // Write output with cast\n'
-                        newline += indent + indent + 'out[i].last = (is_last && (i == N_OUT - 1))? true : false;\n'
+                        newline += indent + indent + 'tmp.data = out_local[i];\n'
+                        newline += indent + indent + 'tmp.last = (is_last && (i == N_OUT - 1))? true : false;\n'
+                        newline += indent + indent + 'out.write(tmp);\n'
                     else:
                         newline += indent + indent + '#pragma HLS UNROLL\n'
                         newline += indent + indent + 'out[i] = out_local[i]; // Write output with cast\n'
@@ -181,15 +182,15 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
                     if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                         newline += (
-                            indent + indent + indent + f'tmp_b.data = ({inp_axi_t}) (ctype[j]);\n'
+                            indent + indent + indent + f'tmp.data = ({inp_axi_t}) (ctype[j]);\n'
                         )
 
                         newline += (
-                            indent + indent + indent + 'if(tmp_a.last == 1) {{tmp_b.last = (((i+1)*(j+1))==N_OUT);}}\n'
+                            indent + indent + indent + 'if(is_last) {{tmp.last = (((i+1)*(j+1))==N_OUT);}}\n'
                         )
 
                         newline += (
-                            indent + indent + indent + 'out.write(tmp_b);\n'
+                            indent + indent + indent + 'out.write(tmp);\n'
                         )
                     else:
                         newline += indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j]);\n'
@@ -260,6 +261,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
 
         inp = model.get_input_variables()[0]
         out = model.get_output_variables()[0]
+        io_type = model.config.get_config_value("IOType")
 
         for line in f.readlines():
             if f'{model.config.get_project_name()}.h' in line:
@@ -286,14 +288,16 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
             else:
                 newline = line
             if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
-                if 'nnet::fill_zero' in line:
-                    newline = newline.replace("nnet::fill_zero<", f"nnet::fill_zero<{inp.type.name}, ")
-                    # indent = line.split('n')[0]
-                    # newline = indent + indent + 'inputs[N_IN-1].last = 1;\n'
                 if 'copy_data' in line:
                     newline = newline.replace('copy_data', 'copy_data_axi').replace("0,", "")
-                if 'print_result' in line:
-                    newline = newline.replace("print_result<", f"print_result<{out.type.name}, ")
+                    
+                if io_type == 'io_stream':
+                    if 'nnet::fill_zero' in line:
+                        newline = newline.replace("nnet::fill_zero<", f"nnet::fill_zero<{inp.type.name}, ")
+                        # indent = line.split('n')[0]
+                        # newline = indent + indent + 'inputs[N_IN-1].last = 1;\n'
+                    if 'print_result' in line:
+                        newline = newline.replace("print_result<", f"print_result<{out.type.name}, ")
             fout.write(newline)
 
         f.close()
