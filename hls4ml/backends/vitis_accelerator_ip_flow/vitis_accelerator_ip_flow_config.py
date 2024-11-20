@@ -133,7 +133,14 @@ class VitisAcceleratorIPFlowConfig:
         if self.board.startswith('alveo'):
             return '../templates/vitis_accelerator_ip_flow/' + 'alveo/' + self.driver + '_drivers/' + self.get_driver_file()
         else:
-            return '../templates/vitis_accelerator_ip_flow/' + self.board + '/' + self.driver + '_drivers/' + self.get_driver_file()
+            return (
+                '../templates/vitis_accelerator_ip_flow/'
+                + self.board
+                + '/'
+                + self.driver
+                + '_drivers/'
+                + self.get_driver_file()
+            )
 
     def get_driver_file(self):
         driver_ext = '.py' if self.driver == 'python' else '.h'

@@ -167,8 +167,9 @@ template <class srcType, class dstType, size_t SIZE> void convert_data(hls::stre
 }
 
 #ifdef VITIS_ACCELERATOR_IP_FLOW
-//todo avoid hardcoding hls::axis<float, 0, 0, 0> and use template
-template <class srcType, typename dstType, size_t SIZE> void convert_data(srcType *src, hls::stream<hls::axis<float, 0, 0, 0>> &dst) {
+// todo avoid hardcoding hls::axis<float, 0, 0, 0> and use template
+template <class srcType, typename dstType, size_t SIZE>
+void convert_data(srcType *src, hls::stream<hls::axis<float, 0, 0, 0>> &dst) {
     for (size_t i = 0; i < SIZE; i++) {
         hls::axis<float, 0, 0, 0> ctype;
         ctype.data = dstType(src[i]);
@@ -176,7 +177,8 @@ template <class srcType, typename dstType, size_t SIZE> void convert_data(srcTyp
     }
 }
 
-template <typename srcType, class dstType, size_t SIZE> void convert_data(hls::stream<hls::axis<float, 0, 0, 0>> &src, dstType *dst) {
+template <typename srcType, class dstType, size_t SIZE>
+void convert_data(hls::stream<hls::axis<float, 0, 0, 0>> &src, dstType *dst) {
     for (size_t i = 0; i < SIZE; i++) {
         hls::axis<float, 0, 0, 0> ctype = src.read();
         dst[i] = dstType(ctype.data);
@@ -323,8 +325,7 @@ template <class res_T, size_t SIZE> void print_result(res_T result[SIZE], std::o
     out << std::endl;
 }
 
-template <class res_T, size_t SIZE,
-          typename std::enable_if<std::is_array<res_T>::value, int>::type = 0>
+template <class res_T, size_t SIZE, typename std::enable_if<std::is_array<res_T>::value, int>::type = 0>
 void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
     for (int i = 0; i < SIZE / res_T::size; i++) {
         res_T res_pack = result.read();
@@ -333,29 +334,29 @@ void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = fal
         }
         if (keep) {
             result.write(res_pack);
-        }           
+        }
     }
     out << std::endl;
 }
 
 // compatible with Vitis Accelerator for res_T = hls::axis<...> and io_parallel
-template <class res_T, size_t SIZE,
-          typename std::enable_if<!std::is_array<res_T>::value, int>::type = 0>
+template <class res_T, size_t SIZE, typename std::enable_if<!std::is_array<res_T>::value, int>::type = 0>
 void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
     for (int i = 0; i < SIZE; i++) {
         res_T res_pack = result.read();
-        
+
         out << res_pack.data << " ";
-        
+
         if (keep) {
             result.write(res_pack);
-        }           
+        }
     }
     out << std::endl;
 }
 
 // compatible with Vitis Accelerator for res_T = hls::axis<underlying_data_T, ...> and io_stream
-template <class underlying_res_T, class res_T, size_t SIZE> void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
+template <class underlying_res_T, class res_T, size_t SIZE>
+void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
     for (int i = 0; i < SIZE / underlying_res_T::size; i++) {
         res_T res_pack;
         for (int j = 0; j < underlying_res_T::size; j++) {
@@ -363,16 +364,15 @@ template <class underlying_res_T, class res_T, size_t SIZE> void print_result(hl
             out << res_pack.data << " ";
             if (keep) {
                 result.write(res_pack);
-            }   
-        }        
+            }
+        }
     }
     out << std::endl;
 }
 
 template <class data_T, size_t SIZE> void fill_zero(data_T data[SIZE]) { std::fill_n(data, SIZE, 0.); }
 
-template <class data_T, size_t SIZE,
-          typename std::enable_if<std::is_array<data_T>::value, int>::type = 0>
+template <class data_T, size_t SIZE, typename std::enable_if<std::is_array<data_T>::value, int>::type = 0>
 void fill_zero(hls::stream<data_T> &data) {
     for (int i = 0; i < SIZE / data_T::size; i++) {
         data_T data_pack;
@@ -383,16 +383,14 @@ void fill_zero(hls::stream<data_T> &data) {
     }
 }
 
-template <class data_T, size_t SIZE,
-          typename std::enable_if<!std::is_array<data_T>::value, int>::type = 0>
+template <class data_T, size_t SIZE, typename std::enable_if<!std::is_array<data_T>::value, int>::type = 0>
 void fill_zero(hls::stream<data_T> &data) {
     for (int i = 0; i < SIZE; i++) {
         data_T data_pack;
         data_pack.data = 0.;
-        if (i==SIZE-1) {
+        if (i == SIZE - 1) {
             data_pack.last = 1;
-        }
-        else {
+        } else {
             data_pack.last = 0;
         }
         data.write(data_pack);
@@ -405,15 +403,13 @@ template <class underlying_data_T, class data_T, size_t SIZE> void fill_zero(hls
         data_T data_pack;
         for (int j = 0; j < underlying_data_T::size; j++) {
             data_pack.data = 0.;
-            if ((i==(SIZE / underlying_data_T::size-1)) && (j==(underlying_data_T::size-1))) {
+            if ((i == (SIZE / underlying_data_T::size - 1)) && (j == (underlying_data_T::size - 1))) {
                 data_pack.last = 1;
-            }
-            else {
+            } else {
                 data_pack.last = 0;
             }
             data.write(data_pack);
         }
-        
     }
 }
 

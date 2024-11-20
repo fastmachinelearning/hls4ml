@@ -37,22 +37,19 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
             # fifo_opt=fifo_opt,
         )
         # Get Config to view Board and Platform
-        from hls4ml.backends import VitisAcceleratorIPFlowConfig
+        # from hls4ml.backends import VitisAcceleratorIPFlowConfig
 
-        vitis_accelerator_ip_flow_config = VitisAcceleratorIPFlowConfig(
-            model.config, model.get_input_variables(), model.get_output_variables()
-        )
+        # vitis_accelerator_ip_flow_config = VitisAcceleratorIPFlowConfig(
+        #     model.config, model.get_input_variables(), model.get_output_variables()
+        # )
         # now make a bitfile
         if bitfile:
-            # if vitis_accelerator_config.get_board().startswith('alveo'):
-            #     self.make_xclbin(model, vitis_accelerator_config.get_platform())
-            # else:
             curr_dir = os.getcwd()
             os.chdir(model.config.get_output_dir())
             try:
-                os.system('vivado -mode batch -source design.tcl') # check if this is accepted as a command
+                os.system('vivado -mode batch -source design.tcl')  # check if this is accepted as a command
             except Exception:
-                print("Something went wrong, check the Vivado logs") 
+                print("Something went wrong, check the Vivado logs")
             os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())

@@ -40,8 +40,10 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
                 newline += f'static const unsigned N_OUT = {out.size()};\n'
                 if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
-                    newline += f'typedef hls::axis<float, 0, 0, 0> my_pkt;\n'
-                else: # TODO: handle this case
+                    newline += 'typedef hls::axis<float, 0, 0, 0> my_pkt;\n'
+                    # might need to make "float" a variable according to the
+                    # configuration set by the user and the DMA available data widths
+                else:  # TODO: handle this case
                     newline += f'typedef {inp_axi_t} input_axi_t;\n'
                     newline += f'typedef {out_axi_t} output_axi_t;\n'
             else:
@@ -68,9 +70,9 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                 newline = ''
                 if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                     newline += indent + 'bool is_last = false;\n'
-                if io_type == 'io_parallel': # TODO: handle io_parallel
+                if io_type == 'io_parallel':  # TODO: handle io_parallel
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
-                    newline += indent + out.type.name + ' out_local[N_OUT];\n'             
+                    newline += indent + out.type.name + ' out_local[N_OUT];\n'
                     newline += indent + 'my_pkt tmp;\n'
                 elif io_type == 'io_stream':
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
@@ -84,12 +86,12 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
             elif '// hls-fpga-machine-learning insert call' in line:
                 newline = indent + f'{model.config.get_project_name()}(in_local, out_local);\n'
             elif '// hls-fpga-machine-learning insert interface' in line:
-                if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_lite': # TODO: handle axi_lite
+                if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_lite':  # TODO: handle axi_lite
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=in\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=out\n'
-                elif self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_master': # TODO: handle axi_master
+                elif self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_master':  # TODO: handle axi_master
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=in offset=slave bundle=IN_BUS\n'.format(
@@ -107,7 +109,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                         newline += indent + '#pragma HLS DATAFLOW\n'
             elif '// hls-fpga-machine-learning insert enqueue' in line:
                 io_type = model.config.get_config_value("IOType")
-                if io_type == 'io_parallel': # TODO: handle io_parallel
+                if io_type == 'io_parallel':  # TODO: handle io_parallel
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN; i++){\n'
                     if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
@@ -132,22 +134,10 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                     newline += indent + indent + 'for(unsigned j = 0; j < {input_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n' # TODO: check if needed
                     if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
-                        newline += (
-                            indent
-                            + indent
-                            + indent
-                            + 'in.read(tmp);\n'
-                        )
-                        newline += (
-                            indent
-                            + indent
-                            + indent
-                            + 'ctype[j] = tmp.data;\n'
-                        )
-                        newline += (
-                            indent + indent + indent + 'is_last = tmp.last;\n'
-                        )
-                    else: # TODO: handle this case
+                        newline += indent + indent + indent + 'in.read(tmp);\n'
+                        newline += indent + indent + indent + 'ctype[j] = tmp.data;\n'
+                        newline += indent + indent + indent + 'is_last = tmp.last;\n'
+                    else:  # TODO: handle this case
                         newline += (
                             indent
                             + indent
@@ -181,17 +171,11 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                     newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
                     if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
-                        newline += (
-                            indent + indent + indent + f'tmp.data = ({inp_axi_t}) (ctype[j]);\n'
-                        )
+                        newline += indent + indent + indent + f'tmp.data = ({inp_axi_t}) (ctype[j]);\n'
 
-                        newline += (
-                            indent + indent + indent + 'if(is_last) {{tmp.last = (((i+1)*(j+1))==N_OUT);}}\n'
-                        )
+                        newline += indent + indent + indent + 'if(is_last) {{tmp.last = (((i+1)*(j+1))==N_OUT);}}\n'
 
-                        newline += (
-                            indent + indent + indent + 'out.write(tmp);\n'
-                        )
+                        newline += indent + indent + indent + 'out.write(tmp);\n'
                     else:
                         newline += indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j]);\n'
                     newline += indent + indent + '}}\n'
@@ -253,7 +237,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
         ###################
         oldfile = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp'
         newfile = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test_wrapper.cpp'
-        
+
         inp_axi_t, out_axi_t, inp, out = self.vitis_accelerator_ip_flow_config.get_corrected_types()
 
         f = open(oldfile)
@@ -278,19 +262,15 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                 indent_amount = line.split(model.config.get_project_name())[0]
                 newline = indent_amount + f'{model.config.get_project_name()}_axi(inputs,outputs);\n'
             elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
-                newline = (
-                    line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'my_pkt')
-                )
+                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'my_pkt')
             elif out.size_cpp() in line or out.name in line or out.type.name in line:
-                newline = (
-                    line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'my_pkt')
-                )
+                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'my_pkt')
             else:
                 newline = line
             if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
                 if 'copy_data' in line:
                     newline = newline.replace('copy_data', 'copy_data_axi').replace("0,", "")
-                    
+
                 if io_type == 'io_stream':
                     if 'nnet::fill_zero' in line:
                         newline = newline.replace("nnet::fill_zero<", f"nnet::fill_zero<{inp.type.name}, ")
@@ -331,7 +311,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
             elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
                 newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, inp_axi_t)
             elif out.size_cpp() in line or out.name in line or out.type.name in line:
-                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, out_axi_t)      
+                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, out_axi_t)
             else:
                 newline = line
             fout.write(newline)
