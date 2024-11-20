@@ -54,44 +54,6 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    # def make_xclbin(self, model, platform='xilinx_u250_xdma_201830_2'):
-    #     """Create the xclbin for the given model and target platform.
-
-    #     Args:
-    #         model (ModelGraph): Compiled and build model.
-    #         platform (str, optional): Development/Deployment target platform, must be installed first.
-    #             The host machine only requires the deployment target platform. Refer to the Getting Started section of
-    #             the Alveo guide. Defaults to 'xilinx_u250_xdma_201830_2'.
-    #     """
-    #     curr_dir = os.getcwd()
-    #     abs_path_dir = os.path.abspath(model.config.get_output_dir())
-    #     os.chdir(abs_path_dir)
-    #     os.makedirs('xo_files', exist_ok=True)
-    #     try:
-    #         os.system('vivado -mode batch -source design.tcl')
-    #     except Exception:
-    #         print("Something went wrong, check the Vivado logs")
-    #     project_name = model.config.get_project_name()
-    #     ip_repo_path = abs_path_dir + '/' + project_name + '_prj' + '/solution1/impl/ip'
-    #     os.makedirs('xclbin_files', exist_ok=True)
-    #     os.chdir(abs_path_dir + '/xclbin_files')
-    #     # TODO Add other platforms
-    #     vitis_cmd = (
-    #         "v++ -t hw --platform "
-    #         + platform
-    #         + " --link ../xo_files/"
-    #         + project_name
-    #         + "_kernel.xo -o'"
-    #         + project_name
-    #         + "_kernel.xclbin' --user_ip_repo_paths "
-    #         + ip_repo_path
-    #     )
-    #     try:
-    #         os.system(vitis_cmd)
-    #     except Exception:
-    #         print("Something went wrong, check the Vitis/Vivado logs")
-    #     os.chdir(curr_dir)
-
     def create_initial_config(
         self,
         board='pynq-z2',
