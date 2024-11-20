@@ -1,5 +1,5 @@
-#ifndef NNET_SEPARABLE_CONV2D_H_
-#define NNET_SEPARABLE_CONV2D_H_
+#ifndef NNET_DEPTH_CONV2D_H_
+#define NNET_DEPTH_CONV2D_H_
 
 #include "nnet_common.h"
 #include "nnet_conv2d.h"

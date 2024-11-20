@@ -24,12 +24,12 @@ bias_options = [False]
 @pytest.mark.parametrize(
     'backend, io_type',
     [
+        ('oneAPI', 'io_parallel'),
         ('Vivado', 'io_parallel'),
         ('Vitis', 'io_parallel'),
         ('Vivado', 'io_stream'),
         ('Vitis', 'io_stream'),
         ('Catapult', 'io_stream'),
-        ('oneAPI', 'io_parallel'),
     ],
 )
 def test_depthconv2d(chans, padds, strides, kernels, bias, io_type, backend):

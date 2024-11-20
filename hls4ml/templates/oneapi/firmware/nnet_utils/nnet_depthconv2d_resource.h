@@ -18,15 +18,16 @@ DM_LOOP:
     #pragma unroll
     for (int dm = 0; dm < depth_multiplier; dm++) {
 
-    CHAN_LOOP:
+    HEIGHT_LOOP:
         #pragma unroll
-        for (int c = 0; c < CONFIG_T::n_chan; c++) {
-        HEIGHT_LOOP:
+        for (int h = 0; h < CONFIG_T::out_height; h++) {
+        WIDTH_LOOP:
             #pragma unroll
-            for (int h = 0; h < CONFIG_T::out_height; h++) {
-            WIDTH_LOOP:
+            for (int w = 0; w < CONFIG_T::out_width; w++) {
+
+            CHAN_LOOP:
                 #pragma unroll
-                for (int w = 0; w < CONFIG_T::out_width; w++) {
+                for (int c = 0; c < CONFIG_T::n_chan; c++) {
 
                     res_idx =
                         (h * CONFIG_T::out_width * CONFIG_T::n_filt) + (w * CONFIG_T::n_filt) + (c * depth_multiplier) + dm;
@@ -46,9 +47,16 @@ DM_LOOP:
                             if ((h_in >= 0) && (h_in < CONFIG_T::in_height) && (w_in >= 0) && (w_in < CONFIG_T::in_width)) {
 
                                 res[res_idx] +=
-                                    data[(h_in)*CONFIG_T::in_width * CONFIG_T::n_chan + (w_in)*CONFIG_T::n_chan + c] *
-                                    weights[(dm * CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan) +
-                                            (kh * CONFIG_T::filt_width * CONFIG_T::n_chan) + (kw * CONFIG_T::n_chan) + c];
+
+                                    CONFIG_T::mult_config::template product<typename data_T::value_type,
+                                                                            typename CONFIG_T::weight_t::value_type>::
+                                        product(
+                                            data[(h_in)*CONFIG_T::in_width * CONFIG_T::n_chan + (w_in)*CONFIG_T::n_chan + c],
+                                            weights[(dm * CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan) +
+                                                    (kh * CONFIG_T::filt_width * CONFIG_T::n_chan) +
+                                                    (kw * CONFIG_T::n_chan) + c]);
+
+                                ;
                             }
                         }
                     }
