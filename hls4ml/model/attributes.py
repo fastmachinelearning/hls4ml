@@ -60,6 +60,20 @@ class Attribute:
         """
         return convert_to_pascal_case(self.name)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Attribute):
+            return NotImplemented
+        return (
+            self.name == other.name
+            and self.value_type == other.value_type
+            and self.default == other.default
+            and self.configurable == other.configurable
+            and self.description == other.description
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.value_type, self.default, self.configurable, self.description))
+
 
 class ConfigurableAttribute(Attribute):
     """
@@ -69,7 +83,7 @@ class ConfigurableAttribute(Attribute):
     when defining the expected attributes of layer classes.
     """
 
-    def __init__(self, name, value_type=int, default=None, description=None):
+    def __init__(self, name, value_type=Integral, default=None, description=None):
         super().__init__(name, value_type, default, configurable=True, description=description)
 
 
@@ -101,6 +115,13 @@ class ChoiceAttribute(Attribute):
     def validate_value(self, value):
         return value in self.choices
 
+    def __eq__(self, other: object) -> bool:
+        base_eq = super().__eq__(other)
+        return base_eq and hasattr(other, 'choices') and set(self.choices) == set(other.choices)
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash(tuple(sorted(self.choices)))
+
 
 class WeightAttribute(Attribute):
     """
@@ -117,9 +138,7 @@ class CodeAttrubute(Attribute):
     """
 
     def __init__(self, name, description=None):
-        super(WeightAttribute, self).__init__(
-            name, value_type=Source, default=None, configurable=False, description=description
-        )
+        super().__init__(name, value_type=Source, default=None, configurable=False, description=description)
 
 
 # endregion
