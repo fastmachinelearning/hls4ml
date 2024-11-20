@@ -14,6 +14,8 @@ void depthwise_conv_2d_resource_cl(const data_T &data, res_T &res, const typenam
     int depth_multiplier = CONFIG_T::n_filt / CONFIG_T::n_chan;
     [[intel::fpga_register]] int res_idx = 0;
 
+    [[intel::fpga_register]] typename CONFIG_T::accum_t acc[CONFIG_T::out_width * CONFIG_T::out_height * CONFIG_T::n_filt];
+
 DM_LOOP:
     #pragma unroll
     for (int dm = 0; dm < depth_multiplier; dm++) {
@@ -32,7 +34,7 @@ DM_LOOP:
                     res_idx =
                         (h * CONFIG_T::out_width * CONFIG_T::n_filt) + (w * CONFIG_T::n_filt) + (c * depth_multiplier) + dm;
 
-                    res[res_idx] = biases[c * depth_multiplier + dm];
+                    acc[res_idx] = biases[c * depth_multiplier + dm];
 
                 KERNEL_H_LOOP:
                     #pragma unroll
@@ -46,8 +48,7 @@ DM_LOOP:
 
                             if ((h_in >= 0) && (h_in < CONFIG_T::in_height) && (w_in >= 0) && (w_in < CONFIG_T::in_width)) {
 
-                                res[res_idx] +=
-
+                                acc[res_idx] +=
                                     CONFIG_T::mult_config::template product<typename data_T::value_type,
                                                                             typename CONFIG_T::weight_t::value_type>::
                                         product(
@@ -63,6 +64,12 @@ DM_LOOP:
                 }
             }
         }
+    }
+
+RESULT:
+    #pragma unroll
+    for (int ires = 0; ires < CONFIG_T::out_width * CONFIG_T::out_height * CONFIG_T::n_filt; ires++) {
+        res[ires] = cast<typename CONFIG_T::accum_t, typename res_T::value_type, CONFIG_T>(acc[ires]);
     }
 }
 } // namespace nnet
