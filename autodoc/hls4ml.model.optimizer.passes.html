@@ -1225,6 +1225,33 @@ The constant value was already used; this is just a cleanup uptimization.</p>
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.model.optimizer.passes.resize_remove_constants">
+<span id="hls4ml-model-optimizer-passes-resize-remove-constants-module"></span><h2>hls4ml.model.optimizer.passes.resize_remove_constants module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.resize_remove_constants" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.resize_remove_constants.</span></span><span class="sig-name descname"><span class="pre">ResizeRemoveConstants</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This optimizer is intended to clean the Resize node from RoI and Scales parameters that if left cause issues in hls4ml.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove RoI and Scale Constant from new shape input.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">
 <span id="hls4ml-model-optimizer-passes-seperable-to-dw-conv-module"></span><h2>hls4ml.model.optimizer.passes.seperable_to_dw_conv module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv" title="Link to this heading"></a></h2>
 <p>This optimizer converts a seperable convolution to a depthwise followed by a regular convolution.

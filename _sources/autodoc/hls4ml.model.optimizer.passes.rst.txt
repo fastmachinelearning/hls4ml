@@ -140,6 +140,14 @@ hls4ml.model.optimizer.passes.reshape\_const module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.resize\_remove\_constants module
+--------------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.resize_remove_constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.seperable\_to\_dw\_conv module
 ------------------------------------------------------------
 
