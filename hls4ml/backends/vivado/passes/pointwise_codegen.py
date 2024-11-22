@@ -66,7 +66,11 @@ class GeneratePointwiseConv1D(OptimizerPass):
     '''Generates code for pointwise 1D convolution'''
 
     def match(self, node):
-        return isinstance(node, Conv1D) and node.model.config.get_config_value('IOType') == 'io_parallel' and node.get_attr('filt_width') == 1
+        return (
+            isinstance(node, Conv1D)
+            and node.model.config.get_config_value('IOType') == 'io_parallel'
+            and node.get_attr('filt_width') == 1
+        )
 
     def transform(self, model, node):
         self._generate_pointwise_conv1d(node)

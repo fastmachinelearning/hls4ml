@@ -95,7 +95,11 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         else:
             params['fill_fn'] = 'FillConv1DBuffer'
 
-        is_pointwise_parallel_latency = node.get_attr('filt_width') == 1 and node.get_attr('strategy').lower() == 'latency' and node.model.config.get_config_value('IOType') == 'io_parallel'
+        is_pointwise_parallel_latency = (
+            node.get_attr('filt_width') == 1
+            and node.get_attr('strategy').lower() == 'latency'
+            and node.model.config.get_config_value('IOType') == 'io_parallel'
+        )
         if is_pointwise_parallel_latency:
             params['conv_fn'] = f'pointwise_conv_{node.index}'
         else:
@@ -108,7 +112,9 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
 
         mult_params = self._default_config_params(node)
         if is_pointwise_parallel_latency:
-            mult_params['n_in'] = int(node.get_attr('in_width') * node.get_attr('n_chan') * node.get_attr('filt_width') / mult_params['reuse'])
+            mult_params['n_in'] = int(
+                node.get_attr('in_width') * node.get_attr('n_chan') * node.get_attr('filt_width') / mult_params['reuse']
+            )
             mult_params['n_out'] = int(node.get_attr('in_width') * node.get_attr('n_filt') / mult_params['reuse'])
         else:
             mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
