@@ -108,8 +108,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
 
         mult_params = self._default_config_params(node)
         if is_pointwise_parallel_latency:
-            mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width') / mult_params['reuse']
-            mult_params['n_out'] = node.get_attr('n_filt') / mult_params['reuse']
+            mult_params['n_in'] = int(node.get_attr('in_width') * node.get_attr('n_chan') * node.get_attr('filt_width') / mult_params['reuse'])
+            mult_params['n_out'] = int(node.get_attr('in_width') * node.get_attr('n_filt') / mult_params['reuse'])
         else:
             mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
             mult_params['n_out'] = node.get_attr('n_filt')
