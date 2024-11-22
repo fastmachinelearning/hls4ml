@@ -1086,8 +1086,8 @@ class MultiModelGraph:
             trace_output.append(curr_trace_output)
         return output_data, trace_output
     
-    def stitch_design(self, **kwargs):
-        self.backend.stitch_design(self.output_dir, self.project_name, **kwargs)
+    def stitch_design(self, export = False, **kwargs):
+        self.backend.stitch_design(self.output_dir, self.project_name, export = export, **kwargs)
         
     def _print_status(self, status):
         # Clear the terminal line and print build status

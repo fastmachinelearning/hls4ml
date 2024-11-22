@@ -123,12 +123,16 @@ if {[llength $ap_rst_ports] > 0} {
     set sample_rst_pin [lindex $ap_rst_ports 0]
     set rst_polarity [get_property CONFIG.POLARITY $sample_rst_pin]
     # Create the 'ap_rst' port
-    create_bd_port -dir I -type rst ap_rst
+    set rst_port_name "ap_rst"
+    create_bd_port -dir I -type rst $rst_port_name
     set ap_rst_port [get_bd_ports ap_rst]
     
     # Set the CONFIG.POLARITY property of the 'ap_rst' port based on the retrieved polarity
     if {$rst_polarity ne ""} {
         set_property CONFIG.POLARITY $rst_polarity $ap_rst_port
+        # naming convention for active-low signals
+        set rst_port_name "ap_rst_n"
+        set_property NAME $rst_port_name $ap_rst_port
     } else {
         # Fallback to ACTIVE_HIGH if the retrieved polarity is not defined
         set_property CONFIG.POLARITY ACTIVE_HIGH $ap_rst_port
@@ -385,7 +389,7 @@ if {$interface_type == "axi_stream"} {
 
     # associate input, output and ap_rst to run at 'ap_clk'
     set_property CONFIG.ASSOCIATED_BUSIF [list "${input_pin_name}:${output_pin_name}"] [get_bd_ports /ap_clk]
-    set_property CONFIG.ASSOCIATED_RESET {ap_rst} [get_bd_ports /ap_clk]
+    set_property CONFIG.ASSOCIATED_RESET $rst_port_name [get_bd_ports /ap_clk]
     
     # Make external the 'ap_done' signal of the last IP
     set last_ip_pins [get_bd_pins -of $last_ip_cell]
@@ -474,15 +478,34 @@ if {$interface_type == "axi_stream"} {
     }
 }
 
-save_bd_design
+validate_bd_design
 
 regenerate_bd_layout
-close_project
 
+save_bd_design
 
 puts "###########################################################"                                     
 puts "#   Successfully connected the ports of each IP instance   "
-puts "#   from '[lindex $ip_instances 0]' to '[lindex $ip_instances [expr {$repo_count - 1}]]'."
 puts "#   A total of $repo_count IPs were connected.             "
 puts "###########################################################"
+
+if { [lsearch -exact $argv "export_design"] >= 0 } {
+    puts "Exporting the final stitched IP..."
+    set stitched_ip_dir "ip_repo"
+    ipx::package_project -root_dir $stitched_ip_dir \
+        -vendor user.org -library user -taxonomy /UserIP -module $bd_name \
+        -import_files
+    set_property description "This IP core integrates all NN subgraph IPs into one." [ipx::find_open_core user.org:user:stitched_design:1.0]   
+    set_property core_revision 2 [ipx::find_open_core user.org:user:stitched_design:1.0]
+    ipx::create_xgui_files [ipx::find_open_core user.org:user:stitched_design:1.0]
+    ipx::update_checksums [ipx::find_open_core user.org:user:stitched_design:1.0]
+    ipx::check_integrity [ipx::find_open_core user.org:user:stitched_design:1.0]
+    ipx::save_core [ipx::find_open_core user.org:user:stitched_design:1.0]
+    puts "Stitched IP has been exported to '$stitched_ip_dir' folder"
+} 
+
+close_project
+
+
+
 
