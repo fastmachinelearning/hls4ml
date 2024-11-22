@@ -129,15 +129,15 @@ class VitisBackend(VivadoBackend):
 
         return parse_vivado_report(output_dir)
     
-    def stitch_design(self, output_dir, project_name):
+    def stitch_design(self, output_dir, project_name, export = False):
         os.makedirs(output_dir, exist_ok=True)
         vivado_stitched_dir = os.path.join(output_dir, 'vivado_stitched_design')
         os.makedirs(vivado_stitched_dir, exist_ok=True)
 
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
-        stitch_command = 'vivado -mode batch -nojournal -nolog -notrace -source ' + hls4ml_path + '/../scripts/ip_stitcher.tcl'
-
+        stitch_flags = ' -tclargs export_design' if export else ''
+        stitch_command = 'vivado -mode batch -nojournal -nolog -notrace -source ' + hls4ml_path + '/../scripts/ip_stitcher.tcl' + stitch_flags
         stdout_log = os.path.join(vivado_stitched_dir, 'stitcher_stdout.log')
         stderr_log = os.path.join(vivado_stitched_dir, 'stitcher_stderr.log')
         
