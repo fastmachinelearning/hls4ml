@@ -107,9 +107,7 @@ void pointwise_conv_1d_latency_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_c
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
 
     // Limit multipliers to control parallelization
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(
-        CONFIG_T::out_width * CONFIG_T::n_filt * CONFIG_T::n_chan / CONFIG_T::reuse_factor, CONFIG_T::reuse_factor);
-#pragma HLS ALLOCATION operation instances=mul limit=multiplier_limit
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::mult_config::multiplier_limit
 
 // Convolve, saving all multiplication results to accumulate later
 ConvOut:
@@ -159,8 +157,8 @@ AccumOut:
     // Cast to "res_t" type
     for (int ii = 0; ii < CONFIG_T::out_width / CONFIG_T::reuse_factor; ii++) {
         for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
-            #pragma HLS UNROLL
-            res[ii * CONFIG_T::n_filt + ff] = (res_T)(acc[ii][ff]);
+            #pragma HLS UNROLL        
+            res[ii * CONFIG_T::n_filt + ff] = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[ii][ff]);
         }
     }
 }
