@@ -1,6 +1,3 @@
-import onnx
-from onnx import helper, numpy_helper
-
 from hls4ml.model import ModelGraph
 
 
@@ -21,6 +18,8 @@ def replace_char_inconsitency(name):
 
 
 def get_onnx_attribute(operation, name, default=None):
+    from onnx import helper
+
     attr = next((x for x in operation.attribute if x.name == name), None)
     if attr is None:
         value = default
@@ -75,8 +74,10 @@ def get_input_shape(graph, node):
 
 
 def get_constant_value(graph, constant_name):
+    from onnx import numpy_helper
+
     tensor = next((x for x in graph.initializer if x.name == constant_name), None)
-    return numpy_helper.to_array(tensor)
+    return numpy_helper.to_array(tensor)  # type: ignore
 
 
 def compute_pads_1d(operation, layer):
@@ -269,6 +270,10 @@ def onnx_to_hls(config):
     Returns:
         ModelGraph: hls4ml model object
     """
+    import onnx
+
+    # This is a list of dictionaries to hold all the layer info we need to generate HLS
+    layer_list = []
 
     # Extract model architecture
     print('Interpreting Model ...')
