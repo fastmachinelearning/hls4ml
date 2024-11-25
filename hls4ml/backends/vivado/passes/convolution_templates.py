@@ -105,7 +105,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         else:
             if node.get_attr('strategy').lower() == 'latency':
                 params['conv_fn'] = 'Conv1DLatency'
-            elif node.get_attr('strategy').lower() == 'resource':
+            else:
                 params['conv_fn'] = 'Conv1DResource'
 
         conv_config = self.template.format(**params)
