@@ -79,6 +79,7 @@ class VivadoBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         streaming_passes = [
+            'vivado:inplace_stream_flatten',  # Inform downstream changed packsize in case of skipping flatten
             'vivado:reshape_stream',
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',

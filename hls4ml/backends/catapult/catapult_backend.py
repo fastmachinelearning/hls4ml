@@ -88,6 +88,7 @@ class CatapultBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         streaming_passes = [
+            'catapult:inplace_stream_flatten',  # Inform downstream changed packsize in case of skipping flatten
             'catapult:reshape_stream',
             'catapult:clone_output',
             'catapult:insert_zero_padding_before_conv1d',

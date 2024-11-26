@@ -49,7 +49,9 @@ class ReshapeStream(OptimizerPass):
 
     def match(self, node):
         # do not run optimizer pass for a flatten layer (1 output dimension)
-        return isinstance(node, Reshape) and len(node.get_output_variable().shape) > 1
+        if not isinstance(node, Reshape):
+            return False
+        return len(node.get_output_variable().shape) > 1 or node.name in node.model.outputs
 
     def transform(self, model, node):
         if model.config.get_config_value('IOType') != 'io_stream':

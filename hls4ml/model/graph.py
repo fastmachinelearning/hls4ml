@@ -506,6 +506,8 @@ class ModelGraph:
 
         if next_node is not None:
             next_node.inputs[input_idx] = node.outputs[0]
+        else:
+            self.outputs = [node.outputs[0] if name == prev_node.outputs[0] else name for name in self.outputs]
 
         new_graph = OrderedDict()
         for k, v in self.graph.items():
@@ -514,47 +516,57 @@ class ModelGraph:
                 new_graph[node.name] = node
 
         self.graph = new_graph
-        self._update_model_outputs()
 
     def remove_node(self, node, rewire=True):
-        """Remove a node from a graph.
+        """Removes a node from the graph.
 
-        By default, this function can connect the outputs of previous node to the input of next one.
-        Note that when removing a leaf node `rewire` should be set to `False`.
+        By default, this function connects the outputs of the previous
+        node to the inputs of the next node. If the removed node has multiple
+        input/output tensors, an exception is raised.
 
         Args:
-            node (Layer): The node to remove
-            rewire (bool, optional): If `True`, connects the outputs of the previous node
-                to the inputs of the next node
+            node (Layer): The node to remove.
+            rewire (bool, optional): Deprecated, has no effect.
 
         Raises:
-            Exception: If an attempt is made to rewire a leaf node or a node with multiple
-                inputs/outputs.
+            Exception: If an attempt is made to rewire a node with
+            multiple inputs/outputs.
 
+        Note:
+            The `rewire` parameter is deprecated and has no effect.
         """
-        if rewire:
-            inputs = [inp for inp in node.inputs if inp]
-            outputs = [outp for outp in node.outputs if outp]
-            if len(inputs) > 1 or len(outputs) > 1:
-                raise Exception('Cannot rewire a node with multiple inputs/outputs')
-            prev_node = node.get_input_node(node.inputs[0])
+
+        inputs = [inp for inp in node.inputs if inp]
+        outputs = [outp for outp in node.outputs if outp]
+
+        if len(inputs) > 1 or len(outputs) > 1:
+            raise Exception('Cannot delete a node with multiple inputs/outputs')
+
+        if len(inputs) == 1:
+            # Connect inputs -> $outputs
+            if node.name in self.outputs:
+                msg = f'Remove leaf node {node.name} will connect its input node {inputs[0]} to output, but it already is.'
+                assert inputs[0] not in self.outputs, msg
+                self.outputs = [inputs[0] if name == node.name else name for name in self.outputs]
+
+        if len(outputs) == 1 and len(inputs) == 1:
+            inp_var = node.get_input_variable()
+            out_var = node.get_output_variable()
+
+            # fmt: off
+            assert (np.prod(inp_var.shape) == np.prod(out_var.shape)), \
+                f'Input and output shapes do not match for {node.name}: {inp_var.shape} -> {out_var.shape}'
+            # fmt: on
+
             next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
-            if prev_node is not None:
-                if len(next_nodes) > 0:
-                    for next_node in next_nodes:
-                        for i, _ in enumerate(next_node.inputs):
-                            if node.outputs[0] == next_node.inputs[i]:
-                                next_node.inputs[i] = prev_node.outputs[0]
-                                break
-                else:
-                    if not node.outputs[0] in self.outputs:
-                        raise Exception('Cannot rewire a node without child')
-            else:
-                raise Exception('Cannot rewire a node without a parent')
+            for next_node in next_nodes:
+                # Connect inputs -> next
+                for i, nxt_inp in enumerate(next_node.inputs):
+                    if outputs[0] == nxt_inp:
+                        next_node.inputs[i] = inputs[0]
 
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
-        self._update_model_outputs()
 
     def replace_node(self, old_node, new_node):
         """Replace an existing node in the graph with a new one.
@@ -584,7 +596,11 @@ class ModelGraph:
                     node.outputs[i] = repl[n]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
-        self._update_model_outputs()
+
+        old_name = old_node.name
+        if old_name in self.outputs:
+            new_name = new_node.name
+            self.outputs = [new_name if name == old_name else name for name in self.outputs]
 
     def split_node(self, old_node, new_node1, new_node2):
         """Replace an existing node in the graph with two nodes in sequence.
@@ -622,17 +638,9 @@ class ModelGraph:
             else:
                 new_graph[key] = value
         self.graph = new_graph
-        self._update_model_outputs()
 
-    def _update_model_outputs(self):
-        '''Update the model outputs
-
-        All node outputs and inputs are found. The model outputs are set to all node outputs
-        that are not also node inputs.
-        '''
-        node_outputs = [out for node in self.graph.values() for out in node.outputs]
-        node_inputs = [inp for node in self.graph.values() for inp in node.inputs]
-        self.outputs = [out for out in node_outputs if out not in node_inputs]
+        if old_node.name in self.outputs:
+            self.outputs = [new_node2.name if name == old_node.name else name for name in self.outputs]
 
     def next_layer(self):
         self.index += 1

@@ -33,6 +33,7 @@
     :caption: Advanced Features
 
     advanced/flows
+    advanced/hgq
     advanced/qonnx
     advanced/fifo_depth
     advanced/extension
