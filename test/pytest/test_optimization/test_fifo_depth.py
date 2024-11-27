@@ -5,6 +5,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+# import qonnx.core.onnx_exec as oxe
+from qonnx.core.modelwrapper import ModelWrapper
 from tensorflow.keras.layers import SeparableConv2D
 from tensorflow.keras.models import Sequential
 
@@ -12,8 +15,12 @@ import hls4ml
 from hls4ml.backends.vitis.passes.fifo_depth_optimization import override_test_bench
 
 test_root_path = Path(__file__).parent
+example_model_path = (test_root_path / '../../example-models').resolve()
 
 backend_options = ['Vitis']
+
+os.environ['XILINX_VITIS'] = "/opt/Xilinx/Vitis_HLS/2023.2/"
+os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
 
 
 def parse_cosim_report(project_path):
@@ -39,8 +46,8 @@ def parse_cosim_report(project_path):
         raise FileNotFoundError("Co-simulation report not found.")
 
 
-def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
-    """Execute the FIFO depth optimizer on an example model."""
+def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
+    """Execute the FIFO depth optimization sequence on a dummy Keras model."""
 
     # create a keras model
     input_shape = (128, 128, 3)
@@ -65,7 +72,7 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
         profiling_fifo_depth=profiling_fifo_depth
     )
 
-    output_dir = str(test_root_path / f'hls4mlprj_fifo_depth_optimization_backend_{backend}')
+    output_dir = str(test_root_path / f'hls4mlprj_fifo_depth_optimization_keras_backend_{backend}')
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, io_type=io_type, hls_config=config, output_dir=output_dir, backend=backend
@@ -74,6 +81,12 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
+
+    fifo_depth_optimization_checks(hls_model)
+
+
+def fifo_depth_optimization_checks(hls_model):
+    """Execute the FIFO depth optimization sequence on an hls4ml model."""
 
     # force the top-function to execute twice in the cosimulation, to verify no deadlocks occur even
     # when streaming multiple inputs into the network
@@ -101,7 +114,7 @@ def fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type):
 
 def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
     with pytest.raises(error, match=re.escape(message)):
-        fifo_depth_optimization_script(backend, profiling_fifo_depth, io_type)
+        run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type)
 
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
@@ -123,6 +136,57 @@ def test_runtime_error(backend):
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution(backend):
+def test_successful_execution_of_dummy_keras(backend):
     """Test the correct execution of the FIFO depth optimizer."""
-    fifo_depth_optimization_script(backend, profiling_fifo_depth=200_000, io_type='io_stream')
+    run_fifo_depth_optimization_keras(backend, profiling_fifo_depth=200_000, io_type='io_stream')
+
+
+# @pytest.fixture(scope='module')
+def get_tiny_unet_model():
+    """
+    Load tiny unet model, already channels-last and cleaned
+    """
+    dl_file = str(example_model_path / "onnx/tiny_unet_ch_last.onnx")
+    assert os.path.isfile(dl_file)
+    model = ModelWrapper(dl_file)
+    return model
+
+
+def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, model):
+    """Execute the FIFO depth optimization sequence on a ONNX/QONNX model."""
+
+    ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
+    X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
+    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+    # idict = {model.graph.input[0].name: X}
+    # y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+
+    config = hls4ml.utils.config.config_from_onnx_model(
+        model, granularity='name', backend=backend, default_precision='fixed<4,2>'
+    )
+
+    config['Flows'] = ['vitis:fifo_depth_optimization']
+    hls4ml.model.optimizer.get_optimizer('vitis:fifo_depth_optimization').configure(
+        profiling_fifo_depth=profiling_fifo_depth
+    )
+
+    output_dir = str(test_root_path / f'hls4mlprj_fifo_depth_optimization_tiny_unet_backend_{backend}')
+
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model,
+        output_dir=output_dir,
+        io_type='io_stream',
+        backend=backend,
+        hls_config=config,
+    )
+    hls_model.compile()
+    # y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
+    # np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml.ravel())s
+
+    # fifo_depth_optimization_checks(hls_model)
+
+
+@pytest.mark.parametrize('backend', backend_options)
+def test_successful_execution_of_tiny_unet(backend):
+    """Test the correct execution of the FIFO depth optimizer."""
+    run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth=200_000, io_type='io_stream', model=get_tiny_unet_model())
