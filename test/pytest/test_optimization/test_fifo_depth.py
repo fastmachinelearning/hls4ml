@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 import qonnx.core.onnx_exec as oxe
 from qonnx.core.modelwrapper import ModelWrapper
 from tensorflow.keras.layers import SeparableConv2D
@@ -14,11 +13,11 @@ from tensorflow.keras.models import Sequential
 import hls4ml
 from hls4ml.backends.vitis.passes.fifo_depth_optimization import override_test_bench
 
-
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../../example-models').resolve()
 
 backend_options = ['Vitis']
+
 
 def parse_cosim_report(project_path):
     """Parse the cosimulation report to check whether the cosimulation passed or failed and therefore a deadlock is
@@ -63,7 +62,7 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32, 16>')
-    
+
     # include the FIFO Depth optimizer do the flows
     config['Flows'] = ['vitis:fifo_depth_optimization']
     hls4ml.model.optimizer.get_optimizer('vitis:fifo_depth_optimization').configure(
@@ -184,6 +183,7 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
     np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
 
     fifo_depth_optimization_checks(hls_model)
+
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)

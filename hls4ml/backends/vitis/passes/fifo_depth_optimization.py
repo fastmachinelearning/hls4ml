@@ -15,17 +15,21 @@ def initialize_large_fifos(model, profiling_fifo_depth):
         Dict[str, int]: A dictionary containing FIFO names as keys and their initial depths as values is returned for
         comparison with the optimized depths.
     """
-    
-    # filter all the output variables and keep only the internal FIFOs, excluding output objects that are not FIFOs and the inut and output FIFOs as they can't be profiled and are implementation dependant i.e AXI Stream, AXI Master or connected to another IP
+
+    # filter all the output variables and keep only the internal FIFOs, excluding output objects that are not FIFOs and the
+    # inut and output FIFOs as they can't be profiled and are implementation dependant i.e AXI Stream, AXI Master or
+    # connected to another IP
     vars_to_profile = {
         output_variable_name: output_variable
         for output_variable_name, output_variable in model.output_vars.items()
-        if ("VivadoStreamVariable" in str(type(output_variable))) and output_variable != model.get_output_variables()[0] and output_variable != model.get_input_variables()[0]
+        if ("VivadoStreamVariable" in str(type(output_variable)))
+        and output_variable != model.get_output_variables()[0]
+        and output_variable != model.get_input_variables()[0]
     }
-    
+
     # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so
     # they will be profiled. Alternatively, "config_dataflow -override_user_fifo_depth profiling_fifo_depth" can be
-    # used inside build_prj.tcl to override all FIFO depths with the specified value  
+    # used inside build_prj.tcl to override all FIFO depths with the specified value
     initial_fifo_depths = {}
     for output_variable in vars_to_profile.values():
         if output_variable.pragma:
@@ -121,7 +125,7 @@ def get_vitis_optimized_fifo_depths(model):
         + "_prj"
         + "/solution1/.autopilot/db/channel_depth_info/"
     )
-    
+
     os.system(f"unzip -q -o {path_to_zip_file}channel.zip -d {path_to_zip_file}")
 
     # the channel_info.csv file contains the mapping of each fifo name (i.e layer4_out_U) to the respective
