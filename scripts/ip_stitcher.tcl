@@ -331,64 +331,59 @@ if {$interface_type == "axi_stream"} {
         }
     }
 
-    # Make external the input interface of the first IP
+    # Make external all input interfaces of the first IP
     set first_ip_cell [get_bd_cells [lindex $ip_instances 0]]
     if {[string length $first_ip_cell] == 0} {
         puts "Error: Could not find the first IP cell."
         return
     }
     set first_ip_intf_pins [get_bd_intf_pins -of $first_ip_cell]
-    set first_ip_axis_slave ""
+    set input_pin_names {}
     foreach intf_pin $first_ip_intf_pins {
         set pin_name [get_property NAME $intf_pin]
         if {[string match "*s_axis*" $pin_name] || [string match "*inp*" $pin_name]} {
-            set first_ip_axis_slave $intf_pin
-            break
+            # Make the interface pin external
+            make_bd_intf_pins_external $intf_pin
+            # Retrieve the external interface port
+            set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
+            # Change name to base_name
+            set_property NAME $pin_name $external_intf_port
+            lappend input_pin_names $pin_name
         }
     }
-    if {[string length $first_ip_axis_slave] > 0} {
-        # Make the interface pin external
-        make_bd_intf_pins_external $first_ip_axis_slave
-        # Retrieve the external interface port
-        set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
-        # Change name to base_name
-        set_property NAME $pin_name $external_intf_port
-        set input_pin_name $pin_name
-    } else {
-        puts "Error: Could not find input AXI Stream interface for first IP."
+    if {[llength $input_pin_names] == 0} {
+        puts "Error: Could not find any input AXI Stream interfaces for first IP."
         return
     }
 
-
-    # Make external the output interface of the last IP
+    # Make external all output interfaces of the last IP
     set last_ip_cell [get_bd_cells [lindex $ip_instances end]]
     if {[string length $last_ip_cell] == 0} {
         puts "Error: Could not find the last IP cell."
         return
     }
     set last_ip_intf_pins [get_bd_intf_pins -of $last_ip_cell]
-    set last_ip_axis_master ""
+    set output_pin_names {}
     foreach intf_pin $last_ip_intf_pins {
         set pin_name [get_property NAME $intf_pin]
-          if {[string match "*m_axis*" $pin_name] || [string match "*out*" $pin_name]} {
-            set last_ip_axis_master $intf_pin
-            break
+        if {[string match "*m_axis*" $pin_name] || [string match "*out*" $pin_name]} {
+            # Make the interface pin external
+            make_bd_intf_pins_external $intf_pin
+            # Retrieve the external interface port and change name to base name
+            set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
+            set_property NAME $pin_name $external_intf_port
+            lappend output_pin_names $pin_name
         }
     }
-    if {[string length $last_ip_axis_master] > 0} {
-        # Make the interface pin external
-        make_bd_intf_pins_external $last_ip_axis_master
-        # Retrieve the external interface port and change name to base name
-        set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
-        set_property NAME $pin_name $external_intf_port
-        set output_pin_name $pin_name
-    } else {
-        puts "Error: Could not find output AXI Stream interface for last IP."
+    if {[llength $output_pin_names] == 0} {
+        puts "Error: Could not find any output AXI Stream interfaces for last IP."
         return
     }
 
-    # associate input, output and ap_rst to run at 'ap_clk'
-    set_property CONFIG.ASSOCIATED_BUSIF [list "${input_pin_name}:${output_pin_name}"] [get_bd_ports /ap_clk]
+    # Associate input, output, and ap_rst to run at 'ap_clk'
+    # Join interface names with colons to match the required format
+    set associated_busif [join [concat $input_pin_names $output_pin_names] ":"]
+    set_property CONFIG.ASSOCIATED_BUSIF {$associated_busif} [get_bd_ports /ap_clk]
     set_property CONFIG.ASSOCIATED_RESET $rst_port_name [get_bd_ports /ap_clk]
     
     # Make external the 'ap_done' signal of the last IP
@@ -412,6 +407,10 @@ if {$interface_type == "axi_stream"} {
 } elseif {$interface_type == "unpacked"} {
     # Make 'ap_start' of the first IP external
     set first_ip_cell [get_bd_cells [lindex $ip_instances 0]]
+    if {[string length $first_ip_cell] == 0} {
+        puts "Error: Could not find the first IP cell."
+        return
+    }
     set first_ip_pins [get_bd_pins -of $first_ip_cell]
     set first_ap_start_pin ""
     foreach pin $first_ip_pins {
@@ -431,6 +430,10 @@ if {$interface_type == "axi_stream"} {
 
     # Make 'ap_done' of the last IP external
     set last_ip_cell [get_bd_cells [lindex $ip_instances end]]
+    if {[string length $last_ip_cell] == 0} {
+        puts "Error: Could not find the last IP cell."
+        return
+    }
     set last_ip_pins [get_bd_pins -of $last_ip_cell]
     set last_ap_done_pin ""
     foreach pin $last_ip_pins {
@@ -448,9 +451,8 @@ if {$interface_type == "axi_stream"} {
         puts "Warning: Could not find 'ap_done' pin for last IP"
     }
 
-
-    # Make external the input of the first IP (including 'vld' signals)
-    set first_ip_pins [get_bd_pins -of $first_ip_cell]
+    # Make external all inputs of the first IP (including 'vld' signals)
+    set input_pin_names {}
     foreach pin $first_ip_pins {
         set pin_name [get_property NAME $pin]
         # Match patterns for inputs and input valid pins
@@ -460,21 +462,31 @@ if {$interface_type == "axi_stream"} {
             # Retrieve the external port and change name to base name
             set external_port [get_bd_ports -filter "NAME =~ \"${pin_name}*\""]
             set_property NAME $pin_name $external_port
+            lappend input_pin_names $pin_name
         }
     }
+    if {[llength $input_pin_names] == 0} {
+        puts "Error: Could not find any input pins for first IP."
+        return
+    }
 
-    # Make external the output of the last IP (including 'vld' signals)
-    set last_ip_pins [get_bd_pins -of $last_ip_cell]
+    # Make external all outputs of the last IP (including 'vld' signals)
+    set output_pin_names {}
     foreach pin $last_ip_pins {
         set pin_name [get_property NAME $pin]
-        # Match patterns for inputs and input valid pins
+        # Match patterns for outputs and output valid pins
         if {[regexp {^layer(?:\d+_)?out(?:_(\d+))?(?:_ap_vld)?$} $pin_name]} {
             # Make the pin external
             make_bd_pins_external $pin
             # Retrieve the external port and change name to base name
             set external_port [get_bd_ports -filter "NAME =~ \"${pin_name}*\""]
             set_property NAME $pin_name $external_port
+            lappend output_pin_names $pin_name
         }
+    }
+    if {[llength $output_pin_names] == 0} {
+        puts "Error: Could not find any output pins for last IP."
+        return
     }
 }
 
