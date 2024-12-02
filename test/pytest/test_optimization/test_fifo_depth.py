@@ -14,6 +14,7 @@ from tensorflow.keras.models import Sequential
 import hls4ml
 from hls4ml.backends.vitis.passes.fifo_depth_optimization import override_test_bench
 
+
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../../example-models').resolve()
 
@@ -61,8 +62,9 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
     X_input = np.random.rand(1, *input_shape)
     keras_prediction = model.predict(X_input)
 
-    # execute fifo optimization
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32, 16>')
+    
+    # include the FIFO Depth optimizer do the flows
     config['Flows'] = ['vitis:fifo_depth_optimization']
     hls4ml.model.optimizer.get_optimizer('vitis:fifo_depth_optimization').configure(
         profiling_fifo_depth=profiling_fifo_depth
@@ -70,6 +72,7 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
 
     output_dir = str(test_root_path / f'hls4mlprj_fifo_depth_optimization_keras_backend_{backend}')
 
+    # execute fifo optimization
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, io_type=io_type, hls_config=config, output_dir=output_dir, backend=backend
     )
@@ -79,6 +82,7 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.01)
 
+    # check that the FIFOs have been optimized succesfully
     fifo_depth_optimization_checks(hls_model)
 
 
@@ -138,7 +142,6 @@ def test_successful_execution_of_dummy_keras(backend):
     run_fifo_depth_optimization_keras(backend, profiling_fifo_depth=200_000, io_type='io_stream')
 
 
-# @pytest.fixture(scope='module')
 def get_tiny_unet_model():
     """
     Load tiny unet model, already channels-last and cleaned
