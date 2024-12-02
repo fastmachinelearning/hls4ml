@@ -18,13 +18,14 @@ def initialize_large_fifos(model, profiling_fifo_depth):
 
     # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so
     # they will be profiled. Alternatively, "config_dataflow -override_user_fifo_depth profiling_fifo_depth" can be
-    # used inside build_prj.tcl to override all FIFO depths with the specified value
+    # used inside build_prj.tcl to override all FIFO depths with the specified value    
     vars_to_profile = {
         k: v
         for k, v in model.output_vars.items()
-        if v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
-    }
+        if ("VivadoStreamVariable" in str(type(v))) and v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
 
+    }
+    
     initial_fifo_depths = {}
     for v in vars_to_profile.values():
         if v.pragma:
@@ -89,7 +90,7 @@ def execute_cosim_to_profile_fifos(model):
 
     model.build(
         reset=False,
-        csim=True,
+        csim=False,
         synth=True,
         cosim=True,
         validation=False,
@@ -120,6 +121,7 @@ def get_vitis_optimized_fifo_depths(model):
         + "_prj"
         + "/solution1/.autopilot/db/channel_depth_info/"
     )
+    
     os.system(f"unzip -q -o {path_to_zip_file}channel.zip -d {path_to_zip_file}")
 
     # the channel_info.csv file contains the mapping of each fifo name (i.e layer4_out_U) to the respective
@@ -181,14 +183,15 @@ def set_optimized_fifo_depths(model, optimized_fifo_depths):
     """
 
     # iterate through the layer output FIFOs
-    for v in model.output_vars.values():
-        if v.pragma:
+    for _, v in model.output_vars.items():
+        if "VivadoStreamVariable" in str(type(v)):
+            if v.pragma:
 
-            if v.name not in optimized_fifo_depths.keys():
-                continue
+                if v.name not in optimized_fifo_depths.keys():
+                    continue
 
-            filtered_depth = optimized_fifo_depths[v.name]
-            v.pragma = (v.pragma[0], filtered_depth)
+                filtered_depth = optimized_fifo_depths[v.name]
+                v.pragma = (v.pragma[0], filtered_depth)
     return
 
 
