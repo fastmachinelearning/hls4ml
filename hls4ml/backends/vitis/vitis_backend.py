@@ -2,10 +2,13 @@ import os
 import sys
 import subprocess
 import importlib.util
+import json
+import shutil
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
-from hls4ml.report import parse_vivado_report
+from hls4ml.report import parse_vivado_report, aggregate_graph_reports
+from hls4ml.utils.simulation_utils import write_verilog_testbench, read_testbench_log, write_testbench_input, prepare_testbench_input, prepare_zero_input
 
 
 class VitisBackend(VivadoBackend):
@@ -133,28 +136,91 @@ class VitisBackend(VivadoBackend):
 
         return parse_vivado_report(output_dir)
     
-    def stitch_design(self, output_dir, project_name, export = False):
-        os.makedirs(output_dir, exist_ok=True)
-        vivado_stitched_dir = os.path.join(output_dir, 'vivado_stitched_design')
-        os.makedirs(vivado_stitched_dir, exist_ok=True)
+    def build_stitched_design(
+        self,
+        output_dir,
+        project_name,
+        stitch_design=True,
+        sim_stitched_design=False,
+        export_stitched_design=False,
+        nn_config=None,
+        graph_reports=None,
+        simulation_input_data=None):    
 
-        spec = importlib.util.find_spec("hls4ml")
+        os.makedirs(output_dir, exist_ok=True)
+        stitched_design_dir = os.path.join(output_dir, project_name)
+        if stitch_design:
+            if os.path.exists(stitched_design_dir):
+                raise FileExistsError(f"The directory '{stitched_design_dir}' already exists.")
+            os.makedirs(stitched_design_dir)
+
+        spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
-        stitch_flags = ' -tclargs export_design' if export else ''
-        stitch_command = 'vivado -mode batch -nojournal -nolog -notrace -source ' + hls4ml_path + '/../scripts/ip_stitcher.tcl' + stitch_flags
-        stdout_log = os.path.join(vivado_stitched_dir, 'stitcher_stdout.log')
-        stderr_log = os.path.join(vivado_stitched_dir, 'stitcher_stderr.log')
+        ip_stitcher_path = os.path.join(hls4ml_path, 'templates/vivado/ip_stitcher.tcl')     
+        stdout_log = os.path.join(stitched_design_dir, 'stitcher_stdout.log')
+        stderr_log = os.path.join(stitched_design_dir, 'stitcher_stderr.log')
+        nn_config_path = os.path.join(stitched_design_dir, 'nn_config.json')
+        testbench_path =  os.path.join(stitched_design_dir, 'testbench.v')
+        testbench_log_path = os.path.join(stitched_design_dir, 'testbench_log.csv')
+
+        try:
+            shutil.copy(ip_stitcher_path, stitched_design_dir)
+        except Exception as e:
+            print(f"Error: {e}. Cannot copy 'ip_stitcher.tcl' to {project_name} folder.")
+
+        if nn_config:
+            with open(nn_config_path, "w") as file:
+                json.dump(nn_config, file, indent=4)
+        
+        if(sim_stitched_design):
+            write_verilog_testbench(nn_config, testbench_path)
+            # Produce a testbench input file for every input layer
+            for i, layer in enumerate(nn_config['inputs']):
+                testbench_input_path = os.path.join(stitched_design_dir, f"{layer['name']}_input_data.txt")
+                # We reshape input simulation data to (fifo_depth, batch_size)
+                if simulation_input_data is None:
+                    input_data_reshaped = prepare_zero_input(layer)
+                    print("No simulation input provided. Using zero-filled inputs.")
+                else:
+                    # Handles both single and multi-layer cases. First dim should always be batch size
+                    data = simulation_input_data[i]
+                    input_data_reshaped = prepare_testbench_input(data, layer['fifo_depth'], layer['batch_size'])
+                write_testbench_input(input_data_reshaped, testbench_input_path, layer['integer_bits'], layer['fractional_bits'])
+            print('Verilog testbench and its input data was generated.')
+
+        print('Running build process of stitched IP...\n')
+        stitch_command = [
+            'vivado', '-mode', 'batch', '-nojournal', '-nolog', '-notrace',
+            '-source', ip_stitcher_path,
+            '-tclargs',
+            f'stitch_design={int(stitch_design)}',
+            f'sim_design={int(sim_stitched_design)}',
+            f'export_design={int(export_stitched_design)}',
+            f'stitch_project_name={project_name}',
+            f'sim_verilog_file={os.path.join(project_name, "testbench.v")}'
+        ]
         
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
-            # Use subprocess.Popen to capture output
             process = subprocess.Popen(
                 stitch_command,
-                shell=True,
                 cwd=output_dir,
                 stdout=stdout_file,
                 stderr=stderr_file,
-                text=True
+                text=True,
+                shell=False
             )
             process.communicate()
             if process.returncode != 0:
                 raise Exception(f'Stitching failed for {project_name}. See logs for details.')
+        
+        stitched_report = {'StitchedDesignReport': {}}
+        if stitch_design:
+            stitched_report = aggregate_graph_reports(graph_reports)
+
+        if sim_stitched_design:
+            testbench_output = read_testbench_log(testbench_log_path)
+            stitched_report['BehavSimResults'] = testbench_output['BehavSimResults']
+            stitched_report['StitchedDesignReport']['BestLatency'] = testbench_output['BestLatency']
+            stitched_report['StitchedDesignReport']['WorstLatency'] = testbench_output['WorstLatency']
+
+        return stitched_report

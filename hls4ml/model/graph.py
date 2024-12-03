@@ -6,6 +6,8 @@ from collections import OrderedDict
 import numpy as np
 import numpy.ctypeslib as npc
 import copy
+import importlib.util
+import shutil
 import re
 import warnings
 import concurrent.futures
@@ -1044,7 +1046,7 @@ class ModelGraph(Serializable):
             split_layer_names (List[str]): The names of the layers to split at.
 
         Returns:
-            List[ModelGraph]: List of ModelGraph instances resulting from the splits.
+            MultiModelGraph: An instance of MultiModelGraph containing the ModelGraphs created from the subgraphs.
         """
         if not split_layer_names:
             raise ValueError("No split layer names provided.")
@@ -1056,13 +1058,9 @@ class ModelGraph(Serializable):
             if name not in layer_names:
                 raise ValueError(f"Layer '{name}' not found in the model.")
 
-        # Get split indices and sort them
-        split_indices = sorted([layer_names.index(name) for name in split_layer_names])
-
-        # Add start and end indices to cover the entire layer list
-        indices = [0] + split_indices + [len(layer_list)]
-
         # Split the layer_list into subgraphs
+        split_indices = sorted([layer_names.index(name) for name in split_layer_names])
+        indices = [0] + split_indices + [len(layer_list)]
         subgraphs_layer_lists = []
         for i in range(len(indices) - 1):
             start = indices[i]
@@ -1142,8 +1140,7 @@ class ModelGraph(Serializable):
             layer_indices = [layer.index for layer in hls_model.graph.values()]
             if layer_indices:
                 max_index = max(layer_indices)
-                current_index = max_index - 1 # we have the input layer as well
-            
+                current_index = max_index - 1 # we have the new input layer as well
             model_graphs.append(hls_model)
 
         return MultiModelGraph(model_graphs)
@@ -1152,18 +1149,63 @@ class ModelGraph(Serializable):
 class MultiModelGraph:
     def __init__(self, graphs):
         self.graphs = graphs
-        self.project_name = re.sub(r'_graph\d+$', '_stitched', graphs[0].config.get_project_name())
+        self.project_name = 'vivado_stitched_design'
         self.output_dir = graphs[0].config.get_output_dir().split('/')[0]
         self.backend = self.graphs[0].config.backend
+        self.graph_reports = None
+    
+    def __getitem__(self, index):
+        return self.graphs[index]
+    
+    def parse_nn_config(self):
+        nn_config = {"inputs": [], "outputs": []}
 
-    def build(self, max_workers=None, **kwargs):
-        # Build all ModelGraph instances in parallel.
+        # Parse layers (inputs and outputs)
+        for graph, io_type in [(self.graphs[0], "inputs"), (self.graphs[-1], "outputs")]:
+            for layer in getattr(graph, io_type):
+                if layer in graph.output_vars:
+                    total_bits = 1
+                    [total_bits := total_bits * num for num in graph.output_vars[layer].shape]
+                    pragma = graph.output_vars[layer].pragma
+                    if isinstance(pragma, str):
+                        layer_pragma = pragma  # 'reshape' or 'partition' pragma
+                        fifo_depth = 1
+                    elif isinstance(pragma, (list, tuple)) and len(pragma) == 2:
+                        layer_pragma = pragma[0]  # 'stream' pragma
+                        fifo_depth = pragma[1]
+                    else:
+                        raise ValueError(f"Unexpected format for pragma: {pragma}")
+                    if total_bits % fifo_depth != 0:
+                        raise ValueError(f"Division of total_bits by fifo_depth does not result in a remainder of zero.")
+                    batch_size = total_bits // fifo_depth
+                    precision = graph.output_vars[layer].type.precision
+                    nn_config[io_type].append({
+                        "name": graph.output_vars[layer].name,
+                        "pragma": layer_pragma,
+                        "integer_bits": int(precision.integer),
+                        "fractional_bits": int(precision.fractional),
+                        "signed": int(precision.signed),
+                        "fifo_depth": int(fifo_depth),
+                        "batch_size": int(batch_size)
+                    })
+
+        return nn_config          
+
+    def build(self, stitch_design=False, sim_stitched_design=False, export_stitched_design=False, max_workers=None, **kwargs):
+        """
+        Builds all ModelGraph instances in parallel, with optional stitching and export.
+        """
+
+        export = kwargs.get('export', False)
+        if (stitch_design or sim_stitched_design or export_stitched_design) and not export:
+            raise ValueError("You can't enable stitch_design, sim_stitched_design, or export_stitched_design without having export=True.")
+        if (sim_stitched_design or export_stitched_design) and not stitch_design:
+            raise ValueError("You can't simulate or export a stitched design without enabling stitch_design.")
         build_results = {}
         total_builds = len(self.graphs)
         status = {}
         status_lock = threading.Lock()
 
-        # Initialize statuses
         for g in self.graphs:
             project_name = g.config.get_project_name()
             status[project_name] = 'Pending'
@@ -1195,37 +1237,61 @@ class MultiModelGraph:
                     build_results[project_name] = result
                 except Exception as exc:
                     build_results[project_name] = None
-        return build_results
+
+        self.graph_reports=build_results
+        self._replace_logos()
+
+        if stitch_design or sim_stitched_design or export_stitched_design:
+            nn_config = self.parse_nn_config()
+            stitched_report = self.backend.build_stitched_design(
+                output_dir=self.output_dir,
+                project_name=self.project_name,
+                stitch_design=stitch_design,
+                sim_stitched_design=sim_stitched_design,
+                export_stitched_design=export_stitched_design,
+                nn_config=nn_config,
+                graph_reports=self.graph_reports)
+            return stitched_report
+
+        return self.graph_reports
 
     def compile(self):
         for g in self.graphs:
             g.compile()
 
-    def predict(self, x):
-        # Pass the data through each ModelGraph in sequence
-        input_data = x
-        for g in self.graphs:
-            # Predict with the current ModelGraph
-            output_data = g.predict(input_data)
-            input_data = output_data
-        return output_data
-
+    def predict(self, x, sim = 'csim'):
+        if sim == 'csim':
+            input_data = x
+            for g in self.graphs:
+                output_data = g.predict(input_data)
+                input_data = output_data
+            return output_data
+        elif sim == 'rtl':
+            nn_config = self.parse_nn_config()
+            stitched_report = self.backend.build_stitched_design(
+                output_dir=self.output_dir,
+                project_name=self.project_name,
+                stitch_design=False,
+                sim_stitched_design=True,
+                export_stitched_design=False,
+                nn_config=nn_config,
+                graph_reports=self.graph_reports,
+                simulation_input_data=x)
+            return stitched_report['BehavSimResults']
+        else: 
+            print('Unknown simulation option given.')
+            
     def trace(self, x):
-        # Pass the data through each ModelGraph in sequence
+        # TODO: finish trace function
         input_data = x
         trace_output = []
         for g in self.graphs:
-            # Trace with the current ModelGraph
             output_data, curr_trace_output = g.trace(input_data)
             input_data = output_data
             trace_output.append(curr_trace_output)
         return output_data, trace_output
-    
-    def stitch_design(self, export = False, **kwargs):
-        self.backend.stitch_design(self.output_dir, self.project_name, export = export, **kwargs)
         
     def _print_status(self, status):
-        # Clear the terminal line and print build status
         print('\r', end='')
         status_icons = {
             'Pending': '○',
@@ -1235,3 +1301,30 @@ class MultiModelGraph:
         }
         status_str = ' | '.join(f'{proj}: {status_icons.get(stat, "?")}' for proj, stat in status.items())
         print(status_str, flush=True)
+
+    def _replace_logos(self):
+        spec = importlib.util.find_spec("hls4ml")
+        hls4ml_path = os.path.dirname(spec.origin)
+        hls4ml_logo = os.path.join(hls4ml_path, '../docs/img/logo_small.png')
+
+        if not os.path.isfile(hls4ml_logo):
+            raise FileNotFoundError(f"hls4ml logo not found at: {hls4ml_logo}")
+
+        for graph in self.graphs:
+            graph_logo_paths = [
+                os.path.join(
+                    graph.config.get_output_dir(),
+                    graph.config.get_project_name() + '_prj',
+                    'solution1/impl/misc/logo.png'
+                ),
+                os.path.join(
+                    graph.config.get_output_dir(),
+                    graph.config.get_project_name() + '_prj',
+                    'solution1/impl/ip/misc/logo.png'
+                )
+            ]
+            try:
+                for logo in graph_logo_paths:
+                    shutil.copy(hls4ml_logo, logo)
+            except Exception as e:
+                print(f"Error copying hls4ml logo to {graph.config.get_output_dir()} project: {e}")
