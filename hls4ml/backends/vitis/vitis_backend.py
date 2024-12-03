@@ -6,6 +6,7 @@ import importlib.util
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
 from hls4ml.report import parse_vivado_report
+from hls4ml.report import parse_xml_and_write_testbench
 
 
 class VitisBackend(VivadoBackend):
@@ -129,15 +130,27 @@ class VitisBackend(VivadoBackend):
 
         return parse_vivado_report(output_dir)
     
-    def stitch_design(self, output_dir, project_name, export = False):
+    def stitch_design(self, output_dir, project_name, sim_design = False, export = False):
         os.makedirs(output_dir, exist_ok=True)
         vivado_stitched_dir = os.path.join(output_dir, 'vivado_stitched_design')
         os.makedirs(vivado_stitched_dir, exist_ok=True)
 
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
-        stitch_flags = ' -tclargs export_design' if export else ''
-        stitch_command = 'vivado -mode batch -nojournal -nolog -notrace -source ' + hls4ml_path + '/../scripts/ip_stitcher.tcl' + stitch_flags
+        
+        # TODO fix verilog generator and output path 
+        sim_verilog_file = parse_xml_and_write_testbench(vivado_stitched_dir)
+        
+        # Build the command as a list
+        stitch_command = [
+            'vivado', '-mode', 'batch', '-nojournal', '-nolog', '-notrace',
+            '-source', os.path.join(hls4ml_path, '../scripts/ip_stitcher.tcl'),
+            '-tclargs',  # Add this line
+            f'sim_design={int(sim_design)}',
+            f'export_design={int(export)}',
+            f'sim_verilog_file={sim_verilog_file}'
+        ]
+                
         stdout_log = os.path.join(vivado_stitched_dir, 'stitcher_stdout.log')
         stderr_log = os.path.join(vivado_stitched_dir, 'stitcher_stderr.log')
         
@@ -145,11 +158,11 @@ class VitisBackend(VivadoBackend):
             # Use subprocess.Popen to capture output
             process = subprocess.Popen(
                 stitch_command,
-                shell=True,
                 cwd=output_dir,
                 stdout=stdout_file,
                 stderr=stderr_file,
-                text=True
+                text=True,
+                shell=False
             )
             process.communicate()
             if process.returncode != 0:
