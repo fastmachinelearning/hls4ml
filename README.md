@@ -15,7 +15,9 @@ If you have any questions, comments, or ideas regarding hls4ml or just want to s
 
 # Documentation & Tutorial
 
-For more information visit the webpage: [https://fastmachinelearning.org/hls4ml/](https://fastmachinelearning.org/hls4ml/)
+For more information visit the webpage: [https://fastmachinelearning.org/hls4ml/](https://fastmachinelearning.org/hls4ml/).
+
+For introductory material on FPGAs, HLS and ML inferences using hls4ml, check out the [video](https://www.youtube.com/watch?v=2y3GNY4tf7A&ab_channel=SystemsGroupatETHZ%C3%BCrich).
 
 Detailed tutorials on how to use `hls4ml`'s various functionalities can be found [here](https://github.com/hls-fpga-machine-learning/hls4ml-tutorial).
 
