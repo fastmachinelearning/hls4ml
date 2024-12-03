@@ -9,6 +9,28 @@
 
 puts "###########################################################"
 
+array set opt {
+    sim_design        0
+    export_design     0
+    sim_verilog_file  ""
+}
+
+foreach arg $::argv {
+    if {[regexp {([^=]+)=(.*)} $arg -> key value]} {
+        if {[info exists opt($key)]} {
+            set opt($key) $value
+        } else {
+            puts "Warning: Unknown option $key"
+        }
+    } else {
+        puts "Warning: Ignoring argument $arg"
+    }
+}
+
+set sim_design [expr {$opt(sim_design)}]
+set export_design [expr {$opt(export_design)}]
+set sim_verilog_file $opt(sim_verilog_file)
+
 # Project base dir
 set base_dir [pwd]
 
@@ -501,7 +523,7 @@ puts "#   Successfully connected the ports of each IP instance   "
 puts "#   A total of $repo_count IPs were connected.             "
 puts "###########################################################"
 
-if { [lsearch -exact $argv "export_design"] >= 0 } {
+if {$export_design} {
     puts "Exporting the final stitched IP..."
     set stitched_ip_dir "ip_repo"
     ipx::package_project -root_dir $stitched_ip_dir \
@@ -515,6 +537,31 @@ if { [lsearch -exact $argv "export_design"] >= 0 } {
     ipx::save_core [ipx::find_open_core user.org:user:stitched_design:1.0]
     puts "Stitched IP has been exported to '$stitched_ip_dir' folder"
 } 
+
+if {$sim_design} {
+    puts "Adding simulation Verilog file..."
+    if {$sim_verilog_file != ""} {
+        if { [file exists $sim_verilog_file] } {
+            if { [llength [get_filesets sim_1]] == 0 } {
+                create_fileset -simset sim_1
+            }
+            set_property SOURCE_SET sources_1 [get_filesets sim_1]
+            add_files -fileset sim_1 -norecurse -scan_for_includes $sim_verilog_file
+            update_compile_order -fileset sim_1
+            puts "Simulation Verilog file added: $sim_verilog_file"
+            # Set the simulation top module if necessary
+            set_property top tb_design_1_wrapper [get_filesets sim_1]
+            # Run the behavioral simulation
+            set_property -name {xsim.simulate.runtime} -value {200000ns} -objects [get_filesets sim_1]
+            launch_simulation
+        } else {
+            puts "Error: Simulation Verilog file not found: $sim_verilog_file"
+        }
+    } else {
+        puts "Error: sim_verilog_file not provided."
+        exit 1
+    }
+}
 
 close_project
 

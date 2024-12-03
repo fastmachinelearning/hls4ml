@@ -322,7 +322,7 @@ class ModelGraph:
         outputs (list, optional):  The outputs to the model. If None, determined from layer_list
     """
 
-    def __init__(self, config, layer_list, inputs=None, outputs=None, initial_index=0):
+    def __init__(self, config, layer_list, inputs=None, outputs=None, initial_index=0): #, output_vars={}):
         self.config = HLSConfig(config)
 
         # keep track of the applied flows
@@ -343,7 +343,7 @@ class ModelGraph:
 
         self.index = initial_index
         self.graph = OrderedDict()  # where the nodes are stored
-        self.output_vars = {}
+        #self.output_vars = output_vars
 
         self._top_function_lib = None
 
@@ -940,6 +940,7 @@ class ModelGraph:
         original_OutputDir = config['OutputDir']
         original_ProjectName = config['ProjectName']
         current_index = 0
+        #curr_output_vars = {}
         last_output_precision = None
         for idx, sub_layer_list in enumerate(subgraphs_layer_lists):
             
@@ -1008,7 +1009,7 @@ class ModelGraph:
             if layer_indices:
                 max_index = max(layer_indices)
                 current_index = max_index - 1 # we have the input layer as well
-            
+            #curr_output_vars = hls_model.output_vars
             model_graphs.append(hls_model)
 
         return MultiModelGraph(model_graphs)
@@ -1020,6 +1021,9 @@ class MultiModelGraph:
         self.project_name = re.sub(r'_graph\d+$', '_stitched', graphs[0].config.get_project_name())
         self.output_dir = graphs[0].config.get_output_dir().split('/')[0]
         self.backend = self.graphs[0].config.backend
+    
+    def __getitem__(self, index):
+        return self.graphs[index]
 
     def build(self, max_workers=None, **kwargs):
         # Build all ModelGraph instances in parallel.
@@ -1086,8 +1090,8 @@ class MultiModelGraph:
             trace_output.append(curr_trace_output)
         return output_data, trace_output
     
-    def stitch_design(self, export = False, **kwargs):
-        self.backend.stitch_design(self.output_dir, self.project_name, export = export, **kwargs)
+    def stitch_design(self, sim_design = False, export = False, **kwargs):
+        self.backend.stitch_design(self.output_dir, self.project_name, sim_design = sim_design, export = export, **kwargs)
         
     def _print_status(self, status):
         # Clear the terminal line and print build status
