@@ -717,6 +717,8 @@ class VivadoWriter(Writer):
             f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
             f.write('variable version\n')
             f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
+            f.write('variable maximum_size\n')
+            f.write('set maximum_size {}\n'.format(model.config.get_config_value('MaximumSize', '4096')))
 
         # build_prj.tcl
         srcpath = (filedir / '../templates/vivado/build_prj.tcl').resolve()
