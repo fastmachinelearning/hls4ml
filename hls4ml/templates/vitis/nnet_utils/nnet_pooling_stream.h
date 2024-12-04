@@ -105,12 +105,14 @@ void pooling2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res) {
                                                                                     [CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
+    constexpr int pack_factor = data_T::size / CONFIG_T::n_filt;
+
 ReadInputHeight:
     for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
     ReadInputWidth:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             #pragma HLS LOOP_FLATTEN
-            #pragma HLS PIPELINE
+            #pragma HLS PIPELINE II=pack_factor
 
             compute_pool_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res);
         }
