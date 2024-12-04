@@ -581,7 +581,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             W_bits = m.rindex('1') + 2  # + 1 for accounting the index starting from 0, +1 for the leading 1 of the exponent
         except Exception:
             W_bits = 1  # the value is a power of 2, 1 bit is needed, I_pos will offset the bit in the proper place
-        if param < 0:
+        if param < 0 and W_bits > 1:  # for po2 values the increment is not needed
             I_pos += 1
             W_bits += 1
         node.attributes[type_to_infer].precision = FixedPrecisionType(W_bits, I_pos, True if param < 0 else False)
