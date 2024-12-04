@@ -5,10 +5,11 @@
 reuse_factor = (
     'The number of times each multiplier is used by controlling the amount of pipelining/unrolling. '
     'Lower number results in more parallelism and lower latency at the expense of the resources used.'
+    'Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.'
 )
 
 index = 'Internal node counter used for bookkeeping and variable/tensor naming.'
-trace = 'Enables saving of layer output (tracing).'
+trace = 'Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)'
 
 result_type = 'The datatype (precision) of the output tensor.'
 accum_type = 'The datatype (precision) used to store intermediate results of the computation within the layer.'
@@ -35,8 +36,12 @@ conv_pf = (
     'The number of outputs computed in parallel. Essentially the number of multiplications of input window with the '
     'convolution kernel occuring in parallel. '
     'Higher number results in more parallelism (lower latency and II) at the expense of resources used.'
+    'Currently only supported in io_parallel.'
 )
-conv_implementation = '"LineBuffer" implementation is preferred over "Encoded" for most use cases.'
+conv_implementation = (
+    '"LineBuffer" implementation is preferred over "Encoded" for most use cases. '
+    'This attribute only applies to io_stream.'
+)
 
 # Recurrent-related attributes
 
