@@ -574,14 +574,17 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             e = bits[-23 - 8 : -23]
             return m, e
 
-        alpha = node.get_attr(attr_name)
-        m, e = get_man_exp(alpha)
-        I_bits = int(e, 2) - 127 + 1  # -127 is the bias of the exponent
-        W_bits = m.rindex('1') + 2  # + 1 for accounting the index starting from 0, +1 for the leading 1 of the exponent
-        if alpha < 0:
-            I_bits += 1
+        param = node.get_attr(attr_name)
+        m, e = get_man_exp(param)
+        I_pos = int(e, 2) - 127 + 1  # -127 is the bias of the exponent
+        try:
+            W_bits = m.rindex('1') + 2  # + 1 for accounting the index starting from 0, +1 for the leading 1 of the exponent
+        except Exception:
+            W_bits = 1  # the value is a power of 2, 1 bit is needed, I_pos will offset the bit in the proper place
+        if param < 0:
+            I_pos += 1
             W_bits += 1
-        node.attributes[type_to_infer].precision = FixedPrecisionType(W_bits, I_bits, True if alpha < 0 else False)
+        node.attributes[type_to_infer].precision = FixedPrecisionType(W_bits, I_pos, True if param < 0 else False)
         inferred_types.append(type_to_infer)
         return inferred_types
 
