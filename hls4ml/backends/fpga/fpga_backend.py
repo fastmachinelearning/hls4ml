@@ -94,7 +94,7 @@ class FPGABackend(Backend):
             attrs.append(ConfigurableAttribute('reuse_factor', default=1, description=descriptions.reuse_factor))
             self.attribute_map[layer] = attrs
 
-        # seperable is kind of special because it is effectively two layers that will be split
+        # separable is kind of special because it is effectively two layers that will be split
         for layer in (SeparableConv1D, SeparableConv2D):
             attrs = self.attribute_map.get(layer, [])
             attrs.append(TypeAttribute('depthwise_accum'))
