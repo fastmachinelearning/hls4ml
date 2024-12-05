@@ -1148,20 +1148,67 @@ class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
 
-        if self.get_attr('data_format') == 'channels_last':
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        if len(self.inputs) > 1:
+            # In order to be correctly ingested by hls4ml the QONNX resize node should have 3 inputs set with RoI left empty
+            if len(self.inputs) == 2:
+                raise Exception(
+                    'The number of inputs to Resize node is equal to 2. '
+                    'In this case, either one is trying to use a version 10 node '
+                    'or one is using the RoI parameter only to perform the resize operation, '
+                    'both not supported in hls4ml'
+                )
+            if len(self.inputs) == 4:
+                raise Exception('Sizes parameter is not supported by hls4ml. Use scales instead')
+            # get the scales of Resize node from QONNX frontend
+            # see doc here: https://onnx.ai/onnx/operators/onnx__Resize.html
+            scales_idx = 2 if len(self.inputs) == 3 or len(self.inputs) == 4 else 1
+            scales = self.get_input_node(self.inputs[scales_idx]).get_attr('value')
+            if len(scales) == 4:  # Resize 2D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('out_height', int(self.get_attr('in_height') * scales[2]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[3]))
+            elif len(scales) == 3:  # Resize 1D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[2]))
+            else:
+                raise Exception('Resize 1D and Resize 2D are the ones supported in hls4ml')
+            if self.get_attr('data_format') == 'channels_last':
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [int(self.get_attr('out_width')), int(self.get_attr('n_chan'))]
+                    dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
+                        int(self.get_attr('n_chan')),
+                    ]
+                    dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            else:
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [int(self.get_attr('n_chan')), int(self.get_attr('out_width'))]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [
+                        int(self.get_attr('n_chan')),
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
+                    ]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         else:
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
+            if self.get_attr('data_format') == 'channels_last':
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
+                    dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
+                    dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            else:
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
 
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
