@@ -292,6 +292,15 @@ def config_from_pytorch_model(
     Users are advised to inspect the returned object to tweak the conversion configuration.
     The return object can be passed as `hls_config` parameter to `convert_from_pytorch_model`.
 
+    Note that hls4ml internally follows the keras convention for nested tensors known as
+    "channels last", wherease pytorch uses the "channels first" convention.
+    For exampe, for a tensor encoding an image with 3 channels, pytorch will expect the data
+    to be encoded as (Number_Of_Channels, Height , Width), whereas hls4ml expects
+    (Height , Width, Number_Of_Channels). By default, hls4ml will perform the necessary
+    conversions of the inputs and internal tensors automatically, but will return the output
+    in "channels last" However, this behavior can be controlled by the user using the
+    related arguments discussed below.
+
     Args:
         model: PyTorch model
         input_shape (tuple or list of tuples): The shape of the input tensor, excluding the batch size.
