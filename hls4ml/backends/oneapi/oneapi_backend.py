@@ -10,6 +10,7 @@ from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.utils import attribute_descriptions as descriptions
 
 # from hls4ml.report import parse_oneapi_report
 
@@ -30,9 +31,9 @@ class OneAPIBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
-            attrs.append(ConfigurableAttribute('table_size', default=1024))
-            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
 
         # Add ParallelizationFactor to Conv1D/2D
@@ -43,7 +44,7 @@ class OneAPIBackend(FPGABackend):
 
         for layer in pf_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('parallelization_factor', default=1))
+            attrs.append(ConfigurableAttribute('parallelization_factor', default=1, description=descriptions.conv_pf))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
