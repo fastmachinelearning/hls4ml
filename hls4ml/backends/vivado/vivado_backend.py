@@ -70,7 +70,6 @@ class VivadoBackend(FPGABackend):
         cnn_layers = [Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Pooling1D, Pooling2D]
         for layer in cnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
@@ -114,6 +113,7 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
             'vivado:generate_conv_im2col',
+            'vivado:generate_pointwise_conv1_d',
             'vivado:generate_unrolled_dense_resource',
             'vivado:set_pipeline_style',
         ]
