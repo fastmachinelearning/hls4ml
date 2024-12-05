@@ -4,6 +4,14 @@ hls4ml.utils package
 Submodules
 ----------
 
+hls4ml.utils.attribute\_descriptions module
+-------------------------------------------
+
+.. automodule:: hls4ml.utils.attribute_descriptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.utils.config module
 --------------------------
 
