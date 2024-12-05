@@ -72,7 +72,8 @@ The ``name`` granularity includes per-layer configuration based on the model. A 
 for automatic setting of precisions.  The layer-level precisions with the ``'name'`` granularity default to ``'auto'``, which means that hls4ml will try to set it automatically
 (see :ref:`Automatic precision inference`). Note that layer-level settings take precedence over model-level settings. A ``'name'`` granularity is required for QKeras
 and QONNX model parsing. Passing the backend to these functions is recommended because some configuration options depend on the backend. See :py:class:`~hls4ml.utils.config.config_from_keras_model`
-and similar for more information on the various options.
+and similar for more information on the various options. Note specifically the documentation of :py:class:`~hls4ml.utils.config.config_from_pytorch_model` on how to handle differences in input data
+formats between pytorch and keras (hls4ml follows keras conventions internally).
 
 One can override specific values before using the configuration:
 
