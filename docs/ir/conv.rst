@@ -30,3 +30,9 @@ Depthwise convolutions
 
 Pointwise convolutions
 ======================
+
+Pointwise convolutions are a special case of convolution where the filter size is 1 for 1D or 1x1 for 2D.
+
+For the Xilinx backend, there is a dedicated io_parallel ``Latency`` strategy implementation of 1D pointwise convolutional layers integrated in `#881 <https://github.com/fastmachinelearning/hls4ml/pull/881>`_.
+The reuse factor (RF) is used to split the layer execution and reuse the existing module RF times. The RF also limits the number of multipliers in each module.
+The initiation interval scales as the RF. One limitation is that it assumes ``in_width`` is divisible by the RF.
