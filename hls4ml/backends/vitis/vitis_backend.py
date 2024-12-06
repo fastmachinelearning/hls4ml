@@ -2,11 +2,12 @@ import os
 import sys
 import subprocess
 import importlib.util
+import json
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
 from hls4ml.report import parse_vivado_report
-from hls4ml.report import parse_xml_and_write_testbench
+from hls4ml.utils.simulation_utils import generate_verilog_testbench
 
 
 class VitisBackend(VivadoBackend):
@@ -112,29 +113,37 @@ class VitisBackend(VivadoBackend):
 
         return parse_vivado_report(output_dir)
     
-    def stitch_design(self, output_dir, project_name, sim_design = False, export = False):
+    def stitch_design(self, output_dir, project_name, sim_design = False, export = False, nn_config=None):
+
         os.makedirs(output_dir, exist_ok=True)
-        vivado_stitched_dir = os.path.join(output_dir, 'vivado_stitched_design')
-        os.makedirs(vivado_stitched_dir, exist_ok=True)
+        stitched_design_dir = os.path.join(output_dir, 'vivado_stitched_design')
+
+        os.makedirs(stitched_design_dir, exist_ok=True)
 
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
+
+        nn_config_file = os.path.join(stitched_design_dir, "nn_config.json")
+        if nn_config:
+            with open(nn_config_file, "w") as file:
+                json.dump(nn_config, file, indent=4)
         
-        # TODO fix verilog generator and output path 
-        sim_verilog_file = parse_xml_and_write_testbench(vivado_stitched_dir)
-        
+        if(sim_design):
+            testbench_file_path =  os.path.join(stitched_design_dir, "testbench.v")
+            generate_verilog_testbench(nn_config, testbench_file_path)
+
         # Build the command as a list
         stitch_command = [
             'vivado', '-mode', 'batch', '-nojournal', '-nolog', '-notrace',
             '-source', os.path.join(hls4ml_path, '../scripts/ip_stitcher.tcl'),
-            '-tclargs',  # Add this line
+            '-tclargs',
             f'sim_design={int(sim_design)}',
             f'export_design={int(export)}',
-            f'sim_verilog_file={sim_verilog_file}'
+            f'sim_verilog_file=vivado_stitched_design/testbench.v'
         ]
                 
-        stdout_log = os.path.join(vivado_stitched_dir, 'stitcher_stdout.log')
-        stderr_log = os.path.join(vivado_stitched_dir, 'stitcher_stderr.log')
+        stdout_log = os.path.join(stitched_design_dir, 'stitcher_stdout.log')
+        stderr_log = os.path.join(stitched_design_dir, 'stitcher_stderr.log')
         
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
             # Use subprocess.Popen to capture output
