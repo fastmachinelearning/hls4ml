@@ -541,21 +541,21 @@ if {$export_design} {
 if {$sim_design} {
     puts "Adding simulation Verilog file..."
     if {$sim_verilog_file != ""} {
-        if { [file exists $sim_verilog_file] } {
+        if { [file exists "$base_dir/$sim_verilog_file"] } {
             if { [llength [get_filesets sim_1]] == 0 } {
                 create_fileset -simset sim_1
             }
             set_property SOURCE_SET sources_1 [get_filesets sim_1]
-            add_files -fileset sim_1 -norecurse -scan_for_includes $sim_verilog_file
+            add_files -fileset sim_1 -norecurse -scan_for_includes "$base_dir/$sim_verilog_file"
             update_compile_order -fileset sim_1
-            puts "Simulation Verilog file added: $sim_verilog_file"
+            puts "Simulation Verilog file added: $base_dir/$sim_verilog_file"
             # Set the simulation top module if necessary
             set_property top tb_design_1_wrapper [get_filesets sim_1]
             # Run the behavioral simulation
             set_property -name {xsim.simulate.runtime} -value {200000ns} -objects [get_filesets sim_1]
             launch_simulation
         } else {
-            puts "Error: Simulation Verilog file not found: $sim_verilog_file"
+            puts "Error: Simulation Verilog file not found: $base_dir/$sim_verilog_file"
         }
     } else {
         puts "Error: sim_verilog_file not provided."

@@ -322,7 +322,7 @@ class ModelGraph:
         outputs (list, optional):  The outputs to the model. If None, determined from layer_list
     """
 
-    def __init__(self, config, layer_list, inputs=None, outputs=None, initial_index=0): #, output_vars={}):
+    def __init__(self, config, layer_list, inputs=None, outputs=None, initial_index=0):
         self.config = HLSConfig(config)
 
         # keep track of the applied flows
@@ -343,7 +343,7 @@ class ModelGraph:
 
         self.index = initial_index
         self.graph = OrderedDict()  # where the nodes are stored
-        #self.output_vars = output_vars
+        self.output_vars = {}
 
         self._top_function_lib = None
 
@@ -1024,6 +1024,41 @@ class MultiModelGraph:
     
     def __getitem__(self, index):
         return self.graphs[index]
+    
+    def parse_nn_config(self):
+        nn_config = {"inputs": [], "outputs": []}
+
+        # Parse layers (inputs and outputs)
+        for graph, io_type in [(self.graphs[0], "inputs"), (self.graphs[-1], "outputs")]:
+            for layer in getattr(graph, io_type):
+                if layer in graph.output_vars:
+                    total_bits = 1
+                    [total_bits := total_bits * num for num in graph.output_vars[layer].shape]
+                    pragma = graph.output_vars[layer].pragma
+                    if isinstance(pragma, str):
+                        layer_pragma = pragma  # 'reshape' or 'partition' pragma
+                        fifo_depth = 1
+                    elif isinstance(pragma, (list, tuple)) and len(pragma) == 2:
+                        layer_pragma = pragma[0]  # 'stream' pragma
+                        fifo_depth = pragma[1]
+                    else:
+                        raise ValueError(f"Unexpected format for pragma: {pragma}")
+                    if total_bits % fifo_depth != 0:
+                        raise ValueError(f"Division of total_bits by fifo_depth does not result in a remainder of zero.")
+                    batch_size = total_bits // fifo_depth
+                    precision = graph.output_vars[layer].type.precision
+                    nn_config[io_type].append({
+                        "name": graph.output_vars[layer].name,
+                        "pragma": layer_pragma,
+                        "integer_bits": int(precision.integer),
+                        "fractional_bits": int(precision.fractional),
+                        "signed": int(precision.signed),
+                        "fifo_depth": int(fifo_depth),
+                        "batch_size": int(batch_size)
+                    })
+
+        return nn_config
+            
 
     def build(self, max_workers=None, **kwargs):
         # Build all ModelGraph instances in parallel.
@@ -1071,30 +1106,32 @@ class MultiModelGraph:
             g.compile()
 
     def predict(self, x):
-        # Pass the data through each ModelGraph in sequence
         input_data = x
         for g in self.graphs:
-            # Predict with the current ModelGraph
             output_data = g.predict(input_data)
             input_data = output_data
         return output_data
 
     def trace(self, x):
-        # Pass the data through each ModelGraph in sequence
         input_data = x
         trace_output = []
         for g in self.graphs:
-            # Trace with the current ModelGraph
             output_data, curr_trace_output = g.trace(input_data)
             input_data = output_data
             trace_output.append(curr_trace_output)
         return output_data, trace_output
     
     def stitch_design(self, sim_design = False, export = False, **kwargs):
-        self.backend.stitch_design(self.output_dir, self.project_name, sim_design = sim_design, export = export, **kwargs)
+        nn_config = self.parse_nn_config()
+        self.backend.stitch_design(
+            output_dir=self.output_dir,
+            project_name=self.project_name,
+            sim_design=sim_design,
+            export=export,
+            nn_config=nn_config,
+            **kwargs)
         
     def _print_status(self, status):
-        # Clear the terminal line and print build status
         print('\r', end='')
         status_icons = {
             'Pending': '○',
