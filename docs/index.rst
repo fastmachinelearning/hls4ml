@@ -5,6 +5,7 @@
     concepts
     status
     setup
+    faq
     release_notes
     reference
 
@@ -74,6 +75,4 @@ For the latest status including current and planned features, see the :ref:`Stat
 
 Tutorials
 =================================
-Detailed tutorials on how to use ``hls4ml``'s various functionalities can be found at:
-
-https://github.com/fastmachinelearning/hls4ml-tutorial
+Detailed tutorials on how to use ``hls4ml``'s various functionalities can be found `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`_.

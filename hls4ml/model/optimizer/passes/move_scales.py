@@ -5,6 +5,8 @@ TODO:  Check that biases are properly handled. (Attempt to do it via Merge)
 
 '''
 
+import warnings
+
 import numpy as np
 
 from hls4ml.model.layers import ApplyAlpha, Constant, Conv, MatMul, Merge
@@ -85,6 +87,9 @@ class ScaleDownMatMul(OptimizerPass):
                 can_propagate = False
 
         if not can_propagate:
+            warnings.warn(
+                'Failed to propagate quantization scales down MatMul node; model probably not suppored.', stacklevel=1
+            )
             return False
 
         model.remove_node(apply_alpha)
@@ -124,6 +129,9 @@ class ScaleDownAdd(OptimizerPass):
         try:
             bias = bias0 + bias1
         except ValueError:
+            warnings.warn(
+                'Failed to propagate quantization scales down Add node; model probably not suppored.', stacklevel=1
+            )
             return False
 
         model.remove_node(in0)
@@ -169,6 +177,7 @@ class BiasDownAdd(OptimizerPass):
             model.insert_node(new_node)
             return True
         else:
+            warnings.warn('Failed to propagate quantization bias down Add node; model probably not suppored.', stacklevel=1)
             return False
 
 
@@ -243,6 +252,9 @@ class ScaleDownConv(OptimizerPass):
                     except ValueError:
                         can_propagate = False
             if not can_propagate:
+                warnings.warn(
+                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                )
                 return False
 
             # to remove warning, since these get set again
@@ -287,6 +299,9 @@ class ScaleDownConv(OptimizerPass):
                     except ValueError:
                         can_propagate = False
             if not can_propagate:
+                warnings.warn(
+                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                )
                 return False
 
             # to remove warning, since these get set again
@@ -308,6 +323,9 @@ class ScaleDownConv(OptimizerPass):
                     can_propagate = False
 
             if not can_propagate:
+                warnings.warn(
+                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                )
                 return False
 
             # to remove warning, since these get set again
@@ -367,6 +385,9 @@ class ScaleDownConv(OptimizerPass):
                     except ValueError:
                         can_propagate = False
             if not can_propagate:
+                warnings.warn(
+                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                )
                 return False
 
             # to remove warning, since these get set again
@@ -388,6 +409,9 @@ class ScaleDownConv(OptimizerPass):
                 except ValueError:
                     can_propagate = False
             if not can_propagate:
+                warnings.warn(
+                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                )
                 return False
 
             # to remove warning, since these get set again
@@ -412,6 +436,9 @@ class ScaleDownConv(OptimizerPass):
                     except ValueError:
                         can_propagate = False
             if not can_propagate:
+                warnings.warn(
+                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                )
                 return False
 
             # to remove warning, since these get set again
@@ -445,6 +472,9 @@ class ScaleDownConv(OptimizerPass):
                     except ValueError:
                         can_propagate = False
             if not can_propagate:
+                warnings.warn(
+                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                )
                 return False
 
             # to remove warning, since these get set again
