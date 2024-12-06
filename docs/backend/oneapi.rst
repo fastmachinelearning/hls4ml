@@ -2,11 +2,11 @@
 oneAPI
 ======
 
-The ``oneAPI`` backend of hls4ml is designed for deploying NNs on Intel/Altera FPGAs. It will eventually
-replace the ``Quartus`` backend, which targeted Intel HLS. (Quartus continues to be used with IP produced by the
-``oneAPI`` backend.) This section discusses details of the ``oneAPI`` backend.
+The **oneAPI** backend of hls4ml is designed for deploying NNs on Intel/Altera FPGAs. It will eventually
+replace the **Quartus** backend, which targeted Intel HLS. (Quartus continues to be used with IP produced by the
+**oneAPI** backend.) This section discusses details of the **oneAPI** backend.
 
-The ``oneAPI`` code uses SYCL kernels to implement the logic that is deployed on FPGAs. It naturally leads to the
+The **oneAPI** code uses SYCL kernels to implement the logic that is deployed on FPGAs. It naturally leads to the
 accelerator style of programming. In the SYCL HLS (IP Component) flow, which is currently the only flow supported, the
 kernel becomes the IP, and the "host code" becomes the testbench. An accelerator flow, with easier deployment on
 PCIe accelerator boards, is planned to be added in the future.
@@ -18,7 +18,7 @@ produces the library used for calling the ``predict`` function from hls4ml. The 
 in hls4ml interact with the cmake system, so one does not need to manually use the build system, but it there
 if desired.
 
-The ``oneAPI`` backend, like the ``Quartus`` backend, only implements the ``Resource`` strategy for the layers. There
+The **oneAPI** backend, like the **Quartus** backend, only implements the ``Resource`` strategy for the layers. There
 is no ``Latency`` implementation of any of the layers.
 
 Note:  currently tracing and external weights (i.e. setting BramFactor) are not supported.
