@@ -318,7 +318,7 @@ def config_from_pytorch_model(
             be an explicit precision: 'auto' is not allowed.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
         channels_last_conversion (string, optional): Configures the conversion of pytorch layers to
-            'channels_last' data format used by hls4ml internally. Can be set to 'full', 'internal',
+            'channels_last' data format used by hls4ml internally. Can be set to 'full' (default), 'internal',
             or 'off'. If 'full', both the inputs and internal layers will be converted. If 'internal',
             only internal layers will be converted; this assumes the inputs are converted by the user.
             If 'off', no conversion is performed.
