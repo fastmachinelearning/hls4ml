@@ -232,7 +232,7 @@ More than one layer can have a configuration specified, e.g.:
        dense2:
           ...
 
-For more information on the optimization parameters and what they mean, you can visit the :doc:`Concepts <../concepts>` chapter.
+For more information on the optimization parameters and what they mean, you can visit the :doc:`Concepts <../api/concepts>` section.
 
 ----
 

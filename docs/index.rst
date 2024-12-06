@@ -2,46 +2,66 @@
     :hidden:
     :caption: Introduction
 
-    concepts
-    status
-    setup
-    faq
-    release_notes
-    reference
+    intro/introduction
+    intro/status
+    intro/setup
+    intro/faq
+    intro/release_notes
+    intro/reference
 
 .. toctree::
     :hidden:
     :glob:
-    :caption: Quick API Reference
+    :caption: User Guide
 
+    api/concepts
     api/configuration
-    api/auto
-    api/details
-    api/hls-model
-    api/profiling
+    api/command
 
 .. toctree::
     :hidden:
     :glob:
-    :caption: Internal Layers
+    :caption: Frontends
 
-    ir/dense
-    ir/activations
-    ir/conv
+    frontend/keras
+    frontend/pytorch
+    frontend/qonnx
+
+.. toctree::
+    :hidden:
+    :glob:
+    :caption: Backends
+
+    backend/vitis
+    backend/accelerator
+    backend/oneapi
+    backend/catapult
+    backend/quartus
+    backend/sr
 
 .. toctree::
     :hidden:
     :caption: Advanced Features
 
-    advanced/flows
+    advanced/profiling
+    advanced/auto
     advanced/hgq
-    advanced/qonnx
     advanced/fifo_depth
     advanced/extension
-    advanced/oneapi
-    advanced/accelerator
     advanced/model_optimization
-    advanced/command
+
+.. toctree::
+    :hidden:
+    :glob:
+    :caption: Internals
+
+    ir/ir
+    ir/modelgraph
+    ir/flows
+    ir/dense
+    ir/activations
+    ir/conv
+    ir/attributes
 
 .. toctree::
     :hidden:

@@ -14,7 +14,7 @@ The latest release of ``hls4ml`` can be installed with ``pip``:
 
    pip install hls4ml
 
-If you want to use our :doc:`profiling <api/profiling>` toolbox, you might need to install extra dependencies:
+If you want to use our :doc:`profiling <../advanced/profiling>` toolbox, you might need to install extra dependencies:
 
 .. code-block::
 
@@ -72,7 +72,7 @@ Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPG
 Quick Start
 =============
 
-For basic concepts to understand the tool, please visit the :doc:`Concepts <concepts>` chapter.
+For basic concepts to understand the tool, please visit the :doc:`Concepts <../api/concepts>` chapter.
 Here we give line-by-line instructions to demonstrate the general workflow.
 
 .. code-block:: python
@@ -105,7 +105,7 @@ After that, you can use :code:`Vivado HLS` to synthesize the model:
 
 Done! You've built your first project using ``hls4ml``! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
 
-If you want to configure your model further, check out our :doc:`Configuration <api/configuration>` page.
+If you want to configure your model further, check out our :doc:`Configuration <../api/configuration>` page.
 
 ..
    Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:

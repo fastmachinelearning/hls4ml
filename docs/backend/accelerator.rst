@@ -1,8 +1,8 @@
-=========================
-VivadoAccelerator Backend
-=========================
+=================
+VivadoAccelerator
+=================
 
-The ``VivadoAccelerator`` backend of ``hls4ml`` leverages the `PYNQ <http://pynq.io/>`_ software stack to easily deploy models on supported devices.
+The **VivadoAccelerator** backend of ``hls4ml`` leverages the `PYNQ <http://pynq.io/>`_ software stack to easily deploy models on supported devices.
 Currently ``hls4ml`` supports the following boards:
 
 * `pynq-z2 <https://www.xilinx.com/support/university/xup-boards/XUPPYNQ-Z2.html>`_ (part: ``xc7z020clg400-1``)

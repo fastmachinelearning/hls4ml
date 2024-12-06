@@ -1,6 +1,6 @@
-==============
-oneAPI Backend
-==============
+======
+oneAPI
+======
 
 The ``oneAPI`` backend of hls4ml is designed for deploying NNs on Intel/Altera FPGAs. It will eventually
 replace the ``Quartus`` backend, which targeted Intel HLS. (Quartus continues to be used with IP produced by the
