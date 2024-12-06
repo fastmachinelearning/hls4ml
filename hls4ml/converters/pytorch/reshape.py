@@ -93,7 +93,7 @@ def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, 
     layer['class_name'] = 'Reshape'
     layer['name'] = layer_name
     layer['inputs'] = input_names
-    if node.op == "call_module":
+    if node.op == 'call_module':
         start_dim = class_object.start_dim
         end_dim = class_object.end_dim
         if end_dim + 1 == 0 or end_dim + 1 > len(input_shapes[0]):
