@@ -166,7 +166,7 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
     """
 
     def match(self, node):
-        prev_node = node.get_input_node(node.inputs[0])
+        prev_node = node.get_input_node()
         basic_match = (
             isinstance(node, BatchNormalization)
             and isinstance(prev_node, BatchNormalization)
@@ -194,7 +194,7 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
             return False
 
     def transform(self, model, node):
-        prev_node = node.get_input_node(node.inputs[0])
+        prev_node = node.get_input_node()
 
         prev_map = prev_node.get_output_use_map()
         if len(prev_map[prev_node.outputs[0]]) > 1:

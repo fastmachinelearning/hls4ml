@@ -26,6 +26,7 @@ from hls4ml.model.types import (
     WeightVariable,
     find_minimum_width,
 )
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 
@@ -53,9 +54,9 @@ class Layer:
     """
 
     _expected_attributes = [
-        Attribute('index'),
-        ConfigurableAttribute('trace', default=False),
-        TypeAttribute('result'),
+        Attribute('index', description=descriptions.index),
+        ConfigurableAttribute('trace', default=False, description=descriptions.trace),
+        TypeAttribute('result', description=descriptions.result_type),
     ]
 
     @classproperty
