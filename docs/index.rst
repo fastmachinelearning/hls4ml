@@ -58,9 +58,6 @@
     ir/ir
     ir/modelgraph
     ir/flows
-    ir/dense
-    ir/activations
-    ir/conv
     ir/attributes
 
 .. toctree::
