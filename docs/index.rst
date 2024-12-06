@@ -5,6 +5,7 @@
     concepts
     status
     setup
+    faq
     release_notes
     reference
 
