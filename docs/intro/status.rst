@@ -18,8 +18,8 @@ A list of supported ML frameworks, HLS backends, and neural network architecture
 ML framework support:
 
 * (Q)Keras
-* PyTorch (limited)
-* (Q)ONNX (in development)
+* PyTorch
+* (Q)ONNX
 
 Neural network architectures:
 
@@ -32,7 +32,9 @@ HLS backends:
 
 * Vivado HLS
 * Intel HLS
-* Vitis HLS (experimental)
+* Vitis HLS
+* Catapult HLS
+* oneAPI (experimental)
 
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 
@@ -46,35 +48,44 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
      - Vivado HLS
      - Intel HLS
      - Vitis HLS
+     - Catapult HLS
+     - oneAPI
    * - MLP
      - ``supported``
-     - ``limited``
-     - ``in development``
+     - ``supported``
+     - ``supported``
+     - ``supported``
+     - ``supported``
      - ``supported``
      - ``supported``
      - ``experimental``
    * - CNN
      - ``supported``
-     - ``limited``
-     - ``in development``
+     - ``supported``
+     - ``supported``
+     - ``supported``
+     - ``supported``
      - ``supported``
      - ``supported``
      - ``experimental``
    * - RNN (LSTM)
      - ``supported``
-     - ``N/A``
-     - ``in development``
-     - ``supported``
      - ``supported``
      - ``N/A``
+     - ``supported``
+     - ``supported``
+     - ``supported``
+     - ``supported``
+     - ``experimental``
    * - GNN (GarNet)
      - ``supported``
+     - ``in development``
      - ``N/A``
      - ``N/A``
      - ``N/A``
      - ``N/A``
      - ``N/A``
-
+     - ``N/A``
 
 Other feature notes:
 
@@ -82,6 +93,9 @@ Other feature notes:
    * Vivado HLS versions 2018.2 to 2020.1
    * Intel HLS versions 20.1 to 21.4
    * Vitis HLS versions 2022.2 to 2024.1
+   * Catapult HLS versions 2024.1_1 to 2024.2
+   * oneAPI versions 2024.1 to 2025.0
+
 * Windows and macOS are not supported
 * BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package
 

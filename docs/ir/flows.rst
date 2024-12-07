@@ -2,17 +2,6 @@
 Optimizer Passes and Flows
 ==========================
 
-Internal Structure
-------------------
-
-The ``hls4ml`` library will parse models from Keras, PyTorch or ONNX into an internal execution graph. This model graph is represented with the
-:py:class:`~hls4ml.model.graph.ModelGraph` class. The nodes in this graph, corresponding to the layer and operations of the input model are represented
-by classes derived from the :py:class:`~hls4ml.model.layers.Layer` base class.
-
-Layers are required to have defined inputs and outputs that define how they are connected in the graph and what is the shape of their output. All information
-about the layer's state and configuration is stored in its attributes. All weights, variables and data types are attributes and there are mapping views to sort through them.
-Layers can define expected attributes and can be verified for correctness, or to produce a list of configurable attributes that user can tweak.
-
 Optimizer passes
 ----------------
 

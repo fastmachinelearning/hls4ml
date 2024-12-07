@@ -12,9 +12,9 @@ If you use this software in a publication, please cite the software
     @software{fastml_hls4ml,
     author       = {{FastML Team}},
     title        = {fastmachinelearning/hls4ml},
-    year         = 2023,
+    year         = 2024,
     publisher    = {Zenodo},
-    version      = {v0.8.1},
+    version      = {v1.0.0},
     doi          = {10.5281/zenodo.1201549},
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }

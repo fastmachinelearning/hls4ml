@@ -124,8 +124,8 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
     acc_optimized = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_optimized, axis=1))
     print(f'Optimized Keras accuracy: {acc_optimized}')
 
-There are two more Vivado "optimizers" - VivadoFFEstimator, aimed at reducing register utilisation and VivadoMultiObjectiveEstimator, aimed at optimising BRAM and DSP utilisation.
-Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used before synthesing HLS, by modifying the config:
+There are two more Vivado "optimizers" - VivadoFFEstimator, aimed at reducing register utilization and VivadoMultiObjectiveEstimator, aimed at optimizing BRAM and DSP utilization.
+Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used before synthesizing HLS, by modifying the config:
 
 .. code-block:: Python
 
