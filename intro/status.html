@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status and Features &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Setup and Quick Start" href="setup.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Status and Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#status">Status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-models">Example Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Status and Features</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/intro/status.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="status-and-features">
+<h1>Status and Features<a class="headerlink" href="#status-and-features" title="Link to this heading"></a></h1>
+<section id="status">
+<h2>Status<a class="headerlink" href="#status" title="Link to this heading"></a></h2>
+<p>The latest version (built from <code class="docutils literal notranslate"><span class="pre">main</span></code>) is 0.9.0.dev100+gcfcd46cb.
+The stable version (released on PyPI) is 0.8.1.
+See the <a class="reference internal" href="release_notes.html#release-notes"><span class="std std-ref">Release Notes</span></a> section for a changelog.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<p>A list of supported ML frameworks, HLS backends, and neural network architectures, including a summary table is below.  Dependencies are given in the <a class="reference internal" href="setup.html"><span class="doc">Setup</span></a> page.</p>
+<p>ML framework support:</p>
+<ul class="simple">
+<li><p>(Q)Keras</p></li>
+<li><p>PyTorch</p></li>
+<li><p>(Q)ONNX</p></li>
+</ul>
+<p>Neural network architectures:</p>
+<ul class="simple">
+<li><p>Fully connected NN (multilayer perceptron, MLP)</p></li>
+<li><p>Convolutional NN</p></li>
+<li><p>Recurrent NN (LSTM)</p></li>
+<li><p>Graph NN (GarNet)</p></li>
+</ul>
+<p>HLS backends:</p>
+<ul class="simple">
+<li><p>Vivado HLS</p></li>
+<li><p>Intel HLS</p></li>
+<li><p>Vitis HLS</p></li>
+<li><p>Catapult HLS</p></li>
+<li><p>oneAPI (experimental)</p></li>
+</ul>
+<p>A summary of the on-going status of the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> tool is in the table below.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ML framework/HLS backend</p></th>
+<th class="head"><p>(Q)Keras</p></th>
+<th class="head"><p>PyTorch</p></th>
+<th class="head"><p>(Q)ONNX</p></th>
+<th class="head"><p>Vivado HLS</p></th>
+<th class="head"><p>Intel HLS</p></th>
+<th class="head"><p>Vitis HLS</p></th>
+<th class="head"><p>Catapult HLS</p></th>
+<th class="head"><p>oneAPI</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MLP</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">experimental</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>CNN</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">experimental</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>RNN (LSTM)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">experimental</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>GNN (GarNet)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">in</span> <span class="pre">development</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Other feature notes:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is tested on Linux, and supports</dt><dd><ul>
+<li><p>Vivado HLS versions 2018.2 to 2020.1</p></li>
+<li><p>Intel HLS versions 20.1 to 21.4</p></li>
+<li><p>Vitis HLS versions 2022.2 to 2024.1</p></li>
+<li><p>Catapult HLS versions 2024.1_1 to 2024.2</p></li>
+<li><p>oneAPI versions 2024.1 to 2025.0</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Windows and macOS are not supported</p></li>
+<li><p>BDT support has moved to the <a class="reference external" href="https://github.com/thesps/conifer">Conifer</a> package</p></li>
+</ul>
+</section>
+<section id="example-models">
+<h2>Example Models<a class="headerlink" href="#example-models" title="Link to this heading"></a></h2>
+<p>We also provide and document several example <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> models in <a class="reference external" href="https://github.com/fastmachinelearning/example-models">this GitHub repository</a>, which is included as a submodule.
+You can check it out by doing <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">submodule</span> <span class="pre">update</span> <span class="pre">--init</span> <span class="pre">--recursive</span></code> from the top level directory of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="introduction.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="setup.html" class="btn btn-neutral float-right" title="Setup and Quick Start" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

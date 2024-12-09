@@ -1,0 +1,194 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frequently asked questions &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Release Notes" href="release_notes.html" />
+    <link rel="prev" title="Setup and Quick Start" href="setup.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently asked questions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#common-hls-synthesis-issues">Common HLS synthesis issues</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Frequently asked questions</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/intro/faq.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="frequently-asked-questions">
+<h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Link to this heading"></a></h1>
+<p><strong>What is hls4ml?</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is a tool for converting neural network models into FPGA firmware. hls4ml is aimed at low-latency applications, such as triggering at the Large Hadron Collider (LHC) at CERN, but is applicable to other domains requiring microsecond latency. See the full documentation for more details.</p>
+<p><strong>How does hls4ml work?</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> takes the models from Keras, PyTorch and ONNX (optionally quantized with the respective quantization libraries) and produces high-level synthesis code (based on C++) that can be converted to FPGA firmware using the HLS compilers from different vendors (AMD/Xilinx, Intel/Altera, Catapult…).</p>
+<p><strong>How is hls4ml so fast?</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> stores all weights on-chip for fast access and has tuneable parallelism. As a consequence, the size of the model that can be successfully converted into firmware with hls4ml largely depends on the amount of available resources on the target FPGA. Therefore it is highly recommended to compress the model with quantization (via QKeras or HGQ for Keras or Brevitas for PyTorch) and pruning. Additionally, <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> exploits the parallelism available in an FPGA or ASIC by implementing a spatial dataflow architecture.</p>
+<p><strong>Will my model work with hls4ml?</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports many common layers found in MLP, CNN and RNN architectures, however some seldom-used features of these layers may not be supported. Novel architectures such as graph networks or transformers are in various stages of development and are currently not stable for end-users. See the status and features page for more information. Models with custom layers can be supported through extension API. If you encounter a feature not yet supported, open a new issue.</p>
+<p><strong>Will my model with X parameters fit an FPGA model Y?</strong></p>
+<p>It depends. <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> has been successfully used with quantized models with <cite>O</cite> (10k) parameters, while for some architectures going beyond <cite>O</cite> (1000) parameters is not doable even on the largest FPGAs. The number of parameters of a model is generally not a good estimate of the performance on an FPGA as the computational complexity of different types of NN layers has big effects on the resource consumption on an FPGA. For example, a CNN or GNN may reuse the same parameter in many operations. Furthermore, model compression in the form of quantization and pruning can significantly change the footprint of the model on the FPGA. For these reasons, we discourage the use of this metric for estimating performance.</p>
+<p>If you’re looking for a quick estimate of the resource usage and latency for a given model without synthesis, look into <a class="reference external" href="https://github.com/IMPETUS-UdeS/rule4ml">rule4ml</a> and <a class="reference external" href="https://github.com/Dendendelen/wa-hls4ml">wa-hls4ml</a> projects.</p>
+<p>LLMs and large vision transformers are not supported nor planned.</p>
+<p><strong>How do I get started with hls4ml?</strong></p>
+<p>We strongly recommend interested users unfamiliar with FPGAs or model compression techniques to review the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">hls4ml tutorials</a> to get an overview of the features and conversion workflow.</p>
+<p><strong>How do I contribute to hls4ml development?</strong></p>
+<p>We’re always welcoming new contributions. If you have an interesting feature in mind feel free to start a new discussion thread with your proposal. We also have regular meetings online to discuss the status of developments where you can be invited to present your work. To receive announcements, <a class="reference external" href="https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=hls-fml">request to be added to our CERN e-group</a>. Furthermore, check the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/CONTRIBUTING.md">CONTRIBUTING</a> document for a set of technical requirements for making contributions to the hls4ml project.</p>
+<section id="common-hls-synthesis-issues">
+<h2>Common HLS synthesis issues<a class="headerlink" href="#common-hls-synthesis-issues" title="Link to this heading"></a></h2>
+<p><strong>Stop unrolling loop … because it may cause large runtime and excessive memory usage due to increase in code size.</strong></p>
+<p>This error is common with models that are too large to fit on the FPGA given the <code class="docutils literal notranslate"><span class="pre">IOType</span></code> used. If you are using <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code>, consider switching to <code class="docutils literal notranslate"><span class="pre">io_stream</span></code>, which prevents unrolling all arrays. It may help to also use the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy. Pruning or quantizing the model may not help as it is related to the size of the loops. If possible, try to reduce the number of neurons/filters of your model to reduce the size of the activation tensors and thus number of iterations of loops.</p>
+<p><strong>cannot open shared object file …: No such file or directory.</strong></p>
+<p>This is usually an indication that the compilation failed due to incorrect HLS code being produced. It is most likely a bug in hls4ml. Please open a bug report. Note that the displayed error message may be the same but the cause can be different. Unless you’re sure that the existing bug reports show the same underlying issue, it is better to open a separate bug report.</p>
+<p><strong>My hls4ml predictions don’t match the original Keras/PyTorch/ONNX ones</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> uses fixed-point precision types to represent internal data structures, unlike the floating-point precision types used for computation in upstream ML toolkits. If the used bit width is not sufficiently wide, you may encounter issues with computation accuracy that propagates through the layers. This is especially true for models that are not fully quantized, or models with insufficient <code class="docutils literal notranslate"><span class="pre">accum_t</span></code> bitwidth. Look into automatic precision inference and profiling tools to resolve the issue.</p>
+<p>Note that bit-exact behavior is not always possible, as many math functions (used by activation functions) are approximated with lookup tables.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="setup.html" class="btn btn-neutral float-left" title="Setup and Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="release_notes.html" class="btn btn-neutral float-right" title="Release Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

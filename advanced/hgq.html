@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="ONNX and QONNX" href="qonnx.html" />
-    <link rel="prev" title="Profiling" href="../api/profiling.html" /> 
+    <link rel="next" title="FIFO Buffer Depth Optimization" href="fifo_depth.html" />
+    <link rel="prev" title="Automatic precision inference" href="auto.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,30 +47,50 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../status.html">Status and Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup and Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../details.html">Software Details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../flows.html">Optimizer Passes and Flows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference.html">Citation, Acknowledgments, and Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/hls-model.html">HLS Model Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">High Granularity Quantization (HGQ)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="oneapi.html">oneAPI Backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
 <ul>
@@ -112,7 +132,7 @@
 <a class="reference external image-reference" href="https://calad0i.github.io/HGQ/"><img alt="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" src="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" /></a>
 <a class="reference external image-reference" href="https://badge.fury.io/py/hgq"><img alt="https://badge.fury.io/py/hgq.svg" src="https://badge.fury.io/py/hgq.svg" /></a>
 <a class="reference external image-reference" href="https://arxiv.org/abs/2405.00645"><img alt="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" /></a>
-<p><a class="reference external" href="https://github.com/calad0i/HGQ/">High Granularity Quantization (HGQ)</a> is a library that performs gradient-based automatic bitwidth optimization and quantization-aware training algorithm for neural networks to be deployed on FPGAs. By laveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.</p>
+<p><a class="reference external" href="https://github.com/calad0i/HGQ/">High Granularity Quantization (HGQ)</a> is a library that performs gradient-based automatic bitwidth optimization and quantization-aware training algorithm for neural networks to be deployed on FPGAs. By leveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.</p>
 <img alt="Overview of HGQ" class="align-center" src="https://calad0i.github.io/HGQ/_images/overview.svg" /><p>Conversion of models made with HGQ library is fully supported. The HGQ models are first converted to proxy model format, which can then be parsed by hls4ml bit-accurately. Below is an example of how to create a model with HGQ and convert it to hls4ml model.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">keras</span>
 <span class="kn">from</span> <span class="nn">HGQ.layers</span> <span class="kn">import</span> <span class="n">HDense</span><span class="p">,</span> <span class="n">HDenseBatchNorm</span><span class="p">,</span> <span class="n">HQuantize</span>
@@ -148,8 +168,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../api/profiling.html" class="btn btn-neutral float-left" title="Profiling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="qonnx.html" class="btn btn-neutral float-right" title="ONNX and QONNX" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="auto.html" class="btn btn-neutral float-left" title="Automatic precision inference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fifo_depth.html" class="btn btn-neutral float-right" title="FIFO Buffer Depth Optimization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

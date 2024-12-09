@@ -1,0 +1,216 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimizer Passes and Flows &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Layer attributes" href="attributes.html" />
+    <link rel="prev" title="ModelGraph Class" href="modelgraph.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Optimizer Passes and Flows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#optimizer-passes">Optimizer passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flows">Flows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Optimizer Passes and Flows</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/ir/flows.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="optimizer-passes-and-flows">
+<h1>Optimizer Passes and Flows<a class="headerlink" href="#optimizer-passes-and-flows" title="Link to this heading"></a></h1>
+<section id="optimizer-passes">
+<h2>Optimizer passes<a class="headerlink" href="#optimizer-passes" title="Link to this heading"></a></h2>
+<p>To reach a state from which the code can be generated, the internal model graph undergoes a series of optimizations (transformations), dubbed
+<em>optimization passes</em>. All transformations of the model and any modification to any layer’s attributes must be implemented through an optimization
+pass. All optimizer passes derive from the <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a> class. Optimizer passes are usually applied to
+nodes/layers; however, a special class <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOptimizerPass</span></code></a> exists that is applied on the full model. An
+example of a layer optimizer is <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd" title="hls4ml.model.optimizer.passes.fuse_biasadd"><code class="xref py py-class docutils literal notranslate"><span class="pre">fuse_biasadd</span></code></a>, which adds a bias to a
+<a class="reference internal" href="../autodoc/hls4ml.model.html#hls4ml.model.layers.Dense" title="hls4ml.model.layers.Dense"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dense</span></code></a>, <a class="reference internal" href="../autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1D" title="hls4ml.model.layers.Conv1D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv1D</span></code></a>, or <a class="reference internal" href="../autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2D" title="hls4ml.model.layers.Conv2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2D</span></code></a> layer, while an example of
+an optimizer pass that runs on the full model is <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.stamp.MakeStamp" title="hls4ml.model.optimizer.passes.stamp.MakeStamp"><code class="xref py py-class docutils literal notranslate"><span class="pre">MakeStamp</span></code></a>, which creates a unique number (stamp).</p>
+<p>Subclasses of <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a> must provide a criteria in <code class="docutils literal notranslate"><span class="pre">match</span></code> function that, if satisfied, will
+perform the transformation from <code class="docutils literal notranslate"><span class="pre">transform</span></code> function. The boolean return value of <code class="docutils literal notranslate"><span class="pre">transform</span></code> indicates if the optimizer pass made changes to the
+model graph that may require running the optimizers again. In that case, optimizers in a flow are run again.</p>
+<p>Optimizers can be general, independent of the backend, in which case they are located in <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes" title="hls4ml.model.optimizer.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.passes</span></code></a>, or they may be backend-specific,
+in which case they are located in a folder dependent on the backend, e.g., <a class="reference internal" href="../autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes" title="hls4ml.backends.vivado.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.vivado.passes</span></code></a> or
+<a class="reference internal" href="../autodoc/hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes" title="hls4ml.backends.quartus.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.quartus.passes</span></code></a>. A common set of optimizers that are used by FPGA backends are located in <a class="reference internal" href="../autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes" title="hls4ml.backends.fpga.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.fpga.passes</span></code></a>.</p>
+<p>Certain optimizers are used frequently enough that it makes sense to define special classes, which inherit from <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalOptimizerPass</span></code></a>: An optimizer pass that matches each node. This is useful, for example,
+to transform the types for a particular backend.</p></li>
+<li><p><a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.LayerOptimizerPass" title="hls4ml.model.optimizer.optimizer.LayerOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerOptimizerPass</span></code></a>: An optimizer pass that matches each node of a particular layer type. This is
+useful, for example, to write out the HLS code for a particular node that remains in the final graph.</p></li>
+<li><p><a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurableOptimizerPass</span></code></a>:  An optimizer pass that has some configurable parameters.</p></li>
+<li><p><a class="reference internal" href="../autodoc/hls4ml.backends.html#hls4ml.backends.template.Template" title="hls4ml.backends.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a>:  An optimizer pass that populates a code template and assigns it to an attribute of a given layer. This is commonly used
+to generate code blocks in later stages of the conversion.</p></li>
+</ul>
+</div></blockquote>
+<p>Note that <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.LayerOptimizerPass" title="hls4ml.model.optimizer.optimizer.LayerOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerOptimizerPass</span></code></a> and <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOptimizerPass</span></code></a>
+also exist as decorators that wrap a function.</p>
+<p>New optimizers can be registered with the <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.register_pass" title="hls4ml.model.optimizer.optimizer.register_pass"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_pass()</span></code></a>. Optimizers should be assigned to a flow (see below).</p>
+</section>
+<section id="flows">
+<h2>Flows<a class="headerlink" href="#flows" title="Link to this heading"></a></h2>
+<p>A <a class="reference internal" href="../autodoc/hls4ml.model.flow.html#hls4ml.model.flow.flow.Flow" title="hls4ml.model.flow.flow.Flow"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flow</span></code></a> is an ordered set of optimizers that represents a single stage in the conversion process. The optimizers
+from a flow are applied in sequence until they no longer make changes to the model graph (controlled by the <code class="docutils literal notranslate"><span class="pre">transform</span></code> return value), after which
+the next flow (stage) can start. Flows may require that other flows are applied before them, ensuring the model graph is in a desired state before a
+flow starts. The function <a class="reference internal" href="../autodoc/hls4ml.model.flow.html#hls4ml.model.flow.flow.register_flow" title="hls4ml.model.flow.flow.register_flow"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_flow()</span></code></a> is used to register a new flow. Flows are applied on a model graph with
+<a class="reference internal" href="../autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.apply_flow" title="hls4ml.model.graph.ModelGraph.apply_flow"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_flow()</span></code></a>.</p>
+<p>There are common model-level flows that can run regardless of the backend, and there are backend-specific flows.
+The <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/model/optimizer/__init__.py#L14-L20">convert and optimize</a>
+flows do not depend on a backend.</p>
+<p>Each backend provides provides a default flow that defines the default target for that backend. For example, the Vivado backend defaults to an
+<a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/backends/vivado/vivado_backend.py#L148-L160">IP flow</a>
+that requires additional flows and produces an IP. It runs no optimizers itself, but it requires that many other flows (sub-flows) to have run.
+The convert and optimize flows defined above are some of these required sub-flows.</p>
+<p>Another example is FIFO buffer depth optimization explained in the <a class="reference internal" href="../advanced/fifo_depth.html#fifo-buffer-depth-optimization"><span class="std std-ref">FIFO Buffer Depth Optimization</span></a> section.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modelgraph.html" class="btn btn-neutral float-left" title="ModelGraph Class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="attributes.html" class="btn btn-neutral float-right" title="Layer attributes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

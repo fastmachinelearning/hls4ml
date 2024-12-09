@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Concepts" href="concepts.html" /> 
+    <link rel="next" title="Introduction" href="intro/introduction.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,30 +47,50 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup and Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="details.html">Software Details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="flows.html">Optimizer Passes and Flows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">Citation, Acknowledgments, and Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="api/concepts.html">Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/hls-model.html">HLS Model Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend/sr.html">SymbolicExpression</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced/auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced/qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/extension.html">Extension API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced/oneapi.html">oneAPI Backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced/accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/attributes.html">Layer attributes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
 <ul>
@@ -115,6 +135,12 @@
 </div>
 <div class="toctree-wrapper compound">
 </div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
 <section id="welcome-to-hls4ml-s-documentation">
 <h1>Welcome to hls4ml’s documentation!<a class="headerlink" href="#welcome-to-hls4ml-s-documentation" title="Link to this heading"></a></h1>
 <a class="reference internal image-reference" href="_images/hls4ml_logo.png"><img alt="_images/hls4ml_logo.png" class="align-center" src="_images/hls4ml_logo.png" style="width: 60%;" /></a>
@@ -122,12 +148,11 @@
 <p>The project is currently in development, so please let us know if you are interested, your experiences with the package, and if you would like new features to be added. You can reach us through our GitHub page.</p>
 <section id="project-status">
 <h2>Project Status<a class="headerlink" href="#project-status" title="Link to this heading"></a></h2>
-<p>For the latest status including current and planned features, see the <a class="reference internal" href="status.html#status-and-features"><span class="std std-ref">Status and Features</span></a> page.</p>
+<p>For the latest status including current and planned features, see the <a class="reference internal" href="intro/status.html#status-and-features"><span class="std std-ref">Status and Features</span></a> page.</p>
 </section>
 <section id="tutorials">
 <h2>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h2>
-<p>Detailed tutorials on how to use <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>’s various functionalities can be found at:</p>
-<p><a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">https://github.com/fastmachinelearning/hls4ml-tutorial</a></p>
+<p>Detailed tutorials on how to use <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>’s various functionalities can be found <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">here</a>.</p>
 </section>
 </section>
 
@@ -135,7 +160,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="concepts.html" class="btn btn-neutral float-right" title="Concepts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="intro/introduction.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

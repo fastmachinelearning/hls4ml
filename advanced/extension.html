@@ -21,7 +21,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="oneAPI Backend" href="oneapi.html" />
+    <link rel="next" title="Hardware-aware Optimization API" href="model_optimization.html" />
     <link rel="prev" title="FIFO Buffer Depth Optimization" href="fifo_depth.html" /> 
 </head>
 
@@ -47,33 +47,53 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../status.html">Status and Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup and Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../details.html">Software Details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../flows.html">Optimizer Passes and Flows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference.html">Citation, Acknowledgments, and Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/hls-model.html">HLS Model Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Extension API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#complete-example">Complete example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="oneapi.html">oneAPI Backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
 <ul>
@@ -290,7 +310,7 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.</p
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="fifo_depth.html" class="btn btn-neutral float-left" title="FIFO Buffer Depth Optimization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="oneapi.html" class="btn btn-neutral float-right" title="oneAPI Backend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="model_optimization.html" class="btn btn-neutral float-right" title="Hardware-aware Optimization API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

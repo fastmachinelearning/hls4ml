@@ -1,0 +1,237 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internal representation &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ModelGraph Class" href="modelgraph.html" />
+    <link rel="prev" title="Loading weights from external BRAM" href="../advanced/bramfactor.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Internal representation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#layers">Layers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Internal representation</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/ir/ir.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="internal-representation">
+<h1>Internal representation<a class="headerlink" href="#internal-representation" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> library will parse models from Keras, PyTorch or ONNX into an internal execution graph. This model graph is represented with the
+<a class="reference internal" href="../autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelGraph</span></code></a> class. The nodes in this graph, loosely corresponding to the layers and operations of the input model are represented
+by classes derived from the <a class="reference internal" href="../autodoc/hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a> base class.</p>
+<p>Layers are required to have defined inputs and outputs that define how they are connected in the graph and what is the shape of their output. All information
+about the layer’s state and configuration is stored in its attributes. All weights, variables and data types are attributes and there are mapping views to sort through them.
+Layers can define expected attributes and can be verified for correctness, or to produce a list of configurable attributes that user can tweak. The complete list of attributes can be found in the <a class="reference internal" href="attributes.html"><span class="doc">Attributes</span></a> page.</p>
+<section id="layers">
+<h2>Layers<a class="headerlink" href="#layers" title="Link to this heading"></a></h2>
+<p>The backends of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> are independent from each other and free to implement features in any suitable way, most implementations share common concepts which we will mention here.</p>
+<section id="dense-layers">
+<h3>Dense Layers<a class="headerlink" href="#dense-layers" title="Link to this heading"></a></h3>
+<section id="one-dimensional-dense-layers">
+<h4>One-dimensional Dense Layers<a class="headerlink" href="#one-dimensional-dense-layers" title="Link to this heading"></a></h4>
+<p>Dense layers over one-dimensional data perform a matrix-vector multiplication followed by elementwise addition of bias tensor. This routine is the underlying computation of many other layers as well and is reused as much as possible. It exists in several implementations across different backends, for different <cite>io_type</cite>’s and strategies.</p>
+<section id="io-parallel">
+<h5>io_parallel<a class="headerlink" href="#io-parallel" title="Link to this heading"></a></h5>
+<p>All the backends have a <code class="docutils literal notranslate"><span class="pre">Resource</span></code> implementation, which divides the computation into a loop of <code class="docutils literal notranslate"><span class="pre">reuse_factor</span></code> iterations, each iteration simultaneously accessing a different part of the array partitioned in BRAM. There are different implementations depending on whether the reuse factor is smaller or bigger than the input size. The two Xilinx backends and Catapult also implement a <code class="docutils literal notranslate"><span class="pre">Latency</span></code> implementation, which uses the reuse factor to control the amount of pipelining/unrolling of the whole function while the weight array is fully partitioned in registers.</p>
+</section>
+<section id="io-stream">
+<h5>io_stream<a class="headerlink" href="#io-stream" title="Link to this heading"></a></h5>
+<p>The io_stream implementation only wraps the io_parallel implementation with streams or pipes for communication. Internally, data is still accessed in parallel as an array.</p>
+</section>
+</section>
+<section id="multi-dimensional-dense-layers">
+<h4>Multi-dimensional Dense Layers<a class="headerlink" href="#multi-dimensional-dense-layers" title="Link to this heading"></a></h4>
+<p>Multi-dimensional Dense layers are converted to pointwise convolutions, and do not directly use the above implementation.</p>
+</section>
+</section>
+<section id="convolution-layers">
+<h3>Convolution Layers<a class="headerlink" href="#convolution-layers" title="Link to this heading"></a></h3>
+<section id="standard-convolution">
+<h4>Standard convolution<a class="headerlink" href="#standard-convolution" title="Link to this heading"></a></h4>
+<p>By <em>standard</em> convolution we refer to the operation represented by the <code class="docutils literal notranslate"><span class="pre">Conv1D/2D</span></code> layer in Keras (<code class="docutils literal notranslate"><span class="pre">Conv1d/2d</span></code> in PyTorch). Depending on the <code class="docutils literal notranslate"><span class="pre">io_type</span></code> option used, there are two classes of implementations in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>.</p>
+<section id="id1">
+<h5>io_parallel<a class="headerlink" href="#id1" title="Link to this heading"></a></h5>
+<p>Parallel IO is applicable to small models that require low latency implementation. Larger models face synthesizability limits very quickly.</p>
+<p>In Vivado/Vitis backends, parallel convolution relies on the <em>im2col</em> transformation of the input, which turns convolution into a matrix-multiplication task. This task is then implemented as a sequence of matrix-vector multiplications using the routine mentioned above. The <code class="docutils literal notranslate"><span class="pre">Latency</span></code> and <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategies refer to the function used for matrix-vector multiplication routine, with <code class="docutils literal notranslate"><span class="pre">Resource</span></code> allowing for a slightly larger models to be synthesized. Parallelism can be further controlled via the <code class="docutils literal notranslate"><span class="pre">ParallelizationFactor</span></code>. Catapult backend in turn uses a direct implementation of convolution via nested loops. The <code class="docutils literal notranslate"><span class="pre">Quartus</span></code>, <code class="docutils literal notranslate"><span class="pre">oneAPI</span></code>, and <code class="docutils literal notranslate"><span class="pre">Catapult</span></code> backends also implement a <code class="docutils literal notranslate"><span class="pre">Winograd</span></code> algorithm choosable by setting the <code class="docutils literal notranslate"><span class="pre">implementation</span></code> to <code class="docutils literal notranslate"><span class="pre">Winograd</span></code> or <code class="docutils literal notranslate"><span class="pre">combination</span></code>. Winograd implementation is available for only a handful of filter size configurations, and it is less concerned about bit accuracy and overflow. In certain conditions it can be faster.</p>
+</section>
+<section id="id2">
+<h5>io_stream<a class="headerlink" href="#id2" title="Link to this heading"></a></h5>
+<p>There are two main classes of io_stream implementations, <code class="docutils literal notranslate"><span class="pre">LineBuffer</span></code> and  <code class="docutils literal notranslate"><span class="pre">Encoded</span></code>. <code class="docutils literal notranslate"><span class="pre">LineBuffer</span></code> is the default, and generally produces marginally better results,
+while <code class="docutils literal notranslate"><span class="pre">Catapult</span></code> and <code class="docutils literal notranslate"><span class="pre">Vivado</span></code> also implement <code class="docutils literal notranslate"><span class="pre">Encoded</span></code>, choosable with the <code class="docutils literal notranslate"><span class="pre">ConvImplementation</span></code> configuration option. In all cases, the data is processed serially, one pixel at a time, with a pixel containing an array of all the channel values for the pixel.</p>
+</section>
+</section>
+<section id="depthwise-convolution">
+<h4>Depthwise convolution<a class="headerlink" href="#depthwise-convolution" title="Link to this heading"></a></h4>
+<p>Depthwise implementation substitutes the matrix-vector multiplication in the kernel to the elementwise multiplication. The only implementation available is based on <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy, used by both <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> and <code class="docutils literal notranslate"><span class="pre">io_stream</span></code>.</p>
+</section>
+<section id="pointwise-convolution">
+<h4>Pointwise convolution<a class="headerlink" href="#pointwise-convolution" title="Link to this heading"></a></h4>
+<p>Pointwise convolutions are a special case of convolution where the filter size is <code class="docutils literal notranslate"><span class="pre">1</span></code> for 1D or <code class="docutils literal notranslate"><span class="pre">1x1</span></code> for 2D.</p>
+<p>For the Vivado/Vitis backends, there is a dedicated <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code>/<code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy implementation of 1D pointwise convolutional layers originally developed for <a class="reference external" href="https://arxiv.org/abs/2402.01876">arXiv:2402.01876</a>.
+The reuse factor (RF) is used to split the layer execution and reuse the existing module RF times. The RF also limits the number of multipliers in each module.
+The initiation interval scales as the RF. One limitation is that it assumes <code class="docutils literal notranslate"><span class="pre">in_width</span></code> is divisible by the RF.</p>
+</section>
+</section>
+<section id="activations">
+<h3>Activations<a class="headerlink" href="#activations" title="Link to this heading"></a></h3>
+<p>Most activations without extra parameters are represented with the <code class="docutils literal notranslate"><span class="pre">Activation</span></code> layer, and those with single parameters (leaky ReLU, thresholded ReLU, ELU) as <code class="docutils literal notranslate"><span class="pre">ParametrizedActivation</span></code>. <code class="docutils literal notranslate"><span class="pre">PReLU</span></code> has its own class because it has a parameter matrix (stored as a weight). The hard (piecewise linear) sigmoid and tanh functions are implemented in a <code class="docutils literal notranslate"><span class="pre">HardActivation</span></code> layer, and <code class="docutils literal notranslate"><span class="pre">Softmax</span></code> has its own layer class.</p>
+<p>Backends have four softmax implementations that the user can choose from by setting the <code class="docutils literal notranslate"><span class="pre">implementation</span></code> parameter:</p>
+<ul class="simple">
+<li><p><strong>latency</strong>:  Good latency, but somewhat high resource usage. It does not work well if there are many output classes.</p></li>
+<li><p><strong>stable</strong>:  Slower but with better accuracy, useful in scenarios where higher accuracy is needed.</p></li>
+<li><p><strong>legacy</strong>:  An older implementation with poor accuracy, but good performance. Usually the latency implementation is preferred.</p></li>
+<li><p><strong>argmax</strong>:  If you don’t care about normalized outputs and only care about which one has the highest value, using argmax saves a lot of resources. This sets the highest value to 1, the others to 0.</p></li>
+</ul>
+<p>Vivado/Vitis backend additionally support completely skipping softmax activation and returning raw outputs.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../advanced/bramfactor.html" class="btn btn-neutral float-left" title="Loading weights from external BRAM" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modelgraph.html" class="btn btn-neutral float-right" title="ModelGraph Class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

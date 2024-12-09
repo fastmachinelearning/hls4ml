@@ -1,0 +1,242 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ModelGraph Class &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimizer Passes and Flows" href="flows.html" />
+    <link rel="prev" title="Internal representation" href="ir.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ir.html">Internal representation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ModelGraph Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#write-method"><code class="docutils literal notranslate"><span class="pre">write</span></code> method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compile-method"><code class="docutils literal notranslate"><span class="pre">compile</span></code> method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#predict-method"><code class="docutils literal notranslate"><span class="pre">predict</span></code> method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-method"><code class="docutils literal notranslate"><span class="pre">build</span></code> method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#trace-method"><code class="docutils literal notranslate"><span class="pre">trace</span></code> method</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">ModelGraph Class</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/ir/modelgraph.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="modelgraph-class">
+<h1>ModelGraph Class<a class="headerlink" href="#modelgraph-class" title="Link to this heading"></a></h1>
+<p>This page documents our <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> class usage. You can generate generate an instance of this class through <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>’s API, for example by converting a Keras model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">hls4ml</span>
+
+<span class="c1"># Generate a simple configuration from keras model</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+<span class="c1"># Convert to a ModelGraph instance (hls_model)</span>
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;test_prj&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This object can be used to perform common simulation and firmware-generation tasks. Here is a list of important user-facing methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#write-method"><span class="std std-ref">write</span></a></p></li>
+<li><p><a class="reference internal" href="#compile-method"><span class="std std-ref">compile</span></a></p></li>
+<li><p><a class="reference internal" href="#predict-method"><span class="std std-ref">predict</span></a></p></li>
+<li><p><a class="reference internal" href="#build-method"><span class="std std-ref">build</span></a></p></li>
+<li><p><a class="reference internal" href="#trace-method"><span class="std std-ref">trace</span></a></p></li>
+</ul>
+<hr class="docutils" />
+<section id="write-method">
+<span id="id1"></span><h2><code class="docutils literal notranslate"><span class="pre">write</span></code> method<a class="headerlink" href="#write-method" title="Link to this heading"></a></h2>
+<p>Write the <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> to the output directory specified in the config:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_model</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+</pre></div>
+</div>
+<hr class="docutils" />
+</section>
+<section id="compile-method">
+<span id="id2"></span><h2><code class="docutils literal notranslate"><span class="pre">compile</span></code> method<a class="headerlink" href="#compile-method" title="Link to this heading"></a></h2>
+<p>Compiles the written C++/HLS code and links it into the Python runtime. Compiled model can be used to evaluate performance (accuracy) through <code class="docutils literal notranslate"><span class="pre">predict()</span></code> method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</pre></div>
+</div>
+<hr class="docutils" />
+</section>
+<section id="predict-method">
+<span id="id3"></span><h2><code class="docutils literal notranslate"><span class="pre">predict</span></code> method<a class="headerlink" href="#predict-method" title="Link to this heading"></a></h2>
+<p>Similar to <code class="docutils literal notranslate"><span class="pre">keras</span></code>‘s predict API, you can get the predictions just by supplying an input <code class="docutils literal notranslate"><span class="pre">numpy</span></code> array:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Suppose that you already have input array X</span>
+<span class="c1"># Note that you have to do hls_model.compile() before using predict</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="n">hls_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is similar to doing <code class="docutils literal notranslate"><span class="pre">csim</span></code> simulation, without creating the testbench and supplying data. It’s very helpful when you want to quickly prototype different configurations for your model.</p>
+<hr class="docutils" />
+</section>
+<section id="build-method">
+<span id="id4"></span><h2><code class="docutils literal notranslate"><span class="pre">build</span></code> method<a class="headerlink" href="#build-method" title="Link to this heading"></a></h2>
+<p>This method “builds” the generated HLS project. The parameters of build are backend-specific and usually include simulation and synthesis. Refer to each backend for a complete list of supported parameters to <code class="docutils literal notranslate"><span class="pre">build()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">hls_model</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1">#You can also read the report of the build</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">&#39;hls4ml_prj&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">report</span></code> object will contain the result of build step, which may include C-simulation results, HLS synthesis estimates, co-simulation latency etc, depending on the backend used.</p>
+<hr class="docutils" />
+</section>
+<section id="trace-method">
+<span id="id5"></span><h2><code class="docutils literal notranslate"><span class="pre">trace</span></code> method<a class="headerlink" href="#trace-method" title="Link to this heading"></a></h2>
+<p>The trace method is an advanced version of the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method. It’s used to trace individual outputs from each layer of the hls_model. This is useful for debugging and setting the appropriate configuration.</p>
+<p><strong>Return:</strong> A dictionary where the keys are the names of the layers, and its values are the layers’s outputs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">predict_ouputs</span><span class="p">,</span> <span class="n">trace_outputs</span> <span class="o">=</span>  <span class="n">hls_model</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+<span class="c1">#We also support a similar function for keras</span>
+<span class="n">keras_trace</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">profiling</span><span class="o">.</span><span class="n">get_ymodel_keras</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ir.html" class="btn btn-neutral float-left" title="Internal representation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="flows.html" class="btn btn-neutral float-right" title="Optimizer Passes and Flows" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

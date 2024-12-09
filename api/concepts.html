@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concepts &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Citation, Acknowledgments, and Contributors" href="../intro/reference.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-it-works">How it Works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#frontends-and-backends">Frontends and Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#i-o-types">I/O Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#strategy">Strategy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Concepts</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/api/concepts.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="concepts">
+<h1>Concepts<a class="headerlink" href="#concepts" title="Link to this heading"></a></h1>
+<section id="how-it-works">
+<h2>How it Works<a class="headerlink" href="#how-it-works" title="Link to this heading"></a></h2>
+<a class="reference internal image-reference" href="../_images/nn_map_paper_fig_2.png"><img alt="../_images/nn_map_paper_fig_2.png" class="align-center" src="../_images/nn_map_paper_fig_2.png" style="width: 70%;" /></a>
+<p>Consider a multilayer neural network. At each neuron in a layer <span class="math notranslate nohighlight">\(m\)</span>  (containing <span class="math notranslate nohighlight">\(N_m\)</span> neurons), we calculate an output value (part of the output vector <span class="math notranslate nohighlight">\(\mathbf{x}_m\)</span> of said layer) using the sum of output values of the previous layer multiplied by independent weights for each of these values and a bias value. An activation function is performed on the result to get the final output value for the neuron. Representing the weights as a <span class="math notranslate nohighlight">\(N_m\)</span> by <span class="math notranslate nohighlight">\(N_{m-1}\)</span>  matrix  <span class="math notranslate nohighlight">\(W_{m,m-1}\)</span>, the bias values as <span class="math notranslate nohighlight">\(\mathbf{b}_m\)</span>, and the activation function as <span class="math notranslate nohighlight">\(g_m\)</span>, we can express this compactly as:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{x}_m = g_m (W_{m,m-1} \mathbf{x}_{m-1} +\mathbf{b}_m)\]</div>
+<p>With hls4ml, each layer of output values is calculated independently in sequence, using pipelining to speed up the process by accepting new inputs after an initiation interval.
+The activations, if nontrivial, are precomputed.</p>
+<p>To ensure optimal performance, the user can control aspects of their model, principally:</p>
+<ul class="simple">
+<li><p><strong>Size/Compression</strong> - Though not explicitly part of the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package, this is an important optimization to efficiently use the FPGA resources</p></li>
+<li><p><strong>Precision</strong> - Define the <a class="reference internal" href="../advanced/profiling.html"><span class="doc">precision</span></a> of the calculations in your model</p></li>
+<li><p><strong>Dataflow/Resource Reuse</strong> - Control parallel or streaming model implementations with varying levels of pipelining</p></li>
+<li><p><strong>Quantization Aware Training</strong> - Achieve best performance at low precision with tools like QKeras, and benefit automatically during inference with <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> parsing of QKeras models</p></li>
+</ul>
+<a class="reference internal image-reference" href="../_images/reuse_factor_paper_fig_8.png"><img alt="../_images/reuse_factor_paper_fig_8.png" class="align-center" src="../_images/reuse_factor_paper_fig_8.png" style="width: 70%;" /></a>
+<p>Often, these decisions will be hardware dependent to maximize performance.
+Of note is that simplifying the input network must be done before using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> to generate HLS code, for optimal compression to provide a sizable speedup.
+Also important to note is the use of fixed point arithmetic in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>.
+This improves processing speed relative to floating point implementations.
+The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package also offers the functionality of configuring binning and output bit width of the precomputed activation functions as necessary. With respect to parallelization and resource reuse, <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> offers a “reuse factor” parameter that determines the number of times each multiplier is used in order to compute a layer of neuron’s values. Therefore, a reuse factor of one would split the computation so each multiplier had to only perform one multiplication in the computation of the output values of a layer, as shown above. Conversely, a reuse factor of four, in this case, uses a single multiplier four times sequentially. Low reuse factor achieves the lowest latency and highest throughput but uses the most resources, while high reuse factor save resources at the expense of longer latency and lower throughput.</p>
+</section>
+<section id="frontends-and-backends">
+<h2>Frontends and Backends<a class="headerlink" href="#frontends-and-backends" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> has a concept of a <strong>frontend</strong> that parses the input NN into an internal model graph, and a <strong>backend</strong> that controls
+what type of output is produced from the graph. Frontends and backends can be independently chosen. Examples of frontends are the
+parsers for Keras or ONNX, and examples of backends are Vivado HLS, Intel HLS, and Vitis HLS. See <a class="reference internal" href="../intro/status.html#status-and-features"><span class="std std-ref">Status and Features</span></a> for the
+currently supported frontends and backends or the dedicated sections for each frontend/backend.</p>
+</section>
+<section id="i-o-types">
+<h2>I/O Types<a class="headerlink" href="#i-o-types" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports multiple styles for handling data transfer to/from the network and between layers, known as the <code class="docutils literal notranslate"><span class="pre">io_type</span></code>.</p>
+<section id="io-parallel">
+<h3>io_parallel<a class="headerlink" href="#io-parallel" title="Link to this heading"></a></h3>
+<p>In this processing style, data is passed in parallel between the layers. Conceptually this corresponds to the C/C++ array where all elements can be accessed ay any time. This style allows for maximum parallelism and is well suited for MLP networks and small CNNs which aim for lowest latency. Due to the impact of parallel processing on resource utilization on FPGAs, the synthesis may fail for larger networks.</p>
+</section>
+<section id="io-stream">
+<h3>io_stream<a class="headerlink" href="#io-stream" title="Link to this heading"></a></h3>
+<p>As opposed to the parallel processing style, in <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> mode data is passed one “pixel” at a time. Each pixel is an array of channels, which are always sent in parallel. This method for sending data between layers is recommended for larger CNN and RNN networks. For one-dimensional <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers, all the inputs are streamed in parallel as a single array.</p>
+<p>With the <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> IO type, each layer is connected with the subsequent layer through first-in first-out (FIFO) buffers.
+The implementation of the FIFO buffers contribute to the overall resource utilization of the design, impacting in particular the BRAM or LUT utilization.
+Because the neural networks can have complex architectures generally, it is hard to know a priori the correct depth of each FIFO buffer.
+By default <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> choses the most conservative possible depth for each FIFO buffer, which can result in a an unnecessary overutilization of resources.</p>
+<p>In order to reduce the impact on the resources used for FIFO buffer implementation, we have a FIFO depth optimization flow. This is described
+in the <a class="reference internal" href="../advanced/fifo_depth.html#fifo-buffer-depth-optimization"><span class="std std-ref">FIFO Buffer Depth Optimization</span></a> section.</p>
+</section>
+</section>
+<section id="strategy">
+<h2>Strategy<a class="headerlink" href="#strategy" title="Link to this heading"></a></h2>
+<p><strong>Strategy</strong> in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> refers to the implementation of core matrix-vector multiplication routine, which can be latency-oriented, resource-saving oriented, or specialized. Different strategies will have an impact on overall latency and resource consumption of each layer and users are advised to choose based on their design goals. The availability of particular strategy for a layer varies across backends, see the <a class="reference internal" href="../ir/attributes.html"><span class="doc">Attributes</span></a> section for a complete list of available strategies per-layer and per-backend.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../intro/reference.html" class="btn btn-neutral float-left" title="Citation, Acknowledgments, and Contributors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profiling &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Automatic precision inference" href="auto.html" />
+    <link rel="prev" title="SymbolicExpression" href="../backend/sr.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Profiling</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/profiling.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="profiling">
+<h1>Profiling<a class="headerlink" href="#profiling" title="Link to this heading"></a></h1>
+<p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <code class="docutils literal notranslate"><span class="pre">Precision</span></code> and <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> with fine granularity.</p>
+<p>Using a low precision can help reduce the FPGA resource usage of a model, but may result in loss of model performance if chosen inappropriately. The profiling tools in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> help you to decide the appropriate model precision.</p>
+<p>Profiling uses some extra dependencies, to install these, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[profiling]</span></code>. The profiling tools are provided as a <code class="docutils literal notranslate"><span class="pre">Python</span></code> module which you can use.</p>
+<p>Three types of objects can be provided: <strong>a model object</strong>, <strong>test data</strong>, and a <strong>ModelGraph object</strong>. The model can be Keras or PyTorch.
+You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hls4ml.model.profiling</span> <span class="kn">import</span> <span class="n">numerical</span>
+<span class="kn">from</span> <span class="nn">hls4ml.converters</span> <span class="kn">import</span> <span class="n">keras_to_hls</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="c1"># pseudo code:</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">()</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">()</span>
+
+<span class="c1"># real code:</span>
+<span class="c1"># load your hls4ml .yml config file with yaml</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;keras-config.yml&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ymlfile</span><span class="p">:</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ymlfile</span><span class="p">)</span>
+
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">keras_to_hls</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># produce 4 plots</span>
+<span class="n">plots</span> <span class="o">=</span> <span class="n">numerical</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls_model</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Calling the <code class="docutils literal notranslate"><span class="pre">hls4ml.model.profiling.numerical</span></code> method with these three objects provided will produce four figures as below:</p>
+<a class="reference internal image-reference" href="../_images/weights_keras.png"><img alt="../_images/weights_keras.png" src="../_images/weights_keras.png" style="width: 45%;" /></a>
+<a class="reference internal image-reference" href="../_images/weights_hls4ml.png"><img alt="../_images/weights_hls4ml.png" src="../_images/weights_hls4ml.png" style="width: 45%;" /></a>
+<a class="reference internal image-reference" href="../_images/act_keras.png"><img alt="../_images/act_keras.png" src="../_images/act_keras.png" style="width: 45%;" /></a>
+<a class="reference internal image-reference" href="../_images/act_hls4ml.png"><img alt="../_images/act_hls4ml.png" src="../_images/act_hls4ml.png" style="width: 45%;" /></a>
+<p>Plots are title “before optimization” and “final / after optimization”.
+The “before optimization” plots show the distributions of the original Keras or PyTorch model, while the “after optimization” plots show the distributions of the ModelGraph.
+In the example images, notice the “bn1”, “bn2”, “bn3” labels in the “before optimization” plots which are missing from the “after optimization”.
+These layer are BatchNormalization layers, which hls4ml has fused into the preceding Dense layers (labelled “fc{1,2,3}”).
+Because of this optimization, the weights of “fc1” of the ModelGraph are actually the product of the weights of the Keras model “fc1” with “bn1”.
+Similarly, the output of “fc1” of the ModelGraph should correspond to the output of the Keras model “bn1”.
+When optimizing precision, the data types should be chosen to work well for the “after optimization” model.</p>
+<p>Different plots styles are available with the <code class="docutils literal notranslate"><span class="pre">plot</span></code> keyword argument. Valid options are <code class="docutils literal notranslate"><span class="pre">boxplot</span></code> (default), <code class="docutils literal notranslate"><span class="pre">histogram</span></code>, <code class="docutils literal notranslate"><span class="pre">violinplot</span></code>. In the default boxplot style, each variable in the neural network is evaluated using the given test data and the distribution of (non-zero) values is shown with a box and whisker diagram.</p>
+<p>When different combinations of the input objects are given, different plots will be produced:</p>
+<ol class="arabic simple">
+<li><p>Only Keras or PyTorch model: only the weights profile plot will be produced, the activation profile will be <code class="docutils literal notranslate"><span class="pre">None</span></code>. No grey boxes representing the data types will be shown.</p></li>
+<li><p>Only ModelGraph (or ModelGraph and Keras or PyTorch model): two weights profile plots will be produced, with grey boxes indicating the data types from the ModelGraph. The first plot is the “before optimization” model, while the second plot is the “after optimization” model.</p></li>
+<li><p>Keras or PyTorch model and data (<code class="docutils literal notranslate"><span class="pre">X</span></code>): both the weights profile and activation profile will be produced. No grey boxes representing the data types will be shown.</p></li>
+<li><p>Keras or PyTorch model, ModelGraph, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the ModelGraph.</p></li>
+</ol>
+<p>Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> config file used.</p>
+<p>As a starting point, a good configuration would at least cover the box and whisker for each variable with the grey box. Make sure the box and whisker is contained to the right by using sufficient integer bits to avoid overflow. It might be that more precision is needed (grey boxes extend further to the left) to achieve satisfactory performance. In some cases, it is safe to barely cover the values and still achieve good accuracy.</p>
+<p>To establish whether the configuration gives good performance, run C Simulation with test data and compare the results to your model evaluated on the CPU with floating point.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../backend/sr.html" class="btn btn-neutral float-left" title="SymbolicExpression" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="auto.html" class="btn btn-neutral float-right" title="Automatic precision inference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

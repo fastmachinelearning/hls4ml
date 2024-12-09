@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup and Quick Start &mdash; hls4ml 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Frequently asked questions" href="faq.html" />
+    <link rel="prev" title="Status and Features" href="status.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Setup and Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Setup and Quick Start</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/intro/setup.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="setup-and-quick-start">
+<h1>Setup and Quick Start<a class="headerlink" href="#setup-and-quick-start" title="Link to this heading"></a></h1>
+<p>Getting started with <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is very easy. There are several installation options available and once installed,
+it takes only a few lines of code to run your first synthesis.</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<p>The latest release of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span>
+</pre></div>
+</div>
+<p>If you want to use our <a class="reference internal" href="../advanced/profiling.html"><span class="doc">profiling</span></a> toolbox, you might need to install extra dependencies:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">profiling</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is also available as a <code class="docutils literal notranslate"><span class="pre">conda</span></code> package in the <code class="docutils literal notranslate"><span class="pre">conda-forge</span></code> repository. To install, run:</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Version of hls4ml available on <code class="docutils literal notranslate"><span class="pre">conda-forge</span></code> is outdated, we recommend installing with <code class="docutils literal notranslate"><span class="pre">pip</span></code> to get the latest version.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">hls4ml</span>
+</pre></div>
+</div>
+<section id="development-version">
+<h3>Development version<a class="headerlink" href="#development-version" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is rapidly evolving and many experimental features and bugfixes are available on the development branch. Development
+version can be installed directly from <code class="docutils literal notranslate"><span class="pre">git</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">fastmachinelearning</span><span class="o">/</span><span class="n">hls4ml</span><span class="nd">@main</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed
+by <code class="docutils literal notranslate"><span class="pre">pip</span></code> or <code class="docutils literal notranslate"><span class="pre">conda</span></code>.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://pypi.org/project/tensorflow/">TensorFlow</a> (version 2.8 to 2.14) and <a class="reference external" href="https://pypi.org/project/qkeras/">QKeras</a> are required by the Keras converter. One may want to install newer versions of QKeras from GitHub. Newer versions of TensorFlow can be used, but QKeras and hl4ml do not currently support Keras v3.</p></li>
+<li><p><a class="reference external" href="https://pypi.org/project/onnx/">ONNX</a> (version 1.4.0 and newer) is required by the ONNX converter.</p></li>
+<li><p><a class="reference external" href="https://pytorch.org/get-started">PyTorch</a> package is optional. If not installed, the PyTorch converter will not be available.</p></li>
+</ul>
+<p>Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler <code class="docutils literal notranslate"><span class="pre">g++</span></code> is required. Any version from a recent
+Linux should work. On MacOS, the <em>clang</em>-based <code class="docutils literal notranslate"><span class="pre">g++</span></code> is enough. For the oneAPI backend, one must have oneAPI installed, along with the FPGA compiler,
+to run C/SYCL simulations.</p>
+<p>To run FPGA synthesis, installation of following tools is required:</p>
+<ul class="simple">
+<li><p>Xilinx Vivado HLS 2018.2 to 2020.1 for synthesis for Xilinx FPGAs using the <code class="docutils literal notranslate"><span class="pre">Vivado</span></code> backend.</p></li>
+<li><p>Vitis HLS 2022.2 or newer is required for synthesis for Xilinx FPGAs using the <code class="docutils literal notranslate"><span class="pre">Vitis</span></code> backend.</p></li>
+<li><p>Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the <code class="docutils literal notranslate"><span class="pre">Quartus</span></code> backend.</p></li>
+<li><p>oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the <code class="docutils literal notranslate"><span class="pre">oneAPI</span></code> backend.</p></li>
+</ul>
+<p>Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.</p>
+</section>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
+<p>For basic concepts to understand the tool, please visit the <a class="reference internal" href="../api/concepts.html"><span class="doc">Concepts</span></a> chapter.
+Here we give line-by-line instructions to demonstrate the general workflow.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">hls4ml</span>
+
+<span class="c1"># Fetch a keras model from our example repository</span>
+<span class="c1"># This will download our example model to your working directory and return an example configuration file</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fetch_example_model</span><span class="p">(</span><span class="s1">&#39;KERAS_3layer.json&#39;</span><span class="p">)</span>
+
+<span class="c1"># You can print it to see some default parameters</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Convert it to a hls project</span>
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras_to_hls</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Print full list of example model if you want to explore more</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fetch_example_list</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>After that, you can use <code class="code docutils literal notranslate"><span class="pre">Vivado</span> <span class="pre">HLS</span></code> to synthesize the model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use Vivado HLS to synthesize the model</span>
+<span class="c1"># This might take several minutes</span>
+<span class="n">hls_model</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Print out the report if you want</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">&#39;my-hls-test&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Done! You’ve built your first project using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>! To learn more about our various API functionalities, check out our tutorials <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">here</a>.</p>
+<p>If you want to configure your model further, check out our <a class="reference internal" href="../api/configuration.html"><span class="doc">Configuration</span></a> page.</p>
+<section id="existing-examples">
+<h3>Existing examples<a class="headerlink" href="#existing-examples" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Training codes and examples of resources needed to train the models can be found in the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">tutorial</a>.</p></li>
+<li><p>Examples of model files and weights can be found in <a class="reference external" href="https://github.com/fastmachinelearning/example-models">example_models</a> directory.</p></li>
+</ul>
+</section>
+<section id="uninstalling">
+<h3>Uninstalling<a class="headerlink" href="#uninstalling" title="Link to this heading"></a></h3>
+<p>To uninstall <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>uninstall<span class="w"> </span>hls4ml
+</pre></div>
+</div>
+<p>If installed with <code class="docutils literal notranslate"><span class="pre">conda</span></code>, remove the package with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>remove<span class="w"> </span>hls4ml
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="status.html" class="btn btn-neutral float-left" title="Status and Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="faq.html" class="btn btn-neutral float-right" title="Frequently asked questions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

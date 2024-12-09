@@ -47,30 +47,50 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../status.html">Status and Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup and Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../details.html">Software Details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../flows.html">Optimizer Passes and Flows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference.html">Citation, Acknowledgments, and Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/hls-model.html">HLS Model Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/qonnx.html">ONNX and QONNX</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/oneapi.html">oneAPI Backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/accelerator.html">VivadoAccelerator Backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
 <ul class="current">
@@ -215,6 +235,14 @@ Note:  Only integer and fixed precisions are supported</p></li>
 <p>This function serves as the initial step in creating the custom conversion configuration.
 Users are advised to inspect the returned object to tweak the conversion configuration.
 The return object can be passed as <cite>hls_config</cite> parameter to <cite>convert_from_pytorch_model</cite>.</p>
+<p>Note that hls4ml internally follows the keras convention for nested tensors known as
+“channels last”, wherease pytorch uses the “channels first” convention.
+For exampe, for a tensor encoding an image with 3 channels, pytorch will expect the data
+to be encoded as (Number_Of_Channels, Height , Width), whereas hls4ml expects
+(Height , Width, Number_Of_Channels). By default, hls4ml will perform the necessary
+conversions of the inputs and internal tensors automatically, but will return the output
+in “channels last” However, this behavior can be controlled by the user using the
+related arguments discussed below.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -233,15 +261,11 @@ configuration tweaks.</p>
 <li><p><strong>default_precision</strong> (<em>str</em><em>, </em><em>optional</em>) – Default precision to use. Defaults to ‘fixed&lt;16,6&gt;’. Note, this must
 be an explicit precision: ‘auto’ is not allowed.</p></li>
 <li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Default reuse factor. Defaults to 1.</p></li>
-<li><p><strong>channels_last_conversion</strong> (<em>string</em><em>, </em><em>optional</em>) – Configures the conversion of pytorch layers to</p></li>
-<li><p><strong>'full'</strong> (<em>or 'off'. If</em>)</p></li>
-<li><p><strong>'internal'</strong> (<em>and internal layers will be converted. If</em>)</p></li>
-<li><p><strong>'full'</strong></p></li>
-<li><p><strong>inputs</strong> (<em>both the</em>)</p></li>
-<li><p><strong>'internal'</strong></p></li>
-<li><p><strong>this</strong> (<em>only internal layers will be converted;</em>)</p></li>
-<li><p><strong>'off'</strong> (<em>assumes the inputs are converted by the user. If</em>)</p></li>
-<li><p><strong>performed.</strong> (<em>no conversion is</em>)</p></li>
+<li><p><strong>channels_last_conversion</strong> (<em>string</em><em>, </em><em>optional</em>) – Configures the conversion of pytorch layers to
+‘channels_last’ data format used by hls4ml internally. Can be set to ‘full’ (default), ‘internal’,
+or ‘off’. If ‘full’, both the inputs and internal layers will be converted. If ‘internal’,
+only internal layers will be converted; this assumes the inputs are converted by the user.
+If ‘off’, no conversion is performed.</p></li>
 <li><p><strong>transpose_outputs</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to ‘False’ if the output should not be transposed from
 channels_last into channels_first data format. Defaults to ‘False’. If False, outputs needs
 to be transposed manually.</p></li>
