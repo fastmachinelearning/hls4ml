@@ -935,7 +935,7 @@ class ParametrizedActivation(Activation):
 
 class HardActivation(Activation):
     '''
-    Implements the hard sigmoid and tan function in keras and qkeras
+    Implements the hard sigmoid and tanh function in keras and qkeras
     (Default parameters in qkeras are different, so should be configured)
     The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
     hard tanh function is 2 * hard_sigmoid - 1

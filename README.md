@@ -15,7 +15,9 @@ If you have any questions, comments, or ideas regarding hls4ml or just want to s
 
 # Documentation & Tutorial
 
-For more information visit the webpage: [https://fastmachinelearning.org/hls4ml/](https://fastmachinelearning.org/hls4ml/)
+For more information visit the webpage: [https://fastmachinelearning.org/hls4ml/](https://fastmachinelearning.org/hls4ml/).
+
+For introductory material on FPGAs, HLS and ML inferences using hls4ml, check out the [video](https://www.youtube.com/watch?v=2y3GNY4tf7A&ab_channel=SystemsGroupatETHZ%C3%BCrich).
 
 Detailed tutorials on how to use `hls4ml`'s various functionalities can be found [here](https://github.com/hls-fpga-machine-learning/hls4ml-tutorial).
 
@@ -49,8 +51,8 @@ hls_model = hls4ml.converters.keras_to_hls(config)
 hls4ml.utils.fetch_example_list()
 ```
 
-### Building a project with Xilinx Vivado HLS (after downloading and installing from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html))
-Note: Vitis HLS is not yet supported. Vivado HLS versions between 2018.2 and 2020.1 are recommended.
+### Building a project.
+We will build the project using Xilinx Vivado HLS, which can be downloaded and installed from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html). Alongside Vivado HLS, hls4ml also supports Vitis HLS, Intel HLS, Catapult HLS and has some experimental support dor Intel oneAPI. The target back-end can be changed using the argument backend when building the model.
 
 ```Python
 # Use Vivado HLS to synthesize the model
@@ -61,15 +63,19 @@ hls_model.build()
 hls4ml.report.read_vivado_report('my-hls-test')
 ```
 
+# FAQ
+
+List of frequently asked questions and common HLS synthesis can be found [here](https://fastmachinelearning.org/hls4ml/faq.html)
+
 # Citation
 If you use this software in a publication, please cite the software
 ```bibtex
 @software{fastml_hls4ml,
   author       = {{FastML Team}},
   title        = {fastmachinelearning/hls4ml},
-  year         = 2023,
+  year         = 2024,
   publisher    = {Zenodo},
-  version      = {v0.8.1},
+  version      = {v1.0.0},
   doi          = {10.5281/zenodo.1201549},
   url          = {https://github.com/fastmachinelearning/hls4ml}
 }
