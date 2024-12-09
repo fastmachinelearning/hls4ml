@@ -1,7 +1,7 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv1D, DepthwiseConv2D
 
 # TODO - Dilation rate ?
 
@@ -70,9 +70,20 @@ conv_stream_function_template = '{name}.async({w}, {b});'
 conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 
 
+depthconv1d_function_template = (
+    'nnet::depthwise_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+)
+depthconv1d_include_list = [
+    'nnet_utils/nnet_conv1d.h',
+    'nnet_utils/nnet_conv1d_resource.h',
+    'nnet_utils/nnet_depthconv1d.h',
+    'nnet_utils/nnet_depthconv1d_resource.h',
+]
+
+
 class Conv1DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__(Conv1D)
+        super().__init__((Conv1D, DepthwiseConv1D))
         self.template = conv1d_config_template
         self.mult_template = conv_mult_config_template
 
@@ -137,6 +148,12 @@ class ConvStreamFunctionTemplate(StreamFunctionCallTemplate):
         return self.template.format(**params)
 
 
+class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
+    def __init__(self):
+        super(Conv1DFunctionTemplate, self).__init__(DepthwiseConv1D, include_header=depthconv1d_include_list)
+        self.template = depthconv1d_function_template
+
+
 ''' 2D Conv '''
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned in_height = {in_height};
@@ -183,7 +200,7 @@ conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_strea
 
 class Conv2DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((Conv2D, Conv2DBatchnorm))
+        super().__init__((Conv2D, Conv2DBatchnorm, DepthwiseConv2D))
         self.template = conv2d_config_template
         self.mult_template = conv_mult_config_template
 
@@ -233,3 +250,20 @@ class Conv2DTaskSequenceTemplate(TaskSequenceTemplate):
             raise RuntimeError('channels_first not supported on oneAPI')
         params['data_format'] = 'cl'
         return self.template.format(**params)
+
+
+depthconv2d_function_template = (
+    'nnet::depthwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+)
+depthconv2d_include_list = [
+    'nnet_utils/nnet_conv2d.h',
+    'nnet_utils/nnet_conv2d_resource.h',
+    'nnet_utils/nnet_depthconv2d.h',
+    'nnet_utils/nnet_depthconv2d_resource.h',
+]
+
+
+class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):
+    def __init__(self):
+        super(Conv2DFunctionTemplate, self).__init__(DepthwiseConv2D, include_header=depthconv2d_include_list)
+        self.template = depthconv2d_function_template
