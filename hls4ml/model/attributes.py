@@ -36,11 +36,12 @@ class Attribute:
 
     """
 
-    def __init__(self, name, value_type=Integral, default=None, configurable=False):
+    def __init__(self, name, value_type=Integral, default=None, configurable=False, description=None):
         self.name = name
         self.value_type = value_type
         self.default = default
         self.configurable = configurable
+        self.description = description
 
     def validate_value(self, value):
         if self.value_type is not None:
@@ -59,6 +60,20 @@ class Attribute:
         """
         return convert_to_pascal_case(self.name)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Attribute):
+            return NotImplemented
+        return (
+            self.name == other.name
+            and self.value_type == other.value_type
+            and self.default == other.default
+            and self.configurable == other.configurable
+            and self.description == other.description
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.value_type, self.default, self.configurable, self.description))
+
 
 class ConfigurableAttribute(Attribute):
     """
@@ -68,8 +83,8 @@ class ConfigurableAttribute(Attribute):
     when defining the expected attributes of layer classes.
     """
 
-    def __init__(self, name, value_type=int, default=None):
-        super().__init__(name, value_type, default, configurable=True)
+    def __init__(self, name, value_type=Integral, default=None, description=None):
+        super().__init__(name, value_type, default, configurable=True, description=description)
 
 
 class TypeAttribute(Attribute):
@@ -79,10 +94,10 @@ class TypeAttribute(Attribute):
     As a convention, the name of the attribute storing a type will end in ``_t``.
     """
 
-    def __init__(self, name, default=None, configurable=True):
+    def __init__(self, name, default=None, configurable=True, description=None):
         if not name.endswith('_t'):
             name += '_t'
-        super().__init__(name, value_type=NamedType, default=default, configurable=configurable)
+        super().__init__(name, value_type=NamedType, default=default, configurable=configurable, description=description)
 
 
 class ChoiceAttribute(Attribute):
@@ -90,16 +105,22 @@ class ChoiceAttribute(Attribute):
     Represents an attribute whose value can be one of several predefined values.
     """
 
-    def __init__(self, name, choices, default=None, configurable=True):
-        super().__init__(name, value_type=list, default=default, configurable=configurable)
+    def __init__(self, name, choices, default=None, configurable=True, description=None):
+        super().__init__(name, value_type=list, default=default, configurable=configurable, description=description)
         assert len(choices) > 0
         if default is not None:
             assert default in choices
         self.choices = choices
-        self.value_type = str(self.choices)
 
     def validate_value(self, value):
         return value in self.choices
+
+    def __eq__(self, other: object) -> bool:
+        base_eq = super().__eq__(other)
+        return base_eq and hasattr(other, 'choices') and set(self.choices) == set(other.choices)
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash(tuple(sorted(self.choices)))
 
 
 class WeightAttribute(Attribute):
@@ -107,8 +128,8 @@ class WeightAttribute(Attribute):
     Represents an attribute that will store a weight variable.
     """
 
-    def __init__(self, name):
-        super().__init__(name, value_type=WeightVariable, default=None, configurable=False)
+    def __init__(self, name, description=None):
+        super().__init__(name, value_type=WeightVariable, default=None, configurable=False, description=description)
 
 
 class CodeAttrubute(Attribute):
@@ -116,8 +137,8 @@ class CodeAttrubute(Attribute):
     Represents an attribute that will store generated source code block.
     """
 
-    def __init__(self, name):
-        super(WeightAttribute, self).__init__(name, value_type=Source, default=None, configurable=False)
+    def __init__(self, name, description=None):
+        super().__init__(name, value_type=Source, default=None, configurable=False, description=description)
 
 
 # endregion

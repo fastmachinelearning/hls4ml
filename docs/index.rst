@@ -22,6 +22,7 @@
     :hidden:
     :caption: Advanced Features
 
+    advanced/hgq
     advanced/qonnx
     advanced/fifo_depth
     advanced/extension
