@@ -9,7 +9,7 @@ import hls4ml
 
 test_root_path = Path(__file__).parent
 
-in_shape = (4, 5)
+in_shape = (10, 8)
 atol = 5e-2
 
 
