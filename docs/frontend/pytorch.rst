@@ -8,8 +8,10 @@ Provided the underlying operation is supported in ``hls4ml``, we generally aim t
 tested. Please reach out if you experience any issues with either case.
 
 The PyTorch/Brevitas parser is under heavy development and doesn't yet have the same feature set of the Keras parsers. Feel free to reach out to developers if you find a missing feature that is present in Keras parser and would like it implemented.
-The direct ingestion of models quantized from brevitas is not yet supported. Exporting brevitas models in the ONNX format (see `here <https://xilinx.github.io/brevitas/tutorials/onnx_export.html>`_) and reading those with the ``hls4ml`` QONNX frontend
-might be possible, but is untested.
+
+.. note::
+    The direct ingestion of models quantized with brevitas is not supported currently. Instead, brevitas models shoud be exported in the ONNX format (see `here <https://xilinx.github.io/brevitas/tutorials/onnx_export.html>`_) and read with the ``hls4ml``
+    QONNX frontend. Issues may arise, for example when non power-of-2 or non-scalar quantization scales are used. Please reach out if you encounter any problems with this workflow.
 
 For multi-dimensional tensors, ``hls4ml`` follows the channels-last convention adopted by Keras, whereas PyTorch uses channels-first. By default, ``hls4ml`` will automaticlly transpose any tensors associated with weights and biases of the internal layers
 of the model. If the ``io_parallel`` I/O type (see :ref:`Concepts`) is used, a transpose node will be added to the model that also adjusts the input tensors. This is not available in the ``io_stream`` case and inputs must be transposed by the user.
