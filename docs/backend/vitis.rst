@@ -9,4 +9,3 @@ backend can be easily incorporated into Vitis kernel.
 
 Users should generally use the **Vitis** backend for new designs that target AMD/Xilinx FPGAs; new ``hls4ml`` developments will not necessarily be backported to
 the **Vivado** backend.
-
