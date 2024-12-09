@@ -28,9 +28,7 @@ struct layernorm_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-template<typename CONFIG_T, int N_TABLE>
-void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE])
-{
+template <typename CONFIG_T, int N_TABLE> void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE]) {
     // Inversion function:
     //   result = 1/sqrt(x)
     float min_val = CONFIG_T::epsilon;
@@ -38,7 +36,7 @@ void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE])
     float step = max_val / (float)(N_TABLE);
     for (int ii = 0; ii < N_TABLE; ii++) {
         float in_val = min_val + step * ii;
-        table_out[ii] = (typename CONFIG_T::table_t)(1.0/sqrt(in_val));
+        table_out[ii] = (typename CONFIG_T::table_t)(1.0 / sqrt(in_val));
     }
 }
 
@@ -88,10 +86,13 @@ LAYERNORM_1D_VAR:
     }
     var = CONFIG_T::template product<typename CONFIG_T::mean_t, typename CONFIG_T::mean_t>::product(sum_cache2, k_inv);
 
-    int index = (var) * (CONFIG_T::table_size) * inv_range_inv;
-    if (CONFIG_T::table_range > 1) index = (var) * (CONFIG_T::table_size) / (int)CONFIG_T::table_range;
-    if (index < 0) index = 0;
-    if (index > CONFIG_T::table_size - 1) index = CONFIG_T::table_size - 1;
+    int index = (var) * (CONFIG_T::table_size)*inv_range_inv;
+    if (CONFIG_T::table_range > 1)
+        index = (var) * (CONFIG_T::table_size) / (int)CONFIG_T::table_range;
+    if (index < 0)
+        index = 0;
+    if (index > CONFIG_T::table_size - 1)
+        index = CONFIG_T::table_size - 1;
     deno_inver = invert_sqr_table[index];
 
 LAYERNORM_1D_RESULT:
