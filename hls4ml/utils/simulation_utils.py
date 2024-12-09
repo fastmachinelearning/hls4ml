@@ -1,5 +1,8 @@
 import os
 from lxml import etree
+import json
+import numpy as np
+import pandas as pd 
 
 def parse_component_xml(component_xml_path):
     """
@@ -135,6 +138,9 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
 
         # Initialize Control Signals
         f.write('    // Control Signal Initialization\n')
+        f.write('    integer csv_file;\n')
+        f.write('    integer j;\n')
+        f.write('    integer total_bits;\n')
         f.write('    initial begin\n')
         f.write('        ap_start = 0;\n')
         for name, _ in input_signals:
@@ -157,21 +163,25 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
 
         # Data Transmission
         f.write('    // Data Transmission\n')
-        f.write('    integer i, j;\n')
-        f.write('    integer total_bits;\n')
         f.write('    initial begin\n')
         f.write('        // Wait for reset deassertion\n')
         f.write('        wait (ap_rst_n == 1);\n')
         f.write('        repeat (2) @(posedge ap_clk);\n\n')
 
         f.write('        // Start the operation\n')
+        f.write('        csv_file = $fopen("testbench_log.csv", "w");\n')
+        f.write('        if (csv_file == 0) begin\n')
+        f.write('            $display("ERROR: Could not open csv log file.");\n')
+        f.write('             $finish;\n')
+        f.write('        end\n')
+        f.write('        $fwrite(csv_file, "output_name,index,value\\n");\n\n')
         f.write('        ap_start = 1;\n')
 
         # First Data Pattern: All Zeros
         for layer in nn_config['inputs']:
             f.write(f'        // Sending all zeros for {layer["name"]}\n')
-            f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
-            f.write(f'        {layer["name"]}_tvalid = 1;\n\n')
+            #f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
+            f.write(f'        {layer["name"]}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
             for k in range(layer['batch_size']):
                 upper = (k + 1) * (layer["integer_bits"] + layer["fractional_bits"]) - 1
@@ -185,8 +195,8 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         # Second Data Pattern: Fixed Value of 1
         for layer in nn_config['inputs']:
             f.write(f'        // Sending fixed value 1 for {layer["name"]}\n')
-            f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
-            f.write(f'        {layer["name"]}_tvalid = 1;\n\n')
+            #f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
+            f.write(f'        {layer["name"]}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
             for k in range(layer['batch_size']):
                 upper = (k + 1) * (layer["integer_bits"] + layer["fractional_bits"]) - 1
@@ -198,11 +208,11 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
             f.write(f'        {layer["name"]}_tvalid = 0;\n\n')
 
         f.write('        start_cycle = cycle_count;\n\n')
-        # Third Data Pattern: All zeros (this is where we measure cycles)
+        # Third Data Pattern: All zeros (here measure output and cycles)
         for layer in nn_config['inputs']:
-            f.write(f'        // Sending all zeros for {layer["name"]} (this is where we measure cycles)\n')
-            f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
-            f.write(f'        {layer["name"]}_tvalid = 1;\n\n')
+            f.write(f'        // Sending all zeros for {layer["name"]} (here we measure output and cycles)\n')
+            #f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
+            f.write(f'        {layer["name"]}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
             for k in range(layer['batch_size']):
                 upper = (k + 1) * (layer["integer_bits"] + layer["fractional_bits"]) - 1
@@ -217,35 +227,54 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         f.write('        wait (ap_done == 1);\n')
         f.write('        end_cycle = cycle_count;\n')
         f.write('        $display("Total cycles from start to done: %0d", end_cycle - start_cycle);\n')
-        f.write('        repeat (5) @(posedge ap_clk);\n')
+        f.write('        // Write latency to JSON\n')
+        f.write('        $fwrite(csv_file, "latency_cycles,0,%d\\n", end_cycle - start_cycle);\n')
+        f.write('        repeat (2) @(posedge ap_clk);\n')
+        f.write('        $fclose(csv_file);\n')
         f.write('        $finish;\n')
         f.write('    end\n\n')
 
         # Output Handling
         f.write('    // Output Data Capture\n')
-        f.write('    // Decode and display outputs in fixed-point format\n')
-        for layer in nn_config['outputs']:
+        for i, layer in enumerate(nn_config['outputs']):
             signed_str = layer.get('signed', 1)
             i_bits = layer['integer_bits']
             f_bits = layer['fractional_bits']
             total_bits = i_bits + f_bits
-            f.write(f'    integer idx;\n')
-            f.write(f'    reg signed [{total_bits-1}:0] fixed_val;\n')
-            f.write(f'    real real_val;\n')
+            layer_name = layer["name"]
 
-            # We'll add an always block per output to print whenever valid & ready
+            f.write(f'    integer idx_{i};\n')
+            f.write(f'    reg signed [{total_bits-1}:0] fixed_val_{i};\n')
+            f.write(f'    real real_val_{i};\n')
+
             f.write(f'    always @(posedge ap_clk) begin\n')
-            f.write(f'        if ({layer["name"]}_tvalid && {layer["name"]}_tready) begin\n')
-            # For simplicity, assume batch_size = 1 here. If you have multiple batch elements, you'd need to loop.
-            # If batch_size > 1, we would display each slice separately.
-            f.write(f'            for (idx = 0; idx < {layer["batch_size"]}; idx = idx + 1) begin\n')
-            f.write(f'                fixed_val = {layer["name"]}_tdata[(idx+1)*{total_bits}-1 -: {total_bits}];\n')
-            # If signed, sign-extend was already done due to reg signed
-            # Convert to real by dividing by 2^(fractional_bits)
-            f.write(f'                real_val = fixed_val / (1.0 * (1 << {f_bits}));\n')
-            f.write(f'                $display("Output {layer["name"]}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx, {i_bits}, {f_bits}, real_val);\n')
-            f.write(f'            end\n')
+            f.write(f'        if ({layer_name}_tvalid && {layer_name}_tready) begin\n')
+            f.write(f'            for (idx_{i} = 0; idx_{i} < {layer["batch_size"]}; idx_{i} = idx_{i} + 1) begin\n')
+            f.write(f'                fixed_val_{i} = {layer_name}_tdata[(idx_{i}+1)*{total_bits}-1 -: {total_bits}];\n')
+            f.write(f'                real_val_{i} = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
+            f.write(f'                $display("Output {layer["name"]}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx_{i}, {i_bits}, {f_bits}, real_val_{i});\n')
+            f.write('                // Write to csv file\n')
+            f.write(f'                $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", idx_{i}, real_val_{i});\n')
+            f.write('            end\n')
             f.write('        end\n')
             f.write('    end\n\n')
 
         f.write('endmodule\n')
+
+
+def read_testbench_log(testbench_file):
+    # Read the CSV and print it in a numpy-structure 
+
+    if not os.path.exists(testbench_file):
+        print(f"Error: The file '{testbench_file}' does not exist.")
+        return
+    df = pd.read_csv(testbench_file) 
+    latency = df[df['output_name'] == 'latency_cycles']['value'].iloc[0] 
+    grouped = df[df['output_name'] != 'latency_cycles'].groupby('output_name') 
+    for name, group in grouped: 
+        indices = group['index'].astype(int) 
+        values = group['value'] 
+        array = np.zeros(max(indices) + 1) 
+        array[indices] = values
+        print(f"{name}:\n{array}\n") 
+    print(f"Latency (cycles): {int(latency)}")

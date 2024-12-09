@@ -7,7 +7,7 @@ import json
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
 from hls4ml.report import parse_vivado_report
-from hls4ml.utils.simulation_utils import generate_verilog_testbench
+from hls4ml.utils.simulation_utils import generate_verilog_testbench, read_testbench_log
 
 
 class VitisBackend(VivadoBackend):
@@ -117,9 +117,7 @@ class VitisBackend(VivadoBackend):
 
         os.makedirs(output_dir, exist_ok=True)
         stitched_design_dir = os.path.join(output_dir, 'vivado_stitched_design')
-
         os.makedirs(stitched_design_dir, exist_ok=True)
-
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
 
@@ -132,7 +130,6 @@ class VitisBackend(VivadoBackend):
             testbench_file_path =  os.path.join(stitched_design_dir, "testbench.v")
             generate_verilog_testbench(nn_config, testbench_file_path)
 
-        # Build the command as a list
         stitch_command = [
             'vivado', '-mode', 'batch', '-nojournal', '-nolog', '-notrace',
             '-source', os.path.join(hls4ml_path, '../scripts/ip_stitcher.tcl'),
@@ -146,7 +143,6 @@ class VitisBackend(VivadoBackend):
         stderr_log = os.path.join(stitched_design_dir, 'stitcher_stderr.log')
         
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
-            # Use subprocess.Popen to capture output
             process = subprocess.Popen(
                 stitch_command,
                 cwd=output_dir,
@@ -158,3 +154,7 @@ class VitisBackend(VivadoBackend):
             process.communicate()
             if process.returncode != 0:
                 raise Exception(f'Stitching failed for {project_name}. See logs for details.')
+        
+        if(sim_design):
+            testbench_logfile_path = os.path.join(stitched_design_dir, 'vivado_stitched_design.sim/sim_1/behav/xsim/testbench_log.csv')
+            read_testbench_log(testbench_file_path)
