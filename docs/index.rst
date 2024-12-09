@@ -49,6 +49,7 @@
     advanced/fifo_depth
     advanced/extension
     advanced/model_optimization
+    advanced/bramfactor
 
 .. toctree::
     :hidden:
