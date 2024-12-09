@@ -2,13 +2,13 @@
 PyTorch and Brevitas
 ====================
 
-PyTorch frontend in ``hls4ml`` is implemented by parsing the symbolic trace of the ``torch.fx`` framework. This ensures proper execution graph is captured. Therefore, only models that can be traced with the FX framework can be parsed by ``hls4ml``.
+The PyTorch frontend in ``hls4ml`` is implemented by parsing the symbolic trace of the ``torch.fx`` framework. This ensures the proper execution graph is captured. Therefore, only models that can be traced with the FX framework can be parsed by ``hls4ml``.
 
-Provided the underlying opertion is supported in ``hls4ml``, we generally aim to support the use of both ``torch.nn`` classes and ``torch.nn.functional`` functions in the construction of PyTorch models. Generally, the use of classes is more thoroughly
+Provided the underlying operation is supported in ``hls4ml``, we generally aim to support the use of both ``torch.nn`` classes and ``torch.nn.functional`` functions in the construction of PyTorch models. Generally, the use of classes is more thoroughly
 tested. Please reach out if you experience any issues with either case.
 
 The PyTorch/Brevitas parser is under heavy development and doesn't yet have the same feature set of the Keras parsers. Feel free to reach out to developers if you find a missing feature that is present in Keras parser and would like it implemented.
-The direct ingestion of models quantized from brevitas is not yet support. Exporting brevitas models in the ONNX format (see `here <https://xilinx.github.io/brevitas/tutorials/onnx_export.html>`_) and reading those with the ``hls4ml`` QONNX frontend
+The direct ingestion of models quantized from brevitas is not yet supported. Exporting brevitas models in the ONNX format (see `here <https://xilinx.github.io/brevitas/tutorials/onnx_export.html>`_) and reading those with the ``hls4ml`` QONNX frontend
 might be possible, but is untested.
 
 For multi-dimensional tensors, ``hls4ml`` follows the channels-last convention adopted by Keras, whereas PyTorch uses channels-first. By default, ``hls4ml`` will automaticlly transpose any tensors associated with weights and biases of the internal layers
