@@ -909,7 +909,7 @@ class ModelGraph:
             split_layer_names (List[str]): The names of the layers to split at.
 
         Returns:
-            List[ModelGraph]: List of ModelGraph instances resulting from the splits.
+            MultiModelGraph: An instance of MultiModelGraph containing the ModelGraphs created from the subgraphs.
         """
         if not split_layer_names:
             raise ValueError("No split layer names provided.")
@@ -921,13 +921,9 @@ class ModelGraph:
             if name not in layer_names:
                 raise ValueError(f"Layer '{name}' not found in the model.")
 
-        # Get split indices and sort them
-        split_indices = sorted([layer_names.index(name) for name in split_layer_names])
-
-        # Add start and end indices to cover the entire layer list
-        indices = [0] + split_indices + [len(layer_list)]
-
         # Split the layer_list into subgraphs
+        split_indices = sorted([layer_names.index(name) for name in split_layer_names])
+        indices = [0] + split_indices + [len(layer_list)]
         subgraphs_layer_lists = []
         for i in range(len(indices) - 1):
             start = indices[i]
@@ -940,7 +936,6 @@ class ModelGraph:
         original_OutputDir = config['OutputDir']
         original_ProjectName = config['ProjectName']
         current_index = 0
-        #curr_output_vars = {}
         last_output_precision = None
         for idx, sub_layer_list in enumerate(subgraphs_layer_lists):
             
@@ -1008,8 +1003,7 @@ class ModelGraph:
             layer_indices = [layer.index for layer in hls_model.graph.values()]
             if layer_indices:
                 max_index = max(layer_indices)
-                current_index = max_index - 1 # we have the input layer as well
-            #curr_output_vars = hls_model.output_vars
+                current_index = max_index - 1 # we have the new input layer as well
             model_graphs.append(hls_model)
 
         return MultiModelGraph(model_graphs)
@@ -1111,8 +1105,9 @@ class MultiModelGraph:
             output_data = g.predict(input_data)
             input_data = output_data
         return output_data
-
+    
     def trace(self, x):
+        # TODO: finish trace function
         input_data = x
         trace_output = []
         for g in self.graphs:
