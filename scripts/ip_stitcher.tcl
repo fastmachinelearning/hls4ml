@@ -536,7 +536,7 @@ if {$export_design} {
     ipx::check_integrity [ipx::find_open_core user.org:user:stitched_design:1.0]
     ipx::save_core [ipx::find_open_core user.org:user:stitched_design:1.0]
     puts "Stitched IP has been exported to '$stitched_ip_dir' folder"
-} 
+}
 
 if {$sim_design} {
     puts "Adding simulation Verilog file..."
@@ -549,10 +549,11 @@ if {$sim_design} {
             add_files -fileset sim_1 -norecurse -scan_for_includes "$base_dir/$sim_verilog_file"
             update_compile_order -fileset sim_1
             puts "Simulation Verilog file added: $base_dir/$sim_verilog_file"
-            # Set the simulation top module if necessary
             set_property top tb_design_1_wrapper [get_filesets sim_1]
-            # Run the behavioral simulation
             set_property -name {xsim.simulate.runtime} -value {200000ns} -objects [get_filesets sim_1]
+            puts "##########################"
+            puts "#  Launching simulation  #"
+            puts "##########################"
             launch_simulation
         } else {
             puts "Error: Simulation Verilog file not found: $base_dir/$sim_verilog_file"
