@@ -129,7 +129,9 @@ class VitisBackend(VivadoBackend):
         if(sim_design):
             testbench_file_path =  os.path.join(stitched_design_dir, "testbench.v")
             generate_verilog_testbench(nn_config, testbench_file_path)
+            print('Verilog testbench generated.')
 
+        print('Running build process of stitched IP...\n') 
         stitch_command = [
             'vivado', '-mode', 'batch', '-nojournal', '-nolog', '-notrace',
             '-source', os.path.join(hls4ml_path, '../scripts/ip_stitcher.tcl'),
@@ -156,5 +158,5 @@ class VitisBackend(VivadoBackend):
                 raise Exception(f'Stitching failed for {project_name}. See logs for details.')
         
         if(sim_design):
-            testbench_logfile_path = os.path.join(stitched_design_dir, 'vivado_stitched_design.sim/sim_1/behav/xsim/testbench_log.csv')
-            read_testbench_log(testbench_file_path)
+            testbench_log_path = os.path.join(stitched_design_dir, 'vivado_stitched_design.sim/sim_1/behav/xsim/testbench_log.csv')
+            read_testbench_log(testbench_log_path)

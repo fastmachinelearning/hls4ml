@@ -180,7 +180,6 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         # First Data Pattern: All Zeros
         for layer in nn_config['inputs']:
             f.write(f'        // Sending all zeros for {layer["name"]}\n')
-            #f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
             f.write(f'        {layer["name"]}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
             for k in range(layer['batch_size']):
@@ -195,7 +194,6 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         # Second Data Pattern: Fixed Value of 1
         for layer in nn_config['inputs']:
             f.write(f'        // Sending fixed value 1 for {layer["name"]}\n')
-            #f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
             f.write(f'        {layer["name"]}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
             for k in range(layer['batch_size']):
@@ -211,7 +209,6 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         # Third Data Pattern: All zeros (here measure output and cycles)
         for layer in nn_config['inputs']:
             f.write(f'        // Sending all zeros for {layer["name"]} (here we measure output and cycles)\n')
-            #f.write(f'        total_bits = {layer["integer_bits"] + layer["fractional_bits"]};\n')
             f.write(f'        {layer["name"]}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
             for k in range(layer['batch_size']):
@@ -228,7 +225,7 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         f.write('        end_cycle = cycle_count;\n')
         f.write('        $display("Total cycles from start to done: %0d", end_cycle - start_cycle);\n')
         f.write('        // Write latency to JSON\n')
-        f.write('        $fwrite(csv_file, "latency_cycles,0,%d\\n", end_cycle - start_cycle);\n')
+        f.write('        $fwrite(csv_file, "latency_cycles,0,%0d\\n", end_cycle - start_cycle);\n')
         f.write('        repeat (2) @(posedge ap_clk);\n')
         f.write('        $fclose(csv_file);\n')
         f.write('        $finish;\n')
@@ -262,15 +259,21 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         f.write('endmodule\n')
 
 
-def read_testbench_log(testbench_file):
-    # Read the CSV and print it in a numpy-structure 
+def read_testbench_log(testbench_log_path):
+    """
+    Reads the testbench log file, extracts simulation outputs 
+    and prints each output in numpy-like format along with the latency cycles.
+    """
 
-    if not os.path.exists(testbench_file):
-        print(f"Error: The file '{testbench_file}' does not exist.")
+    if not os.path.exists(testbench_log_path):
+        print(f"Error: The file '{testbench_log_path}' does not exist.")
         return
-    df = pd.read_csv(testbench_file) 
+    
+    df = pd.read_csv(testbench_log_path) 
     latency = df[df['output_name'] == 'latency_cycles']['value'].iloc[0] 
     grouped = df[df['output_name'] != 'latency_cycles'].groupby('output_name') 
+
+    print('=== SIMULATION OUTPUT ===')
     for name, group in grouped: 
         indices = group['index'].astype(int) 
         values = group['value'] 
