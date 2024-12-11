@@ -261,23 +261,28 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
 
 def read_testbench_log(testbench_log_path):
     """
-    Reads the testbench log file, extracts simulation outputs 
-    and prints each output in numpy-like format along with the latency cycles.
+    Reads the testbench log file and returns a dictionary with latency and 
+    output arrays for each output_name.
     """
-
     if not os.path.exists(testbench_log_path):
         print(f"Error: The file '{testbench_log_path}' does not exist.")
-        return
-    
-    df = pd.read_csv(testbench_log_path) 
-    latency = df[df['output_name'] == 'latency_cycles']['value'].iloc[0] 
-    grouped = df[df['output_name'] != 'latency_cycles'].groupby('output_name') 
+        return {}
 
-    print('=== SIMULATION OUTPUT ===')
-    for name, group in grouped: 
-        indices = group['index'].astype(int) 
-        values = group['value'] 
-        array = np.zeros(max(indices) + 1) 
+    df = pd.read_csv(testbench_log_path)
+    latency = df[df['output_name'] == 'latency_cycles']['value'].iloc[0]
+    grouped = df[df['output_name'] != 'latency_cycles'].groupby('output_name')
+
+    sim_dict = {
+        'latency_cycles': int(latency),
+        'outputs': {}
+    }
+
+    for name, group in grouped:
+        indices = group['index'].astype(int)
+        values = group['value'].astype(float)
+        array = np.zeros(max(indices) + 1, dtype=float)
         array[indices] = values
-        print(f"{name}:\n{array}\n") 
-    print(f"Latency (cycles): {int(latency)}")
+        sim_dict['outputs'][name] = array
+
+    return sim_dict
+    
