@@ -1018,6 +1018,7 @@ class MultiModelGraph:
         self.project_name = re.sub(r'_graph\d+$', '_stitched', graphs[0].config.get_project_name())
         self.output_dir = graphs[0].config.get_output_dir().split('/')[0]
         self.backend = self.graphs[0].config.backend
+        self.build_results = None
     
     def __getitem__(self, index):
         return self.graphs[index]
@@ -1057,8 +1058,16 @@ class MultiModelGraph:
         return nn_config
             
 
-    def build(self, max_workers=None, **kwargs):
-        # Build all ModelGraph instances in parallel.
+    def build(self, stitch_design=False, sim_stitched_design=False, export_stitched_design=False, max_workers=None, **kwargs):
+        """
+        Builds all ModelGraph instances in parallel, with optional stitching and export.
+        """
+
+        export = kwargs.get('export', False)
+        if (stitch_design or sim_stitched_design or export_stitched_design) and not export:
+            raise ValueError("You can't enable stitch_design, sim_stitched_design, or export_stitched_design without having export=True.")
+        if (sim_stitched_design or export_stitched_design) and not stitch_design:
+            raise ValueError("You can't simulate or export a stitched design without enabling stitch_design.")
         build_results = {}
         total_builds = len(self.graphs)
         status = {}
@@ -1096,6 +1105,17 @@ class MultiModelGraph:
                     build_results[project_name] = result
                 except Exception as exc:
                     build_results[project_name] = None
+
+        if stitch_design:
+            nn_config = self.parse_nn_config()
+            build_results = self.backend.stitch_design(
+                output_dir=self.output_dir,
+                project_name=self.project_name,
+                sim_stitched_design=sim_stitched_design,
+                export_stitched_design=export_stitched_design,
+                nn_config=nn_config,
+                build_results=build_results)
+
         return build_results
 
     def compile(self):
@@ -1118,16 +1138,6 @@ class MultiModelGraph:
             input_data = output_data
             trace_output.append(curr_trace_output)
         return output_data, trace_output
-    
-    def stitch_design(self, sim_design = False, export = False, **kwargs):
-        nn_config = self.parse_nn_config()
-        self.backend.stitch_design(
-            output_dir=self.output_dir,
-            project_name=self.project_name,
-            sim_design=sim_design,
-            export=export,
-            nn_config=nn_config,
-            **kwargs)
         
     def _print_status(self, status):
         print('\r', end='')
