@@ -17,7 +17,7 @@ def initialize_large_fifos(model, profiling_fifo_depth):
     """
 
     # filter all the output variables and keep only the internal FIFOs, excluding output objects that are not FIFOs and the
-    # inut and output FIFOs as they can't be profiled and are implementation dependant i.e AXI Stream, AXI Master or
+    # input and output FIFOs as they can't be profiled and are implementation dependant i.e AXI Stream, AXI Master or
     # connected to another IP
     vars_to_profile = {
         output_variable_name: output_variable
