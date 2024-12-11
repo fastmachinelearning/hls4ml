@@ -163,10 +163,10 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
     config = hls4ml.utils.config.config_from_onnx_model(
         model, granularity='name', backend=backend, default_precision='ap_fixed<15,2,AP_RND_CONV>'
     )
-    
+
     # add this line to remove the linear layer that quantizes the input of the NN
     config['LayerName']['global_in']['Precision']['result'] = 'fixed<4,0,AP_RND_CONV,AP_SAT,0>'
-    
+
     config['Flows'] = ['vitis:fifo_depth_optimization']
     hls4ml.model.optimizer.get_optimizer('vitis:fifo_depth_optimization').configure(
         profiling_fifo_depth=profiling_fifo_depth
