@@ -261,8 +261,7 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
 
 def read_testbench_log(testbench_log_path):
     """
-    Reads the testbench log file and returns a dictionary with latency and 
-    output arrays for each output_name.
+    Reads the testbench log file and returns a dictionary 
     """
     if not os.path.exists(testbench_log_path):
         print(f"Error: The file '{testbench_log_path}' does not exist.")
@@ -285,4 +284,3 @@ def read_testbench_log(testbench_log_path):
         sim_dict['outputs'][name] = array
 
     return sim_dict
-    

@@ -1015,10 +1015,10 @@ class ModelGraph:
 class MultiModelGraph:
     def __init__(self, graphs):
         self.graphs = graphs
-        self.project_name = re.sub(r'_graph\d+$', '_stitched', graphs[0].config.get_project_name())
+        self.project_name = 'vivado_stitched_design'
         self.output_dir = graphs[0].config.get_output_dir().split('/')[0]
         self.backend = self.graphs[0].config.backend
-        self.build_results = None
+        self.graph_reports = None
     
     def __getitem__(self, index):
         return self.graphs[index]
@@ -1055,8 +1055,7 @@ class MultiModelGraph:
                         "batch_size": int(batch_size)
                     })
 
-        return nn_config
-            
+        return nn_config          
 
     def build(self, stitch_design=False, sim_stitched_design=False, export_stitched_design=False, max_workers=None, **kwargs):
         """
@@ -1106,17 +1105,20 @@ class MultiModelGraph:
                 except Exception as exc:
                     build_results[project_name] = None
 
+        self.graph_reports=build_results
+
         if stitch_design:
             nn_config = self.parse_nn_config()
-            build_results = self.backend.stitch_design(
+            stitched_report = self.backend.stitch_design(
                 output_dir=self.output_dir,
                 project_name=self.project_name,
                 sim_stitched_design=sim_stitched_design,
                 export_stitched_design=export_stitched_design,
                 nn_config=nn_config,
-                build_results=build_results)
+                graph_reports=self.graph_reports)
+            return stitched_report
 
-        return build_results
+        return self.graph_reports
 
     def compile(self):
         for g in self.graphs:

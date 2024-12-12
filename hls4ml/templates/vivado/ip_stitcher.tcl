@@ -10,9 +10,10 @@
 puts "###########################################################"
 
 array set opt {
-    sim_design        0
-    export_design     0
-    sim_verilog_file  ""
+    sim_design              0
+    export_design           0
+    stitch_project_name     ""
+    sim_verilog_file        ""
 }
 
 foreach arg $::argv {
@@ -30,6 +31,7 @@ foreach arg $::argv {
 set sim_design [expr {$opt(sim_design)}]
 set export_design [expr {$opt(export_design)}]
 set sim_verilog_file $opt(sim_verilog_file)
+set stitch_project_name $opt(stitch_project_name)
 
 # Project base dir
 set base_dir [pwd]
@@ -61,10 +63,9 @@ puts "###########################################################"
 
 
 # Create New Vivado Project
-set project_name "vivado_stitched_design"
-file mkdir $project_name
-cd $project_name
-create_project $project_name . -part $part
+file mkdir $stitch_project_name
+cd $stitch_project_name
+create_project $stitch_project_name . -part $part
 
 # Add repositories
 # Initialize the repo count
