@@ -19,7 +19,6 @@ from HGQ.layers import (  # noqa: F401
     Signature,
 )
 from HGQ.proxy import to_proxy_model
-from HGQ.proxy.fixed_point_quantizer import gfixed
 from tensorflow import keras
 
 from hls4ml.converters import convert_from_keras_model
