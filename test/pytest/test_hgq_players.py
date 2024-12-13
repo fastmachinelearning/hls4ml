@@ -123,11 +123,13 @@ def create_player_model(layer: str, rnd_strategy: str, io_type: str):
 
     return model
 
+
 def get_data(shape: tuple[int, ...], v: float, max_scale: float):
     rng = np.random.default_rng()
     a1 = rng.uniform(-v, v, shape).astype(np.float32)
     a2 = rng.uniform(0, max_scale, (1, shape[1])).astype(np.float32)
     return (a1 * a2).astype(np.float32)
+
 
 @pytest.mark.parametrize(
     'layer',
