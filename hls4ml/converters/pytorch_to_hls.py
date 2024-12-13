@@ -367,12 +367,15 @@ def parse_pytorch_model(config, verbose=True):
         input_layers = None
 
     for layer in layer_list:
-        if layer['class_name'] == 'InputLayer': continue
+        if layer['class_name'] == 'InputLayer':
+            continue
         is_input = False
-        for l in layer_list:
-            if not 'inputs' in l.keys(): continue
-            if layer['name'] in l['inputs']: is_input = True
-        if not is_input:    
+        for lay in layer_list:
+            if 'inputs' not in lay.keys():
+                continue
+            if layer['name'] in lay['inputs']:
+                is_input = True
+        if not is_input:
             output_layers.append(layer['name'])
     return layer_list, input_layers, output_layers
 
