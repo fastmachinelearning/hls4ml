@@ -18,13 +18,14 @@ pytest.{}:
     EXAMPLEMODEL: {}
 """
 
+
 n_test_files_per_yml = int(os.environ.get('N_TESTS_PER_YAML', 4))
 
 # Blacklisted tests will be skipped
 BLACKLIST = {'test_reduction'}
 
 # Long-running tests will not be bundled with other tests
-LONGLIST = {'test_hgq_layers','test_hgq_players','test_qkeras'}
+LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras'}
 
 
 def path_to_name(test_path):
