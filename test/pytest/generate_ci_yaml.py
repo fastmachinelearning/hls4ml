@@ -72,7 +72,7 @@ def generate_test_yaml(test_root='.'):
         name = path.stem.replace('test_', '')
         test_file = str(path.relative_to(test_root))
         needs_examples = uses_example_model(path)
-        diff_yml = yaml.safe_load(template.format(name, test_file, needs_examples))
+        diff_yml = yaml.safe_load(template.format(name, test_file, int(needs_examples)))
         yml.update(diff_yml)
 
     return yml
