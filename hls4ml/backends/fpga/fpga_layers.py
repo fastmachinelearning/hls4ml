@@ -73,12 +73,14 @@ class BatchNormalizationQuantizedTanh(Layer):
 class PointwiseConv1D(Conv1D):
     '''Optimized Conv1D implementation for 1x1 kernels.'''
 
-    # Nothing to do, will pick up function and config from class name
-    pass
+    def initialize(self):
+        # Do noting, values copied
+        pass
 
 
 class PointwiseConv2D(Conv2D):
     '''Optimized Conv2D implementation for 1x1 kernels.'''
 
-    # Nothing to do, will pick up function and config from class name
-    pass
+    def initialize(self):
+        # Do noting, values copied
+        pass
