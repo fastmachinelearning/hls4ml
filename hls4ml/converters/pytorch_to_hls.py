@@ -1,4 +1,5 @@
 from hls4ml.model import ModelGraph
+from hls4ml.utils.dependency import requires
 
 
 class PyTorchModelReader:
@@ -22,6 +23,7 @@ class PyTorchModelReader:
         return data
 
 
+@requires('_torch')
 class PyTorchFileReader(PyTorchModelReader):  # Inherit get_weights_data method
     def __init__(self, config):
         import torch
@@ -103,6 +105,7 @@ layer_name_map = {
 # ----------------------------------------------------------------
 
 
+@requires('_torch')
 def parse_pytorch_model(config, verbose=True):
     """Convert PyTorch model to hls4ml ModelGraph.
 
@@ -368,6 +371,7 @@ def parse_pytorch_model(config, verbose=True):
     return layer_list, input_layers
 
 
+@requires('_torch')
 def pytorch_to_hls(config):
     layer_list, input_layers = parse_pytorch_model(config)
     print('Creating HLS model')
