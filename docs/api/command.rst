@@ -50,7 +50,7 @@ hls4ml config
 
    hls4ml config [-h] [-m MODEL] [-w WEIGHTS] [-o OUTPUT]
 
-This creates a conversion configuration file. Visit Configuration section of the :doc:`Setup <setup>` page for more details on how to write a configuration file.
+This creates a conversion configuration file. Visit Configuration section of the :doc:`Setup <../intro/setup>` page for more details on how to write a configuration file.
 
 **Arguments**
 

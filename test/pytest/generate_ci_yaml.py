@@ -18,13 +18,14 @@ pytest.{}:
     EXAMPLEMODEL: {}
 """
 
+
 n_test_files_per_yml = int(os.environ.get('N_TESTS_PER_YAML', 4))
 
 # Blacklisted tests will be skipped
 BLACKLIST = {'test_reduction'}
 
 # Long-running tests will not be bundled with other tests
-LONGLIST = {'test_hgq_layers'}
+LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_api'}
 
 
 def path_to_name(test_path):
@@ -71,7 +72,7 @@ def generate_test_yaml(test_root='.'):
         name = path.stem.replace('test_', '')
         test_file = str(path.relative_to(test_root))
         needs_examples = uses_example_model(path)
-        diff_yml = yaml.safe_load(template.format(name, test_file, needs_examples))
+        diff_yml = yaml.safe_load(template.format(name, test_file, int(needs_examples)))
         yml.update(diff_yml)
 
     return yml
