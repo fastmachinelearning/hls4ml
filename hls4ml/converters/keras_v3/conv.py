@@ -73,7 +73,6 @@ class KV3ConvHandler(KerasV3LayerHandler):
             'bias_data': bias,
             'data_format': data_format,
             'weight_data': kernel,
-            'bias_data': bias,
             'n_filt': ch_out,
             'n_chan': ch_in,
         }
