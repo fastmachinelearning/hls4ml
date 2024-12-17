@@ -55,65 +55,111 @@ def parse_component_xml(component_xml_path):
 
 
 def generate_verilog_testbench(nn_config, testbench_output_path):
+    """
+    Generate a Verilog testbench for a given neural network configuration.
+    The testbench includes:
+      - Clock and reset logic
+      - DUT instantiation and AXI4-Stream interfaces
+      - Stimulus generation for inputs
+      - Data capture and logging for outputs
+      - Latency measurement
+    """
     inputs = nn_config['inputs']
     outputs = nn_config['outputs']
 
     input_signals = []
     output_signals = []
 
+    # Collect input signals (name and total bitwidth)
     for input_item in inputs:
         total_bits = input_item['integer_bits'] + input_item['fractional_bits']
         input_signals.append((input_item['name'], total_bits))
 
+    # Collect output signals (name and total bitwidth)
     for output_item in outputs:
         total_bits = output_item['integer_bits'] + output_item['fractional_bits']
         output_signals.append((output_item['name'], total_bits))
 
     with open(testbench_output_path, 'w') as f:
-        # Write the initial part of the testbench
+        #----------------------------------------------------------------------
+        # Header and Module Declaration
+        #----------------------------------------------------------------------
         f.write('`timescale 1ns / 1ps\n\n')
         f.write('module tb_design_1_wrapper;\n\n')
+
+        #----------------------------------------------------------------------
+        # Clock and Reset Signals
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Clock and Reset Signals\n')
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    reg ap_clk;\n')
         f.write('    reg ap_rst_n;\n\n')
-        f.write('    // Control Signals\n')
-        f.write('    reg ap_start;\n')
+
+        #----------------------------------------------------------------------
+        # Control and Handshaking Signals
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Control and Handshaking Signals\n')
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    reg  ap_start;\n')
         f.write('    wire ap_done;\n\n')
 
-        # Generate AXI4-Stream interface signals for inputs
+        #----------------------------------------------------------------------
+        # AXI4-Stream Input Interfaces
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // AXI4-Stream Input Interfaces\n')
+        f.write('    //------------------------------------------------------------------------\n')
+
         for layer in nn_config['inputs']:
             total_bits = layer['integer_bits'] + layer['fractional_bits']
-            f.write(f'    reg [{(total_bits * layer["batch_size"]) - 1}:0] {layer["name"]}_tdata;\n')
-            f.write(f'    reg {layer["name"]}_tvalid;\n')
+            batch_size = layer['batch_size']
+            f.write(f'    reg  [{(total_bits * batch_size) - 1}:0] {layer["name"]}_tdata;\n')
+            f.write(f'    reg  {layer["name"]}_tvalid;\n')
             f.write(f'    wire {layer["name"]}_tready;\n\n')
 
-        # Generate AXI4-Stream interface signals for outputs
+        #----------------------------------------------------------------------
+        # AXI4-Stream Output Interfaces
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // AXI4-Stream Output Interfaces\n')
+        f.write('    //------------------------------------------------------------------------\n')
+
         for layer in nn_config['outputs']:
             total_bits = layer['integer_bits'] + layer['fractional_bits']
-            f.write(f'    wire [{(total_bits * layer["batch_size"]) - 1}:0] {layer["name"]}_tdata;\n')
+            batch_size = layer['batch_size']
+            f.write(f'    wire [{(total_bits * batch_size) - 1}:0] {layer["name"]}_tdata;\n')
             f.write(f'    wire {layer["name"]}_tvalid;\n')
-            f.write(f'    reg {layer["name"]}_tready;\n\n')
+            f.write(f'    reg  {layer["name"]}_tready;\n\n')
 
-        # Instantiate the DUT
-        f.write('    // Instantiate the Design Under Test (DUT)\n')
+        #----------------------------------------------------------------------
+        # DUT Instantiation
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // DUT Instantiation\n')
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    stitched_design dut (\n')
         f.write('        .ap_clk(ap_clk),\n')
         f.write('        .ap_done(ap_done),\n')
         f.write('        .ap_rst_n(ap_rst_n),\n')
         f.write('        .ap_start(ap_start),\n')
-        # Connect input AXI4-Stream interfaces
+
+        # Connect input interfaces
         for layer in nn_config['inputs']:
             name = layer["name"]
             f.write(f'        .{name}_tdata({name}_tdata),\n')
             f.write(f'        .{name}_tready({name}_tready),\n')
             f.write(f'        .{name}_tvalid({name}_tvalid),\n')
-        # Connect output AXI4-Stream interfaces
+
+        # Connect output interfaces (all but last have trailing comma)
         for layer in nn_config['outputs'][:-1]:
             name = layer["name"]
             f.write(f'        .{name}_tdata({name}_tdata),\n')
             f.write(f'        .{name}_tready({name}_tready),\n')
             f.write(f'        .{name}_tvalid({name}_tvalid),\n')
-        # Handle the last output layer without a trailing comma
+
+        # Last output interface (no trailing comma)
         last_output_layer = nn_config['outputs'][-1]
         name = last_output_layer["name"]
         f.write(f'        .{name}_tdata({name}_tdata),\n')
@@ -121,26 +167,37 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         f.write(f'        .{name}_tvalid({name}_tvalid)\n')
         f.write('    );\n\n')
 
-        # Add clock generation
-        f.write('    // Clock Generation (100 MHz)\n')
+        #----------------------------------------------------------------------
+        # Clock Generation
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Clock Generation (100 MHz => 10 ns period)\n')
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    initial begin\n')
         f.write('        ap_clk = 0;\n')
-        f.write('        forever #5 ap_clk = ~ap_clk; // Clock period of 10 ns\n')
+        f.write('        forever #5 ap_clk = ~ap_clk;\n')
         f.write('    end\n\n')
 
-        # Reset generation
+        #----------------------------------------------------------------------
+        # Reset Generation
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Reset Generation\n')
+        f.write('    // Wait for a few cycles and then release reset.\n')
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    initial begin\n')
-        f.write('        ap_rst_n  = 0;\n')
+        f.write('        ap_rst_n = 0;\n')
         f.write('        repeat (5) @(posedge ap_clk);\n')
         f.write('        ap_rst_n = 1;\n')
         f.write('    end\n\n')
 
-        # Initialize Control Signals
-        f.write('    // Control Signal Initialization\n')
-        f.write('    integer csv_file;\n')
-        f.write('    integer j;\n')
-        f.write('    integer total_bits;\n')
+        #----------------------------------------------------------------------
+        # Signal Initialization
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Signal Initialization\n')
+        f.write('    // Initialize control signals, input valid, and output ready.\n')
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    initial begin\n')
         f.write('        ap_start = 0;\n')
         for name, _ in input_signals:
@@ -149,11 +206,28 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
             f.write(f'        {name}_tready = 1;\n')
         f.write('    end\n\n')
 
-        # Cycle counter
-        f.write('    // Cycle counter\n')
+        #----------------------------------------------------------------------
+        # Variables for Logging and Measurement
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Logging and Measurement Variables\n')
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    integer csv_file;\n')
+        f.write('    integer j;\n')
+        f.write('    integer total_bits;\n')
         f.write('    reg [63:0] cycle_count = 0;\n')
         f.write('    reg [63:0] start_cycle = 0;\n')
         f.write('    reg [63:0] end_cycle = 0;\n')
+        f.write('    reg [1:0] done_counter = 0;\n')
+        f.write('    reg       old_ap_done = 0;\n\n')
+
+        #----------------------------------------------------------------------
+        # Cycle Counting
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Cycle Counting\n')
+        f.write('    // Count cycles to measure latency.\n')
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    always @(posedge ap_clk) begin\n')
         f.write('        if (!ap_rst_n)\n')
         f.write('            cycle_count <= 0;\n')
@@ -161,100 +235,129 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
         f.write('            cycle_count <= cycle_count + 1;\n')
         f.write('    end\n\n')
 
-        # Data Transmission
-        f.write('    // Data Transmission\n')
+        #----------------------------------------------------------------------
+        # Data Transmission (Stimulus Generation)
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Data Transmission (Stimulus)\n')
+        f.write('    // Send input patterns to the DUT.\n')
+        f.write('    //------------------------------------------------------------------------\n')
         f.write('    initial begin\n')
-        f.write('        // Wait for reset deassertion\n')
+        f.write('        // Wait until reset is de-asserted\n')
         f.write('        wait (ap_rst_n == 1);\n')
         f.write('        repeat (2) @(posedge ap_clk);\n\n')
 
-        f.write('        // Start the operation\n')
+        f.write('        // Open CSV log file\n')
         f.write('        csv_file = $fopen("testbench_log.csv", "w");\n')
         f.write('        if (csv_file == 0) begin\n')
-        f.write('            $display("ERROR: Could not open csv log file.");\n')
-        f.write('             $finish;\n')
+        f.write('            $display("ERROR: Could not open CSV log file.");\n')
+        f.write('            $finish;\n')
         f.write('        end\n')
         f.write('        $fwrite(csv_file, "output_name,index,value\\n");\n\n')
-        f.write('        ap_start = 1;\n')
 
-        # First Data Pattern: All Zeros
+        f.write('        // Start the DUT\n')
+        f.write('        ap_start = 1;\n\n')
+
+        # Send first pattern of inputs (all zeroes)
         for layer in nn_config['inputs']:
-            f.write(f'        // Sending all zeros for {layer["name"]}\n')
-            f.write(f'        {layer["name"]}_tvalid = 1;\n')
-            f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
-            for k in range(layer['batch_size']):
-                upper = (k + 1) * (layer["integer_bits"] + layer["fractional_bits"]) - 1
-                lower = k * (layer["integer_bits"] + layer["fractional_bits"])
-                f.write(f'            {layer["name"]}_tdata[{upper}:{lower}] = 0;\n')
-            f.write(f'            while ({layer["name"]}_tready == 0) @(posedge ap_clk);\n')
-            f.write(f'            @(posedge ap_clk);\n')
-            f.write(f'        end\n')
-            f.write(f'        {layer["name"]}_tvalid = 0;\n\n')
+            i_bits = layer["integer_bits"]
+            f_bits = layer["fractional_bits"]
+            total_bits = i_bits + f_bits
+            batch_size = layer['batch_size']
+            fifo_depth = layer["fifo_depth"]
+            name = layer["name"]
+            f.write(f'        // Sending 1st patern of inputs for {name}\n')
+            f.write(f'        {name}_tvalid = 1;\n')
+            f.write(f'        for (j = 0; j < {fifo_depth}; j = j + 1) begin\n')
+            for k in range(batch_size):
+                upper = (k + 1) * total_bits - 1
+                lower = k * total_bits
+                f.write(f'            {name}_tdata[{upper}:{lower}] = 0;\n')
+            f.write(f'            while ({name}_tready == 0) @(posedge ap_clk);\n')
+            f.write('            @(posedge ap_clk);\n')
+            f.write('        end\n')
+            f.write(f'        {name}_tvalid = 0;\n\n')
 
-        # Second Data Pattern: Fixed Value of 1
+        # Send second pattern of inputs
         for layer in nn_config['inputs']:
-            f.write(f'        // Sending fixed value 1 for {layer["name"]}\n')
-            f.write(f'        {layer["name"]}_tvalid = 1;\n')
-            f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
-            for k in range(layer['batch_size']):
-                upper = (k + 1) * (layer["integer_bits"] + layer["fractional_bits"]) - 1
-                lower = k * (layer["integer_bits"] + layer["fractional_bits"])
-                f.write(f'            {layer["name"]}_tdata[{upper}:{lower}] = 1 << {layer["fractional_bits"]};\n')
-            f.write(f'            while ({layer["name"]}_tready == 0) @(posedge ap_clk);\n')
-            f.write(f'            @(posedge ap_clk);\n')
-            f.write(f'        end\n')
-            f.write(f'        {layer["name"]}_tvalid = 0;\n\n')
+            i_bits = layer["integer_bits"]
+            f_bits = layer["fractional_bits"]
+            total_bits = i_bits + f_bits
+            batch_size = layer['batch_size']
+            fifo_depth = layer["fifo_depth"]
+            name = layer["name"]
+            f.write(f'        // Sending 2nd pattern of inputs for {name}\n')
+            f.write(f'        {name}_tvalid = 1;\n')
+            f.write(f'        for (j = 0; j < {fifo_depth}; j = j + 1) begin\n')
+            for k in range(batch_size):
+                upper = (k + 1) * total_bits - 1
+                lower = k * total_bits
+                f.write(f'            {name}_tdata[{upper}:{lower}] = 1 << {f_bits};\n')
+            f.write(f'            while ({name}_tready == 0) @(posedge ap_clk);\n')
+            f.write('            @(posedge ap_clk);\n')
+            f.write('        end\n')
 
-        f.write('        start_cycle = cycle_count;\n\n')
-        # Third Data Pattern: All zeros (here measure output and cycles)
-        for layer in nn_config['inputs']:
-            f.write(f'        // Sending all zeros for {layer["name"]} (here we measure output and cycles)\n')
-            f.write(f'        {layer["name"]}_tvalid = 1;\n')
-            f.write(f'        for (j = 0; j < {layer["fifo_depth"]}; j = j + 1) begin\n')
-            for k in range(layer['batch_size']):
-                upper = (k + 1) * (layer["integer_bits"] + layer["fractional_bits"]) - 1
-                lower = k * (layer["integer_bits"] + layer["fractional_bits"])
-                f.write(f'            {layer["name"]}_tdata[{upper}:{lower}] = 0;\n')
-            f.write(f'            while ({layer["name"]}_tready == 0) @(posedge ap_clk);\n')
-            f.write(f'            @(posedge ap_clk);\n')
-            f.write(f'        end\n')
-            f.write(f'        {layer["name"]}_tvalid = 0;\n\n')
-
-        f.write('        // Wait for operation to complete\n')
-        f.write('        wait (ap_done == 1);\n')
-        f.write('        end_cycle = cycle_count;\n')
-        f.write('        $display("Total cycles from start to done: %0d", end_cycle - start_cycle);\n')
-        f.write('        // Write latency to JSON\n')
-        f.write('        $fwrite(csv_file, "latency_cycles,0,%0d\\n", end_cycle - start_cycle);\n')
-        f.write('        repeat (2) @(posedge ap_clk);\n')
-        f.write('        $fclose(csv_file);\n')
-        f.write('        $finish;\n')
         f.write('    end\n\n')
 
-        # Output Handling
-        f.write('    // Output Data Capture\n')
+        #----------------------------------------------------------------------
+        # Output Data Capture and Logging
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Output Data Capture and Logging\n')
+        f.write('    // Capture output for 2nd input (done_counter == 1) and log them to CSV.\n')
+        f.write('    //------------------------------------------------------------------------\n\n')
+
         for i, layer in enumerate(nn_config['outputs']):
-            signed_str = layer.get('signed', 1)
             i_bits = layer['integer_bits']
             f_bits = layer['fractional_bits']
             total_bits = i_bits + f_bits
             layer_name = layer["name"]
 
+            f.write(f'    //Output capture for {layer_name}\n')
             f.write(f'    integer idx_{i};\n')
             f.write(f'    reg signed [{total_bits-1}:0] fixed_val_{i};\n')
             f.write(f'    real real_val_{i};\n')
-
             f.write(f'    always @(posedge ap_clk) begin\n')
-            f.write(f'        if ({layer_name}_tvalid && {layer_name}_tready) begin\n')
+            f.write(f'        if (done_counter == 1 && {layer_name}_tvalid && {layer_name}_tready) begin\n')
             f.write(f'            for (idx_{i} = 0; idx_{i} < {layer["batch_size"]}; idx_{i} = idx_{i} + 1) begin\n')
             f.write(f'                fixed_val_{i} = {layer_name}_tdata[(idx_{i}+1)*{total_bits}-1 -: {total_bits}];\n')
-            f.write(f'                real_val_{i} = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
-            f.write(f'                $display("Output {layer["name"]}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx_{i}, {i_bits}, {f_bits}, real_val_{i});\n')
-            f.write('                // Write to csv file\n')
+            f.write(f'                real_val_{i}  = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
+            f.write(f'                $display("Output {layer_name}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx_{i}, {i_bits}, {f_bits}, real_val_{i});\n')
+            f.write('                // Log result to CSV\n')
             f.write(f'                $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", idx_{i}, real_val_{i});\n')
             f.write('            end\n')
             f.write('        end\n')
             f.write('    end\n\n')
+
+        #----------------------------------------------------------------------
+        # Latency Measurement and Test End
+        #----------------------------------------------------------------------
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    // Latency Measurement\n')
+        f.write('    // Measures the cycle count between start and subsequent ap_done signals.\n')
+        f.write('    //------------------------------------------------------------------------\n')
+        f.write('    always @(posedge ap_clk) begin\n')
+        f.write('        if (!ap_rst_n) begin\n')
+        f.write('            old_ap_done <= 0;\n')
+        f.write('        end else begin\n')
+        f.write('            old_ap_done <= ap_done;\n')
+        f.write('            // Detect rising edge of ap_done\n')
+        f.write('            if (ap_done && !old_ap_done) begin\n')
+        f.write('                done_counter <= done_counter + 1;\n')
+        f.write('                if (done_counter == 0) begin\n')
+        f.write('                    start_cycle = cycle_count;\n')
+        f.write('                    $display("Worst latency (first input set): %0d cycles", cycle_count);\n')
+        f.write('                    $fwrite(csv_file, "%s,%0d,%0d\\n", "WorstLatency", 0, cycle_count);\n')
+        f.write('                end else if (done_counter == 1) begin\n')
+        f.write('                    end_cycle = cycle_count;\n')
+        f.write('                    $display("Best latency (second input set): %0d cycles", end_cycle - start_cycle);\n')
+        f.write('                    $fwrite(csv_file, "%s,%0d,%0d\\n", "BestLatency", 0, end_cycle - start_cycle);\n')
+        f.write('                    $fclose(csv_file);\n')
+        f.write('                    $finish;\n')
+        f.write('                end\n')
+        f.write('            end\n')
+        f.write('        end\n')
+        f.write('    end\n\n')
 
         f.write('endmodule\n')
 
@@ -267,20 +370,31 @@ def read_testbench_log(testbench_log_path):
         print(f"Error: The file '{testbench_log_path}' does not exist.")
         return {}
 
-    df = pd.read_csv(testbench_log_path)
-    latency = df[df['output_name'] == 'latency_cycles']['value'].iloc[0]
-    grouped = df[df['output_name'] != 'latency_cycles'].groupby('output_name')
+    try:
+        df = pd.read_csv(testbench_log_path)
+        BestLatency = df[df['output_name'] == 'BestLatency']['value'].iloc[0]
+        WorstLatency = df[df['output_name'] == 'WorstLatency']['value'].iloc[0]
+        output_df = df[~df['output_name'].isin(['BestLatency', 'WorstLatency'])]
+        
+        sim_dict = {
+            'BestLatency': int(BestLatency),
+            'WorstLatency': int(WorstLatency),
+            'outputs': {}
+        }
 
-    sim_dict = {
-        'latency_cycles': int(latency),
-        'outputs': {}
-    }
+        grouped = output_df.groupby('output_name')
+        for name, group in grouped:
+            indices = group['index'].astype(int)
+            values = group['value'].astype(float)
+            array = np.zeros(max(indices) + 1, dtype=float)
+            array[indices] = values
+            sim_dict['outputs'][name] = array
 
-    for name, group in grouped:
-        indices = group['index'].astype(int)
-        values = group['value'].astype(float)
-        array = np.zeros(max(indices) + 1, dtype=float)
-        array[indices] = values
-        sim_dict['outputs'][name] = array
+        return sim_dict
 
-    return sim_dict
+    except (KeyError, IndexError) as e:
+        print(f"Error: Missing expected columns or values in the file: {e}")
+        return {}
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return {}
