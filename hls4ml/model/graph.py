@@ -1107,11 +1107,12 @@ class MultiModelGraph:
 
         self.graph_reports=build_results
 
-        if stitch_design:
+        if stitch_design or sim_stitched_design or export_stitched_design:
             nn_config = self.parse_nn_config()
-            stitched_report = self.backend.stitch_design(
+            stitched_report = self.backend.build_stitched_design(
                 output_dir=self.output_dir,
                 project_name=self.project_name,
+                stitch_design=stitch_design,
                 sim_stitched_design=sim_stitched_design,
                 export_stitched_design=export_stitched_design,
                 nn_config=nn_config,
@@ -1124,12 +1125,24 @@ class MultiModelGraph:
         for g in self.graphs:
             g.compile()
 
-    def predict(self, x):
-        input_data = x
-        for g in self.graphs:
-            output_data = g.predict(input_data)
-            input_data = output_data
-        return output_data
+    def predict(self, x, sim_stitched_design = False):
+        if not sim_stitched_design:
+            input_data = x
+            for g in self.graphs:
+                output_data = g.predict(input_data)
+                input_data = output_data
+            return output_data
+        else:
+            nn_config = self.parse_nn_config()
+            stitched_report = self.backend.build_stitched_design(
+                output_dir=self.output_dir,
+                project_name=self.project_name,
+                stitch_design=False,
+                sim_stitched_design=True,
+                export_stitched_design=False,
+                nn_config=nn_config,
+                graph_reports=self.graph_reports)
+            return stitched_report
     
     def trace(self, x):
         # TODO: finish trace function

@@ -682,14 +682,15 @@ def aggregate_graph_reports(graph_reports):
     if graph_reports is None or len(graph_reports) == 0:
         return {}
 
-    keys_to_sum = ['BRAM_18K', 'DSP', 'FF', 'LUT', 'URAM', 'WorstLatency']
+    keys_to_sum = ['BRAM_18K', 'DSP', 'FF', 'LUT', 'URAM']
     first_subgraph = next(iter(graph_reports))
     base_report = graph_reports[first_subgraph]['CSynthesisReport']
 
     final_report = {
         'TargetClockPeriod': base_report.get('TargetClockPeriod', 'N/A'),
         'EstimatedClockPeriod': float(base_report.get('EstimatedClockPeriod', float('inf'))),
-        'WorstLatency': int(base_report.get('WorstLatency', '-1')),
+        'BestLatency': 'N/A',
+        'WorstLatency': 'N/A'
     }
 
     for k in keys_to_sum:
@@ -709,13 +710,10 @@ def aggregate_graph_reports(graph_reports):
         if est_cp > final_report['EstimatedClockPeriod']:
             final_report['EstimatedClockPeriod'] = est_cp
 
-        final_report['WorstLatency'] = max(final_report['WorstLatency'], int(report.get('WorstLatency', '-1')))
-
         for k in keys_to_sum:
             final_report[k] += int(report.get(k, '0'))
 
     final_report['EstimatedClockPeriod'] = f"{final_report['EstimatedClockPeriod']:.3f}"
-    final_report['WorstLatency'] = str(final_report['WorstLatency'])
     for k in keys_to_sum:
         final_report[k] = str(final_report[k])
 

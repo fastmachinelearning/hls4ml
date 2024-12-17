@@ -132,13 +132,14 @@ class VitisBackend(VivadoBackend):
 
         return parse_vivado_report(output_dir)
     
-    def stitch_design(self, output_dir, project_name, sim_stitched_design=False, export_stitched_design=False, nn_config=None, graph_reports=None):
+    def build_stitched_design(self, output_dir, project_name, stitch_design=True, sim_stitched_design=False, export_stitched_design=False, nn_config=None, graph_reports=None):
         
         os.makedirs(output_dir, exist_ok=True)
         stitched_design_dir = os.path.join(output_dir, project_name)
-        if os.path.exists(stitched_design_dir):
-            raise FileExistsError(f"The directory '{stitched_design_dir}' already exists.")
-        os.makedirs(stitched_design_dir)
+        if stitch_design:
+            if os.path.exists(stitched_design_dir):
+                raise FileExistsError(f"The directory '{stitched_design_dir}' already exists.")
+            os.makedirs(stitched_design_dir)
 
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
@@ -164,6 +165,7 @@ class VitisBackend(VivadoBackend):
             'vivado', '-mode', 'batch', '-nojournal', '-nolog', '-notrace',
             '-source', ip_stitcher_path,
             '-tclargs',
+            f'stitch_design={int(stitch_design)}',
             f'sim_design={int(sim_stitched_design)}',
             f'export_design={int(export_stitched_design)}',
             f'stitch_project_name={project_name}',
@@ -186,9 +188,11 @@ class VitisBackend(VivadoBackend):
             if process.returncode != 0:
                 raise Exception(f'Stitching failed for {project_name}. See logs for details.')
         
-        stitched_report = aggregate_graph_reports(graph_reports)
+        stitched_report = {}
+        if stitch_design:
+            stitched_report = aggregate_graph_reports(graph_reports)
 
-        if(sim_stitched_design):
+        if sim_stitched_design :
             testbench_log_path = os.path.join(stitched_design_dir, project_name + '.sim/sim_1/behav/xsim/testbench_log.csv')
             testbench_output = read_testbench_log(testbench_log_path)
 
@@ -197,6 +201,8 @@ class VitisBackend(VivadoBackend):
                 arr_str = [f"{val:.6f}" for val in arr]
                 behavioral_sim_results.append(arr_str)
             stitched_report['BehavSimResults'] = behavioral_sim_results
-            stitched_report['StitchedDesignReport']['BestLatency'] = testbench_output['latency_cycles']
+            if stitch_design:
+                stitched_report['StitchedDesignReport']['BestLatency'] = testbench_output['BestLatency']
+                stitched_report['StitchedDesignReport']['WorstLatency'] = testbench_output['WorstLatency']
 
         return stitched_report
