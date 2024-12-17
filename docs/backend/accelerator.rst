@@ -1,8 +1,8 @@
-=========================
-VivadoAccelerator Backend
-=========================
+=================
+VivadoAccelerator
+=================
 
-The ``VivadoAccelerator`` backend of ``hls4ml`` leverages the `PYNQ <http://pynq.io/>`_ software stack to easily deploy models on supported devices.
+The **VivadoAccelerator** backend of ``hls4ml`` leverages the `PYNQ <http://pynq.io/>`_ software stack to easily deploy models on supported devices.
 Currently ``hls4ml`` supports the following boards:
 
 * `pynq-z2 <https://www.xilinx.com/support/university/xup-boards/XUPPYNQ-Z2.html>`_ (part: ``xc7z020clg400-1``)
@@ -13,7 +13,7 @@ Currently ``hls4ml`` supports the following boards:
 * `alveo-u280 <https://www.xilinx.com/products/boards-and-kits/alveo/u280.html>`_ (part: ``xcu280-fsvh2892-2L-e``)
 
 but, in principle, support can be extended to `any board supported by PYNQ <http://www.pynq.io/board.html>`_.
-For the Zynq-based boards, there are two components: an ARM-based processing system (PS) and FPGA-based programmable logic (PL), with various intefaces between the two.
+For the Zynq-based boards, there are two components: an ARM-based processing system (PS) and FPGA-based programmable logic (PL), with various interfaces between the two.
 
 .. image:: ../img/zynq_interfaces.png
   :height: 300px
