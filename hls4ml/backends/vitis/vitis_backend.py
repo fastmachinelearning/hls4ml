@@ -8,7 +8,7 @@ import shutil
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
 from hls4ml.report import parse_vivado_report, aggregate_graph_reports
-from hls4ml.utils.simulation_utils import generate_verilog_testbench, read_testbench_log
+from hls4ml.utils.simulation_utils import write_verilog_testbench, read_testbench_log, write_testbench_input, prepare_testbench_input, prepare_zero_input
 
 
 class VitisBackend(VivadoBackend):
@@ -114,8 +114,17 @@ class VitisBackend(VivadoBackend):
 
         return parse_vivado_report(output_dir)
     
-    def build_stitched_design(self, output_dir, project_name, stitch_design=True, sim_stitched_design=False, export_stitched_design=False, nn_config=None, graph_reports=None):
-        
+    def build_stitched_design(
+        self,
+        output_dir,
+        project_name,
+        stitch_design=True,
+        sim_stitched_design=False,
+        export_stitched_design=False,
+        nn_config=None,
+        graph_reports=None,
+        simulation_input_data=None):    
+
         os.makedirs(output_dir, exist_ok=True)
         stitched_design_dir = os.path.join(output_dir, project_name)
         if stitch_design:
@@ -123,11 +132,11 @@ class VitisBackend(VivadoBackend):
                 raise FileExistsError(f"The directory '{stitched_design_dir}' already exists.")
             os.makedirs(stitched_design_dir)
 
-        spec = importlib.util.find_spec("hls4ml")
+        spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
         ip_stitcher_path = os.path.join(hls4ml_path, 'templates/vivado/ip_stitcher.tcl')
-        nn_config_path = os.path.join(stitched_design_dir, "nn_config.json")
-        testbench_path =  os.path.join(stitched_design_dir, "testbench.v")
+        nn_config_path = os.path.join(stitched_design_dir, 'nn_config.json')
+        testbench_path =  os.path.join(stitched_design_dir, 'testbench.v')
 
         try:
             shutil.copy(ip_stitcher_path, stitched_design_dir)
@@ -139,8 +148,22 @@ class VitisBackend(VivadoBackend):
                 json.dump(nn_config, file, indent=4)
         
         if(sim_stitched_design):
-            generate_verilog_testbench(nn_config, testbench_path)
-            print('Verilog testbench generated.')
+            write_verilog_testbench(nn_config, testbench_path)
+
+            # Produce testbench input file for every input layer
+            for i, layer in enumerate(nn_config['inputs']):
+                layer_name = layer['name']
+                frac_bits = layer['fractional_bits']
+                total_bits = layer['fractional_bits'] + layer['integer_bits']
+                testbench_input_path = os.path.join(stitched_design_dir, f"{layer_name}_input_data.txt")
+                # We reshape simulation input data to (fifo_depth, batch_size)
+                if simulation_input_data is None:
+                    input_data_reshaped = prepare_zero_input(layer)
+                else:
+                    data = simulation_input_data[i]
+                    input_data_reshaped = prepare_testbench_input(data, layer['fifo_depth'], layer['batch_size'])
+                write_testbench_input(input_data_reshaped, testbench_input_path, frac_bits, total_bits)
+            print('Verilog testbench and its input data was generated.')
 
         print('Running build process of stitched IP...\n')
         stitch_command = [

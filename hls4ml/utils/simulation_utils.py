@@ -54,7 +54,7 @@ def parse_component_xml(component_xml_path):
     return inputs, outputs
 
 
-def generate_verilog_testbench(nn_config, testbench_output_path):
+def write_verilog_testbench(nn_config, testbench_output_path):
     """
     Generate a Verilog testbench for a given neural network configuration.
     The testbench includes:
@@ -361,6 +361,57 @@ def generate_verilog_testbench(nn_config, testbench_output_path):
 
         f.write('endmodule\n')
 
+def float_to_fixed(float_value, fractional_bits=10, total_bits=16):
+    scaling_factor = 1 << fractional_bits
+    max_val = (1 << (total_bits - 1)) - 1
+    min_val = -(1 << (total_bits - 1))
+
+    float_value = float(float_value)  # Convert to Python float if it's a numpy type
+
+    fixed_value = int(np.round(float_value * scaling_factor))
+    fixed_value = max(min(fixed_value, max_val), min_val)
+
+    if fixed_value < 0:
+        fixed_value = fixed_value + (1 << total_bits)  # Two's complement
+
+    return fixed_value
+
+def write_testbench_input(floats, file_name, fractional_bits=10, total_bits=16):
+    """
+    Convert 1D or 2D arrays (or lists of floats) to fixed-point and write to file.
+
+    If 'floats' is 1D: writes a single line.
+    If 'floats' is 2D: flattens each row and writes one line per row.
+    """
+    with open(file_name, "w") as f:
+        if len(floats) > 0 and isinstance(floats[0], (list, np.ndarray)):
+            for row in floats:
+                row_array = np.array(row).ravel()  # flatten if necessary
+                fixed_line = [float_to_fixed(val, fractional_bits, total_bits) for val in row_array]
+                f.write(" ".join(map(str, fixed_line)) + "\n")
+        else:
+            flattened = np.array(floats).ravel()  # ensure it's a flat array of scalars
+            fixed_line = [float_to_fixed(val, fractional_bits, total_bits) for val in flattened]
+            f.write(" ".join(map(str, fixed_line)) + "\n")
+
+
+def prepare_zero_input(layer):
+        batch_size = layer['batch_size']
+        fifo_depth = layer['fifo_depth']       
+        zero_input = np.zeros((fifo_depth, batch_size), dtype=np.int32)
+        return zero_input
+
+def prepare_testbench_input(data, fifo_depth, batch_size):
+    data_arr = np.array(data)
+    # Flatten the data and then reshape it
+    # Ensure that total elements = fifo_depth * batch_size
+    total_elements = fifo_depth * batch_size
+    if data_arr.size != total_elements:
+        raise ValueError(
+            f"Data size {data_arr.size} does not match fifo_depth * batch_size = {total_elements}"
+        )
+    data_reshaped = data_arr.reshape((fifo_depth, batch_size))
+    return data_reshaped
 
 def read_testbench_log(testbench_log_path):
     """
