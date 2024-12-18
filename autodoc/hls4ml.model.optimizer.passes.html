@@ -1274,17 +1274,17 @@ The constant value was already used; this is just a cleanup uptimization.</p>
 </section>
 <section id="module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">
 <span id="hls4ml-model-optimizer-passes-seperable-to-dw-conv-module"></span><h2>hls4ml.model.optimizer.passes.seperable_to_dw_conv module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv" title="Link to this heading"></a></h2>
-<p>This optimizer converts a seperable convolution to a depthwise followed by a regular convolution.
+<p>This optimizer converts a separable convolution to a depthwise followed by a regular convolution.
 For backends with a custom pointwise implementations the regular convolution will subsequently
 be converted to a pointwise convolution by a different optimizer.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.seperable_to_dw_conv.</span></span><span class="sig-name descname"><span class="pre">SeperableToDepthwiseAndConv</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.seperable_to_dw_conv.</span></span><span class="sig-name descname"><span class="pre">SeparableToDepthwiseAndConv</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>Convert Seperable to DepthwiseConv + Conv (potentially later Pointwise)</p>
+<p>Convert Separable to DepthwiseConv + Conv (potentially later Pointwise)</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.match" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv.match" title="Link to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1294,8 +1294,8 @@ be converted to a pointwise convolution by a different optimizer.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeperableToDepthwiseAndConv.transform" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv.transform" title="Link to this definition"></a></dt>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
