@@ -6,6 +6,8 @@ from collections import OrderedDict
 import numpy as np
 import numpy.ctypeslib as npc
 import copy
+import importlib.util
+import shutil
 import re
 import warnings
 import concurrent.futures
@@ -1106,6 +1108,7 @@ class MultiModelGraph:
                     build_results[project_name] = None
 
         self.graph_reports=build_results
+        self._replace_logos()
 
         if stitch_design or sim_stitched_design or export_stitched_design:
             nn_config = self.parse_nn_config()
@@ -1141,7 +1144,8 @@ class MultiModelGraph:
                 sim_stitched_design=True,
                 export_stitched_design=False,
                 nn_config=nn_config,
-                graph_reports=self.graph_reports)
+                graph_reports=self.graph_reports,
+                simulation_input_data=x)
             return stitched_report
     
     def trace(self, x):
@@ -1164,3 +1168,30 @@ class MultiModelGraph:
         }
         status_str = ' | '.join(f'{proj}: {status_icons.get(stat, "?")}' for proj, stat in status.items())
         print(status_str, flush=True)
+
+    def _replace_logos(self):
+        spec = importlib.util.find_spec("hls4ml")
+        hls4ml_path = os.path.dirname(spec.origin)
+        hls4ml_logo = os.path.join(hls4ml_path, '../docs/img/logo.png')
+
+        if not os.path.isfile(hls4ml_logo):
+            raise FileNotFoundError(f"hls4ml logo not found at: {hls4ml_logo}")
+
+        for graph in self.graphs:
+            graph_logo_paths = [
+                os.path.join(
+                    graph.config.get_output_dir(),
+                    graph.config.get_project_name() + '_prj',
+                    'solution1/impl/misc/logo.png'
+                ),
+                os.path.join(
+                    graph.config.get_output_dir(),
+                    graph.config.get_project_name() + '_prj',
+                    'solution1/impl/ip/misc/logo.png'
+                )
+            ]
+            try:
+                for logo in graph_logo_paths:
+                    shutil.copy(hls4ml_logo, logo)
+            except Exception as e:
+                print(f"Error copying hls4ml logo to {graph.config.get_output_dir()} project: {e}")

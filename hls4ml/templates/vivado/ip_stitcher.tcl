@@ -545,7 +545,7 @@ if {$stitch_design} {
 }
 
 if {$export_design} {
-    puts "Exporting the final stitched IP..."
+    puts "Exporting stitched IP..."
     set stitched_ip_dir "ip_repo"
     ipx::package_project -root_dir $stitched_ip_dir \
         -vendor user.org -library user -taxonomy /UserIP -module $bd_name \
@@ -560,30 +560,29 @@ if {$export_design} {
 }
 
 if {$sim_design} {
-    puts "Adding simulation Verilog file..."
-    if {$sim_verilog_file != ""} {
-        if { [file exists "$base_dir/$sim_verilog_file"] } {
-            if { [llength [get_filesets sim_1]] == 0 } {
-                create_fileset -simset sim_1
-            }
-            set_property SOURCE_SET sources_1 [get_filesets sim_1]
-            add_files -fileset sim_1 -norecurse -scan_for_includes "$base_dir/$sim_verilog_file"
-            update_compile_order -fileset sim_1
-            puts "Simulation Verilog file added: $base_dir/$sim_verilog_file"
-            set_property top tb_design_1_wrapper [get_filesets sim_1]
-            set_property -name {xsim.simulate.runtime} -value {200000ns} -objects [get_filesets sim_1]
-            puts "##########################"
-            puts "#  Launching simulation  #"
-            puts "##########################"
-            launch_simulation
-        } else {
-            puts "Error: Simulation Verilog file not found: $base_dir/$sim_verilog_file"
-        }
-    } else {
+    if {$sim_verilog_file == ""} {
         puts "Error: sim_verilog_file not provided."
         exit 1
     }
+    if {![file exists "$base_dir/$sim_verilog_file"]} {
+        puts "Error: Simulation file not found: $base_dir/$sim_verilog_file"
+        exit 1
+    }
+    if {[llength [get_filesets sim_1]] == 0} {
+        create_fileset -simset sim_1
+    }
+    set_property SOURCE_SET sources_1 [get_filesets sim_1]
+    add_files -fileset sim_1 -norecurse -scan_for_includes "$base_dir/$sim_verilog_file"
+    update_compile_order -fileset sim_1
+    puts "Simulation Verilog file added: $base_dir/$sim_verilog_file"
+    set_property top tb_design_1_wrapper [get_filesets sim_1]
+    set_property -name {xsim.simulate.runtime} -value {800000ns} -objects [get_filesets sim_1]
+    puts "##########################"
+    puts "#  Launching simulation  #"
+    puts "##########################"
+    launch_simulation
 }
+
 
 close_project
 
