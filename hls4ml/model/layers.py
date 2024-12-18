@@ -176,10 +176,12 @@ class Layer:
         return NamedType(name=name, precision=precision)
 
     def _set_accum_t(self):
-        has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
-        if has_accum_t:
-            accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
-            self.set_attr('accum_t', accum_t)
+        """Set the accumulator, but don't overwrite an existing one"""
+        if self.get_attr('accum_t') is None:
+            has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
+            if has_accum_t:
+                accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
+                self.set_attr('accum_t', accum_t)
 
     def _set_type_t(self, name):
         has_type_t = any(a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute))
