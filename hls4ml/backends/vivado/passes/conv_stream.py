@@ -18,7 +18,7 @@ class GenerateConvStreamingInstructions(OptimizerPass):
             raise Exception(f'Cannot generate instructions for node {node.name} ({node_class})')
 
     def _generate_1d_instructions(self, node):
-        if node.model.config.get_config_value('IOType') == 'io_stream' and node.get_attr('conv_implementation') == 'Encoded':
+        if node.model.config.get_config_value('IOType') == 'io_stream' and node.get_attr('implementation').casefold() == 'encoded':
             min_w, instructions = node.model.config.backend.compute_conv1d_instructions(
                 node.get_input_variable().shape[0],
                 node.get_input_variable().shape[1],
@@ -34,7 +34,7 @@ class GenerateConvStreamingInstructions(OptimizerPass):
             node.set_attr('instructions', '0')
 
     def _generate_2d_instructions(self, node):
-        if node.model.config.get_config_value('IOType') == 'io_stream' and node.get_attr('conv_implementation') == 'Encoded':
+        if node.model.config.get_config_value('IOType') == 'io_stream' and node.get_attr('implementation').casefold() == 'encoded':
             min_h, min_w, instructions = node.model.config.backend.compute_conv2d_instructions(
                 node.get_input_variable().shape[0],
                 node.get_input_variable().shape[1],
