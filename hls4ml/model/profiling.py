@@ -78,7 +78,7 @@ def boxplot(data, fmt='longform'):
 
         medianprops = dict(linestyle='-', color='k')
         f, ax = plt.subplots(1, 1)
-        # data.reverse()
+        data.reverse()
         colors = sb.color_palette("Blues", len(data))
         bp = ax.bxp(data, showfliers=False, vert=False, medianprops=medianprops)
         # add colored boxes
