@@ -1074,7 +1074,6 @@ class MultiModelGraph:
         status = {}
         status_lock = threading.Lock()
 
-        # Initialize statuses
         for g in self.graphs:
             project_name = g.config.get_project_name()
             status[project_name] = 'Pending'
@@ -1128,14 +1127,14 @@ class MultiModelGraph:
         for g in self.graphs:
             g.compile()
 
-    def predict(self, x, sim_stitched_design = False):
-        if not sim_stitched_design:
+    def predict(self, x, sim = 'csim'):
+        if sim == 'csim':
             input_data = x
             for g in self.graphs:
                 output_data = g.predict(input_data)
                 input_data = output_data
             return output_data
-        else:
+        elif sim == 'rtl':
             nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
                 output_dir=self.output_dir,
@@ -1146,8 +1145,10 @@ class MultiModelGraph:
                 nn_config=nn_config,
                 graph_reports=self.graph_reports,
                 simulation_input_data=x)
-            return stitched_report
-    
+            return stitched_report['BehavSimResults']
+        else: 
+            print('Unknown simulation option given.')
+            
     def trace(self, x):
         # TODO: finish trace function
         input_data = x
@@ -1172,7 +1173,7 @@ class MultiModelGraph:
     def _replace_logos(self):
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
-        hls4ml_logo = os.path.join(hls4ml_path, '../docs/img/logo.png')
+        hls4ml_logo = os.path.join(hls4ml_path, '../docs/img/logo_small.png')
 
         if not os.path.isfile(hls4ml_logo):
             raise FileNotFoundError(f"hls4ml logo not found at: {hls4ml_logo}")
