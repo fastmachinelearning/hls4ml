@@ -7,7 +7,7 @@ class GenerateConvStreamingInstructions(OptimizerPass):
 
     def match(self, node):
         is_match = (
-            isinstance(node, (Conv1D, SeparableConv1D, Conv2D, SeparableConv2D)) 
+            isinstance(node, (Conv1D, SeparableConv1D, Conv2D, SeparableConv2D))
             and node.model.config.get_config_value('IOType').casefold() == 'io_stream'
             and node.get_attr('implementation').casefold() == 'encoded'
         )
