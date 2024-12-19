@@ -134,9 +134,12 @@ class VitisBackend(VivadoBackend):
 
         spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
-        ip_stitcher_path = os.path.join(hls4ml_path, 'templates/vivado/ip_stitcher.tcl')
+        ip_stitcher_path = os.path.join(hls4ml_path, 'templates/vivado/ip_stitcher.tcl')     
+        stdout_log = os.path.join(stitched_design_dir, 'stitcher_stdout.log')
+        stderr_log = os.path.join(stitched_design_dir, 'stitcher_stderr.log')
         nn_config_path = os.path.join(stitched_design_dir, 'nn_config.json')
         testbench_path =  os.path.join(stitched_design_dir, 'testbench.v')
+        testbench_log_path = os.path.join(stitched_design_dir, 'testbench_log.csv')
 
         try:
             shutil.copy(ip_stitcher_path, stitched_design_dir)
@@ -149,20 +152,18 @@ class VitisBackend(VivadoBackend):
         
         if(sim_stitched_design):
             write_verilog_testbench(nn_config, testbench_path)
-
-            # Produce testbench input file for every input layer
+            # Produce a testbench input file for every input layer
             for i, layer in enumerate(nn_config['inputs']):
-                layer_name = layer['name']
-                frac_bits = layer['fractional_bits']
-                total_bits = layer['fractional_bits'] + layer['integer_bits']
-                testbench_input_path = os.path.join(stitched_design_dir, f"{layer_name}_input_data.txt")
-                # We reshape simulation input data to (fifo_depth, batch_size)
+                testbench_input_path = os.path.join(stitched_design_dir, f"{layer['name']}_input_data.txt")
+                # We reshape input simulation data to (fifo_depth, batch_size)
                 if simulation_input_data is None:
                     input_data_reshaped = prepare_zero_input(layer)
+                    print("No simulation input provided. Using zero-filled inputs.")
                 else:
+                    # Handles both single and multi-layer cases. First dim should always be batch size
                     data = simulation_input_data[i]
                     input_data_reshaped = prepare_testbench_input(data, layer['fifo_depth'], layer['batch_size'])
-                write_testbench_input(input_data_reshaped, testbench_input_path, frac_bits, total_bits)
+                write_testbench_input(input_data_reshaped, testbench_input_path, layer['integer_bits'], layer['fractional_bits'])
             print('Verilog testbench and its input data was generated.')
 
         print('Running build process of stitched IP...\n')
@@ -176,9 +177,6 @@ class VitisBackend(VivadoBackend):
             f'stitch_project_name={project_name}',
             f'sim_verilog_file={os.path.join(project_name, "testbench.v")}'
         ]
-                
-        stdout_log = os.path.join(stitched_design_dir, 'stitcher_stdout.log')
-        stderr_log = os.path.join(stitched_design_dir, 'stitcher_stderr.log')
         
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
             process = subprocess.Popen(
@@ -193,21 +191,14 @@ class VitisBackend(VivadoBackend):
             if process.returncode != 0:
                 raise Exception(f'Stitching failed for {project_name}. See logs for details.')
         
-        stitched_report = {}
+        stitched_report = {'StitchedDesignReport': {}}
         if stitch_design:
             stitched_report = aggregate_graph_reports(graph_reports)
 
-        if sim_stitched_design :
-            testbench_log_path = os.path.join(stitched_design_dir, project_name + '.sim/sim_1/behav/xsim/testbench_log.csv')
+        if sim_stitched_design:
             testbench_output = read_testbench_log(testbench_log_path)
-
-            behavioral_sim_results = []
-            for name, arr in testbench_output['outputs'].items():
-                arr_str = [f"{val:.6f}" for val in arr]
-                behavioral_sim_results.append(arr_str)
-            stitched_report['BehavSimResults'] = behavioral_sim_results
-            if stitch_design:
-                stitched_report['StitchedDesignReport']['BestLatency'] = testbench_output['BestLatency']
-                stitched_report['StitchedDesignReport']['WorstLatency'] = testbench_output['WorstLatency']
+            stitched_report['BehavSimResults'] = testbench_output['BehavSimResults']
+            stitched_report['StitchedDesignReport']['BestLatency'] = testbench_output['BestLatency']
+            stitched_report['StitchedDesignReport']['WorstLatency'] = testbench_output['WorstLatency']
 
         return stitched_report

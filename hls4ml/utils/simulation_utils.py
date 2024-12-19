@@ -213,6 +213,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('    // Logging and Measurement Variables\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    integer csv_file;\n')
+        f.write('    integer file, r, value;\n')
         f.write('    integer j;\n')
         f.write('    integer total_bits;\n')
         f.write('    reg [63:0] cycle_count = 0;\n')
@@ -248,7 +249,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('        repeat (2) @(posedge ap_clk);\n\n')
 
         f.write('        // Open CSV log file\n')
-        f.write('        csv_file = $fopen("testbench_log.csv", "w");\n')
+        f.write('        csv_file = $fopen("../../../../testbench_log.csv", "w");\n')
         f.write('        if (csv_file == 0) begin\n')
         f.write('            $display("ERROR: Could not open CSV log file.");\n')
         f.write('            $finish;\n')
@@ -278,7 +279,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write('        end\n')
             f.write(f'        {name}_tvalid = 0;\n\n')
 
-        # Send second pattern of inputs
+        # Send second pattern of inputs (read from file)
         for layer in nn_config['inputs']:
             i_bits = layer["integer_bits"]
             f_bits = layer["fractional_bits"]
@@ -286,13 +287,21 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             batch_size = layer['batch_size']
             fifo_depth = layer["fifo_depth"]
             name = layer["name"]
+            input_file = f"{name}_input_data.txt"
             f.write(f'        // Sending 2nd pattern of inputs for {name}\n')
             f.write(f'        {name}_tvalid = 1;\n')
+            f.write(f'        file = $fopen("../../../../{input_file}", "r");\n')
+            f.write(f'        if (file == 0) begin\n')
+            f.write(f'            $display("Error opening file {input_file}");\n')
+            f.write(f'            $finish;\n')
+            f.write(f'        end\n')
             f.write(f'        for (j = 0; j < {fifo_depth}; j = j + 1) begin\n')
+            # For each line, read batch_size values:
             for k in range(batch_size):
                 upper = (k + 1) * total_bits - 1
                 lower = k * total_bits
-                f.write(f'            {name}_tdata[{upper}:{lower}] = 1 << {f_bits};\n')
+                f.write(f'            r = $fscanf(file, "%d", value);\n')
+                f.write(f'            {name}_tdata[{upper}:{lower}] = value;\n')
             f.write(f'            while ({name}_tready == 0) @(posedge ap_clk);\n')
             f.write('            @(posedge ap_clk);\n')
             f.write('        end\n')
@@ -361,8 +370,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
 
         f.write('endmodule\n')
 
-def float_to_fixed(float_value, fractional_bits=10, total_bits=16):
+def float_to_fixed(float_value, integer_bits=6, fractional_bits=10):
     scaling_factor = 1 << fractional_bits
+    total_bits = integer_bits + fractional_bits
     max_val = (1 << (total_bits - 1)) - 1
     min_val = -(1 << (total_bits - 1))
 
@@ -376,22 +386,22 @@ def float_to_fixed(float_value, fractional_bits=10, total_bits=16):
 
     return fixed_value
 
-def write_testbench_input(floats, file_name, fractional_bits=10, total_bits=16):
+def write_testbench_input(float_inputs, file_name, integer_bits=6, fractional_bits=10):
     """
     Convert 1D or 2D arrays (or lists of floats) to fixed-point and write to file.
 
-    If 'floats' is 1D: writes a single line.
-    If 'floats' is 2D: flattens each row and writes one line per row.
+    If 'float_inputs' is 1D: writes a single line.
+    If 'float_inputs' is 2D: flattens each row and writes one line per row.
     """
     with open(file_name, "w") as f:
-        if len(floats) > 0 and isinstance(floats[0], (list, np.ndarray)):
-            for row in floats:
+        if len(float_inputs) > 0 and isinstance(float_inputs[0], (list, np.ndarray)):
+            for row in float_inputs:
                 row_array = np.array(row).ravel()  # flatten if necessary
-                fixed_line = [float_to_fixed(val, fractional_bits, total_bits) for val in row_array]
+                fixed_line = [float_to_fixed(val, integer_bits, fractional_bits) for val in row_array]
                 f.write(" ".join(map(str, fixed_line)) + "\n")
         else:
-            flattened = np.array(floats).ravel()  # ensure it's a flat array of scalars
-            fixed_line = [float_to_fixed(val, fractional_bits, total_bits) for val in flattened]
+            flattened = np.array(float_inputs).ravel()  # ensure it's a flat array of scalars
+            fixed_line = [float_to_fixed(val, integer_bits, fractional_bits) for val in flattened]
             f.write(" ".join(map(str, fixed_line)) + "\n")
 
 
@@ -403,7 +413,6 @@ def prepare_zero_input(layer):
 
 def prepare_testbench_input(data, fifo_depth, batch_size):
     data_arr = np.array(data)
-    # Flatten the data and then reshape it
     # Ensure that total elements = fifo_depth * batch_size
     total_elements = fifo_depth * batch_size
     if data_arr.size != total_elements:
@@ -430,16 +439,16 @@ def read_testbench_log(testbench_log_path):
         sim_dict = {
             'BestLatency': int(BestLatency),
             'WorstLatency': int(WorstLatency),
-            'outputs': {}
+            'BehavSimResults': []
         }
 
         grouped = output_df.groupby('output_name')
         for name, group in grouped:
             indices = group['index'].astype(int)
             values = group['value'].astype(float)
-            array = np.zeros(max(indices) + 1, dtype=float)
+            array = np.zeros(max(indices) + 1, dtype=np.float64)
             array[indices] = values
-            sim_dict['outputs'][name] = array
+            sim_dict['BehavSimResults'].append(array)
 
         return sim_dict
 
