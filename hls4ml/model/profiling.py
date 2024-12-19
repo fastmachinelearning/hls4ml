@@ -408,7 +408,7 @@ class WeightsTorch:
         return name in self.registered_layers
 
     def _register_layer(self, name: str) -> None:
-        if self._is_registered(name) == False:
+        if self._is_registered(name) is False:
             self.registered_layers.append(name)
 
     def _is_parameterized(self, module: torch.nn.Module) -> bool:
