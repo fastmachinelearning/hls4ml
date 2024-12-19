@@ -1037,7 +1037,7 @@ class ModelGraph(Serializable):
         serialize_model(self, file_path)
 
     @classmethod
-    def make_multi_graph(cls, config, layer_list, output_shapes, split_layer_names):
+    def make_multi_graph(cls, config, layer_list, input_layers, output_layers, output_shapes, split_layer_names):
         """Splits the layer list at the specified layers and creates multiple ModelGraphs.
 
         Args:
@@ -1061,12 +1061,12 @@ class ModelGraph(Serializable):
         # Split the layer_list into subgraphs
         split_indices = sorted([layer_names.index(name) for name in split_layer_names])
         indices = [0] + split_indices + [len(layer_list)]
-        subgraphs_layer_lists = []
+        subgraph_layer_lists = []
         for i in range(len(indices) - 1):
             start = indices[i]
             end = indices[i + 1]
             sub_layer_list = layer_list[start:end]
-            subgraphs_layer_lists.append(sub_layer_list)
+            subgraph_layer_lists.append(sub_layer_list)
 
         # Create ModelGraphs for each subgraph
         model_graphs = []
@@ -1074,7 +1074,7 @@ class ModelGraph(Serializable):
         original_ProjectName = config['ProjectName']
         current_index = 0
         last_output_precision = None
-        for idx, sub_layer_list in enumerate(subgraphs_layer_lists):
+        for idx, sub_layer_list in enumerate(subgraph_layer_lists):
             
             # Create a shallow copy of the config for each subgraph
             sub_config = copy.copy(config)
@@ -1121,7 +1121,12 @@ class ModelGraph(Serializable):
                 else:
                     pass # case of granularity='Model'
             
-            hls_model = ModelGraph(sub_config, sub_layer_list, None, None, initial_index=current_index)
+            graph_output_layers = output_layers if idx == len(subgraph_layer_lists) - 1 else None
+            graph_input_layers = input_layers if idx == 0 else None
+            hls_model = ModelGraph(sub_config, sub_layer_list, 
+                                   graph_input_layers, 
+                                   graph_output_layers, 
+                                   initial_index=current_index)
 
             # After creating subgraph, get the precision from the last layer's output. 
             if hls_model.graph:

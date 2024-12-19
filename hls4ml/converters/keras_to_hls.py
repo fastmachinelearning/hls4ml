@@ -365,7 +365,7 @@ def keras_to_hls(config, split_layer_names = None):
     if split_layer_names:
         if any(any(layer in name for layer in merge_layers) for name in split_layer_names):
             raise ValueError(f'Split layer must not be a merge layer')
-        hls_model = ModelGraph.make_multi_graph(config, layer_list, output_shapes, split_layer_names)
+        hls_model = ModelGraph.make_multi_graph(config, layer_list, input_layers, output_layers, output_shapes, split_layer_names)
         print('Multi-graph HLS model created.')
     else:
         hls_model = ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
