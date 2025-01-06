@@ -1,5 +1,5 @@
 """
-This optimizer converts a seperable convolution to a depthwise followed by a regular convolution.
+This optimizer converts a separable convolution to a depthwise followed by a regular convolution.
 For backends with a custom pointwise implementations the regular convolution will subsequently
 be converted to a pointwise convolution by a different optimizer.
 """
@@ -10,8 +10,8 @@ from hls4ml.model.layers import SeparableConv1D, SeparableConv2D
 from hls4ml.model.optimizer import OptimizerPass
 
 
-class SeperableToDepthwiseAndConv(OptimizerPass):
-    """Convert Seperable to DepthwiseConv + Conv (potentially later Pointwise)"""
+class SeparableToDepthwiseAndConv(OptimizerPass):
+    """Convert Separable to DepthwiseConv + Conv (potentially later Pointwise)"""
 
     _dw_attributes = (
         'in_width',
@@ -70,7 +70,7 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
             model.config.parse_name_config(dw_name, dw_layer_config)
 
         # creating the attributes
-        dw_attributes = {k: node.attributes[k] for k in SeperableToDepthwiseAndConv._dw_attributes if k in node.attributes}
+        dw_attributes = {k: node.attributes[k] for k in SeparableToDepthwiseAndConv._dw_attributes if k in node.attributes}
         dw_attributes['n_filt'] = dw_attributes['n_chan'] * dw_attributes['depth_multiplier']
         dw_attributes['use_bias'] = False
 
@@ -100,7 +100,7 @@ class SeperableToDepthwiseAndConv(OptimizerPass):
             model.config.parse_name_config(pw_name, pw_layer_config)
 
         # creating the attributes
-        pw_attributes = {k: node.attributes[k] for k in SeperableToDepthwiseAndConv._pw_attributes if k in node.attributes}
+        pw_attributes = {k: node.attributes[k] for k in SeparableToDepthwiseAndConv._pw_attributes if k in node.attributes}
         pw_attributes['filt_width'] = 1
         pw_attributes['filt_height'] = 1
         pw_attributes['stride_width'] = 1
