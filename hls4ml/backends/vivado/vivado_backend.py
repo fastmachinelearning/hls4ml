@@ -21,7 +21,6 @@ from hls4ml.model.layers import (
     GarNet,
     GarNetStack,
     Layer,
-    LayerNormalization,
     MultiHeadAttention,
     Pooling1D,
     Pooling2D,
@@ -570,21 +569,6 @@ class VivadoBackend(FPGABackend):
             assert (
                 len(layer.get_input_variable().shape) == 1
             ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
-
-    @layer_optimizer(LayerNormalization)
-    def init_layernormalization(self, layer):
-        if 'table_t' not in layer.attributes:
-            layer.set_attr(
-                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=30, integer=10))
-            )
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)  # table size
-        if 'table_range' not in layer.attributes:
-            layer.set_attr('table_range', 1.0)  # table range
-        if 'mean_t' not in layer.attributes:
-            layer.set_attr(
-                'mean_t', NamedType(name=layer.name + '_mean_t', precision=FixedPrecisionType(width=19, integer=6))
-            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
