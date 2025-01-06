@@ -26,6 +26,7 @@ from hls4ml.model.types import (
     WeightVariable,
     find_minimum_width,
 )
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 
@@ -53,9 +54,9 @@ class Layer:
     """
 
     _expected_attributes = [
-        Attribute('index'),
-        ConfigurableAttribute('trace', default=False),
-        TypeAttribute('result'),
+        Attribute('index', description=descriptions.index),
+        ConfigurableAttribute('trace', default=False, description=descriptions.trace),
+        TypeAttribute('result', description=descriptions.result_type),
     ]
 
     @classproperty
@@ -175,10 +176,12 @@ class Layer:
         return NamedType(name=name, precision=precision)
 
     def _set_accum_t(self):
-        has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
-        if has_accum_t:
-            accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
-            self.set_attr('accum_t', accum_t)
+        """Set the accumulator, but don't overwrite an existing one"""
+        if self.get_attr('accum_t') is None:
+            has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
+            if has_accum_t:
+                accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
+                self.set_attr('accum_t', accum_t)
 
     def _set_type_t(self, name):
         has_type_t = any(a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute))
@@ -357,7 +360,7 @@ class Input(Layer):
 
 
 class Constant(Layer):
-    # one could consider making this a weight attribute, but given it's transient nature, I am not sure it helps
+    # one could consider making this a weight attribute, but given its transient nature, I am not sure it helps
     _expected_attributes = [
         Attribute('value', value_type=np.ndarray),
     ]
@@ -370,6 +373,10 @@ class Constant(Layer):
             self.set_attr('value', np.array([value]))
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
         quantizer = self.get_attr('quantizer')
+
+        # the graph._make_graph function sets the input node to the previous node
+        # if it is not set. That is incorrect for Constant nodes, so remove the input node
+        self.inputs = []
 
         # Should the else clause below be None or UnspecifiedPrecisionType
         precision = quantizer.hls_type if quantizer is not None else UnspecifiedPrecisionType()
@@ -930,7 +937,7 @@ class ParametrizedActivation(Activation):
 
 class HardActivation(Activation):
     '''
-    Implements the hard sigmoid and tan function in keras and qkeras
+    Implements the hard sigmoid and tanh function in keras and qkeras
     (Default parameters in qkeras are different, so should be configured)
     The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
     hard tanh function is 2 * hard_sigmoid - 1
@@ -1167,20 +1174,67 @@ class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
 
-        if self.get_attr('data_format') == 'channels_last':
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        if len(self.inputs) > 1:
+            # In order to be correctly ingested by hls4ml the QONNX resize node should have 3 inputs set with RoI left empty
+            if len(self.inputs) == 2:
+                raise Exception(
+                    'The number of inputs to Resize node is equal to 2. '
+                    'In this case, either one is trying to use a version 10 node '
+                    'or one is using the RoI parameter only to perform the resize operation, '
+                    'both not supported in hls4ml'
+                )
+            if len(self.inputs) == 4:
+                raise Exception('Sizes parameter is not supported by hls4ml. Use scales instead')
+            # get the scales of Resize node from QONNX frontend
+            # see doc here: https://onnx.ai/onnx/operators/onnx__Resize.html
+            scales_idx = 2 if len(self.inputs) == 3 or len(self.inputs) == 4 else 1
+            scales = self.get_input_node(self.inputs[scales_idx]).get_attr('value')
+            if len(scales) == 4:  # Resize 2D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('out_height', int(self.get_attr('in_height') * scales[2]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[3]))
+            elif len(scales) == 3:  # Resize 1D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[2]))
+            else:
+                raise Exception('Resize 1D and Resize 2D are the ones supported in hls4ml')
+            if self.get_attr('data_format') == 'channels_last':
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [int(self.get_attr('out_width')), int(self.get_attr('n_chan'))]
+                    dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
+                        int(self.get_attr('n_chan')),
+                    ]
+                    dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            else:
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [int(self.get_attr('n_chan')), int(self.get_attr('out_width'))]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [
+                        int(self.get_attr('n_chan')),
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
+                    ]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         else:
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
+            if self.get_attr('data_format') == 'channels_last':
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
+                    dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
+                    dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            else:
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
 
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 

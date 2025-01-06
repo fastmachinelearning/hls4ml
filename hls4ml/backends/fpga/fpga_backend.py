@@ -46,6 +46,7 @@ from hls4ml.model.types import (
     UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.writer import get_writer
 
 
@@ -76,7 +77,7 @@ class FPGABackend(Backend):
 
         for layer in accum_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(TypeAttribute('accum'))
+            attrs.append(TypeAttribute('accum', description=descriptions.accum_type))
             self.attribute_map[layer] = attrs
 
         rf_layers = accum_layers + [
@@ -92,10 +93,10 @@ class FPGABackend(Backend):
 
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('reuse_factor', default=1, description=descriptions.reuse_factor))
             self.attribute_map[layer] = attrs
 
-        # seperable is kind of special because it is effectively two layers that will be split
+        # separable is kind of special because it is effectively two layers that will be split
         for layer in (SeparableConv1D, SeparableConv2D):
             attrs = self.attribute_map.get(layer, [])
             attrs.append(TypeAttribute('depthwise_accum'))
@@ -106,23 +107,34 @@ class FPGABackend(Backend):
             self.attribute_map[layer] = attrs
 
         act_attrs = self.attribute_map.get(Activation, [])
-        act_attrs.append(ConfigurableAttribute('table_size', default=1024))
-        act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+        act_attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+        act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
         self.attribute_map[Activation] = act_attrs
 
         softmax_attrs = self.attribute_map.get(Softmax, [])
-        softmax_attrs.append(ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'))
-        softmax_attrs.append(ConfigurableAttribute('skip', value_type=bool, default=False))
+        softmax_attrs.append(
+            ChoiceAttribute(
+                'implementation',
+                ['latency', 'stable', 'argmax', 'legacy'],
+                default='stable',
+                description=descriptions.softmax_implementation,
+            )
+        )
+        softmax_attrs.append(
+            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip)
+        )
         softmax_attrs.append(
             TypeAttribute(
                 'exp_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                description=descriptions.table_type,
             )
         )
         softmax_attrs.append(
             TypeAttribute(
                 'inv_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                description=descriptions.table_type,
             )
         )
         self.attribute_map[Softmax] = softmax_attrs
