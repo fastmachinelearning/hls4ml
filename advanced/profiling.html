@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profiling &mdash; hls4ml 1.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
@@ -134,10 +134,10 @@
 <p>Profiling uses some extra dependencies, to install these, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[profiling]</span></code>. The profiling tools are provided as a <code class="docutils literal notranslate"><span class="pre">Python</span></code> module which you can use.</p>
 <p>Three types of objects can be provided: <strong>a model object</strong>, <strong>test data</strong>, and a <strong>ModelGraph object</strong>. The model can be Keras or PyTorch.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hls4ml.model.profiling</span> <span class="kn">import</span> <span class="n">numerical</span>
-<span class="kn">from</span> <span class="nn">hls4ml.converters</span> <span class="kn">import</span> <span class="n">keras_to_hls</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.model.profiling</span><span class="w"> </span><span class="kn">import</span> <span class="n">numerical</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">keras_to_hls</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="c1"># pseudo code:</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">()</span>
@@ -191,7 +191,7 @@ When optimizing precision, the data types should be chosen to work well for the 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+    <p>&#169; Copyright 2025, Fast Machine Learning Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

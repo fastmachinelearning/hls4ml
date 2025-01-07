@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>High Granularity Quantization (HGQ) &mdash; hls4ml 1.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
@@ -134,9 +134,9 @@
 <a class="reference external image-reference" href="https://arxiv.org/abs/2405.00645"><img alt="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" /></a>
 <p><a class="reference external" href="https://github.com/calad0i/HGQ/">High Granularity Quantization (HGQ)</a> is a library that performs gradient-based automatic bitwidth optimization and quantization-aware training algorithm for neural networks to be deployed on FPGAs. By leveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.</p>
 <img alt="Overview of HGQ" class="align-center" src="https://calad0i.github.io/HGQ/_images/overview.svg" /><p>Conversion of models made with HGQ library is fully supported. The HGQ models are first converted to proxy model format, which can then be parsed by hls4ml bit-accurately. Below is an example of how to create a model with HGQ and convert it to hls4ml model.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">keras</span>
-<span class="kn">from</span> <span class="nn">HGQ.layers</span> <span class="kn">import</span> <span class="n">HDense</span><span class="p">,</span> <span class="n">HDenseBatchNorm</span><span class="p">,</span> <span class="n">HQuantize</span>
-<span class="kn">from</span> <span class="nn">HGQ</span> <span class="kn">import</span> <span class="n">ResetMinMax</span><span class="p">,</span> <span class="n">FreeBOPs</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">HGQ.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDense</span><span class="p">,</span> <span class="n">HDenseBatchNorm</span><span class="p">,</span> <span class="n">HQuantize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">HGQ</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResetMinMax</span><span class="p">,</span> <span class="n">FreeBOPs</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
    <span class="n">HQuantize</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">),</span>
@@ -152,8 +152,8 @@
 
  <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">)</span>
 
- <span class="kn">from</span> <span class="nn">HGQ</span> <span class="kn">import</span> <span class="n">trace_minmax</span><span class="p">,</span> <span class="n">to_proxy_model</span>
- <span class="kn">from</span> <span class="nn">hls4ml.converters</span> <span class="kn">import</span> <span class="n">convert_from_keras_model</span>
+ <span class="kn">from</span><span class="w"> </span><span class="nn">HGQ</span><span class="w"> </span><span class="kn">import</span> <span class="n">trace_minmax</span><span class="p">,</span> <span class="n">to_proxy_model</span>
+ <span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_keras_model</span>
 
  <span class="n">trace_minmax</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">cover_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
  <span class="n">proxy</span> <span class="o">=</span> <span class="n">to_proxy_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">aggressive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -175,7 +175,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+    <p>&#169; Copyright 2025, Fast Machine Learning Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

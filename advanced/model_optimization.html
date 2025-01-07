@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hardware-aware Optimization API &mdash; hls4ml 1.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
@@ -132,15 +132,15 @@
 <p>Pruning and weight sharing are effective techniques to reduce model footprint and computational requirements. The hls4ml Optimization API introduces hardware-aware pruning and weight sharing.
 By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization etc.</p>
 <p>The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.optimizers</span> <span class="kn">import</span> <span class="n">Adam</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.metrics</span> <span class="kn">import</span> <span class="n">CategoricalAccuracy</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">CategoricalCrossentropy</span>
-<span class="kn">from</span> <span class="nn">hls4ml.optimization.dsp_aware_pruning.keras</span> <span class="kn">import</span> <span class="n">optimize_model</span>
-<span class="kn">from</span> <span class="nn">hls4ml.optimization.dsp_aware_pruning.keras.utils</span> <span class="kn">import</span> <span class="n">get_model_sparsity</span>
-<span class="kn">from</span> <span class="nn">hls4ml.optimization.dsp_aware_pruning.attributes</span> <span class="kn">import</span> <span class="n">get_attributes_from_keras_model</span>
-<span class="kn">from</span> <span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives</span> <span class="kn">import</span> <span class="n">ParameterEstimator</span>
-<span class="kn">from</span> <span class="nn">hls4ml.optimization.dsp_aware_pruning.scheduler</span> <span class="kn">import</span> <span class="n">PolynomialScheduler</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">accuracy_score</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.optimizers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adam</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">CategoricalAccuracy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">CategoricalCrossentropy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.keras.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_sparsity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.attributes</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_attributes_from_keras_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterEstimator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolynomialScheduler</span>
 <span class="c1"># Define baseline model and load data</span>
 <span class="c1"># X_train, y_train = ...</span>
 <span class="c1"># X_val, y_val = ...</span>
@@ -195,7 +195,7 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 <p>In a similar manner, it is possible to target GPU FLOPs or Vivado DSPs. However, in that case, sparsity is not equivalent to model sparsity.
 Instead, it is the sparsity of the target resource. As an example: Starting with a network utilizing 512 DSPs and a final sparsity of 50%; the optimized network will use 256 DSPs.</p>
 <p>To optimize GPU FLOPs, the code is similar to above:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives</span> <span class="kn">import</span> <span class="n">GPUFLOPEstimator</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives</span><span class="w"> </span><span class="kn">import</span> <span class="n">GPUFLOPEstimator</span>
 
 <span class="c1"># Optimize model</span>
 <span class="c1"># Note the change from ParameterEstimator to GPUFLOPEstimator</span>
@@ -215,12 +215,12 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 </pre></div>
 </div>
 <p>Finally, optimizing Vivado DSPs is possible, given a hls4ml config:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hls4ml.utils.config</span> <span class="kn">import</span> <span class="n">config_from_keras_model</span>
-<span class="kn">from</span> <span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives</span> <span class="kn">import</span> <span class="n">VivadoDSPEstimator</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.utils.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">config_from_keras_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives</span><span class="w"> </span><span class="kn">import</span> <span class="n">VivadoDSPEstimator</span>
 
 <span class="c1"># Note the change from optimize_model to optimize_keras_model_for_hls4ml</span>
 <span class="c1"># The function optimize_keras_model_for_hls4ml acts as a wrapper for the function, parsing hls4ml config to model attributes</span>
-<span class="kn">from</span> <span class="nn">hls4ml.optimization</span> <span class="kn">import</span> <span class="n">optimize_keras_model_for_hls4ml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize_keras_model_for_hls4ml</span>
 
 <span class="c1"># Create hls4ml config</span>
 <span class="n">default_reuse_factor</span> <span class="o">=</span> <span class="mi">4</span>
@@ -263,7 +263,7 @@ Note, to ensure DSPs are optimized, “unrolled” Dense multiplication must be 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+    <p>&#169; Copyright 2025, Fast Machine Learning Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

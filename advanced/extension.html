@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Extension API &mdash; hls4ml 1.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
 
@@ -151,26 +151,26 @@ To implement a custom layer in <code class="docutils literal notranslate"><span 
 <h2>Complete example<a class="headerlink" href="#complete-example" title="Link to this heading"></a></h2>
 <p>For concreteness, let’s say our custom layer <code class="docutils literal notranslate"><span class="pre">KReverse</span></code> is implemented in Keras and reverses the order of the last dimension of the input.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Keras implementation of a custom layer</span>
-<span class="k">class</span> <span class="nc">KReverse</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">KReverse</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Keras implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reverse</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Make sure you define a <code class="docutils literal notranslate"><span class="pre">get_config()</span></code> method for your custom layer as this is needed for correct parsing.
 We can define the equivalent layer in hls4ml <code class="docutils literal notranslate"><span class="pre">HReverse</span></code>, which inherits from <code class="docutils literal notranslate"><span class="pre">hls4ml.model.layers.Layer</span></code>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hls4ml layer implementation</span>
-<span class="k">class</span> <span class="nc">HReverse</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HReverse</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;hls4ml implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_variable</span><span class="p">()</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">dims</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">dim_names</span>
@@ -182,7 +182,7 @@ This parser reads the attributes of the Keras layer instance and populates a dic
 It also returns a list of output shapes (one sjape for each output).
 In this case, there a single output with the same shape as the input.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Parser for converter</span>
-<span class="k">def</span> <span class="nf">parse_reverse_layer</span><span class="p">(</span><span class="n">keras_layer</span><span class="p">,</span> <span class="n">input_names</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">,</span> <span class="n">data_reader</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_reverse_layer</span><span class="p">(</span><span class="n">keras_layer</span><span class="p">,</span> <span class="n">input_names</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">,</span> <span class="n">data_reader</span><span class="p">):</span>
     <span class="n">layer</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;class_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;HReverse&#39;</span>
     <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keras_layer</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
@@ -231,22 +231,22 @@ These two templates determine how to populate the config template based on the l
 <span class="n">rev_include_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nnet_utils/nnet_reverse.h&#39;</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">HReverseConfigTemplate</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">LayerConfigTemplate</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HReverseConfigTemplate</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">LayerConfigTemplate</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">HReverse</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="n">rev_config_template</span>
 
-    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config_params</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">HReverseFunctionTemplate</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">FunctionCallTemplate</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HReverseFunctionTemplate</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">FunctionCallTemplate</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">HReverse</span><span class="p">,</span> <span class="n">include_header</span><span class="o">=</span><span class="n">rev_include_list</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="n">rev_function_template</span>
 
-    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_function_params</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
 </pre></div>
@@ -316,7 +316,7 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.</p
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Fast Machine Learning Lab.</p>
+    <p>&#169; Copyright 2025, Fast Machine Learning Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
