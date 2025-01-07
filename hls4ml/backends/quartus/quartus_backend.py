@@ -11,6 +11,7 @@ from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Em
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_quartus_report
+from hls4ml.utils import attribute_descriptions as descriptions
 
 
 @contextmanager
@@ -39,16 +40,21 @@ class QuartusBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
-            attrs.append(ConfigurableAttribute('table_size', default=1024))
-            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
-        streaming_passes = ['quartus:reshape_stream', 'quartus:clone_output']
+        streaming_passes = [
+            'quartus:inplace_stream_flatten',  # Inform downstream changed packsize in case of skipping flatten
+            'quartus:reshape_stream',
+            'quartus:clone_output',
+        ]
+
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
 
         quartus_types = [

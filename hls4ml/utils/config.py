@@ -283,13 +283,23 @@ def config_from_pytorch_model(
     default_precision='ap_fixed<16,6>',
     default_reuse_factor=1,
     channels_last_conversion='full',
-    transpose_outputs=True,
+    transpose_outputs=False,
+    max_precision=None,
 ):
     """Create an HLS conversion config given the PyTorch model.
 
     This function serves as the initial step in creating the custom conversion configuration.
     Users are advised to inspect the returned object to tweak the conversion configuration.
     The return object can be passed as `hls_config` parameter to `convert_from_pytorch_model`.
+
+    Note that hls4ml internally follows the keras convention for nested tensors known as
+    "channels last", wherease pytorch uses the "channels first" convention.
+    For exampe, for a tensor encoding an image with 3 channels, pytorch will expect the data
+    to be encoded as (Number_Of_Channels, Height , Width), whereas hls4ml expects
+    (Height , Width, Number_Of_Channels). By default, hls4ml will perform the necessary
+    conversions of the inputs and internal tensors automatically, but will return the output
+    in "channels last" However, this behavior can be controlled by the user using the
+    related arguments discussed below.
 
     Args:
         model: PyTorch model
@@ -304,15 +314,19 @@ def config_from_pytorch_model(
             will generate config keys for every layer separately, allowing for highly specific
             configuration tweaks.
         backend(str, optional): Name of the backend to use
-        default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
+        default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'. Note, this must
+            be an explicit precision: 'auto' is not allowed.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
         channels_last_conversion (string, optional): Configures the conversion of pytorch layers to
-        'channels_last' dataformate. Can be set to 'full', 'internal', or 'off'. If 'full', both the inputs
-        and internal layers will be converted. If 'internal', only internal layers will be converted; this
-        assumes the inputs are converted by the user. If 'off', no conversion is performed.
+            'channels_last' data format used by hls4ml internally. Can be set to 'full' (default), 'internal',
+            or 'off'. If 'full', both the inputs and internal layers will be converted. If 'internal',
+            only internal layers will be converted; this assumes the inputs are converted by the user.
+            If 'off', no conversion is performed.
         transpose_outputs (bool, optional): Set to 'False' if the output should not be transposed from
             channels_last into channels_first data format. Defaults to 'False'. If False, outputs needs
             to be transposed manually.
+        max_precision (str or None, optional): Maximum width precision to use. Defaults to None, meaning no maximum.
+            Note:  Only integer and fixed precisions are supported
 
     Raises:
         Exception: If PyTorch model has layers not supported by hls4ml.
@@ -324,11 +338,16 @@ def config_from_pytorch_model(
     config = {}
 
     model_config = {}
-    model_config['Precision'] = default_precision
+    model_config['Precision'] = {}
+    model_config['Precision']['default'] = default_precision
+    if max_precision is not None:
+        model_config['Precision']['maximum'] = max_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['ChannelsLastConversion'] = channels_last_conversion
     model_config['TransposeOutputs'] = transpose_outputs
     model_config['Strategy'] = 'Latency'
+    model_config['BramFactor'] = 1_000_000_000
+    model_config['TraceOutput'] = False
 
     config['Model'] = model_config
     config['PytorchModel'] = model
@@ -372,7 +391,7 @@ def config_from_pytorch_model(
                 if name.endswith('_t'):
                     name = name[:-2]
                 if attr.default is None:
-                    precision_cfg[name] = default_precision
+                    precision_cfg[name] = 'auto'
                 else:
                     precision_cfg[name] = str(attr.default)
             elif attr.name == 'reuse_factor':
@@ -413,7 +432,7 @@ def config_from_pytorch_model(
 
 
 def config_from_onnx_model(
-    model, granularity='name', backend=None, default_precision='ap_fixed<16,6>', default_reuse_factor=1
+    model, granularity='name', backend=None, default_precision='fixed<16,6>', default_reuse_factor=1, max_precision=None
 ):
     """Create an HLS conversion config given the ONNX model.
 
@@ -435,6 +454,8 @@ def config_from_onnx_model(
         backend(str, optional): Name of the backend to use
         default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
+        max_precision (str or None, optional): Maximum width precision to use. Defaults to None, meaning no maximum.
+            Note:  Only integer and fixed precisions are supported
 
     Raises:
         Exception: If ONNX model has layers not supported by hls4ml.
@@ -456,9 +477,14 @@ def config_from_onnx_model(
     config = {}
 
     model_config = {}
-    model_config['Precision'] = default_precision
+    model_config['Precision'] = {}
+    model_config['Precision']['default'] = default_precision
+    if max_precision is not None:
+        model_config['Precision']['maximum'] = max_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
+    model_config['BramFactor'] = 1_000_000_000
+    model_config['TraceOutput'] = False
 
     config['Model'] = model_config
 
