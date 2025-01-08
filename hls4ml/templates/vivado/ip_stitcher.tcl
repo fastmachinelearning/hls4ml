@@ -576,11 +576,21 @@ if {$sim_design} {
     update_compile_order -fileset sim_1
     puts "Simulation Verilog file added: $base_dir/$sim_verilog_file"
     set_property top tb_design_1_wrapper [get_filesets sim_1]
-    set_property -name {xsim.simulate.runtime} -value {800000ns} -objects [get_filesets sim_1]
+    set_property -name {xsim.simulate.runtime} -value {1000000ns} -objects [get_filesets sim_1]
+
+   # Check if snapshot already exists
+    set snapshot_name "tb_design_1_wrapper_behav"
+    set xsim_folder_path "${base_dir}/${stitch_project_name}/vivado_stitched_design.sim/sim_1/behav/xsim"
     puts "##########################"
-    puts "#  Launching simulation  #"
+    puts "#  Running Simulation... #"
     puts "##########################"
-    launch_simulation
+    if {[file exists "${xsim_folder_path}/${snapshot_name}.wdb"]} {
+        puts "Using existing snapshot..."
+        cd $xsim_folder_path
+        exec xsim $snapshot_name -R
+    } else {
+        launch_simulation
+    }
 }
 
 
