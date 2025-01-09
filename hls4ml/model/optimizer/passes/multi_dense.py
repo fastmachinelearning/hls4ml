@@ -20,7 +20,6 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
 
         conv_attrs = {
             'data_format': 'channels_last',
-            'padding': 'valid',
             'n_chan': input_shape[-1],
             'n_filt': node.get_attr('n_out'),
             'weight_data': np.expand_dims(node.get_attr('weight_data'), axis=tuple(range(dim))),
