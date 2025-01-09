@@ -82,8 +82,7 @@ void depthwise_product_resource_rf_geq_nchan_rem0(
     const int multiplier_limit = DIV_ROUNDUP(nin, multfactor);
     const int block_factor = DIV_ROUNDUP(nin, rufactor);
 
-    assert((rufactor >= nout && rufactor % nout == 0) &&
-           "This function is correct only for RF >= N_IN && RF % N_IN == 0");
+    assert((rufactor >= nout && rufactor % nout == 0) && "This function is correct only for RF >= N_IN && RF % N_IN == 0");
 
     #pragma HLS function_instantiate variable=weights,biases
     //#pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
