@@ -14,13 +14,11 @@ void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * 
 
     const int nin = CONFIG_T::kernel_size * CONFIG_T::n_chan;
     const int nout = CONFIG_T::n_chan;
-    const int rufactor = MIN(CONFIG_T::reuse_factor, nin);
-    const int multfactor = MIN(nin, CONFIG_T::reuse_factor);
+    const int rufactor = CONFIG_T::reuse_factor;
+    const int multfactor = MIN(nin, rufactor);
     const int multiplier_limit = DIV_ROUNDUP(nin, multfactor);
-    const int block_factor = DIV_ROUNDUP(nin, CONFIG_T::reuse_factor);
-    // const int multscale = multiplier_limit;
+    const int block_factor = DIV_ROUNDUP(nin, rufactor);
 
-    // assert((multiplier_limit % nout == 0 || rufactor > CONFIG_T::n_chan) && "The current Reuse Factor is not allowed");
     assert((multiplier_limit == block_factor) && "This function is correct only for RF <= N_IN");
 
     #pragma HLS function_instantiate variable=weights,biases
@@ -30,11 +28,11 @@ void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * 
 
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
+    typename CONFIG_T::accum_t acc[nout];
     #pragma HLS ARRAY_PARTITION variable=acc type=complete
 
 InitAccum:
-    for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
+    for (int iacc = 0; iacc < nout; iacc++) {
         #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
@@ -57,8 +55,8 @@ ReuseLoop:
             in_index += rufactor;
             out_index += rufactor;
 
-            if (out_index >= CONFIG_T::n_chan) {
-                out_index -= CONFIG_T::n_chan;
+            if (out_index >= nout) {
+                out_index -= nout;
             }
         }
     }
@@ -79,15 +77,12 @@ void depthwise_product_resource_rf_geq_nchan_rem0(
 
     const int nin = CONFIG_T::kernel_size * CONFIG_T::n_chan;
     const int nout = CONFIG_T::n_chan;
-
     const int rufactor = MIN(CONFIG_T::reuse_factor, nin);
-    const int multfactor = MIN(nin, CONFIG_T::reuse_factor);
+    const int multfactor = MIN(nin, rufactor);
     const int multiplier_limit = DIV_ROUNDUP(nin, multfactor);
-    const int block_factor = DIV_ROUNDUP(nin, CONFIG_T::reuse_factor);
-    // const int multscale = multiplier_limit;
+    const int block_factor = DIV_ROUNDUP(nin, rufactor);
 
-    // assert((multiplier_limit % nout == 0 || rufactor >= CONFIG_T::n_chan) && "The current Reuse Factor is not allowed");
-    assert((rufactor >= CONFIG_T::n_chan && rufactor % CONFIG_T::n_chan == 0) &&
+    assert((rufactor >= nout && rufactor % nout == 0) &&
            "This function is correct only for RF >= N_IN && RF % N_IN == 0");
 
     #pragma HLS function_instantiate variable=weights,biases
@@ -97,11 +92,11 @@ void depthwise_product_resource_rf_geq_nchan_rem0(
 
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
+    typename CONFIG_T::accum_t acc[nout];
     #pragma HLS ARRAY_PARTITION variable=acc type=complete
 
 InitAccum:
-    for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
+    for (int iacc = 0; iacc < nout; iacc++) {
         #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
@@ -112,7 +107,7 @@ IndexLoop:
     for (int ir = 0; ir < rufactor; ir++) {
         outidx[ir] = outstep;
         outstep++;
-        if (outstep == CONFIG_T::n_chan) {
+        if (outstep == nout) {
             outstep = 0;
         }
     }
@@ -154,15 +149,9 @@ void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * 
 
     const int nin = CONFIG_T::kernel_size * CONFIG_T::n_chan;
     const int nout = CONFIG_T::n_chan;
-
     const int rufactor = MIN(CONFIG_T::reuse_factor, nin);
-    // const int multfactor = MIN(nin, CONFIG_T::reuse_factor);
-    // const int multiplier_limit = DIV_ROUNDUP(nin, multfactor);
-    const int block_factor = DIV_ROUNDUP(nin, CONFIG_T::reuse_factor);
-    // const int multscale = multiplier_limit;
-
-    // assert((multiplier_limit % nout == 0 || rufactor >= nin) && "The current Reuse Factor is not allowed");
-    assert((rufactor > CONFIG_T::n_chan) && "This function is correct only for RF > N_IN");
+    const int block_factor = DIV_ROUNDUP(nin, rufactor);
+    assert((rufactor > nout) && "This function is correct only for RF > N_IN");
 
     #pragma HLS function_instantiate variable=weights,biases
     //#pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
@@ -171,16 +160,16 @@ void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * 
 
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
+    typename CONFIG_T::accum_t acc[nout];
     #pragma HLS ARRAY_PARTITION variable=acc type=complete
 
 InitAccum:
-    for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
+    for (int iacc = 0; iacc < nout; iacc++) {
         #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
 
-    const int remainder = CONFIG_T::reuse_factor % CONFIG_T::n_chan;
+    const int remainder = CONFIG_T::reuse_factor % nout;
 
     int outidx[rufactor];
     int outstep = 0;
@@ -188,7 +177,7 @@ IndexLoop:
     for (int ir = 0; ir < rufactor; ir++) {
         outidx[ir] = outstep;
         outstep++;
-        if (outstep == CONFIG_T::n_chan) {
+        if (outstep == nout) {
             outstep = 0;
         }
     }
@@ -204,15 +193,15 @@ ReuseLoop:
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
 
-            // out_index = in_index % CONFIG_T::n_chan;
+            // out_index = in_index % nout;
             acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
                 CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
                     data[in_index], weights[in_index]));
 
             in_index += rufactor;
             out_index += remainder;
-            if (out_index >= CONFIG_T::n_chan) {
-                out_index -= CONFIG_T::n_chan;
+            if (out_index >= nout) {
+                out_index -= nout;
             }
         }
     }
