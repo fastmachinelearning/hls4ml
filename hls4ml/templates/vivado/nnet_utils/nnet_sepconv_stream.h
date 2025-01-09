@@ -29,7 +29,7 @@ void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * 
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
     typename CONFIG_T::accum_t acc[nout];
-    #pragma HLS ARRAY_PARTITION variable=acc type=complete
+    #pragma HLS ARRAY_PARTITION variable=acc complete
 
 InitAccum:
     for (int iacc = 0; iacc < nout; iacc++) {
@@ -87,13 +87,13 @@ void depthwise_product_resource_rf_geq_nchan_rem0(
 
     #pragma HLS function_instantiate variable=weights,biases
     //#pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
-    #pragma HLS ARRAY_RESHAPE   variable=weights type=block factor=block_factor
-    #pragma HLS ARRAY_RESHAPE   variable=data type=block factor=block_factor
+    #pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
+    #pragma HLS ARRAY_RESHAPE   variable=data block factor=block_factor
 
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
     typename CONFIG_T::accum_t acc[nout];
-    #pragma HLS ARRAY_PARTITION variable=acc type=complete
+    #pragma HLS ARRAY_PARTITION variable=acc complete
 
 InitAccum:
     for (int iacc = 0; iacc < nout; iacc++) {
@@ -161,7 +161,7 @@ void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * 
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
     typename CONFIG_T::accum_t acc[nout];
-    #pragma HLS ARRAY_PARTITION variable=acc type=complete
+    #pragma HLS ARRAY_PARTITION variable=acc complete
 
 InitAccum:
     for (int iacc = 0; iacc < nout; iacc++) {
