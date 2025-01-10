@@ -4,5 +4,4 @@ sphinx>=3.2.1
 sphinx_contributors
 sphinx_github_changelog
 sphinx_rtd_theme
-tensorflow<=2.15
 toposort>=1.5.0

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <map>
 
-static std::string s_weights_dir = "weights";
+// hls-fpga-machine-learning insert weights dir
 
 const char *get_weights_dir() { return s_weights_dir.c_str(); }
 

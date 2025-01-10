@@ -10,6 +10,7 @@ from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
+from hls4ml.utils.string_utils import convert_to_snake_case
 
 
 class HLSConfig:
@@ -35,7 +36,7 @@ class HLSConfig:
         self.layer_type_targ_cycles = {}
         self.layer_name_targ_cycles = {}
 
-        self.model_strategy = 'Latency'
+        self.model_strategy = convert_to_snake_case('Latency')
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
 
@@ -49,7 +50,8 @@ class HLSConfig:
 
         self.trace_output = self.get_config_value('TraceOutput', False)
 
-        self.pipeline_style = 'pipeline'
+        self.pipeline_style = 'auto'
+        self.pipeline_ii = None
 
         if 'WriterConfig' in self.config:
             self.writer_config = self.config['WriterConfig']
@@ -61,7 +63,6 @@ class HLSConfig:
             }
 
         self._parse_hls_config()
-        self._validate_hls_config()
 
     def get_config_value(self, key, default=None):
         return self.config.get(key, default)
@@ -120,7 +121,8 @@ class HLSConfig:
         type_name = layer.name.lower() + '_' + var + '_t'
         if precision is None:
             precision = self.layer_name_precision.get(layer.name.lower() + '_default')
-            type_name = layer.name.lower() + '_default_t'
+            # I think it is better to keep these unique still to avoid inadvertent updates
+            # type_name = layer.name.lower() + '_default_t'
 
         if precision is None:
             precision = self.layer_type_precision.get(layer.class_name.lower() + '_' + var)
@@ -217,7 +219,7 @@ class HLSConfig:
 
         strategy = layer_cfg.get('Strategy')
         if strategy is not None:
-            self.layer_name_strategy[layer_name.lower()] = strategy
+            self.layer_name_strategy[layer_name.lower()] = convert_to_snake_case(strategy)
 
         conv_implementation = layer_cfg.get('ConvImplementation')
         if conv_implementation is not None:
@@ -265,9 +267,10 @@ class HLSConfig:
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_targ_cycles = model_cfg.get('TargetCycles')
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
-            self.model_strategy = model_cfg.get('Strategy', 'Latency')
+            self.model_strategy = convert_to_snake_case(model_cfg.get('Strategy', 'Latency'))
             self.model_compression = bool(model_cfg.get('Compression', 0))
-            self.pipeline_style = model_cfg.get('PipelineStyle', 'pipeline')
+            self.pipeline_style = model_cfg.get('PipelineStyle', 'auto')
+            self.pipeline_ii = model_cfg.get('PipelineInterval', None)
 
         layer_type_cfg = hls_config.get('LayerType')
         if layer_type_cfg is not None:
@@ -289,7 +292,7 @@ class HLSConfig:
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
-                    self.layer_type_strategy[layer_type.lower()] = strategy
+                    self.layer_type_strategy[layer_type.lower()] = convert_to_snake_case(strategy)
 
                 conv_implementation = layer_cfg.get('ConvImplementation')
                 if conv_implementation is not None:
@@ -303,50 +306,6 @@ class HLSConfig:
         if layer_name_cfg is not None:
             for layer_name, layer_cfg in layer_name_cfg.items():
                 self.parse_name_config(layer_name, layer_cfg)
-
-    def _validate_hls_config(self):
-        use_dataflow = False
-        if self.pipeline_style.lower() == 'pipeline' and self.model_compression:
-            print('WARNING: Compression enabled while pipeline style set to "pipeline".')
-            use_dataflow = True
-        for layer_type, strategy in self.layer_type_strategy.items():
-            if strategy.lower() == 'resource' and self.pipeline_style.lower() == 'pipeline':
-                print(
-                    'WARNING: Strategy for layer type {} set to "Resource", while pipeline style set to "pipeline".'.format(
-                        layer_type
-                    )
-                )
-                use_dataflow = True
-
-        for layer_name, strategy in self.layer_name_strategy.items():
-            if strategy.lower() == 'resource' and self.pipeline_style.lower() == 'pipeline':
-                print(
-                    'WARNING: Strategy for layer {} set to "Resource", while pipeline style set to "pipeline".'.format(
-                        layer_name
-                    )
-                )
-                use_dataflow = True
-
-        for layer_type, compression in self.layer_type_compression.items():
-            if compression and self.pipeline_style.lower() == 'pipeline':
-                print(
-                    'WARNING: Compression enabled for layer type {}, while pipeline style set to "pipeline".'.format(
-                        layer_type
-                    )
-                )
-                use_dataflow = True
-
-        for layer_name, compression in self.layer_name_compression.items():
-            if compression and self.pipeline_style.lower() == 'pipeline':
-                print(f'WARNING: Compression enabled for layer {layer_name}, while pipeline style set to "pipeline".')
-                use_dataflow = True
-
-        if self.model_strategy.lower() == 'resource':
-            use_dataflow = True
-
-        if use_dataflow:
-            print('WARNING: Changing pipeline style to "dataflow".')
-            self.pipeline_style = 'dataflow'
 
 
 class ModelGraph:
@@ -547,6 +506,8 @@ class ModelGraph:
 
         if next_node is not None:
             next_node.inputs[input_idx] = node.outputs[0]
+        else:
+            self.outputs = [node.outputs[0] if name == prev_node.outputs[0] else name for name in self.outputs]
 
         new_graph = OrderedDict()
         for k, v in self.graph.items():
@@ -555,47 +516,57 @@ class ModelGraph:
                 new_graph[node.name] = node
 
         self.graph = new_graph
-        self._update_model_outputs()
 
     def remove_node(self, node, rewire=True):
-        """Remove a node from a graph.
+        """Removes a node from the graph.
 
-        By default, this function can connect the outputs of previous node to the input of next one.
-        Note that when removing a leaf node `rewire` should be set to `False`.
+        By default, this function connects the outputs of the previous
+        node to the inputs of the next node. If the removed node has multiple
+        input/output tensors, an exception is raised.
 
         Args:
-            node (Layer): The node to remove
-            rewire (bool, optional): If `True`, connects the outputs of the previous node
-                to the inputs of the next node
+            node (Layer): The node to remove.
+            rewire (bool, optional): Deprecated, has no effect.
 
         Raises:
-            Exception: If an attempt is made to rewire a leaf node or a node with multiple
-                inputs/outputs.
+            Exception: If an attempt is made to rewire a node with
+            multiple inputs/outputs.
 
+        Note:
+            The `rewire` parameter is deprecated and has no effect.
         """
-        if rewire:
-            inputs = [inp for inp in node.inputs if inp]
-            outputs = [outp for outp in node.outputs if outp]
-            if len(inputs) > 1 or len(outputs) > 1:
-                raise Exception('Cannot rewire a node with multiple inputs/outputs')
-            prev_node = node.get_input_node(node.inputs[0])
+
+        inputs = [inp for inp in node.inputs if inp]
+        outputs = [outp for outp in node.outputs if outp]
+
+        if len(inputs) > 1 or len(outputs) > 1:
+            raise Exception('Cannot delete a node with multiple inputs/outputs')
+
+        if len(inputs) == 1:
+            # Connect inputs -> $outputs
+            if node.name in self.outputs:
+                msg = f'Remove leaf node {node.name} will connect its input node {inputs[0]} to output, but it already is.'
+                assert inputs[0] not in self.outputs, msg
+                self.outputs = [inputs[0] if name == node.name else name for name in self.outputs]
+
+        if len(outputs) == 1 and len(inputs) == 1:
+            inp_var = node.get_input_variable()
+            out_var = node.get_output_variable()
+
+            # fmt: off
+            assert (np.prod(inp_var.shape) == np.prod(out_var.shape)), \
+                f'Input and output shapes do not match for {node.name}: {inp_var.shape} -> {out_var.shape}'
+            # fmt: on
+
             next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
-            if prev_node is not None:
-                if len(next_nodes) > 0:
-                    for next_node in next_nodes:
-                        for i, _ in enumerate(next_node.inputs):
-                            if node.outputs[0] == next_node.inputs[i]:
-                                next_node.inputs[i] = prev_node.outputs[0]
-                                break
-                else:
-                    if not node.outputs[0] in self.outputs:
-                        raise Exception('Cannot rewire a node without child')
-            else:
-                raise Exception('Cannot rewire a node without a parent')
+            for next_node in next_nodes:
+                # Connect inputs -> next
+                for i, nxt_inp in enumerate(next_node.inputs):
+                    if outputs[0] == nxt_inp:
+                        next_node.inputs[i] = inputs[0]
 
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
-        self._update_model_outputs()
 
     def replace_node(self, old_node, new_node):
         """Replace an existing node in the graph with a new one.
@@ -625,7 +596,11 @@ class ModelGraph:
                     node.outputs[i] = repl[n]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
-        self._update_model_outputs()
+
+        old_name = old_node.name
+        if old_name in self.outputs:
+            new_name = new_node.name
+            self.outputs = [new_name if name == old_name else name for name in self.outputs]
 
     def split_node(self, old_node, new_node1, new_node2):
         """Replace an existing node in the graph with two nodes in sequence.
@@ -663,17 +638,9 @@ class ModelGraph:
             else:
                 new_graph[key] = value
         self.graph = new_graph
-        self._update_model_outputs()
 
-    def _update_model_outputs(self):
-        '''Update the model outputs
-
-        All node outputs and inputs are found. The model outputs are set to all node outputs
-        that are not also node inputs.
-        '''
-        node_outputs = [out for node in self.graph.values() for out in node.outputs]
-        node_inputs = [inp for node in self.graph.values() for inp in node.inputs]
-        self.outputs = [out for out in node_outputs if out not in node_inputs]
+        if old_node.name in self.outputs:
+            self.outputs = [new_node2.name if name == old_node.name else name for name in self.outputs]
 
     def next_layer(self):
         self.index += 1
@@ -805,32 +772,24 @@ class ModelGraph:
         n_inputs = len(self.get_input_variables())
         n_outputs = len(self.get_output_variables())
 
-        curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir() + '/firmware')
-
         output = []
         if n_samples == 1 and n_inputs == 1:
             x = [x]
 
-        try:
-            for i in range(n_samples):
-                predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
-                if n_inputs == 1:
-                    inp = [np.asarray(x[i])]
-                else:
-                    inp = [np.asarray(xj[i]) for xj in x]
-                argtuple = inp
-                argtuple += predictions
-                argtuple = tuple(argtuple)
-                top_function(*argtuple)
-                output.append(predictions)
+        for i in range(n_samples):
+            predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
+            if n_inputs == 1:
+                inp = [np.asarray(x[i])]
+            else:
+                inp = [np.asarray(xj[i]) for xj in x]
+            argtuple = inp
+            argtuple += predictions
+            argtuple = tuple(argtuple)
+            top_function(*argtuple)
+            output.append(predictions)
 
-            # Convert to list of numpy arrays (one for each output)
-            output = [
-                np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)
-            ]
-        finally:
-            os.chdir(curr_dir)
+        # Convert to list of numpy arrays (one for each output)
+        output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
 
         if n_samples == 1 and n_outputs == 1:
             return output[0][0]

@@ -26,13 +26,13 @@ input_size_options = [16]
 @pytest.mark.parametrize(
     'backend, io_type, strategy',
     [
-        # ('Vivado', 'io_parallel', 'latency'),
-        # ('Vitis', 'io_parallel', 'latency'),
-        # ('Vivado', 'io_stream', 'latency'),
-        # ('Vitis', 'io_stream', 'latency'),
+        ('Vivado', 'io_parallel', 'latency'),
+        ('Vitis', 'io_parallel', 'latency'),
+        ('Vivado', 'io_stream', 'latency'),
+        ('Vitis', 'io_stream', 'latency'),
         ('Vivado', 'io_stream', 'resource'),
         ('Vitis', 'io_stream', 'resource'),
-        # ('Catapult', 'io_stream', 'latency'),
+        ('Catapult', 'io_stream', 'latency'),
     ],
 )
 @pytest.mark.parametrize('rf', rf_options)

@@ -22,9 +22,11 @@ from hls4ml.model.types import (
     IntegerPrecisionType,
     NamedType,
     TensorVariable,
+    UnspecifiedPrecisionType,
     WeightVariable,
     find_minimum_width,
 )
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 
@@ -52,9 +54,9 @@ class Layer:
     """
 
     _expected_attributes = [
-        Attribute('index'),
-        ConfigurableAttribute('trace', default=False),
-        TypeAttribute('result'),
+        Attribute('index', description=descriptions.index),
+        ConfigurableAttribute('trace', default=False, description=descriptions.trace),
+        TypeAttribute('result', description=descriptions.result_type),
     ]
 
     @classproperty
@@ -174,10 +176,12 @@ class Layer:
         return NamedType(name=name, precision=precision)
 
     def _set_accum_t(self):
-        has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
-        if has_accum_t:
-            accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
-            self.set_attr('accum_t', accum_t)
+        """Set the accumulator, but don't overwrite an existing one"""
+        if self.get_attr('accum_t') is None:
+            has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
+            if has_accum_t:
+                accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
+                self.set_attr('accum_t', accum_t)
 
     def _set_type_t(self, name):
         has_type_t = any(a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute))
@@ -344,7 +348,7 @@ class Input(Layer):
     def initialize(self):
         shape = self.attributes['input_shape']
         if shape[0] is None:
-            shape = shape[1:]
+            raise RuntimeError(f"Unexpectedly have a None in {shape=} of Input layer")
         dims = [f'N_INPUT_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         if self.index == 1:
             default_type_name = 'input_t'
@@ -355,6 +359,50 @@ class Input(Layer):
         self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
 
+class Constant(Layer):
+    # one could consider making this a weight attribute, but given its transient nature, I am not sure it helps
+    _expected_attributes = [
+        Attribute('value', value_type=np.ndarray),
+    ]
+
+    def initialize(self):
+        value = self.attributes['value']
+        shape = list(value.shape)
+        if not shape:
+            shape = (1,)
+            self.set_attr('value', np.array([value]))
+        dims = [f'{self.name}_{i}' for i in range(len(shape))]
+        quantizer = self.get_attr('quantizer')
+
+        # the graph._make_graph function sets the input node to the previous node
+        # if it is not set. That is incorrect for Constant nodes, so remove the input node
+        self.inputs = []
+
+        # Should the else clause below be None or UnspecifiedPrecisionType
+        precision = quantizer.hls_type if quantizer is not None else UnspecifiedPrecisionType()
+
+        self.add_output_variable(shape, dims, var_name=self.name, precision=precision)
+
+
+class Quant(Layer):  # The QONNX quantization layer
+    """
+    This is a QONNX quantization layer. Optimizations should convert it
+    before HLS is produced.
+    """
+
+    _expected_attributes = [
+        Attribute('narrow', value_type=bool),
+        Attribute('rounding_mode', value_type=str),
+        Attribute('signed', value_type=bool),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+
 class Reshape(Layer):
     _expected_attributes = [
         Attribute('target_shape', value_type=typing.Sequence),
@@ -362,17 +410,18 @@ class Reshape(Layer):
 
     def initialize(self):
         input_shape = self.get_input_variable(self.inputs[0]).shape
-        target_shape = self.get_attr('target_shape')
+        target_shape = self.get_attr('target_shape')  # this should not have a batch dimension
         if target_shape is None:
             # need to get it from the input
             shape_node = self.get_input_node(self.inputs[1])
             # for QONNX, remove batch dimension
-            if shape_node:
-                target_shape = shape_node.value[1:]
+            # (onnx cleaning should have removed reshapes not on data path)
+            if isinstance(shape_node, Constant):
+                target_shape = shape_node.attributes['value'][1:]
             else:
                 raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
 
-        # remove Nones -- is this ever triggered?
+        # remove Nones -- Seems to be used by pytorch parser
         if target_shape[0] is None:
             target_shape = target_shape[1:]
 
@@ -406,7 +455,7 @@ class Dense(Layer):
     ]
 
     def initialize(self):
-        shape = self.get_input_variable().shape[:]
+        shape = list(self.get_input_variable().shape)
         shape[-1] = self.attributes['n_out']
         if len(shape) > 1:
             dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
@@ -415,6 +464,26 @@ class Dense(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
+class Conv(Layer):
+    """
+    This is for the ONNX Conv node. Currently, it is only supported as an intermediate
+    form that gets converted to an explicit ConvXD.
+
+    Note:  these are always channels-last.
+    """
+
+    def initialize(self):
+        if self.attributes['n_dim'] == 1:
+            # this is 1D convolution
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
+            dims = [f'N_OUTPUTS_{self.index}', f'N_FILT_{self.index}']
+        else:
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_FILT_{self.index}']
+
+        self.add_output_variable(shape, dims)
 
 
 class Conv1D(Layer):
@@ -868,7 +937,7 @@ class ParametrizedActivation(Activation):
 
 class HardActivation(Activation):
     '''
-    Implements the hard sigmoid and tan function in keras and qkeras
+    Implements the hard sigmoid and tanh function in keras and qkeras
     (Default parameters in qkeras are different, so should be configured)
     The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
     hard tanh function is 2 * hard_sigmoid - 1
@@ -884,7 +953,7 @@ class HardActivation(Activation):
     def initialize(self):
         super().initialize()
         slope_prec = self.get_attr('slope_prec', FixedPrecisionType(width=16, integer=0, signed=False))
-        shift_prec = self.get_attr('shift_prec', FixedPrecisionType(width=1, integer=0, signed=False))
+        shift_prec = self.get_attr('shift_prec', FixedPrecisionType(width=2, integer=0, signed=False))
         index = self.get_attr('index')
         slope_t = NamedType(f'slope{index}_t', precision=slope_prec)
         shift_t = NamedType(f'shift{index}_t', precision=shift_prec)
@@ -915,10 +984,24 @@ class TernaryTanh(Activation):
         super().initialize()
 
 
+class BatchNormOnnx(Layer):
+    '''
+    A transient layer formed from ONNX BatchNormalization that gets converted to
+    BatchNormalization after the scale and bias are determined
+    '''
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+
+# TODO:  We currently seem to ignore the quantizers to mean, variance, etc.
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
-        Attribute('n_filt', default=0),
+        Attribute('n_filt', default=-1),
         WeightAttribute('scale'),
         WeightAttribute('bias'),
         TypeAttribute('scale'),
@@ -945,6 +1028,36 @@ class BatchNormalization(Layer):
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
 
+# TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
+class ApplyAlpha(BatchNormalization):
+    '''A custom layer to scale the output of a QDense layer which used 'alpha != 1'
+    Inference computation uses BatchNormalization methods'''
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+        self.set_attr('n_in', inp.size())
+
+        # precision values are ignored if quantizer is not None
+        scale = self.get_attr('scale_data')
+        scale_quantizer = self.get_attr('scale_quantizer')
+        scale_precision = self.get_attr('scale_precision')
+        bias = self.get_attr('bias_data')
+        bias_quantizer = self.get_attr('bias_quantizer')
+        bias_precision = self.get_attr('bias_precision')
+
+        self.add_weights(scale, quantizer=scale_quantizer, precision=scale_precision)
+        self.add_bias(bias, quantizer=bias_quantizer, precision=bias_precision)
+
+    def add_weights(self, scale, quantizer=None, precision=None):
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer, precision=precision)
+
+    def add_bias(self, bias, quantizer=None, precision=None):
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer, precision=precision)
+
+
 class Merge(Layer):
     def initialize(self):
         assert len(self.inputs) == 2
@@ -956,6 +1069,31 @@ class Merge(Layer):
         else:
             shape = inp1.shape.copy()
             dims = inp1.dim_names.copy()
+        self.add_output_variable(shape, dims)
+
+
+class MatMul(Layer):
+    """
+    This is a matrix multiply. Currently, it is only supported as an intermediate
+    form that gets converted to a Dense layer.
+    """
+
+    def initialize(self):
+        assert len(self.inputs) == 2
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        if len(inp2.shape) == 1:
+            # mat vec multiply
+            assert inp1.shape[-1] == inp2.shape[0]
+            shape = list(inp1.shape[:-1]) + [inp2.shape[0]]
+        else:
+            assert inp1.shape[-1] == inp2.shape[-2]
+            shape = list(inp1.shape[:-1]) + [inp2.shape[-1]]
+        if len(shape) > 1:
+            dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+
         self.add_output_variable(shape, dims)
 
 
@@ -1012,20 +1150,67 @@ class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
 
-        if self.get_attr('data_format') == 'channels_last':
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-                dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        if len(self.inputs) > 1:
+            # In order to be correctly ingested by hls4ml the QONNX resize node should have 3 inputs set with RoI left empty
+            if len(self.inputs) == 2:
+                raise Exception(
+                    'The number of inputs to Resize node is equal to 2. '
+                    'In this case, either one is trying to use a version 10 node '
+                    'or one is using the RoI parameter only to perform the resize operation, '
+                    'both not supported in hls4ml'
+                )
+            if len(self.inputs) == 4:
+                raise Exception('Sizes parameter is not supported by hls4ml. Use scales instead')
+            # get the scales of Resize node from QONNX frontend
+            # see doc here: https://onnx.ai/onnx/operators/onnx__Resize.html
+            scales_idx = 2 if len(self.inputs) == 3 or len(self.inputs) == 4 else 1
+            scales = self.get_input_node(self.inputs[scales_idx]).get_attr('value')
+            if len(scales) == 4:  # Resize 2D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('out_height', int(self.get_attr('in_height') * scales[2]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[3]))
+            elif len(scales) == 3:  # Resize 1D
+                self.set_attr('out_width', int(self.get_attr('in_width') * scales[1]))
+                self.set_attr('n_chan', int(self.get_attr('n_chan') * scales[2]))
+            else:
+                raise Exception('Resize 1D and Resize 2D are the ones supported in hls4ml')
+            if self.get_attr('data_format') == 'channels_last':
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [int(self.get_attr('out_width')), int(self.get_attr('n_chan'))]
+                    dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
+                        int(self.get_attr('n_chan')),
+                    ]
+                    dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            else:
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [int(self.get_attr('n_chan')), int(self.get_attr('out_width'))]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [
+                        int(self.get_attr('n_chan')),
+                        int(self.get_attr('out_height')),
+                        int(self.get_attr('out_width')),
+                    ]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         else:
-            if len(inp.shape) == 2:  # 1D -> width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
-            elif len(inp.shape) == 3:  # 2D -> height + width + chan
-                shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
-                dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
+            if self.get_attr('data_format') == 'channels_last':
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
+                    dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
+                    dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+            else:
+                if len(inp.shape) == 2:  # 1D -> width + chan
+                    shape = [self.get_attr('n_chan'), self.get_attr('out_width')]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
+                elif len(inp.shape) == 3:  # 2D -> height + width + chan
+                    shape = [self.get_attr('n_chan'), self.get_attr('out_height'), self.get_attr('out_width')]
+                    dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
 
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
@@ -1434,6 +1619,7 @@ class SymbolicExpression(Layer):
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
+    'Constant': Constant,
     'Activation': Activation,
     'QActivation': Activation,
     'LeakyReLU': ParametrizedActivation,
@@ -1448,6 +1634,7 @@ layer_map = {
     'BinaryDense': Dense,
     'TernaryDense': Dense,
     'QDense': Dense,
+    'Conv': Conv,
     'Conv1D': Conv1D,
     'QConv1D': Conv1D,
     'Conv2D': Conv2D,
@@ -1474,6 +1661,7 @@ layer_map = {
     'ZeroPadding1D': ZeroPadding1D,
     'ZeroPadding2D': ZeroPadding2D,
     'Merge': Merge,
+    'MatMul': MatMul,
     'Dot': Dot,
     'Concatenate': Concatenate,
     'Resize': Resize,
@@ -1489,6 +1677,9 @@ layer_map = {
     'QGRU': GRU,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
+    'Quant': Quant,
+    'ApplyAlpha': ApplyAlpha,
+    'BatchNormOnnx': BatchNormOnnx,
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
     # TensorFlow-specific layers:

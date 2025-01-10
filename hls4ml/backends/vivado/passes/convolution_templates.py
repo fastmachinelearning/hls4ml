@@ -22,6 +22,8 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
+    template<class data_T, class res_T, class CONFIG_T>
+    using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -58,6 +60,8 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {config_t} mult_config;
     template<unsigned K, unsigned S, unsigned W>
     using scale_index = nnet::{scale_index_type}<K, S, W>;
+    template<class data_T, class res_T, class CONFIG_T>
+    using conv_kernel = nnet::{conv_fn}<data_T, res_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -91,15 +95,46 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         else:
             params['fill_fn'] = 'FillConv1DBuffer'
 
+        is_pointwise_parallel_latency = (
+            node.get_attr('filt_width') == 1
+            and node.get_attr('strategy').lower() == 'latency'
+            and node.model.config.get_config_value('IOType') == 'io_parallel'
+        )
+        if is_pointwise_parallel_latency:
+            params['conv_fn'] = f'pointwise_conv_{node.index}'
+        else:
+            if node.get_attr('strategy').lower() == 'latency':
+                params['conv_fn'] = 'Conv1DLatency'
+            else:
+                params['conv_fn'] = 'Conv1DResource'
+
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
-        mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
-        mult_params['n_out'] = node.get_attr('n_filt')
+        if is_pointwise_parallel_latency:
+            mult_params['n_in'] = int(
+                node.get_attr('in_width') * node.get_attr('n_chan') * node.get_attr('filt_width') / mult_params['reuse']
+            )
+            mult_params['n_out'] = int(node.get_attr('in_width') * node.get_attr('n_filt') / mult_params['reuse'])
+        else:
+            mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
+            mult_params['n_out'] = node.get_attr('n_filt')
         mult_params['nzeros'] = node.get_weights('weight').nzeros
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+
+        if node.get_attr('strategy').lower() == 'latency':
+            mult_params['dense_function'] = 'DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
+                mult_params['dense_function'] = 'DenseResource_rf_leq_nin'
+            else:
+                mult_params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+            # The 3rd case is never used
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params['dense_function'] = f'dense_resource_unrolled_{node.index}'
+
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -213,6 +248,18 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+
+        if node.get_attr('strategy').lower() == 'latency':
+            mult_params['dense_function'] = 'DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
+                mult_params['dense_function'] = 'DenseResource_rf_leq_nin'
+            else:
+                mult_params['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+            # The 3rd case is never used
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            mult_params['dense_function'] = f'dense_resource_unrolled_{node.index}'
+
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -297,6 +344,8 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
             params['scale_index_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_depthwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_config = self.depthwise_template.format(**params)
 
         # Depthwise mult config
@@ -309,6 +358,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to depthwise Conv1D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
@@ -338,6 +390,8 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
             params['scale_index_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_pointwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_config = self.pointwise_template.format(**params)
 
         # Pointwise mult config
@@ -350,6 +404,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to separable Conv1D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+
         pointwise_mult_config = self.pointwise_mult_template.format(**mult_params)
 
         return (
@@ -425,6 +482,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
             params['scale_index_width_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_depthwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_config = self.depthwise_template.format(**params)
 
         # Depthwise mult config
@@ -437,6 +496,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to depthwise Conv2D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
@@ -474,6 +535,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
         params['config_t'] = f'config{node.index}_pointwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_config = self.pointwise_template.format(**params)
 
         # Pointwise mult config
@@ -486,6 +549,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to separable Conv2D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_mult_config = self.pointwise_mult_template.format(**mult_params)
 
         return (
