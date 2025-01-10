@@ -1,7 +1,3 @@
-from copy import copy
-
-import numpy as np
-
 from hls4ml.backends.fpga.fpga_layers import PointwiseConv1D, PointwiseConv2D
 from hls4ml.backends.quartus.passes.convolution_templates import (
     Conv1DConfigTemplate,
@@ -83,13 +79,10 @@ class OptimizePointwiseConv(OptimizerPass):
 
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:]  # '1D' or '2D'
+        new_attrs = {k: v for k, v in node.attributes.items() if k not in ('trace', 'precision', 'reuse_factor')}
         pw_node = model.make_node(
-            'PointwiseConv' + dim, node.name, copy(node.attributes), node.inputs.copy(), outputs=node.outputs.copy()
+            'PointwiseConv' + dim, node.name, new_attrs, node.inputs.copy(), outputs=node.outputs.copy()
         )
-        if len(node.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv2D
-            expand_axis = tuple(range(int(dim[0])))
-            pw_node.weights['weight'].data = np.expand_dims(node.weights['weight'].data, axis=expand_axis)
-        pw_node.weights['bias'].data = node.weights['bias'].data
         model.replace_node(node, pw_node)
 
         return True

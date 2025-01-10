@@ -413,6 +413,34 @@ TanHActLoop:
 }
 
 // *************************************************
+//       UnaryLUT Activation
+// *************************************************
+
+template <class data_T, class res_T, typename CONFIG_T>
+void unary_lut(hls::stream<data_T> &data, hls::stream<res_T> &res, typename CONFIG_T::table_t table[CONFIG_T::table_size]) {
+    #pragma HLS function_instantiate variable=table
+    #pragma HLS ARRAY_PARTITION variable=table complete
+
+UnaryLUTActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
+
+        data_T in_data = data.read();
+        res_T out_data;
+        PRAGMA_DATA_PACK(out_data)
+
+    UnaryLUTPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
+            #pragma HLS UNROLL
+            unsigned index = get_index_unary_lut<CONFIG_T::table_size>(in_data[j].V);
+            out_data[j] = table[index];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
 //       Hard sigmoid Activation
 // *************************************************
 
@@ -471,8 +499,8 @@ HardSigmoidActLoop:
 //       Leaky RELU Activation
 // *************************************************
 
-template <class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void leaky_relu(hls::stream<data_T> &data, param_T alpha, hls::stream<res_T> &res) {
 LeakyReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
@@ -497,8 +525,8 @@ LeakyReLUActLoop:
 //       Thresholded RELU Activation
 // *************************************************
 
-template <class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(hls::stream<data_T> &data, typename data_T::value_type theta, hls::stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void thresholded_relu(hls::stream<data_T> &data, param_T theta, hls::stream<res_T> &res) {
 ThresholdedReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
@@ -605,8 +633,8 @@ SoftsignActLoop:
 // *************************************************
 //       ELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void elu(hls::stream<data_T> &data, param_T alpha, hls::stream<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -647,7 +675,7 @@ EluActLoop:
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void elu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
+    elu<data_T, ap_uint<1>, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
@@ -698,8 +726,8 @@ SeluActLoop:
 //       PReLU Activation
 // *************************************************
 
-template <class data_T, class res_T, typename CONFIG_T>
-void prelu(hls::stream<data_T> &data, typename data_T::value_type alpha[CONFIG_T::n_in], hls::stream<res_T> &res) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void prelu(hls::stream<data_T> &data, const param_T alpha[CONFIG_T::n_in], hls::stream<res_T> &res) {
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE

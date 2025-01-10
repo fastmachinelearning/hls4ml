@@ -4,10 +4,10 @@ from qkeras import QConv2D, QDense
 from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
 
-from hls4ml.optimization.attributes import get_attributes_from_keras_model
-from hls4ml.optimization.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.keras.masking import get_model_masks
-from hls4ml.optimization.objectives import ParameterEstimator
+from hls4ml.optimization.dsp_aware_pruning.attributes import get_attributes_from_keras_model
+from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
+from hls4ml.optimization.dsp_aware_pruning.keras.masking import get_model_masks
+from hls4ml.optimization.dsp_aware_pruning.objectives import ParameterEstimator
 
 '''
 In all the tests, an artifical network with one Dense/Conv2D layer and pre-determined weights is created

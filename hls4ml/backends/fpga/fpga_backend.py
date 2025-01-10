@@ -1,6 +1,6 @@
 import math
-import os
 import re
+import subprocess
 from bisect import bisect_left
 from collections.abc import Iterable
 
@@ -13,6 +13,8 @@ from hls4ml.model.layers import (
     LSTM,
     Activation,
     BatchNormalization,
+    BatchNormOnnx,
+    Conv,
     Conv1D,
     Conv2D,
     Dense,
@@ -22,8 +24,11 @@ from hls4ml.model.layers import (
     GarNetStack,
     GlobalPooling1D,
     GlobalPooling2D,
+    MatMul,
+    Merge,
     Pooling1D,
     Pooling2D,
+    Quant,
     SeparableConv1D,
     SeparableConv2D,
     SimpleRNN,
@@ -40,6 +45,7 @@ from hls4ml.model.types import (
     UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.writer import get_writer
 
 
@@ -55,8 +61,6 @@ class FPGABackend(Backend):
             Dense,
             Conv1D,
             Conv2D,
-            SeparableConv1D,
-            SeparableConv2D,
             Pooling1D,
             Pooling2D,
             GlobalPooling1D,
@@ -65,38 +69,70 @@ class FPGABackend(Backend):
             LSTM,
             GRU,
             Dot,
+            Conv,
+            MatMul,
         ]
 
         for layer in accum_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(TypeAttribute('accum'))
+            attrs.append(TypeAttribute('accum', description=descriptions.accum_type))
             self.attribute_map[layer] = attrs
 
-        rf_layers = accum_layers + [BatchNormalization, Activation, Embedding, GarNet, GarNetStack]
+        rf_layers = accum_layers + [
+            BatchNormalization,
+            Activation,
+            Embedding,
+            GarNet,
+            GarNetStack,
+            Quant,
+            BatchNormOnnx,
+            Merge,
+        ]
 
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('reuse_factor', default=1, description=descriptions.reuse_factor))
+            self.attribute_map[layer] = attrs
+
+        # separable is kind of special because it is effectively two layers that will be split
+        for layer in (SeparableConv1D, SeparableConv2D):
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(TypeAttribute('depthwise_accum'))
+            attrs.append(TypeAttribute('pointwise_accum'))
+            attrs.append(TypeAttribute('depthwise_result'))
+            attrs.append(ConfigurableAttribute('depthwise_reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('pointwise_reuse_factor', default=1))
             self.attribute_map[layer] = attrs
 
         act_attrs = self.attribute_map.get(Activation, [])
-        act_attrs.append(ConfigurableAttribute('table_size', default=1024))
-        act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+        act_attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+        act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
         self.attribute_map[Activation] = act_attrs
 
         softmax_attrs = self.attribute_map.get(Softmax, [])
-        softmax_attrs.append(ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'))
-        softmax_attrs.append(ConfigurableAttribute('skip', value_type=bool, default=False))
+        softmax_attrs.append(
+            ChoiceAttribute(
+                'implementation',
+                ['latency', 'stable', 'argmax', 'legacy'],
+                default='stable',
+                description=descriptions.softmax_implementation,
+            )
+        )
+        softmax_attrs.append(
+            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip)
+        )
         softmax_attrs.append(
             TypeAttribute(
                 'exp_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                description=descriptions.table_type,
             )
         )
         softmax_attrs.append(
             TypeAttribute(
                 'inv_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                description=descriptions.table_type,
             )
         )
         self.attribute_map[Softmax] = softmax_attrs
@@ -123,19 +159,22 @@ class FPGABackend(Backend):
         Returns:
             string: Returns the name of the compiled library.
         """
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
 
         lib_name = None
-        try:
-            ret_val = os.system('bash build_lib.sh')
-            if ret_val != 0:
-                raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
-            lib_name = '{}/firmware/{}-{}.so'.format(
-                model.config.get_output_dir(), model.config.get_project_name(), model.config.get_config_value('Stamp')
-            )
-        finally:
-            os.chdir(curr_dir)
+        ret_val = subprocess.run(
+            ['./build_lib.sh'],
+            shell=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=model.config.get_output_dir(),
+        )
+        if ret_val.returncode != 0:
+            print(ret_val.stdout)
+            raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
+        lib_name = '{}/firmware/{}-{}.so'.format(
+            model.config.get_output_dir(), model.config.get_project_name(), model.config.get_config_value('Stamp')
+        )
 
         return lib_name
 
@@ -227,10 +266,12 @@ class FPGABackend(Backend):
         else:
             return before
 
-    def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor'):
+    def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor', include_max_rf=True):
         assert attribute is not None, 'Reuse factor attribute cannot be None'
 
         valid_rf = self.get_valid_reuse_factors(n_in, n_out)
+        if not include_max_rf:
+            valid_rf.pop()
         chosen_rf = layer.get_attr(attribute)
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
