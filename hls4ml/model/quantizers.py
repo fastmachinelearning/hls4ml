@@ -182,6 +182,7 @@ class BrevitasQuantizer(Quantizer):
     def __call__(self, data):
         return data
 
+
 class QuantNodeQuantizer(Quantizer):
     """
     This implements a quantizer for a FixedPrecisionType with width==integer
