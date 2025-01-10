@@ -200,14 +200,12 @@ def parse_pytorch_model(config, verbose=True):
             for arg in node.args:
                 if np.isscalar(arg):
                     # add an input node with the constant value
-                    new_node = traced_model.graph.placeholder(
-                        name='const_' + str(i), type_expr=torch.Tensor, default_value=arg
-                    )
+                    new_node = traced_model.placeholder(name='const_' + str(i), type_expr=torch.Tensor, default_value=arg)
                     node.prepend(new_node)
                     node.update_arg(1, new_node)
                     i += 1
 
-    traced_model.graph.lint()
+    traced_model.lint()
 
     for node in traced_model.nodes:
         if node.op == 'call_module':
@@ -258,7 +256,7 @@ def parse_pytorch_model(config, verbose=True):
                 input_shapes = [output_shapes[str(node.args[0])]]
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif "getitem" in node.args[0].name:
-                for tmp_node in traced_model.graph.nodes:
+                for tmp_node in traced_model.nodes:
                     if tmp_node.name == node.args[0].name:
                         if "getitem" in tmp_node.args[0].name:
                             raise Exception('Nested getitem calles not resolved at the moment.')

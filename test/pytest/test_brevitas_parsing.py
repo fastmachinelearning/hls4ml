@@ -55,12 +55,11 @@ def test_quantlinear(backend, io_type):
     x = torch.tensor([1.0, 2.0, 3.0, 4.0])
 
     pytorch_prediction = model(x).detach().numpy()
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, input_shape=(None, 4))
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_linear_{backend}_{io_type}')
 
     hls_model = convert_from_pytorch_model(
         model,
-        (None, 4),
         hls_config=config,
         output_dir=output_dir,
         backend=backend,
@@ -87,9 +86,13 @@ def test_quantconv1d(backend, io_type):
     pytorch_prediction = model(x).detach().numpy()
     if io_type == 'io_stream':
         x = np.ascontiguousarray(x.permute(0, 2, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(
+            model, (None, n_in, size_in), channels_last_conversion="internal", transpose_outputs=False
+        )
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(
+            model, (None, n_in, size_in), channels_last_conversion="full", transpose_outputs=True
+        )
 
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_conv1d_{backend}_{io_type}')
 
@@ -118,9 +121,7 @@ def test_quantconv1d(backend, io_type):
         + 1
     )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
 
-    hls_model = convert_from_pytorch_model(
-        model, (None, n_in, size_in), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
     if io_type == 'io_stream':
@@ -144,12 +145,15 @@ def test_quantconv2d(backend, io_type):
     x = torch.randn(1, n_in, size_in_height, size_in_width)
 
     pytorch_prediction = model(x).detach().numpy()
-    config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
     if io_type == 'io_stream':
         x = np.ascontiguousarray(x.permute(0, 2, 3, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(
+            model, (None, n_in, size_in_height, size_in_width), channels_last_conversion="internal", transpose_outputs=False
+        )
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(
+            model, (None, n_in, size_in_height, size_in_width), channels_last_conversion="full", transpose_outputs=True
+        )
 
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_conv2d_{backend}_{io_type}')
 
@@ -191,7 +195,6 @@ def test_quantconv2d(backend, io_type):
 
     hls_model = convert_from_pytorch_model(
         model,
-        (None, n_in, size_in_height, size_in_width),
         hls_config=config,
         output_dir=output_dir,
         backend=backend,
@@ -249,12 +252,11 @@ def test_pooling(pooling, backend):
 
     pytorch_prediction = model(x).tensor.detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    config = config_from_pytorch_model(model, input_shape_forHLS, transpose_outputs=True)
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_{pooling.__name__}_{backend}')
 
     hls_model = convert_from_pytorch_model(
         model,
-        input_shape_forHLS,
         hls_config=config,
         output_dir=output_dir,
         backend=backend,
