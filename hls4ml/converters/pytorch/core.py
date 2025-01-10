@@ -1,7 +1,9 @@
 import numpy as np
+
 from hls4ml.converters.pytorch_to_hls import convert_uaq_to_apfixed, pytorch_handler
 from hls4ml.model.quantizers import BrevitasQuantizer
 from hls4ml.model.types import FixedPrecisionType
+
 
 @pytorch_handler('Constant')
 def parse_constant_layer(operation, layer_name, node):
@@ -18,7 +20,8 @@ def parse_constant_layer(operation, layer_name, node):
     output_shape = constant.shape
 
     return layer, output_shape
-  
+
+
 @pytorch_handler('Linear', 'QuantLinear')
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert 'Linear' in operation

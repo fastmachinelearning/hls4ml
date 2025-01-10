@@ -1,4 +1,5 @@
 import math
+
 import numpy as np
 import torch
 
@@ -190,7 +191,7 @@ def parse_pytorch_model(config, verbose=True):
     layer_counter = 0
 
     n_inputs = 0
-    
+
     # check for constant nodes
     merge_layers = ['add', 'mul', 'sub', 'fmin', 'fmax']
     i = 0  # count number of consts and use it in the name
@@ -207,7 +208,7 @@ def parse_pytorch_model(config, verbose=True):
                     i += 1
 
     traced_model.graph.lint()
-    
+
     for node in traced_model.nodes:
         if node.op == 'call_module':
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
