@@ -333,8 +333,8 @@ void hard_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
 // *************************************************
 //       Leaky RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(data_T data[CONFIG_T::n_in], data_T alpha, res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void leaky_relu(data_T data[CONFIG_T::n_in], param_T alpha, res_T res[CONFIG_T::n_in]) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         data_T datareg = data[ii];
@@ -348,8 +348,8 @@ void leaky_relu(data_T data[CONFIG_T::n_in], data_T alpha, res_T res[CONFIG_T::n
 // *************************************************
 //       Thresholded RELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(data_T data[CONFIG_T::n_in], data_T theta, res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void thresholded_relu(data_T data[CONFIG_T::n_in], param_T theta, res_T res[CONFIG_T::n_in]) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         data_T datareg = data[ii];
@@ -414,8 +414,8 @@ void softsign(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
 // *************************************************
 //       ELU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void elu(data_T data[CONFIG_T::n_in], const param_T alpha, res_T res[CONFIG_T::n_in]) {
 // Initialize the lookup table
 #include "activation_tables/elu_table.tb"
     // Index into the lookup table based on data
@@ -434,7 +434,7 @@ void elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_i
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void elu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
-    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
+    elu<data_T, ac_int<1, false>, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
@@ -461,8 +461,8 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(data_T data[CO
 // *************************************************
 //       PReLU Activation
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
-void prelu(data_T data[CONFIG_T::n_in], const data_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void prelu(data_T data[CONFIG_T::n_in], const param_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         data_T datareg = data[ii];

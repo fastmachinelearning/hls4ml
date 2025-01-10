@@ -15,7 +15,8 @@ class VitisBackend(VivadoBackend):
     def _register_flows(self):
         validation_passes = [
             'vitis:validate_conv_implementation',
-            'vitis:validate_strategy',
+            'vitis:validate_resource_strategy',
+            'vitis:validate_resource_unrolled_strategy',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
 
@@ -34,8 +35,32 @@ class VitisBackend(VivadoBackend):
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
     def create_initial_config(
-        self, part='xcvu13p-flga2577-2-e', clock_period=5, clock_uncertainty='27%', io_type='io_parallel', **_
+        self,
+        part='xcvu13p-flga2577-2-e',
+        clock_period=5,
+        clock_uncertainty='27%',
+        io_type='io_parallel',
+        namespace=None,
+        write_weights_txt=True,
+        write_tar=False,
+        **_,
     ):
+        """Create initial configuration of the Vitis backend.
+
+        Args:
+            part (str, optional): The FPGA part to be used. Defaults to 'xcvu13p-flga2577-2-e'.
+            clock_period (int, optional): The clock period. Defaults to 5.
+            clock_uncertainty (str, optional): The clock uncertainty. Defaults to 27%.
+            io_type (str, optional): Type of implementation used. One of
+                'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            namespace (str, optional): If defined, place all generated code within a namespace. Defaults to None.
+            write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
+                Defaults to True.
+            write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+
+        Returns:
+            dict: initial configuration.
+        """
         config = {}
 
         config['Part'] = part if part is not None else 'xcvu13p-flga2577-2-e'
@@ -43,6 +68,11 @@ class VitisBackend(VivadoBackend):
         config['ClockUncertainty'] = clock_uncertainty if clock_uncertainty is not None else '27%'
         config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
+        config['WriterConfig'] = {
+            'Namespace': namespace,
+            'WriteWeightsTxt': write_weights_txt,
+            'WriteTar': write_tar,
+        }
 
         return config
 

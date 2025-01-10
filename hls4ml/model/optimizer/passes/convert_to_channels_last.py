@@ -17,14 +17,14 @@ class ChannelsLastConverter(OptimizerPass):
 
     def transform(self, model, node):
         # If this parameter has not been set, this model does not need to be converted
-        if 'InputsChannelLast' not in model.config.config['HLSConfig']['Model']:
+        if 'ChannelsLastConversion' not in model.config.config['HLSConfig']['Model']:
             node.channels_last_converted = True
             return False
         outshape = node.get_output_variable().shape
 
         if isinstance(node, Input):
             # if inputs are not yet transposed into channels_last, add transpose layer
-            if not model.config.config['HLSConfig']['Model']['InputsChannelLast'] and len(outshape) > 1:
+            if model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "full" and len(outshape) > 1:
                 # Add transpose for input layer
                 input = node.name
                 if len(outshape) == 2:
@@ -39,7 +39,7 @@ class ChannelsLastConverter(OptimizerPass):
                 transpose_node.channels_last_converted = True
 
                 model.insert_node(transpose_node)
-            else:
+            elif model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "internal" and len(outshape) > 1:
                 input_shape = node.get_output_variable().shape
                 input_shape.append(input_shape.pop(0))
                 node.get_output_variable().shape = input_shape
@@ -94,10 +94,19 @@ class ChannelsLastConverter(OptimizerPass):
                 node.add_output_variable(shape, dims)
 
             # Have to transpose back before flattening to get correct order of elements in the flattened tensor
-            if isinstance(node, Reshape) and len(node.attributes['target_shape']) == 1:
+            if (
+                isinstance(node, Reshape)
+                and len(node.attributes['target_shape']) == 1
+                and not model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "off"
+            ):
                 previous_node = node.get_input_node(node.inputs[0])
                 input = previous_node.name
                 outshape = previous_node.get_output_variable().shape
+
+                if (model.config.config['IOType'] == 'io_stream') and len(outshape) == 3:
+                    raise Exception(
+                        'No 3D transpose available in io_stream, this model cannot be converted to channels-last'
+                    )
 
                 if len(outshape) == 2:
                     attributes = {'perm': [1, 0]}

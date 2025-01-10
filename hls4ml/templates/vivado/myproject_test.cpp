@@ -21,6 +21,8 @@ size_t trace_type_size = sizeof(double);
 } // namespace nnet
 
 int main(int argc, char **argv) {
+    // hls-fpga-machine-learning insert namespace
+
     // load input data from text file
     std::ifstream fin("tb_data/tb_input_features.dat");
     // load predictions from text file

@@ -31,7 +31,7 @@ def test_backend_config(framework, backend, part, clock_period, clock_unc):
         convert_fn = hls4ml.converters.convert_from_keras_model
     else:
         model = torch.nn.Sequential(torch.nn.Linear(1, 2), torch.nn.ReLU())
-        config = hls4ml.utils.config_from_pytorch_model(model)
+        config = hls4ml.utils.config_from_pytorch_model(model, input_shape=(None, 1))
         convert_fn = hls4ml.converters.convert_from_pytorch_model
 
     if clock_unc is not None:
@@ -42,16 +42,27 @@ def test_backend_config(framework, backend, part, clock_period, clock_unc):
     test_dir = f'hls4mlprj_backend_config_{framework}_{backend}_part_{part}_period_{clock_period}_unc_{unc_str}'
     output_dir = test_root_path / test_dir
 
-    hls_model = convert_fn(
-        model,
-        input_shape=(None, 1),  # This serves as a test of handling unexpected values by the backend in keras converer
-        hls_config=config,
-        output_dir=str(output_dir),
-        backend=backend,
-        part=part,
-        clock_period=clock_period,
-        clock_uncertainty=clock_unc,
-    )
+    if framework == "keras":
+        hls_model = convert_fn(
+            model,
+            input_shape=(None, 1),  # This serves as a test of handling unexpected values by the backend in keras converer
+            hls_config=config,
+            output_dir=str(output_dir),
+            backend=backend,
+            part=part,
+            clock_period=clock_period,
+            clock_uncertainty=clock_unc,
+        )
+    else:
+        hls_model = convert_fn(
+            model,
+            hls_config=config,
+            output_dir=str(output_dir),
+            backend=backend,
+            part=part,
+            clock_period=clock_period,
+            clock_uncertainty=clock_unc,
+        )
 
     hls_model.write()
 

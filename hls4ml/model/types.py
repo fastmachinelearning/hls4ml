@@ -64,11 +64,14 @@ class PrecisionType:
         self.width = width
         self.signed = signed
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         eq = self.width == other.width
         eq = eq and self.signed == other.signed
 
         return eq
+
+    def __hash__(self) -> int:
+        return hash((self.width, self.signed))
 
 
 class IntegerPrecisionType(PrecisionType):
@@ -88,11 +91,15 @@ class IntegerPrecisionType(PrecisionType):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
-    def __eq__(self, other):
+    # Does this need to make sure other is also an IntegerPrecisionType? I could see a match between Fixed and Integer
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, IntegerPrecisionType):
             return super().__eq__(other)
 
         return False
+
+    def __hash__(self) -> int:
+        return super().__hash__()
 
     @property
     def integer(self):
@@ -135,6 +142,8 @@ class FixedPrecisionType(PrecisionType):
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
+
+    # make this a property to avoid inconsistencies
 
     @property
     def fractional(self):
@@ -183,7 +192,7 @@ class FixedPrecisionType(PrecisionType):
         typestring = '{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, FixedPrecisionType):
             eq = super().__eq__(other)
             eq = eq and self.integer == other.integer
@@ -193,6 +202,9 @@ class FixedPrecisionType(PrecisionType):
             return eq
 
         return False
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash((self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits))
 
 
 class XnorPrecisionType(PrecisionType):
@@ -204,6 +216,7 @@ class XnorPrecisionType(PrecisionType):
         super().__init__(width=1, signed=False)
         self.integer = 1
 
+    # TODO:  this should really be a specific type
     def __str__(self):
         typestring = 'uint<1>'
         return typestring
@@ -218,6 +231,7 @@ class ExponentPrecisionType(PrecisionType):
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
 
+    # TODO:  this should really be a specific type, not int
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring

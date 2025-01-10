@@ -1,6 +1,6 @@
-import glob
 import itertools
 import os
+from pathlib import Path
 
 import yaml
 
@@ -8,6 +8,7 @@ import yaml
 Create a Gitlab CI yml file with a separate entry for each test_* file
 in the pytests directory to parallelise the CI jobs.
 '''
+
 
 template = """
 pytest.{}:
@@ -17,7 +18,20 @@ pytest.{}:
     EXAMPLEMODEL: {}
 """
 
+
 n_test_files_per_yml = int(os.environ.get('N_TESTS_PER_YAML', 4))
+
+# Blacklisted tests will be skipped
+BLACKLIST = {'test_reduction'}
+
+# Long-running tests will not be bundled with other tests
+LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_api'}
+
+
+def path_to_name(test_path):
+    path = Path(test_path)
+    name = path.stem.replace('test_', '')
+    return name
 
 
 def batched(iterable, chunk_size):
@@ -32,41 +46,39 @@ def uses_example_model(test_filename):
         return 'example-models' in content
 
 
-yml = None
-tests = glob.glob('test_*.py')
-for test_batch in batched(tests, n_test_files_per_yml):
-    name = '+'.join([test.replace('test_', '').replace('.py', '') for test in test_batch])
-    test_files = ' '.join(list(test_batch))
-    uses_example_models = int(any([uses_example_model(test) for test in test_batch]))
+def generate_test_yaml(test_root='.'):
+    test_root = Path(test_root)
+    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem not in (BLACKLIST | LONGLIST)]
+    need_example_models = [uses_example_model(path) for path in test_paths]
 
-    new_yml = yaml.safe_load(template.format(name, test_files, uses_example_models))
-    if yml is None:
-        yml = new_yml
-    else:
-        yml.update(new_yml)
+    idxs = list(range(len(need_example_models)))
+    idxs = sorted(idxs, key=lambda i: f'{need_example_models[i]}_{path_to_name(test_paths[i])}')
 
-# hls4ml Optimization API
-tests = glob.glob('test_optimization/test_*.py')
-for test in tests:
-    name = test.replace('test_optimization/', '').replace('test_', '').replace('.py', '')
-    new_yml = yaml.safe_load(template.format(name, f'test_optimization/test_{name}.py', int(uses_example_model(test))))
-    if yml is None:
-        yml = new_yml
-    else:
-        yml.update(new_yml)
-
-tests = glob.glob('test_optimization/test_keras/test_*.py')
-for test in tests:
-    # For now, skip Keras Surgeon [conflicting versions]
-    if 'test_reduction' not in test:
-        name = test.replace('test_optimization/test_keras/', '').replace('test_', '').replace('.py', '')
-        new_yml = yaml.safe_load(
-            template.format(name, f'test_optimization/test_keras/test_{name}.py', int(uses_example_model(test)))
-        )
+    yml = None
+    for batch_idxs in batched(idxs, n_test_files_per_yml):
+        batch_paths: list[Path] = [test_paths[i] for i in batch_idxs]
+        names = [path_to_name(path) for path in batch_paths]
+        name = '+'.join(names)
+        test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
+        batch_need_example_model = int(any([need_example_models[i] for i in batch_idxs]))
+        diff_yml = yaml.safe_load(template.format(name, test_files, batch_need_example_model))
         if yml is None:
-            yml = new_yml
+            yml = diff_yml
         else:
-            yml.update(new_yml)
+            yml.update(diff_yml)
 
-yamlfile = open('pytests.yml', 'w')
-yaml.safe_dump(yml, yamlfile)
+    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in LONGLIST]
+    for path in test_paths:
+        name = path.stem.replace('test_', '')
+        test_file = str(path.relative_to(test_root))
+        needs_examples = uses_example_model(path)
+        diff_yml = yaml.safe_load(template.format(name, test_file, int(needs_examples)))
+        yml.update(diff_yml)
+
+    return yml
+
+
+if __name__ == '__main__':
+    yml = generate_test_yaml(Path(__file__).parent)
+    with open('pytests.yml', 'w') as yamlfile:
+        yaml.safe_dump(yml, yamlfile)

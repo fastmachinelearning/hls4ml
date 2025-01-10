@@ -66,7 +66,9 @@ def test_binary_cnn(backend, io_type, strategy):
 
     model2.summary()
 
-    hls_config = hls4ml.utils.config_from_keras_model(model2, granularity='name', default_precision='fixed<32,12>')
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model2, granularity='name', default_precision='fixed<32,12>', backend=backend
+    )
     hls_config['Model']['Strategy'] = strategy
 
     # hls_config['LayerName']['q_dense_7_softmax']['Implementation'] = 'legacy'

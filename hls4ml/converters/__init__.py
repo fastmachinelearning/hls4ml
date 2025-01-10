@@ -10,6 +10,7 @@ from hls4ml.converters.keras_to_hls import KerasReader  # noqa: F401
 from hls4ml.converters.keras_to_hls import get_supported_keras_layers  # noqa: F401
 from hls4ml.converters.keras_to_hls import parse_keras_model  # noqa: F401
 from hls4ml.converters.keras_to_hls import keras_to_hls, register_keras_layer_handler
+from hls4ml.converters.onnx_to_hls import parse_onnx_model  # noqa: F401
 from hls4ml.model import ModelGraph
 from hls4ml.utils.config import create_config
 from hls4ml.utils.symbolic_utils import LUTFunction
@@ -238,7 +239,6 @@ def convert_from_keras_model(
 
 def convert_from_pytorch_model(
     model,
-    input_shape,
     output_dir='my-hls-test',
     project_name='myproject',
     input_data_tb=None,
@@ -251,7 +251,6 @@ def convert_from_pytorch_model(
 
     Args:
         model: PyTorch model to convert.
-        input_shape (list): The shape of the input tensor. First element is the batch size, needs to be None
         output_dir (str, optional): Output directory of the generated HLS project. Defaults to 'my-hls-test'.
         project_name (str, optional): Name of the HLS project. Defaults to 'myproject'.
         input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
@@ -279,9 +278,10 @@ def convert_from_pytorch_model(
     Notes:
         Pytorch uses the "channels_first" data format for its tensors, while hls4ml expects the "channels_last" format
         used by keras. By default, hls4ml will automatically add layers to the model which transpose the inputs to the
-        "channels_last"format. Not that this is not supported for the "io_stream" io_type, for which the user will have
-        to transpose the input by hand before passing it to hls4ml. In that case the "inputs_channel_last" argument of
-        the "config_from_pytorch_model" function needs to be set to True. By default, the output of the model remains
+        "channels_last" format. Not that this is not supported for the "io_stream" io_type, for which the user will have
+        to transpose the input by hand before passing it to hls4ml. In that case the "channels_last_conversion" argument of
+        the "config_from_pytorch_model" function needs to be set to "internal". This argument can be used to completely
+        disable this internal conversion. By default, the output of the model remains
         in the "channels_last" data format. The "transpose_outputs" argument of the "config_from_pytorch_model" can be
         used to add a layer to the model that transposes back to "channels_first". As before, this will not work for
         io_stream.
@@ -293,7 +293,6 @@ def convert_from_pytorch_model(
     config = create_config(output_dir=output_dir, project_name=project_name, backend=backend, **kwargs)
 
     config['PytorchModel'] = model
-    config['InputShape'] = input_shape
     config['InputData'] = input_data_tb
     config['OutputPredictions'] = output_data_tb
     config['HLSConfig'] = {}
@@ -301,9 +300,9 @@ def convert_from_pytorch_model(
     if hls_config is None:
         hls_config = {}
 
-    model_config = hls_config.get('Model', None)
+    model_config = hls_config.get('Model')
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-
+    config['InputShape'] = hls_config.get('InputShape')
     _check_hls_config(config, hls_config)
 
     return pytorch_to_hls(config)
