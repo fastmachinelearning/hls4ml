@@ -2,32 +2,64 @@
     :hidden:
     :caption: Introduction
 
-    concepts
-    status
-    setup
-    release_notes
-    details
-    flows
-    command
-    reference
+    intro/introduction
+    intro/status
+    intro/setup
+    intro/faq
+    intro/release_notes
+    intro/reference
 
 .. toctree::
     :hidden:
     :glob:
-    :caption: Quick API Reference
+    :caption: User Guide
 
-    api/*
+    api/concepts
+    api/configuration
+    api/command
+
+.. toctree::
+    :hidden:
+    :glob:
+    :caption: Frontends
+
+    frontend/keras
+    frontend/pytorch
+    frontend/qonnx
+
+.. toctree::
+    :hidden:
+    :glob:
+    :caption: Backends
+
+    backend/vitis
+    backend/accelerator
+    backend/oneapi
+    backend/catapult
+    backend/quartus
+    backend/sr
 
 .. toctree::
     :hidden:
     :caption: Advanced Features
 
-    advanced/qonnx
+    advanced/profiling
+    advanced/auto
+    advanced/hgq
     advanced/fifo_depth
     advanced/extension
-    advanced/oneapi
-    advanced/accelerator
     advanced/model_optimization
+    advanced/bramfactor
+
+.. toctree::
+    :hidden:
+    :glob:
+    :caption: Internals
+
+    ir/ir
+    ir/modelgraph
+    ir/flows
+    ir/attributes
 
 .. toctree::
     :hidden:
@@ -61,6 +93,4 @@ For the latest status including current and planned features, see the :ref:`Stat
 
 Tutorials
 =================================
-Detailed tutorials on how to use ``hls4ml``'s various functionalities can be found at:
-
-https://github.com/fastmachinelearning/hls4ml-tutorial
+Detailed tutorials on how to use ``hls4ml``'s various functionalities can be found `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`_.
