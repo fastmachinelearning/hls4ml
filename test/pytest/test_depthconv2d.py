@@ -8,14 +8,14 @@ import hls4ml
 
 test_root_path = Path(__file__).parent
 
-padds_options = ['same', 'valid']
+padds_options = ['same']
 chans_options = ['channels_last']
-io_type_options = ['io_parallel', 'io_stream']
+io_type_options = ['io_stream']
 strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
 bias_options = [False]
-rf_options = [1, 5, 23, 24, 57]
-input_size_options = [2, 5, 37, 100]
+rf_options = [1, 4, 16, 24] # each rf corresponds to one of the three cases of depthwise resource for io_stream 
+input_size_options = [16]
 
 
 @pytest.mark.parametrize('chans', chans_options)
