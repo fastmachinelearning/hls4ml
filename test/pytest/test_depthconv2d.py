@@ -10,7 +10,6 @@ test_root_path = Path(__file__).parent
 
 padds_options = ['same']
 chans_options = ['channels_last']
-io_type_options = ['io_stream']
 strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
 bias_options = [False]
