@@ -24,6 +24,7 @@ bias_options = [False]
 @pytest.mark.parametrize(
     'backend, io_type',
     [
+        ('oneAPI', 'io_parallel'),
         ('Vivado', 'io_parallel'),
         ('Vitis', 'io_parallel'),
         ('Vivado', 'io_stream'),

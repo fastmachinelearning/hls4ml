@@ -97,11 +97,16 @@ class ChannelsLastConverter(OptimizerPass):
             if (
                 isinstance(node, Reshape)
                 and len(node.attributes['target_shape']) == 1
-                and not model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "internal"
+                and not model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "off"
             ):
                 previous_node = node.get_input_node(node.inputs[0])
                 input = previous_node.name
                 outshape = previous_node.get_output_variable().shape
+
+                if (model.config.config['IOType'] == 'io_stream') and len(outshape) == 3:
+                    raise Exception(
+                        'No 3D transpose available in io_stream, this model cannot be converted to channels-last'
+                    )
 
                 if len(outshape) == 2:
                     attributes = {'perm': [1, 0]}
