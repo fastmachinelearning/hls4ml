@@ -13,8 +13,8 @@ chans_options = ['channels_last']
 strides_options = [(1), (2)]
 kernel_options = [(2), (3)]
 bias_options = [False]
-rf_options = [1, 5, 23, 24, 57]
-input_size_options = [2, 5, 37, 100]
+rf_options = [1, 16, 24]  # each rf corresponds to one of the three cases of depthwise resource for io_stream
+input_size_options = [16]
 
 
 @pytest.mark.parametrize('chans', chans_options)
@@ -25,13 +25,13 @@ input_size_options = [2, 5, 37, 100]
 @pytest.mark.parametrize(
     'backend, io_type, strategy',
     [
-        # ('Vivado', 'io_parallel', 'latency'),
-        # ('Vitis', 'io_parallel', 'latency'),
-        # ('Vivado', 'io_stream', 'latency'),
-        # ('Vitis', 'io_stream', 'latency'),
+        ('Vivado', 'io_parallel', 'latency'),
+        ('Vitis', 'io_parallel', 'latency'),
+        ('Vivado', 'io_stream', 'latency'),
+        ('Vitis', 'io_stream', 'latency'),
         ('Vivado', 'io_stream', 'resource'),
         ('Vitis', 'io_stream', 'resource'),
-        # ('Catapult', 'io_stream', 'latency'),
+        ('Catapult', 'io_stream', 'latency'),
     ],
 )
 @pytest.mark.parametrize('rf', rf_options)

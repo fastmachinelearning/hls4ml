@@ -14,7 +14,7 @@ io_type_options = ['io_parallel', 'io_stream']
 strides_options = [(1), (2)]
 kernel_options = [(2), (3)]
 bias_options = [False]
-rf_options = [1, 4, 16, 24]  # each rf corresponds to one of the three cases of depthwise resource for io_stream
+rf_options = [1, 16, 24]  # each rf corresponds to one of the three cases of depthwise resource for io_stream
 input_size_options = [16]
 
 
