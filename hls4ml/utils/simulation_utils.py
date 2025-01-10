@@ -450,6 +450,9 @@ def read_testbench_log(testbench_log_path):
             array[indices] = values
             sim_dict['BehavSimResults'].append(array)
 
+        if len(sim_dict['BehavSimResults']) == 1:
+            sim_dict['BehavSimResults'] = sim_dict['BehavSimResults'][0]
+
         return sim_dict
 
     except (KeyError, IndexError) as e:
