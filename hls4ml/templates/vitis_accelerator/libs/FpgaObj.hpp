@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "DataBatcher.hpp"
+#include "Params.hpp"
 #include "Types.hpp"
 #include "Worker.hpp"
 #include "xcl2.hpp"
@@ -24,75 +25,97 @@ template <class T, class U> class FpgaObj {
      * \param numCU Number of compute units synthesized on the FPGA
      * \param xclbinFilename String containing path of synthesized xclbin
      */
-    FpgaObj(int batchsize, int sampleInputSize, int sampleOutputSize, int numCU,
-            std::string xclbinFilename)
-        : _batchsize(batchsize), _sampleInputSize(sampleInputSize), _sampleOutputSize(sampleOutputSize),
-          _numCU(numCU), _xclbinFilename(xclbinFilename) {
+    FpgaObj(const Params &params)
+        : _batchsize(params.batchSize), _sampleInputSize(params.sampleInputSize), _sampleOutputSize(params.sampleOutputSize),
+          _numCU(params.numCU), _xclbinFilename(params.xclbinFilename) {
 
-        // Finds Xilinx device
-        devices = xcl::get_xil_devices();
-        device = devices[0];
-        std::string deviceName = device.getInfo<CL_DEVICE_NAME>();
-        std::cout << "Found Device: " << deviceName << std::endl;
+        if (params.deviceBDFs.size() == 0) {
+            // Finds all AMD/Xilinx devices present in system
+            devices = xcl::get_xil_devices();
+            if (devices.size() == 0) {
+                throw std::runtime_error("No AMD/Xilinx FPGA devices found");
+            }
+            for (auto &device : devices) {
+                std::string device_bdf;
+                OCL_CHECK(err, err = device.getInfo(CL_DEVICE_PCIE_BDF, &device_bdf));
+                std::cout << "Found device: " << device.getInfo<CL_DEVICE_NAME>() << " (" << device_bdf << ")" << std::endl;
+            }
 
-        // Load xclbin
-        fileBuf = xcl::read_binary_file(_xclbinFilename);
-        bins = cl::Program::Binaries({{fileBuf.data(), fileBuf.size()}});
-
-        // Create OpenCL context
-        context = cl::Context(device);
-
-        // Create OpenCL program from binary file
-        program = cl::Program(context, devices, bins);
-
-        // Create OpenCL command queues
-        comQueues.reserve(_numCU);
-        for (int i = 0; i < _numCU; i++) {
-            comQueues.emplace_back(context,
-                                   device,
-                                   CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
+        } else {
+            // Find devices by BDF
+            devices.reserve(params.deviceBDFs.size());
+            for (auto &bdf : params.deviceBDFs) {
+                devices.push_back(xcl::find_device_bdf(xcl::get_xil_devices(), bdf));
+                std::cout << "Found device: " << devices.back().getInfo<CL_DEVICE_NAME>() << " (" << bdf << ")" << std::endl;
+            }
         }
 
-        // Create mutexes for each command queue
-        std::vector<std::mutex> temp(_numCU);
-        comQueueMtxi.swap(temp);
+        // Ensure that all devices are of the same type
+        for (auto &device : devices) {
+            std::string device_name = device.getInfo<CL_DEVICE_NAME>();
+            if (_deviceName.empty()) {
+                _deviceName = device_name;
+            } else if (_deviceName != device_name) {
+                throw std::runtime_error(
+                    "All devices must be of the same type, use -d to specify the BDFs of the devices you want to use");
+            }
+        }
+
+        _numDevice = devices.size();
+
+        // Load xclbin
+        std::cout << "Loading: " << _xclbinFilename << std::endl;
+        std::vector<unsigned char> fileBuf = xcl::read_binary_file(_xclbinFilename);
+        cl::Program::Binaries bins;
+        for (int i = 0; i < _numDevice; i++) {
+            bins.push_back({fileBuf.data(), fileBuf.size()});
+        }
+
+        // Create OpenCL context
+        OCL_CHECK(err, context = cl::Context(devices, nullptr, nullptr, nullptr, &err));
+
+        // Create OpenCL program from binary file
+        OCL_CHECK(err, program = cl::Program(context, devices, bins, nullptr, &err));
+
+        std::cout << "Device programmed successfully" << std::endl;
+
+        // Create OpenCL program, and command queues for each device
+        comQueues.resize(_numDevice);
+        for (int i = 0; i < _numDevice; i++) {
+            comQueues[i].resize(_numCU);
+            // Create OpenCL out-of-order command queues (One per compute unit)
+            for (int j = 0; j < _numCU; j++) {
+                comQueues[i][j] = cl::CommandQueue(context, devices[i],
+                                                   CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
+            }
+        }
     }
 
     /**
-     * \brief Creates worker objects for each compute unit
+     * \brief Creates worker objects for each compute unit on each device
      * \param workersPerCU Number of worker objects that will drive each compute unit
-     * \param fpga Type of memory resource used by the FPGA.
-     * \param numHBMChannels Number of channels per port each Worker uses. Only for HBM.
      */
-    void createWorkers(int workersPerCU, FPGAType fpga, int numHBMChannels = 0) {
+    void createWorkers(int workersPerCU) {
         _workersPerCU = workersPerCU;
 
         // Construct workers
         workers.reserve(_numCU * _workersPerCU);
-        for (int i = 0; i < _numCU; i++) {
-            for (int j = 0; j < workersPerCU; j++) {
-                workers.emplace_back(_batchsize,
-                                     _sampleInputSize,
-                                     _sampleOutputSize,
-                                     comQueues[i],
-                                     comQueueMtxi[i]);
+        for (int d = 0; d < _numDevice; d++) {
+            for (int cu = 0; cu < _numCU; cu++) {
+                for (int w = 0; w < _workersPerCU; w++) {
+                    workers.emplace_back(d, d * (_numCU * _workersPerCU) + cu * _workersPerCU + w, _batchsize,
+                                         _sampleInputSize, _sampleOutputSize, comQueues[d][cu]);
+                }
             }
         }
 
         // Initialize workers
-        int currHBMChannel = 0;  // Only used if FPGAType is HBM
-        for (int i = 0; i < _numCU; i++) {
-            for (int j = 0; j < _workersPerCU; j++) {
-                workers[i * _workersPerCU + j].initialize(context,
-                                                          program,
-                                                          i + 1,
-                                                          i * _workersPerCU + j,
-                                                          fpga,
-                                                          currHBMChannel,
-                                                          numHBMChannels);
-
+        for (int d = 0; d < _numDevice; d++) {
+            for (int cu = 0; cu < _numCU; cu++) {
+                for (int w = 0; w < _workersPerCU; w++) {
+                    workers[d * (_numCU * _workersPerCU) + cu * _workersPerCU + w].initialize(context, program, cu + 1);
+                }
             }
-            currHBMChannel += 2 * numHBMChannels;
         }
     }
 
@@ -101,24 +124,18 @@ template <class T, class U> class FpgaObj {
      * \param fin Filename
      * \param s Input type. VitisAccelerator Backend currently uses text input. However,
      * the code also supports binary input in the format produced by NumPy's toFile().
-     * \param profiling If true, the given data will be iterated over multiple times,
-     * for more accurate throughput testing.
-     * \param profilingDataRepeat Only used if profiling is set to True. Additional number of
-     * times the given data is iterated over.
+     * \param profilingDataRepeat Additional number of times the given data is iterated
+     * over. Profiling is enabled if this is greater than 0.
      */
-    void loadData(const std::string& fin, bool profiling = false, int profilingDataRepeat = 0) {
+    void loadData(const std::string &fin, int profilingDataRepeat = 0) {
         // Set-up containers for each Worker's batches/workload
-        batchedData.reserve(_numCU * _workersPerCU);
-        for (int i = 0; i < _numCU * _workersPerCU; i++) {
+        batchedData.reserve(_numCU * _workersPerCU * _numDevice);
+        for (int i = 0; i < _numCU * _workersPerCU * _numDevice; i++) {
             batchedData.emplace_back();
         }
 
         // Batch and distribute data
-        db = new DataBatcher<T, U>(_batchsize,
-                                   _sampleInputSize,
-                                   _sampleOutputSize,
-                                   _numCU * _workersPerCU,
-                                   profiling,
+        db = new DataBatcher<T, U>(_batchsize, _sampleInputSize, _sampleOutputSize, _numCU * _workersPerCU * _numDevice,
                                    profilingDataRepeat);
         db->read(fin);
         db->createResultBuffers();
@@ -134,33 +151,49 @@ template <class T, class U> class FpgaObj {
             throw std::runtime_error("No data loaded");
         }
 
-        std::cout << "\nStarting FPGA run" << std::endl;
+        std::cout << "Starting FPGA run" << std::endl;
 
         auto ts_start = std::chrono::system_clock::now();
+
         std::vector<std::thread> accelThreads;
-        accelThreads.reserve(_numCU * _workersPerCU);
-        for (int i = 0; i < _numCU * _workersPerCU; i++) {
-            accelThreads.emplace_back([this, i]() {
-                this->workers[i].evalLoop(this->batchedData[i]);
-            });
+        accelThreads.reserve(_numCU * _workersPerCU * _numDevice);
+        for (int i = 0; i < _numCU * _workersPerCU * _numDevice; i++) {
+            accelThreads.emplace_back([this, i]() { this->workers[i].evalLoop(this->batchedData[i]); });
         }
-        for (int i = 0; i < _numCU * _workersPerCU; i++) {
+        for (int i = 0; i < _numCU * _workersPerCU * _numDevice; i++) {
             accelThreads[i].join();
         }
-        for (int i = 0; i < _numCU; i++) {
-            OCL_CHECK(err, err = comQueues[i].finish());
+
+        for (auto deviceQueue : comQueues) {
+            for (auto queue : deviceQueue) {
+                OCL_CHECK(err, err = queue.finish());
+            }
         }
+
         auto ts_end = std::chrono::system_clock::now();
 
         uint64_t ns_elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(ts_end - ts_start).count();
         if (db->isProfilingMode()) {
             double profilingThroughput = 1.0e9 * static_cast<double>(db->getProfilingSampleCount()) / ns_elapsed;
-            std::cout << "\nProfiling throughput: " << profilingThroughput << " predictions/second" << std::endl;
+            std::cout << "Processed " << db->getProfilingSampleCount() << " samples in " << ns_elapsed / 1000000 << " ms"
+                      << std::endl;
+            std::cout << "Profiling throughput: " << profilingThroughput << " predictions/second" << std::endl;
         } else {
             double throughput = 1.0e9 * static_cast<double>(db->getSampleCount()) / ns_elapsed;
             double maxThroughput = 1.0e9 * static_cast<double>(db->getPaddedSampleCount()) / ns_elapsed;
-            std::cout << "\nUtilized throughput: " << throughput << " predictions/second" << std::endl;
+            std::cout << "Utilized throughput: " << throughput << " predictions/second" << std::endl;
             std::cout << "Max possible throughput: " << maxThroughput << " predictions/second" << std::endl;
+        }
+    }
+
+    void checkResults(const std::string &ref) {
+        if (db == nullptr) {
+            throw std::runtime_error("No data loaded");
+        }
+        if (db->readReference(ref)) {
+            db->checkResults();
+        } else {
+            std::cout << "No reference file provided, skipping results check" << std::endl;
         }
     }
 
@@ -168,7 +201,7 @@ template <class T, class U> class FpgaObj {
      * \brief Writes results, in text format, to provided file. Releases resources
      * \param fout Filename. If file already exists, it will be overwritten with current results.
      */
-    void saveResults(const std::string& fout) {
+    void saveResults(const std::string &fout) {
         if (db == nullptr) {
             throw std::runtime_error("No data loaded");
         }
@@ -181,24 +214,18 @@ template <class T, class U> class FpgaObj {
     int _sampleInputSize;
     int _sampleOutputSize;
     int _numCU;
+    int _numDevice;
     std::string _xclbinFilename;
+    std::string _deviceName;
 
-    /// @brief A list of connected Xilinx devices
+    /// @brief A list of connected AMD/Xilinx devices
     std::vector<cl::Device> devices;
-    /// @brief The identified FPGA
-    cl::Device device;
-    /// @brief Container that xclbin file is read into
-    std::vector<unsigned char> fileBuf;
-    /// @brief OpenCL object constructed from xclbin
-    cl::Program::Binaries bins;
     /// @brief OpenCL Program that each compute unit executes
     cl::Program program;
     /// @brief OpenCL Device Context
     cl::Context context;
     /// @brief OpenCL Command Queues for each compute unit
-    std::vector<cl::CommandQueue> comQueues;
-    /// @brief Mutexes for each Command Queue
-    mutable std::vector<std::mutex> comQueueMtxi;
+    std::vector<std::vector<cl::CommandQueue>> comQueues;
     /// @brief Error code storage
     cl_int err;
 
@@ -206,7 +233,7 @@ template <class T, class U> class FpgaObj {
     /// @brief Workers, indexed by (i_CU * _workersPerCU + i_worker)
     std::vector<Worker<T, U>> workers;
     /// @brief Data Batcher
-    DataBatcher<T, U>* db = nullptr;
+    DataBatcher<T, U> *db = nullptr;
     /// @brief A vector containing each Worker's batches/workload
     std::vector<std::list<Batch<T, U>>> batchedData;
 };

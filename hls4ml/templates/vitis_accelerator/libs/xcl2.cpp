@@ -37,8 +37,6 @@ std::vector<cl::Device> get_devices(const std::string &vendor_name) {
         platform = platforms[i];
         OCL_CHECK(err, std::string platformName = platform.getInfo<CL_PLATFORM_NAME>(&err));
         if (!(platformName.compare(vendor_name))) {
-            std::cout << "Found Platform" << std::endl;
-            std::cout << "Platform Name: " << platformName.c_str() << std::endl;
             break;
         }
     }
@@ -74,7 +72,7 @@ cl::Device find_device_bdf(const std::vector<cl::Device> &devices, const std::st
         }
     }
     if (cnt == 0) {
-        std::cout << "Invalid device bdf. Please check and provide valid bdf\n";
+        std::cout << "Invalid device bdf: " << bdf << ". Please check and provide valid bdf\n";
         exit(EXIT_FAILURE);
     }
     return device;
@@ -103,14 +101,12 @@ cl_device_id find_device_bdf_c(cl_device_id *devices, const std::string &bdf, cl
     return device;
 }
 std::vector<unsigned char> read_binary_file(const std::string &xclbin_file_name) {
-    std::cout << "INFO: Reading " << xclbin_file_name << std::endl;
     FILE *fp;
     if ((fp = fopen(xclbin_file_name.c_str(), "r")) == nullptr) {
         printf("ERROR: %s xclbin not available please build\n", xclbin_file_name.c_str());
         exit(EXIT_FAILURE);
     }
     // Loading XCL Bin into char buffer
-    std::cout << "Loading: '" << xclbin_file_name.c_str() << "'\n";
     std::ifstream bin_file(xclbin_file_name.c_str(), std::ifstream::binary);
     bin_file.seekg(0, bin_file.end);
     auto nb = bin_file.tellg();

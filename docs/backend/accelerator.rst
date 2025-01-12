@@ -132,11 +132,34 @@ Once the project is generated, it possible to run manually the build steps by us
 
 It is also possible to run the full build process by calling ``make`` without any target. Modifications to the ``accelerator_card.cfg`` file can be done manually before running the build process (e.g., to change the clock period, or add addition ``.xo`` kernel to the build).
 
-The generated host code application and the xclbin file can be executed as such:
+Host code
+=========
+
+Once built, the host program can be run to load the board and perform inferences:
 
 .. code-block:: Bash
 
-    ./host <build_directory>/<myproject>.xclbin
+    ./host
+
+By defaut, all Computing Unit (CU) on all compatible devices will be used, with 3 worker thread per CU.
+
+The generated host code application support the following options to tweak the execution:
+
+ * ``-d``: device BDF to use (can be specified multiple times)
+ * ``-x``: XCLBIN path
+ * ``-i``: input feature file
+ * ``-o``: output feature file
+ * ``-c``: maximum computing units count to use
+ * ``-n``: number of worker threads to use
+ * ``-r``: number of repeatition of the input feature file (For artificially increasing the data size for benchmarking purpose)
+ * ``-v``: enable verbose output
+ * ``-h``: print help
+
+The following example shows how to limit on only one device, one CU, and on worker thread:
+
+.. code-block:: Bash
+
+    ./host -d 0000:c1:00.1 -c 1 -n 1
 
 Example
 =======

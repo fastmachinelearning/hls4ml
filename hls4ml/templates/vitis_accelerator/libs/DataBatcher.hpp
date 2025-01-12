@@ -5,8 +5,8 @@
 #include <fstream>
 #include <iostream>
 #include <list>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -25,10 +25,9 @@ template <class T, class U> class DataBatcher {
      * \param profilingDataRepeat Only used if profiling is set to True. Additional number of
      * times the given data is iterated over.
      */
-    DataBatcher(int batchsize, int sampleInputSize, int sampleOutputSize, int numWorkers,
-                bool profiling, int profilingDataRepeat)
+    DataBatcher(int batchsize, int sampleInputSize, int sampleOutputSize, int numWorkers, int profilingDataRepeat)
         : _batchsize(batchsize), _sampleInputSize(sampleInputSize), _sampleOutputSize(sampleOutputSize),
-          _numWorkers(numWorkers), _profiling(profiling), _profilingDataRepeat(profilingDataRepeat) {}
+          _numWorkers(numWorkers), _profilingDataRepeat(profilingDataRepeat) {}
 
     /**
      * \brief Read in data to a buffer. Allocate space for results.
@@ -36,14 +35,14 @@ template <class T, class U> class DataBatcher {
      * \param s Type of input, currently supports text files used by VitisAccelerator backend, and
      * binary files produced by NumPy's toFile() function
      */
-    void read(const std::string& filename) {
-        std::cout << "\nReading data from text file " << filename << std::endl;
+    void read(const std::string &filename) {
 
-        // Read in text file
         std::ifstream fin(filename);
         if (!fin.is_open()) {
             throw std::runtime_error("Error opening file " + filename);
         }
+
+        std::cout << "Reading data from: " << filename << std::endl;
 
         std::string line;
         while (std::getline(fin, line)) {
@@ -57,13 +56,70 @@ template <class T, class U> class DataBatcher {
                 throw std::runtime_error("Failed to parse value on line " + std::to_string(originalSampleCount));
             }
         }
-        std::cout << "Read in " << originalSampleCount << " lines" << std::endl;
+
+        std::cout << "Read in " << originalSampleCount << " samples (" << inputData.size() << " elements)" << std::endl;
         fin.close();
 
         // Zero-pad
         numBatches = std::ceil(static_cast<double>(originalSampleCount) / _batchsize);
-        if (numBatches * _batchsize > originalSampleCount) {
-            inputData.resize(numBatches * _batchsize * _sampleInputSize, (T)0);
+        size_t finalSampleCount = numBatches * _batchsize;
+        if (finalSampleCount > originalSampleCount) {
+            std::cout << "Padding with " << (finalSampleCount - originalSampleCount) << " empty samples for a total of "
+                      << numBatches << " batches of " << _batchsize << " samples" << std::endl;
+            inputData.resize(finalSampleCount * _sampleInputSize, (T)0);
+        }
+    }
+
+    bool readReference(const std::string &filename) {
+
+        std::ifstream fref(filename);
+        if (!fref.is_open()) {
+            return false;
+        }
+
+        std::cout << "Reading data from: " << filename << std::endl;
+        size_t refSampleCount = 0;
+        std::string line;
+        while (std::getline(fref, line)) {
+            refSampleCount++;
+            std::istringstream parser(line);
+            T val;
+            while (parser >> val) {
+                refData.push_back(val);
+            }
+            if (!parser.eof()) {
+                throw std::runtime_error("Failed to parse value on line " + std::to_string(refSampleCount));
+            }
+        }
+
+        std::cout << "Read in " << refSampleCount << " reference samples (" << refData.size() << " elements)" << std::endl;
+        fref.close();
+        return true;
+    }
+
+    void checkResults() {
+        if (storedEvalResults.size() == 0 || refData.size() == 0) {
+            throw std::runtime_error("No data to check");
+        }
+
+        if (storedEvalResults.size() != refData.size()) {
+            throw std::runtime_error("Stored results and reference data are not the same size");
+        }
+        size_t error_count = 0;
+        for (uint64_t i = 0; i < storedEvalResults.size(); i++) {
+            if (storedEvalResults[i] != refData[i]) {
+                error_count++;
+                std::cout << "Mismatch at index " + std::to_string(i) + ": " + std::to_string((float)storedEvalResults[i]) +
+                                 " != " + std::to_string((float)refData[i])
+                          << ", error = " << ((float)storedEvalResults[i] - (float)refData[i]) << std::endl;
+            }
+        }
+
+        if (error_count > 0) {
+            std::cout << "Mismatch count: " << error_count << std::endl;
+            throw std::runtime_error("Results do not match reference data");
+        } else {
+            std::cout << "Results match reference data" << std::endl;
         }
     }
 
@@ -74,7 +130,7 @@ template <class T, class U> class DataBatcher {
         storedEvalResults.resize(numBatches * _batchsize * _sampleOutputSize, (U)0);
 
         // Allocate space to dump the extra arbitrary data used during profiling
-        if (_profiling) {
+        if (isProfilingMode()) {
             profilingResultsDump.resize(_numWorkers * _batchsize * _sampleOutputSize, (U)0);
         }
     }
@@ -84,18 +140,18 @@ template <class T, class U> class DataBatcher {
      * \param batchedData A vector of containers for each Worker's batches/workload.
      * Size must be equal to _numWorkers.
      */
-    void batch(std::vector<std::list<Batch<T, U>>>& batchedData) {
+    void batch(std::vector<std::list<Batch<T, U>>> &batchedData) {
         if (inputData.size() == 0 || originalSampleCount == 0) {
             throw std::runtime_error("No data to batch");
         }
+        std::cout << "Original sample count: " << originalSampleCount << std::endl;
+        std::cout << "Input sample element count: " << _sampleInputSize << std::endl;
+        std::cout << "Output sample element count: " << _sampleOutputSize << std::endl;
         if (storedEvalResults.size() == 0) {
             throw std::runtime_error("Create result buffers first");
         }
 
-        batchedData.reserve(_numWorkers);
-        for (int i = 0; i < _numWorkers; i++) {
-            batchedData.emplace_back();
-        }
+        batchedData.resize(_numWorkers);
 
         uint64_t batchIndex = 0;
         while (batchIndex < numBatches) {
@@ -103,24 +159,28 @@ template <class T, class U> class DataBatcher {
             uint64_t inputLocation = batchIndex * _batchsize * _sampleInputSize;
             uint64_t outputLocation = batchIndex * _batchsize * _sampleOutputSize;
 
-            const T* in = &inputData[inputLocation];
-            U* out = &storedEvalResults[outputLocation];
+            const T *in = &inputData[inputLocation];
+            U *out = &storedEvalResults[outputLocation];
             Batch<T, U> newBatch = {in, out};
 
             batchedData[worker].push_back(newBatch);
             batchIndex++;
         }
 
-        if (_profiling) {
+        if (isProfilingMode()) {
             std::cout << "Creating profiling batches" << std::endl;
             profilingBatchCount = numBatches * (_profilingDataRepeat + 1);
+            std::cout << "Batches: " << numBatches << std::endl;
+            std::cout << "Profiling batch count: " << profilingBatchCount << std::endl;
+            std::cout << "Profiling data repeat: " << _profilingDataRepeat << std::endl;
+            std::cout << "Profiling total data count: " << profilingBatchCount * _batchsize << std::endl;
             while (batchIndex < profilingBatchCount) {
                 int worker = batchIndex % _numWorkers;
                 uint64_t inputLocation = (batchIndex % numBatches) * _batchsize * _sampleInputSize;
                 uint64_t outputLocation = worker * _batchsize * _sampleOutputSize;
 
-                const T* in = &inputData[inputLocation];
-                U* out = &profilingResultsDump[outputLocation];
+                const T *in = &inputData[inputLocation];
+                U *out = &profilingResultsDump[outputLocation];
                 Batch<T, U> newBatch = {in, out};
 
                 batchedData[worker].push_back(newBatch);
@@ -141,8 +201,8 @@ template <class T, class U> class DataBatcher {
         profilingBatchCount = 0;
     }
 
-    void write(const std::string& filename) {
-        std::cout << "\nWriting HW results to file " << filename << std::endl;
+    void write(const std::string &filename) {
+        std::cout << "Writing HW results to: " << filename << std::endl;
         std::ofstream fout;
         fout.open(filename, std::ios::trunc);
 
@@ -163,28 +223,19 @@ template <class T, class U> class DataBatcher {
         profilingResultsDump.clear();
     }
 
-    uint64_t getSampleCount() {
-        return originalSampleCount;
-    }
+    uint64_t getSampleCount() { return originalSampleCount; }
 
-    uint64_t getPaddedSampleCount() {
-        return numBatches * _batchsize;
-    }
+    uint64_t getPaddedSampleCount() { return numBatches * _batchsize; }
 
-    uint64_t getProfilingSampleCount() {
-        return profilingBatchCount * _batchsize;
-    }
+    uint64_t getProfilingSampleCount() { return profilingBatchCount * _batchsize; }
 
-    bool isProfilingMode() {
-        return _profiling;
-    }
+    bool isProfilingMode() { return _profilingDataRepeat > 0; }
 
   private:
     int _batchsize;
     int _sampleInputSize;
     int _sampleOutputSize;
     int _numWorkers;
-    bool _profiling;
     int _profilingDataRepeat;
 
     /// @brief Number of floats read in. (Not including padding).
@@ -195,6 +246,8 @@ template <class T, class U> class DataBatcher {
     uint64_t profilingBatchCount = 0;
     /// @brief Vector with values.
     std::vector<T> inputData;
+    /// @brief Vector with reference values.
+    std::vector<T> refData;
     /// @brief Vector to store evaluation results.
     std::vector<U> storedEvalResults;
     /// @brief Vector for dumping results from extra arbitrary data used during profiling.

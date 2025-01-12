@@ -1,42 +1,26 @@
 #include <string>
 
 #include "FpgaObj.hpp"
+#include "Params.hpp"
 #include "Types.hpp"
 #include "kernel_wrapper.h"
 #include "xcl2.hpp"
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        std::cout << "Usage: " << argv[0]
-                               << " <XCLBIN filename>"
-                               << " [Profiling: Data repeat count]" << std::endl;
-        return EXIT_FAILURE;
-    }
-    std::string xclbinFilename = argv[1];
-    int dataRepeatCount = -1;
-    if (argc == 3) {
-        dataRepeatCount = std::stoi(argv[2]);
-    }
 
-	FpgaObj</*INTERFACE_TYPES*/> fpga(BATCHSIZE,
-                                            INSTREAMSIZE,
-                                            OUTSTREAMSIZE,
-                                            NUM_CU,
-                                            xclbinFilename);
+    Params params(argc, argv);
 
-    fpga.createWorkers(NUM_WORKER,
-                       FPGAType::/*FPGA_Type*/,
-                       NUM_CHANNEL);
+    FpgaObj</*INTERFACE_TYPES*/> fpga(params);
 
-    if (dataRepeatCount == -1) {
-        fpga.loadData("../tb_data/tb_input_features.dat");
-    } else {
-        fpga.loadData("../tb_data/tb_input_features.dat", true, dataRepeatCount);
-    }
+    fpga.createWorkers(params.numWorker);
+
+    fpga.loadData(params.inputFilename, params.dataRepeatCount);
 
     fpga.evaluateAll();
 
-    fpga.saveResults("../tb_data/hw_results.dat");
+    fpga.checkResults(params.referenceFilename);
+
+    fpga.saveResults(params.outputFilename);
 
     return EXIT_SUCCESS;
 }
