@@ -27,12 +27,13 @@ def model():
     return model
 
 
-# Currently only Vivado in io_parallel mode is supported
-def test_layernorm(model, data):
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
-    output_dir = str(test_root_path / 'hls4mlprj_layernorm_Vivado_io_parallel')
+# Currently only Vivado/Vitis in io_parallel mode is supported
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_layernorm(model, data, backend):
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    output_dir = str(test_root_path / f'hls4mlprj_layernorm_{backend}_io_parallel')
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, backend='Vivado', hls_config=config, io_type='io_parallel', output_dir=output_dir
+        model, backend=backend, hls_config=config, io_type='io_parallel', output_dir=output_dir
     )
     hls_model.compile()
 
