@@ -37,12 +37,12 @@ def model():
     return model
 
 
-# Currently only Vivado in io_parallel mode is supported
+# Currently only Vitis in io_parallel mode is supported
 def test_multiheadattention(model, query_data, key_value_data):
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
-    output_dir = str(test_root_path / 'hls4mlprj_multiheadattention_Vivado_io_parallel')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vitis')
+    output_dir = str(test_root_path / 'hls4mlprj_multiheadattention_Vitis_io_parallel')
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, backend='Vivado', hls_config=config, io_type='io_parallel', output_dir=output_dir
+        model, backend='Vitis', hls_config=config, io_type='io_parallel', output_dir=output_dir
     )
     hls_model.compile()
 

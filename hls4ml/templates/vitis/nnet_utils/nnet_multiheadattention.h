@@ -6,7 +6,6 @@
 #include "nnet_common.h"
 #include "nnet_dense.h"
 #include "nnet_mult.h"
-#include <iostream>
 #include <math.h>
 
 namespace nnet {

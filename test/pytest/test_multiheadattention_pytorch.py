@@ -37,7 +37,7 @@ class MultiHeadAttentionModel(nn.Module):
         return output
 
 
-# Currently only Vivado in io_parallel mode is supported
+# Currently only Vitis in io_parallel mode is supported
 def test_multiheadattention(query_data, key_value_data):
     model = MultiHeadAttentionModel()
     model.eval()
@@ -46,13 +46,13 @@ def test_multiheadattention(query_data, key_value_data):
         model,
         [(seq_len, embed_dim), (seq_len, embed_dim), (seq_len, embed_dim)],
         granularity='name',
-        backend='Vivado',
+        backend='Vitis',
         channels_last_conversion='off',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / 'hls4mlprj_multiheadattention_pytorch_Vivado_io_parallel')
+    output_dir = str(test_root_path / 'hls4mlprj_multiheadattention_pytorch_Vitis_io_parallel')
     hls_model = hls4ml.converters.convert_from_pytorch_model(
-        model, backend='Vivado', hls_config=config, io_type='io_parallel', output_dir=output_dir
+        model, backend='Vitis', hls_config=config, io_type='io_parallel', output_dir=output_dir
     )
     hls_model.compile()
 
