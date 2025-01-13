@@ -22,6 +22,7 @@ mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
+
 # activation template
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
@@ -31,11 +32,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
     typedef {table_t.name} exp_table_t;
     typedef {table_t.name} inv_table_t;
-    typedef {accum_t.name} accum_t;
-    static const unsigned inv_range = {inv_range};
-    static const unsigned exp_range = {exp_range};
 }};\n"""
-
 
 mha_config_template = """struct config{index} : nnet::multiheadattention_config {{
     typedef {accum_t.name} accum_t;
@@ -55,7 +52,6 @@ mha_config_template = """struct config{index} : nnet::multiheadattention_config 
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
 }};\n"""
-
 
 mha_function_template = """nnet::multiheadattention<{input_t}, {output_t}, {config}>({input_q}, {input_kv},
                             {output}, {w_o}, {b_o}, {w_k}, {b_k}, {w_q}, {b_q}, {w_v}, {b_v});"""

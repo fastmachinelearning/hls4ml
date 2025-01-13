@@ -554,17 +554,6 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
-        if 'exp_table_t' not in layer.attributes:
-            layer.set_attr('exp_table_t', layer.get_attr('table_t'))
-        if 'inv_table_t' not in layer.attributes:
-            layer.set_attr('inv_table_t', layer.get_attr('table_t'))
-        if 'accum_t' not in layer.attributes:
-            layer.set_attr('accum_t', FixedPrecisionType(width=18, integer=8))
-        if 'inv_range' not in layer.attributes:
-            layer.set_attr('inv_range', 128)
-        if 'exp_range' not in layer.attributes:
-            layer.set_attr('exp_range', 8)
-
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert (
                 len(layer.get_input_variable().shape) == 1
