@@ -283,7 +283,7 @@ def config_from_pytorch_model(
     default_precision='ap_fixed<16,6>',
     default_reuse_factor=1,
     channels_last_conversion='full',
-    transpose_outputs=True,
+    transpose_outputs=False,
     max_precision=None,
 ):
     """Create an HLS conversion config given the PyTorch model.
