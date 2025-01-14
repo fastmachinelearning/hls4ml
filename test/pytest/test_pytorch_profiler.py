@@ -32,7 +32,7 @@ class NestedSequentialModel(torch.nn.Module):
 
 def count_bars_in_figure(fig):
     count = 0
-    for ax in fig.get_axes():  
+    for ax in fig.get_axes():
         count += len(ax.patches)
     return count
 
@@ -40,6 +40,7 @@ def count_bars_in_figure(fig):
 # Reusable parameter list
 test_layers = [
     (4, [nn.Linear(10, 20), nn.Linear(20, 5)]),
+    (3, [nn.Linear(10, 20), nn.BatchNorm1d(20)]),
     (6, [nn.Linear(10, 20), nn.Linear(20, 5), nn.Conv1d(3, 16, kernel_size=3)]),
     (6, [nn.Linear(15, 30), nn.Linear(30, 15), nn.Conv2d(1, 32, kernel_size=3)]),
     (6, [nn.RNN(64, 128), nn.Linear(128, 10)]),
@@ -73,7 +74,7 @@ def test_modulelist_model(layers):
         param_count, layers = layers
         model = ModuleListModel(layers)
         wp, _, _, _ = hls4ml.model.profiling.numerical(model)
-        assert count_bars_in_figure(wp) == param_count 
+        assert count_bars_in_figure(wp) == param_count
 
 
 @pytest.mark.parametrize("layers", test_layers)
@@ -82,4 +83,4 @@ def test_nested_model(layers):
         param_count, layers = layers
         model = NestedSequentialModel(layers)
         wp, _, _, _ = hls4ml.model.profiling.numerical(model)
-        assert count_bars_in_figure(wp) == param_count 
+        assert count_bars_in_figure(wp) == param_count

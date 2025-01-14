@@ -385,6 +385,45 @@ def weights_torch(model, fmt='longform', plot='boxplot'):
     return wt.get_weights()
 
 
+def _torch_batchnorm(layer):
+    weights = list(layer.parameters())
+    epsilon = layer.eps
+
+    gamma = weights[0]
+    beta = weights[1]
+    if layer.track_running_stats:
+        mean = layer.running_mean
+        var = layer.running_var
+    else:
+        mean = torch.tensor(np.ones(20))
+        var = torch.tensor(np.zeros(20))
+
+    scale = gamma / np.sqrt(var + epsilon)
+    bias = beta - gamma * mean / np.sqrt(var + epsilon)
+
+    return [scale, bias], ['s', 'b']
+
+
+def _torch_layer(layer):
+    return list(layer.parameters()), ['w', 'b']
+
+
+def _torch_rnn(layer):
+    return list(layer.parameters()), ['w_ih_l0', 'w_hh_l0', 'b_ih_l0', 'b_hh_l0']
+
+
+torch_process_layer_map = defaultdict(
+    lambda: _torch_layer,
+    {
+        'BatchNorm1d': _torch_batchnorm,
+        'BatchNorm2d': _torch_batchnorm,
+        'RNN': _torch_rnn,
+        'LSTM': _torch_rnn,
+        'GRU': _torch_rnn,
+    },
+)
+
+
 class WeightsTorch:
     def __init__(self, model: torch.nn.Module, fmt: str = 'longform', plot: str = 'boxplot') -> None:
         self.model = model
@@ -415,7 +454,6 @@ class WeightsTorch:
         return any(p.requires_grad for p in module.parameters())
 
     def _get_weights(self) -> pandas.DataFrame | list[dict]:
-        suffix = ['w', 'b']
         if self.fmt == 'longform':
             data = {'x': [], 'layer': [], 'weight': []}
         elif self.fmt == 'summary':
@@ -423,7 +461,7 @@ class WeightsTorch:
         for layer_name in self.registered_layers:
             layer = self._get_layer(layer_name, self.model)
             name = layer.__class__.__name__
-            weights = list(layer.parameters())
+            weights, suffix = torch_process_layer_map[layer.__class__.__name__](layer)
             for i, w in enumerate(weights):
                 label = f'{name}/{suffix[i]}'
                 w = weights[i].detach().numpy()
