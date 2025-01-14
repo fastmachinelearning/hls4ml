@@ -55,7 +55,6 @@ def test_sequential_model(layers):
         param_count, layers = layers
         model = torch.nn.Sequential(*layers)
         wp, _, _, _ = hls4ml.model.profiling.numerical(model)
-        wp.savefig('test.png')
         assert count_bars_in_figure(wp) == param_count
 
 
