@@ -93,7 +93,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params1['nzeros'] = 0
         mult_params1['nonzeros'] = params['feature_dim'] * params['num_heads'] * params['head_dim_key']
         mult_params1['dense_function'] = 'DenseLatency'
-        print (mult_params1)
+        print(mult_params1)
         mult_config1 = self.mult1_template.format(**mult_params1)
 
         mult_params2 = self._default_config_params(node)

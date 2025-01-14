@@ -279,7 +279,6 @@ void multiheadattention(
     #pragma HLS stream variable=k_proj type=fifo depth=CONFIG_T::seq_len
     #pragma HLS stream variable=v_proj type=fifo depth=CONFIG_T::seq_len
     #pragma HLS stream variable=matr_out type=fifo depth=CONFIG_T::head_dim_value
- 
 
     #pragma HLS DATAFLOW
     #pragma HLS ARRAY_PARTITION variable=d_query complete dim=1
