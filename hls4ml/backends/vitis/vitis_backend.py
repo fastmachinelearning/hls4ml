@@ -152,9 +152,8 @@ class VitisBackend(VivadoBackend):
         os.makedirs(OutputDir, exist_ok=True)
         stitched_design_dir = os.path.join(OutputDir, VivadoProjectName)
         if stitch_design:
-            if os.path.exists(stitched_design_dir):
-                print(f"WARNING: The directory '{stitched_design_dir}' already exists.")
-            os.makedirs(stitched_design_dir)
+            if not os.path.exists(stitched_design_dir):
+                os.makedirs(stitched_design_dir)
 
         spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
