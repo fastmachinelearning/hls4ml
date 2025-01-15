@@ -534,7 +534,13 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
 }
 
 if {$stitch_design} {
+    set start_time [clock seconds]
     stitch_procedure $original_project_path $stitch_project_name $original_project_name $bd_name $part
+    set end_time [clock seconds]
+    set elapsed_time [expr {$end_time - $start_time}]
+    puts "====================================================="
+    puts "\[Stitch\] Elapsed Time : $elapsed_time seconds"
+    puts "====================================================="
 } else {
     #set existing_stitch_project_name [file join $stitch_project_name "$stitch_project_name.xpr"]
     if {[file exists "$stitch_project_name.xpr"]} {
@@ -547,6 +553,7 @@ if {$stitch_design} {
 }
 
 if {$export_design} {
+    set start_time [clock seconds] 
     puts "Exporting stitched IP..."
     set stitched_ip_dir "ip_repo"
     ipx::package_project -root_dir $stitched_ip_dir \
@@ -559,9 +566,13 @@ if {$export_design} {
     ipx::check_integrity [ipx::find_open_core user.org:user:stitched_design:1.0]
     ipx::save_core [ipx::find_open_core user.org:user:stitched_design:1.0]
     puts "Stitched IP has been exported to '$stitched_ip_dir' folder"
+    puts "====================================================="
+    puts "\[Export\] Elapsed Time : $elapsed_time seconds"
+    puts "====================================================="
 }
 
 if {$sim_design} {
+    set start_time [clock seconds] 
     if {$sim_verilog_file == ""} {
         puts "Error: sim_verilog_file not provided."
         exit 1
@@ -593,6 +604,11 @@ if {$sim_design} {
     } else {
         launch_simulation
     }
+    set end_time [clock seconds]
+    set elapsed_time [expr {$end_time - $start_time}]
+    puts "====================================================="
+    puts "\[Simulation\] Elapsed Time : $elapsed_time seconds"
+    puts "====================================================="
 }
 
 
