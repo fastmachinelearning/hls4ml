@@ -14,6 +14,7 @@ array set opt {
     sim_design              0
     export_design           0
     stitch_project_name     ""
+    original_project_name   ""
     sim_verilog_file        ""
 }
 
@@ -34,18 +35,21 @@ set sim_design [expr {$opt(sim_design)}]
 set export_design [expr {$opt(export_design)}]
 set sim_verilog_file $opt(sim_verilog_file)
 set stitch_project_name $opt(stitch_project_name)
+set original_project_name $opt(original_project_name)
 
 # Project base dir
 set base_dir [pwd]
+set original_project_path "$base_dir/../../"
+puts $base_dir
 # Name of the block design 
 set bd_name "stitched_design"
 
-# Find a directory that ends with "graph1", "graph2", etc.
-set project_dirs [glob -nocomplain -directory $base_dir *graph[0-9]]
+# Find a directory that ends with "graph1", "graph2", etc. in the parent project folder
+set project_dirs [glob -nocomplain -directory $original_project_path *graph[0-9]]
 
 # Check if a matching directory is found
 if {[llength $project_dirs] == 0} {
-    puts "Error: No project directory ending with 'graph{id}' found in $base_dir"
+    puts "Error: No project directory ending with 'graph{id}' found in $original_project_path"
 } else {
     # Get the first matching directory
     set project_dir [lindex $project_dirs 0]
@@ -62,7 +66,7 @@ if {[llength $project_dirs] == 0} {
 }
 
 # Procedure for stitching the project
-proc stitch_procedure {base_dir stitch_project_name bd_name part} {
+proc stitch_procedure {base_dir stitch_project_name original_project_name bd_name part} {
 
     puts "###########################################################"
     puts "#   Starting the IP connection process...                  "
@@ -70,16 +74,14 @@ proc stitch_procedure {base_dir stitch_project_name bd_name part} {
 
 
     # Create New Vivado Project
-    file mkdir $stitch_project_name
-    cd $stitch_project_name
-    create_project $stitch_project_name . -part $part
+    create_project $stitch_project_name . -part $part -force
 
     # Add repositories
     # Initialize the repo count
     set repo_count 0
     # Loop through potential project directories
-    for {set i 1} {[file exists "$base_dir/hls4ml_prj_graph$i/myproject_graph${i}_prj"]} {incr i} {
-        set repo_path "$base_dir/hls4ml_prj_graph$i/myproject_graph${i}_prj/solution1/impl/ip"
+    for {set i 1} {[file exists "$base_dir/graph$i/${original_project_name}_graph${i}_prj"]} {incr i} {
+        set repo_path "$base_dir/graph$i/${original_project_name}_graph${i}_prj/solution1/impl/ip"
         # Check if the repository path exists
         if {[file isdirectory $repo_path]} {
             # Add repository path to current project's IP repository paths
@@ -106,14 +108,14 @@ proc stitch_procedure {base_dir stitch_project_name bd_name part} {
 
     # Add IPs to block design
     for {set i 1} {$i <= $repo_count} {incr i} {
-        set vlnv "xilinx.com:hls:myproject_graph$i:1.0"
-        create_bd_cell -type ip -vlnv $vlnv "myproject_graph${i}_0"
+        set vlnv "xilinx.com:hls:${original_project_name}_graph${i}:1.0"
+        create_bd_cell -type ip -vlnv $vlnv "${original_project_name}_graph${i}_0"
     }
 
     # Collect all IP instance names in a list
     set ip_instances {}
     for {set i 1} {$i <= $repo_count} {incr i} {
-        set ip_name "myproject_graph${i}_0"
+        set ip_name "${original_project_name}_graph${i}_0"
         lappend ip_instances $ip_name
     }
 
@@ -532,14 +534,14 @@ proc stitch_procedure {base_dir stitch_project_name bd_name part} {
 }
 
 if {$stitch_design} {
-    stitch_procedure $base_dir $stitch_project_name $bd_name $part
+    stitch_procedure $original_project_path $stitch_project_name $original_project_name $bd_name $part
 } else {
-    set existing_stitch_project_name [file join $stitch_project_name "$stitch_project_name.xpr"]
-    if {[file exists $existing_stitch_project_name]} {
-        puts "Opening existing project: $existing_stitch_project_name"
-        open_project $existing_stitch_project_name
+    #set existing_stitch_project_name [file join $stitch_project_name "$stitch_project_name.xpr"]
+    if {[file exists "$stitch_project_name.xpr"]} {
+        puts "Opening existing project: $stitch_project_name.xpr"
+        open_project "$stitch_project_name.xpr"
     } else {
-        puts "Error: Project file '$existing_stitch_project_name' does not exist."
+        puts "Error: Project file "$stitch_project_name.xpr" does not exist."
         exit 1
     }
 }
@@ -580,7 +582,7 @@ if {$sim_design} {
 
    # Check if snapshot already exists
     set snapshot_name "tb_design_1_wrapper_behav"
-    set xsim_folder_path "${base_dir}/${stitch_project_name}/vivado_stitched_design.sim/sim_1/behav/xsim"
+    set xsim_folder_path "${base_dir}/vivado_stitched_design.sim/sim_1/behav/xsim"
     puts "##########################"
     puts "#  Running Simulation... #"
     puts "##########################"
