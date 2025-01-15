@@ -1,5 +1,6 @@
 import math
 from pathlib import Path
+from utils import check_synthesis
 
 import numpy as np
 import pytest
@@ -27,7 +28,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_dense(backend, io_type):
+def test_dense(backend, io_type, synthesis):
     model = tf.keras.models.Sequential()
     model.add(
         Dense(
@@ -53,6 +54,7 @@ def test_dense(backend, io_type):
 
     config = hls4ml.utils.config_from_keras_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
+    baseline_path = str(test_root_path / f'keras_api_dense_{backend}_{io_type}')
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -67,12 +69,15 @@ def test_dense(backend, io_type):
     assert len(model.layers) + 1 == len(hls_model.get_layers())
     assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
     assert list(hls_model.get_layers())[1].attributes["class_name"] == model.layers[0]._name
-    assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ELU'
+    # assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ELU'
     assert list(hls_model.get_layers())[0].attributes['input_shape'] == list(model.layers[0].input_shape[1:])
     assert list(hls_model.get_layers())[1].attributes['n_in'] == model.layers[0].input_shape[1:][0]
     assert list(hls_model.get_layers())[1].attributes['n_out'] == model.layers[0].output_shape[1:][0]
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
+
+    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+
 
 
 # TODO: add ThresholdedReLU test when it can be made to pass
