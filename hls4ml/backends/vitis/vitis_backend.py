@@ -138,20 +138,22 @@ class VitisBackend(VivadoBackend):
     
     def build_stitched_design(
         self,
-        output_dir,
-        project_name,
         stitch_design=True,
         sim_stitched_design=False,
         export_stitched_design=False,
         nn_config=None,
         graph_reports=None,
-        simulation_input_data=None):    
+        simulation_input_data=None):  
 
-        os.makedirs(output_dir, exist_ok=True)
-        stitched_design_dir = os.path.join(output_dir, project_name)
+        OutputDir = nn_config['OutputDir']
+        VivadoProjectName = nn_config['VivadoProjectName']
+        OriginalProjectName = nn_config['OriginalProjectName']
+
+        os.makedirs(OutputDir, exist_ok=True)
+        stitched_design_dir = os.path.join(OutputDir, VivadoProjectName)
         if stitch_design:
             if os.path.exists(stitched_design_dir):
-                raise FileExistsError(f"The directory '{stitched_design_dir}' already exists.")
+                print(f"WARNING: The directory '{stitched_design_dir}' already exists.")
             os.makedirs(stitched_design_dir)
 
         spec = importlib.util.find_spec('hls4ml')
@@ -166,7 +168,7 @@ class VitisBackend(VivadoBackend):
         try:
             shutil.copy(ip_stitcher_path, stitched_design_dir)
         except Exception as e:
-            print(f"Error: {e}. Cannot copy 'ip_stitcher.tcl' to {project_name} folder.")
+            print(f"Error: {e}. Cannot copy 'ip_stitcher.tcl' to {VivadoProjectName} folder.")
 
         if nn_config:
             with open(nn_config_path, "w") as file:
@@ -196,14 +198,15 @@ class VitisBackend(VivadoBackend):
             f'stitch_design={int(stitch_design)}',
             f'sim_design={int(sim_stitched_design)}',
             f'export_design={int(export_stitched_design)}',
-            f'stitch_project_name={project_name}',
-            f'sim_verilog_file={os.path.join(project_name, "testbench.v")}'
+            f'stitch_project_name={VivadoProjectName}',
+            f'original_project_name={OriginalProjectName}',
+            f'sim_verilog_file=testbench.v'
         ]
         
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
             process = subprocess.Popen(
                 stitch_command,
-                cwd=output_dir,
+                cwd=stitched_design_dir,
                 stdout=stdout_file,
                 stderr=stderr_file,
                 text=True,
@@ -211,7 +214,7 @@ class VitisBackend(VivadoBackend):
             )
             process.communicate()
             if process.returncode != 0:
-                raise Exception(f'Stitching failed for {project_name}. See logs for details.')
+                raise Exception(f'Stitching failed for {VivadoProjectName}. See logs for details.')
         
         stitched_report = {'StitchedDesignReport': {}}
         if stitch_design:

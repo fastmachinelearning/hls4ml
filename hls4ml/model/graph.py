@@ -1078,8 +1078,8 @@ class ModelGraph(Serializable):
             
             # Create a shallow copy of the config for each subgraph
             sub_config = copy.copy(config)
-            sub_config['OutputDir'] = f"{original_OutputDir}_graph{idx + 1}"
-            sub_config['ProjectName'] = f"{original_ProjectName}_graph{idx + 1}"
+            sub_config['OutputDir'] = os.path.join(original_OutputDir, f'graph{idx + 1}')
+            sub_config['ProjectName'] = f'{original_ProjectName}_graph{idx + 1}'
 
             # For subgraphs after the first one, configure new input layer
             if idx > 0:
@@ -1154,16 +1154,40 @@ class ModelGraph(Serializable):
 class MultiModelGraph:
     def __init__(self, graphs):
         self.graphs = graphs
-        self.project_name = 'vivado_stitched_design'
-        self.output_dir = graphs[0].config.get_output_dir().split('/')[0]
-        self.backend = self.graphs[0].config.backend
+        self.config = copy.copy(self.graphs[0].config)
+        self._deepcopy_config_names(self.graphs[0].config.config)
+        self._initialize_config(graphs[0])
+        self.config.config['VivadoProjectName'] = 'vivado_stitched_design'
+        self.backend = graphs[0].config.backend
         self.graph_reports = None
-    
+        self._top_function_lib = None
+        self._compile = ModelGraph._compile.__get__(self, MultiModelGraph)
+
+    def _initialize_config(self, first_graph):
+        """
+        Initialize the configuration using details from the first graph
+        """
+        original_project_name = first_graph.config.get_project_name().partition('_graph')[0]
+        self.config.config['ProjectName'] = f"{original_project_name}_stitched"
+        self.config.config['OriginalProjectName'] = original_project_name
+        original_output_dir = first_graph.config.get_output_dir().partition('/graph')[0]       
+        self.config.config['OutputDir'] = os.path.join(original_output_dir, 'stitched')
+
+    def _deepcopy_config_names(self, config):
+        # Deep copy only 'ProjectName' and 'OutputDir', shallow copy others
+        keys_to_deepcopy = ['ProjectName', 'OutputDir']
+        self.config.config = {k: copy.deepcopy(config[k]) 
+                            if k in keys_to_deepcopy 
+                            else config[k] for k in config}
+
     def __getitem__(self, index):
         return self.graphs[index]
     
     def parse_nn_config(self):
         nn_config = {"inputs": [], "outputs": []}
+        nn_config['OutputDir'] = self.config.config['OutputDir']
+        nn_config['VivadoProjectName'] = self.config.config['VivadoProjectName']
+        nn_config['OriginalProjectName'] = self.config.config['OriginalProjectName']
 
         # Parse layers (inputs and outputs)
         for graph, io_type in [(self.graphs[0], "inputs"), (self.graphs[-1], "outputs")]:
@@ -1249,8 +1273,6 @@ class MultiModelGraph:
         if stitch_design or sim_stitched_design or export_stitched_design:
             nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
-                output_dir=self.output_dir,
-                project_name=self.project_name,
                 stitch_design=stitch_design,
                 sim_stitched_design=sim_stitched_design,
                 export_stitched_design=export_stitched_design,
@@ -1263,6 +1285,7 @@ class MultiModelGraph:
     def compile(self):
         for g in self.graphs:
             g.compile()
+        #self._compile()
 
     def predict(self, x, sim = 'csim'):
         if sim == 'csim':
@@ -1274,8 +1297,6 @@ class MultiModelGraph:
         elif sim == 'rtl':
             nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
-                output_dir=self.output_dir,
-                project_name=self.project_name,
                 stitch_design=False,
                 sim_stitched_design=True,
                 export_stitched_design=False,
