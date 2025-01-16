@@ -145,12 +145,8 @@ class VitisBackend(VivadoBackend):
         graph_reports=None,
         simulation_input_data=None):  
 
-        OutputDir = nn_config['OutputDir']
-        VivadoProjectName = nn_config['VivadoProjectName']
-        OriginalProjectName = nn_config['OriginalProjectName']
-
-        os.makedirs(OutputDir, exist_ok=True)
-        stitched_design_dir = os.path.join(OutputDir, VivadoProjectName)
+        os.makedirs(nn_config['OutputDir'], exist_ok=True)
+        stitched_design_dir = os.path.join(nn_config['OutputDir'], nn_config['StitchedProjectName'])
         if stitch_design:
             if not os.path.exists(stitched_design_dir):
                 os.makedirs(stitched_design_dir)
@@ -167,7 +163,7 @@ class VitisBackend(VivadoBackend):
         try:
             shutil.copy(ip_stitcher_path, stitched_design_dir)
         except Exception as e:
-            print(f"Error: {e}. Cannot copy 'ip_stitcher.tcl' to {VivadoProjectName} folder.")
+            print(f"Error: {e}. Cannot copy 'ip_stitcher.tcl' to {nn_config['StitchedProjectName']} folder.")
 
         if nn_config:
             with open(nn_config_path, "w") as file:
@@ -187,7 +183,7 @@ class VitisBackend(VivadoBackend):
                     data = simulation_input_data[i]
                     input_data_reshaped = prepare_testbench_input(data, layer['fifo_depth'], layer['batch_size'])
                 write_testbench_input(input_data_reshaped, testbench_input_path, layer['integer_bits'], layer['fractional_bits'])
-            print('Verilog testbench and its input data was generated.')
+            print('Verilog testbench and its input data were generated.')
 
         print('Running build process of stitched IP...\n')
         stitch_command = [
@@ -197,8 +193,8 @@ class VitisBackend(VivadoBackend):
             f'stitch_design={int(stitch_design)}',
             f'sim_design={int(sim_stitched_design)}',
             f'export_design={int(export_stitched_design)}',
-            f'stitch_project_name={VivadoProjectName}',
-            f'original_project_name={OriginalProjectName}',
+            f"stitch_project_name={nn_config['StitchedProjectName']}",
+            f"original_project_name={nn_config['OriginalProjectName']}",
             f'sim_verilog_file=testbench.v'
         ]
         
@@ -213,8 +209,8 @@ class VitisBackend(VivadoBackend):
             )
             process.communicate()
             if process.returncode != 0:
-                raise Exception(f'Stitching failed for {VivadoProjectName}. See logs for details.')
-        
+                raise Exception(f"Stitching failed for {nn_config['StitchedProjectName']}. See logs for details.")
+
         stitched_report = {'StitchedDesignReport': {}}
         if stitch_design:
             stitched_report = aggregate_graph_reports(graph_reports)
