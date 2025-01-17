@@ -108,13 +108,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
             else:
                 params['conv_fn'] = 'Conv1DResource'
 
-        if (
-            node.get_attr('implementation').casefold() == 'linebuffer'
-            or node.model.config.get_config_value('IOType').casefold() == 'io_parallel'
-        ):
-            # these are unused; just put dummy values
-            params['min_width'] = node.get_attr('in_width')
-            params['instructions'] = '0'
+        params.setdefault('min_width', node.get_attr('in_width'))
+        params.setdefault('instructions', '0')
 
         conv_config = self.template.format(**params)
 
@@ -247,14 +242,9 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         else:
             params['fill_fn'] = 'FillConv2DBuffer'
 
-        if (
-            node.get_attr('implementation').casefold() == 'linebuffer'
-            or node.model.config.get_config_value('IOType').casefold() == 'io_parallel'
-        ):
-            # these are unused; just put dummy values
-            params['min_height'] = node.get_attr('in_height')
-            params['min_width'] = node.get_attr('in_width')
-            params['instructions'] = '0'
+        params.setdefault('min_height', node.get_attr('in_height'))
+        params.setdefault('min_width', node.get_attr('in_width'))
+        params.setdefault('instructions', '0')
 
         conv_config = self.template.format(**params)
 
