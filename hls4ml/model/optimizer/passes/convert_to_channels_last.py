@@ -12,14 +12,13 @@ class ChannelsLastConverter(OptimizerPass):
     and adding a transpose layer for the inputs and outputs, if necessary'''
 
     def match(self, node):
+        # If this parameter has not been set, this model does not need to be converted
+        if 'ChannelsLastConversion' not in node.model.config.config['HLSConfig']['Model']:
+            return False  # No littering of unused property
         if not hasattr(node, 'channels_last_converted'):
             return True
 
     def transform(self, model, node):
-        # If this parameter has not been set, this model does not need to be converted
-        if 'ChannelsLastConversion' not in model.config.config['HLSConfig']['Model']:
-            node.channels_last_converted = True
-            return False
         outshape = node.get_output_variable().shape
 
         if isinstance(node, Input):
@@ -102,11 +101,6 @@ class ChannelsLastConverter(OptimizerPass):
                 previous_node = node.get_input_node(node.inputs[0])
                 input = previous_node.name
                 outshape = previous_node.get_output_variable().shape
-
-                if (model.config.config['IOType'] == 'io_stream') and len(outshape) == 3:
-                    raise Exception(
-                        'No 3D transpose available in io_stream, this model cannot be converted to channels-last'
-                    )
 
                 if len(outshape) == 2:
                     attributes = {'perm': [1, 0]}
