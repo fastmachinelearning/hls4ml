@@ -16,7 +16,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
     if "Quant" in operation:
-        if class_object.is_weight_quant_enabled:
+        if class_object.weight_quant.is_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
             layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
@@ -26,7 +26,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
         else:
             layer['weight_data'] = class_object.weight.data.numpy()
 
-        if class_object.is_bias_quant_enabled:
+        if class_object.bias_quant.is_quant_enabled:
             width = int(class_object.quant_bias().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_bias().scale))
             layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
@@ -81,7 +81,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
     if "Quant" in operation:
-        if class_object.is_weight_quant_enabled:
+        if class_object.weight_quant.is_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
             layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
@@ -91,7 +91,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
         else:
             layer['weight_data'] = class_object.weight.data.numpy()
 
-        if class_object.is_bias_quant_enabled:
+        if class_object.bias_quant.is_quant_enabled:
             width = int(class_object.quant_bias().bit_width)
             ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_bias().scale))
             layer['bias_data'] = class_object.quant_bias().detach().value.numpy()
