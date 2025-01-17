@@ -226,7 +226,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
             params['min_height'] = node.get_attr('in_height')
             params['min_width'] = node.get_attr('in_width')
             params['instructions'] = '0'
-            
+
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
