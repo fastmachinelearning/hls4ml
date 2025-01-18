@@ -31,7 +31,7 @@ class GRUNetStream(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_gru(backend, io_type):
     model = GRUNet()
@@ -56,7 +56,7 @@ def test_gru(backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_gru_stream(backend, io_type):
     model = GRUNetStream()
@@ -98,7 +98,7 @@ class LSTMStream(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_lstm(backend, io_type):
     model = LSTM()
@@ -132,10 +132,10 @@ def test_lstm(backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_lstm_stream(backend, io_type):
-    if not (backend == "Quartus" and io_type == "io_stream"):
+    if not (backend in ('Quartus', 'oneAPI') and io_type == "io_stream"):
         model = LSTMStream()
         model.eval()
 
@@ -174,7 +174,7 @@ class RNN(nn.Module):
 @pytest.mark.parametrize('backend', ['Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_rnn(backend, io_type):
-    if not (backend == "Quartus" and io_type == "io_stream"):
+    if not (backend in ('Quartus', 'oneAPI') and io_type == "io_stream"):
         model = RNN()
         model.eval()
 
