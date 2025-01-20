@@ -431,29 +431,29 @@ def _(layer: Concatenate):
 
 @produce_kif.register
 def _(layer: Activation):
-    fn_name = layer.attributes.attributes['activation']
+    fn_name = layer.attributes.attributes['activation'].lower()
     k, i, f = get_input_kifs(layer)[0]
 
-    if fn_name == 'linear':
-        return k, i, f
-    if fn_name == 'relu':
-        print(k.__class__)
-        k = np.zeros_like(k)
-        return k, i, f
-    if fn_name == 'tanh':
-        i = np.minimum(i, 1)
-        f = np.full_like(f, 126)
-        return k, i, f
-    if fn_name == 'sigmoid':
-        k = np.zeros_like(k)
-        i = np.minimum(i, 1)
-        f = np.full_like(f, 126)
-        return k, i, f
-
-    k = np.zeros_like(k)
-    i = np.full_like(i, 1)
-    f = np.full_like(f, 126)
-    return k, i, f
+    match fn_name:
+        case 'linear':
+            return k, i, f
+        case 'relu':
+            k = np.zeros_like(k)
+            return k, i, f
+        case 'tanh':
+            i = np.minimum(i, 1)
+            f = np.full_like(f, 126)
+            return k, i, f
+        case 'sigmoid':
+            k = np.zeros_like(k)
+            i = np.minimum(i, 1)
+            f = np.full_like(f, 126)
+            return k, i, f
+        case _:
+            k = np.zeros_like(k)
+            i = np.full_like(i, 1)
+            f = np.full_like(f, 126)
+            return k, i, f
 
 
 @produce_kif.register
@@ -476,10 +476,12 @@ def default_register_precision(layer: Layer):
     _pk, _pi, _pf = produce_kif(layer)  # Maximum possible k,i,f output from this layer
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
     _ok, _oi, _of = np.minimum(_pk, _rk), np.minimum(_pi, _ri), np.minimum(_pf, _rf)
-    _oi += ((_pf > _rf) & (_pi <= _ri)).astype(np.int8)  # Corner cases overflow prevention
+    ok, oi, of = kif_arrs_to_ints((_ok, _oi, _of))
 
-    result_kif = kif_arrs_to_ints((_ok, _oi, _of))
-    result_t = to_hls4ml_fixed(*result_kif, f'{layer.name}_t')
+    if np.max(_pf) > np.max(_rf) and np.max(_pi) <= np.max(_ri):
+        oi += 1  # Edge cases overflow prevention
+
+    result_t = to_hls4ml_fixed(ok, oi, of, f'{layer.name}_t')
     layer.attributes.attributes['result_t'] = result_t
     layer.get_output_variable().type = result_t
 
