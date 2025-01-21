@@ -3,10 +3,12 @@ import urllib
 from pathlib import Path
 
 import numpy as np
+import onnx
 import pytest
 import qonnx.core.onnx_exec as oxe
 import qonnx.util.cleanup
 import qonnx.util.to_channels_last
+from onnx import TensorProto, helper
 
 # To conveniently run QONNX inference
 from qonnx.core.modelwrapper import ModelWrapper
@@ -231,6 +233,45 @@ def conv2d_small_mp_keras_model():
     return model
 
 
+@pytest.fixture(scope='module')
+def resize_model():
+    # Define the input tensor (e.g., a 4D tensor with shape [N, C, H, W])
+    input_tensor = helper.make_tensor_value_info("in", TensorProto.FLOAT, [1, 3, 64, 64])
+
+    # Define the output tensor shape (e.g., resizing to [1, 3, 128, 128])
+    output_tensor = helper.make_tensor_value_info("out", TensorProto.FLOAT, [1, 3, 128, 128])
+
+    # Define the scale tensor (for upscaling by a factor of 2 along height and width)
+    scales = np.array([1.0, 1.0, 2.0, 2.0], dtype=np.float32)
+    scales_initializer = helper.make_tensor("scales", TensorProto.FLOAT, [4], scales)
+
+    # Create the Resize node
+    resize_node = helper.make_node(
+        "Resize",
+        name="Resize0",
+        inputs=["in", "", "scales"],  # Empty string for "roi" input as it's not used here
+        outputs=["out"],
+        mode="nearest",  # Nearest interpolation
+    )
+
+    # Create the graph with input, scales, and output
+    graph = helper.make_graph(
+        nodes=[resize_node],
+        name="ResizeGraph",
+        inputs=[input_tensor],
+        outputs=[output_tensor],
+        initializer=[scales_initializer],
+    )
+
+    # Define the model
+    model = helper.make_model(graph, opset_imports=[helper.make_operatorsetid("", 13)])
+
+    # Save the model
+    onnx.save(model, str(test_root_path / "resize_model.onnx"))
+
+    return ModelWrapper(str(test_root_path / "resize_model.onnx"))
+
+
 # The actual tests
 
 
@@ -306,6 +347,33 @@ def test_jet_tagging(jettagging_model, backend):
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
 
+    np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
+
+@pytest.mark.parametrize('backend', ['Vitis'])
+def test_simple_resize(resize_model, backend):
+    model = ModelWrapper('/eos/home-n/nghielme/qonnx-edge-spaice-pipeline/hls4ml/test/pytest/resize_model_ch_last.onnx')
+
+    model = qonnx.util.cleanup.cleanup_model(model)
+
+    ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
+    X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape).astype(np.float32)
+    idict = {model.graph.input[0].name: X}
+    y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+
+    config = hls4ml.utils.config.config_from_onnx_model(
+        model, granularity='name', backend='Vitis', default_precision='fixed<32,16>'
+    )
+
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model,
+        output_dir=str(test_root_path / f'hls4mlprj_qonnx_resize_{backend}'),
+        io_type='io_stream',
+        backend='Vitis',
+        hls_config=config,
+    )
+    hls_model.compile()
+    y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 

@@ -27,12 +27,13 @@ class ResizeRemoveConstants(OptimizerPass):
         model.remove_node(scales_node, rewire=False)
         # RoI position is always 1 when present
         roi_node = node.get_input_node(node.inputs[roi_index])
-        if roi_node.get_attr('value'):
+        if roi_node is not None and roi_node.get_attr('value'):
             warn('RoI value vector is not empty. Consider that RoI is not supported in hls4ml', stacklevel=2)
         node.inputs[roi_index] = ''
-        if not isinstance(roi_node, Constant):
+        if roi_node is not None and not isinstance(roi_node, Constant):
             raise RuntimeError("Non-constant RoI inputs are not supported")
-        model.remove_node(roi_node, rewire=False)
+        if roi_node is not None:
+            model.remove_node(roi_node, rewire=False)
         # Clean all the '' inputs
         node.inputs = list(filter(None, node.inputs))
         return True

@@ -63,6 +63,8 @@ def get_input_shape(graph, node):
     """
     rv = []
     for inp in node.input:
+        if inp == '':
+            continue
         try:
             value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == inp))
             dim = list(d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim)
