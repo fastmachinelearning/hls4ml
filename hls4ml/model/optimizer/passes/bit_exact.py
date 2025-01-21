@@ -120,8 +120,9 @@ def _(layer: Activation):
     if fn_name == 'linear':
         return (requested_kif(layer),)
     if fn_name == 'relu':
-        k, i, f = requested_kif(layer)
-        k = np.ones_like(k)
+        _, _, f = requested_kif(layer)
+        k = np.ones(f.shape, dtype=np.int8)
+        i = np.full(f.shape, 126, dtype=np.int8)
         return ((k, i, f),)
     inp_shape = get_input_shapes(layer)[0]
     return (_maximum_kif_at_shape(inp_shape),)
@@ -478,9 +479,6 @@ def default_register_precision(layer: Layer):
     _ok, _oi, _of = np.minimum(_pk, _rk), np.minimum(_pi, _ri), np.minimum(_pf, _rf)
     ok, oi, of = kif_arrs_to_ints((_ok, _oi, _of))
 
-    if np.max(_pf) > np.max(_rf) and np.max(_pi) <= np.max(_ri):
-        oi += 1  # Edge cases overflow prevention
-
     result_t = to_hls4ml_fixed(ok, oi, of, f'{layer.name}_t')
     layer.attributes.attributes['result_t'] = result_t
     layer.get_output_variable().type = result_t
@@ -495,7 +493,7 @@ def default_register_precision(layer: Layer):
 
     # Set precision for fixed array (weight_t, bias_t, table_t, etc.)
     for w_name_t, v in layer.attributes.attributes.items():
-        if not isinstance(v, NamedType) and w_name_t.endswith('_t'):
+        if not isinstance(v, NamedType) and not w_name_t.endswith('_t'):
             continue  # Not a precision, skip
 
         w_name = w_name_t[:-2]
@@ -529,6 +527,24 @@ def default_register_precision(layer: Layer):
 @singledispatch
 def register_precision(node: Layer):
     default_register_precision(node)
+
+
+@register_precision.register
+def _(node: Activation):
+    default_register_precision(node)
+    act_fn = node.attributes['activation'].lower()
+    _k, _i, _f = get_input_kifs(node)[0]
+    k, i, f = kif_arrs_to_ints((_k, _i, _f))
+    table_size = int(2 ** (k + i + f))
+
+    # Temporary workaround for sigmoid and tanh activations, which scale the input by constant factors
+    # TODO: Rewrite tanh and sigmoid fn templates
+    if act_fn == 'tanh':
+        table_size = int(8 / 2.0**-f)  # LUT Range hardcoded to -4 ~ 4, match #fractional bits
+    elif act_fn == 'sigmoid':
+        table_size = int(16 / 2.0**-f)  # LUT Range hardcoded to -8 ~ 8, match #fractional bits
+
+    node.attributes['table_size'] = table_size
 
 
 @register_precision.register
