@@ -90,8 +90,14 @@ class FuseFixedPointQuantizer(OptimizerPass):
     def propagate(self, node: Layer, precision: FixedPrecisionType):
         from hls4ml.model.optimizer.passes.bit_exact import get_input_layers, get_output_layers
 
+        if node.attributes.get('result_t_propagated', False):
+            msg = f'result_t for {node.name} propagated multiple times. \
+                Bit-exactness may be compromised. Consider void using consecutive quantizers in your model.'
+            warn(msg, stacklevel=1)
+
         node.get_output_variable().type.precision = precision
-        node.attributes.attributes['result_t'].precision = precision
+        node.attributes['result_t'].precision = precision
+        node.attributes['result_t_propagated'] = True
 
         if not isinstance(node, Reshape):
             return node
