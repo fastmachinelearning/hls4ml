@@ -110,7 +110,7 @@ Performs a forward pass through the chained sub-models using the C-simulation (`
 
 .. _mmg-trace-method:
 
-``trace`` method
+``trace`` method [TODO]
 ================
 
 Provides detailed layer-by-layer outputs across all sub-models, which is essential for debugging or tuning quantization and precision settings.
@@ -125,4 +125,4 @@ Provides detailed layer-by-layer outputs across all sub-models, which is essenti
 Summary
 --------------------------
 
-The ``MultiModelGraph`` class is a powerful tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility, parallelism, and a clear path to advanced workflows such as hierarchical design, incremental optimization, and integrated system-level simulations.
+The ``MultiModelGraph`` class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility, parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.

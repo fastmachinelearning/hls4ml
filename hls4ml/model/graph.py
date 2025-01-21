@@ -1228,41 +1228,42 @@ class MultiModelGraph:
         if (sim_stitched_design or export_stitched_design) and not stitch_design:
             raise ValueError("You can't simulate or export a stitched design without enabling stitch_design.")
         build_results = {}
-        total_builds = len(self.graphs)
         status = {}
         status_lock = threading.Lock()
 
-        for g in self.graphs:
-            project_name = g.config.get_project_name()
-            status[project_name] = 'Pending'
+        for idx, g in enumerate(self.graphs, start=1):
+            status[f'graph{idx}'] = 'Pending'
 
-        def build_wrapper(g, **kwargs):
-            project_name = g.config.get_project_name()
+        def build_wrapper(idx, g, **kwargs):
+            graph_name = f'graph{idx}'
             with status_lock:
-                status[project_name] = 'Running'
+                status[graph_name] = 'Running'
                 self._print_status(status)
             try:
-                result = g.build(**kwargs)
+                result = g.build(log_to_stdout = False, **kwargs)
                 with status_lock:
-                    status[project_name] = 'Completed'
+                    status[graph_name] = 'Completed'
                     self._print_status(status)
                 return result
             except Exception as exc:
                 with status_lock:
-                    status[project_name] = 'Failed'
+                    status[graph_name] = 'Failed'
                     self._print_status(status)
                 raise
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_g = {executor.submit(build_wrapper, g, **kwargs): g for g in self.graphs}
-            for future in concurrent.futures.as_completed(future_to_g):
-                g = future_to_g[future]
-                project_name = g.config.get_project_name()
+            future_to_idx = {
+            executor.submit(build_wrapper, idx, g, **kwargs): idx
+            for idx, g in enumerate(self.graphs, start=1)
+            }
+            for future in concurrent.futures.as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                graph_name = f'graph{idx}'
                 try:
                     result = future.result()
-                    build_results[project_name] = result
+                    build_results[graph_name] = result
                 except Exception as exc:
-                    build_results[project_name] = None
+                    build_results[graph_name] = None
 
         self.graph_reports=build_results
         self._replace_logos()
@@ -1318,7 +1319,7 @@ class MultiModelGraph:
         return output_data, trace_output
     
     def write_build_script(self):
-        # NOTE if we move this function to Vivado writer we need to pass graph objects 
+        # NOTE we need to move this function to Vivado writer with each graph object 
         spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
         build_lib_src = os.path.join(hls4ml_path, 'templates/vivado/build_lib_multigraph.sh') 
@@ -1335,7 +1336,7 @@ class MultiModelGraph:
         os.chmod(build_lib_dst, os.stat(build_lib_dst).st_mode | stat.S_IEXEC)
     
     def write_bridge(self):
-        # NOTE if we move this function to Vivado writer we need to pass graph objects 
+        # NOTE we need to move this function to Vivado writer with each graph object 
         """Write the Python-C++ bridge (myproject_bridge.cpp)
         Args:
             model (ModelGraph): the hls4ml model.
