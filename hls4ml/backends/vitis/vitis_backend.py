@@ -81,7 +81,7 @@ class VitisBackend(VivadoBackend):
 
         return config
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, log_to_stdout=True):
         if 'linux' in sys.platform:
             found = os.system('command -v vitis_hls > /dev/null')
             if found != 0:
@@ -93,24 +93,29 @@ class VitisBackend(VivadoBackend):
         ).format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
 
         output_dir = model.config.get_output_dir()
-        # Define log file paths
-        # NOTE - 'build_stdout.log' is the same as 'vitis_hls.log'
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
         stderr_log = os.path.join(output_dir, 'build_stderr.log')
         
-        with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
-            # Use subprocess.Popen to capture output
+        stdout_target = None if log_to_stdout else open(stdout_log, 'w')
+        stderr_target = None if log_to_stdout else open(stderr_log, 'w')
+
+        try:
             process = subprocess.Popen(
                 build_command,
                 shell=True,
                 cwd=output_dir,
-                stdout=stdout_file,
-                stderr=stderr_file,
+                stdout=stdout_target,
+                stderr=stderr_target,
                 text=True
             )
             process.communicate()
+
             if process.returncode != 0:
                 raise Exception(f'Build failed for {model.config.get_project_name()}. See logs for details.')
+        finally:
+            if not log_to_stdout:
+                stdout_target.close()
+                stderr_target.close()
 
         return parse_vivado_report(output_dir)
     
