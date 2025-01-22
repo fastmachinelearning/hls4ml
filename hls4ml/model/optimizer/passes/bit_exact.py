@@ -552,6 +552,9 @@ def _(node: Softmax):
     if not node.attributes.get('_bit_exact', False):
         # Softmax is not bit-exact by default
         warn(f'Softmax layer {node.name} is converted from a frontend not supporting bit-exact softmax.')
+        accum_t = node.attributes['accum_t']
+        default_register_precision(node)
+        node.attributes['accum_t'] = accum_t
         return
 
     inv_inp_t: FixedPrecisionType = node.attributes['inv_inp_t'].precision
