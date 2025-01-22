@@ -80,7 +80,7 @@ def parse_qrnn_layer(keras_layer, input_names, input_shapes, data_reader):
     layer, output_shape = parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    layer['recurrent_quantizer'] = get_quantizer_from_config(keras_layer, 'recurrent')
+    layer['recurrent_weight_quantizer'] = get_quantizer_from_config(keras_layer, 'recurrent')
     layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape
