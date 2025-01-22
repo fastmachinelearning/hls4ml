@@ -225,6 +225,10 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         params.setdefault('n_outer', 1)
         params.setdefault('exp_scale', 1.0)
         params.setdefault('parallelization_factor', -1)
+        if params['accum_t'].name == 'model_default_t':  # type: ignore
+            params['accum_t'] = params['exp_table_t']
+        if params['inv_inp_t'].name == 'model_default_t':  # type: ignore
+            params['inv_inp_t'] = params['exp_table_t']
 
         if 'inp_norm_t' not in params:
             input_t = node.get_input_variable().type.precision
