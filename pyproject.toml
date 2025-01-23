@@ -33,7 +33,7 @@ optional-dependencies.doc = [
   "sphinx-github-changelog",
   "sphinx-rtd-theme",
 ]
-optional-dependencies.HGQ = [ "hgq>=0.2.3" ]
+optional-dependencies.hgq = [ "hgq>=0.2.3" ]
 optional-dependencies.onnx = [ "onnx>=1.4" ]
 optional-dependencies.optimization = [
   "keras-tuner==1.1.3",
@@ -50,7 +50,7 @@ optional-dependencies.quantus_report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.sr = [ "sympy" ]
 optional-dependencies.testing = [
   "calmjs-parse",
-  "hgq~=0.2.0",
+  "hgq>=0.2.3",
   "onnx>=1.4",
   "pytest",
   "pytest-cov",

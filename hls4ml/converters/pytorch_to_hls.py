@@ -25,7 +25,6 @@ class PyTorchModelReader:
         return data
 
 
-@requires('_torch')
 class PyTorchFileReader(PyTorchModelReader):  # Inherit get_weights_data method
     def __init__(self, config):
         import torch
@@ -107,7 +106,6 @@ layer_name_map = {
 # ----------------------------------------------------------------
 
 
-@requires('_torch')
 def parse_pytorch_model(config, verbose=True):
     """Convert PyTorch model to hls4ml ModelGraph.
 

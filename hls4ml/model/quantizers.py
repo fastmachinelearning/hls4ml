@@ -14,7 +14,6 @@ from hls4ml.model.types import (
     SaturationMode,
     XnorPrecisionType,
 )
-from hls4ml.utils.dependency import requires
 
 
 class Quantizer:
@@ -85,7 +84,6 @@ class QKerasQuantizer(Quantizer):
         config (dict): Config of the QKeras quantizer to wrap.
     """
 
-    @requires('qkeras')
     def __init__(self, config):
         from qkeras.quantizers import get_quantizer
 
@@ -133,7 +131,6 @@ class QKerasBinaryQuantizer(Quantizer):
         config (dict): Config of the QKeras quantizer to wrap.
     """
 
-    @requires('qkeras')
     def __init__(self, config, xnor=False):
         from qkeras.quantizers import get_quantizer
 
@@ -158,7 +155,6 @@ class QKerasPO2Quantizer(Quantizer):
         config (dict): Config of the QKeras quantizer to wrap.
     """
 
-    @requires('qkeras')
     def __init__(self, config):
         from qkeras.quantizers import get_quantizer
 
