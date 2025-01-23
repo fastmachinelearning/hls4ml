@@ -18,29 +18,27 @@ for k, v in metadata('hls4ml')._headers:  # type: ignore
 
 
 def requires(pkg: str):
-    """Mark a function or method as requiring a package to be installed.
-    'name': requires hls4ml[name] to be installed.
-    '_name': requires name to be installed.
+    """
+    Mark a function or method as requiring a package to be installed.
 
-    Parameters
-    ----------
-    pkg : str
-        The package to require.
+    Args:
+        pkg (str): The package to require. 'name' requires hls4ml[name] to be installed.
+                   '_name' requires name to be installed.
     """
 
     def deco(f):
         if ismethod(f):
-            qualifier = f"Method {f.__self__.__class__.__name__}.{f.__name__}"
+            qualifier = f'Method {f.__self__.__class__.__name__}.{f.__name__}'
         else:
-            qualifier = f"Function {f.__name__}"
+            qualifier = f'Function {f.__name__}'
 
-        if not pkg.startswith("_"):
-            reqs = ", ".join(extra_requires[pkg])
-            msg = f"{qualifier} requires {reqs}, but package {{ename}} is missing"
-            "Please consider install it with `pip install hls4ml[{pkg}]` for full functionality with {pkg}."
+        if not pkg.startswith('_'):
+            reqs = ', '.join(extra_requires[pkg])
+            msg = f'{qualifier} requires {reqs}, but package {{ename}} is missing'
+            'Please consider install it with `pip install hls4ml[{pkg}]` for full functionality with {pkg}.'
         else:
-            msg = f"{qualifier} requires {pkg[1:]}, but package {{ename}} is missing."
-            "Consider install it with `pip install {pkg}`."
+            msg = f'{qualifier} requires {pkg[1:]}, but package {{ename}} is missing.'
+            'Consider install it with `pip install {pkg}`.'
 
         @wraps(f)
         def inner(*args, **kwargs):
