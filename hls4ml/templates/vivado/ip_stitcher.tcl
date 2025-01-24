@@ -41,7 +41,7 @@ set original_project_name $opt(original_project_name)
 set base_dir [pwd]
 set original_project_path "$base_dir/../../"
 puts $base_dir
-# Name of the block design 
+# Name of the block design
 set bd_name "stitched_design"
 
 # Find a directory that ends with "graph1", "graph2", etc. in the parent project folder
@@ -86,7 +86,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         if {[file isdirectory $repo_path]} {
             # Add repository path to current project's IP repository paths
             set_property ip_repo_paths [concat [get_property ip_repo_paths [current_project]] $repo_path] [current_project]
-            
+
             # Increment the repo count
             incr repo_count
 
@@ -156,7 +156,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         set rst_port_name "ap_rst"
         create_bd_port -dir I -type rst $rst_port_name
         set ap_rst_port [get_bd_ports ap_rst]
-        
+
         # Set the CONFIG.POLARITY property of the 'ap_rst' port based on the retrieved polarity
         if {$rst_polarity ne ""} {
             set_property CONFIG.POLARITY $rst_polarity $ap_rst_port
@@ -415,7 +415,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         set associated_busif [join [concat $input_pin_names $output_pin_names] ":"]
         set_property CONFIG.ASSOCIATED_BUSIF {$associated_busif} [get_bd_ports /ap_clk]
         set_property CONFIG.ASSOCIATED_RESET $rst_port_name [get_bd_ports /ap_clk]
-        
+
         # Make external the 'ap_done' signal of the last IP
         set last_ip_pins [get_bd_pins -of $last_ip_cell]
         set last_ap_done_pin ""
@@ -433,7 +433,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         } else {
             puts "Warning: Could not find 'ap_done' pin for last IP"
         }
-        
+
     } elseif {$interface_type == "unpacked"} {
         # Make 'ap_start' of the first IP external
         set first_ip_cell [get_bd_cells [lindex $ip_instances 0]]
@@ -526,7 +526,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
 
     save_bd_design
 
-    puts "###########################################################"                                     
+    puts "###########################################################"
     puts "#   Successfully connected the ports of each IP instance   "
     puts "#   A total of $repo_count IPs were connected.             "
     puts "###########################################################"
@@ -553,13 +553,13 @@ if {$stitch_design} {
 }
 
 if {$export_design} {
-    set start_time [clock seconds] 
+    set start_time [clock seconds]
     puts "Exporting stitched IP..."
     set stitched_ip_dir "ip_repo"
     ipx::package_project -root_dir $stitched_ip_dir \
         -vendor user.org -library user -taxonomy /UserIP -module $bd_name \
         -import_files
-    set_property description "This IP core integrates all NN subgraph IPs into one." [ipx::find_open_core user.org:user:stitched_design:1.0]   
+    set_property description "This IP core integrates all NN subgraph IPs into one." [ipx::find_open_core user.org:user:stitched_design:1.0]
     set_property core_revision 2 [ipx::find_open_core user.org:user:stitched_design:1.0]
     ipx::create_xgui_files [ipx::find_open_core user.org:user:stitched_design:1.0]
     ipx::update_checksums [ipx::find_open_core user.org:user:stitched_design:1.0]
@@ -572,7 +572,7 @@ if {$export_design} {
 }
 
 if {$sim_design} {
-    set start_time [clock seconds] 
+    set start_time [clock seconds]
     if {$sim_verilog_file == ""} {
         puts "Error: sim_verilog_file not provided."
         exit 1
@@ -613,7 +613,3 @@ if {$sim_design} {
 
 
 close_project
-
-
-
-
