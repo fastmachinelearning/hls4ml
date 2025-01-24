@@ -89,12 +89,12 @@ void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG
         inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
     }
 
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::ACT_CONFIG_LSTM>::activation(
-        inputacc_ifo, tmpres_ifo);
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                       typename CONFIG_T::ACT_CONFIG_LSTM>::activation(inputacc_ifo, tmpres_ifo);
 
     // Now for the confusion matrix
-    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
-        inputacc_c, tmpres_c);
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                  typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_c, tmpres_c);
 
     // Operation: s=g*i+sold*f (update state with buffer to avoid timing issues)
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
@@ -166,12 +166,12 @@ void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate
         inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
     }
 
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::ACT_CONFIG_LSTM>::activation(
-        inputacc_ifo, tmpres_ifo);
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                       typename CONFIG_T::ACT_CONFIG_LSTM>::activation(inputacc_ifo, tmpres_ifo);
 
     // Now for the confusion matrix
-    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
-        inputacc_c, tmpres_c);
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                  typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_c, tmpres_c);
 
     // Operation: s=g*i+sold*f (update state with buffer to avoid timing issues)
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
