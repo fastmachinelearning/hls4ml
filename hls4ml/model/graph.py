@@ -1442,7 +1442,7 @@ class MultiModelGraph:
         if isinstance(pragma, str):
             pragma_str = pragma  # 'reshape' or 'partition' pragma
             fifo_depth = 1
-        elif isinstance(pragma, (list, tuple)) and len(pragma) == 2:
+        elif isinstance(pragma, (list, tuple)):
             pragma_str = pragma[0]  # 'stream' pragma
             fifo_depth = pragma[1]
         else:
@@ -1473,8 +1473,11 @@ class MultiModelGraph:
         )
 
         if len(ref_pragmas) != 1:
-            raise ValueError(f"Multiple pragmas detected in 1st graph: {ref_pragmas} ")
-    
+            raise ValueError(
+                f"Multiple pragmas detected in 1st graph: {ref_pragmas}. "
+                "Ensure all graphs have the same interface (stream or partition)."
+            )
+                
         for idx, g in enumerate(self.graphs[1:], start=1):
             current_pragmas = set(
                 self._get_pragma_details(g.output_vars[layer].pragma)[0] 
