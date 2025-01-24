@@ -1284,9 +1284,10 @@ class MultiModelGraph:
     def compile(self):
         for g in self.graphs:
             g.compile()
-        self.write_build_script()
-        self.write_bridge()
-        self._compile()
+        # TODO  
+        #self.write_build_script()
+        #self.write_bridge()
+        #self._compile()
 
     def predict(self, x, sim = 'csim'):
         if sim == 'csim':
