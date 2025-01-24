@@ -2,8 +2,8 @@
 MultiModelGraph Class
 =======================
 
-This page documents the ``MultiModelGraph`` class, which enables handling multiple subgraphs (each represented as a ``ModelGraph``) derived from a single original model. 
-The central concept here is the division of a larger model into multiple smaller subgraphs at given layers which can be useful for: 
+This page documents the ``MultiModelGraph`` class, which enables handling multiple subgraphs (each represented as a ``ModelGraph``) derived from a single original model.
+The central concept here is the division of a larger model into multiple smaller subgraphs at given layers which can be useful for:
 
 * Very large models
 * Step-wise optimization
@@ -26,8 +26,8 @@ For example, when converting a Keras model, you can specify the layers at which 
    config = hls4ml.utils.config_from_keras_model(model, granularity='model')
 
    hls_model = hls4ml.converters.convert_from_keras_model(
-       model, 
-       hls_config=config, 
+       model,
+       hls_config=config,
        backend='vitis',
        split_layer_names = ['layer3', 'layer7']
    )
@@ -39,10 +39,10 @@ Here, the ``hls_model`` is actually a ``MultiModelGraph`` containing three subgr
 Key Methods for MultiModelGraph
 ----------------------------------
 
-* :ref:`compile <mmg-compile-method>`  
-* :ref:`predict <mmg-predict-method>`  
-* :ref:`build <mmg-build-method>`  
-* :ref:`trace <mmg-trace-method>`  
+* :ref:`compile <mmg-compile-method>`
+* :ref:`predict <mmg-predict-method>`
+* :ref:`build <mmg-build-method>`
+* :ref:`trace <mmg-trace-method>`
 * :ref:`make_multi_graph <make_multi_graph-method>`
 
 ----
