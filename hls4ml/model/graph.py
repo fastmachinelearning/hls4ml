@@ -1,18 +1,18 @@
+import concurrent.futures
+import copy
 import ctypes
+import importlib.util
 import os
 import platform
+import re
+import shutil
+import stat
+import threading
+import warnings
 from collections import OrderedDict
 
 import numpy as np
 import numpy.ctypeslib as npc
-import copy
-import stat
-import importlib.util
-import shutil
-import re
-import warnings
-import concurrent.futures
-import threading
 
 from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
@@ -1076,7 +1076,7 @@ class ModelGraph(Serializable):
         current_index = 0
         last_output_precision = None
         for idx, sub_layer_list in enumerate(subgraph_layer_lists):
-            
+
             # Create a shallow copy of the config for each subgraph
             sub_config = copy.copy(config)
             sub_config['OutputDir'] = os.path.join(original_OutputDir, f'graph{idx + 1}')
@@ -1089,10 +1089,10 @@ class ModelGraph(Serializable):
                 previous_layer = layer_list[previous_layer_index]
                 previous_layer_name = previous_layer['name']
                 input_shape = output_shapes.get(previous_layer_name, None)
-                #NOTE - Verify that the input shape is correctly identified
+                # NOTE - Verify that the input shape is correctly identified
                 if input_shape is None:
                     raise ValueError(f"Could not find input_shape of '{split_layer_names[idx - 1]}'.")
-                
+
                 current_split_layer = sub_layer_list[0]
                 input_layer_name = current_split_layer['name'] + '_input'
                 input_layer_dict = {
@@ -1102,51 +1102,49 @@ class ModelGraph(Serializable):
                     'input_shape': input_shape[1:],
                 }
                 # Reset the inputs of the split layer in the current graph
-                #NOTE - Better allow it to automatically determine its inputs
+                # NOTE - Better allow it to automatically determine its inputs
                 sub_layer_list[0]['inputs'] = []
                 # Then insert the new input layer at the beginning
                 sub_layer_list.insert(0, input_layer_dict)
 
                 # Copy 'Precision' and 'Trace' from the previous layer's config to the new input layer's config
-                if 'LayerName' in sub_config['HLSConfig']:    
+                if 'LayerName' in sub_config['HLSConfig']:
                     if previous_layer_name in sub_config['HLSConfig']['LayerName']:
                         prev_layer_config = sub_config['HLSConfig']['LayerName'][previous_layer_name]
                         new_layer_config = {}
                         new_layer_config['Precision'] = prev_layer_config['Precision']
-                        #NOTE - We copy Trace as well but it might be better to reset it
-                        new_layer_config['Trace'] = prev_layer_config['Trace'] 
-                        # copy last layer config from previous graph to the new input layer config of current graph 
+                        # NOTE - We copy Trace as well but it might be better to reset it
+                        new_layer_config['Trace'] = prev_layer_config['Trace']
+                        # copy last layer config from previous graph to the new input layer config of current graph
                         sub_config['HLSConfig']['LayerName'][input_layer_name] = new_layer_config
                     else:
                         raise KeyError(f"Layer '{previous_layer_name}' not found in subconfig.")
                 else:
-                    pass # case of granularity='Model'
-            
+                    pass  # case of granularity='Model'
+
             graph_output_layers = output_layers if idx == len(subgraph_layer_lists) - 1 else None
             graph_input_layers = input_layers if idx == 0 else None
-            hls_model = ModelGraph(sub_config, sub_layer_list, 
-                                   graph_input_layers, 
-                                   graph_output_layers, 
-                                   initial_index=current_index)
+            hls_model = ModelGraph(
+                sub_config, sub_layer_list, graph_input_layers, graph_output_layers, initial_index=current_index
+            )
 
-            # After creating subgraph, get the precision from the last layer's output. 
+            # After creating subgraph, get the precision from the last layer's output.
             if hls_model.graph:
                 try:
                     last_layer = next(reversed(hls_model.graph.values()))
                     last_output_precision = last_layer.attributes['precision']['result']
                 except (KeyError, AttributeError):
                     warnings.warn(
-                    "Could not find precision in the last layer. "
-                    "Setting 'last_output_precision' to 'auto'."
+                        "Could not find precision in the last layer. " "Setting 'last_output_precision' to 'auto'."
                     )
-                    last_output_precision = 'auto'  
+                    last_output_precision = 'auto'
 
             # Update the current index for the next graph
             # Get the index of the last element in the graph
             layer_indices = [layer.index for layer in hls_model.graph.values()]
             if layer_indices:
                 max_index = max(layer_indices)
-                current_index = max_index - 1 # we have the new input layer as well
+                current_index = max_index - 1  # we have the new input layer as well
             model_graphs.append(hls_model)
 
         return MultiModelGraph(model_graphs)
@@ -1174,19 +1172,17 @@ class MultiModelGraph:
         original_project_name = first_graph.config.get_project_name().partition('_graph')[0]
         self.config.config['ProjectName'] = f"{original_project_name}_stitched"
         self.config.config['OriginalProjectName'] = original_project_name
-        original_output_dir = first_graph.config.get_output_dir().partition('/graph')[0]       
+        original_output_dir = first_graph.config.get_output_dir().partition('/graph')[0]
         self.config.config['OutputDir'] = os.path.join(original_output_dir, 'stitched')
 
     def _deepcopy_config_names(self, config):
         # Deep copy only 'ProjectName' and 'OutputDir', shallow copy others
         keys_to_deepcopy = ['ProjectName', 'OutputDir']
-        self.config.config = {k: copy.deepcopy(config[k]) 
-                            if k in keys_to_deepcopy 
-                            else config[k] for k in config}
+        self.config.config = {k: copy.deepcopy(config[k]) if k in keys_to_deepcopy else config[k] for k in config}
 
     def __getitem__(self, index):
         return self.graphs[index]
-    
+
     def parse_nn_config(self):
         nn_config = {"inputs": [], "outputs": []}
         nn_config['OutputDir'] = self.config.config['OutputDir']
@@ -1205,26 +1201,32 @@ class MultiModelGraph:
                         raise ValueError(f"Division of total_bits by fifo_depth does not result in a remainder of zero.")
                     batch_size = total_bits // fifo_depth
                     precision = graph.output_vars[layer].type.precision
-                    nn_config[io_type].append({
-                        "name": graph.output_vars[layer].name,
-                        "pragma": layer_pragma,
-                        "integer_bits": int(precision.integer),
-                        "fractional_bits": int(precision.fractional),
-                        "signed": int(precision.signed),
-                        "fifo_depth": int(fifo_depth),
-                        "batch_size": int(batch_size)
-                    })
+                    nn_config[io_type].append(
+                        {
+                            "name": graph.output_vars[layer].name,
+                            "pragma": layer_pragma,
+                            "integer_bits": int(precision.integer),
+                            "fractional_bits": int(precision.fractional),
+                            "signed": int(precision.signed),
+                            "fifo_depth": int(fifo_depth),
+                            "batch_size": int(batch_size),
+                        }
+                    )
 
-        return nn_config          
+        return nn_config
 
-    def build(self, stitch_design=False, sim_stitched_design=False, export_stitched_design=False, max_workers=None, **kwargs):
+    def build(
+        self, stitch_design=False, sim_stitched_design=False, export_stitched_design=False, max_workers=None, **kwargs
+    ):
         """
         Builds all ModelGraph instances in parallel, with optional stitching and export.
         """
 
         export = kwargs.get('export', False)
         if (stitch_design or sim_stitched_design or export_stitched_design) and not export:
-            raise ValueError("You can't enable stitch_design, sim_stitched_design, or export_stitched_design without having export=True.")
+            raise ValueError(
+                "You can't enable stitch_design, sim_stitched_design, or export_stitched_design without having export=True."
+            )
         if (sim_stitched_design or export_stitched_design) and not stitch_design:
             raise ValueError("You can't simulate or export a stitched design without enabling stitch_design.")
         build_results = {}
@@ -1240,7 +1242,7 @@ class MultiModelGraph:
                 status[graph_name] = 'Running'
                 self._print_status(status)
             try:
-                result = g.build(log_to_stdout = False, **kwargs)
+                result = g.build(log_to_stdout=False, **kwargs)
                 with status_lock:
                     status[graph_name] = 'Completed'
                     self._print_status(status)
@@ -1253,8 +1255,7 @@ class MultiModelGraph:
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_idx = {
-            executor.submit(build_wrapper, idx, g, **kwargs): idx
-            for idx, g in enumerate(self.graphs, start=1)
+                executor.submit(build_wrapper, idx, g, **kwargs): idx for idx, g in enumerate(self.graphs, start=1)
             }
             for future in concurrent.futures.as_completed(future_to_idx):
                 idx = future_to_idx[future]
@@ -1265,7 +1266,7 @@ class MultiModelGraph:
                 except Exception as exc:
                     build_results[graph_name] = None
 
-        self.graph_reports=build_results
+        self.graph_reports = build_results
         self._replace_logos()
 
         if stitch_design or sim_stitched_design or export_stitched_design:
@@ -1276,7 +1277,8 @@ class MultiModelGraph:
                 sim_stitched_design=sim_stitched_design,
                 export_stitched_design=export_stitched_design,
                 nn_config=nn_config,
-                graph_reports=self.graph_reports)
+                graph_reports=self.graph_reports,
+            )
             return stitched_report
 
         return self.graph_reports
@@ -1284,12 +1286,12 @@ class MultiModelGraph:
     def compile(self):
         for g in self.graphs:
             g.compile()
-        # TODO  
-        #self.write_build_script()
-        #self.write_bridge()
-        #self._compile()
+        # TODO
+        # self.write_build_script()
+        # self.write_bridge()
+        # self._compile()
 
-    def predict(self, x, sim = 'csim'):
+    def predict(self, x, sim='csim'):
         if sim == 'csim':
             input_data = x
             for g in self.graphs:
@@ -1304,11 +1306,12 @@ class MultiModelGraph:
                 export_stitched_design=False,
                 nn_config=nn_config,
                 graph_reports=self.graph_reports,
-                simulation_input_data=x)
+                simulation_input_data=x,
+            )
             return stitched_report['BehavSimResults']
-        else: 
+        else:
             print('Unknown simulation option given.')
-            
+
     def trace(self, x):
         # TODO: finish trace function
         input_data = x
@@ -1318,14 +1321,14 @@ class MultiModelGraph:
             input_data = output_data
             trace_output.append(curr_trace_output)
         return output_data, trace_output
-    
+
     def write_build_script(self):
-        # NOTE we need to move this function to Vivado writer with each graph object 
+        # NOTE we need to move this function to Vivado writer with each graph object
         spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
-        build_lib_src = os.path.join(hls4ml_path, 'templates/vivado/build_lib_multigraph.sh') 
+        build_lib_src = os.path.join(hls4ml_path, 'templates/vivado/build_lib_multigraph.sh')
         os.makedirs(self.config.config['OutputDir'], exist_ok=True)
-        build_lib_dst = os.path.join(self.config.config['OutputDir'], 'build_lib.sh') 
+        build_lib_dst = os.path.join(self.config.config['OutputDir'], 'build_lib.sh')
         graph_project_names = ' '.join(f"\"{g.config.get_output_dir().split('/')[-1]}\"" for g in self.graphs)
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
             for line in src.readlines():
@@ -1335,9 +1338,9 @@ class MultiModelGraph:
                 line = line.replace('mygraph_name_list', graph_project_names)
                 dst.write(line)
         os.chmod(build_lib_dst, os.stat(build_lib_dst).st_mode | stat.S_IEXEC)
-    
+
     def write_bridge(self):
-        # NOTE we need to move this function to Vivado writer with each graph object 
+        # NOTE we need to move this function to Vivado writer with each graph object
         """Write the Python-C++ bridge (myproject_bridge.cpp)
         Args:
             model (ModelGraph): the hls4ml model.
@@ -1345,7 +1348,7 @@ class MultiModelGraph:
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/vivado/myproject_bridge_multigraph.cpp'))
-        fout = open(f"{self.config.get_output_dir()}/{self.config.config['ProjectName']}_bridge.cpp", 'w')        
+        fout = open(f"{self.config.get_output_dir()}/{self.config.config['ProjectName']}_bridge.cpp", 'w')
         model_inputs = self.graphs[0].get_input_variables()
         model_outputs = self.graphs[-1].get_output_variables()
         model_brams = [var for var in self.graphs[0].get_weight_variables() if var.storage.lower() == 'bram']
@@ -1359,7 +1362,7 @@ class MultiModelGraph:
             elif 'firmware/myproject' in line:
                 for graph_idx in range(len(self.graphs)):
                     newline += line.replace('myproject', format(self.graphs[graph_idx].config.config['ProjectName']))
-                    newline += '\n#undef DEFINES_H_\n' if graph_idx < len(self.graphs)-1 else ''
+                    newline += '\n#undef DEFINES_H_\n' if graph_idx < len(self.graphs) - 1 else ''
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(self.graphs[0].config.config['ProjectName']))
 
@@ -1435,7 +1438,7 @@ class MultiModelGraph:
 
         f.close()
         fout.close()
-        
+
     def _get_pragma_details(self, pragma):
         """
         Extracts the pragma type and FIFO depth from the given pragma.
@@ -1448,17 +1451,12 @@ class MultiModelGraph:
             fifo_depth = pragma[1]
         else:
             raise ValueError(f"Unexpected format for pragma: {pragma}")
-        
+
         return pragma_str, fifo_depth
-    
+
     def _print_status(self, status):
         print('\r', end='')
-        status_icons = {
-            'Pending': '○',
-            'Running': '⌛',
-            'Completed': '✅',
-            'Failed': '❌'
-        }
+        status_icons = {'Pending': '○', 'Running': '⌛', 'Completed': '✅', 'Failed': '❌'}
         status_str = ' | '.join(f'{proj}: {status_icons.get(stat, "?")}' for proj, stat in status.items())
         print(status_str, flush=True)
 
@@ -1467,30 +1465,28 @@ class MultiModelGraph:
         Ensure all graphs have the same pragma in their input and output layers.
         Stitching and simulating mixed pragmas is not supported at the moment.
         """
-        ref_pragmas = set(
-            self._get_pragma_details(self.graphs[0].output_vars[layer].pragma)[0] 
+        ref_pragmas = {
+            self._get_pragma_details(self.graphs[0].output_vars[layer].pragma)[0]
             for layer in self.graphs[0].inputs + self.graphs[0].outputs
             if layer in self.graphs[0].output_vars
-        )
+        }
 
         if len(ref_pragmas) != 1:
             raise ValueError(
                 f"Multiple pragmas detected in 1st graph: {ref_pragmas}. "
                 "Ensure all graphs have the same interface (stream or partition)."
             )
-                
+
         for idx, g in enumerate(self.graphs[1:], start=1):
-            current_pragmas = set(
-                self._get_pragma_details(g.output_vars[layer].pragma)[0] 
+            current_pragmas = {
+                self._get_pragma_details(g.output_vars[layer].pragma)[0]
                 for layer in g.inputs + g.outputs
                 if layer in g.output_vars
-            )
+            }
 
             if ref_pragmas != current_pragmas:
                 raise ValueError(
-                    f"Pragma mismatch in graph {idx}:\n"
-                    f"Expected: {ref_pragmas}\n"
-                    f"Found: {current_pragmas}"
+                    f"Pragma mismatch in graph {idx}:\n" f"Expected: {ref_pragmas}\n" f"Found: {current_pragmas}"
                 )
 
     def _replace_logos(self):
@@ -1504,15 +1500,11 @@ class MultiModelGraph:
         for g in self.graphs:
             graph_logo_paths = [
                 os.path.join(
-                    g.config.get_output_dir(),
-                    g.config.get_project_name() + '_prj',
-                    'solution1/impl/misc/logo.png'
+                    g.config.get_output_dir(), g.config.get_project_name() + '_prj', 'solution1/impl/misc/logo.png'
                 ),
                 os.path.join(
-                    g.config.get_output_dir(),
-                    g.config.get_project_name() + '_prj',
-                    'solution1/impl/ip/misc/logo.png'
-                )
+                    g.config.get_output_dir(), g.config.get_project_name() + '_prj', 'solution1/impl/ip/misc/logo.png'
+                ),
             ]
             try:
                 for logo in graph_logo_paths:

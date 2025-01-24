@@ -1,14 +1,20 @@
-import os
-import sys
-import subprocess
 import importlib.util
 import json
+import os
 import shutil
+import subprocess
+import sys
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
-from hls4ml.report import parse_vivado_report, aggregate_graph_reports
-from hls4ml.utils.simulation_utils import write_verilog_testbench, read_testbench_log, write_testbench_input, prepare_testbench_input, prepare_zero_input
+from hls4ml.report import aggregate_graph_reports, parse_vivado_report
+from hls4ml.utils.simulation_utils import (
+    prepare_testbench_input,
+    prepare_zero_input,
+    read_testbench_log,
+    write_testbench_input,
+    write_verilog_testbench,
+)
 
 
 class VitisBackend(VivadoBackend):
@@ -118,18 +124,13 @@ class VitisBackend(VivadoBackend):
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
         stderr_log = os.path.join(output_dir, 'build_stderr.log')
-        
+
         stdout_target = None if log_to_stdout else open(stdout_log, 'w')
         stderr_target = None if log_to_stdout else open(stderr_log, 'w')
 
         try:
             process = subprocess.Popen(
-                build_command,
-                shell=True,
-                cwd=output_dir,
-                stdout=stdout_target,
-                stderr=stderr_target,
-                text=True
+                build_command, shell=True, cwd=output_dir, stdout=stdout_target, stderr=stderr_target, text=True
             )
             process.communicate()
 
@@ -141,7 +142,7 @@ class VitisBackend(VivadoBackend):
                 stderr_target.close()
 
         return parse_vivado_report(output_dir)
-    
+
     def build_stitched_design(
         self,
         stitch_design=True,
@@ -149,7 +150,8 @@ class VitisBackend(VivadoBackend):
         export_stitched_design=False,
         nn_config=None,
         graph_reports=None,
-        simulation_input_data=None):  
+        simulation_input_data=None,
+    ):
 
         os.makedirs(nn_config['OutputDir'], exist_ok=True)
         stitched_design_dir = os.path.join(nn_config['OutputDir'], nn_config['StitchedProjectName'])
@@ -159,11 +161,11 @@ class VitisBackend(VivadoBackend):
 
         spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
-        ip_stitcher_path = os.path.join(hls4ml_path, 'templates/vivado/ip_stitcher.tcl')     
+        ip_stitcher_path = os.path.join(hls4ml_path, 'templates/vivado/ip_stitcher.tcl')
         stdout_log = os.path.join(stitched_design_dir, 'stitcher_stdout.log')
         stderr_log = os.path.join(stitched_design_dir, 'stitcher_stderr.log')
         nn_config_path = os.path.join(stitched_design_dir, 'nn_config.json')
-        testbench_path =  os.path.join(stitched_design_dir, 'testbench.v')
+        testbench_path = os.path.join(stitched_design_dir, 'testbench.v')
         testbench_log_path = os.path.join(stitched_design_dir, 'testbench_log.csv')
 
         try:
@@ -174,8 +176,8 @@ class VitisBackend(VivadoBackend):
         if nn_config:
             with open(nn_config_path, "w") as file:
                 json.dump(nn_config, file, indent=4)
-        
-        if(sim_stitched_design):
+
+        if sim_stitched_design:
             write_verilog_testbench(nn_config, testbench_path)
             # Produce a testbench input file for every input layer
             for i, layer in enumerate(nn_config['inputs']):
@@ -188,30 +190,33 @@ class VitisBackend(VivadoBackend):
                     # Handles both single and multi-layer cases. First dim should always be batch size
                     data = simulation_input_data[i]
                     input_data_reshaped = prepare_testbench_input(data, layer['fifo_depth'], layer['batch_size'])
-                write_testbench_input(input_data_reshaped, testbench_input_path, layer['integer_bits'], layer['fractional_bits'])
+                write_testbench_input(
+                    input_data_reshaped, testbench_input_path, layer['integer_bits'], layer['fractional_bits']
+                )
             print('Verilog testbench and its input data were generated.')
 
         print('Running build process of stitched IP...\n')
         stitch_command = [
-            'vivado', '-mode', 'batch', '-nojournal', '-nolog', '-notrace',
-            '-source', ip_stitcher_path,
+            'vivado',
+            '-mode',
+            'batch',
+            '-nojournal',
+            '-nolog',
+            '-notrace',
+            '-source',
+            ip_stitcher_path,
             '-tclargs',
             f'stitch_design={int(stitch_design)}',
             f'sim_design={int(sim_stitched_design)}',
             f'export_design={int(export_stitched_design)}',
             f"stitch_project_name={nn_config['StitchedProjectName']}",
             f"original_project_name={nn_config['OriginalProjectName']}",
-            f'sim_verilog_file=testbench.v'
+            f'sim_verilog_file=testbench.v',
         ]
-        
+
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:
             process = subprocess.Popen(
-                stitch_command,
-                cwd=stitched_design_dir,
-                stdout=stdout_file,
-                stderr=stderr_file,
-                text=True,
-                shell=False
+                stitch_command, cwd=stitched_design_dir, stdout=stdout_file, stderr=stderr_file, text=True, shell=False
             )
             process.communicate()
             if process.returncode != 0:
