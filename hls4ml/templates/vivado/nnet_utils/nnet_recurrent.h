@@ -12,7 +12,10 @@ namespace nnet {
 struct lstm_config {
     // Internal data type definitions
     typedef float weight_t;
+    typedef float recurrent_weight_t;
     typedef float bias_t;
+    typedef float recurrent_bias_t;
+    typedef float accum_t;
 
     // Layer Sizes
     static const unsigned n_in = 2;
@@ -47,9 +50,9 @@ struct lstm_config {
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
           res_T s_newstate[CONFIG_T::n_state], typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-          typename CONFIG_T::weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+          typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
           typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
-          typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 4]) {
+          typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
     // Initialize the state variable -- will maintain state between function calls
 
     typename CONFIG_T::accum_t tmpres[CONFIG_T::n_state * 4];
@@ -86,12 +89,12 @@ void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG
         inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
     }
 
-    CONFIG_T::template activation_recr<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>::activation(
-        inputacc_ifo, tmpres_ifo);
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                       typename CONFIG_T::ACT_CONFIG_LSTM>::activation(inputacc_ifo, tmpres_ifo);
 
     // Now for the confusion matrix
-    CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
-        inputacc_c, tmpres_c);
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                  typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_c, tmpres_c);
 
     // Operation: s=g*i+sold*f (update state with buffer to avoid timing issues)
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
@@ -99,7 +102,7 @@ void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG
         s_newstate[iacc] = tmpres_c[iacc] * tmpres_ifo[iacc] + s_newstate[iacc] * tmpres_ifo[iacc + (CONFIG_T::n_state)];
     }
     // Operation: h=act(s)*o
-    CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
+    CONFIG_T::template activation<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
         s_newstate, s_actstate);
 
     for (int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
@@ -112,9 +115,9 @@ template <class data_T, class res_T, typename CONFIG_T>
 void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
                  res_T s_newstate[CONFIG_T::n_state],
                  typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                 typename CONFIG_T::weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                 typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
                  typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
-                 typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 4]) {
+                 typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
     static res_T h_state[CONFIG_T::n_state];
     static res_T s_state[CONFIG_T::n_state];
     // Initialize the state variable -- will maintain state between function calls
@@ -163,12 +166,12 @@ void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate
         inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
     }
 
-    CONFIG_T::template activation_recr<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>::activation(
-        inputacc_ifo, tmpres_ifo);
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                       typename CONFIG_T::ACT_CONFIG_LSTM>::activation(inputacc_ifo, tmpres_ifo);
 
     // Now for the confusion matrix
-    CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
-        inputacc_c, tmpres_c);
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
+                                  typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_c, tmpres_c);
 
     // Operation: s=g*i+sold*f (update state with buffer to avoid timing issues)
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
@@ -177,7 +180,7 @@ void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate
         s_newstate[iacc] = s_state[iacc];
     }
     // Operation: h=act(s)*o
-    CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
+    CONFIG_T::template activation<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::ACT_CONFIG_T>::activation(
         s_state, s_actstate);
 
     for (int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
@@ -190,9 +193,9 @@ void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
                 typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                typename CONFIG_T::weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
-                typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 4]) {
+                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
 
     res_T h_newstate[CONFIG_T::n_state];
     res_T s_newstate[CONFIG_T::n_state];
@@ -235,9 +238,9 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CO
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
                 typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                typename CONFIG_T::weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
-                typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 4]) {
+                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
 
     typename res_T::value_type h_newstate[CONFIG_T::n_state];
     typename res_T::value_type s_newstate[CONFIG_T::n_state];
@@ -300,7 +303,9 @@ DataPropagation:
 struct gru_config {
     // Internal data type definitions
     typedef float weight_t;
+    typedef float recurrent_weight_t;
     typedef float bias_t;
+    typedef float recurrent_bias_t;
     typedef float accum_t;
 
     // Layer Sizes
@@ -327,9 +332,9 @@ template <class data_T, class res_T, typename CONFIG_T>
 void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
          typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in], // TODO - Check the layout of the param
                                                                                     // weights - refer page in copy!!
-         typename CONFIG_T::weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+         typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
          typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
-         typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 3]) {
+         typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
     // Initialize the state variable -- will maintain state between function calls
     typename CONFIG_T::accum_t tmpres[CONFIG_T::n_state * 3];
     typename CONFIG_T::accum_t tmpres_state_zr[CONFIG_T::n_state * 3];
@@ -361,7 +366,7 @@ void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_
     }
 
     // Activation function Sub layer -- START
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t,
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
                                        typename CONFIG_T::ACT_CONFIG_GRU>::activation(inputacc_zr, tmpres_zr);
 
     // Activation function Sub layer -- END
@@ -383,7 +388,7 @@ void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_
     }
 
     // Now run the activation on this guy
-    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t,
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
                                   typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_h, tmpres_h);
 
     // Mix the stat with the previous state
@@ -400,9 +405,9 @@ void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_
 template <class data_T, class res_T, typename CONFIG_T>
 void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
                 typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-                typename CONFIG_T::weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+                typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
-                typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 3]) {
+                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
     // Initialize the state variable -- will maintain state between function calls
 
     static res_T h_state[CONFIG_T::n_state];
@@ -444,7 +449,7 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
     }
 
     // Activation function Sub layer -- START
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t,
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
                                        typename CONFIG_T::ACT_CONFIG_GRU>::activation(inputacc_zr, tmpres_zr);
 
     // Activation function Sub layer -- END
@@ -466,7 +471,7 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
     }
 
     // Now run the activation on this guy
-    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t,
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
                                   typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_h, tmpres_h);
 
     // Mix the stat with the previous state
@@ -484,9 +489,9 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
 template <class data_T, class res_T, typename CONFIG_T>
 void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-               typename CONFIG_T::weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
                typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
-               typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 3]) {
+               typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
 
     res_T h_state[CONFIG_T::n_state];
     data_T data_in[CONFIG_T::n_in];
@@ -525,9 +530,9 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CON
 template <class data_T, class res_T, typename CONFIG_T>
 void gru_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-               typename CONFIG_T::weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
                typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
-               typename CONFIG_T::bias_t param_br[CONFIG_T::n_state * 3]) {
+               typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
 
     typename res_T::value_type h_newstate[CONFIG_T::n_state];
     #pragma HLS ARRAY_PARTITION variable=h_newstate complete
