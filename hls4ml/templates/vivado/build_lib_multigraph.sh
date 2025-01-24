@@ -27,7 +27,7 @@ for g in "${graph_project_names[@]}"; do
     WEIGHTS_DIR="\"${BASEDIR}/${g}/firmware/weights\""
     SRC_FILE="${g}/firmware/${ORIGINAL_PROJECT}_${g}.cpp"
     OBJ_FILE="${ORIGINAL_PROJECT}_${g}.o"
-    
+
     ${CC} ${CFLAGS} ${AP_TYPES_PATH} -D WEIGHTS_DIR="${WEIGHTS_DIR}" -c "${BASEDIR}/${SRC_FILE}" -o "${OBJ_FILE}"
     OBJECT_FILES+=("${OBJ_FILE}")
     INCFLAGS+="-I${BASEDIR}/${g}/ "

@@ -1,8 +1,10 @@
-import os
-from lxml import etree
 import json
+import os
+
 import numpy as np
-import pandas as pd 
+import pandas as pd
+from lxml import etree
+
 
 def parse_component_xml(component_xml_path):
     """
@@ -24,7 +26,7 @@ def parse_component_xml(component_xml_path):
     ns = {
         'spirit': 'http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009',
         'xilinx': 'http://www.xilinx.com',
-        'xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+        'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
     }
 
     # Extract ports
@@ -81,33 +83,33 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         output_signals.append((output_item['name'], total_bits))
 
     with open(testbench_output_path, 'w') as f:
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Header and Module Declaration
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('`timescale 1ns / 1ps\n\n')
         f.write('module tb_design_1_wrapper;\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Clock and Reset Signals
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Clock and Reset Signals\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    reg ap_clk;\n')
         f.write('    reg ap_rst_n;\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Control and Handshaking Signals
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Control and Handshaking Signals\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    reg  ap_start;\n')
         f.write('    wire ap_done;\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # AXI4-Stream Input Interfaces
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // AXI4-Stream Input Interfaces\n')
         f.write('    //------------------------------------------------------------------------\n')
@@ -119,9 +121,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write(f'    reg  {layer["name"]}_tvalid;\n')
             f.write(f'    wire {layer["name"]}_tready;\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # AXI4-Stream Output Interfaces
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // AXI4-Stream Output Interfaces\n')
         f.write('    //------------------------------------------------------------------------\n')
@@ -133,9 +135,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write(f'    wire {layer["name"]}_tvalid;\n')
             f.write(f'    reg  {layer["name"]}_tready;\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # DUT Instantiation
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // DUT Instantiation\n')
         f.write('    //------------------------------------------------------------------------\n')
@@ -167,9 +169,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write(f'        .{name}_tvalid({name}_tvalid)\n')
         f.write('    );\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Clock Generation
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Clock Generation (100 MHz => 10 ns period)\n')
         f.write('    //------------------------------------------------------------------------\n')
@@ -178,9 +180,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('        forever #5 ap_clk = ~ap_clk;\n')
         f.write('    end\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Reset Generation
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Reset Generation\n')
         f.write('    // Wait for a few cycles and then release reset.\n')
@@ -191,9 +193,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('        ap_rst_n = 1;\n')
         f.write('    end\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Signal Initialization
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Signal Initialization\n')
         f.write('    // Initialize control signals, input valid, and output ready.\n')
@@ -206,9 +208,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write(f'        {name}_tready = 1;\n')
         f.write('    end\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Variables for Logging and Measurement
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Logging and Measurement Variables\n')
         f.write('    //------------------------------------------------------------------------\n')
@@ -222,9 +224,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('    reg [1:0] done_counter = 0;\n')
         f.write('    reg       old_ap_done = 0;\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Cycle Counting
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Cycle Counting\n')
         f.write('    // Count cycles to measure latency.\n')
@@ -236,9 +238,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('            cycle_count <= cycle_count + 1;\n')
         f.write('    end\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Data Transmission (Stimulus Generation)
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Data Transmission (Stimulus)\n')
         f.write('    // Send input patterns to the DUT.\n')
@@ -308,9 +310,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
 
         f.write('    end\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Output Data Capture and Logging
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Output Data Capture and Logging\n')
         f.write('    // Capture output for 2nd input (done_counter == 1) and log them to CSV.\n')
@@ -331,16 +333,18 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write(f'            for (idx_{i} = 0; idx_{i} < {layer["batch_size"]}; idx_{i} = idx_{i} + 1) begin\n')
             f.write(f'                fixed_val_{i} = {layer_name}_tdata[(idx_{i}+1)*{total_bits}-1 -: {total_bits}];\n')
             f.write(f'                real_val_{i}  = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
-            f.write(f'                $display("Output {layer_name}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx_{i}, {i_bits}, {f_bits}, real_val_{i});\n')
+            f.write(
+                f'                $display("Output {layer_name}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx_{i}, {i_bits}, {f_bits}, real_val_{i});\n'
+            )
             f.write('                // Log result to CSV\n')
             f.write(f'                $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", idx_{i}, real_val_{i});\n')
             f.write('            end\n')
             f.write('        end\n')
             f.write('    end\n\n')
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # Latency Measurement and Test End
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Latency Measurement\n')
         f.write('    // Measures the cycle count between start and subsequent ap_done signals.\n')
@@ -370,6 +374,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
 
         f.write('endmodule\n')
 
+
 def float_to_fixed(float_value, integer_bits=6, fractional_bits=10):
     scaling_factor = 1 << fractional_bits
     total_bits = integer_bits + fractional_bits
@@ -385,6 +390,7 @@ def float_to_fixed(float_value, integer_bits=6, fractional_bits=10):
         fixed_value = fixed_value + (1 << total_bits)  # Two's complement
 
     return fixed_value
+
 
 def write_testbench_input(float_inputs, file_name, integer_bits=6, fractional_bits=10):
     """
@@ -406,25 +412,25 @@ def write_testbench_input(float_inputs, file_name, integer_bits=6, fractional_bi
 
 
 def prepare_zero_input(layer):
-        batch_size = layer['batch_size']
-        fifo_depth = layer['fifo_depth']       
-        zero_input = np.zeros((fifo_depth, batch_size), dtype=np.int32)
-        return zero_input
+    batch_size = layer['batch_size']
+    fifo_depth = layer['fifo_depth']
+    zero_input = np.zeros((fifo_depth, batch_size), dtype=np.int32)
+    return zero_input
+
 
 def prepare_testbench_input(data, fifo_depth, batch_size):
     data_arr = np.array(data)
     # Ensure that total elements = fifo_depth * batch_size
     total_elements = fifo_depth * batch_size
     if data_arr.size != total_elements:
-        raise ValueError(
-            f"Data size {data_arr.size} does not match fifo_depth * batch_size = {total_elements}"
-        )
+        raise ValueError(f"Data size {data_arr.size} does not match fifo_depth * batch_size = {total_elements}")
     data_reshaped = data_arr.reshape((fifo_depth, batch_size))
     return data_reshaped
 
+
 def read_testbench_log(testbench_log_path):
     """
-    Reads the testbench log file and returns a dictionary 
+    Reads the testbench log file and returns a dictionary
     """
     if not os.path.exists(testbench_log_path):
         print(f"Error: The file '{testbench_log_path}' does not exist.")
@@ -435,12 +441,8 @@ def read_testbench_log(testbench_log_path):
         BestLatency = df[df['output_name'] == 'BestLatency']['value'].iloc[0]
         WorstLatency = df[df['output_name'] == 'WorstLatency']['value'].iloc[0]
         output_df = df[~df['output_name'].isin(['BestLatency', 'WorstLatency'])]
-        
-        sim_dict = {
-            'BestLatency': int(BestLatency),
-            'WorstLatency': int(WorstLatency),
-            'BehavSimResults': []
-        }
+
+        sim_dict = {'BestLatency': int(BestLatency), 'WorstLatency': int(WorstLatency), 'BehavSimResults': []}
 
         grouped = output_df.groupby('output_name')
         for name, group in grouped:
