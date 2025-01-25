@@ -5,7 +5,6 @@ requires = [ "setuptools>=61", "setuptools-scm>=8" ]
 
 [project]
 name = "hls4ml"
-version = "1.0.0"
 description = "Machine learning in FPGAs using HLS"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -25,6 +24,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+dynamic = [ "version" ]
 dependencies = [ "h5py", "numpy", "pydigitalwavetools==1.1", "pyyaml" ]
 
 optional-dependencies.doc = [
