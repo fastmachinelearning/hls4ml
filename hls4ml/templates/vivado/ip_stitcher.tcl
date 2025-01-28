@@ -152,25 +152,35 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         # Get the CONFIG.POLARITY property from one of the IP's 'ap_rst' pins
         set sample_rst_pin [lindex $ap_rst_ports 0]
         set rst_polarity [get_property CONFIG.POLARITY $sample_rst_pin]
-        # Create the 'ap_rst' port
-        set rst_port_name "ap_rst"
-        create_bd_port -dir I -type rst $rst_port_name
-        set ap_rst_port [get_bd_ports ap_rst]
 
-        # Set the CONFIG.POLARITY property of the 'ap_rst' port based on the retrieved polarity
+        # Only proceed if the polarity is defined
         if {$rst_polarity ne ""} {
+            # Create the 'ap_rst' port
+            set rst_port_name "ap_rst"
+            create_bd_port -dir I -type rst $rst_port_name
+            set ap_rst_port [get_bd_ports ap_rst]
+
+            # Set the CONFIG.POLARITY property of the 'ap_rst' port based on the retrieved polarity
             set_property CONFIG.POLARITY $rst_polarity $ap_rst_port
-            # naming convention for active-low signals
-            set rst_port_name "ap_rst_n"
-            set_property NAME $rst_port_name $ap_rst_port
+            
+            # Rename the port based on polarity
+            if {$rst_polarity eq "ACTIVE_LOW"} {
+                set rst_port_name "ap_rst_n"
+                set_property NAME $rst_port_name $ap_rst_port
+                puts "Setting reset port ap_rst_n (ACTIVE_LOW)."
+            } else {
+                puts "Setting reset port ap_rst (ACTIVE_HIGH)."
+            }
+            # Connect all 'ap_rst' pins to the 'ap_rst' port
+            foreach rst_pin $ap_rst_ports {
+                connect_bd_net $ap_rst_port $rst_pin
+            }
         } else {
-            # Fallback to ACTIVE_HIGH if the retrieved polarity is not defined
-            set_property CONFIG.POLARITY ACTIVE_HIGH $ap_rst_port
+            # Fallback: Undefined polarity, no port created
+            puts "Warning: CONFIG.POLARITY of ap_rst is undefined. No reset port created."
         }
-        # Connect all 'ap_rst' pins to the 'ap_rst' port
-        foreach rst_pin $ap_rst_ports {
-            connect_bd_net $ap_rst_port $rst_pin
-        }
+    } else {
+        puts "Error: No reset ports found."
     }
 
     # Determine interface type
@@ -185,7 +195,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
             set interface_type "axi_stream"
             break
         } elseif {[regexp {^layer(?:\d+_)?out_(\d+)$} $port_name]} {
-            set interface_type "unpacked"
+            set interface_type "partition"
             break
         }
     }
@@ -220,8 +230,8 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         set ip_i_cell [get_bd_cells $ip_i]
         set ip_i_plus1_cell [get_bd_cells $ip_i_plus1]
 
-        if {$interface_type == "unpacked"} {
-            # Existing unpacked interface connection logic
+        if {$interface_type == "partition"} {
+            # Existing partitioned interface connection logic
             # Get all output pins from ip_i
             set output_ports [get_bd_pins -of $ip_i_cell]
 
@@ -434,7 +444,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
             puts "Warning: Could not find 'ap_done' pin for last IP"
         }
 
-    } elseif {$interface_type == "unpacked"} {
+    } elseif {$interface_type == "partition"} {
         # Make 'ap_start' of the first IP external
         set first_ip_cell [get_bd_cells [lindex $ip_instances 0]]
         if {[string length $first_ip_cell] == 0} {
