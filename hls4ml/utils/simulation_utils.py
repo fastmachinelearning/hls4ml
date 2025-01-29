@@ -61,117 +61,161 @@ def write_verilog_testbench(nn_config, testbench_output_path):
     Generate a Verilog testbench for a given neural network configuration.
     The testbench includes:
       - Clock and reset logic
-      - DUT instantiation and AXI4-Stream interfaces
+      - DUT instantiation and AXI4-Stream/Partition interfaces
       - Stimulus generation for inputs
       - Data capture and logging for outputs
       - Latency measurement
     """
     inputs = nn_config['inputs']
     outputs = nn_config['outputs']
-
-    input_signals = []
-    output_signals = []
-
-    # Collect input signals (name and total bitwidth)
-    for input_item in inputs:
-        total_bits = input_item['integer_bits'] + input_item['fractional_bits']
-        input_signals.append((input_item['name'], total_bits))
-
-    # Collect output signals (name and total bitwidth)
-    for output_item in outputs:
-        total_bits = output_item['integer_bits'] + output_item['fractional_bits']
-        output_signals.append((output_item['name'], total_bits))
+    pragma = nn_config['inputs'][0]['pragma']
+    # NOTE we usually have active-low in stream interfaces and active-high in partitioned interfaces.
+    rst_name = 'ap_rst_n' if pragma == 'stream' else 'ap_rst'
 
     with open(testbench_output_path, 'w') as f:
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Header and Module Declaration
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('`timescale 1ns / 1ps\n\n')
         f.write('module tb_design_1_wrapper;\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Clock and Reset Signals
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Clock and Reset Signals\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    reg ap_clk;\n')
-        f.write('    reg ap_rst_n;\n\n')
+        f.write(f'    reg {rst_name};\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Control and Handshaking Signals
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Control and Handshaking Signals\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    reg  ap_start;\n')
         f.write('    wire ap_done;\n\n')
 
-        # ----------------------------------------------------------------------
-        # AXI4-Stream Input Interfaces
-        # ----------------------------------------------------------------------
-        f.write('    //------------------------------------------------------------------------\n')
-        f.write('    // AXI4-Stream Input Interfaces\n')
-        f.write('    //------------------------------------------------------------------------\n')
+        if(pragma == 'stream'):
+            #----------------------------------------------------------------------
+            # AXI4-Stream Input Interfaces
+            #----------------------------------------------------------------------
+            f.write('    //------------------------------------------------------------------------\n')
+            f.write('    // AXI4-Stream Input Interfaces\n')
+            f.write('    //------------------------------------------------------------------------\n')
 
-        for layer in nn_config['inputs']:
-            total_bits = layer['integer_bits'] + layer['fractional_bits']
-            batch_size = layer['batch_size']
-            f.write(f'    reg  [{(total_bits * batch_size) - 1}:0] {layer["name"]}_tdata;\n')
-            f.write(f'    reg  {layer["name"]}_tvalid;\n')
-            f.write(f'    wire {layer["name"]}_tready;\n\n')
+            for layer in nn_config['inputs']:
+                name = layer["name"]
+                total_bits = layer['integer_bits'] + layer['fractional_bits']
+                batch_size = layer['batch_size']
+                f.write(f'    reg  [{(total_bits * batch_size) - 1}:0] {name}_tdata;\n')
+                f.write(f'    reg  {name}_tvalid;\n')
+                f.write(f'    wire {name}_tready;\n\n')
 
-        # ----------------------------------------------------------------------
-        # AXI4-Stream Output Interfaces
-        # ----------------------------------------------------------------------
-        f.write('    //------------------------------------------------------------------------\n')
-        f.write('    // AXI4-Stream Output Interfaces\n')
-        f.write('    //------------------------------------------------------------------------\n')
+            #----------------------------------------------------------------------
+            # AXI4-Stream Output Interfaces
+            #----------------------------------------------------------------------
+            f.write('    //------------------------------------------------------------------------\n')
+            f.write('    // AXI4-Stream Output Interfaces\n')
+            f.write('    //------------------------------------------------------------------------\n')
 
-        for layer in nn_config['outputs']:
-            total_bits = layer['integer_bits'] + layer['fractional_bits']
-            batch_size = layer['batch_size']
-            f.write(f'    wire [{(total_bits * batch_size) - 1}:0] {layer["name"]}_tdata;\n')
-            f.write(f'    wire {layer["name"]}_tvalid;\n')
-            f.write(f'    reg  {layer["name"]}_tready;\n\n')
+            for layer in nn_config['outputs']:
+                name = layer["name"]
+                total_bits = layer['integer_bits'] + layer['fractional_bits']
+                batch_size = layer['batch_size']
+                f.write(f'    wire [{(total_bits * batch_size) - 1}:0] {name}_tdata;\n')
+                f.write(f'    wire {name}_tvalid;\n')
+                f.write(f'    reg  {name}_tready;\n\n')
+        else:
+            #----------------------------------------------------------------------
+            # Partitioned Input Interfaces
+            #----------------------------------------------------------------------
+            f.write('    //------------------------------------------------------------------------\n')
+            f.write('    // Partitioned Input Interfaces\n')
+            f.write('    //------------------------------------------------------------------------\n')
 
-        # ----------------------------------------------------------------------
+            for layer in nn_config['inputs']:
+                name = layer["name"]
+                total_bits = layer['integer_bits'] + layer['fractional_bits']
+                batch_size = layer['batch_size']
+                for idx in range(batch_size):
+                    f.write(f'    reg  [{total_bits - 1}:0] {name}_{idx};\n')
+                    f.write(f'    reg {name}_{idx}_ap_vld;\n')
+
+            #----------------------------------------------------------------------
+            # Partitioned Output Interfaces
+            #----------------------------------------------------------------------
+            f.write('    //------------------------------------------------------------------------\n')
+            f.write('    // Partitioned Output Interfaces\n')
+            f.write('    //------------------------------------------------------------------------\n')
+
+            for layer in nn_config['outputs']:
+                name = layer["name"]
+                total_bits = layer['integer_bits'] + layer['fractional_bits']
+                batch_size = layer['batch_size']
+                for idx in range(batch_size):
+                    f.write(f'    wire [{total_bits - 1}:0] {name}_{idx};\n')
+                    f.write(f'    wire {name}_{idx}_ap_vld;\n')
+
+        #----------------------------------------------------------------------
         # DUT Instantiation
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // DUT Instantiation\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    stitched_design dut (\n')
         f.write('        .ap_clk(ap_clk),\n')
         f.write('        .ap_done(ap_done),\n')
-        f.write('        .ap_rst_n(ap_rst_n),\n')
+        f.write(f'        .{rst_name}({rst_name}),\n')
         f.write('        .ap_start(ap_start),\n')
 
         # Connect input interfaces
         for layer in nn_config['inputs']:
             name = layer["name"]
-            f.write(f'        .{name}_tdata({name}_tdata),\n')
-            f.write(f'        .{name}_tready({name}_tready),\n')
-            f.write(f'        .{name}_tvalid({name}_tvalid),\n')
+            batch_size = layer['batch_size']
+            if (pragma == 'stream'):
+                f.write(f'        .{name}_tdata({name}_tdata),\n')
+                f.write(f'        .{name}_tready({name}_tready),\n')
+                f.write(f'        .{name}_tvalid({name}_tvalid),\n')
+            else:
+                for idx in range(batch_size):
+                    f.write(f'        .{name}_{idx}({name}_{idx}),\n')
+                    f.write(f'        .{name}_{idx}_ap_vld({name}_{idx}_ap_vld),\n')
 
         # Connect output interfaces (all but last have trailing comma)
         for layer in nn_config['outputs'][:-1]:
             name = layer["name"]
-            f.write(f'        .{name}_tdata({name}_tdata),\n')
-            f.write(f'        .{name}_tready({name}_tready),\n')
-            f.write(f'        .{name}_tvalid({name}_tvalid),\n')
+            batch_size = layer['batch_size']
+            if (pragma == 'stream'):
+                f.write(f'        .{name}_tdata({name}_tdata),\n')
+                f.write(f'        .{name}_tready({name}_tready),\n')
+                f.write(f'        .{name}_tvalid({name}_tvalid),\n')
+            else:
+                for idx in range(batch_size):
+                    f.write(f'        .{name}_{idx}({name}_{idx}),\n')
+                    f.write(f'        .{name}_{idx}_ap_vld({name}_{idx}_ap_vld),\n')
 
         # Last output interface (no trailing comma)
         last_output_layer = nn_config['outputs'][-1]
         name = last_output_layer["name"]
-        f.write(f'        .{name}_tdata({name}_tdata),\n')
-        f.write(f'        .{name}_tready({name}_tready),\n')
-        f.write(f'        .{name}_tvalid({name}_tvalid)\n')
+        batch_size = last_output_layer['batch_size']
+        if (pragma == 'stream'):
+            f.write(f'        .{name}_tdata({name}_tdata),\n')
+            f.write(f'        .{name}_tready({name}_tready),\n')
+            f.write(f'        .{name}_tvalid({name}_tvalid)\n')
+        else:
+            for idx in range(batch_size):
+                    f.write(f'        .{name}_{idx}({name}_{idx}),\n')
+                    if idx < batch_size - 1:
+                        f.write(f'        .{name}_{idx}_ap_vld({name}_{idx}_ap_vld),\n')
+                    else:
+                        f.write(f'        .{name}_{idx}_ap_vld({name}_{idx}_ap_vld)\n')
         f.write('    );\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Clock Generation
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Clock Generation (100 MHz => 10 ns period)\n')
         f.write('    //------------------------------------------------------------------------\n')
@@ -180,37 +224,51 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('        forever #5 ap_clk = ~ap_clk;\n')
         f.write('    end\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Reset Generation
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Reset Generation\n')
-        f.write('    // Wait for a few cycles and then release reset.\n')
+        f.write('    // Wait for a cycle and then release reset.\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    initial begin\n')
-        f.write('        ap_rst_n = 0;\n')
-        f.write('        repeat (5) @(posedge ap_clk);\n')
-        f.write('        ap_rst_n = 1;\n')
+        if rst_name == 'ap_rst_n':
+            f.write(f'        {rst_name} = 0;\n')
+            f.write('        repeat (1) @(posedge ap_clk);\n')
+            f.write(f'        {rst_name} = 1;\n')
+        else:
+            f.write(f'        {rst_name} = 1;\n')
+            f.write('        repeat (1) @(posedge ap_clk);\n')
+            f.write(f'        {rst_name} = 0;\n')           
         f.write('    end\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Signal Initialization
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Signal Initialization\n')
         f.write('    // Initialize control signals, input valid, and output ready.\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    initial begin\n')
         f.write('        ap_start = 0;\n')
-        for name, _ in input_signals:
-            f.write(f'        {name}_tvalid = 0;\n')
-        for name, _ in output_signals:
-            f.write(f'        {name}_tready = 1;\n')
+
+        for layer in nn_config['inputs']:
+                name = layer['name']
+                batch_size = layer['batch_size']
+                if pragma == 'stream':
+                    f.write(f'        {name}_tvalid = 0;\n')
+                else:
+                    for idx in range(batch_size):
+                        f.write(f'        {name}_{idx}_ap_vld = 0;\n')
+        if pragma == 'stream':
+            for layer in nn_config['outputs']:
+                name = layer['name']
+                f.write(f'        {name}_tready = 1;\n')
         f.write('    end\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Variables for Logging and Measurement
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Logging and Measurement Variables\n')
         f.write('    //------------------------------------------------------------------------\n')
@@ -222,33 +280,39 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('    reg [63:0] start_cycle = 0;\n')
         f.write('    reg [63:0] end_cycle = 0;\n')
         f.write('    reg [1:0] done_counter = 0;\n')
-        f.write('    reg       old_ap_done = 0;\n\n')
+        f.write('    reg old_ap_done = 0;\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Cycle Counting
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Cycle Counting\n')
         f.write('    // Count cycles to measure latency.\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    always @(posedge ap_clk) begin\n')
-        f.write('        if (!ap_rst_n)\n')
-        f.write('            cycle_count <= 0;\n')
+        if rst_name == 'ap_rst_n':
+            f.write(f'        if (!{rst_name})\n')
+            f.write('            cycle_count <= 0;\n')
+        else:
+            f.write(f'        if ({rst_name})\n')
+            f.write('            cycle_count <= 0;\n')           
         f.write('        else\n')
         f.write('            cycle_count <= cycle_count + 1;\n')
         f.write('    end\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Data Transmission (Stimulus Generation)
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Data Transmission (Stimulus)\n')
         f.write('    // Send input patterns to the DUT.\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    initial begin\n')
         f.write('        // Wait until reset is de-asserted\n')
-        f.write('        wait (ap_rst_n == 1);\n')
-        f.write('        repeat (2) @(posedge ap_clk);\n\n')
+        if rst_name == 'ap_rst_n':
+            f.write(f'        wait ({rst_name} == 1);\n')
+        else:
+            f.write(f'        wait ({rst_name} == 0);\n')            
 
         f.write('        // Open CSV log file\n')
         f.write('        csv_file = $fopen("../../../../testbench_log.csv", "w");\n')
@@ -258,10 +322,13 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('        end\n')
         f.write('        $fwrite(csv_file, "output_name,index,value\\n");\n\n')
 
-        f.write('        // Start the DUT\n')
-        f.write('        ap_start = 1;\n\n')
+        if pragma == 'stream':
+            f.write('        // Start the DUT\n')
+            f.write('        ap_start = 1;\n\n')
 
-        # Send first pattern of inputs (all zeroes)
+        #----------------------------------------------------------------------
+        # Sending first pattern of inputs (all zeroes)
+        #----------------------------------------------------------------------
         for layer in nn_config['inputs']:
             i_bits = layer["integer_bits"]
             f_bits = layer["fractional_bits"]
@@ -269,19 +336,44 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             batch_size = layer['batch_size']
             fifo_depth = layer["fifo_depth"]
             name = layer["name"]
-            f.write(f'        // Sending 1st patern of inputs for {name}\n')
-            f.write(f'        {name}_tvalid = 1;\n')
+            f.write(f'        // Sending first patern of inputs for {name}\n')
+            if pragma == 'stream':
+                f.write(f'        {name}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {fifo_depth}; j = j + 1) begin\n')
             for k in range(batch_size):
                 upper = (k + 1) * total_bits - 1
                 lower = k * total_bits
-                f.write(f'            {name}_tdata[{upper}:{lower}] = 0;\n')
-            f.write(f'            while ({name}_tready == 0) @(posedge ap_clk);\n')
-            f.write('            @(posedge ap_clk);\n')
+                if pragma == 'stream':
+                    f.write(f'            {name}_tdata[{upper}:{lower}] = 0;\n')
+                else:
+                    f.write(f'            {name}_{k} = 0;\n')
+            if pragma == 'stream':
+                f.write(f'            while ({name}_tready == 0) @(posedge ap_clk);\n')
+                f.write('            @(posedge ap_clk);\n')
             f.write('        end\n')
-            f.write(f'        {name}_tvalid = 0;\n\n')
+            if pragma == 'stream':
+                f.write(f'        {name}_tvalid = 0;\n\n')
+            else:
+                f.write(f'        // Assert valid signals\n')
+                for k in range(batch_size):
+                   f.write(f'        {name}_{k}_ap_vld = 1;\n')
+                f.write('        // Start the DUT\n')
+                f.write(f'        ap_start = 1;\n')  
+                f.write(f'        @(posedge ap_clk);\n')
+                f.write(f'        ap_start = 0;\n') 
+                f.write(f'        // Deassert valid signals\n')
+                for k in range(batch_size):
+                   f.write(f'        {name}_{k}_ap_vld = 0;\n') 
+                f.write(f'\n') 
+                f.write(f'        // Wait for ap_done to go high\n')
+                f.write(f'        wait (ap_done);\n')
+                f.write(f'        // Wait for ap_done to go low before sending next input\n')
+                f.write(f'        wait (!ap_done);\n')
+                f.write(f'        // Wait for ap_done to go high\n')
 
-        # Send second pattern of inputs (read from file)
+        #----------------------------------------------------------------------
+        # Sending second pattern of inputs (read from file)
+        #----------------------------------------------------------------------
         for layer in nn_config['inputs']:
             i_bits = layer["integer_bits"]
             f_bits = layer["fractional_bits"]
@@ -290,8 +382,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             fifo_depth = layer["fifo_depth"]
             name = layer["name"]
             input_file = f"{name}_input_data.txt"
-            f.write(f'        // Sending 2nd pattern of inputs for {name}\n')
-            f.write(f'        {name}_tvalid = 1;\n')
+            f.write(f'        // Sending second pattern of inputs for {name}\n')
+            if pragma == 'stream':
+                f.write(f'        {name}_tvalid = 1;\n')
             f.write(f'        file = $fopen("../../../../{input_file}", "r");\n')
             f.write(f'        if (file == 0) begin\n')
             f.write(f'            $display("Error opening file {input_file}");\n')
@@ -303,16 +396,32 @@ def write_verilog_testbench(nn_config, testbench_output_path):
                 upper = (k + 1) * total_bits - 1
                 lower = k * total_bits
                 f.write(f'            r = $fscanf(file, "%d", value);\n')
-                f.write(f'            {name}_tdata[{upper}:{lower}] = value;\n')
-            f.write(f'            while ({name}_tready == 0) @(posedge ap_clk);\n')
-            f.write('            @(posedge ap_clk);\n')
+                if pragma == 'stream':
+                    f.write(f'            {name}_tdata[{upper}:{lower}] = value;\n')
+                else:
+                    f.write(f'            {name}_{k} = value;\n')
+            if pragma == 'stream':    
+                f.write(f'            while ({name}_tready == 0) @(posedge ap_clk);\n')
+                f.write('            @(posedge ap_clk);\n')
             f.write('        end\n')
+            if pragma == 'partition':
+                f.write(f'        // Assert valid signals\n')
+                for k in range(batch_size):
+                   f.write(f'        {name}_{k}_ap_vld = 1;\n')
+                f.write('        // Start the DUT\n')
+                f.write(f'        ap_start = 1;\n')  
+                f.write(f'        @(posedge ap_clk);\n')
+                f.write(f'        ap_start = 0;\n') 
+                f.write(f'        // Deassert valid signals\n')
+                for k in range(batch_size):
+                   f.write(f'        {name}_{k}_ap_vld = 0;\n') 
+                f.write(f'\n') 
 
         f.write('    end\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Output Data Capture and Logging
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Output Data Capture and Logging\n')
         f.write('    // Capture output for 2nd input (done_counter == 1) and log them to CSV.\n')
@@ -323,34 +432,50 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f_bits = layer['fractional_bits']
             total_bits = i_bits + f_bits
             layer_name = layer["name"]
+            batch_size = layer["batch_size"]
 
             f.write(f'    //Output capture for {layer_name}\n')
             f.write(f'    integer idx_{i};\n')
-            f.write(f'    reg signed [{total_bits-1}:0] fixed_val_{i};\n')
-            f.write(f'    real real_val_{i};\n')
+            if pragma == 'stream':
+                f.write(f'    reg signed [{total_bits-1}:0] fixed_val_{i};\n')
+                f.write(f'    real real_val_{i};\n')
+            else:
+                f.write(f'    reg signed [{total_bits-1}:0] fixed_val_{i};\n')
+                f.write(f'    real real_val_{i};\n')               
             f.write(f'    always @(posedge ap_clk) begin\n')
-            f.write(f'        if (done_counter == 1 && {layer_name}_tvalid && {layer_name}_tready) begin\n')
-            f.write(f'            for (idx_{i} = 0; idx_{i} < {layer["batch_size"]}; idx_{i} = idx_{i} + 1) begin\n')
-            f.write(f'                fixed_val_{i} = {layer_name}_tdata[(idx_{i}+1)*{total_bits}-1 -: {total_bits}];\n')
-            f.write(f'                real_val_{i}  = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
-            f.write(
-                f'                $display("Output {layer_name}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx_{i}, {i_bits}, {f_bits}, real_val_{i});\n'
-            )
-            f.write('                // Log result to CSV\n')
-            f.write(f'                $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", idx_{i}, real_val_{i});\n')
-            f.write('            end\n')
+            if pragma == 'stream':
+                f.write(f'        if (done_counter == 1 && {layer_name}_tvalid && {layer_name}_tready) begin\n')
+                f.write(f'            for (idx_{i} = 0; idx_{i} < {batch_size}; idx_{i} = idx_{i} + 1) begin\n')
+                f.write(f'                fixed_val_{i} = {layer_name}_tdata[(idx_{i}+1)*{total_bits}-1 -: {total_bits}];\n')
+                f.write(f'                real_val_{i}  = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
+                f.write(f'                $display("Output {layer_name}[%0d]: integer_bits=%0d fractional_bits=%0d value=%f", idx_{i}, {i_bits}, {f_bits}, real_val_{i});\n')
+                f.write('                // Log result to CSV\n')
+                f.write(f'                $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", idx_{i}, real_val_{i});\n')
+                f.write('            end\n')
+            else:
+                f.write(f'        // Note: The expected behavior in most cases is to have valid outputs (ap_vld=1) when ap_done = 1\n')
+                f.write(f'        if (done_counter == 1 && ap_done == 1) begin\n')
+                for idx in range (batch_size):
+                    f.write(f'            fixed_val_{i} = {layer_name}_{idx}[{total_bits - 1}:0];\n')
+                    f.write(f'            real_val_{i} = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
+                    f.write(f'            $display("Output {layer_name}_{idx}: integer_bits=%0d fractional_bits=%0d value=%f", {i_bits}, {f_bits}, real_val_{i});\n')
+                    f.write('            // Log result to CSV\n')
+                    f.write(f'            $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", {idx}, real_val_{i});\n')        
             f.write('        end\n')
             f.write('    end\n\n')
 
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Latency Measurement and Test End
-        # ----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    // Latency Measurement\n')
         f.write('    // Measures the cycle count between start and subsequent ap_done signals.\n')
         f.write('    //------------------------------------------------------------------------\n')
         f.write('    always @(posedge ap_clk) begin\n')
-        f.write('        if (!ap_rst_n) begin\n')
+        if rst_name == 'ap_rst_n':
+            f.write(f'        if (!{rst_name}) begin\n')
+        else:
+             f.write(f'        if ({rst_name}) begin\n')           
         f.write('            old_ap_done <= 0;\n')
         f.write('        end else begin\n')
         f.write('            old_ap_done <= ap_done;\n')
