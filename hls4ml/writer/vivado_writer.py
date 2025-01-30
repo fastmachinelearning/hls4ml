@@ -254,6 +254,7 @@ class VivadoWriter(Writer):
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
+                            vars = layer.get_variables()
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
                                 newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(
