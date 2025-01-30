@@ -1427,6 +1427,54 @@ class GRU(Layer):
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
+class TimeDistributed(Layer):
+    _expected_attributes = [
+        Attribute('wrapped_layer', value_type=Layer),
+        Attribute('n_time_steps'),
+        Attribute('output_shape', value_type=list),
+    ]
+
+    def initialize(self):
+        # The wrapped_layer attribute can be a dict (an unprocessed layer) coming from the converter
+        # or a Layer instance, coming from an optimizer
+        wrapped_layer = self.attributes['wrapped_layer']
+        if not isinstance(wrapped_layer, Layer):
+            kind = wrapped_layer['class_name']
+            name = wrapped_layer['name']
+            inputs = wrapped_layer.get('inputs', [])
+            outputs = wrapped_layer.get('outputs', [])
+            if len(inputs) == 0:
+                inputs = [self.attributes['name']]
+            if len(outputs) == 0:
+                outputs = [name]
+
+            wrapped_layer = self.model.make_node(kind, name, wrapped_layer, inputs, outputs)
+            # Set the new Layer object as the wrapped_layer attribute for optimizer to process
+            self.set_attr('wrapped_layer', wrapped_layer)
+
+        # We recognize two cases, one when the wrapped layer is TimeDistributed, and one when it is not.
+        # If wrapped_layer is TimeDistributed, it is used to mark a special case when the graph is flattened.
+        # When the graph is flattened by the optimizer, the wrapped layer will have modified output shape that
+        # we must be aware of.
+        if isinstance(wrapped_layer, TimeDistributed):
+            assert (
+                wrapped_layer.name + '_end' == self.name
+            ), f'Layer {self.name} expected to wrap {self.name[:-4]} not {wrapped_layer.name}.'
+
+        shape = self.attributes['output_shape']
+        dims = [f'N_TIME_STEPS_{self.index}']
+        if len(shape[1:]) == 1:
+            dims += [f'N_OUT_{self.index}']
+        elif len(shape[1:]) == 2:
+            dims += [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        elif len(shape[1:]) == 3:
+            dims += [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            dims += [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+
 class GarNet(Layer):
     ref_impl = False
 
@@ -1677,6 +1725,7 @@ layer_map = {
     'QSimpleRNN': SimpleRNN,
     'QLSTM': LSTM,
     'QGRU': GRU,
+    'TimeDistributed': TimeDistributed,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
     'Quant': Quant,

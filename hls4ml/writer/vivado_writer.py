@@ -241,7 +241,8 @@ class VivadoWriter(Writer):
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
-                                    newline += '    ' + self._make_array_pragma(var) + '\n'
+                                    newline += '    ' + self._make_array_pragma(var) + '\n\n'
+                for layer in model.get_layers():
                     func = layer.get_attr('function_cpp', None)
                     if func:
                         if not isinstance(func, (list, set)):
