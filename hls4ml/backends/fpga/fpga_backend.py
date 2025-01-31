@@ -913,6 +913,33 @@ class FPGABackend(Backend):
 
         return generated_code
 
+    @staticmethod
+    def permute_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
+        """
+        Generate new shape and perm_strides for a permute operation. Operates by mapping the output index
+        to input input index by:
+        - unravel the output index
+        - map each dimension to the corresponding stride in the input tensor, sum
+        The operation can be expressed as:
+
+        new_shape = tuple(shape[i] for i in perm)
+        strides = np.cumprod((shapes[1:] + (1,))[::-1])[::-1]
+        perm_strides = [strides[i] for i in perm]
+        out[index] = inp[np.dot(np.unravel_index(index, new_shape), perm_strides)]
+
+        Args:
+            name (str): The name of the configuration.
+            shape (tuple[int, ...]): The shape of the input tensor.
+            perm (tuple[int, ...]): The permutation of the dimensions.
+
+        Returns:
+            (new_shape, perm_strides) (tuple, tuple):  the output shape and permutation strides.
+        """
+        new_shape = tuple(shape[i] for i in perm)
+        strides = np.cumprod((shape[1:] + (1,))[::-1])[::-1]
+        perm_strides = tuple(int(strides[i]) for i in perm)
+        return (new_shape, perm_strides)
+
     @model_optimizer()
     def write_hls(self, model):
         self.writer.write_hls(model)
