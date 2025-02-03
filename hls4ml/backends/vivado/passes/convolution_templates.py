@@ -108,8 +108,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
             else:
                 params['conv_fn'] = 'Conv1DResource'
 
-        params.setdefault('min_width', node.get_attr('in_width'))
-        params.setdefault('instructions', '0')
+        params['min_width'] = node.get_attr('min_width', node.get_attr('in_width'))
+        params['instructions'] = node.get_attr('instructions', '0')
 
         conv_config = self.template.format(**params)
 
@@ -242,9 +242,9 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         else:
             params['fill_fn'] = 'FillConv2DBuffer'
 
-        params.setdefault('min_height', node.get_attr('in_height'))
-        params.setdefault('min_width', node.get_attr('in_width'))
-        params.setdefault('instructions', '0')
+        params['min_height'] = node.get_attr('min_height', node.get_attr('in_height'))
+        params['min_width'] = node.get_attr('min_width', node.get_attr('in_width'))
+        params['instructions'] = node.get_attr('instructions', '0')
 
         conv_config = self.template.format(**params)
 
