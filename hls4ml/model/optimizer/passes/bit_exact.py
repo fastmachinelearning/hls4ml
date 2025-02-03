@@ -76,12 +76,12 @@ def _maximum_kif_at_shape(shape: tuple[int, ...]):
 
 
 @singledispatch
-def request_kif(layer: Layer) -> tuple[KIF_t, ...]:
+def _request_kif(layer: Layer) -> tuple[KIF_t, ...]:
     input_shapes = get_input_shapes(layer)
     return tuple(_maximum_kif_at_shape(shape) for shape in input_shapes)
 
 
-@request_kif.register
+@_request_kif.register
 def _(layer: FixedPointQuantizer):
     assert layer.mask_kbi is not None
     k, b, I = layer.mask_kbi
@@ -104,7 +104,7 @@ def _(layer: FixedPointQuantizer):
     return ((k, i, f),)
 
 
-@request_kif.register
+@_request_kif.register
 def _(layer: Reshape):
     inp_shape = get_input_shapes(layer)[0]
     k, i, f = requested_kif(layer)
@@ -114,7 +114,7 @@ def _(layer: Reshape):
     return ((k, i, f),)
 
 
-@request_kif.register
+@_request_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes.attributes.get('activation')
     if fn_name == 'linear':
@@ -128,7 +128,7 @@ def _(layer: Activation):
     return (_maximum_kif_at_shape(inp_shape),)
 
 
-@request_kif.register
+@_request_kif.register
 def _(layer: Concatenate):
     inp_shape0, inp_shape1 = get_input_shapes(layer)
     k, i, f = requested_kif(layer)
@@ -163,11 +163,11 @@ def requested_kif(layer: Layer) -> KIF_t:
 
 
 @singledispatch
-def produce_kif(layer: Layer) -> KIF_t:
+def _produce_kif(layer: Layer) -> KIF_t:
     raise NotImplementedError(f'No implementation of produce_kif for {layer.__class__}')
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Input):
     k = np.ones(get_output_shape(layer), dtype=np.int8)
     i = f = np.full(get_output_shape(layer), 126, dtype=np.int8)
@@ -175,10 +175,10 @@ def _(layer: Input):
 
 
 def get_input_kifs(layer: Layer):
-    return [produce_kif(l) for l in get_input_layers(layer)]
+    return [_produce_kif(l) for l in get_input_layers(layer)]
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: FixedPointQuantizer):
     assert layer.mask_kbi is not None
     k, b, I = layer.mask_kbi
@@ -192,14 +192,14 @@ def _(layer: FixedPointQuantizer):
     return k, i, f
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Reshape):
     out_shape = get_output_shape(layer)
     k, i, f = produce_kif(get_input_layers(layer)[0])
     return k.reshape(out_shape), i.reshape(out_shape), f.reshape(out_shape)
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Merge):
     op = layer.attributes.attributes['op'].lower()
     kif_ins = get_input_kifs(layer)
@@ -219,7 +219,7 @@ def _(layer: Merge):
             raise NotImplementedError(f'No implementation of Merge for {op}')
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: EinsumDense):
     t_kernel = layer.attributes.attributes['weight'].data
     to_original_kernel = layer.attributes.attributes['to_original_kernel']
@@ -237,7 +237,7 @@ def _(layer: EinsumDense):
     return k.astype(np.int8), i, f
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Einsum):
     kif_in1, kif_in2 = get_input_kifs(layer)
     qint_in1 = QIntervalArray.from_kif(*kif_in1)
@@ -248,7 +248,7 @@ def _(layer: Einsum):
     return k.astype(np.int8), i, f
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Dense):
     kernel = layer.attributes.attributes['weight'].data
     _bias = layer.attributes.attributes['bias']
@@ -334,8 +334,8 @@ def stride_arrs(node: Layer, *arrs: np.ndarray):
     raise ValueError(f'Layer {node.class_name} is not supported for stride_arrs')
 
 
-@produce_kif.register(Conv1D)
-@produce_kif.register(Conv2D)
+@_produce_kif.register(Conv1D)
+@_produce_kif.register(Conv2D)
 def _(layer: Conv1D | Conv2D):
     assert layer.attributes.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
     kernel = layer.attributes.attributes['weight'].data
@@ -353,10 +353,10 @@ def _(layer: Conv1D | Conv2D):
     return k.astype(np.int8), i, f
 
 
-@produce_kif.register(Pooling1D)
-@produce_kif.register(Pooling2D)
-@produce_kif.register(GlobalPooling1D)
-@produce_kif.register(GlobalPooling2D)
+@_produce_kif.register(Pooling1D)
+@_produce_kif.register(Pooling2D)
+@_produce_kif.register(GlobalPooling1D)
+@_produce_kif.register(GlobalPooling2D)
 def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
     if isinstance(layer, (Pooling1D, GlobalPooling1D)):
         px_shape = (layer.attributes['pool_width'],)
@@ -386,7 +386,7 @@ def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
     return k_out, i_out, f_out
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: BatchNormalization):
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
@@ -400,7 +400,7 @@ def _(layer: BatchNormalization):
     return k.astype(np.int8), i, f
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Softmax):
     out_shape = get_output_shape(layer)
 
@@ -419,7 +419,7 @@ def _(layer: Softmax):
     return k, i, f
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Concatenate):
     kifs_in = get_input_kifs(layer)
     ks, is_, fs = zip(*kifs_in)
@@ -430,7 +430,7 @@ def _(layer: Concatenate):
     return k, i, f
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes.attributes['activation'].lower()
     k, i, f = get_input_kifs(layer)[0]
@@ -457,7 +457,7 @@ def _(layer: Activation):
             return k, i, f
 
 
-@produce_kif.register
+@_produce_kif.register
 def _(layer: UnaryLUT):
     table_t = layer.attributes['table_t'].precision
     k, I, f = table_t.signed, table_t.integer, table_t.fractional
@@ -471,6 +471,22 @@ def _(layer: UnaryLUT):
 
 def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
     return tuple(int(np.max(a)) for a in arr)
+
+
+def produce_kif(layer: Layer) -> KIF_t:
+    if layer.attributes.get('_produce_kif'):
+        return layer.attributes['_produce_kif']
+    kif = _produce_kif(layer)
+    layer.attributes['_produce_kif'] = kif
+    return kif
+
+
+def request_kif(layer: Layer) -> tuple[KIF_t, ...]:
+    if layer.attributes.get('_request_kif'):
+        return layer.attributes['_request_kif']
+    kif = _request_kif(layer)
+    layer.attributes['_request_kif'] = kif
+    return kif
 
 
 def default_register_precision(layer: Layer):
@@ -635,9 +651,15 @@ class BitExact(ModelOptimizerPass):
 
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
-                return False
+                continue
             register_precision(node)
             node.attributes['bit_exact_transformed'] = True
+
+        for node in model.graph.values():
+            if node.attributes.get('_produce_kif'):
+                del node.attributes['_produce_kif']
+            if node.attributes.get('_request_kif'):
+                del node.attributes['_request_kif']
 
         return False
 
@@ -669,7 +691,7 @@ class FixInputPrecision(OptimizerPass):
         if illegal_sat_modes:
             raise ValueError(f'Input {node.name} has quantizer with illegal saturation mode {illegal_sat_modes} after.')
 
-        kifs = [produce_kif(l) for l in out_layers]
+        kifs = [_produce_kif(l) for l in out_layers]
         i = np.max([np.max(i) for _, i, _ in kifs])
         k = np.max([np.max(k) for k, _, _ in kifs])
         f = node.get_output_variable().type.precision.fractional
