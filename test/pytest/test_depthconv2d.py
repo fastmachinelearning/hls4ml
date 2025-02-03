@@ -8,7 +8,7 @@ import hls4ml
 
 test_root_path = Path(__file__).parent
 
-padds_options = ['same']
+padds_options = ['same', 'valid']
 chans_options = ['channels_last']
 strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
