@@ -100,7 +100,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters.keras_to_hls">hls4ml.converters.keras_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters.onnx_to_hls">hls4ml.converters.onnx_to_hls module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-pytorch-to-hls-module">hls4ml.converters.pytorch_to_hls module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters.pytorch_to_hls">hls4ml.converters.pytorch_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters.utils">hls4ml.converters.utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters">Module contents</a></li>
 </ul>
@@ -245,12 +245,39 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.pytorch.html">hls4ml.converters.pytorch package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-convolution-module">hls4ml.converters.pytorch.convolution module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-core-module">hls4ml.converters.pytorch.core module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-merge-module">hls4ml.converters.pytorch.merge module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-pooling-module">hls4ml.converters.pytorch.pooling module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-recurrent-module">hls4ml.converters.pytorch.recurrent module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-reshape-module">hls4ml.converters.pytorch.reshape module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.convolution">hls4ml.converters.pytorch.convolution module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.convolution.parse_conv1d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv1d_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.convolution.parse_conv2d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv2d_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.core">hls4ml.converters.pytorch.core module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.core.parse_activation_layer"><code class="docutils literal notranslate"><span class="pre">parse_activation_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.core.parse_batchnorm_layer"><code class="docutils literal notranslate"><span class="pre">parse_batchnorm_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.core.parse_constant_layer"><code class="docutils literal notranslate"><span class="pre">parse_constant_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.core.parse_linear_layer"><code class="docutils literal notranslate"><span class="pre">parse_linear_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.merge">hls4ml.converters.pytorch.merge module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.merge.parse_concat_layer"><code class="docutils literal notranslate"><span class="pre">parse_concat_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.merge.parse_merge_layer"><code class="docutils literal notranslate"><span class="pre">parse_merge_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.pooling">hls4ml.converters.pytorch.pooling module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pooling.parse_pooling_layer"><code class="docutils literal notranslate"><span class="pre">parse_pooling_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.recurrent">hls4ml.converters.pytorch.recurrent module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.recurrent.parse_rnn_layer"><code class="docutils literal notranslate"><span class="pre">parse_rnn_layer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.reshape">hls4ml.converters.pytorch.reshape module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.handle_upsample"><code class="docutils literal notranslate"><span class="pre">handle_upsample()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_flatten_layer"><code class="docutils literal notranslate"><span class="pre">parse_flatten_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_reshape_layer"><code class="docutils literal notranslate"><span class="pre">parse_reshape_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_squeeze_layer"><code class="docutils literal notranslate"><span class="pre">parse_squeeze_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_unsqueeze_layer"><code class="docutils literal notranslate"><span class="pre">parse_unsqueeze_layer()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch">Module contents</a></li>
 </ul>
 </li>
@@ -513,8 +540,71 @@ output_layers (list):  The output layers</p>
 <dd></dd></dl>
 
 </section>
-<section id="hls4ml-converters-pytorch-to-hls-module">
-<h2>hls4ml.converters.pytorch_to_hls module<a class="headerlink" href="#hls4ml-converters-pytorch-to-hls-module" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.pytorch_to_hls">
+<span id="hls4ml-converters-pytorch-to-hls-module"></span><h2>hls4ml.converters.pytorch_to_hls module<a class="headerlink" href="#module-hls4ml.converters.pytorch_to_hls" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.PyTorchFileReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">PyTorchFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.PyTorchFileReader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.pytorch_to_hls.PyTorchModelReader" title="hls4ml.converters.pytorch_to_hls.PyTorchModelReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyTorchModelReader</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.PyTorchModelReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">PyTorchModelReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.PyTorchModelReader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>PyTorch reader to extract weights data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.PyTorchModelReader.get_weights_data">
+<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.PyTorchModelReader.get_weights_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.get_supported_pytorch_layers">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_supported_pytorch_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.get_supported_pytorch_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.get_weights_data">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.get_weights_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.parse_pytorch_model">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">parse_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.parse_pytorch_model" title="Link to this definition"></a></dt>
+<dd><p>Convert PyTorch model to hls4ml ModelGraph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – The conversion config</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – On unsupported features of the model.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>hls4ml model object.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph">ModelGraph</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.pytorch_handler">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">pytorch_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.pytorch_handler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.pytorch_to_hls">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">pytorch_to_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.pytorch_to_hls" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch_to_hls.register_pytorch_layer_handler">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch_to_hls.</span></span><span class="sig-name descname"><span class="pre">register_pytorch_layer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch_to_hls.register_pytorch_layer_handler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-hls4ml.converters.utils">
 <span id="hls4ml-converters-utils-module"></span><h2>hls4ml.converters.utils module<a class="headerlink" href="#module-hls4ml.converters.utils" title="Link to this heading"></a></h2>

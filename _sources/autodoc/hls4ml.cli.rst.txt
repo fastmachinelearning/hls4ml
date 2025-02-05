@@ -1,0 +1,10 @@
+hls4ml.cli package
+==================
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.cli
+   :members:
+   :undoc-members:
+   :show-inheritance:

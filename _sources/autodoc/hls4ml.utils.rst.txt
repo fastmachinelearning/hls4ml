@@ -20,6 +20,14 @@ hls4ml.utils.config module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.dependency module
+------------------------------
+
+.. automodule:: hls4ml.utils.dependency
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.utils.example\_models module
 -----------------------------------
 

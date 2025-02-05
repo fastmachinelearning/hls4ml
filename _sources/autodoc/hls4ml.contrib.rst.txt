@@ -1,0 +1,21 @@
+hls4ml.contrib package
+======================
+
+Submodules
+----------
+
+hls4ml.contrib.garnet module
+----------------------------
+
+.. automodule:: hls4ml.contrib.garnet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.contrib
+   :members:
+   :undoc-members:
+   :show-inheritance:

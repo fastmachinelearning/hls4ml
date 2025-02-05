@@ -100,7 +100,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.keras_to_hls">hls4ml.converters.keras_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.onnx_to_hls">hls4ml.converters.onnx_to_hls module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#hls4ml-converters-pytorch-to-hls-module">hls4ml.converters.pytorch_to_hls module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.pytorch_to_hls">hls4ml.converters.pytorch_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.utils">hls4ml.converters.utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters">Module contents</a></li>
 </ul>
@@ -142,23 +142,98 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="hls4ml-converters-pytorch-convolution-module">
-<h2>hls4ml.converters.pytorch.convolution module<a class="headerlink" href="#hls4ml-converters-pytorch-convolution-module" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.pytorch.convolution">
+<span id="hls4ml-converters-pytorch-convolution-module"></span><h2>hls4ml.converters.pytorch.convolution module<a class="headerlink" href="#module-hls4ml.converters.pytorch.convolution" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.convolution.parse_conv1d_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.convolution.</span></span><span class="sig-name descname"><span class="pre">parse_conv1d_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.convolution.parse_conv1d_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.convolution.parse_conv2d_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.convolution.</span></span><span class="sig-name descname"><span class="pre">parse_conv2d_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.convolution.parse_conv2d_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="hls4ml-converters-pytorch-core-module">
-<h2>hls4ml.converters.pytorch.core module<a class="headerlink" href="#hls4ml-converters-pytorch-core-module" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.pytorch.core">
+<span id="hls4ml-converters-pytorch-core-module"></span><h2>hls4ml.converters.pytorch.core module<a class="headerlink" href="#module-hls4ml.converters.pytorch.core" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.core.parse_activation_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.core.</span></span><span class="sig-name descname"><span class="pre">parse_activation_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.core.parse_activation_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.core.parse_batchnorm_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.core.</span></span><span class="sig-name descname"><span class="pre">parse_batchnorm_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.core.parse_batchnorm_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.core.parse_constant_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.core.</span></span><span class="sig-name descname"><span class="pre">parse_constant_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.core.parse_constant_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.core.parse_linear_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.core.</span></span><span class="sig-name descname"><span class="pre">parse_linear_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.core.parse_linear_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="hls4ml-converters-pytorch-merge-module">
-<h2>hls4ml.converters.pytorch.merge module<a class="headerlink" href="#hls4ml-converters-pytorch-merge-module" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.pytorch.merge">
+<span id="hls4ml-converters-pytorch-merge-module"></span><h2>hls4ml.converters.pytorch.merge module<a class="headerlink" href="#module-hls4ml.converters.pytorch.merge" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.merge.parse_concat_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.merge.</span></span><span class="sig-name descname"><span class="pre">parse_concat_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.merge.parse_concat_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.merge.parse_merge_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.merge.</span></span><span class="sig-name descname"><span class="pre">parse_merge_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.merge.parse_merge_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="hls4ml-converters-pytorch-pooling-module">
-<h2>hls4ml.converters.pytorch.pooling module<a class="headerlink" href="#hls4ml-converters-pytorch-pooling-module" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.pytorch.pooling">
+<span id="hls4ml-converters-pytorch-pooling-module"></span><h2>hls4ml.converters.pytorch.pooling module<a class="headerlink" href="#module-hls4ml.converters.pytorch.pooling" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.pooling.parse_pooling_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.pooling.</span></span><span class="sig-name descname"><span class="pre">parse_pooling_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.pooling.parse_pooling_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="hls4ml-converters-pytorch-recurrent-module">
-<h2>hls4ml.converters.pytorch.recurrent module<a class="headerlink" href="#hls4ml-converters-pytorch-recurrent-module" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.pytorch.recurrent">
+<span id="hls4ml-converters-pytorch-recurrent-module"></span><h2>hls4ml.converters.pytorch.recurrent module<a class="headerlink" href="#module-hls4ml.converters.pytorch.recurrent" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.recurrent.parse_rnn_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.recurrent.</span></span><span class="sig-name descname"><span class="pre">parse_rnn_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.recurrent.parse_rnn_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="hls4ml-converters-pytorch-reshape-module">
-<h2>hls4ml.converters.pytorch.reshape module<a class="headerlink" href="#hls4ml-converters-pytorch-reshape-module" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.pytorch.reshape">
+<span id="hls4ml-converters-pytorch-reshape-module"></span><h2>hls4ml.converters.pytorch.reshape module<a class="headerlink" href="#module-hls4ml.converters.pytorch.reshape" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.reshape.handle_upsample">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.reshape.</span></span><span class="sig-name descname"><span class="pre">handle_upsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.reshape.handle_upsample" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.reshape.parse_flatten_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.reshape.</span></span><span class="sig-name descname"><span class="pre">parse_flatten_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.reshape.parse_flatten_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.reshape.parse_reshape_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.reshape.</span></span><span class="sig-name descname"><span class="pre">parse_reshape_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.reshape.parse_reshape_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.reshape.parse_squeeze_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.reshape.</span></span><span class="sig-name descname"><span class="pre">parse_squeeze_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.reshape.parse_squeeze_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.pytorch.reshape.parse_unsqueeze_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.pytorch.reshape.</span></span><span class="sig-name descname"><span class="pre">parse_unsqueeze_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.pytorch.reshape.parse_unsqueeze_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-hls4ml.converters.pytorch">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.converters.pytorch" title="Link to this heading"></a></h2>
