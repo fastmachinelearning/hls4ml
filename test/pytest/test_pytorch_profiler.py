@@ -1,6 +1,6 @@
 import pytest
 
-import hls4ml
+from hls4ml.model.profiling import numerical
 
 try:
     import torch
@@ -54,7 +54,7 @@ def test_sequential_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers
         model = torch.nn.Sequential(*layers)
-        wp, _, _, _ = hls4ml.model.profiling.numerical(model)
+        wp, _, _, _ = numerical(model)
         assert count_bars_in_figure(wp) == param_count
 
 
@@ -63,7 +63,7 @@ def test_subclass_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers
         model = SubClassModel(layers)
-        wp, _, _, _ = hls4ml.model.profiling.numerical(model)
+        wp, _, _, _ = numerical(model)
         assert count_bars_in_figure(wp) == param_count
 
 
@@ -72,7 +72,7 @@ def test_modulelist_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers
         model = ModuleListModel(layers)
-        wp, _, _, _ = hls4ml.model.profiling.numerical(model)
+        wp, _, _, _ = numerical(model)
         assert count_bars_in_figure(wp) == param_count
 
 
@@ -81,5 +81,5 @@ def test_nested_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers
         model = NestedSequentialModel(layers)
-        wp, _, _, _ = hls4ml.model.profiling.numerical(model)
+        wp, _, _, _ = numerical(model)
         assert count_bars_in_figure(wp) == param_count
