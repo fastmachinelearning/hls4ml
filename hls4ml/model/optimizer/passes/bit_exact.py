@@ -57,7 +57,7 @@ def get_input_layers(layer: Layer):
 
 def get_output_layers(layer: Layer):
     model: 'ModelGraph' = layer.model
-    return [l for l in model.graph.values() if layer.name in l.attributes.get('inputs', ())]
+    return [l for l in model.graph.values() if layer.name in l.inputs]
 
 
 def get_output_shape(layer: Layer) -> tuple[int, ...]:
@@ -87,10 +87,13 @@ def _(layer: FixedPointQuantizer):
     k, b, I = layer.mask_kbi
     k, i, f = k, I - k, b - I
 
+    if k.ndim > 0:
+        k, i, f = k[0], i[0], f[0]
+
     out_shape = get_output_shape(layer)
-    k = np.broadcast_to(k[0], out_shape).astype(np.int8)
-    i = np.broadcast_to(i[0], out_shape).astype(np.int8)
-    f = np.broadcast_to(f[0], out_shape).astype(np.int8)
+    k = np.broadcast_to(k, out_shape).astype(np.int8)
+    i = np.broadcast_to(i, out_shape).astype(np.int8)
+    f = np.broadcast_to(f, out_shape).astype(np.int8)
 
     if layer.SAT != 'WRAP':
         k[:] = 1
@@ -100,7 +103,7 @@ def _(layer: FixedPointQuantizer):
     elif layer.RND == 'RND':
         f += 1
     else:
-        f += 3
+        f[:] = 126
     return ((k, i, f),)
 
 
@@ -181,14 +184,60 @@ def get_input_kifs(layer: Layer):
 @_produce_kif.register
 def _(layer: FixedPointQuantizer):
     assert layer.mask_kbi is not None
-    k, b, I = layer.mask_kbi
-    k, i, f = k, I - k, b - I
 
-    out_shape = get_output_shape(layer)
-    k = np.broadcast_to(k[0], out_shape)
-    i = np.broadcast_to(i[0], out_shape)
-    f = np.broadcast_to(f[0], out_shape)
+    _k, _b, _I = layer.mask_kbi
+    shape0 = _k.shape[1:]
+    k, i, f = _k, _I - _k, _b - _I
+    last_layer = get_input_layers(layer)[0]
+    lk, li, lf = produce_kif(last_layer)
 
+    k, i, f = k[0], i[0], f[0]
+    shape0 = k.shape
+    ndim = k.ndim
+
+    if ndim > 0:
+        # Make sure input kbi masks are in good shape
+        assert k.ndim == lk.ndim == i.ndim == li.ndim == f.ndim == lf.ndim
+
+    # Bitwidth reduction
+    _k = np.minimum(k, lk)
+    _i = np.minimum(i, li)
+    _f = np.minimum(f, lf)
+
+    # Compansate for round-up/downs that may need extra bits for representing (ufixed<2,0> -> ufixed<2,1,RND>, 0.75->1.0)
+    if layer.RND != 'TRN':
+        _i += ((lf > f) & (i > li)).astype(np.int8)
+    else:
+        _i += ((lf > f) & (i > li) & k).astype(np.int8)
+
+    # Perserve repr boundaries unless overflow never happens
+    mask = (2.0**i - 2.0**-f >= 2.0**li - 2.0**-lf) & (k >= lk)
+    i = np.where(mask, _i, i)
+    f = np.where(mask, _f, f)
+    k = np.where(mask, _k, k)
+
+    # Set zeros to zero
+    idx_zeros = np.where(k + i + f <= 0)
+    k[idx_zeros] = 0
+    i[idx_zeros] = 0
+    f[idx_zeros] = 0
+
+    if ndim > 0:  # Shrink to the original shape
+        contract_axis = np.where(np.array(shape0) == 1)[0]
+    else:  # Shrink to [1]*N instead of scaler; no real difference
+        contract_axis = np.arange(k.ndim)
+
+    _k = k
+    _b = k + i + f
+    _I = k + i
+
+    for ax in contract_axis:
+        _k = np.max(_k, axis=ax, keepdims=True)
+        _b = np.max(_b, axis=ax, keepdims=True)
+        _I = np.max(_I, axis=ax, keepdims=True)
+
+    _k, _b, _I = _k[None], _b[None], _I[None]
+    layer.mask_kbi = (_k, _b, _I)
     return k, i, f
 
 
@@ -459,9 +508,7 @@ def _(layer: Activation):
 
 @_produce_kif.register
 def _(layer: UnaryLUT):
-    table_t = layer.attributes['table_t'].precision
-    k, I, f = table_t.signed, table_t.integer, table_t.fractional
-    i = I - k
+    k, i, f = minimal_kif(layer.attributes['table'].data)
     shape = get_output_shape(layer)
     k = np.full(shape, np.max(k), dtype=np.int8)
     i = np.full(shape, np.max(i), dtype=np.int8)
@@ -648,6 +695,10 @@ class BitExact(ModelOptimizerPass):
     def transform(self, model):
         if not self._match(model):
             return False
+        for node in model.graph.values():
+            if node.attributes.get('bit_exact_transformed'):
+                continue
+            produce_kif(node)  # Shrink FixedPointQuantizer bits when possible to be used in backward flow (requested_kif).
 
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
