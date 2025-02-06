@@ -555,7 +555,7 @@ def default_register_precision(layer: Layer):
 
     # Set precision for fixed array (weight_t, bias_t, table_t, etc.)
     for w_name_t, v in layer.attributes.attributes.items():
-        if not isinstance(v, NamedType) and not w_name_t.endswith('_t'):
+        if not isinstance(v, NamedType) or not w_name_t.endswith('_t'):
             continue  # Not a precision, skip
 
         w_name = w_name_t[:-2]
