@@ -1,5 +1,6 @@
 from functools import singledispatchmethod
 from typing import Any, Sequence, overload
+from warnings import warn
 
 import numpy as np
 
@@ -49,12 +50,14 @@ class _QIntervalArray:
     def _validate(self):
         with np.errstate(divide='ignore', invalid='ignore'):
             assert np.all(self.min <= self.max), "min must be less than or equal to max"
-            assert np.all(
-                (self.max % self.delta == 0) | ((self.max == 0) & (self.delta == 0))
-            ), "max must be a multiple of delta"
-            assert np.all(
-                (self.min % self.delta == 0) | ((self.min == 0) & (self.delta == 0))
-            ), "min must be a multiple of delta"
+            if not np.all((self.max % self.delta == 0) | ((self.max == 0) & (self.delta == 0))):
+                warn("max is not a multiple of delta. Bit-exactness may be compromised.")
+                self.delta = 2.0 ** np.round(np.log2(self.delta))
+                self.max = np.round(self.max / self.delta) * self.delta
+            if not np.all((self.min % self.delta == 0) | ((self.min == 0) & (self.delta == 0))):
+                warn("min is not a multiple of delta. Bit-exactness may be compromised.")
+                self.delta = 2.0 ** np.round(np.log2(self.delta))
+                self.min = np.round(self.min / self.delta) * self.delta
 
 
 class QIntervalArray(_QIntervalArray):
