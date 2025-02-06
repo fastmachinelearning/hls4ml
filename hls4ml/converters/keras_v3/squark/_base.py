@@ -141,6 +141,22 @@ class SQConvHandler(SQLayerHandler, KV3ConvHandler):
 class SQDenseHandler(SQLayerHandler, KV3DenseHandler):
     handles = ('squark.layers.core.dense.QDense',)
 
+    def handle(
+        self,
+        layer: 'squark.layers.QDense',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        conf = super().handle(layer, in_tensors, out_tensors)
+        in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
+        if len(in_shape) > 1:
+            if hasattr(layer, 'parallelization_factor'):
+                parallelization_factor = layer.parallelization_factor
+            else:
+                parallelization_factor = prod(in_shape[:-1])
+            conf['parallelization_factor'] = parallelization_factor
+        return conf
+
 
 @register
 class SQActivationHandler(SQLayerHandler, KV3ActivationHandler):
