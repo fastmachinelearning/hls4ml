@@ -699,14 +699,25 @@ class BitExact(ModelOptimizerPass):
     def __init__(self):
         pass
 
-    def _match(self, model: 'ModelGraph'):
+    def has_fixed_quantizer(self, model: 'ModelGraph'):
         if not any(isinstance(node, FixedPointQuantizer) for node in model.graph.values()):
             return False
         return True
 
-    def transform(self, model):
+    def _match(self, model: 'ModelGraph'):
+        return self.has_fixed_quantizer(model)
+
+    def transform(self, model: 'ModelGraph'):
         if not self._match(model):
             return False
+
+        if self.has_fixed_quantizer(model):
+            # For HGQ-proxy model, no explicit linear layers will be reqired.
+            for k in list(model.graph.keys()):
+                v = model.graph[k]
+                if isinstance(v, Activation) and v.attributes.get('activation') == 'linear':
+                    model.remove_node(v)
+
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
                 continue
