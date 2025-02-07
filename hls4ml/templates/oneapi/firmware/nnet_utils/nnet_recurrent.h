@@ -611,10 +611,10 @@ void lstm_init_state(const data_T &data, const h_T &hidden_state_initial, const 
 
     [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
     [[intel::fpga_register]] h_T hidden_state_temp;
-    [[intel::fpga_register]] h_T cell_state[CONFIG_T::n_timesteps + 1];
-    [[intel::fpga_register]] h_T cell_state_temp; // should this be updated to a differnt type
+    [[intel::fpga_register]] hc_T cell_state[CONFIG_T::n_timesteps + 1];
+    [[intel::fpga_register]] hc_T cell_state_temp; // should this be updated to a differnt type
     [[intel::fpga_register]] h_T h;
-    [[intel::fpga_register]] h_T c;
+    [[intel::fpga_register]] hc_T c;
     [[intel::fpga_register]] in_T in;
 
 // Set initially hidden state (output) to zero
