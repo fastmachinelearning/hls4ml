@@ -769,8 +769,8 @@ void lstm(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], data2_T hidden_st
     data2_T hidden_state_temp[CONFIG_T::n_out] hls_register;
     data3_T cell_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
     data3_T cell_state_temp[CONFIG_T::n_out] hls_register;
-    res_T h[CONFIG_T::n_out] hls_register;
-    res_T c[CONFIG_T::n_out] hls_register;
+    data2_T h[CONFIG_T::n_out] hls_register;
+    data3_T c[CONFIG_T::n_out] hls_register;
     data_T in[CONFIG_T::n_in] hls_register;
 
 // Set initially hidden state (output) to zero
