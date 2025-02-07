@@ -153,7 +153,7 @@ def handle_upsample(operation, layer_name, input_names, input_shapes, node, clas
         layer['out_height'] = int(layer['in_height'] * scale_height)
         layer['out_width'] = int(layer['in_width'] * scale_width)
 
-        output_shape = [layer['n_chan'], layer['out_height'], layer['out_width']]
+        output_shape = [input_shapes[0][0], layer['n_chan'], layer['out_height'], layer['out_width']]
     else:
         raise Exception(f'Parsing "Upsample" with {len(input_shape)}-dimensional tensors is not yet supported.')
 

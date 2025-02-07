@@ -498,7 +498,7 @@ def test_pooling(pooling, padds, backend):
     model.eval()
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model, input_shape_forHLS)
+    config = config_from_pytorch_model(model, input_shape_forHLS, transpose_outputs=True)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_pooling_{pooling.__name__}_padds_{padds}_backend_{backend}')
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
