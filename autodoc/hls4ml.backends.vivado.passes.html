@@ -1074,38 +1074,6 @@
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.permute_config_gen">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">permute_config_gen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.permute_config_gen" title="Link to this definition"></a></dt>
-<dd><dl class="simple">
-<dt>Generate a configuration string for a permute operation. Operates by mapping the output index to input input index by:</dt><dd><ul class="simple">
-<li><p>unravel the output index</p></li>
-<li><p>map each dimension to the corresponding stride in the input tensor, sum</p></li>
-</ul>
-</dd>
-</dl>
-<p>The operation can be expressed as:</p>
-<p>new_shape = tuple(shape[i] for i in perm)
-strides = np.cumprod((shapes[1:] + (1,))[::-1])[::-1]
-perm_strides = [strides[i] for i in perm]
-out[index] = inp[np.dot(np.unravel_index(index, new_shape), perm_strides)]</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – The name of the configuration.</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – The shape of the input tensor.</p></li>
-<li><p><strong>perm</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – The permutation of the dimensions.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The formatted configuration string for the permute operation.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="module-hls4ml.backends.vivado.passes.resource_strategy">
 <span id="hls4ml-backends-vivado-passes-resource-strategy-module"></span><h2>hls4ml.backends.vivado.passes.resource_strategy module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.resource_strategy" title="Link to this heading"></a></h2>
