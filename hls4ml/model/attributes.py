@@ -36,7 +36,7 @@ class Attribute:
 
     """
 
-    def __init__(self, name, value_type=Integral, default=None, configurable=False, description=None):
+    def __init__(self, name, value_type: type = Integral, default=None, configurable=False, description=None):
         self.name = name
         self.value_type = value_type
         self.default = default
@@ -182,7 +182,7 @@ class AttributeDict(MutableMapping):
         self.attributes[key] = value
 
     def __delitem__(self, key):
-        self.attributes.remove(key)
+        del self.attributes[key]
 
 
 class AttributeMapping(MutableMapping):
@@ -208,7 +208,7 @@ class AttributeMapping(MutableMapping):
         self.attributes[key] = value
 
     def __delitem__(self, key):
-        self.attributes.remove(key)
+        del self.attributes[key]
 
 
 class WeightMapping(AttributeMapping):
