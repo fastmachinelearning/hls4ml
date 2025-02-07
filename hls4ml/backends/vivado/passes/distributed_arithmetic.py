@@ -5,7 +5,6 @@ import numpy as np
 
 from hls4ml.model.layers import Conv1D, Conv2D, Dense, Layer
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.optimizer.passes.bit_exact import get_input_kifs
 from hls4ml.model.types import FixedPrecisionType, Source
 from hls4ml.utils.dependency import requires
 
@@ -42,26 +41,16 @@ class DistributedArithmeticCodegen(OptimizerPass):
         n_in, n_out = kernel.shape
         fn_name = f'dense_da_{node.index}'
 
-        Ks, Is, Fs = get_input_kifs(node)[0]
-        if np.all(Is == 126) and np.all(Fs == 126):
-            # No fixed quantizer before this layer to produce reasonable bw
-            # Use result_t from prev layer instead
-            result_t = node.get_input_variable().type.precision
-            if not isinstance(result_t, FixedPrecisionType):
-                k = [True] * n_in
-                b = [7] * n_in
-                i = [0] * n_in
-            else:
-                _k, _b, _i = result_t.signed, result_t.width, result_t.integer
-                k = [_k] * n_in
-                b = [_b - _k] * n_in
-                i = [_i - _k] * n_in
+        result_t = node.get_input_variable().type.precision
+        if not isinstance(result_t, FixedPrecisionType):
+            k = [True] * n_in
+            b = [7] * n_in
+            i = [0] * n_in
         else:
-            Ks = np.any(Ks.reshape(-1, n_in), axis=0)
-            Is = np.max(Is.reshape(-1, n_in), axis=0)
-            Fs = np.max(Fs.reshape(-1, n_in), axis=0)
-            k, b, i = Ks, Is + Fs, Is
-            k, b, i = list(k), list(b), list(i)
+            _k, _b, _i = result_t.signed, result_t.width, result_t.integer
+            k = [_k] * n_in
+            b = [_b - _k] * n_in
+            i = [_i - _k] * n_in
 
         codegen_backend = VitisCodegenBackend(fn_name=fn_name)
 
@@ -72,7 +61,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
             bias = node.attributes['bias'].data.ravel()
             assert len(bias) == n_out
             for i, b in enumerate(bias):
-                out[i] += b
+                out[i] = out[i] + b
         _fn, fn_str = codegen_backend(inp, out)
 
         node.set_attr('da_codegen', Source(fn_str))
@@ -114,6 +103,8 @@ conv_da_template = """struct config{index} {{
     static const unsigned n_filt = {n_filt};
     static const unsigned filt_height = {filt_height};
     static const unsigned filt_width = {filt_width};
+    static const unsigned stride_height = {stride_height};
+    static const unsigned stride_width = {stride_width};
 
     static const unsigned strategy = nnet::latency;
     static const unsigned n_partitions = {n_partitions};
@@ -161,12 +152,13 @@ class DALatencyConvTemplate(OptimizerPass):
 
         # config generation
         params = node.attributes.attributes.copy()
-        n_pixels = prod(node.get_input_variable().shape[:-1]) // node.attributes['n_partitions']
+        n_pixels = prod(node.get_output_variable().shape[:-1]) // node.attributes['n_partitions']
 
         # conv 1d case, set dummy values for heights
         params.setdefault('in_height', -1)
         params.setdefault('out_height', -1)
         params.setdefault('filt_height', -1)
+        params.setdefault('stride_height', -1 if ndim == 1 else 1)
 
         config_cpp = conv_da_template.format(inp_t=inp_t, out_t=out_t, n_pixels=n_pixels, **params)
         node.attributes.attributes['config_cpp'] = config_cpp
