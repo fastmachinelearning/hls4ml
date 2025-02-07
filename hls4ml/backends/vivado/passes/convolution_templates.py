@@ -142,6 +142,14 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
 
         return mult_config + '\n' + conv_config
 
+    def match(self, node):
+        if 'da_codegen' in node.attributes:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for
+                return False
+        return super().match(node)
+
 
 class Conv1DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -155,6 +163,14 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if 'da_codegen' in node.attributes:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
@@ -271,6 +287,14 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
 
         return mult_config + '\n' + conv_config
 
+    def match(self, node):
+        if 'da_codegen' in node.attributes:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for
+                return False
+        return super().match(node)
+
 
 class Conv2DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -284,6 +308,14 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if 'da_codegen' in node.attributes:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):

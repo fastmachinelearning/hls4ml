@@ -53,8 +53,18 @@ class DenseConfigTemplate(LayerConfigTemplate):
             # The 3rd case is never used
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             params['dense_function'] = f'dense_resource_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'distributed_arithmetic':
+            params['dense_function'] = f'dense_da_{node.index}'
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('da_codegen') is not None:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for
+                return False
+        return super().match(node)
 
 
 class DenseFunctionTemplate(FunctionCallTemplate):
@@ -68,6 +78,14 @@ class DenseFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if 'da_codegen' in node.attributes:
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for
+                return False
+        return super().match(node)
 
 
 # BatchNormalization templates

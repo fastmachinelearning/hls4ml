@@ -72,7 +72,10 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         params['n_free_kernel'] = node.attributes.attributes['n_free_kernel']
         params['n_contract'] = node.attributes.attributes['n_contract']
         params['n_inplace'] = node.attributes.attributes['n_inplace']
-        params['parallelization_factor'] = node.attributes.attributes['parallelization_factor']
+        pf = node.attributes.attributes['parallelization_factor']
+        if pf < 0:
+            pf = params['n_inplace']
+        params['parallelization_factor'] = pf
 
         einsum_conf = self.template.format(**params)
 

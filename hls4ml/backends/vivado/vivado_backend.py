@@ -125,6 +125,9 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_pointwise_conv1_d',
             'vivado:generate_unrolled_dense_resource',
             'vivado:set_pipeline_style',
+            'vivado:distributed_arithmetic_codegen',
+            'vivado:d_a_latency_dense_template',
+            'vivado:d_a_latency_conv_template',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
