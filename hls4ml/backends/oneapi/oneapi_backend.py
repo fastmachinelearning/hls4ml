@@ -129,13 +129,31 @@ class OneAPIBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False):
+        """Create initial configuration of the oneAPI backend.
+
+        Args:
+            part (str, optional): The FPGA part to be used. Defaults to 'xcvu13p-flga2577-2-e'.
+            clock_period (int, optional): The clock period. Defaults to 5.
+            clock_uncertainty (str, optional): The clock uncertainty. Defaults to 12.5%.
+            io_type (str, optional): Type of implementation used. One of
+                'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+
+        Returns:
+            dict: initial configuration.
+        """
+
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
+        config['WriterConfig'] = {
+            # TODO:  add namespace
+            'WriteTar': write_tar,
+        }
 
         return config
 
