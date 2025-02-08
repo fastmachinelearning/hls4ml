@@ -18,7 +18,6 @@ class DistributedArithmeticCodegen(OptimizerPass):
     def match(self, node):
         if not node.get_attr('strategy', None) == 'distributed_arithmetic':
             return False
-
         supported = (Dense, Conv1D, Conv2D)
         # TODO: EinsumDense support
         # RNN and depthwise conv families are not supported for now
@@ -34,7 +33,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
     def add_kernel_wrapper(self, index: int, n_in: int, n_out: int):
 
         wrapper = f'''template <typename inp_t, typename out_t, typename DUMMY> struct dense_da_wrapper_{index} {{
-  static void dense(inp_t inp[{n_in}], out_t out[{n_out}], void *weights, void *biases) {{
+  static void dense(inp_t inp[{n_in}], out_t out[{n_out}], void *weights=nullptr, void *biases=nullptr) {{
       dense_da_{index}(inp, out);
   }}
 }};'''
@@ -81,12 +80,22 @@ class DistributedArithmeticCodegen(OptimizerPass):
         node.set_attr('da_codegen', Source(fn_str))
 
 
+dense_da_stream_template = '''struct config{index} {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned io_type = nnet::io_stream;
+    static const unsigned strategy = nnet::distributed_arithmetic;
+    constexpr static auto dense_da = nnet::dense_da_{index}<typename {inp_t}::value_type, typename {out_t}::value_type>;
+}};\n'''
+
+
 class DALatencyDenseTemplate(OptimizerPass):
+    # For Dense, distributed arithmetic do not call the original, regardless of the io_type
+    # FOr io_stream, a minimal config will still be generated
     def match(self, node: Layer):
-        if not node.get_attr('da_codegen') or node.class_name != 'Dense':
+        if node.class_name != 'Dense':
             return False
-        io_type = node.model.config.get_config_value("IOType")
-        return io_type == 'io_parallel'
+        return node.get_attr('strategy', None) == 'distributed_arithmetic'
 
     def transform(self, model: 'ModelGraph', node: Layer):
         inp_t: str = node.get_input_variable().type.name
@@ -95,9 +104,18 @@ class DALatencyDenseTemplate(OptimizerPass):
         out_name: str = node.get_output_variable().name
 
         # override function_cpp
-        fn_name = f'dense_da_{node.index}<{inp_t}, {out_t}>'
-        function_cpp = f'nnet::{fn_name}({inp_name}, {out_name});'
-        node.attributes.attributes['function_cpp'] = function_cpp
+        io_type = node.model.config.get_config_value("IOType")
+        if io_type == 'io_parallel':
+            fn_name = f'dense_da_{node.index}<{inp_t}, {out_t}>'
+            function_cpp = f'nnet::{fn_name}({inp_name}, {out_name});'
+            node.attributes.attributes['function_cpp'] = function_cpp
+        else:
+            assert io_type == 'io_stream'
+            config_cpp = dense_da_stream_template.format(inp_t=inp_t, out_t=out_t, **node.attributes.attributes)
+            function_cpp = f'nnet::dense<{inp_t}, {out_t}, config{node.index}>({inp_name}, {out_name});'
+            node.attributes['config_cpp'] = config_cpp
+            node.attributes['function_cpp'] = function_cpp
+            node.attributes['include_header'] = ['nnet_utils/nnet_da_wrappers.h']
 
         # avoid output weights and bias; alternatie entry point does not use them
         del node.attributes['weight_data']
@@ -108,7 +126,7 @@ class DALatencyDenseTemplate(OptimizerPass):
         del node.attributes['bias_t']
 
 
-conv_da_template = """struct config{index} {{
+conv_da_parallel_template = """struct config{index} {{
     static const unsigned in_height = {in_height};
     static const unsigned in_width = {in_width};
     static const unsigned n_chan = {n_chan};
@@ -120,7 +138,7 @@ conv_da_template = """struct config{index} {{
     static const unsigned stride_height = {stride_height};
     static const unsigned stride_width = {stride_width};
 
-    static const unsigned strategy = nnet::latency;
+    static const unsigned strategy = nnet::distributed_arithmetic;
     static const unsigned n_partitions = {n_partitions};
     static const unsigned n_pixels = {n_pixels};
     constexpr static auto dense_da = nnet::dense_da_{index}<{inp_t}, {out_t}>;
@@ -131,7 +149,9 @@ conv_da_template = """struct config{index} {{
 
 class DALatencyConvTemplate(OptimizerPass):
     def match(self, node: Layer):
-        if not node.get_attr('da_codegen') and node.class_name in (
+        if not node.get_attr('strategy', None) == 'distributed_arithmetic':
+            return False
+        if node.class_name not in (
             'Conv1D',
             'Conv2D',
             'PointwiseConv1D',
@@ -174,13 +194,12 @@ class DALatencyConvTemplate(OptimizerPass):
         params.setdefault('filt_height', -1)
         params.setdefault('stride_height', -1 if ndim == 1 else 1)
 
-        config_cpp = conv_da_template.format(inp_t=inp_t, out_t=out_t, n_pixels=n_pixels, **params)
+        config_cpp = conv_da_parallel_template.format(inp_t=inp_t, out_t=out_t, n_pixels=n_pixels, **params)
         node.attributes.attributes['config_cpp'] = config_cpp
 
         # Only unrolled header is required for io_parallel
         include_headers = [
-            'nnet_utils/nnet_conv_da.h',
-            'nnet_utils/nnet_dense_latency.h',
+            'nnet_utils/nnet_da_wrappers.h',
             f'nnet_utils/nnet_{class_name.lower()}.h',
             'nnet_utils/nnet_conv_stream.h',  # some properties defined in config need this
         ]

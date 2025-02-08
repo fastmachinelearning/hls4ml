@@ -145,10 +145,10 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         return mult_config + '\n' + conv_config
 
     def match(self, node):
-        if 'da_codegen' in node.attributes:
+        if node.get_attr('strategy') == 'distributed_arithmetic':
             io_type = node.model.config.get_config_value("IOType")
             if io_type == 'io_parallel':
-                # DA impl use alternate entry point for
+                # DA impl use alternate entry point for io_parallel conv
                 return False
         return super().match(node)
 
@@ -167,10 +167,10 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if 'da_codegen' in node.attributes:
+        if node.get_attr('strategy') == 'distributed_arithmetic':
             io_type = node.model.config.get_config_value("IOType")
             if io_type == 'io_parallel':
-                # DA impl use alternate entry point for
+                # DA impl use alternate entry point for io_parallel conv
                 return False
         return super().match(node)
 
@@ -292,10 +292,10 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         return mult_config + '\n' + conv_config
 
     def match(self, node):
-        if 'da_codegen' in node.attributes:
+        if node.get_attr('strategy') == 'distributed_arithmetic':
             io_type = node.model.config.get_config_value("IOType")
             if io_type == 'io_parallel':
-                # DA impl use alternate entry point for
+                # DA impl use alternate entry point for io_parallel conv
                 return False
         return super().match(node)
 
@@ -314,10 +314,10 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if 'da_codegen' in node.attributes:
+        if node.get_attr('strategy') == 'distributed_arithmetic':
             io_type = node.model.config.get_config_value("IOType")
             if io_type == 'io_parallel':
-                # DA impl use alternate entry point for
+                # DA impl use alternate entry point for io_parallel conv
                 return False
         return super().match(node)
 

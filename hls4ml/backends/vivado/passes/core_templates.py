@@ -59,11 +59,8 @@ class DenseConfigTemplate(LayerConfigTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if node.get_attr('da_codegen') is not None:
-            io_type = node.model.config.get_config_value("IOType")
-            if io_type == 'io_parallel':
-                # DA impl use alternate entry point for
-                return False
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            return False  # DA does not use common dense template
         return super().match(node)
 
 
@@ -80,11 +77,8 @@ class DenseFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if 'da_codegen' in node.attributes:
-            io_type = node.model.config.get_config_value("IOType")
-            if io_type == 'io_parallel':
-                # DA impl use alternate entry point for
-                return False
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            return False  # DA does not use common dense template
         return super().match(node)
 
 
