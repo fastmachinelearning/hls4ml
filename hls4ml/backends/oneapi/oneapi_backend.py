@@ -129,7 +129,7 @@ class OneAPIBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, **_):
         """Create initial configuration of the oneAPI backend.
 
         Args:
