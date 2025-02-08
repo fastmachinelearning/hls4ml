@@ -54,7 +54,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             params['dense_function'] = f'dense_resource_unrolled_{node.index}'
         elif node.get_attr('strategy').lower() == 'distributed_arithmetic':
-            params['dense_function'] = f'dense_da_{node.index}'
+            params['dense_function'] = f'dense_da_wrapper_{node.index}'
 
         return self.template.format(**params)
 

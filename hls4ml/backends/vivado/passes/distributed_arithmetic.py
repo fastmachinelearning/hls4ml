@@ -16,14 +16,13 @@ class DistributedArithmeticCodegen(OptimizerPass):
     '''Generates C++ code for distributed arithmetic implementation of Dense layers'''
 
     def match(self, node):
-        # if not node.get_attr('strategy', 'latency').lower() in ('da', 'distributed_arithmetic'):
-        #     return False
+        if not node.get_attr('strategy', None) == 'distributed_arithmetic':
+            return False
 
         supported = (Dense, Conv1D, Conv2D)
         # TODO: EinsumDense support
         # RNN and depthwise conv families are not supported for now
         if not isinstance(node, supported):
-            return False
             raise Exception(f'Layer {node.name} of type {node.__class__.__name__} is not supported by DA optimizer.')
 
         rf = node.get_attr('reuse_factor', 1)
@@ -32,9 +31,19 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
         return True
 
+    def add_kernel_wrapper(self, index: int, n_in: int, n_out: int):
+
+        wrapper = f'''template <typename inp_t, typename out_t, typename DUMMY> struct dense_da_wrapper_{index} {{
+  static void dense(inp_t inp[{n_in}], out_t out[{n_out}], void *weights, void *biases) {{
+      dense_da_{index}(inp, out);
+  }}
+}};'''
+        return wrapper
+
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
         from da4ml import VitisCodegenBackend, compile_kernel, graph_compile_states
+        from da4ml.cmvm.codegen import Namer
 
         kernel: np.ndarray = node.attributes['weight'].data
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -54,15 +63,20 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
         codegen_backend = VitisCodegenBackend(fn_name=fn_name)
 
-        states = compile_kernel(kernel, k, b, i, [False] * n_in, [0] * n_in, 1, 0, 128, 64)  # type: ignore
+        with Namer().tmp_scope():
+            states = compile_kernel(kernel, k, b, i, [False] * n_in, [0] * n_in, 1, 0, 128, 64)  # type: ignore
+            inp, out = graph_compile_states(states, False)
+            if node.attributes['bias'] is not None:
+                bias = node.attributes['bias'].data.ravel()
+                assert len(bias) == n_out
+                for i, b in enumerate(bias):
+                    out[i] = out[i] + b
+            _fn, fn_str = codegen_backend(inp, out)
+        fn_str = fn_str.replace('{', '{\n    #pragma HLS INLINE', 1)  # add pragma to first line
 
-        inp, out = graph_compile_states(states, False)
-        if node.attributes['bias'] is not None:
-            bias = node.attributes['bias'].data.ravel()
-            assert len(bias) == n_out
-            for i, b in enumerate(bias):
-                out[i] = out[i] + b
-        _fn, fn_str = codegen_backend(inp, out)
+        io_type = node.model.config.get_config_value("IOType")
+        if io_type != 'io_parallel':
+            fn_str += '\n\n' + self.add_kernel_wrapper(node.index, n_in, n_out)
 
         node.set_attr('da_codegen', Source(fn_str))
 
@@ -108,7 +122,7 @@ conv_da_template = """struct config{index} {{
 
     static const unsigned strategy = nnet::latency;
     static const unsigned n_partitions = {n_partitions};
-    static const unsigned n_pixels = {n_pixels};;
+    static const unsigned n_pixels = {n_pixels};
     constexpr static auto dense_da = nnet::dense_da_{index}<{inp_t}, {out_t}>;
     template<class data_T, class CONFIG_T>
     using fill_buffer = nnet::fill_buffer_{index}<data_T, CONFIG_T>;
