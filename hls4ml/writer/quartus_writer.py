@@ -1345,8 +1345,12 @@ class QuartusWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
 
-        with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
-            archive.add(model.config.get_output_dir(), recursive=True)
+        if model.config.get_writer_config().get('WriteTar', False):
+            tar_path = model.config.get_output_dir() + '.tar.gz'
+            if os.path.exists(tar_path):
+                os.remove(tar_path)
+            with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
+                archive.add(model.config.get_output_dir(), recursive=True)
 
     def write_hls(self, model):
         print('Writing HLS project')
