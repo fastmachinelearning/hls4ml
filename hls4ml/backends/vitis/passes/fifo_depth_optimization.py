@@ -57,11 +57,11 @@ def override_test_bench(model):
         for line in file_iterator:
 
             if "// hls-fpga-machine-learning insert zero" in line:
-                newline += indent + indent + "const unsigned BATCH_SIZE = 2;\n"
+                newline += indent + indent + "const unsigned PROFILING_ITERATIONS = 2;\n"
                 newline += (
                     indent
                     + indent
-                    + "for(unsigned batch_iteration = 0; batch_iteration < BATCH_SIZE; ++batch_iteration) {\n"
+                    + "for(unsigned batch_iteration = 0; batch_iteration < PROFILING_ITERATIONS; ++profiling_iterations) {\n"
                 )
                 newline += line
                 second_part_of_testbench = True
@@ -226,7 +226,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         # or via vitis 2023.2 c-simulation
         profiling_fifo_depth = getattr(self, "profiling_fifo_depth", 100_000)
 
-        if not isinstance(profiling_fifo_depth, int) or profiling_fifo_depth < 0:
+        if not isinstance(profiling_fifo_depth, int) or profiling_fifo_depth <= 0:
             raise ValueError("The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer.")
 
         # check axi-stream or io-stream
