@@ -336,7 +336,7 @@ INIT_LOOP:
         // Write result
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state[x][i + 1] = h[x];
+            hidden_state[i + 1][x] = h[x];
         }
     }
 
