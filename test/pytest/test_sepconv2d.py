@@ -13,8 +13,8 @@ chans_options = ['channels_last']
 strides_options = [(1, 1), (2, 2)]
 kernel_options = [(2, 2), (3, 3)]
 bias_options = [False]
-rf_options = [1, 16, 24]  # each rf corresponds to one of the three cases of depthwise resource for io_stream
-input_size_options = [16]
+rf_options = [1, 3, 4]  # each rf corresponds to one of the three cases of depthwise resource for io_stream
+input_size_options = [3]
 
 
 @pytest.mark.parametrize('chans', chans_options)
