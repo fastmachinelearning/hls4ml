@@ -61,7 +61,7 @@ def override_test_bench(model):
                 newline += (
                     indent
                     + indent
-                    + "for(unsigned batch_iteration = 0; batch_iteration < PROFILING_ITERATIONS; ++profiling_iterations) {\n"
+                    + "for(unsigned batch_iteration = 0; batch_iteration < PROFILING_ITERATIONS; ++batch_iteration) {\n"
                 )
                 newline += line
                 second_part_of_testbench = True
