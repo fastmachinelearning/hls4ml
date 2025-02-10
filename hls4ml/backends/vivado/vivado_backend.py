@@ -111,8 +111,10 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
             'vivado:fix_softmax_table_size',
-            'vivado:process_fixed_point_quantizer_layer',
             'infer_precision_types',
+            'vivado:distributed_arithmetic_codegen',
+            'vivado:fuse_quantizer_into_d_a_layers',
+            'vivado:process_fixed_point_quantizer_layer',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -125,7 +127,6 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_pointwise_conv1_d',
             'vivado:generate_unrolled_dense_resource',
             'vivado:set_pipeline_style',
-            'vivado:distributed_arithmetic_codegen',
             'vivado:d_a_latency_dense_template',
             'vivado:d_a_latency_conv_template',
         ]

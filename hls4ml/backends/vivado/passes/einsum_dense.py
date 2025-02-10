@@ -62,7 +62,7 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         strategy = node.model.config.get_strategy(node)
         io_type = node.model.config.get_config_value('IOType')
 
-        assert io_type == 'io_parallel', 'EinsumDense layer only supports io_parallel for now'
+        assert io_type == 'io_parallel', 'EinsumDense layer only supports io_parallel and distributed_arithmetic'
         assert strategy.lower() == 'latency', 'EinsumDense layer only supports Latency strategy for now'
 
         # EinsumDense config
@@ -109,6 +109,12 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
 
         return '\n\n'.join((inp_tpose_conf, out_tpose_conf, dense_config, einsum_conf))
 
+    def match(self, node):
+        strategy = node.model.config.get_strategy(node)
+        if strategy.lower() == 'distributed_arithmetic':
+            return False
+        return super().match(node)
+
 
 class EinsumDenseFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -121,3 +127,9 @@ class EinsumDenseFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        strategy = node.model.config.get_strategy(node)
+        if strategy.lower() == 'distributed_arithmetic':
+            return False
+        return super().match(node)

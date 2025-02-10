@@ -49,13 +49,13 @@ def to_hls4ml_fixed(k, i, f, name, *args):
     return NamedType(name, ptype)
 
 
-def get_input_layers(layer: Layer):
+def get_input_layers(layer: Layer) -> list[Layer]:
     model: 'ModelGraph' = layer.model
     inp_names = layer.inputs
     return [model.graph[name] for name in inp_names]
 
 
-def get_output_layers(layer: Layer):
+def get_output_layers(layer: Layer) -> list[Layer]:
     model: 'ModelGraph' = layer.model
     return [l for l in model.graph.values() if layer.name in l.inputs]
 
@@ -167,7 +167,7 @@ def requested_kif(layer: Layer) -> KIF_t:
 
 @singledispatch
 def _produce_kif(layer: Layer) -> KIF_t:
-    raise NotImplementedError(f'No implementation of produce_kif for {layer.__class__}')
+    raise NotImplementedError(f'No implementation of produce_kif for {layer.__class__} ({layer.class_name})')
 
 
 @_produce_kif.register
