@@ -16,7 +16,7 @@ void depthwise_product_resource_rf_lt_nchan(data_T data[CONFIG_T::kernel_size * 
     const int multiplier_limit = DIV_ROUNDUP(nin, multfactor);
     const int block_factor = DIV_ROUNDUP(nin, rufactor);
 
-    assert((multiplier_limit == block_factor) && "This function is correct only for RF <= N_IN");
+    assert((multiplier_limit == block_factor) && "This function is correct only for RF <= N_IN, where N_IN=Kernel_Size*Number_of_Channels");
 
     #pragma HLS function_instantiate variable=weights,biases
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
@@ -78,7 +78,7 @@ void depthwise_product_resource_rf_geq_nchan_rem0(
     const int multiplier_limit = DIV_ROUNDUP(nin, multfactor);
     const int block_factor = DIV_ROUNDUP(nin, rufactor);
 
-    assert((rufactor >= nout && rufactor % nout == 0) && "This function is correct only for RF >= N_IN && RF % N_IN == 0");
+    assert((rufactor >= nout && rufactor % nout == 0) && "This function is correct only for RF >= N_IN && RF % N_IN == 0, where N_IN=Kernel_Size*Number_of_Channels");
 
     #pragma HLS function_instantiate variable=weights,biases
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
@@ -145,7 +145,7 @@ void depthwise_product_resource_rf_gt_nchan(data_T data[CONFIG_T::kernel_size * 
     const int nout = CONFIG_T::n_chan;
     const int rufactor = MIN(CONFIG_T::reuse_factor, nin);
     const int block_factor = DIV_ROUNDUP(nin, rufactor);
-    assert((rufactor > nout) && "This function is correct only for RF > N_IN");
+    assert((rufactor > nout) && "This function is correct only for RF > N_IN, where N_IN=Kernel_Size*Number_of_Channels");
 
     #pragma HLS function_instantiate variable=weights,biases
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
