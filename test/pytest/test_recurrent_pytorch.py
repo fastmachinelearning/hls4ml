@@ -171,7 +171,7 @@ class RNN(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Quartus'])
+@pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_rnn(backend, io_type):
     if not (backend in ('Quartus', 'oneAPI') and io_type == "io_stream"):

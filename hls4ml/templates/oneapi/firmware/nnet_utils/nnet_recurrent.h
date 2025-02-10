@@ -404,7 +404,7 @@ void simple_rnn_pytorch_cell(const in_T &inputs, h_T &hidden_state, h_T &hidden_
 
     // Hidden state
     [[intel::fpga_register]] accum_array_T hiddenCand;
-    multiply_U<in_T, accum_array_T, typename CONFIG_T::recurrent_weight_t, CONFIG_T::n_out>(hidden_state, hiddenCand,
+    multiply_U<h_T, accum_array_T, typename CONFIG_T::recurrent_weight_t, CONFIG_T::n_out>(hidden_state, hiddenCand,
                                                                                             rec_kernel);
 
     // Hidden state bias addition
@@ -460,7 +460,68 @@ INIT_LOOP:
         // Write result
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state[x][i + 1] = h[x];
+            hidden_state[i + 1][x] = h[x];
+        }
+    }
+
+    if (CONFIG_T::return_sequences == 0) {
+        // Output when return_sequences is false
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            res[x] = hidden_state[x][CONFIG_T::n_timesteps];
+        }
+    } else {
+        // Output when return_sequences is true
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
+            #pragma unroll
+            for (int h = 0; h < CONFIG_T::n_out; h++) {
+                res[x * CONFIG_T::n_out + h] = hidden_state[h][x + 1];
+            }
+        }
+    }
+}
+
+template <class data_T, class h_T, class res_T, typename CONFIG_T>
+void simple_rnn_pytorch_init_state(const data_T &data, const h_T& hin, res_T &res, const typename CONFIG_T::weight_t &kernel,
+                        const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias,
+                        const typename CONFIG_T::recurrent_bias_t &rec_bias) {
+
+    using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
+
+    [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
+    [[intel::fpga_register]] h_T hidden_state_temp;
+    [[intel::fpga_register]] h_T h;
+    [[intel::fpga_register]] in_T in;
+
+// Set initially hidden state (output) to zero
+INIT_LOOP:
+    #pragma unroll
+    for (int x = 0; x < CONFIG_T::n_out; x++) {
+        hidden_state[x][0] = hin[x];
+    }
+
+    [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
+
+        // Data at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_in; x++) {
+            in[x] = data[x + i * CONFIG_T::n_in];
+        }
+
+        // Hidden state at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state_temp[x] = hidden_state[x][i];
+        }
+
+        // Do SimpleRNN
+        simple_rnn_pytorch_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias, rec_bias);
+
+        // Write result
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state[i + 1][x] = h[x];
         }
     }
 

@@ -490,6 +490,68 @@ INIT_LOOP:
     }
 }
 
+template <class data_T, class data2_T, class res_T, typename CONFIG_T>
+void simple_rnn_pytorch(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], data2_T hin[CONFIG_T::n_out],
+                        res_T res[CONFIG_T::n_outputs * CONFIG_T::n_out],
+                        const typename CONFIG_T::weight_t kernel[CONFIG_T::n_in * CONFIG_T::n_out],
+                        const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
+                        const typename CONFIG_T::bias_t bias[CONFIG_T::n_out],
+                        const typename CONFIG_T::bias_t rec_bias[CONFIG_T::n_out]) {
+    data2_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
+    data2_T hidden_state_temp[CONFIG_T::n_out] hls_register;
+    data2_T h[CONFIG_T::n_out] hls_register;
+    data_T in[CONFIG_T::n_in] hls_register;
+
+// Set initially hidden state (output) to zero
+INIT_LOOP:
+    #pragma unroll
+    for (int x = 0; x < CONFIG_T::n_out; x++) {
+        hidden_state[x][0] = hin[x];
+    }
+
+    #pragma disable_loop_pipelining
+    for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
+
+        // Data at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_in; x++) {
+            in[x] = data[x + i * CONFIG_T::n_in];
+        }
+
+        // Hidden state at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state_temp[x] = hidden_state[x][i];
+        }
+
+        // Do SimpleRNN
+        simple_rnn_pytorch_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias, rec_bias);
+
+        // Write result
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state[x][i + 1] = h[x];
+        }
+    }
+
+    if (CONFIG_T::return_sequences == 0) {
+        // Output when return_sequences is false
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            res[x] = hidden_state[x][CONFIG_T::n_timesteps];
+        }
+    } else {
+        // Output when return_sequences is true
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
+            #pragma unroll
+            for (int h = 0; h < CONFIG_T::n_out; h++) {
+                res[x * CONFIG_T::n_out + h] = hidden_state[h][x + 1];
+            }
+        }
+    }
+}
+
 //----------------------
 // LSTM
 //----------------------
