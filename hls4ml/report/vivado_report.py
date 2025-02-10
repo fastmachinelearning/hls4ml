@@ -502,7 +502,7 @@ def _convert_cycles_to_time(n_cycles, clock_period):
 
     time_in_us = time_in_ns / 1000
     if time_in_us < 1000:
-        return str(time_in_us) + ' \u00B5s'
+        return str(time_in_us) + ' \u00b5s'
 
     time_in_ms = time_in_us / 1000
     if time_in_ms < 1000:
