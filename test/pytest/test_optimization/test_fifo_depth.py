@@ -141,9 +141,9 @@ def test_successful_execution_of_dummy_keras(backend):
     run_fifo_depth_optimization_keras(backend, profiling_fifo_depth=200_000, io_type='io_stream')
 
 
-def get_tiny_unet_model():
+def get_branched_model():
     """
-    Load tiny unet model, already channels-last and cleaned
+    Load branched model, already channels-last and cleaned
     """
     dl_file = str(example_model_path / "onnx/branched_model_ch_last.onnx")
     assert os.path.isfile(dl_file)
@@ -192,4 +192,4 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
 @pytest.mark.parametrize('backend', backend_options)
 def test_successful_execution_of_tiny_unet(backend):
     """Test the correct execution of the FIFO depth optimizer."""
-    run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth=200_000, io_type='io_stream', model=get_tiny_unet_model())
+    run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth=200_000, io_type='io_stream', model=get_branched_model())
