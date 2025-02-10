@@ -10,6 +10,7 @@ from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.utils import attribute_descriptions as descriptions
 
 # from hls4ml.report import parse_oneapi_report
 
@@ -30,9 +31,9 @@ class OneAPIBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
-            attrs.append(ConfigurableAttribute('table_size', default=1024))
-            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
 
         # Add ParallelizationFactor to Conv1D/2D
@@ -43,7 +44,7 @@ class OneAPIBackend(FPGABackend):
 
         for layer in pf_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('parallelization_factor', default=1))
+            attrs.append(ConfigurableAttribute('parallelization_factor', default=1, description=descriptions.conv_pf))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -128,13 +129,30 @@ class OneAPIBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, **_):
+        """Create initial configuration of the oneAPI backend.
+
+        Args:
+            part (str, optional): The FPGA part to be used. Defaults to 'Arria10'.
+            clock_period (int, optional): The clock period. Defaults to 5.
+            io_type (str, optional): Type of implementation used. One of
+                'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+
+        Returns:
+            dict: initial configuration.
+        """
+
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
+        config['WriterConfig'] = {
+            # TODO:  add namespace
+            'WriteTar': write_tar,
+        }
 
         return config
 

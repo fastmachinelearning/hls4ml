@@ -1,8 +1,8 @@
 ================
-HLS Model Class
+ModelGraph Class
 ================
 
-This page documents our hls_model class usage. You can generate generate an hls model object from a keras model through ``hls4ml``'s API:
+This page documents our ``ModelGraph`` class usage. You can generate generate an instance of this class through ``hls4ml``'s API, for example by converting a Keras model:
 
 .. code-block:: python
 
@@ -11,10 +11,10 @@ This page documents our hls_model class usage. You can generate generate an hls 
    # Generate a simple configuration from keras model
    config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
 
-   # Convert to an hls model
+   # Convert to a ModelGraph instance (hls_model)
    hls_model = hls4ml.converters.convert_from_keras_model(keras_model, hls_config=config, output_dir='test_prj')
 
-After that, you can use several methods in that object. Here is a list of all the methods:
+This object can be used to perform common simulation and firmware-generation tasks. Here is a list of important user-facing methods:
 
 
 * :ref:`write <write-method>`
@@ -23,8 +23,6 @@ After that, you can use several methods in that object. Here is a list of all th
 * :ref:`build <build-method>`
 * :ref:`trace <trace-method>`
 
-Similar functionalities are also supported through command line interface. If you prefer using them, please refer to Command Help section.
-
 ----
 
 .. _write-method:
@@ -32,7 +30,7 @@ Similar functionalities are also supported through command line interface. If yo
 ``write`` method
 ====================
 
-Write your keras model as a hls project to ``hls_model``\ 's ``output_dir``\ :
+Write the ``ModelGraph`` to the output directory specified in the config:
 
 .. code-block:: python
 
@@ -45,7 +43,7 @@ Write your keras model as a hls project to ``hls_model``\ 's ``output_dir``\ :
 ``compile`` method
 ======================
 
-Compile your hls project.
+Compiles the written C++/HLS code and links it into the Python runtime. Compiled model can be used to evaluate performance (accuracy) through ``predict()`` method.
 
 .. code-block:: python
 
@@ -58,7 +56,7 @@ Compile your hls project.
 ``predict`` method
 ======================
 
-Similar to ``keras``\ 's predict API, you can get the predictions of ``hls_model`` just by supplying an input ``numpy`` array:
+Similar to ``keras``\ 's predict API, you can get the predictions just by supplying an input ``numpy`` array:
 
 .. code-block:: python
 
@@ -67,7 +65,7 @@ Similar to ``keras``\ 's predict API, you can get the predictions of ``hls_model
 
    y = hls_model.predict(X)
 
-This is similar to doing ``csim`` simulation, but you can get your prediction results much faster. It's very helpful when you want to quickly prototype different configurations for your model.
+This is similar to doing ``csim`` simulation, without creating the testbench and supplying data. It's very helpful when you want to quickly prototype different configurations for your model.
 
 ----
 
@@ -76,12 +74,16 @@ This is similar to doing ``csim`` simulation, but you can get your prediction re
 ``build`` method
 ====================
 
+This method "builds" the generated HLS project. The parameters of build are backend-specific and usually include simulation and synthesis. Refer to each backend for a complete list of supported parameters to ``build()``.
+
 .. code-block:: python
 
-   hls_model.build()
+   report = hls_model.build()
 
    #You can also read the report of the build
    hls4ml.report.read_vivado_report('hls4ml_prj')
+
+The returned ``report`` object will contain the result of build step, which may include C-simulation results, HLS synthesis estimates, co-simulation latency etc, depending on the backend used.
 
 ----
 
