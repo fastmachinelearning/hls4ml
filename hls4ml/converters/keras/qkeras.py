@@ -80,15 +80,19 @@ def parse_qrnn_layer(keras_layer, input_names, input_shapes, data_reader):
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     layer['recurrent_weight_quantizer'] = get_quantizer_from_config(keras_layer, 'recurrent')
     layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    layer['accum_quantizer'] = get_quantizer_from_config(keras_layer, 'state')
+
+
+    if not isinstance(keras_layer['config']['activation'], str):
+        activation = get_activation_quantizer(keras_layer, input_names)
+        layer['activation'] = activation['activation']
+        layer['activation_quantizer'] = activation['activation_quantizer']
 
     return layer, output_shape
 
 
-@keras_handler('QActivation')
-def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader):
+def get_activation_quantizer(keras_layer, input_names):
     from qkeras.quantizers import get_quantizer
-
-    assert keras_layer['class_name'] == 'QActivation'
     supported_activations = [
         'quantized_relu',
         'quantized_tanh',
@@ -159,6 +163,16 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
         layer['activation'] = activation_config['class_name'].replace('quantized_', '')
 
     layer['activation_quantizer'] = activation_config
+
+    return layer
+
+@keras_handler('QActivation')
+def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader):
+
+    assert keras_layer['class_name'] == 'QActivation'
+
+    layer = get_activation_quantizer(keras_layer, input_names)
+
     return layer, [shape for shape in input_shapes[0]]
 
 
