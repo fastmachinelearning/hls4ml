@@ -35,10 +35,10 @@ def _get_input_kif(node: Layer):
     if not isinstance(result_t, FixedPrecisionType):
         raise ValueError(f'Input to layer {node.name} is not a fixed point type - DA optimization not supported.')
     inp_layer = get_input_layers(node)[0]
-    inp_shape = node.get_input_variable().shape
     if isinstance(inp_layer, FixedPointQuantizer):
         Ks, _Bs, _Is = inp_layer.mask_kbi
         Is, Fs = _Is - Ks, _Bs - _Is
+        Ks, Is, Fs = Ks[0], Is[0], Fs[0]  # remove batch dimension
     else:
         Ks = np.ones(inp_shape, dtype=np.int8)
         Is = Fs = np.full(inp_shape, 126, dtype=np.int8)
@@ -167,6 +167,8 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
             allow += (Conv1D, Conv2D)
         for next_layer in next_layers:
             if next_layer.get_attr('strategy', None) != 'distributed_arithmetic':
+                return False
+            if not isinstance(next_layer, allow):
                 return False
         return len(next_layers) == 1 or (node.RND == 'RND' and node.SAT == 'WRAP')  # avoid resource overhead
 
