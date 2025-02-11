@@ -1,3 +1,4 @@
+import re
 import typing
 from copy import copy
 from functools import reduce, singledispatch
@@ -37,6 +38,7 @@ if typing.TYPE_CHECKING:
 
 
 KIF_t = tuple[NDArray[np.int8], NDArray[np.int8], NDArray[np.int8]]
+rm_cpy = re.compile(r'(?P<name>.+)_cpy\d*')
 
 
 def to_hls4ml_fixed(k, i, f, name, *args):
@@ -52,7 +54,14 @@ def to_hls4ml_fixed(k, i, f, name, *args):
 def get_input_layers(layer: Layer) -> list[Layer]:
     model: 'ModelGraph' = layer.model
     inp_names = layer.inputs
-    return [model.graph[name] for name in inp_names]
+    ret = []
+    for name in inp_names:
+        if name not in model.graph.keys():  # in stream_io, <name>_cpt\d+ may be used instead of <name>
+            matched = rm_cpy.match(name)
+            assert matched, f'Layer {layer.name} has input {name} which is not in the model (keys: {model.graph.keys()})'
+            name = matched.group('name')
+        ret.append(model.graph[name])
+    return ret
 
 
 def get_output_layers(layer: Layer) -> list[Layer]:
