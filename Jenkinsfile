@@ -15,7 +15,7 @@ pipeline {
         dir(path: 'test') {
           sh '''#!/bin/bash --login
               conda activate hls4ml-py310
-              conda install -y jupyterhub pydot graphviz pytest pytest-cov
+              conda install -y jupyterhub pydot graphviz pytest pytest-cov da4ml
               pip install pytest-randomly jupyter onnx>=1.4.0 matplotlib pandas seaborn pydigitalwavetools==1.1 pyyaml tensorflow==2.14 qonnx torch git+https://github.com/jmitrevs/qkeras.git@qrecurrent_unstack pyparsing quantizers
               pip install -U ../ --user
               ./convert-keras-models.sh -x -f keras-models.txt
