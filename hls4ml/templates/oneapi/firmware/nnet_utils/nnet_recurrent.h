@@ -405,7 +405,7 @@ void simple_rnn_pytorch_cell(const in_T &inputs, h_T &hidden_state, h_T &hidden_
     // Hidden state
     [[intel::fpga_register]] accum_array_T hiddenCand;
     multiply_U<h_T, accum_array_T, typename CONFIG_T::recurrent_weight_t, CONFIG_T::n_out>(hidden_state, hiddenCand,
-                                                                                            rec_kernel);
+                                                                                           rec_kernel);
 
     // Hidden state bias addition
     [[intel::fpga_register]] accum_array_T hiddenBias;
@@ -437,7 +437,7 @@ void simple_rnn_pytorch(const data_T &data, res_T &res, const typename CONFIG_T:
 INIT_LOOP:
     #pragma unroll
     for (int x = 0; x < CONFIG_T::n_out; x++) {
-        hidden_state[x][0] = 0;
+        hidden_state[0][x] = 0;
     }
 
     [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
@@ -451,7 +451,7 @@ INIT_LOOP:
         // Hidden state at current time step
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state_temp[x] = hidden_state[x][i];
+            hidden_state_temp[x] = hidden_state[i][x];
         }
 
         // Do SimpleRNN
@@ -468,7 +468,7 @@ INIT_LOOP:
         // Output when return_sequences is false
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            res[x] = hidden_state[x][CONFIG_T::n_timesteps];
+            res[x] = hidden_state[CONFIG_T::n_timesteps][x];
         }
     } else {
         // Output when return_sequences is true
@@ -476,16 +476,17 @@ INIT_LOOP:
         for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
             #pragma unroll
             for (int h = 0; h < CONFIG_T::n_out; h++) {
-                res[x * CONFIG_T::n_out + h] = hidden_state[h][x + 1];
+                res[x * CONFIG_T::n_out + h] = hidden_state[x + 1][h];
             }
         }
     }
 }
 
 template <class data_T, class h_T, class res_T, typename CONFIG_T>
-void simple_rnn_pytorch_init_state(const data_T &data, const h_T& hin, res_T &res, const typename CONFIG_T::weight_t &kernel,
-                        const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias,
-                        const typename CONFIG_T::recurrent_bias_t &rec_bias) {
+void simple_rnn_pytorch_init_state(const data_T &data, const h_T &hin, res_T &res, const typename CONFIG_T::weight_t &kernel,
+                                   const typename CONFIG_T::recurrent_weight_t &rec_kernel,
+                                   const typename CONFIG_T::bias_t &bias,
+                                   const typename CONFIG_T::recurrent_bias_t &rec_bias) {
 
     using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
 
@@ -498,7 +499,7 @@ void simple_rnn_pytorch_init_state(const data_T &data, const h_T& hin, res_T &re
 INIT_LOOP:
     #pragma unroll
     for (int x = 0; x < CONFIG_T::n_out; x++) {
-        hidden_state[x][0] = hin[x];
+        hidden_state[0][x] = hin[x];
     }
 
     [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
@@ -512,7 +513,7 @@ INIT_LOOP:
         // Hidden state at current time step
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            hidden_state_temp[x] = hidden_state[x][i];
+            hidden_state_temp[x] = hidden_state[i][x];
         }
 
         // Do SimpleRNN
@@ -529,7 +530,7 @@ INIT_LOOP:
         // Output when return_sequences is false
         #pragma unroll
         for (int x = 0; x < CONFIG_T::n_out; x++) {
-            res[x] = hidden_state[x][CONFIG_T::n_timesteps];
+            res[x] = hidden_state[CONFIG_T::n_timesteps][x];
         }
     } else {
         // Output when return_sequences is true
@@ -537,7 +538,7 @@ INIT_LOOP:
         for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
             #pragma unroll
             for (int h = 0; h < CONFIG_T::n_out; h++) {
-                res[x * CONFIG_T::n_out + h] = hidden_state[h][x + 1];
+                res[x * CONFIG_T::n_out + h] = hidden_state[x + 1][h];
             }
         }
     }
