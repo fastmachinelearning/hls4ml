@@ -81,19 +81,19 @@ def _(layer: Conv1D | Conv2D):
 
 @get_kernel_inp_kif.register
 def _(node: EinsumDense):
-    inp_tpose_idx = node.attributes.attributes['inp_tpose_idxs'][0]
+    inp_tpose_idx = node.attributes['inp_tpose_idxs']
     L = node.attributes['n_free_data']
     I = node.attributes['n_inplace']  # noqa: E741
     C = node.attributes['n_contract']
 
     k, i, f = _get_input_kif(node)
     k, i, f = k.transpose(inp_tpose_idx), i.transpose(inp_tpose_idx), f.transpose(inp_tpose_idx)
-    k, i, f = k.reshape(I, L, C)  # noqa: E741
+    k, i, f = k.reshape(I, L, C), i.reshape(I, L, C), f.reshape(I, L, C)
     return k.max(axis=1), i.max(axis=1), f.max(axis=1)
 
 
 class DistributedArithmeticCodegen(OptimizerPass):
-    '''Generates C++ code for distributed arithmetic implementation of Dense layers'''
+    '''Generates C++ code for distributed arithmetic implementation of Dense and Conv1/2D layers'''
 
     def match(self, node):
         if not node.get_attr('strategy', None) == 'distributed_arithmetic':
@@ -104,6 +104,8 @@ class DistributedArithmeticCodegen(OptimizerPass):
         # EinsumDense support is standalone as it requires additional configuration
         # RNN and depthwise conv families are not supported for now
         if not isinstance(node, supported):
+            if isinstance(node, EinsumDense):
+                return False
             raise Exception(f'Layer {node.name} of type {node.__class__.__name__} is not supported by DA optimizer.')
 
         rf = node.get_attr('reuse_factor', 1)
@@ -123,7 +125,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
         fn_name = f'dense_da_{node.index}'
 
         k, i, f = get_kernel_inp_kif(node)
-        k, b, i = list(k), list(i + f + k), list(i + k)
+        k, b, i = list(k), list(i + f), list(i)
         codegen_backend = VitisCodegenBackend(fn_name=fn_name)
 
         with Namer().tmp_scope():
@@ -325,39 +327,56 @@ class DALatencyConvTemplate(OptimizerPass):
         del node.attributes['bias_t']
 
 
-# einsum_dense_da_parallel_template = '''
-# struct config{index} {{
-#     typedef config{index}_tpose_inp tpose_inp_conf;
-#     typedef config{index}_tpose_out tpose_out_conf;
-#     typedef void dense_conf;
+class DistributedArithmeticEinsumCodegen(OptimizerPass):
+    '''Generates C++ code for distributed arithmetic implementation of Dense layers'''
 
-#     // Layer Sizes
-#     static const unsigned n_free_data = {n_free_data};
-#     static const unsigned n_free_kernel = {n_free_kernel};
-#     static const unsigned n_contract = {n_contract};
-#     static const unsigned n_inplace = {n_inplace};
+    def match(self, node):
+        if not node.get_attr('strategy', None) == 'distributed_arithmetic':
+            return False
+        if 'da_codegen' in node.attributes:
+            return False
+        return isinstance(node, EinsumDense)
 
-#     // Resource reuse info
-#     static const unsigned io_type = nnet::op_parallel;
-#     static const unsigned strategy = nnet::distributed_arithmetic;
-#     static const unsigned reuse_factor = 1;
-#     static const unsigned parallelization_factor = {parallelization_factor}; // Only useful when n_inplace > 1
-# }};
-# '''
+    @requires('da')
+    def transform(self, model: 'ModelGraph', node: Layer):
+        from da4ml import VitisCodegenBackend, compile_kernel, graph_compile_states
+        from da4ml.cmvm.codegen import Namer
 
+        kernel: np.ndarray = node.attributes['weight'].data
+        I, C, L_ker = kernel.shape
+        L_data = node.attributes['n_free_data']
 
-# class DAEinsumDense(OptimizerPass):
-#     def match(self, node: Layer):
-#         if not node.get_attr('strategy', None) == 'distributed_arithmetic':
-#             return False
-#         return node.class_name == 'EinsumDense'
+        codegen_backend = VitisCodegenBackend()
+        inp_kifs = get_kernel_inp_kif(node)
+        n_in = C
+        fn_strs = []
+        fn_calls = []
 
-#     def coded_gen(self, node: EinsumDense):
+        for i in range(I):
+            _k, _i, _f = (v[i] for v in inp_kifs)
+            _b = _i + _f
+            fn_name = f'einsum_{node.index}_da_{i}_of_{I}'
+            with Namer().tmp_scope():
+                states = compile_kernel(kernel[i], _k, _b, _i, [False] * n_in, [0] * n_in, 1, 0, 128, 64)  # type: ignore
+                inp, out = graph_compile_states(states, False)
+                _fn, fn_str = codegen_backend.gen_fn(inp, out, fn_name=fn_name)
+            fn_str = fn_str.replace('{', '{\n    #pragma HLS INLINE', 1)  # add pragma to first line
+            fn_strs.append(fn_str)
+            fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'
+            fn_calls.append(fn_call)
 
-#     def transform(self, model: 'ModelGraph', node: EinsumDense):
-#         inp_shape = node.attributes.attributes['inp_shape']
-#         out_interpert_shape = node.attributes.attributes['out_interpert_shape']
-#         inp_tpose_idxs = node.attributes.attributes['inp_tpose_idxs']
-#         out_tpose_idxs = node.attributes.attributes['out_tpose_idxs']
-#         tpose_inp_conf_name = f'config{node.index}_tpose_inp'
-#         tpose_out_conf_name = f'config{node.index}_tpose_out'
+        kernel_fn = f'''
+template <typename inp_t, typename out_t>
+void einsum_dense{node.index}_da_kernel(
+    inp_t inp_tpose[{L_data * C * I}],
+    out_t out_tpose[{L_data * L_ker * I}],
+    int l0
+) {{
+    {"    ".join(fn_calls)}
+}}
+'''
+        code_gen = '\n\n'.join(fn_strs) + '\n\n' + kernel_fn
+        node.attributes['da_codegen'] = Source(code_gen)
+        del node.attributes['weight_data']
+        del node.attributes['weight']
+        del node.attributes['weight_t']

@@ -17,6 +17,7 @@ from hls4ml.model.layers import (
     Dense,
     DepthwiseConv1D,
     DepthwiseConv2D,
+    EinsumDense,
     Embedding,
     GarNet,
     GarNetStack,
@@ -113,6 +114,7 @@ class VivadoBackend(FPGABackend):
             'vivado:fix_softmax_table_size',
             'infer_precision_types',
             'vivado:distributed_arithmetic_codegen',
+            'vivado:distributed_arithmetic_einsum_codegen',
             'vivado:fuse_quantizer_into_d_a_layers',
             'vivado:process_fixed_point_quantizer_layer',
         ]
@@ -671,3 +673,15 @@ class VivadoBackend(FPGABackend):
     @layer_optimizer(GarNetStack)
     def init_garnet_stack(self, layer):
         self.init_garnet(layer)
+
+    @layer_optimizer(EinsumDense)
+    def init_einsum_dense(self, layer: EinsumDense) -> None:
+        strategy: str | None = layer.model.config.get_strategy(layer)
+        if not strategy:
+            layer.set_attr('strategy', 'latency')
+            return
+        if strategy in ('latency', 'resource', 'distributed_arithmetic'):
+            layer.set_attr('strategy', strategy)
+            return
+        warn(f'Invalid strategy "{strategy}" for EinsumDense layer "{layer.name}". Using "latency" strategy instead.')
+        layer.set_attr('strategy', 'latency')
