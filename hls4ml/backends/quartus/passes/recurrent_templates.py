@@ -285,6 +285,9 @@ simple_rnn_function_template = 'nnet::simple_rnn<{input_t}, {output_t}, {config}
 simple_rnn_pytorch_function_template = (
     'nnet::simple_rnn_pytorch<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
 )
+simple_rnn_pytorch_function_initial_state_template = (
+    'nnet::simple_rnn_pytorch<{input_t}, {input2_t}, {output_t}, {config}>({input}, {input2}, {output}, {weights});'
+)
 
 
 class SimpleRNNConfigTemplate(LayerConfigTemplate):
@@ -326,13 +329,20 @@ class SimpleRNNConfigTemplate(LayerConfigTemplate):
 class SimpleRNNFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(SimpleRNN, include_header=recurrent_include_list)
-        self.template = simple_rnn_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
+        if params['pass_initial_states'] == 'true':
+            params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
+            params['input2'] = node.get_input_variable(node.inputs[1]).name
+
         if node.get_attr('pytorch', False):
-            self.template = simple_rnn_pytorch_function_template
+            if params['pass_initial_states'] == 'true':
+                template = simple_rnn_pytorch_function_initial_state_template
+            else:
+                template = simple_rnn_pytorch_function_template
             params['weights'] = 'w{0}, wr{0}, b{0}, br{0}'.format(str(node.index))
         else:
+            template = simple_rnn_function_template
             params['weights'] = 'w{0}, wr{0}, b{0}'.format(str(node.index))
-        return self.template.format(**params)
+        return template.format(**params)
