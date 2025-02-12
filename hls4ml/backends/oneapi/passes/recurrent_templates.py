@@ -373,6 +373,9 @@ class SimpleRNNConfigTemplate(LayerConfigTemplate):
         )
         simple_rnn_params['recurrent_activation'] = 'relu'
 
+        # In Keras there is no recurrent bias, so put a placeholder
+        simple_rnn_params.setdefault('recurrent_bias_t', simple_rnn_params['bias_t'])
+
         simple_rnn_config = self.template.format(**simple_rnn_params)
 
         act_params = self._default_config_params(node)
