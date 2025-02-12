@@ -35,7 +35,7 @@ recr_mult_config_template_2 = """struct config{index} : nnet::dense_config {{
     typedef {recurrent_bias_t.name} bias_t;
     typedef {recurrent_weight_t.name} weight_t;
     template<class data_T, class res_T, class CONFIG_T>
-    using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
+    using kernel = {dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
