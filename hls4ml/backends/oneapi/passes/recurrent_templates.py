@@ -351,7 +351,7 @@ simple_rnn_function_template = 'nnet::simple_rnn<{input_t}, {output_t}, {config}
 simple_rnn_pytorch_function_template = (
     'nnet::simple_rnn_pytorch<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
 )
-simple_rnn_pytorch_function_initial_state_template = 'nnet::simple_rnn_pytorch_init_state<{input_t}, {h_t}, {output_t}, {config}>({input}, {init_state}, {output}, {weights});'
+simple_rnn_pytorch_function_initial_state_template = 'nnet::simple_rnn_pytorch_init_state<{input_t}, {h_t}, {output_t}, {config}>({input}, {init_state}, {output}, {weights});'  # noqa E501
 
 
 class SimpleRNNConfigTemplate(LayerConfigTemplate):
