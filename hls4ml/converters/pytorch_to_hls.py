@@ -1,7 +1,7 @@
 import numpy as np
-import torch
 
 from hls4ml.model import ModelGraph
+from hls4ml.utils.dependency import requires
 
 
 class PyTorchModelReader:
@@ -27,6 +27,8 @@ class PyTorchModelReader:
 
 class PyTorchFileReader(PyTorchModelReader):  # Inherit get_weights_data method
     def __init__(self, config):
+        import torch
+
         self.config = config
 
         if not torch.cuda.is_available():
@@ -116,6 +118,8 @@ def parse_pytorch_model(config, verbose=True):
     Returns:
         ModelGraph: hls4ml model object.
     """
+    import torch
+    from torch.fx import symbolic_trace
 
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -135,7 +139,6 @@ def parse_pytorch_model(config, verbose=True):
     # dict of layer objects in non-traced form for access lateron
     children = {c[0]: c[1] for c in model.named_children()}
     # use symbolic_trace to get a full graph of the model
-    from torch.fx import symbolic_trace
 
     traced_model = symbolic_trace(model)
     # Define layers to skip for conversion to HLS
@@ -148,6 +151,7 @@ def parse_pytorch_model(config, verbose=True):
     inputs_map = {}
 
     input_layers = []
+    output_layers = []
 
     # Output shape tracking
     output_shapes = {}
@@ -396,11 +400,23 @@ def parse_pytorch_model(config, verbose=True):
     if len(input_layers) == 0:
         input_layers = None
 
-    return layer_list, input_layers
+    for layer in layer_list:
+        if layer['class_name'] == 'InputLayer':
+            continue
+        is_input = False
+        for lay in layer_list:
+            if 'inputs' not in lay.keys():
+                continue
+            if layer['name'] in lay['inputs']:
+                is_input = True
+        if not is_input:
+            output_layers.append(layer['name'])
+    return layer_list, input_layers, output_layers
 
 
+@requires('_torch')
 def pytorch_to_hls(config):
-    layer_list, input_layers = parse_pytorch_model(config)
+    layer_list, input_layers, output_layers = parse_pytorch_model(config)
     print('Creating HLS model')
-    hls_model = ModelGraph(config, layer_list, inputs=input_layers)
+    hls_model = ModelGraph(config, layer_list, inputs=input_layers, outputs=output_layers)
     return hls_model
