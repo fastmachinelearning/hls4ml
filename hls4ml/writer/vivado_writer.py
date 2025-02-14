@@ -452,6 +452,21 @@ class VivadoWriter(Writer):
                     weights, model.config.get_output_dir(), namespace=namespace, write_txt_file=write_txt
                 )
 
+    def write_multigraph_weights(self, model):
+        """Write the weights into header files
+
+        Args:
+            model (MultiModelGraph): the hls4ml multigraph model.
+        """
+        namespace = model.config.get_writer_config().get('Namespace', None)
+        write_txt = model.config.get_writer_config().get('WriteWeightsTxt', True)
+        for g in model.graphs:
+            for layer in g.get_layers():
+                for weights in layer.get_weights():
+                    self.print_array_to_cpp(
+                        weights, model.config.get_output_dir(), namespace=namespace, write_txt_file=write_txt
+                    )
+
     def __make_dat_file(self, original_path, project_path):
         """
         Convert other input/output data types into a dat file, which is
@@ -700,6 +715,132 @@ class VivadoWriter(Writer):
         f.close()
         fout.close()
 
+    def write_bridge_multigraph(self, model):
+        """Write the Python-C++ bridge (myproject_bridge.cpp)
+        Args:
+            model (MultiModelGraph): the hls4ml multigraph model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir, '../templates/vivado/myproject_bridge.cpp'))
+        fout = open(f"{model.config.get_output_dir()}/{model.config.config['ProjectName']}_bridge.cpp", 'w')
+        model_inputs = model.graphs[0].get_input_variables()
+        model_outputs = model.graphs[-1].get_output_variables()
+        model_brams = [var for var in model.graphs[0].get_weight_variables() if var.storage.lower() == 'bram']
+
+        indent = '    '
+
+        for line in f.readlines():
+            newline = ''
+            if 'MYPROJECT' in line:
+                newline = line.replace('MYPROJECT', format(model.config.config['ProjectName'].upper()))
+            elif 'firmware/myproject' in line:
+                for graph_idx, g in enumerate(model.graphs):
+                    newline += '#undef DEFINES_H_\n'
+                    if len(g.outputs) == 1:
+                        newline += '#define result_t ' + 'result_graph' + str(graph_idx+1) + '_t\n'
+                    newline += line.replace('myproject', format(model.graphs[graph_idx].config.config['ProjectName']))
+                    if len(g.outputs) == 1:
+                        newline += 'typedef result_graph' + str(graph_idx+1) + '_t graph' + str(graph_idx+1) + '_result_t;\n'
+                        newline += '#undef result_t\n\n' if graph_idx < len(model.graphs) - 1 else '\n'
+                newline += '\n'
+            elif 'myproject' in line:
+                newline = line.replace('myproject', format(model.config.config['ProjectName']))
+
+            elif '// hls-fpga-machine-learning insert bram' in line:
+                newline = line
+                for bram in model_brams:
+                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
+            elif '// hls-fpga-machine-learning insert header' in line:
+                dtype = line.split('#', 1)[1].strip()
+                inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
+                outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
+
+                newline = ''
+                newline += indent + inputs_str + ',\n'
+                newline += indent + outputs_str + '\n'
+
+            elif '// hls-fpga-machine-learning insert wrapper' in line:
+                dtype = line.split('#', 1)[1].strip()
+                newline = ''
+                for i in model_inputs:
+                    newline += indent + '{var};\n'.format(var=i.definition_cpp(name_suffix='_ap'))
+                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(
+                        dtype, i.type.name, i.size_cpp(), i.name, i.name
+                    )
+                newline += '\n'
+
+                for idx, g in enumerate(model.graphs):
+                    for o in g.get_output_variables():
+                        definition = o.definition_cpp(name_suffix='_ap')
+                        if len(g.outputs) == 1:
+                            parts = definition.split(' ', 1)  
+                            datatype = 'graph'+str(idx+1) + '_result_t'
+                            if parts[0].startswith('hls::stream'):
+                                modified_definition = 'hls::stream<' + datatype + '> ' + parts[1]
+                            else:
+                                modified_definition = datatype + ' ' + parts[1]
+                            newline += indent + f"{modified_definition};\n"
+                        else:
+                            newline += indent + f"{definition};\n"
+
+                newline += '\n'
+
+                top_level = ''
+                output_vars = ''
+                for idx, g in enumerate(model.graphs):
+                    if idx == 0:
+                        input_vars = ','.join([i.name + '_ap' for i in g.get_input_variables()])
+                    else:
+                        input_vars =  output_vars
+                    bram_vars = ','.join([b.name for b in [var for var in g.get_weight_variables() if var.storage.lower() == 'bram']])
+                    output_vars = ','.join([o.name + '_ap' for o in g.get_output_variables()])
+                    # Concatenate the input, output, and bram variables. Filter out empty/null values
+                    all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
+                    top_level += indent + f"{g.config.config['ProjectName']}({all_vars});\n"
+                newline += top_level
+
+                newline += '\n'
+
+                for o in model_outputs:
+                    if len(model.graphs[-1].outputs) == 1:
+                        newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(
+                            datatype, dtype, o.size_cpp(), o.name, o.name
+                        )
+                    else:
+                        newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(
+                            o.type.name, dtype, o.size_cpp(), o.name, o.name
+                        )
+
+            elif '// hls-fpga-machine-learning insert trace_outputs' in line:
+                newline = ''
+                for layer in model.get_layers():
+                    func = layer.get_attr('function_cpp', None)
+                    if func and model.config.trace_output and layer.get_attr('trace', False):
+                        vars = layer.get_variables()
+                        for var in vars:
+                            newline += (
+                                indent
+                                + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
+                                + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
+                            )
+
+            elif '// hls-fpga-machine-learning insert namespace' in line:
+                newline = ''
+
+                namespace = model.config.get_writer_config().get('Namespace', None)
+                if namespace is not None:
+                    newline += indent + f'using namespace {namespace};\n'
+
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+
+
     def write_build_script(self, model):
         """Write the TCL/Shell build scripts (project.tcl, build_prj.tcl, vivado_synth.tcl, build_lib.sh)
 
@@ -747,6 +888,26 @@ class VivadoWriter(Writer):
 
                 dst.write(line)
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
+    
+    def write_build_script_multigraph(self, model):
+            """Write the build script (build_lib.sh) for stitched multigraph project
+            Args:
+                model (MultiModelGraph): the hls4ml multigraph model.
+            """
+            filedir = Path(__file__).parent
+            os.makedirs(model.config.get_output_dir(), exist_ok=True)
+            build_lib_src = (filedir / '../templates/vivado/build_lib_multigraph.sh').resolve()
+            build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+            graph_project_names = ' '.join(f"\"{g.config.get_output_dir().split('/')[-1]}\"" for g in model.graphs)
+
+            with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
+                for line in src.readlines():
+                    line = line.replace('myproject', model.config.config['OriginalProjectName'])
+                    line = line.replace('myproject_stitched', model.config.config['ProjectName'])
+                    line = line.replace('mystamp', model.config.config['Stamp'])
+                    line = line.replace('mygraph_name_list', graph_project_names)
+                    dst.write(line)
+            os.chmod(build_lib_dst, os.stat(build_lib_dst).st_mode | stat.S_IEXEC)
 
     def write_nnet_utils(self, model):
         """Copy the nnet_utils, AP types headers and any custom source to the project output directory
@@ -854,19 +1015,27 @@ class VivadoWriter(Writer):
             with tarfile.open(tar_path, mode='w:gz') as archive:
                 archive.add(model.config.get_output_dir(), recursive=True, arcname='')
 
-    def write_hls(self, model):
-        print('Writing HLS project')
-        self.write_project_dir(model)
-        self.write_project_cpp(model)
-        self.write_project_header(model)
-        self.write_weights(model)
-        self.write_defines(model)
-        self.write_parameters(model)
-        self.write_test_bench(model)
-        self.write_bridge(model)
-        self.write_build_script(model)
-        self.write_nnet_utils(model)
-        self.write_generated_code(model)
-        self.write_yml(model)
-        self.write_tar(model)
-        print('Done')
+    def write_hls(self, model, is_multigraph=False):
+        if not is_multigraph:
+            print('Writing HLS project')
+            self.write_project_dir(model)
+            self.write_project_cpp(model)
+            self.write_project_header(model)
+            self.write_weights(model)
+            self.write_defines(model)
+            self.write_parameters(model)
+            self.write_test_bench(model)
+            self.write_bridge(model)
+            self.write_build_script(model)
+            self.write_nnet_utils(model)
+            self.write_generated_code(model)
+            self.write_yml(model)
+            self.write_tar(model)
+            print('Done')
+        else:
+            print('Writing HLS multigraph project')
+            self.write_project_dir(model)
+            self.write_build_script_multigraph(model)
+            self.write_bridge_multigraph(model)
+            self.write_multigraph_weights(model)
+            print('Done')   

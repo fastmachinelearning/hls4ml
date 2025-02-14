@@ -1112,10 +1112,9 @@ class ModelGraph(Serializable):
                     if previous_layer_name in sub_config['HLSConfig']['LayerName']:
                         prev_layer_config = sub_config['HLSConfig']['LayerName'][previous_layer_name]
                         new_layer_config = {}
-                        new_layer_config['Precision'] = prev_layer_config['Precision']
+                        new_layer_config['Precision'] =  last_output_precision if last_output_precision is not None else 'auto'
                         # NOTE - We copy Trace as well but it might be better to reset it
                         new_layer_config['Trace'] = prev_layer_config['Trace']
-                        # copy last layer config from previous graph to the new input layer config of current graph
                         sub_config['HLSConfig']['LayerName'][input_layer_name] = new_layer_config
                     else:
                         raise KeyError(f"Layer '{previous_layer_name}' not found in subconfig.")
@@ -1128,23 +1127,19 @@ class ModelGraph(Serializable):
                 sub_config, sub_layer_list, graph_input_layers, graph_output_layers, initial_index=current_index
             )
 
-            # After creating subgraph, get the precision from the last layer's output.
+            # After creating the subgraph, extract the actual precision from the last layer's result.
             if hls_model.graph:
-                try:
-                    last_layer = next(reversed(hls_model.graph.values()))
-                    last_output_precision = last_layer.attributes['precision']['result']
-                except (KeyError, AttributeError):
-                    warnings.warn(
-                        "Could not find precision in the last layer. " "Setting 'last_output_precision' to 'auto'."
-                    )
-                    last_output_precision = 'auto'
+                last_layer = next(reversed(hls_model.graph.values()))
+                last_prec = last_layer.attributes.get('result_t')
+                last_output_precision = (last_prec.precision if hasattr(last_prec, 'precision') else last_prec) if last_prec is not None else 'auto'
+                if last_output_precision == 'auto' or last_output_precision is None:
+                    raise ValueError("Could not extract a valid precision from the last layer!")
 
-            # Update the current index for the next graph
-            # Get the index of the last element in the graph
+            # Update current_index based on the new graph (accounting for the inserted input layer).
             layer_indices = [layer.index for layer in hls_model.graph.values()]
             if layer_indices:
                 max_index = max(layer_indices)
-                current_index = max_index - 1  # we have the new input layer as well
+                current_index = max_index - 1
             model_graphs.append(hls_model)
 
         return MultiModelGraph(model_graphs)
@@ -1153,32 +1148,45 @@ class ModelGraph(Serializable):
 class MultiModelGraph:
     def __init__(self, graphs):
         self.graphs = graphs
-        self.config = copy.copy(self.graphs[0].config)
-        self._deepcopy_config_names(self.graphs[0].config.config)
         self._initialize_config(graphs[0])
-        self.config.config['StitchedProjectName'] = 'vivado_stitched_design'
-        self.backend = graphs[0].config.backend
-        self.graph_reports = None
-        self._top_function_lib = None
-        self.config.config['Stamp'] = '64616e'
-        self.inputs = graphs[0].inputs
-        self.outputs = graphs[-1].outputs
-        self._compile = ModelGraph._compile.__get__(self, MultiModelGraph)
+        self._bind_modelgraph_methods()
+        self._initialize_io_attributes(graphs)
 
     def _initialize_config(self, first_graph):
-        """
-        Initialize the configuration using details from the first graph
-        """
+        self.config = copy.copy(first_graph.config)
+        # Deep copy only 'ProjectName' and 'OutputDir', shallow copy others
+        keys_to_deepcopy = ['ProjectName', 'OutputDir']
+        self.config.config = {
+            k: copy.deepcopy(first_graph.config.config[k]) if k in keys_to_deepcopy else first_graph.config.config[k] 
+            for k in first_graph.config.config
+        }
+        self._update_project_config(first_graph)
+        self.backend = first_graph.config.backend
+
+    def _bind_modelgraph_methods(self):
+        # Bind necessary ModelGraph methods to this instance
+        self._compile = ModelGraph._compile.__get__(self, MultiModelGraph)
+        self.get_output_variables = ModelGraph.get_output_variables.__get__(self, MultiModelGraph)
+        self._compute_n_samples = ModelGraph._compute_n_samples.__get__(self, MultiModelGraph)
+        self._get_top_function = ModelGraph._get_top_function.__get__(self, MultiModelGraph)
+        self._predict = ModelGraph.predict.__get__(self, MultiModelGraph)
+        self.trace = ModelGraph.trace.__get__(self, MultiModelGraph)
+
+    def _initialize_io_attributes(self, graphs):
+        self.graph_reports = None
+        self._top_function_lib = None
+        self.inputs = graphs[0].inputs
+        self.outputs = graphs[-1].outputs
+        self.output_vars = graphs[-1].output_vars        
+
+    def _update_project_config(self, first_graph):
         original_project_name = first_graph.config.get_project_name().partition('_graph')[0]
         self.config.config['ProjectName'] = f"{original_project_name}_stitched"
         self.config.config['OriginalProjectName'] = original_project_name
         original_output_dir = first_graph.config.get_output_dir().partition('/graph')[0]
         self.config.config['OutputDir'] = os.path.join(original_output_dir, 'stitched')
-
-    def _deepcopy_config_names(self, config):
-        # Deep copy only 'ProjectName' and 'OutputDir', shallow copy others
-        keys_to_deepcopy = ['ProjectName', 'OutputDir']
-        self.config.config = {k: copy.deepcopy(config[k]) if k in keys_to_deepcopy else config[k] for k in config}
+        self.config.config['StitchedProjectName'] = 'vivado_stitched_design'
+        self.config.config['Stamp'] = '64616e'
 
     def __getitem__(self, index):
         return self.graphs[index]
@@ -1271,6 +1279,9 @@ class MultiModelGraph:
 
         if stitch_design or sim_stitched_design or export_stitched_design:
             self._assert_consistent_pragmas()
+            vivado_folder = os.path.join(self.config.config['OutputDir'], self.config.config['StitchedProjectName'])
+            if os.path.exists(vivado_folder):
+                raise FileExistsError(f"Vivado stitched project folder '{vivado_folder}' already exists.")
             nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
                 stitch_design=stitch_design,
@@ -1286,18 +1297,13 @@ class MultiModelGraph:
     def compile(self):
         for g in self.graphs:
             g.compile()
-        # TODO
-        # self.write_build_script()
-        # self.write_bridge()
-        # self._compile()
+        # Bypass VitisWriter and invoke write_hls directly from VivadoWriter
+        super(self.backend.writer.__class__, self.backend.writer).write_hls(self, is_multigraph=True)
+        self._compile()
 
     def predict(self, x, sim='csim'):
         if sim == 'csim':
-            input_data = x
-            for g in self.graphs:
-                output_data = g.predict(input_data)
-                input_data = output_data
-            return output_data
+            return self._predict(x)
         elif sim == 'rtl':
             nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
@@ -1311,134 +1317,22 @@ class MultiModelGraph:
             return stitched_report['BehavSimResults']
         else:
             print('Unknown simulation option given.')
-
+    
     def trace(self, x):
-        # TODO: finish trace function
-        input_data = x
-        trace_output = []
+        raise NotImplementedError("Trace function has not been implemented yet for MultiModelGraph.")
+
+    def get_input_variables(self):
+        variables = []
+        for inp in self.inputs:
+            variables.append(self.graphs[0].graph[inp].get_output_variable())
+        return variables
+    
+    def get_layers(self):
+        all_values = []
         for g in self.graphs:
-            output_data, curr_trace_output = g.trace(input_data)
-            input_data = output_data
-            trace_output.append(curr_trace_output)
-        return output_data, trace_output
-
-    def write_build_script(self):
-        # NOTE we need to move this function to Vivado writer with each graph object
-        spec = importlib.util.find_spec('hls4ml')
-        hls4ml_path = os.path.dirname(spec.origin)
-        build_lib_src = os.path.join(hls4ml_path, 'templates/vivado/build_lib_multigraph.sh')
-        os.makedirs(self.config.config['OutputDir'], exist_ok=True)
-        build_lib_dst = os.path.join(self.config.config['OutputDir'], 'build_lib.sh')
-        graph_project_names = ' '.join(f"\"{g.config.get_output_dir().split('/')[-1]}\"" for g in self.graphs)
-        with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', self.config.config['OriginalProjectName'])
-                line = line.replace('myproject_stitched', self.config.config['ProjectName'])
-                line = line.replace('mystamp', self.config.config['Stamp'])
-                line = line.replace('mygraph_name_list', graph_project_names)
-                dst.write(line)
-        os.chmod(build_lib_dst, os.stat(build_lib_dst).st_mode | stat.S_IEXEC)
-
-    def write_bridge(self):
-        # NOTE we need to move this function to Vivado writer with each graph object
-        """Write the Python-C++ bridge (myproject_bridge.cpp)
-        Args:
-            model (ModelGraph): the hls4ml model.
-        """
-
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir, '../templates/vivado/myproject_bridge_multigraph.cpp'))
-        fout = open(f"{self.config.get_output_dir()}/{self.config.config['ProjectName']}_bridge.cpp", 'w')
-        model_inputs = self.graphs[0].get_input_variables()
-        model_outputs = self.graphs[-1].get_output_variables()
-        model_brams = [var for var in self.graphs[0].get_weight_variables() if var.storage.lower() == 'bram']
-
-        indent = '    '
-
-        for line in f.readlines():
-            newline = ''
-            if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(self.config.config['ProjectName'].upper()))
-            elif 'firmware/myproject' in line:
-                for graph_idx in range(len(self.graphs)):
-                    newline += line.replace('myproject', format(self.graphs[graph_idx].config.config['ProjectName']))
-                    newline += '\n#undef DEFINES_H_\n' if graph_idx < len(self.graphs) - 1 else ''
-            elif 'myproject' in line:
-                newline = line.replace('myproject', format(self.graphs[0].config.config['ProjectName']))
-
-            elif '// hls-fpga-machine-learning insert bram' in line:
-                newline = line
-                for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
-
-            elif '// hls-fpga-machine-learning insert header' in line:
-                dtype = line.split('#', 1)[1].strip()
-                inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
-                outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
-
-                newline = ''
-                newline += indent + inputs_str + ',\n'
-                newline += indent + outputs_str + '\n'
-
-            elif '// hls-fpga-machine-learning insert wrapper' in line:
-                dtype = line.split('#', 1)[1].strip()
-                newline = ''
-                for i in model_inputs:
-                    newline += indent + '{var};\n'.format(var=i.definition_cpp(name_suffix='_ap'))
-                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(
-                        dtype, i.type.name, i.size_cpp(), i.name, i.name
-                    )
-                newline += '\n'
-
-                for o in model_outputs:
-                    newline += indent + '{var};\n'.format(var=o.definition_cpp(name_suffix='_ap'))
-
-                newline += '\n'
-
-                input_vars = ','.join([i.name + '_ap' for i in model_inputs])
-                bram_vars = ','.join([b.name for b in model_brams])
-                output_vars = ','.join([o.name + '_ap' for o in model_outputs])
-
-                # Concatenate the input, output, and bram variables. Filter out empty/null values
-                all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
-
-                top_level = indent + f"//{self.config.config['ProjectName']}({all_vars});\n"
-                newline += top_level
-
-                newline += '\n'
-
-                for o in model_outputs:
-                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(
-                        o.type.name, dtype, o.size_cpp(), o.name, o.name
-                    )
-
-            elif '// hls-fpga-machine-learning insert trace_outputs' in line:
-                newline = ''
-                for layer in self.graphs[0].get_layers():
-                    func = layer.get_attr('function_cpp', None)
-                    if func and self.graphs[0].config.trace_output and layer.get_attr('trace', False):
-                        vars = layer.get_variables()
-                        for var in vars:
-                            newline += (
-                                indent
-                                + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
-                                + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
-                            )
-
-            elif '// hls-fpga-machine-learning insert namespace' in line:
-                newline = ''
-
-                namespace = self.config.get_writer_config().get('Namespace', None)
-                if namespace is not None:
-                    newline += indent + f'using namespace {namespace};\n'
-
-            else:
-                newline = line
-            fout.write(newline)
-
-        f.close()
-        fout.close()
-
+            all_values.extend(g.graph.values())
+        return dict(zip(all_values, all_values)).values()
+    
     def _get_pragma_details(self, pragma):
         """
         Extracts the pragma type and FIFO depth from the given pragma.
