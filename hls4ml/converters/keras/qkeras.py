@@ -85,7 +85,7 @@ def parse_qrnn_layer(keras_layer, input_names, input_shapes, data_reader):
     if not isinstance(keras_layer['config']['activation'], str):
         activation = get_activation_quantizer(keras_layer, input_names)
 
-        assert activation["class_name"] != "HardActivation", "Hard activation not supported"
+        assert activation['class_name'] != 'HardActivation', 'Hard activation not supported'
 
         layer['activation'] = activation['activation']
         layer['activation_quantizer'] = activation['activation_quantizer']
@@ -93,10 +93,10 @@ def parse_qrnn_layer(keras_layer, input_names, input_shapes, data_reader):
     if keras_layer['class_name'] in ['QLSTM', 'QGRU'] and not isinstance(keras_layer['config']['recurrent_activation'], str):
         recurrent_activation = get_activation_quantizer(keras_layer, input_names, activation_name='recurrent_activation')
 
-        assert recurrent_activation["class_name"] != "HardActivation", "Hard activation not supported"
+        assert recurrent_activation['class_name'] != 'HardActivation', 'Hard activation not supported'
 
-        layer["recurrent_activation"] = recurrent_activation['recurrent_activation']
-        layer["recurrent_activation_config"] = recurrent_activation
+        layer['recurrent_activation'] = recurrent_activation['recurrent_activation']
+        layer['recurrent_activation_config'] = recurrent_activation
 
     return layer, output_shape
 

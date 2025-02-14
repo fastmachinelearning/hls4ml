@@ -79,7 +79,7 @@ class OneAPIPackedTypeConverter(TypeDefinition, TypePrecisionConverter):
         return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(
             name=self.name,
             precision=self.precision.definition_cpp(),
-            n_elem=str(int(self.n_elem)) + n_elem_expr + str(self.n_pack),
+            n_elem=str(self.n_elem) + n_elem_expr + str(self.n_pack),
         )
 
     def convert_precision(self, precision_converter):
