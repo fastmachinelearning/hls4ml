@@ -188,7 +188,7 @@ class TransposeConfigTemplate(LayerConfigTemplate):
         new_shape, perm_strides = node.model.config.backend.permute_config_gen(name, shape, perm)
         return transpose_config_template.format(
             dims=len(shape),
-            N=np.prod(shape),
+            N=int(np.prod(shape)),
             from_shape=', '.join(str(x) for x in shape),
             perm=', '.join(str(x) for x in perm),
             perm_strides=', '.join(str(x) for x in perm_strides),
@@ -251,5 +251,5 @@ class ReshapeTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['size'] = np.prod(node.get_output_variable().shape)
+        params['size'] = int(np.prod(node.get_output_variable().shape))
         return self.template.format(**params)
