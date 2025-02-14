@@ -15,19 +15,19 @@ ORIGINAL_PROJECT=myproject
 PROJECT=myproject_stitched
 LIB_STAMP=mystamp
 BASEDIR="$(cd "$(dirname "$0")" && cd .. && pwd)"
-AP_TYPES_PATH="-I${BASEDIR}/${graph_project_names[0]}/firmware/ap_types/"
 INCFLAGS=""
 OUTPUT_DIR="${BASEDIR}/stitched/firmware"
+WEIGHTS_DIR="\"${BASEDIR}/stitched/firmware/weights\""
 
 mkdir -p "${OUTPUT_DIR}"
 
 # Compile all graphs
 OBJECT_FILES=()
 for g in "${graph_project_names[@]}"; do
-    WEIGHTS_DIR="\"${BASEDIR}/${g}/firmware/weights\""
     SRC_FILE="${g}/firmware/${ORIGINAL_PROJECT}_${g}.cpp"
     OBJ_FILE="${ORIGINAL_PROJECT}_${g}.o"
-
+    AP_TYPES_PATH="-I${BASEDIR}/${g}/firmware/ap_types/"
+    
     ${CC} ${CFLAGS} ${AP_TYPES_PATH} -D WEIGHTS_DIR="${WEIGHTS_DIR}" -c "${BASEDIR}/${SRC_FILE}" -o "${OBJ_FILE}"
     OBJECT_FILES+=("${OBJ_FILE}")
     INCFLAGS+="-I${BASEDIR}/${g}/ "
