@@ -258,7 +258,7 @@ class LSTMFunctionTemplate(FunctionCallTemplate):
 ################################################
 # SimpleRNN Template
 ################################################
-simple_rnn_config_template = """struct config{index} : nnet::simpleRNN_config {{
+simple_rnn_config_template = """struct config{index} : nnet::simple_rnn_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned n_outputs = {n_outputs};

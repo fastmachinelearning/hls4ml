@@ -251,7 +251,7 @@ void gru(data_T data[CONFIG_T::n_in], data2_T h[CONFIG_T::n_units], res_T res[CO
 // SimpleRNN
 //----------------------
 
-struct simpleRNN_config {
+struct simple_rnn_config {
     // Internal data type definitions
     typedef float weight_t;
     typedef float bias_t;
@@ -367,30 +367,6 @@ INIT_LOOP:
 //----------------------
 // SimpleRNN with pytorch biases
 //----------------------
-
-struct simpleRNN_pytorch_config {
-    // Internal data type definitions
-    typedef float weight_t;
-    typedef float bias_t;
-    typedef float accum_t;
-
-    // Layer Sizes
-    static const unsigned n_in = 1;
-    static const unsigned n_out = 1;
-    static const unsigned n_outputs = 1;
-    static const unsigned n_timesteps = 1;
-    static const bool return_sequences = false;
-
-    // Resource reuse info
-    static const unsigned io_type = io_parallel;
-    static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;
-
-    // Activation
-    template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
-
-    template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
-};
 
 template <class data_T, class res_T, typename CONFIG_T>
 void simple_rnn_pytorch_cell(data_T inputs[CONFIG_T::n_in], res_T hidden_state[CONFIG_T::n_out],
