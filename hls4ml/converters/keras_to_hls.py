@@ -209,7 +209,7 @@ def parse_keras_model(model_arch, reader):
         'HGQ>UnaryLUT',
     ]
     # Recurrent layers
-    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
+    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU']
     # All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 

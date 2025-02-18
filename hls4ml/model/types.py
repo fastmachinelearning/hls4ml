@@ -437,7 +437,7 @@ class WeightVariable(Variable):
         self.data = data
         self.nzeros = -1
         self.shape = list(self.data.shape)
-        self.data_length = np.prod(self.data.shape)
+        self.data_length = int(np.prod(self.data.shape))
         self.nonzeros = np.count_nonzero(self.data)
         self.nzeros = self.data_length - self.nonzeros
         self.min = np.min(self.data)
