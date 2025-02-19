@@ -165,7 +165,7 @@ void gru(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weig
          const typename CONFIG_T::recurrent_weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
          const typename CONFIG_T::recurrent_bias_t &recurrent_bias) {
 
-    using h_T = array<typename res_T::value_type, CONFIG_T::n_units>;
+    using h_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_units>;
     [[intel::fpga_register]] data_T x;
     [[intel::fpga_register]] h_T h;
 
@@ -259,7 +259,7 @@ void simple_rnn(const data_T &data, res_T &res, const typename CONFIG_T::weight_
                 const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias) {
 
     using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
-    using h_T = array<typename res_T::value_type, CONFIG_T::n_out>;
+    using h_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_out>;
 
     [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
     [[intel::fpga_register]] h_T hidden_state_temp;
@@ -500,7 +500,7 @@ void lstm(const data_T &data, res_T &res, const typename CONFIG_T::weight_i_t &W
     // Note:  currently this does not support recurrent bias
 
     using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
-    using h_T = array<typename res_T::value_type, CONFIG_T::n_out>;
+    using h_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_out>;
 
     [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
     [[intel::fpga_register]] h_T hidden_state_temp;
