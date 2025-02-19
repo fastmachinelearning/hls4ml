@@ -329,11 +329,6 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
             os.path.join(filedir, self.vitis_accelerator_ip_flow_config.get_tcl_file_path()),
             f'{model.config.get_output_dir()}/design.tcl',
         )
-        # Generic alveo board
-        if self.vitis_accelerator_ip_flow_config.get_board().startswith('alveo'):
-            src_dir = os.path.join(filedir, self.vitis_accelerator_ip_flow_config.get_krnl_rtl_src_dir())
-            dst_dir = os.path.abspath(model.config.get_output_dir()) + '/src'
-            copy_tree(src_dir, dst_dir)
 
         ###################
         # project.tcl
@@ -356,6 +351,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
             f.write(f'set bit_width_hls_output {in_bit}\n')
             f.write(f'set bit_width_hls_input {out_bit}\n')
         f.close()
+        return
 
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))

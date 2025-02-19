@@ -34,7 +34,6 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
             validation=validation,
             export=export,
             vsynth=vsynth,
-            # fifo_opt=fifo_opt,
         )
 
         # now make a bitfile
@@ -59,8 +58,7 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
         interface='axi_stream',
         driver='python',
         input_type='float',
-        output_type='float',
-        platform='xilinx_u250_xdma_201830_2',
+        output_type='float'
     ):
         '''
         Create initial accelerator config with default parameters
@@ -110,6 +108,9 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
         self._writer_flow = register_flow('write', writer_passes, requires=[vivado_ip], backend=self.name)
         self._default_flow = vivado_ip
 
-        # fifo_depth_opt_passes = ['vivadoaccelerator:fifo_depth_optimization'] + writer_passes
+        # Register the fifo depth optimization flow which is different from the one for vivado
+        fifo_depth_opt_passes = [
+            'vitisacceleratoripflow:fifo_depth_optimization'
+        ] + writer_passes  # After optimization, a new project will be written
 
-        # register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[vivado_ip], backend=self.name)
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitisacceleratoripflow:ip'], backend=self.name)
