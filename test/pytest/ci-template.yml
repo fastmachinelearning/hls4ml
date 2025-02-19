@@ -1,14 +1,34 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.5.6.base
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.6.1.base
   tags:
     - k8s-default
   before_script:
+    - echo "Starting before_script debugging..."
+    - echo "Shell type is $SHELL"
+
+    - echo "Checking if .bashrc exists..."
+    - ls -l ~/.bashrc
+
+    - echo "Last 10 lines of ~/.bashrc:"
+    - tail -n 10 ~/.bashrc
+
+    - echo "Sourcing ~/.bashrc..."
     - source ~/.bashrc
-    - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
+    - echo "Exit code of source command $?"
+
+    - echo "Updating git submodules..."
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
+    - echo "Git submodules updated successfully."
+
+    - echo "Checking Conda environment..."
+    - conda info
+    - echo "Activating Conda environment..."
     - conda activate hls4ml-testing
+    - echo "Conda environment activated."
+
+    - echo "Installing Python dependencies..."
     - pip install .[testing,sr,optimization]
   script:
     - cd test/pytest
