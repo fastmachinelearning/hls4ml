@@ -10,7 +10,10 @@
 #include "firmware/parameters.h"
 
 #include <sycl/ext/intel/fpga_extensions.hpp>
+
+#if (__INTEL_CLANG_COMPILER < 20250000)
 #include <sycl/ext/intel/prototype/interfaces.hpp>
+#endif
 
 #include "exception_handler.hpp"
 // hls-fpga-machine-learning insert bram
