@@ -4,7 +4,7 @@ import brevitas.nn as qnn
 import numpy as np
 import pytest
 import torch
-from brevitas.quant import Int8WeightPerTensorFixedPoint
+from brevitas.quant import Int8ActPerTensorFixedPoint, Int8WeightPerTensorFixedPoint, Int8WeightPerTensorFloat
 from torch import nn
 from torch.nn import Module
 
@@ -12,6 +12,12 @@ from hls4ml.converters import convert_from_pytorch_model
 from hls4ml.utils.config import config_from_pytorch_model
 
 test_root_path = Path(__file__).parent
+
+quants = {
+    'Int8WeightPerTensorFixedPoint': Int8WeightPerTensorFixedPoint,
+    'Int8ActPerTensorFixedPoint': Int8ActPerTensorFixedPoint,
+    'Int8WeightPerTensorFloat': Int8WeightPerTensorFloat,
+}
 
 
 class QuantModelConv2d(Module):
@@ -37,9 +43,12 @@ class QuantModelConv1d(Module):
 
 
 class QuantModelLinear(Module):
-    def __init__(self):
+    def __init__(self, weight_quant, input_quant):
         super().__init__()
-        self.conv1 = qnn.QuantLinear(4, 4, bias=True, weight_quant=Int8WeightPerTensorFixedPoint)
+        # self.conv1 = qnn.QuantLinear(4, 4, bias=False, weight_quant=quants[weight_quant], input_quant=quants[input_quant])
+        self.conv1 = qnn.QuantLinear(
+            4, 4, bias=False, weight_quant=Int8WeightPerTensorFixedPoint, input_quant=Int8ActPerTensorFixedPoint
+        )
         self.relu1 = qnn.QuantReLU()
 
     def forward(self, x):
@@ -47,16 +56,19 @@ class QuantModelLinear(Module):
         return out
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_quantlinear(backend, io_type):
-    model = QuantModelLinear()
+@pytest.mark.parametrize('weight_quant', ['Int8WeightPerTensorFixedPoint'])
+@pytest.mark.parametrize('io_quant', ['Int8ActPerTensorFixedPoint'])
+def test_quantlinear(backend, io_type, weight_quant, io_quant):
+    # def test_quantlinear(backend, io_type):
+    model = QuantModelLinear(weight_quant, io_quant)
 
-    x = torch.tensor([1.0, 2.0, 3.0, 4.0])
-
+    x = torch.rand(1, 4)
     pytorch_prediction = model(x).detach().numpy()
     config = config_from_pytorch_model(model, input_shape=(None, 4))
-    output_dir = str(test_root_path / f'hls4mlprj_brevitas_linear_{backend}_{io_type}')
+    # output_dir = str(test_root_path / f'hls4mlprj_brevitas_linear_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_brevitas_linear_{backend}_{io_type}_{weight_quant}_{io_quant}')
 
     hls_model = convert_from_pytorch_model(
         model,

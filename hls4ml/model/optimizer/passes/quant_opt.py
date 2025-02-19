@@ -100,7 +100,6 @@ class QuantToActivation(OptimizerPass):
             scale = node.get_attr('scale')
             bias = node.get_attr('zeropt')
             is_match = is_match and (bias == np.zeros_like(bias)).all()
-
             # check if scale is ones-like or a power of two
             scale_unit_or_po2 = (scale == np.ones_like(scale)).all()
             if not scale_unit_or_po2 and _ALSO_MATCH_PO2:
@@ -232,7 +231,6 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         narrow = node.get_attr('narrow')
         signed = node.get_attr('signed')
         bitwidth = node.get_attr('bitwidth')
-
         precision, quantizer = _calculate_precision_quantizer(bitwidth, bitwidth, signed, narrow, rounding_mode)
 
         activation_attributes = {'activation': 'linear', 'quantizer': quantizer}
@@ -245,8 +243,14 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         act_name = f'{node.name}_act'
         model.config.set_name_config(act_name, act_config)
         model.config.parse_name_config(act_name, act_config)
-
-        new_node = model.make_node(Activation, act_name, activation_attributes, [node.inputs[0]], [x for x in node.outputs])
+        if 'global_out' in node.outputs:
+            new_node = model.make_node(
+                Activation, act_name, activation_attributes, [node.inputs[0]], [x for x in node.outputs]
+            )
+        else:
+            new_node = model.make_node(
+                Activation, act_name, activation_attributes, [node.inputs[0]], [x + '_act' for x in node.outputs]
+            )
         model.replace_node(node, new_node)
 
         # but now add the ApplyAlhpas before and after
@@ -268,19 +272,48 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         rescale_name = f'{node.name}_rescale'
         model.config.set_name_config(rescale_name, rescale_config)
         model.config.parse_name_config(rescale_name, rescale_config)
-
         firstscale = 1 / scale
+
+        # need to adjust data type to account for the fact that the inverse scale needs mostly integer bits
+        fractional_part, integer_part = math.modf(firstscale)
+        int_bits = math.ceil(math.log2(integer_part)) + 1
+        frac_bits = min(
+            node.get_attr('bitwidth'),
+            math.ceil(math.log2(fractional_part * (10 ** len(str(fractional_part).split('.')[1])))) + 1,
+        )
+        scale_precision, scale_quantizer = _calculate_precision_quantizer(
+            int_bits + frac_bits, int_bits, False, False, 'FLOOR'
+        )
+
         firstbias = bias
         attributes_scale['scale_data'] = np.broadcast_to(firstscale, inshape)
         attributes_scale['bias_data'] = np.broadcast_to(firstbias, inshape)
+        attributes_scale['scale_quantizer'] = scale_quantizer
+        attributes_scale['scale_precision'] = scale_precision
 
         scale_node = model.make_node(ApplyAlpha, scale_name, attributes_scale, [node.inputs[0]])
+        scale_node.types['result_t'].precision = scale_precision
         model.insert_node(scale_node)
+
+        fractional_part, integer_part = math.modf(scale)
+        if integer_part > 0:
+            int_bits = math.ceil(math.log2(integer_part)) + 1
+        else:
+            int_bits = 0
+        frac_bits = min(
+            node.get_attr('bitwidth') * 2,
+            math.ceil(math.log2(fractional_part * (10 ** len(str(fractional_part).split('.')[1])))) + 1,
+        )
+        scale_precision, scale_quantizer = _calculate_precision_quantizer(
+            int_bits + frac_bits, int_bits, False, False, 'FLOOR'
+        )
 
         rescale = scale
         rebias = -bias * scale
         attributes_rescale['scale_data'] = np.broadcast_to(rescale, inshape)
         attributes_rescale['bias_data'] = np.broadcast_to(rebias, inshape)
+        attributes_rescale['scale_quantizer'] = scale_quantizer
+        attributes_rescale['scale_precision'] = scale_precision
 
         rescale_node = model.make_node(ApplyAlpha, rescale_name, attributes_rescale, [new_node.outputs[0]])
         model.insert_node(rescale_node)

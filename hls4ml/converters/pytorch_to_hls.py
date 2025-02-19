@@ -91,6 +91,41 @@ def convert_uaq_to_apfixed(bitwidth, scale_factor):
     return (fract_bitwidth, int_bitwidth)
 
 
+def addQuantizationParameters(layer, quant_object, quant_type, act=False):
+    if not act:
+        print(quant_object.bit_width)
+        bit_width = int(quant_object.bit_width)
+        # signed = quant_object.is_signed
+        signed = quant_object.signed
+        scale = float(quant_object.scale)
+        zeropoint = float(quant_object.zero_point)
+        if signed:
+            narrow = True
+        else:
+            narrow = False
+        rounding_mode = 'ROUND'
+        layer['convert_from_brevitas'] = True
+    else:
+        bit_width = int(quant_object.bit_width())
+        signed = quant_object.is_signed
+        scale = float(quant_object.scale())
+        zeropoint = float(quant_object.zero_point())
+        narrow = quant_object.is_narrow_range
+        rounding_mode = quant_object.rounding_mode
+        layer['convert_io_from_brevitas'] = True
+        print(scale)
+
+    layer[f'{quant_type}_quantization'] = {
+        'bit_width': bit_width,
+        'signed': signed,
+        'scale': scale,
+        'zeropoint': zeropoint,
+        'narrow': narrow,
+        'rounding_mode': rounding_mode,
+    }
+    return layer
+
+
 # ----------------------Layer handling--------------------- #
 layer_handlers = {}
 

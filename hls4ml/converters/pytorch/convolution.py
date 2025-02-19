@@ -1,4 +1,6 @@
-from hls4ml.converters.pytorch_to_hls import convert_uaq_to_apfixed, pytorch_handler
+import numpy as np
+
+from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, convert_uaq_to_apfixed, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 from hls4ml.model.quantizers import BrevitasQuantizer
 from hls4ml.model.types import FixedPrecisionType
@@ -18,11 +20,25 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     if "Quant" in operation:
         if class_object.weight_quant.is_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
-            ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
-            layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
-            layer['weight_quantizer'] = BrevitasQuantizer(
-                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-            )
+            scale = class_object.quant_weight().scale.detach().numpy()
+            mantissa, _ = np.frexp(scale)
+            # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
+            # use the already quantized tensor from brevitas
+            if mantissa == 0.5:
+                ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
+                layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
+                layer['weight_quantizer'] = BrevitasQuantizer(
+                    width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+                )
+            # for non-power-of-2 scales, instead take the unquantized inputs and set parameters
+            # so an ApplyAlpha node will be added to the model. Currently broken :/
+            else:
+                raise Exception(
+                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                    Please used QONNX instead.'''
+                )
+                # layer = addQuantizationParameters(layer, class_object.quant_weight(), 'weight')
+                # layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
         else:
             layer['weight_data'] = class_object.weight.data.numpy()
 
@@ -34,7 +50,15 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
             )
         else:
-            layer['bias_data'] = class_object.bias.data.numpy()
+            if class_object.bias is not None:
+                layer['bias_data'] = class_object.bias.data.numpy()
+            else:
+                layer['bias_data'] = None
+        if class_object.input_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
+        if class_object.output_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True)
+
     else:
         layer['weight_data'] = class_object.weight.data.numpy()
         if class_object.bias is not None:
@@ -83,11 +107,25 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     if "Quant" in operation:
         if class_object.weight_quant.is_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
-            ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
-            layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
-            layer['weight_quantizer'] = BrevitasQuantizer(
-                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-            )
+            scale = class_object.quant_weight().scale.detach().numpy()
+            mantissa, _ = np.frexp(scale)
+            # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
+            # use the already quantized tensor from brevitas
+            if mantissa == 0.5:
+                ap_fixed_params = convert_uaq_to_apfixed(width, float(class_object.quant_weight().scale))
+                layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
+                layer['weight_quantizer'] = BrevitasQuantizer(
+                    width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+                )
+            # for non-power-of-2 scales, instead take the unquantized inputs and set parameters so an
+            # ApplyAlpha node will be added to the model. Currently broken :/
+            else:
+                raise Exception(
+                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                    Please used QONNX instead.'''
+                )
+                # layer = addQuantizationParameters(layer, class_object.quant_weight(), 'weight')
+                # layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
         else:
             layer['weight_data'] = class_object.weight.data.numpy()
 
@@ -99,7 +137,15 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
             )
         else:
-            layer['bias_data'] = class_object.bias.data.numpy()
+            if class_object.bias is not None:
+                layer['bias_data'] = class_object.bias.data.numpy()
+            else:
+                layer['bias_data'] = None
+        if class_object.input_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
+        if class_object.output_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True)
+
     else:
         layer['weight_data'] = class_object.weight.data.numpy()
         if class_object.bias is not None:
