@@ -8,6 +8,7 @@
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
+    - conda init
     - conda activate hls4ml-testing
     - pip install .[testing,sr,optimization]
   script:
