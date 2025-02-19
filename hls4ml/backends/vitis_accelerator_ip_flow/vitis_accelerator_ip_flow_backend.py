@@ -21,7 +21,7 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
         validation=False,
         export=False,
         vsynth=False,
-        # fifo_opt=False,
+        fifo_opt=False,
         bitfile=False,
     ):
         # run the VitisBackend build
@@ -36,12 +36,7 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
             vsynth=vsynth,
             # fifo_opt=fifo_opt,
         )
-        # Get Config to view Board and Platform
-        # from hls4ml.backends import VitisAcceleratorIPFlowConfig
 
-        # vitis_accelerator_ip_flow_config = VitisAcceleratorIPFlowConfig(
-        #     model.config, model.get_input_variables(), model.get_output_variables()
-        # )
         # now make a bitfile
         if bitfile:
             curr_dir = os.getcwd()
@@ -100,8 +95,6 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
         config['AcceleratorConfig']['Precision']['Output'] = {}
         config['AcceleratorConfig']['Precision']['Input'] = input_type  # float, double or ap_fixed<a,b>
         config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
-        # if board.startswith('alveo'):
-        #     config['AcceleratorConfig']['Platform'] = platform
 
         return config
 

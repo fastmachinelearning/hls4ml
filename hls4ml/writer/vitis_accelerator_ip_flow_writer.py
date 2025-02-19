@@ -40,7 +40,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
                 newline += f'static const unsigned N_OUT = {out.size()};\n'
                 if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
-                    newline += 'typedef hls::axis<float, 0, 0, 0> my_pkt;\n'
+                    newline += 'typedef hls::axis<float, 0, 0, 0> dma_data_packet;\n'
                     # might need to make "float" a variable according to the
                     # configuration set by the user and the DMA available data widths
                 else:  # TODO: handle this case
@@ -73,7 +73,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                 if io_type == 'io_parallel':  # TODO: handle io_parallel
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
                     newline += indent + out.type.name + ' out_local[N_OUT];\n'
-                    newline += indent + 'my_pkt tmp;\n'
+                    newline += indent + 'dma_data_packet tmp;\n'
                 elif io_type == 'io_stream':
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
                     newline += indent + 'hls::stream<' + out.type.name + '> out_local("output_1");\n\n'
@@ -124,7 +124,7 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                     newline += indent + 'tmp.last = 0;\n'
                 elif io_type == 'io_stream':
                     newline = ''
-                    newline += indent + 'my_pkt tmp;\n'
+                    newline += indent + 'dma_data_packet tmp;\n'
 
                     newline += indent + 'for(unsigned i = 0; i < N_IN / {input_t}::size; ++i) {{\n'
                     # newline += indent + indent + '#pragma HLS PIPELINE\n' # TODO: check if needed
@@ -252,19 +252,19 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
                 newline = line.replace(f'{model.config.get_project_name()}.h', f'{model.config.get_project_name()}_axi.h')
             elif inp.definition_cpp() in line:
                 newline = line.replace(
-                    inp.definition_cpp(), 'hls::stream< my_pkt > inputs'
+                    inp.definition_cpp(), 'hls::stream< dma_data_packet > inputs'
                 )  # TODO instead of replacing strings, how about we use proper variables and their definition?
             elif out.definition_cpp() in line:
-                newline = line.replace(out.definition_cpp(), 'hls::stream< my_pkt > outputs')
+                newline = line.replace(out.definition_cpp(), 'hls::stream< dma_data_packet > outputs')
             elif 'unsigned short' in line:
                 newline = ''
             elif f'{model.config.get_project_name()}(' in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
                 newline = indent_amount + f'{model.config.get_project_name()}_axi(inputs,outputs);\n'
             elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
-                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'my_pkt')
+                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'dma_data_packet')
             elif out.size_cpp() in line or out.name in line or out.type.name in line:
-                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'my_pkt')
+                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'dma_data_packet')
             else:
                 newline = line
             if self.vitis_accelerator_ip_flow_config.get_interface() == 'axi_stream':
@@ -300,9 +300,9 @@ class VitisAcceleratorIPFlowWriter(VitisWriter):
             if f'{model.config.get_project_name()}.h' in line:
                 newline = line.replace(f'{model.config.get_project_name()}.h', f'{model.config.get_project_name()}_axi.h')
             elif inp.definition_cpp(name_suffix='_ap') in line:
-                newline = line.replace(inp.definition_cpp(name_suffix='_ap'), f'hls::stream< my_pkt > {inp.name}_ap')
+                newline = line.replace(inp.definition_cpp(name_suffix='_ap'), f'hls::stream< dma_data_packet > {inp.name}_ap')
             elif out.definition_cpp(name_suffix='_ap') in line:
-                newline = line.replace(out.definition_cpp(name_suffix='_ap'), f'hls::stream< my_pkt > {out.name}_ap')
+                newline = line.replace(out.definition_cpp(name_suffix='_ap'), f'hls::stream< dma_data_packet > {out.name}_ap')
             elif f'{model.config.get_project_name()}(' in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
                 newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(
