@@ -4,25 +4,11 @@
   tags:
     - k8s-default
   before_script:
-    - echo "Starting before_script debugging..."
-    - echo "Shell type is $SHELL"
-
-    - eval "$(conda shell.bash hook)"
-    - conda activate hls4ml-testing
-
-    - echo "Updating git submodules..."
+    - source /opt/intel/oneapi/setvars.sh --force
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
-    - echo "Git submodules updated successfully."
-
-    - echo "Checking Conda environment..."
-    - conda info
-    - echo "Activating Conda environment..."
     - conda activate hls4ml-testing
-    - echo "Conda environment activated."
-
-    - echo "Installing Python dependencies..."
     - pip install .[testing,sr,optimization]
   script:
     - cd test/pytest
