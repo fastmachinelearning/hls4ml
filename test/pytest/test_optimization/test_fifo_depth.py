@@ -5,18 +5,18 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import qonnx.core.onnx_exec as oxe
-from qonnx.core.modelwrapper import ModelWrapper
+# import qonnx.core.onnx_exec as oxe
+# from qonnx.core.modelwrapper import ModelWrapper
 from tensorflow.keras.layers import SeparableConv2D
 from tensorflow.keras.models import Sequential
 
 import hls4ml
-from hls4ml.backends.vitis.passes.fifo_depth_optimization import override_test_bench
+from hls4ml.backends.vitis_accelerator_ip_flow.passes.fifo_depth_optimization import override_test_bench
 
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../../example-models').resolve()
 
-backend_options = ['Vitis']
+backend_options = ['VitisAcceleratorIPFlow']
 
 
 def parse_cosim_report(project_path):
@@ -34,7 +34,7 @@ def parse_cosim_report(project_path):
                 top_func_name = line.split('"')[-2]
                 prj_dir = top_func_name + '_prj'
 
-    cosim_file_path = project_path + '/' + prj_dir + f'/solution1/sim/report/{top_func_name}_cosim.rpt'
+    cosim_file_path = project_path + '/' + prj_dir + f'/solution1/sim/report/{top_func_name}_axi_cosim.rpt'
 
     if os.path.isfile(cosim_file_path):
         return cosim_file_path
@@ -46,7 +46,7 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
     """Execute the FIFO depth optimization sequence on a dummy Keras model."""
 
     # create a keras model
-    input_shape = (128, 128, 3)
+    input_shape = (32, 32, 3)
     activation = 'relu'
     kernel_size = (3, 3)
     padding = 'same'
@@ -64,8 +64,8 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32, 16>')
 
     # include the FIFO Depth optimizer do the flows
-    config['Flows'] = ['vitis:fifo_depth_optimization']
-    hls4ml.model.optimizer.get_optimizer('vitis:fifo_depth_optimization').configure(
+    config['Flows'] = ['vitisacceleratoripflow:fifo_depth_optimization']
+    hls4ml.model.optimizer.get_optimizer('vitisacceleratoripflow:fifo_depth_optimization').configure(
         profiling_fifo_depth=profiling_fifo_depth
     )
 
@@ -73,7 +73,7 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
 
     # execute fifo optimization
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, io_type=io_type, hls_config=config, output_dir=output_dir, backend=backend
+        model, io_type=io_type, hls_config=config, output_dir=output_dir, backend=backend, clock_period=10
     )
 
     hls_model.compile()
@@ -134,62 +134,62 @@ def test_runtime_error(backend):
     expect_exception(RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel')
 
 
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
+# @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_successful_execution_of_dummy_keras(backend):
     """Test the correct execution of the FIFO depth optimizer."""
     run_fifo_depth_optimization_keras(backend, profiling_fifo_depth=200_000, io_type='io_stream')
 
 
-def get_branched_model():
-    """
-    Load branched model, already channels-last and cleaned
-    """
-    dl_file = str(example_model_path / "onnx/branched_model_ch_last.onnx")
-    assert os.path.isfile(dl_file)
-    model = ModelWrapper(dl_file)
-    return model
+# def get_branched_model():
+#     """
+#     Load branched model, already channels-last and cleaned
+#     """
+#     dl_file = str(example_model_path / "onnx/branched_model_ch_last.onnx")
+#     assert os.path.isfile(dl_file)
+#     model = ModelWrapper(dl_file)
+#     return model
 
 
-def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, model):
-    """Execute the FIFO depth optimization sequence on a ONNX/QONNX model."""
+# def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, model):
+#     """Execute the FIFO depth optimization sequence on a ONNX/QONNX model."""
 
-    ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
-    X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
-    X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
-    idict = {model.graph.input[0].name: X}
-    y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+#     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
+#     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
+#     X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
+#     idict = {model.graph.input[0].name: X}
+#     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
 
-    config = hls4ml.utils.config.config_from_onnx_model(
-        model, granularity='name', backend=backend, default_precision='ap_fixed<15,2,AP_RND_CONV>'
-    )
+#     config = hls4ml.utils.config.config_from_onnx_model(
+#         model, granularity='name', backend=backend, default_precision='ap_fixed<15,2,AP_RND_CONV>'
+#     )
 
-    # add this line to remove the linear layer that quantizes the input of the NN
-    config['LayerName']['global_in']['Precision']['result'] = 'fixed<4,0,AP_RND_CONV,AP_SAT,0>'
+#     # add this line to remove the linear layer that quantizes the input of the NN
+#     config['LayerName']['global_in']['Precision']['result'] = 'fixed<4,0,AP_RND_CONV,AP_SAT,0>'
 
-    config['Flows'] = ['vitis:fifo_depth_optimization']
-    hls4ml.model.optimizer.get_optimizer('vitis:fifo_depth_optimization').configure(
-        profiling_fifo_depth=profiling_fifo_depth
-    )
+#     config['Flows'] = ['vitisacceleratoripflow:fifo_depth_optimization']
+#     hls4ml.model.optimizer.get_optimizer('vitisacceleratoripflow:fifo_depth_optimization').configure(
+#         profiling_fifo_depth=profiling_fifo_depth
+#     )
 
-    output_dir = str(test_root_path / f'hls4mlprj_fifo_depth_optimization_branched_model_backend_{backend}')
+#     output_dir = str(test_root_path / f'hls4mlprj_fifo_depth_optimization_branched_model_backend_{backend}')
 
-    hls_model = hls4ml.converters.convert_from_onnx_model(
-        model,
-        output_dir=output_dir,
-        io_type=io_type,
-        backend=backend,
-        hls_config=config,
-    )
-    hls_model.compile()
-    y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
-    np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
+#     hls_model = hls4ml.converters.convert_from_onnx_model(
+#         model,
+#         output_dir=output_dir,
+#         io_type=io_type,
+#         backend=backend,
+#         hls_config=config,
+#     )
+#     hls_model.compile()
+#     y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
+#     np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
 
-    fifo_depth_optimization_checks(hls_model)
+#     fifo_depth_optimization_checks(hls_model)
 
 
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
-@pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution_of_tiny_unet(backend):
-    """Test the correct execution of the FIFO depth optimizer."""
-    run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth=200_000, io_type='io_stream', model=get_branched_model())
+# @pytest.mark.skip(reason='Skipping synthesis tests for now')
+# @pytest.mark.parametrize('backend', backend_options)
+# def test_successful_execution_of_tiny_unet(backend):
+#     """Test the correct execution of the FIFO depth optimizer."""
+#     run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth=200_000, io_type='io_stream', model=get_branched_model())

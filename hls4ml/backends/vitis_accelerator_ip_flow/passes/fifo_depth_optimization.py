@@ -35,6 +35,14 @@ def initialize_large_fifos(model, profiling_fifo_depth):
         if output_variable.pragma:
             initial_fifo_depths[output_variable.name] = int(output_variable.pragma[1])
             output_variable.pragma = (output_variable.pragma[0], profiling_fifo_depth)
+            
+    inp = model.get_input_variables()[0]
+    initial_fifo_depths['in_local'] = int(inp.pragma[1])
+    inp.pragma = (inp.pragma[0], profiling_fifo_depth)
+    
+    outp = model.get_output_variables()[0]
+    initial_fifo_depths['out_local'] = int(outp.pragma[1])
+    outp.pragma = (outp.pragma[0], profiling_fifo_depth)
     return initial_fifo_depths
 
 
@@ -188,7 +196,7 @@ def set_optimized_fifo_depths(model, optimized_fifo_depths):
 
     # iterate through the layer output FIFOs
     for output_variable in model.output_vars.values():
-        if "VivadoStreamVariable" in str(type(output_variable)):
+        if ("VivadoStreamVariable" in str(type(output_variable))) or (output_variable.name == 'in_local') or (output_variable.name == 'out_local'):
             if output_variable.pragma:
 
                 if output_variable.name not in optimized_fifo_depths.keys():
@@ -196,6 +204,12 @@ def set_optimized_fifo_depths(model, optimized_fifo_depths):
 
                 filtered_depth = optimized_fifo_depths[output_variable.name]
                 output_variable.pragma = (output_variable.pragma[0], filtered_depth)
+    
+    inp = model.get_input_variables()[0]
+    inp.pragma = (inp.pragma[0], optimized_fifo_depths['in_local'])
+    
+    outp = model.get_output_variables()[0]
+    outp.pragma = (inp.pragma[0], optimized_fifo_depths['out_local'])
     return
 
 
@@ -227,7 +241,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         profiling_fifo_depth = getattr(self, "profiling_fifo_depth", 100_000)
 
         if not isinstance(profiling_fifo_depth, int) or profiling_fifo_depth <= 0:
-            raise ValueError("The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer.")
+            raise ValueError("The FIFO depth for profiling (profiling_fifo_depth variable) must be a positive integer.")
 
         # check axi-stream or io-stream
         if not (model.config.get_config_value("IOType") == "io_stream"):
