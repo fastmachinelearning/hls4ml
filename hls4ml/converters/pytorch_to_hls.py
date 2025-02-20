@@ -2,19 +2,27 @@ import math
 
 import numpy as np
 
-# this import conficts with our new lazy imports. Not sure how to handle this otherwise yet
-import torch
-
 from hls4ml.model import ModelGraph
 from hls4ml.utils.dependency import requires
 
+# this import conficts with our new lazy imports. Not sure how to handle this otherwise yet
 
-class CustomFXTracer(torch.fx.Tracer):
 
-    def is_leaf_module(self, m: torch.nn.Module, module_qualified_name: str) -> bool:
+class CustomFXTracer:
+
+    def __new__(cls, *args, **kwargs):
+        import torch.fx as fx
+
+        new_type = type('CustomFXTracer', (CustomFXTracer, fx.Tracer, object), {})
+        instance = super().__new__(new_type)
+        return instance
+
+    def is_leaf_module(self, m, module_qualified_name: str) -> bool:
         """
         Custom Tracher class for hls4ml to define brevitas modules as leaf modules so they are not traced through by torch.FX
         """
+        import torch
+
         return (
             m.__module__.startswith("torch.nn")
             or m.__module__.startswith("torch.ao.nn")
