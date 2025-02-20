@@ -64,6 +64,23 @@ class KerasNestedFileReader(KerasFileReader):
             return None
 
 
+class KerasWrappedLayerFileReader(KerasFileReader):
+    def __init__(self, data_reader, layer_path):
+        super().__init__(data_reader.config)
+        self.layer_path = f'model_weights/{layer_path}'
+
+    def _find_data(self, layer_name, var_name):
+        def h5_visitor_func(name):
+            if var_name in name:
+                return name
+
+        data_path = self.h5file[self.layer_path].visit(h5_visitor_func)
+        if data_path:
+            return self.h5file[f'/{self.layer_path}/{data_path}']
+        else:
+            return None
+
+
 class KerasModelReader(KerasReader):
     def __init__(self, keras_model):
         self.model = keras_model
@@ -76,6 +93,19 @@ class KerasModelReader(KerasReader):
                     return w.numpy()  # TF 2.x
                 except Exception:
                     return layer.get_weights()[i]  # TF 1.x
+
+        return None
+
+
+class KerasWrappedLayerReader(KerasReader):
+    def __init__(self, layer):
+        self.layer = layer
+
+    def get_weights_data(self, layer_name, var_name):
+        assert self.layer.name == layer_name
+        for _, w in enumerate(self.layer.weights):
+            if var_name in w.name:
+                return w.numpy()
 
         return None
 
@@ -93,6 +123,10 @@ def get_weights_data(data_reader, layer_name, var_name):
 
 
 layer_handlers = {}
+
+
+def get_layer_handlers():
+    return layer_handlers
 
 
 def register_keras_layer_handler(layer_cname, handler_func):
