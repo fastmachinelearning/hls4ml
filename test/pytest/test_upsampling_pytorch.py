@@ -33,9 +33,10 @@ class Upsample1DModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.upsample = nn.Upsample(scale_factor=2)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        return self.upsample(x)
+        return self.relu(self.upsample(x))
 
 
 class Upsample2DModel(nn.Module):
@@ -43,9 +44,10 @@ class Upsample2DModel(nn.Module):
         super().__init__()
         # this scale_factor tests proper output shape calculation with fractional scaling and parsing per-axis scales
         self.upsample = nn.UpsamplingNearest2d(scale_factor=(1, 2.4))  # Would also work with Upsample(mode='nearest')
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        return self.upsample(x)
+        return self.relu(self.upsample(x))
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])

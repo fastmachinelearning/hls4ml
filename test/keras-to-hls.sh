@@ -150,7 +150,7 @@ do
    echo "  WriteWeightsTxt: true" >> ${file}
    echo "  WriteTar: true" >> ${file}
 
-   ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
+   ${pycmd} -m hls4ml.cli convert -c ${file} || exit 1
    rm ${file}
    rm -rf "${prjdir}"
    echo ""
