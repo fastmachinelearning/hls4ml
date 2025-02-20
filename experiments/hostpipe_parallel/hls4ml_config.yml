@@ -1,0 +1,17 @@
+Backend: oneAPI
+ClockPeriod: 5
+HLSConfig:
+  Model:
+    Precision: ap_fixed<16,6>
+    ReuseFactor: 1
+IOType: io_parallel
+InputData: null
+KerasModel: !keras_model 'hostpipe/keras_model.keras'
+OutputDir: hostpipe
+OutputPredictions: null
+Part: Agilex7
+ProjectName: myproject
+Stamp: 86a68350
+Version: 1.0.0
+WriterConfig:
+  WriteTar: false
