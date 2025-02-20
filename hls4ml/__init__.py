@@ -1,4 +1,4 @@
-from hls4ml import converters, report, utils  # noqa: F401
+from hls4ml import converters, report, utils  # noqa: F401, E402
 
 try:
     from ._version import version as __version__

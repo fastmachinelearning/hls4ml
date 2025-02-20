@@ -2,20 +2,26 @@ exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pyte
 
 repos:
 - repo: https://github.com/psf/black
-  rev: 24.8.0
+  rev: 25.1.0
   hooks:
   - id: black
     language_version: python3
     args: ['--line-length=125',
            '--skip-string-normalization']
 
+- repo: https://github.com/tox-dev/pyproject-fmt
+  rev: v2.5.0
+  hooks:
+    - id: pyproject-fmt
+
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
+  rev: v5.0.0
   hooks:
   - id: check-added-large-files
   - id: check-case-conflict
   - id: check-merge-conflict
   - id: check-symlinks
+  - id: check-toml
   - id: check-yaml
   - id: debug-statements
   - id: end-of-file-fixer
@@ -24,24 +30,18 @@ repos:
   - id: trailing-whitespace
 
 - repo: https://github.com/PyCQA/isort
-  rev: 5.13.2
+  rev: 6.0.0
   hooks:
   - id: isort
-    args: ["--profile", "black", --line-length=125]
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.17.0
+  rev: v3.19.1
   hooks:
   - id: pyupgrade
     args: ["--py36-plus"]
 
-- repo: https://github.com/asottile/setup-cfg-fmt
-  rev: v2.5.0
-  hooks:
-  - id: setup-cfg-fmt
-
 - repo: https://github.com/pycqa/flake8
-  rev: 7.1.1
+  rev: 7.1.2
   hooks:
   - id: flake8
     exclude: docs/conf.py
@@ -50,7 +50,7 @@ repos:
            '--extend-ignore=E203,T201']  # E203 is not PEP8 compliant
 
 - repo: https://github.com/mgedmin/check-manifest
-  rev: "0.49"
+  rev: "0.50"
   hooks:
   - id: check-manifest
     stages: [manual]

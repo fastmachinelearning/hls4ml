@@ -19,6 +19,8 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {index_t.name} index_t;
+    template<class data_T, class res_T, class CONFIG_T>
+    using kernel = {dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -40,6 +42,19 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+
+        namespace = params['namespace']
+
+        if node.get_attr('strategy').lower() == 'latency':
+            params['dense_function'] = 'nnet::DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if int(params['reuse_factor']) <= int(params['n_in']):
+                params['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+            else:
+                params['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
+            # The 3rd case is never used
+        elif node.get_attr('strategy').lower() == 'resource_unrolled':
+            params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
 
         return self.template.format(**params)
 
@@ -116,6 +131,15 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     typedef {table_t.name} table_t;
 }};\n"""
 
+param_activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned table_size = {table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    typedef {table_t.name} table_t;
+    typedef {param_t.name} param_t;
+}};\n"""
+
 hard_activ_config_template = """struct {type}_config{index} {{
     static const unsigned n_in = {n_in};
     static const {slope_t.name} slope;
@@ -138,15 +162,29 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
 }};\n"""
 
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
-param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
+param_activ_function_template = (
+    'nnet::{activation}<{input_t}, {param_t.name}, {output_t}, {config}>({input}, {param}, {output});'
+)
 
 activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
 
 
 class ActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((Activation, ParametrizedActivation, PReLU, UnaryLUT))
+        super().__init__((Activation, UnaryLUT))
         self.template = activ_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['type'] = node.get_attr('activation')
+
+        return self.template.format(**params)
+
+
+class ParamActivationConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__((ParametrizedActivation, PReLU))
+        self.template = param_activ_config_template
 
     def format(self, node):
         params = self._default_config_params(node)
@@ -208,7 +246,7 @@ class PReLUFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
-        params['param'] = node.get_weights('alpha').name
+        params['param'] = node.get_weights('param').name
         params['config'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
 
         return self.template.format(**params)

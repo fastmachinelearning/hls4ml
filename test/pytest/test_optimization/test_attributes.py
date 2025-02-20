@@ -1,7 +1,7 @@
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, ReLU
 from tensorflow.keras.models import Sequential
 
-from hls4ml.optimization.attributes import get_attributes_from_keras_model_and_hls4ml_config
+from hls4ml.optimization.dsp_aware_pruning import get_attributes_from_keras_model_and_hls4ml_config
 from hls4ml.utils.config import config_from_keras_model
 
 
@@ -37,6 +37,12 @@ def test_attributes():
     cfg['IOType'] = io_type
     cfg['Model']['Strategy'] = strategy
     cfg['LayerName']['dense']['ReuseFactor'] = 1
+
+    # optimization doesn't yet support auto precision
+    for layer in cfg['LayerName'].values():
+        for key, prec in layer['Precision'].items():
+            if prec == 'auto':
+                layer['Precision'][key] = default_precision
 
     # Verify correct information for every layer
     model_attributes = get_attributes_from_keras_model_and_hls4ml_config(model, cfg)

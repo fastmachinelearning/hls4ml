@@ -33,9 +33,10 @@ class Upsample1DModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.upsample = nn.Upsample(scale_factor=2)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        return self.upsample(x)
+        return self.relu(self.upsample(x))
 
 
 class Upsample2DModel(nn.Module):
@@ -43,9 +44,10 @@ class Upsample2DModel(nn.Module):
         super().__init__()
         # this scale_factor tests proper output shape calculation with fractional scaling and parsing per-axis scales
         self.upsample = nn.UpsamplingNearest2d(scale_factor=(1, 2.4))  # Would also work with Upsample(mode='nearest')
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        return self.upsample(x)
+        return self.relu(self.upsample(x))
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
@@ -55,13 +57,14 @@ def test_pytorch_upsampling1d(data_1d, io_type, backend):
 
     config = hls4ml.utils.config_from_pytorch_model(
         model,
+        (None, in_feat, in_width),
         default_precision='ap_fixed<16,6>',
         channels_last_conversion="internal",
         transpose_outputs=False,
     )
     odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_1d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_pytorch_model(
-        model, (None, in_feat, in_width), hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+        model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
     hls_model.compile()
 
@@ -84,13 +87,14 @@ def test_pytorch_upsampling2d(data_2d, io_type, backend):
 
     config = hls4ml.utils.config_from_pytorch_model(
         model,
+        (in_feat, in_height, in_width),
         default_precision='ap_fixed<16,6>',
         channels_last_conversion="full",  # With conversion to channels_last
         transpose_outputs=True,
     )
     odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_2d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_pytorch_model(
-        model, (None, in_feat, in_height, in_width), hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+        model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
     hls_model.compile()
 

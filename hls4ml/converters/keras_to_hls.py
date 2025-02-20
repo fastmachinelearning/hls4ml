@@ -160,9 +160,9 @@ def get_model_arch(config):
         # Model instance passed in config from API
         keras_model = config['KerasModel']
         if isinstance(keras_model, str):
-            from tensorflow.keras.models import load_model
+            import keras
 
-            keras_model = load_model(keras_model)
+            keras_model = keras.models.load_model(keras_model)
         model_arch = json.loads(keras_model.to_json())
         reader = KerasModelReader(keras_model)
     elif 'KerasJson' in config:
@@ -209,7 +209,7 @@ def parse_keras_model(model_arch, reader):
         'HGQ>UnaryLUT',
     ]
     # Recurrent layers
-    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
+    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU']
     # All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -297,26 +297,18 @@ def parse_keras_model(model_arch, reader):
         layer_list.append(layer)
         if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers:  # + qkeras_layers:
             act_layer = {}
+            act_details = layer['activation']
             # Workaround for QKeras activations passed as an argument
-            if isinstance(layer['activation'], dict):
-                act_details = layer['activation']
+            if isinstance(act_details, dict):
                 act_layer['class_name'] = 'QActivation'
                 act_layer['config'] = {
                     'name': layer['name'] + '_' + act_details['class_name'],
                     'activation': act_details,
                 }
-                act_layer, output_shape = layer_handlers['QActivation'](act_layer, None, [output_shape], reader)
             else:
-                act_layer['name'] = layer['name'] + '_' + layer['activation']
-                act_layer['activation'] = layer['activation']
-                if 'activ_param' in layer:
-                    act_layer['activ_param'] = layer['activ_param']
-                    act_layer['class_name'] = layer['activation']
-                elif layer['activation'] == 'softmax':
-                    act_layer['class_name'] = 'Softmax'
-                    act_layer['axis'] = -1
-                else:
-                    act_layer['class_name'] = 'Activation'
+                act_layer['class_name'] = 'Activation'
+                act_layer['config'] = {'name': layer['name'] + '_' + act_details, 'activation': act_details}
+            act_layer, output_shape = layer_handlers[act_layer['class_name']](act_layer, None, [output_shape], reader)
             inputs_map[layer['name']] = act_layer['name']
             if output_layers is not None and layer['name'] in output_layers:
                 output_layers = [act_layer['name'] if name == layer['name'] else name for name in output_layers]

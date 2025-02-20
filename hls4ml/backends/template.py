@@ -2,6 +2,14 @@ from hls4ml.model.optimizer.optimizer import OptimizerPass
 
 
 class Template(OptimizerPass):
+    """The Template base class, should not be instantiated directly
+
+    Args:
+        name (str): Name of the template.
+        layer_class (Layer or list, tuple, or aet of Layers): The Layers that this template handles.
+        attribute_name (str):  The type of attribute provided
+    """
+
     def __init__(self, name, layer_class, attribute_name):
         self.name = name
         self.layer_class = layer_class
@@ -36,6 +44,12 @@ class Template(OptimizerPass):
 
 
 class LayerConfigTemplate(Template):
+    """Base class for layer config templates:  provides the 'config_cpp' attribute
+
+    Args:
+        layer_class (Layer or list, tuple, or set of Layers): The Layers that this template handles.
+    """
+
     def __init__(self, layer_class):
         if isinstance(layer_class, (list, tuple, set)):
             name = '_'.join([cls.__name__.lower() for cls in layer_class])
@@ -48,11 +62,19 @@ class LayerConfigTemplate(Template):
         params = self._default_params(layer)
         params['iotype'] = layer.model.config.get_config_value('IOType')
         params['reuse'] = layer.get_attr('reuse_factor')
+        params['namespace'] = layer.model.config.get_writer_config().get('Namespace', None) or 'nnet'
 
         return params
 
 
 class FunctionCallTemplate(Template):
+    """Base class for function call templates:  provides the 'function_cpp' attribute
+
+    Args:
+        layer_class (Layer or list, tuple, or set of Layers): The Layers that this template handles.
+        include_header (list, tuple, or set of str, or None):  The list of needed include files
+    """
+
     def __init__(self, layer_class, include_header=None):
         if isinstance(layer_class, (list, tuple, set)):
             name = '_'.join([cls.__name__.lower() for cls in layer_class])

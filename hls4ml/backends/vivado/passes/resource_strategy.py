@@ -9,7 +9,7 @@ class ApplyResourceStrategy(OptimizerPass):
 
     def match(self, node):
         node_matches = isinstance(node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU))
-        is_resource_strategy = node.get_attr('strategy', '').lower() == 'resource'
+        is_resource_strategy = node.get_attr('strategy', '').lower() in ['resource', 'resource_unrolled']
         already_transformed = node.get_attr('_weights_transposed', False) is True
 
         return node_matches and is_resource_strategy and not already_transformed

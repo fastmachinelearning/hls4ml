@@ -11,6 +11,7 @@ from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Em
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_quartus_report
+from hls4ml.utils import attribute_descriptions as descriptions
 
 
 @contextmanager
@@ -39,22 +40,28 @@ class QuartusBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
-            attrs.append(ConfigurableAttribute('table_size', default=1024))
-            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
-        streaming_passes = ['quartus:reshape_stream', 'quartus:clone_output']
+        streaming_passes = [
+            'quartus:inplace_stream_flatten',  # Inform downstream changed packsize in case of skipping flatten
+            'quartus:reshape_stream',
+            'quartus:clone_output',
+        ]
+
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
 
         quartus_types = [
             'quartus:transform_types',
             'quartus:register_bram_weights',
             'quartus:apply_resource_strategy',
+            'quartus:generate_conv_im2col',
             'quartus:apply_winograd_kernel_transformation',
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
@@ -103,9 +110,8 @@ class QuartusBackend(FPGABackend):
         ]
 
         if len(extras) > 0:
-            extras_flow = register_flow('extras', extras, requires=[init_flow], backend=self.name)
-        else:
-            extras_flow = None
+            for opt in extras:
+                warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
         ip_flow_requirements = [
             'optimize',
@@ -114,10 +120,8 @@ class QuartusBackend(FPGABackend):
             quantization_flow,
             optimization_flow,
             quartus_types_flow,
-            extras_flow,
             template_flow,
         ]
-        ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
@@ -127,13 +131,16 @@ class QuartusBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', **_):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, **_):
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
         config['ClockPeriod'] = clock_period if clock_period is not None else 5
         config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
+        config['WriterConfig'] = {
+            'WriteTar': write_tar,
+        }
 
         return config
 

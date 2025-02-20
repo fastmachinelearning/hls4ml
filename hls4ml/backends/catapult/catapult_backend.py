@@ -1,5 +1,6 @@
 import os
 import sys
+from warnings import warn
 
 import numpy as np
 
@@ -31,6 +32,7 @@ from hls4ml.model.layers import (
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_catapult_report
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.fixed_point_utils import ceil_log2
 
 
@@ -50,10 +52,12 @@ class CatapultBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
-            attrs.append(ConfigurableAttribute('static', value_type=bool, default=True))
-            attrs.append(ConfigurableAttribute('table_size', default=1024))
-            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(
+                ConfigurableAttribute('static', value_type=bool, default=True, description=descriptions.recurrent_static)
+            )
+            attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
 
         # Add ParallelizationFactor to Conv1D/2D
@@ -64,7 +68,7 @@ class CatapultBackend(FPGABackend):
 
         for layer in pf_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('parallelization_factor', default=1))
+            attrs.append(ConfigurableAttribute('parallelization_factor', default=1, description=descriptions.conv_pf))
             self.attribute_map[layer] = attrs
 
         # Add ConvImplementation to Convolution+Pooling layers
@@ -72,8 +76,14 @@ class CatapultBackend(FPGABackend):
 
         for layer in cnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
-            attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
+            attrs.append(
+                ChoiceAttribute(
+                    'conv_implementation',
+                    choices=['LineBuffer', 'Encoded'],
+                    default='LineBuffer',
+                    description=descriptions.conv_implementation,
+                )
+            )
             self.attribute_map[layer] = attrs
 
         sep_conv_layers = [SeparableConv1D, SeparableConv2D]
@@ -87,6 +97,7 @@ class CatapultBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         streaming_passes = [
+            'catapult:inplace_stream_flatten',  # Inform downstream changed packsize in case of skipping flatten
             'catapult:reshape_stream',
             'catapult:clone_output',
             'catapult:insert_zero_padding_before_conv1d',
@@ -110,6 +121,8 @@ class CatapultBackend(FPGABackend):
             'catapult:inplace_stream_flatten',
             'catapult:skip_softmax',
             'catapult:fix_softmax_table_size',
+            'catapult:process_fixed_point_quantizer_layer',
+            'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -119,6 +132,7 @@ class CatapultBackend(FPGABackend):
             'catapult:generate_conv_streaming_instructions',
             'catapult:apply_resource_strategy',
             'catapult:generate_conv_im2col',
+            'catapult:apply_winograd_kernel_transformation',
         ]
         catapult_types_flow = register_flow('specific_types', catapult_types, requires=[init_flow], backend=self.name)
 
@@ -152,9 +166,8 @@ class CatapultBackend(FPGABackend):
         ]
 
         if len(extras) > 0:
-            extras_flow = register_flow('extras', extras, requires=[init_flow], backend=self.name)
-        else:
-            extras_flow = None
+            for opt in extras:
+                warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
         ip_flow_requirements = [
             'optimize',
@@ -163,10 +176,8 @@ class CatapultBackend(FPGABackend):
             quantization_flow,
             optimization_flow,
             catapult_types_flow,
-            extras_flow,
             template_flow,
         ]
-        ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
