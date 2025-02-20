@@ -99,9 +99,9 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         else:
             assert strategy.lower() == 'distributed_arithmetic', 'EinsumDense layer only supports Latency strategy for now'
             inp_t = node.get_input_variable().type.name
-            accum_t = node.attributes['accum_t'].name
+            result_t = node.get_output_variable().type.name
             index = node.index
-            conf = f'constexpr static auto da_kernel = nnet::einsum_dense{index}_da_kernel<{inp_t}, {accum_t}>'
+            conf = f'constexpr static auto da_kernel = nnet::einsum_dense{index}_da_kernel<{inp_t}, {result_t}>'
             params['kernel_config'] = conf
         pf = node.attributes.attributes['parallelization_factor']
         if pf < 0:

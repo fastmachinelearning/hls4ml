@@ -48,7 +48,7 @@ class EinsumConfigTemplate(LayerConfigTemplate):
     def format(self, node: Einsum):
         default_params = self._default_config_params(node)
 
-        strategy = node.model.config.get_strategy(node)
+        strategy = node.attributes.attributes['strategy']
         io_type = node.model.config.get_config_value('IOType')
 
         assert io_type == 'io_parallel', 'EinsumDense layer only supports io_parallel for now'
