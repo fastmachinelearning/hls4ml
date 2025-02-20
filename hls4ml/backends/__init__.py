@@ -5,12 +5,13 @@ from hls4ml.backends.symbolic.symbolic_backend import SymbolicExpressionBackend
 from hls4ml.backends.vivado.vivado_backend import VivadoBackend
 from hls4ml.backends.vivado_accelerator.vivado_accelerator_backend import VivadoAcceleratorBackend
 from hls4ml.backends.vivado_accelerator.vivado_accelerator_config import VivadoAcceleratorConfig  # noqa: F401
+
 from hls4ml.backends.catapult.catapult_backend import CatapultBackend  # isort: skip
 from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
-from hls4ml.backends.vitis_accelerator_ip_flow.vitis_accelerator_ip_flow_backend import (
+from hls4ml.backends.vitis_accelerator_ip_flow.vitis_accelerator_ip_flow_backend import (  # isort: skip
     VitisAcceleratorIPFlowBackend,
 )
-from hls4ml.backends.vitis_accelerator_ip_flow.vitis_accelerator_ip_flow_config import (
+from hls4ml.backends.vitis_accelerator_ip_flow.vitis_accelerator_ip_flow_config import (  # isort: skip  # noqa: F401
     VitisAcceleratorIPFlowConfig,
 )
 

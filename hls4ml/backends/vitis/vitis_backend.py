@@ -97,7 +97,7 @@ class VitisBackend(VivadoBackend):
         os.system(
             (
                 'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-                'validation={validation} export={export} vsynth={vsynth}"'
+                'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
             ).format(
                 reset=reset,
                 csim=csim,
