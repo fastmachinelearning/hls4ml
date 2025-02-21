@@ -137,8 +137,15 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning read in' in line:
                     newline = line
                     if io_type == 'io_parallel':
+                        restartable_kernel_loop = (
+                            f"bool keep_going = true;\n\n"
+                            f"{indent}[[intel::initiation_interval(1)]]\n"
+                            f"{indent}while (keep_going) {{\n"
+                        )
+                        newline += indent + restartable_kernel_loop
                         for inp in model_inputs:
-                            newline += indent + f'auto {inp.name} = {inp.pipe_name}::read();\n'
+                            newline += indent * 2 + f'auto {inp.name}_beat = {inp.pipe_name}::read();\n'
+                            newline += indent * 2 + f'auto {inp.name} = {inp.name}_beat.data;\n'
                     # for streaming we don't need to read it in
 
                 # Insert weights
@@ -151,16 +158,21 @@ class OneAPIWriter(Writer):
 
                 # Insert task sequences
                 elif '// hls-fpga-machine-learning declare task sequences' in line:
-                    newline = line
                     if io_type == 'io_stream':  # only need this for io_stream
+                        newline = line
                         for layer in model.get_layers():
                             ts = layer.get_attr('tast_sequence_cpp')
                             if ts:
                                 newline += '    ' + ts + '\n'
+                    else:
+                        newline = indent + line
 
                 # Neural net instantiation
                 elif '// hls-fpga-machine-learning insert layers' in line:
-                    newline = line + '\n'
+                    if io_type == 'io_parallel':
+                        newline = indent + line + '\n'
+                    else:
+                        newline = line + '\n'
                     for layer in model.get_layers():
                         if io_type != 'io_stream':
                             vars = layer.get_variables()
@@ -168,14 +180,14 @@ class OneAPIWriter(Writer):
                                 if var not in model_inputs:
                                     def_cpp = var.definition_cpp()
                                     if def_cpp is not None:
-                                        newline += '    ' + def_cpp + ';\n'
+                                        newline += indent * 2 + def_cpp + ';\n'
                         func = (
                             layer.get_attr('function_cpp')
                             if io_type == 'io_parallel'
                             else layer.get_attr('stream_function_cpp')
                         )
                         if func:
-                            newline += '    ' + func + '\n'
+                            newline += (indent * 2 if io_type == 'io_parallel' else indent) + func + '\n'
                             if model.config.trace_output and layer.get_attr('trace', False):
                                 newline += '#ifndef HLS_SYNTHESIS\n'
                                 for var in vars:
@@ -188,8 +200,13 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning return' in line:
                     newline = line
                     if io_type == 'io_parallel':
+                        newline = indent + newline
                         for out in model_outputs:
-                            newline += indent + f'{out.pipe_name}::write({out.name});\n'
+                            out_beat = f"{out.name}_beat"
+                            newline += indent * 2 + f'typename nnet::ExtractPipeType<{out.pipe_name}>::value_type {out_beat};\n'
+                            newline += indent * 2 + f'{out_beat}.data = {out.name};\n'
+                            newline += indent * 2 + f'{out.pipe_name}::write({out_beat});\n'
+                        newline += f"{indent}}}\n"
                     # don't need to add anything in io_stream
 
                 # Just copy line
