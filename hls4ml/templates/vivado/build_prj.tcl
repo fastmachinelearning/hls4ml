@@ -195,7 +195,10 @@ if {$opt(cosim)} {
 
     if {$opt(fifo_opt)} {
         puts "\[hls4ml\] - FIFO optimization started"
-        add_vcd_instructions_tcl
+
+        if {[string equal "$backend" "vivado"] || [string equal $backend "vivadoaccelerator"]} {
+            add_vcd_instructions_tcl
+        }
     }
 
     remove_recursive_log_wave
@@ -206,7 +209,7 @@ if {$opt(cosim)} {
 
     set time_end [clock clicks -milliseconds]
     puts "INFO:"
-    if {[string equal "$backend" "vivadoaccelerator"]} {
+    if {[string equal "$backend" "vivadoaccelerator"] || [string equal $backend "vitisacceleratoripflow"]} {
         puts [read [open ${project_name}_prj/solution1/sim/report/${project_name}_axi_cosim.rpt r]]
     } else {
         puts [read [open ${project_name}_prj/solution1/sim/report/${project_name}_cosim.rpt r]]

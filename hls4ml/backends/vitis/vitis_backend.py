@@ -76,7 +76,18 @@ class VitisBackend(VivadoBackend):
 
         return config
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(
+        self,
+        model,
+        reset=False,
+        csim=True,
+        synth=True,
+        cosim=False,
+        validation=False,
+        export=False,
+        vsynth=False,
+        fifo_opt=False,
+    ):
         if 'linux' in sys.platform:
             found = os.system('command -v vitis_hls > /dev/null')
             if found != 0:
@@ -87,8 +98,17 @@ class VitisBackend(VivadoBackend):
         os.system(
             (
                 'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-                'validation={validation} export={export} vsynth={vsynth}"'
-            ).format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+                'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
+            ).format(
+                reset=reset,
+                csim=csim,
+                synth=synth,
+                cosim=cosim,
+                validation=validation,
+                export=export,
+                vsynth=vsynth,
+                fifo_opt=fifo_opt,
+            )
         )
         os.chdir(curr_dir)
 
