@@ -153,6 +153,9 @@ class OneAPIBackend(FPGABackend):
             # TODO:  add namespace
             'WriteTar': write_tar,
         }
+        
+        if 'use_bsp' in _:
+            config['IS_BSP'] = True
 
         return config
 
