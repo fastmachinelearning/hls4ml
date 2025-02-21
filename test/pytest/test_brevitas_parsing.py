@@ -166,7 +166,7 @@ def test_quantconv2d(backend, io_type):
 
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_conv2d_{backend}_{io_type}')
 
-    from hls4ml.converters.pytorch_to_hls import CustomFXTracer
+    from hls4ml.converters.pytorch.tracer import CustomFXTracer
 
     tracer = CustomFXTracer()
     traced_model = tracer.trace(model)
