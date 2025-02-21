@@ -30,15 +30,11 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
                 layer['weight_quantizer'] = BrevitasQuantizer(
                     width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
                 )
-            # for non-power-of-2 scales, instead take the unquantized inputs and set parameters
-            # so an ApplyAlpha node will be added to the model. Currently broken :/
             else:
                 raise Exception(
                     '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
                     Please used QONNX instead.'''
                 )
-                # layer = addQuantizationParameters(layer, class_object.quant_weight(), 'weight')
-                # layer['weight_data'] = class_object.quant_weight().detach().value.numpy()
         else:
             layer['weight_data'] = class_object.weight.data.numpy()
 
@@ -117,8 +113,6 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
                 layer['weight_quantizer'] = BrevitasQuantizer(
                     width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
                 )
-            # for non-power-of-2 scales, instead take the unquantized inputs and set parameters so an
-            # ApplyAlpha node will be added to the model. Currently broken :/
             else:
                 raise Exception(
                     '''Non-power of 2 quantization of weights not supported when injecting brevitas models.

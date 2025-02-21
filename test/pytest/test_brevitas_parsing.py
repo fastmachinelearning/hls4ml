@@ -45,11 +45,10 @@ class QuantModelConv1d(Module):
 class QuantModelLinear(Module):
     def __init__(self, weight_quant, input_quant):
         super().__init__()
-        # self.conv1 = qnn.QuantLinear(4, 4, bias=False, weight_quant=quants[weight_quant], input_quant=quants[input_quant])
         self.conv1 = qnn.QuantLinear(
             4, 4, bias=False, weight_quant=Int8WeightPerTensorFixedPoint, input_quant=Int8ActPerTensorFixedPoint
         )
-        self.relu1 = qnn.QuantReLU()
+        self.relu1 = qnn.QuantReLU(act_quant=Int8ActPerTensorFixedPoint)
 
     def forward(self, x):
         out = self.relu1(self.conv1(x))
@@ -61,13 +60,11 @@ class QuantModelLinear(Module):
 @pytest.mark.parametrize('weight_quant', ['Int8WeightPerTensorFixedPoint'])
 @pytest.mark.parametrize('io_quant', ['Int8ActPerTensorFixedPoint'])
 def test_quantlinear(backend, io_type, weight_quant, io_quant):
-    # def test_quantlinear(backend, io_type):
     model = QuantModelLinear(weight_quant, io_quant)
 
     x = torch.rand(1, 4)
     pytorch_prediction = model(x).detach().numpy()
     config = config_from_pytorch_model(model, input_shape=(None, 4))
-    # output_dir = str(test_root_path / f'hls4mlprj_brevitas_linear_{backend}_{io_type}')
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_linear_{backend}_{io_type}_{weight_quant}_{io_quant}')
 
     hls_model = convert_from_pytorch_model(

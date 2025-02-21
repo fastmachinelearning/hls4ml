@@ -34,7 +34,6 @@ register_flow(
     'parse_brevitas',
     [
         'brevitas_input_output_optimizer',
-        'brevitas_factorize_alpha',
     ],
 )
 

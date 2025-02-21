@@ -2,32 +2,9 @@ import math
 
 import numpy as np
 
+from hls4ml.converters.pytorch.tracer import CustomFXTracer
 from hls4ml.model import ModelGraph
 from hls4ml.utils.dependency import requires
-
-# this import conficts with our new lazy imports. Not sure how to handle this otherwise yet
-
-
-class CustomFXTracer:
-
-    def __new__(cls, *args, **kwargs):
-        import torch.fx as fx
-
-        new_type = type('CustomFXTracer', (CustomFXTracer, fx.Tracer, object), {})
-        instance = super().__new__(new_type)
-        return instance
-
-    def is_leaf_module(self, m, module_qualified_name: str) -> bool:
-        """
-        Custom Tracher class for hls4ml to define brevitas modules as leaf modules so they are not traced through by torch.FX
-        """
-        import torch
-
-        return (
-            m.__module__.startswith("torch.nn")
-            or m.__module__.startswith("torch.ao.nn")
-            or m.__module__.startswith("brevitas.nn")
-        ) and not isinstance(m, torch.nn.Sequential)
 
 
 class PyTorchModelReader:
@@ -104,11 +81,12 @@ def convert_uaq_to_apfixed(bitwidth, scale_factor):
     return (fract_bitwidth, int_bitwidth)
 
 
+# embed quantization information into the layer dictionary for a Quant layer
+# so that this layer can be added to the model
 def addQuantizationParameters(layer, quant_object, quant_type, act=False):
     if not act:
-        print(quant_object.bit_width)
+        # currently not used, might be use later for non-power-of-2 scales
         bit_width = int(quant_object.bit_width)
-        # signed = quant_object.is_signed
         signed = quant_object.signed
         scale = float(quant_object.scale)
         zeropoint = float(quant_object.zero_point)
@@ -117,7 +95,6 @@ def addQuantizationParameters(layer, quant_object, quant_type, act=False):
         else:
             narrow = False
         rounding_mode = 'ROUND'
-        layer['convert_from_brevitas'] = True
     else:
         bit_width = int(quant_object.bit_width())
         signed = quant_object.is_signed
@@ -125,8 +102,6 @@ def addQuantizationParameters(layer, quant_object, quant_type, act=False):
         zeropoint = float(quant_object.zero_point())
         narrow = quant_object.is_narrow_range
         rounding_mode = quant_object.rounding_mode
-        layer['convert_io_from_brevitas'] = True
-        print(scale)
 
     layer[f'{quant_type}_quantization'] = {
         'bit_width': bit_width,
