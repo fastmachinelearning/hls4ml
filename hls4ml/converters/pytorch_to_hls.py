@@ -2,7 +2,6 @@ import math
 
 import numpy as np
 
-from hls4ml.converters.pytorch.tracer import CustomFXTracer
 from hls4ml.model import ModelGraph
 from hls4ml.utils.dependency import requires
 
@@ -172,6 +171,8 @@ def parse_pytorch_model(config, verbose=True):
         ModelGraph: hls4ml model object.
     """
     import torch
+
+    from hls4ml.converters.pytorch.tracer import CustomFXTracer
 
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
