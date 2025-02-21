@@ -322,9 +322,21 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config):
+def keras_to_hls(config, split_layer_names=None):
     model_arch, reader = get_model_arch(config)
-    layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
-    print('Creating HLS model')
-    hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
+    layer_list, input_layers, output_layers, output_shapes = parse_keras_model(model_arch, reader)
+
+    print('Creating HLS model...')
+    merge_layers = ['add', 'subtract', 'multiply', 'average', 'maximum', 'minimum', 'concatenate', 'dot']
+    if split_layer_names:
+        if any(any(layer in name for layer in merge_layers) for name in split_layer_names):
+            raise ValueError(f'Split layer must not be a merge layer')
+        hls_model = ModelGraph.make_multi_graph(
+            config, layer_list, input_layers, output_layers, output_shapes, split_layer_names
+        )
+        print('Multi-graph HLS model created.')
+    else:
+        hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
+        print('HLS model created.')
+
     return hls_model
