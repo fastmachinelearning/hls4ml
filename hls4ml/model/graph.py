@@ -597,7 +597,6 @@ class ModelGraph:
             for i, n in enumerate(node.outputs):
                 if n in repl:
                     node.outputs[i] = repl[n]
-
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
         old_name = old_node.name

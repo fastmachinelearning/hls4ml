@@ -31,6 +31,13 @@ del module_path
 del optimizers
 
 register_flow(
+    'parse_brevitas',
+    [
+        'brevitas_input_output_optimizer',
+    ],
+)
+
+register_flow(
     'parse_qonnx',
     [
         'reshape_constant',
@@ -53,6 +60,7 @@ register_flow(
         'conv_to_conv_x_d',
         'conv_to_depthwise_conv_x_d',
     ],
+    requires=['parse_brevitas'],
 )
 
 register_flow(
