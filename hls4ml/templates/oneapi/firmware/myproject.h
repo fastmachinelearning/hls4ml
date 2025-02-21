@@ -18,18 +18,6 @@ using HostPipePropertiesT = decltype(sycl::ext::oneapi::experimental::properties
     sycl::ext::intel::experimental::protocol_avalon_streaming_uses_ready
 ));
 
-// Data wrapper type used in the host pipes.
-// first argument: datatype carried over this Avalon streaming interface's data signal.
-// second argument: enable startofpacket and endofpacket signals for synchronization.
-// third argument: to enable the empty signal.
-using InputBeatT = sycl::ext::intel::experimental::StreamingBeat<
-    input_t,    // input_t should match the input type of the first layer.
-    true,
-    true>;
-using OutputBeatT = sycl::ext::intel::experimental::StreamingBeat<
-    result_t,    // result_t should match the output type of the last layer.
-    true,
-    true>;
 
 namespace nnet {
 
@@ -45,12 +33,12 @@ class IDOutputDMA;
 
 // Implementation of a direct memory access kernel. Move data from source, convert, 
 // and send to the sink. Adaptive to SYCL HLS and hardware acceleration flow.
-template <class srcType, class dest_pipe, size_t SIZE> 
+template <class src_T, class dest_pipe, size_t num_iteration> 
 struct DMA_convert_data {
 #if !defined(IS_BSP)
     // When targeting a device family, we instantiate an Avalon Memory Mapped Host for 
     // data transaction between host and the DMA kernel during emulation and simulation.
-    sycl::ext::oneapi::experimental::annotated_arg<srcType *, 
+    sycl::ext::oneapi::experimental::annotated_arg<src_T *, 
       decltype(sycl::ext::oneapi::experimental::properties{
           sycl::ext::intel::experimental::latency<0>,
           sycl::ext::intel::experimental::dwidth<8>,
@@ -59,7 +47,7 @@ struct DMA_convert_data {
           sycl::ext::intel::experimental::wait_request_requested})>
 #else
     // When targeting oneAPI BSP, we can use USM pointer to access host memory.
-    srcType *const
+    src_T *const
 #endif
         src;
 
@@ -68,10 +56,10 @@ struct DMA_convert_data {
         
 #if defined(IS_BSP)
         // Access data using host pointer.
-        sycl::ext::intel::host_ptr<srcType> src_ptr(src);
+        sycl::ext::intel::host_ptr<src_T> src_ptr(src);
 #else
         // Host allocation is not supported when targeting an FPGA family or part number.
-        srcType *src_ptr(src);
+        src_T *src_ptr(src);
 #endif
         // First, extract the PipeDataT from the pipe
         using PipeDataType = typename nnet::ExtractPipeType<dest_pipe>::value_type;
@@ -80,25 +68,30 @@ struct DMA_convert_data {
         constexpr auto dstTypeSize = std::tuple_size<DstDataType>{};
 
         [[intel::fpga_register]]
-        typename nnet::ExtractPipeType<dest_pipe>::value_type ctype;
+        typename nnet::ExtractPipeType<dest_pipe>::value_type packet;
 
-        for (size_t i = 0; i < SIZE / dstTypeSize; i++) {
+        // Keep sending data to the input layer and keep the kernels running.
+        for (size_t i = 0; i < num_iteration; i++) {
             #pragma unroll
             for (size_t j = 0; j < dstTypeSize; j++) {
-                ctype.data[j] = src_ptr[i * dstTypeSize + j];
+                packet.data[j] = src_ptr[i * dstTypeSize + j];
             }
-            ctype.sop = (i == 0);
-            ctype.eop = (i == (SIZE / dstTypeSize - 1));
-            dest_pipe::write(ctype);
+            packet.sop = (i == 0);
+            // Assert end-of-packet signal after the last iteration.
+            // All down-stream kernels will stop seeing eop.
+            packet.eop = (i == (num_iteration - 1));
+            dest_pipe::write(packet);
         }
     }
 };
 
-// Symmetrical to the DMA_convert_data above.
-template <class src_pipe, class dstType, size_t SIZE> 
+// Symmetrical to the DMA_convert_data above, this DMA drains the output pipe and 
+// writes result to memory.
+template <class src_pipe, class dst_T, size_t num_iteration> 
 struct DMA_convert_data_back {
 #if !defined(IS_BSP)
-    sycl::ext::oneapi::experimental::annotated_arg<dstType *, 
+    // Without BSP, instantiate an Avalon Memory Mapped Host to write to host.
+    sycl::ext::oneapi::experimental::annotated_arg<dst_T *, 
       decltype(sycl::ext::oneapi::experimental::properties{
           sycl::ext::intel::experimental::latency<0>,
           sycl::ext::intel::experimental::dwidth<8>,
@@ -106,27 +99,33 @@ struct DMA_convert_data_back {
           sycl::ext::intel::experimental::read_write_mode_write,
           sycl::ext::intel::experimental::wait_request_requested})>
 #else
-    dstType *const
+    // USM pointer, otherwise.
+    dst_T *const
 #endif
         dst;
 
     [[intel::kernel_args_restrict]]
     void operator()() const {
 #if defined(IS_BSP)
-        sycl::ext::intel::host_ptr<dstType> dst_ptr(dst);
+        sycl::ext::intel::host_ptr<dst_T> dst_ptr(dst);
 #else
-        dstType *dst_ptr(dst);
+        dst_T *dst_ptr(dst);
 #endif
-        constexpr auto srcTypeSize = std::tuple_size<typename nnet::ExtractPipeType<src_pipe>::value_type>{};
+        // First, extract the PipeDataT from the pipe
+        using PipeDataType = typename nnet::ExtractPipeType<src_pipe>::value_type;
+        // Then, extract the DataT from StreamingBeat
+        using SrcDataType = typename nnet::ExtractDataType<PipeDataType>::value_type;
+        constexpr auto srcTypeSize = std::tuple_size<SrcDataType>{};
 
         [[intel::fpga_register]] 
-        typename nnet::ExtractPipeType<src_pipe>::value_type ctype;
-
-        for (size_t i = 0; i < SIZE / srcTypeSize; i++) {
-            ctype = src_pipe::read();
+        typename nnet::ExtractPipeType<src_pipe>::value_type packet;
+        
+        // Drain the output pipe and write result to memory.
+        for (size_t i = 0; i < num_iteration; i++) {
+            packet = src_pipe::read();
             #pragma unroll
             for (size_t j = 0; j < srcTypeSize; j++) {
-                dst_ptr[i * srcTypeSize + j] = ctype[j].to_double();
+                dst_ptr[i * srcTypeSize + j] = static_cast<dst_T>(packet.data[j].to_double());
             }
         }
     }
