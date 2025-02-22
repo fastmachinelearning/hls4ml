@@ -100,6 +100,7 @@ class QuantToActivation(OptimizerPass):
             scale = node.get_attr('scale')
             bias = node.get_attr('zeropt')
             is_match = is_match and (bias == np.zeros_like(bias)).all()
+
             # check if scale is ones-like or a power of two
             scale_unit_or_po2 = (scale == np.ones_like(scale)).all()
             if not scale_unit_or_po2 and _ALSO_MATCH_PO2:
@@ -135,7 +136,7 @@ class QuantToActivation(OptimizerPass):
         config = model.config.get_layer_config(node)
         prec_config = config.setdefault('Precision', {})
         prec_config['result'] = str(precision)
-        new_name = node.name
+        new_name = f'{node.name}_act'
         model.config.set_name_config(new_name, config)
         model.config.parse_name_config(new_name, config)
 
@@ -231,6 +232,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         narrow = node.get_attr('narrow')
         signed = node.get_attr('signed')
         bitwidth = node.get_attr('bitwidth')
+
         precision, quantizer = _calculate_precision_quantizer(bitwidth, bitwidth, signed, narrow, rounding_mode)
 
         activation_attributes = {'activation': 'linear', 'quantizer': quantizer}
@@ -243,6 +245,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         act_name = f'{node.name}_act'
         model.config.set_name_config(act_name, act_config)
         model.config.parse_name_config(act_name, act_config)
+
         new_node = model.make_node(Activation, act_name, activation_attributes, [node.inputs[0]], [x for x in node.outputs])
         model.replace_node(node, new_node)
 
@@ -266,7 +269,6 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         model.config.set_name_config(rescale_name, rescale_config)
         model.config.parse_name_config(rescale_name, rescale_config)
         firstscale = 1 / scale
-
         firstbias = bias
         attributes_scale['scale_data'] = np.broadcast_to(firstscale, inshape)
         attributes_scale['bias_data'] = np.broadcast_to(firstbias, inshape)
