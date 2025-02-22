@@ -268,7 +268,6 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         rescale_name = f'{node.name}_rescale'
         model.config.set_name_config(rescale_name, rescale_config)
         model.config.parse_name_config(rescale_name, rescale_config)
-
         firstscale = 1 / scale
         firstbias = bias
         attributes_scale['scale_data'] = np.broadcast_to(firstscale, inshape)

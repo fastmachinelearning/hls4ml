@@ -49,6 +49,7 @@ optional-dependencies.qkeras = [
 optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.sr = [ "sympy" ]
 optional-dependencies.testing = [
+  "brevitas",
   "calmjs-parse",
   "hgq>=0.2.3",
   "onnx>=1.4",
