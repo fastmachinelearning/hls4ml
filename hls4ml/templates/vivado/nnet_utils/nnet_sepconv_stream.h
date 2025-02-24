@@ -5,74 +5,8 @@
 #include "nnet_common.h"
 #include "nnet_conv_stream.h"
 #include "nnet_depthwise_product.h"
+
 namespace nnet {
-
-template <class data_T, class res_T, typename CONFIG_T>
-void depthwise_product_latency(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                               typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                               typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
-    #pragma HLS INLINE
-
-    typename CONFIG_T::accum_t mult[CONFIG_T::kernel_size * CONFIG_T::n_chan];
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_chan];
-
-    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
-    #pragma HLS function_instantiate variable=weights
-
-    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-
-    #pragma HLS ARRAY_PARTITION variable=mult complete
-
-    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
-
-// Do the matrix-multiply
-Product:
-    for (int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
-        #pragma HLS UNROLL
-        mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
-            data[ii], weights[ii]);
-    }
-
-// Initialize accumulator with input biases
-ResetAccum:
-    for (int iacc = 0; iacc < CONFIG_T::n_chan; iacc++) {
-        #pragma HLS UNROLL
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
-    }
-
-// Accumulate multiplication result
-Accum1:
-    for (int ii = 0; ii < CONFIG_T::kernel_size; ii++) {
-    Accum2:
-        for (int jj = 0; jj < CONFIG_T::n_chan; jj++) {
-            int index = ii * CONFIG_T::n_chan + jj;
-            acc[jj] += mult[index];
-        }
-    }
-
-// Cast to "res_t" type
-Result:
-    for (int ires = 0; ires < CONFIG_T::n_chan; ires++) {
-        #pragma HLS UNROLL
-        res[ires] = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[ires]);
-    }
-}
-
-template <class data_T, class res_T, typename CONFIG_T>
-void depthwise_product_resource(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], res_T res[CONFIG_T::n_chan],
-                                typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
-                                typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
-
-    #pragma HLS INLINE recursive
-
-    if (CONFIG_T::reuse_factor < CONFIG_T::n_chan) {
-        depthwise_product_resource_rf_lt_nchan<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else if (CONFIG_T::reuse_factor % CONFIG_T::n_chan == 0) {
-        depthwise_product_resource_rf_geq_nchan_rem0<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else {
-        depthwise_product_resource_rf_gt_nchan<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    }
-}
 
 template <class data_T, class res_T, typename CONFIG_T>
 void depthwise_mult_buffer(hls::stream<typename data_T::value_type> data_window[CONFIG_T::kernel_size * CONFIG_T::n_chan],
@@ -93,13 +27,8 @@ InitData:
     }
 
     #pragma HLS INLINE recursive
-    if (CONFIG_T::strategy == nnet::latency) {
-        depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights,
-                                                                                                     biases);
-    } else {
-        depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights,
-                                                                                                      biases);
-    }
+    CONFIG_T::mult_config::template kernel<typename data_T::value_type, typename res_T::value_type,
+                                           typename CONFIG_T::mult_config>::dense(data, res, weights, biases);
 
 CastLoop:
     for (unsigned jj = 0; jj < CONFIG_T::n_chan; jj++) {
@@ -172,13 +101,8 @@ InitData:
     }
 
     #pragma HLS INLINE recursive
-    if (CONFIG_T::strategy == nnet::latency) {
-        dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-            data, res, weights, biases);
-    } else {
-        dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-            data, res, weights, biases);
-    }
+    CONFIG_T::mult_config::template kernel<typename data_T::value_type, typename res_T::value_type,
+                                           typename CONFIG_T::mult_config>::dense(data, res, weights, biases);
 
 CastLoop:
     for (unsigned jj = 0; jj < CONFIG_T::n_filt; jj++) {
@@ -219,13 +143,8 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, hls::stream<res_T
     if ((sX - lShiftX) == 0 && pX > lShiftX - 1) {
         // Dense multiply
         #pragma HLS INLINE recursive
-        if (CONFIG_T::strategy == nnet::latency) {
-            depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
-                kernel_data, res_out, weights, biases);
-        } else {
-            depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
-                kernel_data, res_out, weights, biases);
-        }
+        CONFIG_T::mult_config::template kernel<typename data_T::value_type, typename res_T::value_type,
+                                               typename CONFIG_T::mult_config>::dense(kernel_data, res_out, weights, biases);
 
     // Pack output
     CastLoop:
@@ -285,13 +204,8 @@ void compute_depthwise_output_buffer_2d(const data_T &in_elem,
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
         // Dense multiply
         #pragma HLS INLINE recursive
-        if (CONFIG_T::strategy == nnet::latency) {
-            depthwise_product_latency<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
-                kernel_data, res_out, weights, biases);
-        } else {
-            depthwise_product_resource<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
-                kernel_data, res_out, weights, biases);
-        }
+        CONFIG_T::mult_config::template kernel<typename data_T::value_type, typename res_T::value_type,
+                                               typename CONFIG_T::mult_config>::dense(kernel_data, res_out, weights, biases);
 
     // Pack output
     CastLoop:
