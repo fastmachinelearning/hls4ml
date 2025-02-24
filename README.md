@@ -65,7 +65,7 @@ hls4ml.report.read_vivado_report('my-hls-test')
 
 # FAQ
 
-List of frequently asked questions and common HLS synthesis can be found [here](https://fastmachinelearning.org/hls4ml/faq.html)
+List of frequently asked questions and common HLS synthesis can be found [here](https://fastmachinelearning.org/hls4ml/intro/faq.html)
 
 # Citation
 If you use this software in a publication, please cite the software
