@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "firmware/myproject.h"
@@ -20,45 +21,29 @@
 
 #define CHECKPOINT 5000
 
-int main(int argc, char **argv) {
-
-#if FPGA_SIMULATOR
-    auto selector = sycl::ext::intel::fpga_simulator_selector_v;
-#elif FPGA_HARDWARE
-    auto selector = sycl::ext::intel::fpga_selector_v;
-#else // #if FPGA_EMULATOR
-    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
+#if not defined(IS_BSP)
+using sycl::ext::intel::experimental::property::usm::buffer_location;
 #endif
 
-    sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
-
-    auto device = q.get_device();
-
-    // make sure the device supports USM host allocations
-    if (!device.has(sycl::aspect::usm_host_allocations)) {
-        std::cerr << "This design must either target a board that supports USM "
-                     "Host/Shared allocations, or IP Component Authoring. "
-                  << std::endl;
-        std::terminate();
-    }
-
-    std::cout << "Running on device: " << device.get_info<sycl::info::device::name>().c_str() << std::endl;
-
+// Functions that reads input and prediction data from files.
+// Returns `true` if files are read successfully and not empty.
+// Returns `false` otherwise.
+bool prepare_data_from_file(
+    std::string &fin_path,
+    std::string &fpr_path,
+    std::vector<std::vector<float>> &inputs,
+    std::vector<std::vector<float>> &predictions
+) {
     // load input data from text file
-    std::ifstream fin("tb_data/tb_input_features.dat");
+    std::ifstream fin(fin_path.c_str());
     // load predictions from text file
-    std::ifstream fpr("tb_data/tb_output_predictions.dat");
-
-    std::string RESULTS_LOG = "tb_data/results.log";
-    std::ofstream fout(RESULTS_LOG);
-
+    std::ifstream fpr(fpr_path.c_str());
+    
     std::string iline;
     std::string pline;
 
     if (fin.is_open() && fpr.is_open()) {
-        std::vector<std::vector<float>> inputs;
-        std::vector<std::vector<float>> predictions;
-        unsigned int num_iterations = 0;
+        size_t num_iterations = 0;
         
         // Prepare input data from file. Load predictions from file.
         for (; std::getline(fin, iline) && std::getline(fpr, pline); num_iterations++) {
@@ -83,7 +68,82 @@ int main(int argc, char **argv) {
             std::copy(pr.cbegin(), pr.cend(), predictions.back().begin());
             std::copy(in.cbegin(), in.cend(), inputs.back().begin());
         }
+        fin.close();
+        fpr.close();
+        if (inputs.empty())
+            return false;
+        else
+            return true;
+    } else {
+        return false;
+    }
+}
 
+int main(int argc, char **argv) {
+
+#if FPGA_SIMULATOR
+#define NUM_ITERATIONS 5
+    auto selector = sycl::ext::intel::fpga_simulator_selector_v;
+#elif FPGA_HARDWARE
+#define NUM_ITERATIONS 100
+    auto selector = sycl::ext::intel::fpga_selector_v;
+#else // #if FPGA_EMULATOR
+#define NUM_ITERATIONS 100
+    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
+#endif
+
+    sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
+
+    auto device = q.get_device();
+
+    // make sure the device supports USM host allocations
+    if (!device.has(sycl::aspect::usm_host_allocations)) {
+        std::cerr << "This design must either target a board that supports USM "
+                     "Host/Shared allocations, or IP Component Authoring. "
+                  << std::endl;
+        std::terminate();
+    }
+
+    std::cout << "Running on device: " << device.get_info<sycl::info::device::name>().c_str() << std::endl;
+
+    std::string INPUT_FILE  = "tb_data/tb_input_features.dat";
+    std::string PRED_FILE   = "tb_data/tb_output_predictions.dat";
+    std::string RESULTS_LOG = "tb_data/results.log";
+    std::ofstream fout(RESULTS_LOG);
+
+    // Allocate vectors on stack to hold data from files temporarily.
+    std::vector<std::vector<float>> inputs;
+    std::vector<std::vector<float>> predictions;
+    bool file_valid = prepare_data_from_file(INPUT_FILE, PRED_FILE, inputs, predictions);
+    unsigned int num_iterations;
+    if (file_valid) {
+        num_iterations = inputs.size();
+    } else {
+        num_iterations = NUM_ITERATIONS;
+    }
+
+    // hls-fpga-machine-learning insert runtime contant
+
+#if defined(IS_BSP)
+    // Allocate host memory if BSP is in use.
+    float *vals = sycl::malloc_host<float>(kInputSz, q);
+    if (vals == nullptr) {
+        std::cerr << "ERROR: host allocation failed for input\n";
+        fout.close();
+        return 1;
+    }
+    float *outputs = sycl::malloc_host<float>(kOutputSz, q);
+    if (output == nullptr) {
+        std::cerr << "ERROR: host allocation failed for output\n";
+        fout.close();
+        return 1;
+    }    
+#else
+    float *vals = new float[kInputSz];
+    float *outputs = new float[kOutputSz];
+#endif
+
+    if (file_valid) {
         // Start always-run streaming kernel here, instead of inside a loop.
         q.single_task(MyProject{});
 
@@ -106,18 +166,13 @@ int main(int argc, char **argv) {
                 std::cout << std::endl;
                 std::cout << "Quantized predictions" << std::endl;
                 // hls-fpga-machine-learning insert quantized
-                for (int j = 0; j < kOutLayerSize /* defined in convert output */; j++) {
+                for (int j = 0; j < kOutLayerSize; j++) {
                     std::cout << outputs[i * kOutLayerSize + j] << " ";
                 }
                 std::cout << std::endl;
             }
         }
-        delete[] vals;
-        delete[] outputs;
-        fin.close();
-        fpr.close();
     } else {
-        constexpr unsigned int num_iterations = 10;
         std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations
                   << " invocations." << std::endl;
 
@@ -127,16 +182,23 @@ int main(int argc, char **argv) {
         q.single_task(MyProject{});
         // hls-fpga-machine-learning convert output
         for (int i = 0; i < num_iterations; i++) {
-            for (int j = 0; j < kOutLayerSize /* defined in convert output */; j++) {
+            for (int j = 0; j < kOutLayerSize; j++) {
                 std::cout << outputs[i * kOutLayerSize + j] << " ";
                 fout << outputs[i * kOutLayerSize + j] << " ";
             }
             std::cout << std::endl;
             fout << std::endl;
         }
-        delete[] outputs;
     }
 
+    // Free up resources.
+#if defined(IS_BSP)
+    free(vals);
+    free(outputs);
+#else
+    delete[] vals;
+    delete[] outputs;
+#endif
     fout.close();
     std::cout << "INFO: Saved inference results to file: " << RESULTS_LOG << std::endl;
 

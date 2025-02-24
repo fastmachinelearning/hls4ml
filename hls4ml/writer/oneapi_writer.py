@@ -412,12 +412,20 @@ class OneAPIWriter(Writer):
                     newline = line
                     for bram in model_brams:
                         newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                elif '// hls-fpga-machine-learning insert runtime contant' in line:
+                    newline = line
+                    insert_constant_lines = (
+                        f'{indent}const size_t kInputSz = {model_inputs[0].size_cpp()} * num_iterations;\n'
+                        f'{indent}const size_t kOutputSz = {model_outputs[0].size_cpp()} * num_iterations;\n'
+                        f'{indent}const size_t kInputLayerSize = {model_inputs[0].size_cpp()};\n'
+                        f'{indent}const size_t kOutLayerSize = {model_outputs[0].size_cpp()};\n'
+                    )
+                    newline += insert_constant_lines;
                 elif '// hls-fpga-machine-learning insert zero' in line:
                     newline = line
                     inp = model_inputs[0]
                     insert_zero_lines = (
-                        f'{indent}float vals[{inp.size_cpp()} * num_iterations]; \n'
-                        f'{indent}for (int j = 0 ; j < {inp.size_cpp()} * num_iterations; j++)\n'
+                        f'{indent}for (int j = 0 ; j < kInputSz; j++)\n'
                         f'{indent}    vals[j] = 0.0;\n'
                         f'{indent}q.single_task(nnet::DMA_convert_data<float, {inp.pipe_name}>{{vals, num_iterations}});\n'
                     )
@@ -426,8 +434,6 @@ class OneAPIWriter(Writer):
                     newline = line
                     inp = model_inputs[0]
                     insert_data_lines = (
-                        f'{indent}constexpr size_t kInputLayerSize = {inp.size_cpp()};\n'
-                        f'{indent}float *vals = new float[kInputLayerSize * num_iterations];\n'
                         f'{indent}for (int i = 0; i < num_iterations; i++)\n'
                         f'{indent}    for (int j = 0 ; j < kInputLayerSize; j++)\n'
                         f'{indent}        vals[i * kInputLayerSize + j] = inputs[i][j]; \n'
@@ -437,12 +443,8 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
-                    output_lines = (
-                        f'{indent}float *outputs = new float[{out.size_cpp()} * num_iterations];\n'
+                    newline += \
                         f'{indent}q.single_task(nnet::DMA_convert_data_back<{out.pipe_name}, float>{{outputs, num_iterations}}).wait();\n'
-                        f'{indent}constexpr size_t kOutLayerSize = {out.size_cpp()};\n'
-                    )
-                    newline += output_lines
                 else:
                     newline = line
 
