@@ -22,6 +22,32 @@ def parse_constant_layer(operation, layer_name, node):
     return layer, output_shape
 
 
+# A QuantIdentity layer does nothing but quantize its inputs. Insert `Quant` node to be processed by QONNX optimizers
+@pytorch_handler('QuantIdentity')
+def parse_quantidentity_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert 'QuantIdentity' in operation
+
+    layer = {}
+    layer['inputs'] = input_names
+
+    layer['class_name'] = 'Quant'
+    layer['name'] = layer_name
+    print(input_shapes)
+    if class_object.act_quant.is_quant_enabled:
+        layer['bitwidth'] = int(class_object.act_quant.bit_width())
+        layer['signed'] = class_object.act_quant.is_signed
+        layer['scale'] = np.full(np.array(input_shapes[0][1:]), class_object.act_quant.scale())
+        layer['zeropt'] = float(class_object.act_quant.zero_point())
+        layer['narrow'] = class_object.act_quant.is_narrow_range
+        layer['rounding_mode'] = class_object.act_quant.rounding_mode
+
+    else:
+        raise Exception('''QuantIdentify layer without act quant does nothing, please remove from model.''')
+    output_shape = input_shapes[0]
+
+    return layer, output_shape
+
+
 @pytorch_handler('Linear', 'QuantLinear')
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert 'Linear' in operation

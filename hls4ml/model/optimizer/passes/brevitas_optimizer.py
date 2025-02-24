@@ -8,13 +8,12 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
     '''Takes nodes parsed from brevitas and inserts Quant nodes into the model if necessary'''
 
     def match(self, node):
-        needs_conversion = False
-        if 'convert_io_from_brevitas' in node.attributes.keys():
-            needs_conversion = node.attributes['convert_io_from_brevitas'] and (
-                'output_quantization' in node.attributes.keys() or 'input_quantization' in node.attributes.keys()
-            )
-
-        return needs_conversion
+        if ('output_quantization' in node.attributes.keys() and not len(node.attributes['output_quantization']) == 0) or (
+            'input_quantization' in node.attributes.keys() and not len(node.attributes['input_quantization']) == 0
+        ):
+            return True
+        else:
+            return False
 
     def transform(self, model, node):
 
