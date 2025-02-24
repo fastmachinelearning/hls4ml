@@ -343,8 +343,16 @@ class ConstQuantToConstAlpha(OptimizerPass):
 
         rescale = scale
         rebias = -bias * scale
+
+        # precision of the scale is important for overall model accuracy, so it is increased here
+        # This is somewhat stupid and needs a better solution
+        frac_bits = node.get_attr('bitwidth') * 2
+        scale_precision, scale_quantizer = _calculate_precision_quantizer(frac_bits, 0, signed, narrow, rounding_mode)
+
         attributes_rescale['scale_data'] = np.broadcast_to(rescale, inshape)
         attributes_rescale['bias_data'] = np.broadcast_to(rebias, inshape)
+        attributes_rescale['scale_quantizer'] = scale_quantizer
+        attributes_rescale['scale_precision'] = scale_precision
 
         rescale_node = model.make_node(
             ApplyAlpha, rescale_name, attributes_rescale, [x for x in node.inputs], [x for x in node.outputs]
