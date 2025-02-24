@@ -139,7 +139,6 @@ class QuantToActivation(OptimizerPass):
         new_name = f'{node.name}_act'
         model.config.set_name_config(new_name, config)
         model.config.parse_name_config(new_name, config)
-        print("making new node")
         new_node = model.make_node(Activation, new_name, attributes, [node.inputs[0]], [f'{x}_act' for x in node.outputs])
         model.replace_node(node, new_node)
 
