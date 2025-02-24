@@ -139,7 +139,6 @@ class OneAPIWriter(Writer):
                     if io_type == 'io_parallel':
                         restartable_kernel_loop = (
                             f"bool keep_going = true;\n\n"
-                            f"{indent}[[intel::initiation_interval(1)]]\n"
                             f"{indent}while (keep_going) {{\n"
                         )
                         newline += indent + restartable_kernel_loop
@@ -416,24 +415,34 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning insert zero' in line:
                     newline = line
                     inp = model_inputs[0]
-                    newline += indent + f'float vals[{inp.size_cpp()}]; \n'
-                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
-                    newline += indent + '    vals[j] = 0.0; \n'
-                    newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    insert_zero_lines = (
+                        f'{indent}float vals[{inp.size_cpp()} * num_iterations]; \n'
+                        f'{indent}for (int j = 0 ; j < {inp.size_cpp()} * num_iterations; j++)\n'
+                        f'{indent}    vals[j] = 0.0;\n'
+                        f'{indent}q.single_task(nnet::DMA_convert_data<float, {inp.pipe_name}>{{vals, num_iterations}});\n'
+                    )
+                    newline += insert_zero_lines
                 elif '// hls-fpga-machine-learning insert data' in line:
                     newline = line
                     inp = model_inputs[0]
-                    newline += indent + f'float vals[{inp.size_cpp()}]; \n'
-                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
-                    newline += indent + '    vals[j] = in[j]; \n'
-                    newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    insert_data_lines = (
+                        f'{indent}constexpr size_t kInputLayerSize = {inp.size_cpp()};\n'
+                        f'{indent}float *vals = new float[kInputLayerSize * num_iterations];\n'
+                        f'{indent}for (int i = 0; i < num_iterations; i++)\n'
+                        f'{indent}    for (int j = 0 ; j < kInputLayerSize; j++)\n'
+                        f'{indent}        vals[i * kInputLayerSize + j] = inputs[i][j]; \n'
+                        f'{indent}q.single_task(nnet::DMA_convert_data<float, {inp.pipe_name}>{{vals, num_iterations}});\n'
+                    )
+                    newline += insert_data_lines
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
-                    newline += indent + f'float outputs[{out.size_cpp()}];\n'
-                    newline += indent + f'nnet::convert_data_back<{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
+                    output_lines = (
+                        f'{indent}float *outputs = new float[{out.size_cpp()} * num_iterations];\n'
+                        f'{indent}q.single_task(nnet::DMA_convert_data_back<{out.pipe_name}, float>{{outputs, num_iterations}}).wait();\n'
+                        f'{indent}constexpr size_t kOutLayerSize = {out.size_cpp()};\n'
+                    )
+                    newline += output_lines
                 else:
                     newline = line
 

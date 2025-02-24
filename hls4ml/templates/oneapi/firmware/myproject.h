@@ -27,13 +27,9 @@ inline constexpr unsigned kInputBufferLocation = 0;
 inline constexpr unsigned kOutputBufferLocation = 1;
 #endif
 
-// Name for DMAs.
-class IDInputDMA;
-class IDOutputDMA;
-
 // Implementation of a direct memory access kernel. Move data from source, convert, 
 // and send to the sink. Adaptive to SYCL HLS and hardware acceleration flow.
-template <class src_T, class dest_pipe, size_t num_iteration> 
+template <class src_T, class dest_pipe> 
 struct DMA_convert_data {
 #if !defined(IS_BSP)
     // When targeting a device family, we instantiate an Avalon Memory Mapped Host for 
@@ -50,6 +46,7 @@ struct DMA_convert_data {
     src_T *const
 #endif
         src;
+    size_t num_iteration;
 
     [[intel::kernel_args_restrict]]
     void operator()() const {
@@ -87,7 +84,7 @@ struct DMA_convert_data {
 
 // Symmetrical to the DMA_convert_data above, this DMA drains the output pipe and 
 // writes result to memory.
-template <class src_pipe, class dst_T, size_t num_iteration> 
+template <class src_pipe, class dst_T> 
 struct DMA_convert_data_back {
 #if !defined(IS_BSP)
     // Without BSP, instantiate an Avalon Memory Mapped Host to write to host.
@@ -103,6 +100,7 @@ struct DMA_convert_data_back {
     dst_T *const
 #endif
         dst;
+    size_t num_iteration;
 
     [[intel::kernel_args_restrict]]
     void operator()() const {

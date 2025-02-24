@@ -56,11 +56,14 @@ int main(int argc, char **argv) {
     std::string pline;
 
     if (fin.is_open() && fpr.is_open()) {
+        std::vector<std::vector<float>> inputs;
         std::vector<std::vector<float>> predictions;
-        unsigned int iteration = 0;
-        for (; std::getline(fin, iline) && std::getline(fpr, pline); iteration++) {
-            if (iteration % CHECKPOINT == 0) {
-                std::cout << "Processing input " << iteration << std::endl;
+        unsigned int num_iterations = 0;
+        
+        // Prepare input data from file. Load predictions from file.
+        for (; std::getline(fin, iline) && std::getline(fpr, pline); num_iterations++) {
+            if (num_iterations % CHECKPOINT == 0) {
+                std::cout << "Processing input " << num_iterations << std::endl;
             }
 
             std::vector<float> in;
@@ -77,57 +80,62 @@ int main(int argc, char **argv) {
                 pr.push_back(current);
             }
 
-            // hls-fpga-machine-learning insert data
-
-            q.single_task(MyProject{});
-
-            // hls-fpga-machine-learning convert output
-
             std::copy(pr.cbegin(), pr.cend(), predictions.back().begin());
+            std::copy(in.cbegin(), in.cend(), inputs.back().begin());
+        }
 
-            for (auto outval : outputs) {
-                fout << outval << " ";
+        // Start always-run streaming kernel here, instead of inside a loop.
+        q.single_task(MyProject{});
+
+        // hls-fpga-machine-learning insert data
+
+        // hls-fpga-machine-learning convert output
+
+        // Print output from kernel and from prediction file.
+        for (int i = 0; i < num_iterations; i++) {
+            for (int j = 0; j < kOutLayerSize; j++) {
+                fout << outputs[i * kOutLayerSize + j] << " ";
             }
             fout << std::endl;
-            if (iteration % CHECKPOINT == 0) {
+            if (i % CHECKPOINT == 0) {
                 std::cout << "Predictions" << std::endl;
                 // hls-fpga-machine-learning insert predictions
-                for (auto predval : pr) {
+                for (auto predval : predictions[i]) {
                     std::cout << predval << " ";
                 }
                 std::cout << std::endl;
                 std::cout << "Quantized predictions" << std::endl;
                 // hls-fpga-machine-learning insert quantized
-                for (auto outval : outputs) {
-                    std::cout << outval << " ";
+                for (int j = 0; j < kOutLayerSize /* defined in convert output */; j++) {
+                    std::cout << outputs[i * kOutLayerSize + j] << " ";
                 }
                 std::cout << std::endl;
             }
         }
+        delete[] vals;
+        delete[] outputs;
         fin.close();
         fpr.close();
     } else {
-        const unsigned int num_iterations = 10;
+        constexpr unsigned int num_iterations = 10;
         std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations
                   << " invocations." << std::endl;
 
         // hls-fpga-machine-learning insert top-level-function
+
+        // hls-fpga-machine-learning insert zero
+        q.single_task(MyProject{});
+        // hls-fpga-machine-learning convert output
         for (int i = 0; i < num_iterations; i++) {
-            // hls-fpga-machine-learning insert zero
-            q.single_task(MyProject{});
-            // hls-fpga-machine-learning convert output
-            for (auto outval : outputs) {
-                std::cout << outval << " ";
+            for (int j = 0; j < kOutLayerSize /* defined in convert output */; j++) {
+                std::cout << outputs[i * kOutLayerSize + j] << " ";
+                fout << outputs[i * kOutLayerSize + j] << " ";
             }
             std::cout << std::endl;
-
-            for (auto outval : outputs) {
-                fout << outval << " ";
-            }
             fout << std::endl;
         }
+        delete[] outputs;
     }
-    q.wait();
 
     fout.close();
     std::cout << "INFO: Saved inference results to file: " << RESULTS_LOG << std::endl;
