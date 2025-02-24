@@ -394,9 +394,6 @@ class Quant(Layer):  # The QONNX quantization layer
         Attribute('narrow', value_type=bool),
         Attribute('rounding_mode', value_type=str),
         Attribute('signed', value_type=bool),
-        Attribute('scale', value_type=float),
-        Attribute('zeropt', value_type=int),
-        Attribute('bitwidth', value_type=int),
     ]
 
     def initialize(self):
