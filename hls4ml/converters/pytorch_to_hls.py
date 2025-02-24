@@ -227,14 +227,14 @@ def parse_pytorch_model(config, verbose=True):
             if pytorch_class in ["RNN", "GRU", "LSTM"]:
                 input_shapes = []
                 input_names = []
-                for i in node.args:
-                    if isinstance(i, tuple):
-                        for y in i:
-                            input_shapes.append(output_shapes[str(y)])
-                            input_names.append(inputs_map.get(str(y), str(y)))
+                for arg in node.args:
+                    if isinstance(arg, tuple):
+                        for input in arg:
+                            input_shapes.append(output_shapes[str(input)])
+                            input_names.append(inputs_map.get(str(input), str(input)))
                     else:
-                        input_shapes.append(output_shapes[str(i)])
-                        input_names.append(inputs_map.get(str(i), str(i)))
+                        input_shapes.append(output_shapes[str(arg)])
+                        input_names.append(inputs_map.get(str(arg), str(arg)))
 
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif "getitem" in node.args[0].name:

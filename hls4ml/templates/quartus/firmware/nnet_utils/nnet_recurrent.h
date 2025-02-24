@@ -206,8 +206,8 @@ void gru(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_outputs * CONFIG_T::
     }
 }
 
-template <class data_T, class data2_T, class res_T, typename CONFIG_T>
-void gru(data_T data[CONFIG_T::n_in], data2_T h[CONFIG_T::n_units], res_T res[CONFIG_T::n_outputs * CONFIG_T::n_units],
+template <class data_T, class h_T, class res_T, typename CONFIG_T>
+void gru(data_T data[CONFIG_T::n_in], h_T h[CONFIG_T::n_units], res_T res[CONFIG_T::n_outputs * CONFIG_T::n_units],
          const typename CONFIG_T::weight_t weights[3 * CONFIG_T::n_units * CONFIG_T::n_in],
          const typename CONFIG_T::weight_t recurrent_weights[3 * CONFIG_T::n_units * CONFIG_T::n_units],
          const typename CONFIG_T::bias_t bias[3 * CONFIG_T::n_units],
@@ -466,16 +466,16 @@ INIT_LOOP:
     }
 }
 
-template <class data_T, class data2_T, class res_T, typename CONFIG_T>
-void simple_rnn_pytorch(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], data2_T hin[CONFIG_T::n_out],
+template <class data_T, class h_T, class res_T, typename CONFIG_T>
+void simple_rnn_pytorch(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], h_T hin[CONFIG_T::n_out],
                         res_T res[CONFIG_T::n_outputs * CONFIG_T::n_out],
                         const typename CONFIG_T::weight_t kernel[CONFIG_T::n_in * CONFIG_T::n_out],
                         const typename CONFIG_T::weight_t rec_kernel[CONFIG_T::n_out * CONFIG_T::n_out],
                         const typename CONFIG_T::bias_t bias[CONFIG_T::n_out],
                         const typename CONFIG_T::bias_t rec_bias[CONFIG_T::n_out]) {
-    data2_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
-    data2_T hidden_state_temp[CONFIG_T::n_out] hls_register;
-    data2_T h[CONFIG_T::n_out] hls_register;
+    h_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
+    h_T hidden_state_temp[CONFIG_T::n_out] hls_register;
+    h_T h[CONFIG_T::n_out] hls_register;
     data_T in[CONFIG_T::n_in] hls_register;
 
 // Set initially hidden state (output) to zero
@@ -790,9 +790,9 @@ INIT_LOOP:
     }
 }
 
-template <class data_T, class data2_T, class data3_T, class res_T, class CONFIG_T>
-void lstm(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], data2_T hidden_state_initial[CONFIG_T::n_out],
-          data3_T cell_state_initial[CONFIG_T::n_out], res_T res[CONFIG_T::n_outputs * CONFIG_T::n_out],
+template <class data_T, class h_T, class s_T, class res_T, class CONFIG_T>
+void lstm(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], h_T hidden_state_initial[CONFIG_T::n_out],
+          s_T cell_state_initial[CONFIG_T::n_out], res_T res[CONFIG_T::n_outputs * CONFIG_T::n_out],
           const typename CONFIG_T::weight_t WI[CONFIG_T::n_in * CONFIG_T::n_out],
           const typename CONFIG_T::weight_t WF[CONFIG_T::n_in * CONFIG_T::n_out],
           const typename CONFIG_T::weight_t WC[CONFIG_T::n_in * CONFIG_T::n_out],
@@ -803,12 +803,12 @@ void lstm(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], data2_T hidden_st
           const typename CONFIG_T::weight_t RWO[CONFIG_T::n_out * CONFIG_T::n_out],
           const typename CONFIG_T::bias_t BI[CONFIG_T::n_out], const typename CONFIG_T::bias_t BF[CONFIG_T::n_out],
           const typename CONFIG_T::bias_t BC[CONFIG_T::n_out], const typename CONFIG_T::bias_t BO[CONFIG_T::n_out]) {
-    data2_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
-    data2_T hidden_state_temp[CONFIG_T::n_out] hls_register;
-    data3_T cell_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
-    data3_T cell_state_temp[CONFIG_T::n_out] hls_register;
-    data2_T h[CONFIG_T::n_out] hls_register;
-    data3_T c[CONFIG_T::n_out] hls_register;
+    h_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
+    h_T hidden_state_temp[CONFIG_T::n_out] hls_register;
+    s_T cell_state[CONFIG_T::n_out][CONFIG_T::n_timesteps + 1] hls_register;
+    s_T cell_state_temp[CONFIG_T::n_out] hls_register;
+    h_T h[CONFIG_T::n_out] hls_register;
+    s_T c[CONFIG_T::n_out] hls_register;
     data_T in[CONFIG_T::n_in] hls_register;
 
 // Set initially hidden state (output) to zero

@@ -234,9 +234,9 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CO
         }
 }
 
-template <class data_T, class data2_T, class data3_T, class res_T, typename CONFIG_T>
-void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], data2_T h_newstate[CONFIG_T::n_state],
-                data3_T s_newstate[CONFIG_T::n_state], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
+template <class data_T, class h_T, class s_T, class res_T, typename CONFIG_T>
+void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_newstate[CONFIG_T::n_state],
+                s_T s_newstate[CONFIG_T::n_state], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
                 typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
                 typename CONFIG_T::weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
@@ -560,8 +560,8 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CON
         }
 }
 
-template <class data_T, class data2_T, class res_T, typename CONFIG_T>
-void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], data2_T h_state[CONFIG_T::n_state],
+template <class data_T, class h_T, class res_T, typename CONFIG_T>
+void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_state[CONFIG_T::n_state],
                res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
                typename CONFIG_T::weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
