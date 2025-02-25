@@ -1,6 +1,6 @@
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, pytorch_handler
 
-concat_layers = ['cat', 'concat', 'concatenate']
+concat_layers = ['cat', 'concat', 'concatenate', 'QuantCat']
 
 
 @pytorch_handler(*concat_layers)
@@ -24,6 +24,12 @@ def parse_concat_layer(operation, layer_name, input_names, input_shapes, node, c
 
     output_shape = input_shapes[0][:]
     output_shape[layer['axis']] += input_shapes[1][layer['axis']]
+
+    if "Quant" in layer_name:
+        if class_object.input_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
+        if class_object.output_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True)
 
     return layer, output_shape
 

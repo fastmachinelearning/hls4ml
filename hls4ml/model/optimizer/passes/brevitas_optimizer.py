@@ -42,7 +42,6 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
 
             attributes = {}
 
-            input = node.inputs[0]
             # Other attributes
             attributes['narrow'] = node.attributes['input_quantization']['narrow']
             attributes['rounding_mode'] = node.attributes['input_quantization']['rounding_mode']
@@ -51,8 +50,12 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
             attributes['zeropt'] = node.attributes['input_quantization']['zeropoint']
             attributes['scale'] = np.array([node.attributes['input_quantization']['scale']])
 
-            quant_node = model.make_node('Quant', f'quant_input_for_{node.get_attr("name")}', attributes, [input])
-            quant_node.set_attr('name', f'quant_input_for_{node.get_attr("name")}')
+            for i, input in enumerate(node.inputs):
+
+                quant_node = model.make_node(
+                    'Quant', f'quant_input_for_{node.get_attr("name")}_input_{i}', attributes, [input]
+                )
+                quant_node.set_attr('name', f'quant_input_for_{node.get_attr("name")}')
 
             model.insert_node(quant_node)
 

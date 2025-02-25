@@ -217,3 +217,46 @@ def test_quantconv2d(backend, io_type):
         hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.05)
+
+
+# QuantCat seems to be broken in brevitas itself, disable this test for the moment.
+# class QuantModelConcacenate(Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.cat = qnn.QuantCat(
+#             input_quant=Int8ActPerTensorFixedPoint, output_quant=Int8ActPerTensorFixedPoint
+#         )
+
+#     def forward(self, x, y, dim):
+#         out = self.cat([x,y], dim=dim)
+#         return out
+
+
+# @pytest.mark.parametrize('backend', ['Vivado'])
+# @pytest.mark.parametrize('io_type', ['io_parallel'])
+# @pytest.mark.parametrize('dim', [1, 2])
+# def test_concatenate2d(dim, io_type, backend):
+#     input_shape = (10, 3)
+
+
+#     x = torch.randn(input_shape)
+#     y = torch.randn(input_shape)
+
+#     model = QuantModelConcacenate()
+#     pytorch_prediction = model(x,y,dim).detach().numpy()
+#     config = config_from_pytorch_model(model, input_shape=[(None, input_shape[0], input_shape[1]),
+#       (None, input_shape[0], input_shape[1])])
+#     output_dir = str(test_root_path / f'hls4mlprj_brevitas_cat_{backend}_{io_type}_{dim}')
+
+#     hls_model = convert_from_pytorch_model(
+#         model,
+#         hls_config=config,
+#         output_dir=output_dir,
+#         backend=backend,
+#         io_type=io_type,
+#     )
+#     hls_model.compile()
+
+#     hls_prediction = np.reshape(hls_model.predict([x.detach().numpy(), y.detach().numpy()]), pytorch_prediction.shape)
+
+#     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.05)
