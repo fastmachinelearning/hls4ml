@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 #define NUM_ITERATIONS 100
     auto selector = sycl::ext::intel::fpga_selector_v;
 #else // #if FPGA_EMULATOR
-#define NUM_ITERATIONS 100
+#define NUM_ITERATIONS 10
     auto selector = sycl::ext::intel::fpga_emulator_selector_v;
 #endif
 
@@ -124,83 +124,90 @@ int main(int argc, char **argv) {
 
     // hls-fpga-machine-learning insert runtime contant
 
+    try {
 #if defined(IS_BSP)
-    // Allocate host memory if BSP is in use.
-    float *vals = sycl::malloc_host<float>(kInputSz, q);
-    if (vals == nullptr) {
-        std::cerr << "ERROR: host allocation failed for input\n";
-        fout.close();
-        return 1;
-    }
-    float *outputs = sycl::malloc_host<float>(kOutputSz, q);
-    if (output == nullptr) {
-        std::cerr << "ERROR: host allocation failed for output\n";
-        fout.close();
-        return 1;
-    }    
+        // Allocate host memory if BSP is in use.
+        float *vals = sycl::malloc_host<float>(kInputSz, q);
+        if (vals == nullptr) {
+            std::cerr << "ERROR: host allocation failed for input\n";
+            fout.close();
+            return 1;
+        }
+        float *outputs = sycl::malloc_host<float>(kOutputSz, q);
+        if (outputs == nullptr) {
+            std::cerr << "ERROR: host allocation failed for output\n";
+            fout.close();
+            return 1;
+        }    
 #else
-    float *vals = new float[kInputSz];
-    float *outputs = new float[kOutputSz];
+        float *vals = sycl::malloc_shared<float>(kInputSz, q, sycl::property_list{buffer_location(nnet::kInputBufferLocation)});
+        float *outputs = sycl::malloc_shared<float>(kOutputSz, q, sycl::property_list{buffer_location(nnet::kOutputBufferLocation)});
 #endif
 
-    if (file_valid) {
-        // Start always-run streaming kernel here, instead of inside a loop.
-        q.single_task(MyProject{});
+        if (file_valid) {
+            // Start always-run streaming kernel here, instead of inside a loop.
+            q.single_task(MyProject{});
 
-        // hls-fpga-machine-learning insert data
+            // hls-fpga-machine-learning insert data
 
-        // hls-fpga-machine-learning convert output
+            // hls-fpga-machine-learning convert output
 
-        // Print output from kernel and from prediction file.
-        for (int i = 0; i < num_iterations; i++) {
-            for (int j = 0; j < kOutLayerSize; j++) {
-                fout << outputs[i * kOutLayerSize + j] << " ";
-            }
-            fout << std::endl;
-            if (i % CHECKPOINT == 0) {
-                std::cout << "Predictions" << std::endl;
-                // hls-fpga-machine-learning insert predictions
-                for (auto predval : predictions[i]) {
-                    std::cout << predval << " ";
+            // Print output from kernel and from prediction file.
+            for (int i = 0; i < num_iterations; i++) {
+                for (int j = 0; j < kOutLayerSize; j++) {
+                    fout << outputs[i * kOutLayerSize + j] << " ";
                 }
-                std::cout << std::endl;
-                std::cout << "Quantized predictions" << std::endl;
-                // hls-fpga-machine-learning insert quantized
+                fout << std::endl;
+                if (i % CHECKPOINT == 0) {
+                    std::cout << "Predictions" << std::endl;
+                    // hls-fpga-machine-learning insert predictions
+                    for (auto predval : predictions[i]) {
+                        std::cout << predval << " ";
+                    }
+                    std::cout << std::endl;
+                    std::cout << "Quantized predictions" << std::endl;
+                    // hls-fpga-machine-learning insert quantized
+                    for (int j = 0; j < kOutLayerSize; j++) {
+                        std::cout << outputs[i * kOutLayerSize + j] << " ";
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        } else {
+            std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations
+                    << " invocations." << std::endl;
+            q.single_task(MyProject{});
+            // hls-fpga-machine-learning insert top-level-function
+            // hls-fpga-machine-learning insert zero
+            // hls-fpga-machine-learning convert output
+            for (int i = 0; i < num_iterations; i++) {
                 for (int j = 0; j < kOutLayerSize; j++) {
                     std::cout << outputs[i * kOutLayerSize + j] << " ";
+                    fout << outputs[i * kOutLayerSize + j] << " ";
                 }
                 std::cout << std::endl;
+                fout << std::endl;
             }
         }
-    } else {
-        std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations
-                  << " invocations." << std::endl;
+        sycl::free(vals, q);
+        sycl::free(outputs, q);
+        fout.close();
+        std::cout << "INFO: Saved inference results to file: " << RESULTS_LOG << std::endl;
+    } catch (sycl::exception const &e) {
+        // Catches exceptions in the host code.
+        std::cerr << "Caught a SYCL host exception:\n"
+                  << e.what() << "\n";
 
-        // hls-fpga-machine-learning insert top-level-function
-
-        // hls-fpga-machine-learning insert zero
-        q.single_task(MyProject{});
-        // hls-fpga-machine-learning convert output
-        for (int i = 0; i < num_iterations; i++) {
-            for (int j = 0; j < kOutLayerSize; j++) {
-                std::cout << outputs[i * kOutLayerSize + j] << " ";
-                fout << outputs[i * kOutLayerSize + j] << " ";
-            }
-            std::cout << std::endl;
-            fout << std::endl;
+        // Most likely the runtime couldn't find FPGA hardware!
+        if (e.code().value() == CL_DEVICE_NOT_FOUND)
+        {
+            std::cerr << "If you are targeting an FPGA, please ensure that your "
+                         "system has a correctly configured FPGA board.\n";
+            std::cerr << "Run sys_check in the oneAPI root directory to verify.\n";
+            std::cerr << "If you are targeting the FPGA emulator, compile with "
+                         "-DFPGA_EMULATOR.\n";
         }
+        std::terminate();
     }
-
-    // Free up resources.
-#if defined(IS_BSP)
-    free(vals);
-    free(outputs);
-#else
-    delete[] vals;
-    delete[] outputs;
-#endif
-    fout.close();
-    std::cout << "INFO: Saved inference results to file: " << RESULTS_LOG << std::endl;
-
     return 0;
 }

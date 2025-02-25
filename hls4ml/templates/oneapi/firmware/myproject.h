@@ -37,7 +37,7 @@ struct DMA_convert_data {
     sycl::ext::oneapi::experimental::annotated_arg<src_T *, 
       decltype(sycl::ext::oneapi::experimental::properties{
           sycl::ext::intel::experimental::latency<0>,
-          sycl::ext::intel::experimental::dwidth<8>,
+          sycl::ext::intel::experimental::dwidth<16>,
           sycl::ext::intel::experimental::buffer_location<kInputBufferLocation>,
           sycl::ext::intel::experimental::read_write_mode_read,
           sycl::ext::intel::experimental::wait_request_requested})>
@@ -91,7 +91,7 @@ struct DMA_convert_data_back {
     sycl::ext::oneapi::experimental::annotated_arg<dst_T *, 
       decltype(sycl::ext::oneapi::experimental::properties{
           sycl::ext::intel::experimental::latency<0>,
-          sycl::ext::intel::experimental::dwidth<8>,
+          sycl::ext::intel::experimental::dwidth<16>,
           sycl::ext::intel::experimental::buffer_location<kOutputBufferLocation>,
           sycl::ext::intel::experimental::read_write_mode_write,
           sycl::ext::intel::experimental::wait_request_requested})>

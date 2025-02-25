@@ -205,6 +205,8 @@ class OneAPIWriter(Writer):
                             newline += indent * 2 + f'typename nnet::ExtractPipeType<{out.pipe_name}>::value_type {out_beat};\n'
                             newline += indent * 2 + f'{out_beat}.data = {out.name};\n'
                             newline += indent * 2 + f'{out.pipe_name}::write({out_beat});\n'
+                        newline += indent * 2 + '// stops the kernel when the last input seen.\n'
+                        newline += indent * 2 + f'keep_going = !{model_inputs[0].name}_beat.eop;\n'
                         newline += f"{indent}}}\n"
                     # don't need to add anything in io_stream
 

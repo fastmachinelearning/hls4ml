@@ -170,11 +170,12 @@ class OneAPIInterfaceVariableDefinition(VariableDefinition):
         else:
             return f'{self.type.name} {self.name}{name_suffix}'
 
-    def declare_cpp(self, pipe_min_size=0, indent=''):
+    # Updated pipe min size to be 32 for simulation.
+    def declare_cpp(self, pipe_min_size=32, indent=''):
         # Updated to use streaming beat for restartable streaming kernel.
         # Streaming beat is a wrapper type of the actual type with sideband control signals.
         # Syntax: using BeatT = sycl::ext::intel::experimental::StreamingBeat<DataT, eop, empty>;
-        streaming_beat_t = f"{self.type.name}BeatT"
+        streaming_beat_t = f"{self.pipe_name}BeatT"
         lines = (
             f"{indent}class {self.pipe_id};\n"
             f"{indent}using {streaming_beat_t} = "
