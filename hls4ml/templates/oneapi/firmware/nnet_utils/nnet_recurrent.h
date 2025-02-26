@@ -89,6 +89,7 @@ struct gru_config {
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
+    static const bool pytorch_order = false;
     static const bool store_weights_in_bram = false;
 
     // Activation
@@ -137,7 +138,10 @@ void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t &weight
     [[intel::fpga_register]] h_activ_array_T hadamard_r_h;
     #pragma unroll recurrent_unroll_factor
     for (int i = 0; i < (CONFIG_T::n_units); i++) {
-        hadamard_r_h[i] = z_r_act[i + CONFIG_T::n_units] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
+        if (CONFIG_T::pytorch_order)
+            hadamard_r_h[i] = z_r_act[i] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
+        else
+            hadamard_r_h[i] = z_r_act[i + CONFIG_T::n_units] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
     }
 
     // The candidate state; X * W_{hx} + hadmard(r(t), h_(t-1)) * W_{hh} + b_{h}
@@ -156,7 +160,11 @@ void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t &weight
     // Update state
     #pragma unroll recurrent_unroll_factor
     for (int i = 0; i < (CONFIG_T::n_units); i++) {
-        h[i] = static_cast<typename h_T::value_type>(h_cand_act[i] * (1 - z_r_act[i]) + h[i] * z_r_act[i]);
+        if (CONFIG_T::pytorch_order)
+            h[i] = static_cast<typename h_T::value_type>(h_cand_act[i] * (1 - z_r_act[i + CONFIG_T::n_units]) +
+                                                         h[i] * z_r_act[i + CONFIG_T::n_units]);
+        else
+            h[i] = static_cast<typename h_T::value_type>(h_cand_act[i] * (1 - z_r_act[i]) + h[i] * z_r_act[i]);
     }
 }
 
@@ -165,7 +173,7 @@ void gru(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weig
          const typename CONFIG_T::recurrent_weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
          const typename CONFIG_T::recurrent_bias_t &recurrent_bias) {
 
-    using h_T = array<typename res_T::value_type, CONFIG_T::n_units>;
+    using h_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_units>;
     [[intel::fpga_register]] data_T x;
     [[intel::fpga_register]] h_T h;
 
@@ -200,11 +208,46 @@ void gru(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weig
     }
 }
 
+template <class data_T, class h_T, class res_T, typename CONFIG_T>
+void gru_init_state(const data_T &data, const h_T &hin, res_T &res, const typename CONFIG_T::weight_t &weights,
+                    const typename CONFIG_T::recurrent_weight_t &recurrent_weights, const typename CONFIG_T::bias_t &bias,
+                    const typename CONFIG_T::recurrent_bias_t &recurrent_bias) {
+
+    [[intel::fpga_register]] data_T x;
+
+    [[intel::fpga_register]] h_T h = hin;
+
+    // Loop depedency - cannot pipeline
+    [[intel::disable_loop_pipelining]] for (int t = 0; t < CONFIG_T::n_timesteps; t++) {
+        // Get data at current time step
+        #pragma unroll
+        for (int j = 0; j < CONFIG_T::n_in; j++) {
+            x[j] = data[j + t * CONFIG_T::n_in];
+        }
+
+        nnet::gru_cell<data_T, h_T, CONFIG_T>(x, h, weights, recurrent_weights, bias, recurrent_bias);
+
+        if (CONFIG_T::return_sequences) {
+            #pragma unroll
+            for (int i = 0; i < CONFIG_T::n_units; i++) {
+                res[CONFIG_T::n_units * t + i] = h[i];
+            }
+        }
+    }
+
+    if (!CONFIG_T::return_sequences) {
+        #pragma unroll
+        for (int i = 0; i < (CONFIG_T::n_units); i++) {
+            res[i] = h[i];
+        }
+    }
+}
+
 //----------------------
 // SimpleRNN
 //----------------------
 
-struct simpleRNN_config {
+struct simple_rnn_config {
     // Internal data type definitions
     typedef float weight_t;
     typedef float bias_t;
@@ -259,7 +302,7 @@ void simple_rnn(const data_T &data, res_T &res, const typename CONFIG_T::weight_
                 const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias) {
 
     using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
-    using h_T = array<typename res_T::value_type, CONFIG_T::n_out>;
+    using h_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_out>;
 
     [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
     [[intel::fpga_register]] h_T hidden_state_temp;
@@ -289,6 +332,168 @@ INIT_LOOP:
 
         // Do SimpleRNN
         simple_rnn_cell<in_T, h_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias);
+
+        // Write result
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state[i + 1][x] = h[x];
+        }
+    }
+
+    if (CONFIG_T::return_sequences == 0) {
+        // Output when return_sequences is false
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            res[x] = hidden_state[CONFIG_T::n_timesteps][x];
+        }
+    } else {
+        // Output when return_sequences is true
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
+            #pragma unroll
+            for (int h = 0; h < CONFIG_T::n_out; h++) {
+                res[x * CONFIG_T::n_out + h] = hidden_state[x + 1][h];
+            }
+        }
+    }
+}
+
+//----------------------
+// SimpleRNN with pytorch biases
+//----------------------
+
+template <class in_T, class h_T, typename CONFIG_T>
+void simple_rnn_pytorch_cell(const in_T &inputs, h_T &hidden_state, h_T &hidden_state_o,
+                             const typename CONFIG_T::weight_t &kernel,
+                             const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias,
+                             const typename CONFIG_T::recurrent_bias_t rec_bias) {
+
+    using accum_array_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_out>;
+
+    // Weight multiplication
+    [[intel::fpga_register]] accum_array_T afterW;
+    multiply_W<in_T, accum_array_T, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(inputs, afterW, kernel);
+
+    // Bias addition
+    [[intel::fpga_register]] accum_array_T afterBias;
+    add_bias<accum_array_T, accum_array_T, typename CONFIG_T::bias_t, CONFIG_T::n_out>(afterW, afterBias, bias);
+
+    // Hidden state
+    [[intel::fpga_register]] accum_array_T hiddenCand;
+    multiply_U<h_T, accum_array_T, typename CONFIG_T::recurrent_weight_t, CONFIG_T::n_out>(hidden_state, hiddenCand,
+                                                                                           rec_kernel);
+
+    // Hidden state bias addition
+    [[intel::fpga_register]] accum_array_T hiddenBias;
+    add_bias<accum_array_T, accum_array_T, typename CONFIG_T::recurrent_bias_t, CONFIG_T::n_out>(hiddenCand, hiddenBias,
+                                                                                                 rec_bias);
+
+    // Vector addition
+    [[intel::fpga_register]] accum_array_T afterAdd;
+    add_vectors<accum_array_T, accum_array_T, accum_array_T, CONFIG_T::n_out>(afterBias, hiddenBias, afterAdd);
+
+    // Activation
+    CONFIG_T::template activation<accum_array_T, h_T, typename CONFIG_T::ACT_CONFIG_T>::activation(afterAdd, hidden_state_o);
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void simple_rnn_pytorch(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &kernel,
+                        const typename CONFIG_T::recurrent_weight_t &rec_kernel, const typename CONFIG_T::bias_t &bias,
+                        const typename CONFIG_T::recurrent_bias_t &rec_bias) {
+
+    using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
+    using h_T = array<typename res_T::value_type, CONFIG_T::n_out>;
+
+    [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
+    [[intel::fpga_register]] h_T hidden_state_temp;
+    [[intel::fpga_register]] h_T h;
+    [[intel::fpga_register]] in_T in;
+
+// Set initially hidden state (output) to zero
+INIT_LOOP:
+    #pragma unroll
+    for (int x = 0; x < CONFIG_T::n_out; x++) {
+        hidden_state[0][x] = 0;
+    }
+
+    [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
+
+        // Data at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_in; x++) {
+            in[x] = data[x + i * CONFIG_T::n_in];
+        }
+
+        // Hidden state at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state_temp[x] = hidden_state[i][x];
+        }
+
+        // Do SimpleRNN
+        simple_rnn_pytorch_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias, rec_bias);
+
+        // Write result
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state[i + 1][x] = h[x];
+        }
+    }
+
+    if (CONFIG_T::return_sequences == 0) {
+        // Output when return_sequences is false
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            res[x] = hidden_state[CONFIG_T::n_timesteps][x];
+        }
+    } else {
+        // Output when return_sequences is true
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
+            #pragma unroll
+            for (int h = 0; h < CONFIG_T::n_out; h++) {
+                res[x * CONFIG_T::n_out + h] = hidden_state[x + 1][h];
+            }
+        }
+    }
+}
+
+template <class data_T, class h_T, class res_T, typename CONFIG_T>
+void simple_rnn_pytorch_init_state(const data_T &data, const h_T &hin, res_T &res, const typename CONFIG_T::weight_t &kernel,
+                                   const typename CONFIG_T::recurrent_weight_t &rec_kernel,
+                                   const typename CONFIG_T::bias_t &bias,
+                                   const typename CONFIG_T::recurrent_bias_t &rec_bias) {
+
+    using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
+
+    [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
+    [[intel::fpga_register]] h_T hidden_state_temp;
+    [[intel::fpga_register]] h_T h;
+    [[intel::fpga_register]] in_T in;
+
+// Set initially hidden state (output) to zero
+INIT_LOOP:
+    #pragma unroll
+    for (int x = 0; x < CONFIG_T::n_out; x++) {
+        hidden_state[0][x] = hin[x];
+    }
+
+    [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
+
+        // Data at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_in; x++) {
+            in[x] = data[x + i * CONFIG_T::n_in];
+        }
+
+        // Hidden state at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state_temp[x] = hidden_state[i][x];
+        }
+
+        // Do SimpleRNN
+        simple_rnn_pytorch_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias, rec_bias);
 
         // Write result
         #pragma unroll
@@ -500,7 +705,7 @@ void lstm(const data_T &data, res_T &res, const typename CONFIG_T::weight_i_t &W
     // Note:  currently this does not support recurrent bias
 
     using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
-    using h_T = array<typename res_T::value_type, CONFIG_T::n_out>;
+    using h_T = array<typename CONFIG_T::accum_t, CONFIG_T::n_out>;
 
     [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
     [[intel::fpga_register]] h_T hidden_state_temp;
@@ -516,6 +721,78 @@ INIT_LOOP:
     for (int x = 0; x < CONFIG_T::n_out; x++) {
         hidden_state[0][x] = 0;
         cell_state[0][x] = 0;
+    }
+
+    // Input dimension
+    [[intel::disable_loop_pipelining]] for (int i = 0; i < CONFIG_T::n_timesteps; i++) {
+        // Data at current time step
+        for (int x = 0; x < CONFIG_T::n_in; x++) {
+            in[x] = data[x + i * CONFIG_T::n_in];
+        }
+
+        // Hidden state at current time step
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state_temp[x] = hidden_state[i][x];
+            cell_state_temp[x] = cell_state[i][x];
+        }
+
+        // Do LSTM
+        lstm_cell<in_T, h_T, CONFIG_T>(in, hidden_state_temp, h, cell_state_temp, c, WI, WF, WC, WO, RWI, RWF, RWC, RWO, BI,
+                                       BF, BC, BO);
+
+        // Write result
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            hidden_state[i + 1][x] = h[x];
+            cell_state[i + 1][x] = c[x];
+        }
+    }
+
+    if (CONFIG_T::return_sequences == 0) {
+        // Output when return_sequences is false
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_out; x++) {
+            res[x] = hidden_state[CONFIG_T::n_timesteps][x];
+        }
+    } else {
+        // Output when return_sequences is true
+        #pragma unroll
+        for (int x = 0; x < CONFIG_T::n_timesteps; x++) {
+            for (int h = 0; h < CONFIG_T::n_out; h++) {
+                res[x * CONFIG_T::n_out + h] = hidden_state[x + 1][h];
+            }
+        }
+    }
+}
+
+template <class data_T, class h_T, class hc_T, class res_T, class CONFIG_T>
+void lstm_init_state(const data_T &data, const h_T &hidden_state_initial, const hc_T &cell_state_initial, res_T &res,
+                     const typename CONFIG_T::weight_i_t &WI, const typename CONFIG_T::weight_f_t &WF,
+                     const typename CONFIG_T::weight_c_t &WC, const typename CONFIG_T::weight_o_t &WO,
+                     const typename CONFIG_T::recurrent_weight_i_t &RWI, const typename CONFIG_T::recurrent_weight_f_t &RWF,
+                     const typename CONFIG_T::recurrent_weight_c_t &RWC, const typename CONFIG_T::recurrent_weight_o_t &RWO,
+                     const typename CONFIG_T::bias_i_t &BI, const typename CONFIG_T::bias_f_t &BF,
+                     const typename CONFIG_T::bias_c_t &BC, const typename CONFIG_T::bias_o_t &BO) {
+
+    // Note:  currently this does not support recurrent bias
+
+    using in_T = array<typename data_T::value_type, CONFIG_T::n_in>;
+
+    [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
+    [[intel::fpga_register]] h_T hidden_state_temp;
+    [[intel::fpga_register]] hc_T cell_state[CONFIG_T::n_timesteps + 1];
+    [[intel::fpga_register]] hc_T cell_state_temp; // should this be updated to a differnt type
+    [[intel::fpga_register]] h_T h;
+    [[intel::fpga_register]] hc_T c;
+    [[intel::fpga_register]] in_T in;
+
+// Set initially hidden state (output) to zero
+INIT_LOOP:
+    #pragma unroll
+    for (int x = 0; x < CONFIG_T::n_out; x++) {
+        hidden_state[0][x] = hidden_state_initial[x];
+        cell_state[0][x] = cell_state_initial[x];
     }
 
     // Input dimension
