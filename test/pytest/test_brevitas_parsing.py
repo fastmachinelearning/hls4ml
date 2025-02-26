@@ -8,6 +8,7 @@ from brevitas.quant import Int8ActPerTensorFixedPoint, Int8WeightPerTensorFixedP
 from torch import nn
 from torch.nn import Module
 
+import hls4ml
 from hls4ml.converters import convert_from_pytorch_model
 from hls4ml.utils.config import config_from_pytorch_model
 
@@ -219,44 +220,98 @@ def test_quantconv2d(backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.05)
 
 
-# QuantCat seems to be broken in brevitas itself, disable this test for the moment.
-# class QuantModelConcacenate(Module):
-#     def __init__(self):
-#         super().__init__()
-#         self.cat = qnn.QuantCat(
-#             input_quant=Int8ActPerTensorFixedPoint, output_quant=Int8ActPerTensorFixedPoint
-#         )
+in_height = 6
+in_width = 8
+in_feat = 4
 
-#     def forward(self, x, y, dim):
-#         out = self.cat([x,y], dim=dim)
-#         return out
+size = 2
+atol = 5e-3
 
 
-# @pytest.mark.parametrize('backend', ['Vivado'])
-# @pytest.mark.parametrize('io_type', ['io_parallel'])
-# @pytest.mark.parametrize('dim', [1, 2])
-# def test_concatenate2d(dim, io_type, backend):
-#     input_shape = (10, 3)
+@pytest.fixture(scope='module')
+def data_1d():
+    X = np.random.rand(100, in_feat, in_width)
+    return X
 
 
-#     x = torch.randn(input_shape)
-#     y = torch.randn(input_shape)
+@pytest.fixture(scope='module')
+def data_2d():
+    X = np.random.rand(100, in_feat, in_height, in_width)
+    return X
 
-#     model = QuantModelConcacenate()
-#     pytorch_prediction = model(x,y,dim).detach().numpy()
-#     config = config_from_pytorch_model(model, input_shape=[(None, input_shape[0], input_shape[1]),
-#       (None, input_shape[0], input_shape[1])])
-#     output_dir = str(test_root_path / f'hls4mlprj_brevitas_cat_{backend}_{io_type}_{dim}')
 
-#     hls_model = convert_from_pytorch_model(
-#         model,
-#         hls_config=config,
-#         output_dir=output_dir,
-#         backend=backend,
-#         io_type=io_type,
-#     )
-#     hls_model.compile()
+class QuantUpsample1DModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.identity = qnn.QuantIdentity(act_quant=Int8ActPerTensorFixedPoint, return_quant_tensor=True)
+        self.upsample = qnn.QuantUpsample(scale_factor=2)
+        self.relu = nn.ReLU()
 
-#     hls_prediction = np.reshape(hls_model.predict([x.detach().numpy(), y.detach().numpy()]), pytorch_prediction.shape)
+    def forward(self, x):
+        return self.relu(self.upsample(self.identity(x)))
 
-#     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.05)
+
+class QuantUpsample2DModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # this scale_factor tests proper output shape calculation with fractional scaling and parsing per-axis scales
+        self.identity = qnn.QuantIdentity(act_quant=Int8ActPerTensorFixedPoint, return_quant_tensor=True)
+        self.upsample = qnn.QuantUpsamplingNearest2d(scale_factor=(1, 2.4))  # Would also work with Upsample(mode='nearest')
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.upsample(self.identity(x)))
+
+
+@pytest.mark.parametrize('io_type', ['io_parallel'])  # Quant upsampling layers currently not supported in io_stream
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+def test_pytorch_upsampling1d(data_1d, io_type, backend):
+    model = QuantUpsample1DModel()
+
+    config = hls4ml.utils.config_from_pytorch_model(
+        model,
+        (None, in_feat, in_width),
+        default_precision='ap_fixed<16,6>',
+        channels_last_conversion="internal",
+        transpose_outputs=False,
+    )
+    odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_1d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    data_1d_t = np.ascontiguousarray(data_1d.transpose([0, 2, 1]))
+
+    pytorch_prediction = model(torch.Tensor(data_1d)).value.detach().numpy()
+    hls_prediction = hls_model.predict(data_1d_t)
+
+    pred_shape = list(pytorch_prediction.shape)
+    pred_shape.append(pred_shape.pop(1))  # Transpose shape to channels_last
+    hls_prediction = hls_prediction.reshape(pred_shape).transpose([0, 2, 1])  # Transpose back
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+
+@pytest.mark.parametrize('io_type', ['io_parallel'])  # Fractional scaling doesn't work with io_stream
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+def test_pytorch_upsampling2d(data_2d, io_type, backend):
+    model = QuantUpsample2DModel()
+
+    config = hls4ml.utils.config_from_pytorch_model(
+        model,
+        (in_feat, in_height, in_width),
+        default_precision='ap_fixed<16,6>',
+        channels_last_conversion="full",  # With conversion to channels_last
+        transpose_outputs=True,
+    )
+    odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_2d_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    pytorch_prediction = model(torch.Tensor(data_2d)).value.detach().numpy().flatten()
+    hls_prediction = hls_model.predict(data_2d).flatten()
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)

@@ -88,6 +88,7 @@ def addQuantizationParameters(layer, quant_object, quant_type, act=False):
         bit_width = int(quant_object.bit_width)
         signed = quant_object.signed
         scale = float(quant_object.scale)
+        print("scale: ", scale)
         zeropoint = float(quant_object.zero_point)
         if signed:
             narrow = True
@@ -98,6 +99,7 @@ def addQuantizationParameters(layer, quant_object, quant_type, act=False):
         bit_width = int(quant_object.bit_width())
         signed = quant_object.is_signed
         scale = float(quant_object.scale())
+        print("scale: ", scale)
         zeropoint = float(quant_object.zero_point())
         narrow = quant_object.is_narrow_range
         rounding_mode = quant_object.rounding_mode
@@ -251,6 +253,10 @@ def parse_pytorch_model(config, verbose=True):
 
             if pytorch_class not in supported_layers:
                 raise Exception(f'Unsupported layer {pytorch_class}')
+
+            if 'IOType' in config.keys():
+                if "QuantUpsampl" in pytorch_class and config['IOType'] == 'io_stream':
+                    raise Exception('Quant upsampling layers currently not supported with io_stream')
 
             if layer_counter != 0:
                 input_shapes = [output_shape]  # In case there are multiple inputs

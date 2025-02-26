@@ -88,7 +88,6 @@ class QuantToActivation(OptimizerPass):
 
     def match(self, node):
         # only matches after the other inputs are already folded
-
         is_match = (
             isinstance(node, Quant)
             and len(node.inputs) == 1
@@ -105,8 +104,8 @@ class QuantToActivation(OptimizerPass):
             scale_unit_or_po2 = (scale == np.ones_like(scale)).all()
             if not scale_unit_or_po2 and _ALSO_MATCH_PO2:
                 # This optimization only works if all scales are the same
-                if np.all(scale[0] == scale):
-                    mantissa, _ = np.frexp(scale[0])
+                if np.all(next(iter(scale.flat)) == scale):
+                    mantissa, _ = np.frexp(next(iter(scale.flat)))
                     scale_unit_or_po2 = mantissa == 0.5
 
             is_match = scale_unit_or_po2
@@ -125,7 +124,7 @@ class QuantToActivation(OptimizerPass):
         integer = bitwidth
         scale = node.get_attr('scale')
         if _ALSO_MATCH_PO2 and not (scale == np.ones_like(scale)).all():
-            _, exp = np.frexp(scale[0])
+            _, exp = np.frexp(next(iter(scale.flat)))
             integer = bitwidth + exp - 1
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
