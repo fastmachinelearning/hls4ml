@@ -32,7 +32,7 @@ def parse_quantidentity_layer(operation, layer_name, input_names, input_shapes, 
 
     layer['class_name'] = 'Quant'
     layer['name'] = layer_name
-    print(input_shapes)
+
     if class_object.act_quant.is_quant_enabled:
         layer['bitwidth'] = int(class_object.act_quant.bit_width())
         layer['signed'] = class_object.act_quant.is_signed

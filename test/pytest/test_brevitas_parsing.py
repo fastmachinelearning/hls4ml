@@ -46,13 +46,11 @@ class QuantModelConv1d(Module):
 class QuantModelLinear(Module):
     def __init__(self, weight_quant, input_quant):
         super().__init__()
-        self.conv1 = qnn.QuantLinear(
-            4, 4, bias=False, weight_quant=Int8WeightPerTensorFixedPoint, input_quant=Int8ActPerTensorFixedPoint
-        )
-        self.relu1 = qnn.QuantReLU(act_quant=Int8ActPerTensorFixedPoint)
+        self.lin1 = qnn.QuantLinear(4, 4, bias=False, weight_quant=quants[weight_quant], input_quant=quants[input_quant])
+        self.relu1 = qnn.QuantReLU(act_quant=quants[input_quant])
 
     def forward(self, x):
-        out = self.relu1(self.conv1(x))
+        out = self.relu1(self.lin1(x))
         return out
 
 
@@ -315,3 +313,43 @@ def test_pytorch_upsampling2d(data_2d, io_type, backend):
     hls_prediction = hls_model.predict(data_2d).flatten()
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+
+class QuantEltwiseAddModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.add = qnn.QuantEltwiseAdd(input_quant=Int8ActPerTensorFixedPoint, output_quant=Int8ActPerTensorFixedPoint)
+
+    def forward(self, x, y):
+        return self.add(x, y)
+
+
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+def test_brevitas_quanteltwiseadd(io_type, backend):
+    model = QuantEltwiseAddModel()
+
+    x = torch.rand(1, 4, 4)
+    y = torch.rand(1, 4, 4)
+
+    pytorch_prediction = model(torch.Tensor(x), torch.Tensor(y)).detach().numpy()
+
+    config = hls4ml.utils.config_from_pytorch_model(
+        model,
+        [(None, 4, 4), (None, 4, 4)],
+        default_precision='ap_fixed<16,6>',
+        channels_last_conversion="off",
+        transpose_outputs=False,
+    )
+    odir = str(test_root_path / f'hls4mlprj_brevitas_quanteltwiseadd_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict([x.detach().numpy(), y.detach().numpy()])
+
+    pred_shape = pytorch_prediction.shape
+    hls_prediction = hls_prediction.reshape(pred_shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=5e-2, atol=0.05)
