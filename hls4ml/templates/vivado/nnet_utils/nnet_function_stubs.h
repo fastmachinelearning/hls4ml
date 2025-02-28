@@ -37,6 +37,15 @@ template <class data_T, class res_T, typename CONFIG_T> class DenseKernel {
     }
 };
 
+template <class data_T, class res_T, typename CONFIG_T> class DepthwiseDenseKernel {
+  public:
+    static void dense(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+                      typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
+                      typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+        // To be implemented in subclasses
+    }
+};
+
 template <class data_T, class res_T, typename CONFIG_T> class Conv1DKernel {
   public:
     static void conv(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],

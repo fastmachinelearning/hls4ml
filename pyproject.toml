@@ -46,7 +46,7 @@ optional-dependencies.qkeras = [
   "tensorflow>=2.8,<=2.14.1",
   "tensorflow-model-optimization<=0.7.5",
 ]
-optional-dependencies.quartus_report = [ "calmjs-parse", "tabulate" ]
+optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.sr = [ "sympy" ]
 optional-dependencies.testing = [
   "calmjs-parse",

@@ -17,7 +17,7 @@ recr_mult_config_template_1 = """struct config{index} : nnet::dense_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     template<class data_T, class res_T, class CONFIG_T>
-    using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
+    using kernel = {dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -35,7 +35,7 @@ recr_mult_config_template_2 = """struct config{index} : nnet::dense_config {{
     typedef {recurrent_bias_t.name} bias_t;
     typedef {recurrent_weight_t.name} weight_t;
     template<class data_T, class res_T, class CONFIG_T>
-    using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
+    using kernel = {dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -87,6 +87,8 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
 }};\n"""
 
 recr_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
+recr_function_template_initial_states_lstm = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {input3_t}, {output_t}, {config}>({input}, {input2}, {input3}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
+recr_function_template_initial_states_gru = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {output_t}, {config}>({input}, {input2}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
 
 recr_include_list = ['nnet_utils/nnet_recurrent.h']
 
@@ -161,16 +163,18 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
 
+        namespace = params['namespace']
+
         if node.get_attr('strategy').lower() == 'latency':
-            mult_params1['dense_function'] = 'DenseLatency'
+            mult_params1['dense_function'] = 'nnet::DenseLatency'
         elif node.get_attr('strategy').lower() == 'resource':
             if int(mult_params1['reuse_factor']) <= int(mult_params1['n_in']):
-                mult_params1['dense_function'] = 'DenseResource_rf_leq_nin'
+                mult_params1['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
             else:
-                mult_params1['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+                mult_params1['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
-            mult_params1['dense_function'] = f'dense_resource_unrolled_{node.index}_1'
+            mult_params1['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}_1'
 
         if node.get_attr('return_sequences'):
             mult_params2['n_in'] = node.get_output_variable().shape[1]
@@ -187,15 +191,15 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params2['nonzeros'] = node.get_weights('recurrent_weight').nonzeros
 
         if node.get_attr('strategy').lower() == 'latency':
-            mult_params2['dense_function'] = 'DenseLatency'
+            mult_params2['dense_function'] = 'nnet::DenseLatency'
         elif node.get_attr('strategy').lower() == 'resource':
             if int(mult_params2['reuse_factor']) <= int(mult_params2['n_in']):
-                mult_params2['dense_function'] = 'DenseResource_rf_leq_nin'
+                mult_params2['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
             else:
-                mult_params2['dense_function'] = 'DenseResource_rf_gt_nin_rem0'
+                mult_params2['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
             # The 3rd case is never used
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
-            mult_params2['dense_function'] = f'dense_resource_unrolled_{node.index}_2'
+            mult_params2['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}_2'
 
         mult_config1 = self.mult1_template.format(**mult_params1)
         mult_config2 = self.mult2_template.format(**mult_params2)
@@ -206,10 +210,16 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
 class RecurrentFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__((LSTM, GRU), include_header=recr_include_list)
-        self.template = recr_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
+        if params['pass_initial_states'] == 'true':
+            params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
+            params['input2'] = node.get_input_variable(node.inputs[1]).name
+            if node.class_name == 'LSTM':
+                params['input3'] = node.get_input_variable(node.inputs[2]).name
+                params['input3_t'] = node.get_input_variable(node.inputs[2]).type.name
+
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
         params['wr'] = node.get_weights('recurrent_weight').name
@@ -218,4 +228,12 @@ class RecurrentFunctionTemplate(FunctionCallTemplate):
         params['recurrent_activation'] = node.get_attr('recurrent_activation')
         params['recr_type'] = node.class_name.lower()
 
-        return self.template.format(**params)
+        if params['pass_initial_states'] == 'true':
+            if node.class_name == 'LSTM':
+                template = recr_function_template_initial_states_lstm
+            else:
+                template = recr_function_template_initial_states_gru
+        else:
+            template = recr_function_template
+
+        return template.format(**params)
