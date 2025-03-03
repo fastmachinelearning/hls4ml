@@ -68,7 +68,7 @@ This allows modular design flows and easier debugging of large models.
 ``compile`` method
 ==================
 
-Compiles all the individual ``ModelGraph`` subgraphs within the ``MultiModelGraph``.
+Compiles all the individual ``ModelGraph`` subgraphs within the ``MultiModelGraph``. Also, compiles a chained bridge file with all the subgraphs linked together that can be used for the predict function.
 
 .. code-block:: python
 
@@ -97,7 +97,7 @@ The returned ``report`` contains data from each subgraph's build and, if stitchi
 ``predict`` method
 ==================
 
-Performs a forward pass through the chained sub-models using the C-simulation (``sim='csim'``). Data is automatically passed from one subgraph's output to the next subgraph's input. For large stitched designs, you can also leverage RTL simulation (``sim='rtl'``) to perform the forward pass at the register-transfer level. In this case, a Verilog testbench is dynamically generated and executed against the stitched IP design, providing behavioral simulation to accurately verify latency and output at the hardware level.
+Performs a forward pass through the chained bridge file using the C-simulation (``sim='csim'``). Data is automatically passed from one subgraph's output to the next subgraph's input. For large stitched designs, you can also leverage RTL simulation (``sim='rtl'``) to perform the forward pass at the register-transfer level. In this case, a Verilog testbench is dynamically generated and executed against the stitched IP design, providing behavioral simulation to accurately verify latency and output at the hardware level. Note that the input data for the RTL simulation must have a single batch dimension.
 
 .. code-block:: python
 
@@ -126,3 +126,12 @@ Summary
 --------------------------
 
 The ``MultiModelGraph`` class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility, parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.
+
+--------------------------
+Other Notes
+--------------------------
+
+* Branch Splitting Limitation: Splitting in the middle of a branched architecture (e.g., ResNet skip connections or multi-path networks) is currently unsupported. Also, each split subgraph must have a single input and a single output.
+* Handling Multiple NN Inputs & Outputs: The final NN output can support multiple output layers. However, for networks with multiple input layers, proper synchronization is required to drive inputs—especially for stream interfaces. A fork-join mechanism in the Verilog testbench can help manage input synchronization effectively.
+* RTL Simulation Issue: RTL simulation of stitched IPs with io_type='io_parallel' and a split at the flatten layer leads to improper simulation behavior and should be avoided.
+* Array Partitioning for Parallel I/O: For io_parallel interfaces, all IPs must use the 'partition' pragma instead of 'reshape'.
