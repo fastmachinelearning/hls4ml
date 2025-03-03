@@ -539,10 +539,10 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model_inputs:
-                    newline += '    ' + inp.definition_cpp() + ';\n'
-                    newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
+                    newline += indent + inp.definition_cpp() + ';\n'
+                    newline += indent + f'nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
-                    newline += '    ' + out.definition_cpp() + ';\n'
+                    newline += indent + out.definition_cpp() + ';\n'
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line

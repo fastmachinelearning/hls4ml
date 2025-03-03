@@ -33,6 +33,7 @@ class HLSCodePrinter(CXX11CodePrinter):
                 user_functions = settings.get('user_functions', {})
                 user_functions.update(lut_functions)
                 settings['user_functions'] = user_functions
+            settings['strict'] = False
 
             settings['strict'] = False
 
