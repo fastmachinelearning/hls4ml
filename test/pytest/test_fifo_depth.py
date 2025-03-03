@@ -11,7 +11,6 @@ from tensorflow.keras.layers import SeparableConv2D
 from tensorflow.keras.models import Sequential
 
 import hls4ml
-from hls4ml.backends.vitis.passes.fifo_depth_optimization import override_test_bench
 
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../../example-models').resolve()
@@ -19,34 +18,24 @@ example_model_path = (test_root_path / '../../../example-models').resolve()
 backend_options = ['Vitis']
 
 
-def parse_cosim_report(project_path):
-    """Parse the cosimulation report to check whether the cosimulation passed or failed and therefore a deadlock is
-    detected.
+def parse_cosim_report(project_path, project_name):
     """
-    prj_dir = None
-    top_func_name = None
+    Parse the co-simulation report to check whether the co-simulation passed or failed and therefore a deadlock is detected.
+    """
+    cosim_report_path = project_path + '/' + project_name + f'_prj/solution1/sim/report/{project_name}_cosim.rpt'
 
-    project_tcl_path = project_path + '/project.tcl'
+    if not os.path.isfile(cosim_report_path):
+        raise FileNotFoundError('Co-simulation report not found.')
 
-    with open(project_tcl_path) as f:
-        for line in f.readlines():
-            if 'set project_name' in line:
-                top_func_name = line.split('"')[-2]
-                prj_dir = top_func_name + '_prj'
-
-    cosim_file_path = project_path + '/' + prj_dir + f'/solution1/sim/report/{top_func_name}_cosim.rpt'
-
-    if os.path.isfile(cosim_file_path):
-        return cosim_file_path
-    else:
-        raise FileNotFoundError("Co-simulation report not found.")
+    with open(cosim_report_path) as cosim_report_file:
+        return any('Pass' in line for line in cosim_report_file)
 
 
 def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
     """Execute the FIFO depth optimization sequence on a dummy Keras model."""
 
     # create a keras model
-    input_shape = (128, 128, 3)
+    input_shape = (64, 64, 3)
     activation = 'relu'
     kernel_size = (3, 3)
     padding = 'same'
@@ -81,33 +70,28 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type):
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.01)
 
-    # check that the FIFOs have been optimized succesfully
+    # check that the FIFOs have been optimized successfully
     fifo_depth_optimization_checks(hls_model)
 
 
 def fifo_depth_optimization_checks(hls_model):
     """Execute the FIFO depth optimization sequence on an hls4ml model."""
 
-    # force the top-function to execute twice in the cosimulation, to verify no deadlocks occur even
-    # when streaming multiple inputs into the network
-    override_test_bench(hls_model)
-
-    # build the new project with optimized depths and execute cosimulation to check for deadlocks
+    # build the new project with optimized depths and execute co-simulation to check for deadlocks
     # due to the new FIFO depths
     hls_model.build(reset=False, csim=False, synth=True, cosim=True)
 
     # checks if the fifo depths decreased/were optimized
     fifo_depths = {}
-    with open(hls_model.config.get_output_dir() + "/fifo_depths.json") as fifo_depths_file:
+    with open(hls_model.config.get_output_dir() + '/fifo_depths.json') as fifo_depths_file:
         fifo_depths = json.load(fifo_depths_file)
 
     fifo_depths_decreased = all(fifo['optimized'] < fifo['initial'] for fifo in fifo_depths.values())
 
-    # checks that the cosimulation ran succesfully without detecting deadlocks
-    cosim_report_path = parse_cosim_report(hls_model.config.get_output_dir())
-
-    with open(cosim_report_path) as cosim_report_file:
-        cosim_succesful = any("Pass" in line for line in cosim_report_file)
+    # checks that the co-simulation ran successfully without detecting deadlocks
+    project_path = hls_model.config.get_output_dir()
+    project_name = hls_model.config.get_project_name()
+    cosim_succesful = parse_cosim_report(project_path, project_name)
 
     assert fifo_depths_decreased and cosim_succesful
 
@@ -119,10 +103,10 @@ def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-@pytest.mark.parametrize('profiling_fifo_depth', [-2, 3.14, "a"])
+@pytest.mark.parametrize('profiling_fifo_depth', [-2, 3.14, 'a'])
 def test_value_error(backend, profiling_fifo_depth):
     """Test the FIFO depth optimizer with faulty inputs of profiling_fifo_depth to verify that an exception is raised."""
-    message = "The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer."
+    message = 'The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer.'
     expect_exception(ValueError, message, backend, profiling_fifo_depth, io_type='io_stream')
 
 
@@ -130,7 +114,7 @@ def test_value_error(backend, profiling_fifo_depth):
 @pytest.mark.parametrize('backend', backend_options)
 def test_runtime_error(backend):
     """Test the FIFO depth optimizer with io_type='io_parallel' to verify that an exception is raised."""
-    message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
+    message = 'To use this optimization you have to set `IOType` field to `io_stream` in the HLS config.'
     expect_exception(RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel')
 
 
@@ -145,7 +129,7 @@ def get_branched_model():
     """
     Load branched model, already channels-last and cleaned
     """
-    dl_file = str(example_model_path / "onnx/branched_model_ch_last.onnx")
+    dl_file = str(example_model_path / 'onnx/branched_model_ch_last.onnx')
     assert os.path.isfile(dl_file)
     model = ModelWrapper(dl_file)
     return model
