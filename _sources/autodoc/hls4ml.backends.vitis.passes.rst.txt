@@ -12,6 +12,14 @@ hls4ml.backends.vitis.passes.feature\_check module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.vitis.passes.fifo\_depth\_optimization module
+-------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vitis.passes.fifo_depth_optimization
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

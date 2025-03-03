@@ -240,6 +240,126 @@
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.backends.vitis.passes.fifo_depth_optimization">
+<span id="hls4ml-backends-vitis-passes-fifo-depth-optimization-module"></span><h2>hls4ml.backends.vitis.passes.fifo_depth_optimization module<a class="headerlink" href="#module-hls4ml.backends.vitis.passes.fifo_depth_optimization" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">FifoDepthOptimization</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimization" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurableOptimizerPass</span></code></a>, <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimization.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimization.transform" title="Link to this definition"></a></dt>
+<dd><p>Perform FIFO depth optimization between the FIFOs of all layers to reduce resource utilization as the
+initial FIFOs set by hls4ml might be larger than required. At the end of the optimization the FIFOs will
+have the largest depths achieved during co-simulation without causing any deadlocks between the layers
+(producer-consumer), thus no additional delays between the layers. In some cases, this optimization
+might lead to bigger FIFOs than initially set by the hls4ml tool in order to prevent deadlocks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The model to which FIFO depth optimization is applied.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the FIFO depth for profiling provided by the user is not a non-negative integer.</p></li>
+<li><p><strong>RuntimeError</strong> – If the IO type is not set to “io_stream”.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The execution state of the Optimizer Pass</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.fifo_depth_optimization.execute_cosim_to_profile_fifos">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">execute_cosim_to_profile_fifos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.fifo_depth_optimization.execute_cosim_to_profile_fifos" title="Link to this definition"></a></dt>
+<dd><p>Execute a co-simulation with a test-bench that calls the top function to properly profile the max FIFO depths.
+Note that the top function needs to execute <strong>least twice</strong>, so user-provided input must have at least two samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The model to which FIFO depth optimization is applied.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.fifo_depth_optimization.generate_depths_file">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">generate_depths_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_fifo_depths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimized_fifo_depths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.fifo_depth_optimization.generate_depths_file" title="Link to this definition"></a></dt>
+<dd><p>Generate a json file with the names of the FIFOs, the initial depths set by hls4ml and their optimized depths,
+for post-processing. The json file is not used by the rest of the pipeline, it is only produced for the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The model to which FIFO depth optimization is applied.</p></li>
+<li><p><strong>initial_fifo_depths</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em>) – A dictionary that contains the FIFO names as keys and the initial</p></li>
+<li><p><strong>values.</strong> (<em>depths as</em>)</p></li>
+<li><p><strong>optimized_fifo_depths</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em>) – A dictionary that contains the FIFO names as keys and the optimized</p></li>
+<li><p><strong>values.</strong></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.fifo_depth_optimization.get_vitis_optimized_fifo_depths">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">get_vitis_optimized_fifo_depths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.fifo_depth_optimization.get_vitis_optimized_fifo_depths" title="Link to this definition"></a></dt>
+<dd><p>Parse the files generated by the co-simulation to retrieve the optimized depths for the FIFOs.
+Attention, only the FIFOs between the layers are profiled!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The model to which FIFO depth optimization is applied.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary that contains the FIFO names as keys and the optimized depths as values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.fifo_depth_optimization.initialize_large_fifos">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">initialize_large_fifos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiling_fifo_depth</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.fifo_depth_optimization.initialize_large_fifos" title="Link to this definition"></a></dt>
+<dd><p>Set all FIFO depths equal to a large value so that they can be profiled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The model to which FIFO depth optimization is applied.</p></li>
+<li><p><strong>profiling_fifo_depth</strong> (<em>int</em>) – A large non-negative integer, must be larger than the max expected depth of the FIFOs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing FIFO names as keys and their initial depths as values is returned for
+comparison with the optimized depths.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.fifo_depth_optimization.set_optimized_fifo_depths">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">set_optimized_fifo_depths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimized_fifo_depths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.fifo_depth_optimization.set_optimized_fifo_depths" title="Link to this definition"></a></dt>
+<dd><p>Set the new optimized FIFO depths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The model to which FIFO depth optimization is applied.</p></li>
+<li><p><strong>optimized_fifo_depths</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em>) – A dictionary that contains the FIFO names as keys and the optimized</p></li>
+<li><p><strong>values.</strong> (<em>depths as</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.backends.vitis.passes">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.vitis.passes" title="Link to this heading"></a></h2>
 </section>

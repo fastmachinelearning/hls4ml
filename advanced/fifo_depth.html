@@ -132,24 +132,24 @@
 <p>With the <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> IO type, each layer is connected with the subsequent layer through first-in first-out (FIFO) buffers.
 The implementation of the FIFO buffers contribute to the overall resource utilization of the design, impacting in particular the BRAM or LUT utilization.
 Because the neural networks can have complex architectures generally, it is hard to know a priori the correct depth of each FIFO buffer.
-By default <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> choses the most conservative possible depth for each FIFO buffer, which can result in a an unnecessary overutilization of resources.</p>
-<p>In order to reduce the impact on the resources used for FIFO buffer implementation, an optimization has been developed in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/509">#509</a> that correctly sizes the depth of the FIFO buffers by analyzing the RTL cosimulation.
-We implemented this FIFO buffer resizing as a <a class="reference internal" href="../autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.fifo_depth_optimization" title="hls4ml.backends.vivado.passes.fifo_depth_optimization"><code class="xref py py-class docutils literal notranslate"><span class="pre">fifo_depth_optimization</span></code></a> optimizer pass.
+By default <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> choses the most conservative possible depth for each FIFO buffer, which can result in a an unnecessary over-utilization of resources.</p>
+<p>In order to reduce the impact on the resources used for FIFO buffer implementation, an optimization flow has been developed that correctly sizes the depth
+of the FIFO buffers by analyzing the RTL co-simulation. This feature is currently available in <code class="docutils literal notranslate"><span class="pre">Vitis</span></code> and <code class="docutils literal notranslate"><span class="pre">Vivado</span></code> backends.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">Vivado</span></code> backend, FIFO buffer resizing is implemented as a <a class="reference internal" href="../autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.fifo_depth_optimization" title="hls4ml.backends.vivado.passes.fifo_depth_optimization"><code class="xref py py-class docutils literal notranslate"><span class="pre">fifo_depth_optimization</span></code></a> optimizer pass.
 Through RTL simulation with large FIFO buffers (by default set to a depth of 100,000), we estimate the maximum occupation of each FIFO.
 Once the maximum depth is determined, the optimizer pass sets the FIFO buffer depth to that value plus 1.</p>
-<p>As an example, we show below how to use the optimizer pass, inspired by this <a class="reference external" href="https://gist.github.com/nicologhielmetti/3a268be32755448920e9f7d5c78a76d8">GitHub Gist</a>.
-First, we can define a simple neural network in Keras</p>
+<p>Below we show an example of the use of the FIFO depth optimization. First, we can define a simple neural network in Keras:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dense</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequential</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc1&#39;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc1&#39;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
 <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc2&#39;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
 <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc3&#39;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc3&#39;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc4&#39;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Then, we can convert the model, including the flow</p>
+<p>Then, we can convert the model, including the flow:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hls4ml</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
@@ -168,6 +168,18 @@ First, we can define a simple neural network in Keras</p>
 </pre></div>
 </div>
 <p>For more details and results, see <a class="reference external" href="https://arxiv.org/abs/2206.11791">H. Borras et al., “Open-source FPGA-ML codesign for the MLPerf Tiny Benchmark” (2022)</a>.</p>
+<p>Similarly, the FIFO buffers can be optimized while using the <code class="docutils literal notranslate"><span class="pre">Vitis</span></code> backend with the following changes:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;Flows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;vitis:fifo_depth_optimization&#39;</span><span class="p">]</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">get_optimizer</span><span class="p">(</span><span class="s1">&#39;vitis:fifo_depth_optimization&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">profiling_fifo_depth</span><span class="o">=</span><span class="mi">100_000</span><span class="p">)</span>
+
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                                                    <span class="n">io_type</span><span class="o">=</span><span class="s1">&#39;io_stream&#39;</span><span class="p">,</span>
+                                                    <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                                                    <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;hls4mlprj_fifo_depth_opt&#39;</span><span class="p">,</span>
+                                                    <span class="n">part</span><span class="o">=</span><span class="s1">&#39;xc7z020clg400-1&#39;</span><span class="p">,</span>
+                                                    <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;Vitis&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 
 
