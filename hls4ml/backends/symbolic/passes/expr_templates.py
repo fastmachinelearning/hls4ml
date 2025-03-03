@@ -35,8 +35,6 @@ class HLSCodePrinter(CXX11CodePrinter):
                 settings['user_functions'] = user_functions
             settings['strict'] = False
 
-            settings['strict'] = False
-
         super().__init__(settings)
         self.layer = layer
         self.use_built_in_luts = use_built_in_luts
