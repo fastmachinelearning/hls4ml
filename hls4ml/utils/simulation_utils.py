@@ -5,57 +5,6 @@ import numpy as np
 import pandas as pd
 from lxml import etree
 
-
-def parse_component_xml(component_xml_path):
-    """
-    Parse the given component.xml file and return structured information
-    about the input and output ports.
-
-    Returns:
-        inputs (list): A list of dicts, each containing 'name', 'direction', and 'width' for input ports.
-        outputs (list): A list of dicts, each containing 'name', 'direction', and 'width' for output ports.
-    """
-    if not os.path.exists(component_xml_path):
-        raise FileNotFoundError(f"component.xml not found at {component_xml_path}")
-
-    # Parse the XML file
-    tree = etree.parse(component_xml_path)
-    root = tree.getroot()
-
-    # Define the namespaces
-    ns = {
-        'spirit': 'http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009',
-        'xilinx': 'http://www.xilinx.com',
-        'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-    }
-
-    # Extract ports
-    ports = root.findall('.//spirit:model/spirit:ports/spirit:port', namespaces=ns)
-    inputs = []
-    outputs = []
-
-    for port in ports:
-        name = port.find('spirit:name', namespaces=ns).text
-        wire = port.find('spirit:wire', namespaces=ns)
-        if wire is not None:
-            direction = wire.find('spirit:direction', namespaces=ns).text
-            vector = wire.find('spirit:vector', namespaces=ns)
-            if vector is not None:
-                left = vector.find('spirit:left', namespaces=ns).text
-                right = vector.find('spirit:right', namespaces=ns).text
-                width = abs(int(left) - int(right)) + 1
-            else:
-                width = 1
-
-            port_info = {'name': name, 'direction': direction, 'width': width}
-            if direction == 'in':
-                inputs.append(port_info)
-            elif direction == 'out':
-                outputs.append(port_info)
-
-    return inputs, outputs
-
-
 def write_verilog_testbench(nn_config, testbench_output_path):
     """
     Generate a Verilog testbench for a given neural network configuration.
@@ -552,8 +501,7 @@ def prepare_testbench_input(data, fifo_depth, batch_size):
     data_reshaped = data_arr.reshape((fifo_depth, batch_size))
     return data_reshaped
 
-
-def read_testbench_log(testbench_log_path):
+def read_testbench_log(testbench_log_path, outputs):
     """
     Reads the testbench log file and returns a dictionary
     """
@@ -569,8 +517,13 @@ def read_testbench_log(testbench_log_path):
 
         sim_dict = {'BestLatency': int(BestLatency), 'WorstLatency': int(WorstLatency), 'BehavSimResults': []}
 
-        grouped = output_df.groupby('output_name')
-        for name, group in grouped:
+        ordered_output_names = [entry['name'] for entry in outputs]
+        for name in ordered_output_names:
+            group = output_df[output_df['output_name'] == name]
+            if group.empty:
+                print(f"Warning: Expected output '{name}' not found in testbench log.")
+                continue
+
             indices = group['index'].astype(int)
             values = group['value'].astype(float)
             array = np.zeros(max(indices) + 1, dtype=np.float64)

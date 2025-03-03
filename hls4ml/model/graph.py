@@ -1,6 +1,7 @@
 import concurrent.futures
 import copy
 import ctypes
+import uuid
 import importlib.util
 import os
 import platform
@@ -1151,6 +1152,7 @@ class MultiModelGraph:
         self._initialize_config(graphs[0])
         self._bind_modelgraph_methods()
         self._initialize_io_attributes(graphs)
+        self._update_pragmas()
 
     def _initialize_config(self, first_graph):
         self.config = copy.copy(first_graph.config)
@@ -1186,7 +1188,7 @@ class MultiModelGraph:
         original_output_dir = first_graph.config.get_output_dir().partition('/graph')[0]
         self.config.config['OutputDir'] = os.path.join(original_output_dir, 'stitched')
         self.config.config['StitchedProjectName'] = 'vivado_stitched_design'
-        self.config.config['Stamp'] = '64616e'
+        self.config.config['Stamp'] = self._make_stamp()
 
     def __getitem__(self, index):
         return self.graphs[index]
@@ -1354,6 +1356,20 @@ class MultiModelGraph:
         status_str = ' | '.join(f'{proj}: {status_icons.get(stat, "?")}' for proj, stat in status.items())
         print(status_str, flush=True)
 
+    def _update_pragmas(self):
+        """
+        Modifies the pragma for all layers in all graphs, replacing 'reshape' with 'partition' where applicable
+        """
+        for g in self.graphs:
+            for layer_name in g.output_vars:
+                if hasattr(g.output_vars[layer_name], 'pragma'):
+                    layer_pragma = g.output_vars[layer_name].pragma
+                    if isinstance(layer_pragma, str) and layer_pragma == 'reshape':
+                        g.output_vars[layer_name].pragma = 'partition'
+                        print(f"Updating pragma in Layer '{layer_name}' from 'reshape' to 'partition'.")
+                else:
+                    print(f"Layer '{layer_name}' does not have a 'pragma' attribute.")
+
     def _assert_consistent_pragmas(self):
         """
         Ensure all graphs have the same pragma in their input and output layers.
@@ -1382,7 +1398,12 @@ class MultiModelGraph:
                 raise ValueError(
                     f"Pragma mismatch in graph {idx}:\n" f"Expected: {ref_pragmas}\n" f"Found: {current_pragmas}"
                 )
-
+            
+    def _make_stamp(self):
+            length = 8
+            stamp = uuid.uuid4()
+            return str(stamp)[-length:]
+    
     def _replace_logos(self):
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)

@@ -227,7 +227,7 @@ class VitisBackend(VivadoBackend):
             stitched_report = aggregate_graph_reports(graph_reports)
 
         if sim_stitched_design:
-            testbench_output = read_testbench_log(testbench_log_path)
+            testbench_output = read_testbench_log(testbench_log_path, nn_config['outputs'])
             stitched_report['BehavSimResults'] = testbench_output['BehavSimResults']
             stitched_report['StitchedDesignReport']['BestLatency'] = testbench_output['BestLatency']
             stitched_report['StitchedDesignReport']['WorstLatency'] = testbench_output['WorstLatency']
