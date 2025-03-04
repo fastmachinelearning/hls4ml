@@ -38,7 +38,9 @@ def test_gru(backend, io_type):
     model.eval()
 
     X_input = torch.randn(1, 1, 10)
+    X_input = np.round(X_input * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
     h0 = torch.randn(1, 1, 20)
+    h0 = np.round(h0 * 2**16) * 2**-16
 
     pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0)).detach().numpy()
 
@@ -67,6 +69,7 @@ def test_gru_stream(backend, io_type):
     model.eval()
 
     X_input = torch.randn(1, 1, 10)
+    X_input = np.round(X_input * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
@@ -75,9 +78,7 @@ def test_gru_stream(backend, io_type):
     )
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_gru_{backend}_{io_type}')
 
-    hls_model = convert_from_pytorch_model(
-        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type, default_precision='fixed<32,16>'
-    )
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
 
@@ -113,8 +114,11 @@ def test_lstm(backend, io_type):
     model.eval()
 
     X_input = torch.randn(1, 1, 10)
+    X_input = np.round(X_input * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
     h0 = torch.randn(1, 1, 20)
+    h0 = np.round(h0 * 2**16) * 2**-16
     c0 = torch.randn(1, 1, 20)
+    c0 = np.round(c0 * 2**16) * 2**-16
 
     pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0), torch.tensor(c0)).detach().numpy()
 
@@ -152,6 +156,7 @@ def test_lstm_stream(backend, io_type):
         model.eval()
 
         X_input = torch.randn(1, 1, 10)
+        X_input = np.round(X_input * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
 
         pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
@@ -193,6 +198,7 @@ def test_rnn(backend, io_type):
         model.eval()
 
         X_input = torch.randn(1, 1, 10)
+        X_input = np.round(X_input * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
         h0 = torch.zeros(1, 1, 20)
 
         pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0)).detach().numpy()
@@ -212,7 +218,6 @@ def test_rnn(backend, io_type):
             output_dir=output_dir,
             backend=backend,
             io_type=io_type,
-            default_precision='fixed<32,16>',
         )
 
         hls_model.compile()
