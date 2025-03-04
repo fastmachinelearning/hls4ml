@@ -1,11 +1,14 @@
 from pathlib import Path
+
 import numpy as np
 import pytest
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Conv2D, Activation, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.layers import Activation, Conv2D, Dense, Flatten, Input, MaxPooling2D
+
 import hls4ml
 
 test_root_path = Path(__file__).parent
+
 
 def create_test_model():
     """
@@ -21,16 +24,14 @@ def create_test_model():
     output1 = Dense(5, activation='relu', name='dense1')(x)
     output2 = Dense(5, activation='relu', name='dense2')(x)
     model = tf.keras.Model(inputs=inp, outputs=[output1, output2])
-    
+
     return model
+
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['model', 'name'])
-@pytest.mark.parametrize('split_layers', [
-    ('pool1', 'dense_common'),
-    ('relu1', 'flatten')
-])
+@pytest.mark.parametrize('split_layers', [('pool1', 'dense_common'), ('relu1', 'flatten')])
 def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     """
     Tests the multi-graph splitting and stitching process.
@@ -42,7 +43,6 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     model = create_test_model()
     model.compile(optimizer='adam', loss='categorical_crossentropy')
     X_input = np.random.rand(5, 4, 4, 3).astype(np.float32)
-    keras_pred = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity, default_precision='ap_fixed<32,16>')
     config['Model']['Strategy'] = strategy
@@ -52,11 +52,7 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
 
     # --- Monolithic HLS conversion (no split) ---
     hls_model_mono = hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=config,
-        output_dir=output_dir_mono,
-        backend=backend,
-        io_type=io_type
+        model, hls_config=config, output_dir=output_dir_mono, backend=backend, io_type=io_type
     )
     hls_model_mono.compile()
     pred_mono = hls_model_mono.predict(X_input)
@@ -68,7 +64,7 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
         output_dir=output_dir_multi,
         backend=backend,
         io_type=io_type,
-        split_layer_names=list(split_layers)
+        split_layer_names=list(split_layers),
     )
     hls_model_multi.compile()
     pred_multi = hls_model_multi.predict(X_input)
@@ -78,17 +74,26 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
 
     for mono_out, multi_out in zip(pred_mono, pred_multi):
         np.testing.assert_allclose(multi_out, mono_out, rtol=0, atol=1e-5)
-    
+
     if granularity == 'name':
         if io_type == 'io_parallel' and split_layers == ('relu1', 'flatten'):
-            pytest.skip("Skipping RTL simulation for io_parallel with split layer at flatten due to improper simulation behavior.")
+            pytest.skip(
+                "Skipping RTL simulation for io_parallel with split layer at flatten due to improper simulation behavior."
+            )
 
         # --- Optional: Build the HLS project and run simulation ---
-        hls_model_multi.build(csim=False, cosim=False, vsynth=False, export=True, 
-                        stitch_design=True, sim_stitched_design=True, export_stitched_design=True)
+        hls_model_multi.build(
+            csim=False,
+            cosim=False,
+            vsynth=False,
+            export=True,
+            stitch_design=True,
+            sim_stitched_design=True,
+            export_stitched_design=True,
+        )
 
         # test only the first sample, as batch prediction is not supported for stitched RTL simulations
         inp = np.expand_dims(X_input[0], axis=0)
-        sim_results = hls_model_multi.predict(inp, sim = 'rtl')
+        sim_results = hls_model_multi.predict(inp, sim='rtl')
         for sim_out, pred_out in zip(sim_results, list([pred_multi[0][0], pred_multi[1][0]])):
             np.testing.assert_allclose(sim_out, pred_out, rtol=0, atol=0.3)

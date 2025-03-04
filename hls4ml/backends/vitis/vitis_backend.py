@@ -119,7 +119,16 @@ class VitisBackend(VivadoBackend):
         build_command = (
             'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
             'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
-        ).format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt)
+        ).format(
+            reset=reset,
+            csim=csim,
+            synth=synth,
+            cosim=cosim,
+            validation=validation,
+            export=export,
+            vsynth=vsynth,
+            fifo_opt=fifo_opt,
+        )
 
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
@@ -211,7 +220,7 @@ class VitisBackend(VivadoBackend):
             f'export_design={int(export_stitched_design)}',
             f"stitch_project_name={nn_config['StitchedProjectName']}",
             f"original_project_name={nn_config['OriginalProjectName']}",
-            f'sim_verilog_file=testbench.v',
+            'sim_verilog_file=testbench.v',
         ]
 
         with open(stdout_log, 'w') as stdout_file, open(stderr_log, 'w') as stderr_file:

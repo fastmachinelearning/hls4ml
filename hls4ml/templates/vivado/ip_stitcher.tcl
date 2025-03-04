@@ -162,7 +162,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
 
             # Set the CONFIG.POLARITY property of the 'ap_rst' port based on the retrieved polarity
             set_property CONFIG.POLARITY $rst_polarity $ap_rst_port
-            
+
             # Rename the port based on polarity
             if {$rst_polarity eq "ACTIVE_LOW"} {
                 set rst_port_name "ap_rst_n"

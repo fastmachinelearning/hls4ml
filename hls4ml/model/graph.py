@@ -1,15 +1,12 @@
 import concurrent.futures
 import copy
 import ctypes
-import uuid
 import importlib.util
 import os
 import platform
-import re
 import shutil
-import stat
 import threading
-import warnings
+import uuid
 from collections import OrderedDict
 
 import numpy as np
@@ -1113,7 +1110,9 @@ class ModelGraph(Serializable):
                     if previous_layer_name in sub_config['HLSConfig']['LayerName']:
                         prev_layer_config = sub_config['HLSConfig']['LayerName'][previous_layer_name]
                         new_layer_config = {}
-                        new_layer_config['Precision'] =  last_output_precision if last_output_precision is not None else 'auto'
+                        new_layer_config['Precision'] = (
+                            last_output_precision if last_output_precision is not None else 'auto'
+                        )
                         # NOTE - We copy Trace as well but it might be better to reset it
                         new_layer_config['Trace'] = prev_layer_config['Trace']
                         sub_config['HLSConfig']['LayerName'][input_layer_name] = new_layer_config
@@ -1132,7 +1131,11 @@ class ModelGraph(Serializable):
             if hls_model.graph:
                 last_layer = next(reversed(hls_model.graph.values()))
                 last_prec = last_layer.attributes.get('result_t')
-                last_output_precision = (last_prec.precision if hasattr(last_prec, 'precision') else last_prec) if last_prec is not None else 'auto'
+                last_output_precision = (
+                    (last_prec.precision if hasattr(last_prec, 'precision') else last_prec)
+                    if last_prec is not None
+                    else 'auto'
+                )
                 if last_output_precision == 'auto' or last_output_precision is None:
                     raise ValueError("Could not extract a valid precision from the last layer!")
 
@@ -1159,7 +1162,7 @@ class MultiModelGraph:
         # Deep copy only 'ProjectName' and 'OutputDir', shallow copy others
         keys_to_deepcopy = ['ProjectName', 'OutputDir']
         self.config.config = {
-            k: copy.deepcopy(first_graph.config.config[k]) if k in keys_to_deepcopy else first_graph.config.config[k] 
+            k: copy.deepcopy(first_graph.config.config[k]) if k in keys_to_deepcopy else first_graph.config.config[k]
             for k in first_graph.config.config
         }
         self._update_project_config(first_graph)
@@ -1179,7 +1182,7 @@ class MultiModelGraph:
         self._top_function_lib = None
         self.inputs = graphs[0].inputs
         self.outputs = graphs[-1].outputs
-        self.output_vars = graphs[-1].output_vars        
+        self.output_vars = graphs[-1].output_vars
 
     def _update_project_config(self, first_graph):
         original_project_name = first_graph.config.get_project_name().partition('_graph')[0]
@@ -1208,18 +1211,18 @@ class MultiModelGraph:
                     pragma = graph.output_vars[layer].pragma
                     layer_pragma, fifo_depth = self._get_pragma_details(pragma)
                     if total_bits % fifo_depth != 0:
-                        raise ValueError(f"Division of total_bits by fifo_depth does not result in a remainder of zero.")
+                        raise ValueError('Division of total_bits by fifo_depth does not result in a remainder of zero.')
                     batch_size = total_bits // fifo_depth
                     precision = graph.output_vars[layer].type.precision
                     nn_config[io_type].append(
                         {
-                            "name": graph.output_vars[layer].name,
-                            "pragma": layer_pragma,
-                            "integer_bits": int(precision.integer),
-                            "fractional_bits": int(precision.fractional),
-                            "signed": int(precision.signed),
-                            "fifo_depth": int(fifo_depth),
-                            "batch_size": int(batch_size),
+                            'name': graph.output_vars[layer].name,
+                            'pragma': layer_pragma,
+                            'integer_bits': int(precision.integer),
+                            'fractional_bits': int(precision.fractional),
+                            'signed': int(precision.signed),
+                            'fifo_depth': int(fifo_depth),
+                            'batch_size': int(batch_size),
                         }
                     )
 
@@ -1243,7 +1246,7 @@ class MultiModelGraph:
         status = {}
         status_lock = threading.Lock()
 
-        for idx, g in enumerate(self.graphs, start=1):
+        for idx, _ in enumerate(self.graphs, start=1):
             status[f'graph{idx}'] = 'Pending'
 
         def build_wrapper(idx, g, **kwargs):
@@ -1261,7 +1264,7 @@ class MultiModelGraph:
                 with status_lock:
                     status[graph_name] = 'Failed'
                     self._print_status(status)
-                raise
+                raise exc
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_idx = {
@@ -1275,6 +1278,7 @@ class MultiModelGraph:
                     build_results[graph_name] = result
                 except Exception as exc:
                     build_results[graph_name] = None
+                    print(f"Error while building {graph_name}: {exc}")
 
         self.graph_reports = build_results
         self._replace_logos()
@@ -1319,7 +1323,7 @@ class MultiModelGraph:
             return stitched_report['BehavSimResults']
         else:
             print('Unknown simulation option given.')
-    
+
     def trace(self, x):
         raise NotImplementedError("Trace function has not been implemented yet for MultiModelGraph.")
 
@@ -1328,13 +1332,13 @@ class MultiModelGraph:
         for inp in self.inputs:
             variables.append(self.graphs[0].graph[inp].get_output_variable())
         return variables
-    
+
     def get_layers(self):
         all_values = []
         for g in self.graphs:
             all_values.extend(g.graph.values())
         return dict(zip(all_values, all_values)).values()
-    
+
     def _get_pragma_details(self, pragma):
         """
         Extracts the pragma type and FIFO depth from the given pragma.
@@ -1367,8 +1371,6 @@ class MultiModelGraph:
                     if isinstance(layer_pragma, str) and layer_pragma == 'reshape':
                         g.output_vars[layer_name].pragma = 'partition'
                         print(f"Updating pragma in Layer '{layer_name}' from 'reshape' to 'partition'.")
-                else:
-                    print(f"Layer '{layer_name}' does not have a 'pragma' attribute.")
 
     def _assert_consistent_pragmas(self):
         """
@@ -1398,12 +1400,12 @@ class MultiModelGraph:
                 raise ValueError(
                     f"Pragma mismatch in graph {idx}:\n" f"Expected: {ref_pragmas}\n" f"Found: {current_pragmas}"
                 )
-            
+
     def _make_stamp(self):
-            length = 8
-            stamp = uuid.uuid4()
-            return str(stamp)[-length:]
-    
+        length = 8
+        stamp = uuid.uuid4()
+        return str(stamp)[-length:]
+
     def _replace_logos(self):
         spec = importlib.util.find_spec("hls4ml")
         hls4ml_path = os.path.dirname(spec.origin)
