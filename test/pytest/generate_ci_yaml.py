@@ -4,7 +4,7 @@ template = """
 pytest.test_cvmfs_mount:
   extends: .pytest
   variables:
-    PYTESTFILE: 'test_cvmfs_mount.py'
+    PYTESTFILE: test_cvmfs_mount.py
     EXAMPLEMODEL: 0
 """
 
