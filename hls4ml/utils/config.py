@@ -1,7 +1,5 @@
 import json
 
-import qkeras
-
 import hls4ml
 
 
@@ -48,6 +46,8 @@ def create_config(output_dir='my-hls-test', project_name='myproject', backend='V
 
 def _get_precision_from_quantizer(quantizer):
     if isinstance(quantizer, str):
+        import qkeras
+
         quantizer_obj = qkeras.get_quantizer(quantizer)
         quantizer = {}
         # Some activations are classes with get_config method
@@ -283,7 +283,7 @@ def config_from_pytorch_model(
     default_precision='ap_fixed<16,6>',
     default_reuse_factor=1,
     channels_last_conversion='full',
-    transpose_outputs=True,
+    transpose_outputs=False,
     max_precision=None,
 ):
     """Create an HLS conversion config given the PyTorch model.
@@ -367,6 +367,7 @@ def config_from_pytorch_model(
 
     (
         layer_list,
+        _,
         _,
     ) = parse_pytorch_model(config, verbose=False)
 

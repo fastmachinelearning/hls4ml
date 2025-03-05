@@ -80,6 +80,7 @@ def test_activations(activation_function, backend, io_type):
     model.eval()
 
     X_input = np.random.rand(1)
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
@@ -498,7 +499,7 @@ def test_pooling(pooling, padds, backend):
     model.eval()
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model, input_shape_forHLS)
+    config = config_from_pytorch_model(model, input_shape_forHLS, transpose_outputs=True)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_pooling_{pooling.__name__}_padds_{padds}_backend_{backend}')
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()

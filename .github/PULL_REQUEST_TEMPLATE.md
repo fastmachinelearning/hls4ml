@@ -1,4 +1,4 @@
-A# Description
+# Description
 
 > :memo: Please include a summary of the change.
 >

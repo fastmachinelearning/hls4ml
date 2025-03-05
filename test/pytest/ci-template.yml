@@ -1,14 +1,15 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.5.6.base
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.6.1.base
   tags:
     - k8s-default
   before_script:
-    - source ~/.bashrc
+    - eval "$(conda shell.bash hook)"
+    - conda activate hls4ml-testing
+    - source /opt/intel/oneapi/setvars.sh --force
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
-    - conda activate hls4ml-testing
     - pip install .[testing,sr,optimization]
   script:
     - cd test/pytest

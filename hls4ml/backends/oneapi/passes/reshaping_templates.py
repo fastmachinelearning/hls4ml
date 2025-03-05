@@ -161,17 +161,17 @@ class ResizeTaskSequenceTemplate(TaskSequenceTemplate):
 
 # Transpose templates
 
-transpose_config_template = """struct config{index} : nnet::transpose_config {{
-    static const unsigned depth = {depth};
-    static const unsigned height = {height};
-    static const unsigned width = {width};
-    static constexpr unsigned perm[3] = {{{perm_str}}};
+transpose_config_template = """struct {config_name} : nnet::transpose_config {{
+    static constexpr unsigned dims = {dims};
+    static constexpr unsigned N = {N};
+    static constexpr std::array<unsigned, dims> from_shape = {{{from_shape}}};
+    static constexpr std::array<unsigned, dims> to_shape = {{{to_shape}}};
+    static constexpr std::array<unsigned, dims> perm = {{{perm}}};
+    static constexpr std::array<unsigned, dims> perm_strides = {{{perm_strides}}};
 }};\n"""
 
-transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {output_t}, {config}>({input}, {output});'
-transpose_task_sequence_template = (
-    'task_sequence<nnet::transpose_{dim}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
-)
+transpose_function_template = 'nnet::transpose<{input_t}, {output_t}, {config}>({input}, {output});'
+transpose_task_sequence_template = 'task_sequence<nnet::transpose_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 transpose_include_list = ['nnet_utils/nnet_transpose.h', 'nnet_utils/nnet_transpose_stream.h']
 
 
@@ -181,9 +181,20 @@ class TransposeConfigTemplate(LayerConfigTemplate):
         self.template = transpose_config_template
 
     def format(self, node):
-        params = self._default_config_params(node)
+        shape = tuple(node.get_input_variable().shape)
+        perm = tuple(node.get_attr('perm'))
+        name = f'config{node.index}'
 
-        return self.template.format(**params)
+        new_shape, perm_strides = node.model.config.backend.permute_config_gen(name, shape, perm)
+        return transpose_config_template.format(
+            dims=len(shape),
+            N=int(np.prod(shape)),
+            from_shape=', '.join(str(x) for x in shape),
+            perm=', '.join(str(x) for x in perm),
+            perm_strides=', '.join(str(x) for x in perm_strides),
+            to_shape=', '.join(str(x) for x in new_shape),
+            config_name=name,
+        )
 
 
 class TransposeFunctionTemplate(FunctionCallTemplate):
@@ -240,5 +251,5 @@ class ReshapeTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['size'] = np.prod(node.get_output_variable().shape)
+        params['size'] = int(np.prod(node.get_output_variable().shape))
         return self.template.format(**params)
