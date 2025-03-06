@@ -77,14 +77,16 @@ int main(int argc, char **argv) {
         fpr.close();
     } else {
         std::cout << "INFO: Unable to open input/predictions file, using default input." << std::endl;
+        const unsigned NUM_TEST_SAMPLES = 5;
+        for (unsigned i = 0; i < NUM_TEST_SAMPLES; i++) {
+            // hls-fpga-machine-learning insert zero
 
-        // hls-fpga-machine-learning insert zero
+            // hls-fpga-machine-learning insert top-level-function
 
-        // hls-fpga-machine-learning insert top-level-function
+            // hls-fpga-machine-learning insert output
 
-        // hls-fpga-machine-learning insert output
-
-        // hls-fpga-machine-learning insert tb-output
+            // hls-fpga-machine-learning insert tb-output
+        }
     }
 
     fout.close();
