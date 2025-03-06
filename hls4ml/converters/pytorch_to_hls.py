@@ -283,7 +283,7 @@ def parse_pytorch_model(config, verbose=True):
 
             # parse info from class object
             input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
-            if pytorch_class in ["RNN", "GRU", "LSTM"]:
+            if pytorch_class in ['RNN', 'GRU', 'LSTM', 'QuantRNN', 'QuantLSTM']:
                 input_shapes = []
                 input_names = []
                 for arg in node.args:

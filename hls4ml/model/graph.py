@@ -494,7 +494,9 @@ class ModelGraph:
                 next_nodes.append(x)
 
         if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] in prev_node.outputs), None)
+            next_node = next(
+                (x for x in self.graph.values() if x.inputs and set(x.inputs).intersection(prev_node.outputs)), None
+            )
         else:
             if before not in next_nodes:
                 raise Exception(

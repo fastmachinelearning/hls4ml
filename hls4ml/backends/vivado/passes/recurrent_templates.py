@@ -47,7 +47,7 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef {table_t.name} table_t;
+    typedef {act_t.name} table_t;
 }};\n"""
 
 recr_activ_config_template = """struct {type}_config{index}_recr : nnet::activ_config {{
@@ -55,7 +55,7 @@ recr_activ_config_template = """struct {type}_config{index}_recr : nnet::activ_c
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef {table_t.name} table_t;
+    typedef {recurr_act_t.name} table_t;
 }};\n"""
 
 # LSTM + GRU templates

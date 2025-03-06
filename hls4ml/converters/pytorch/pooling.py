@@ -6,8 +6,6 @@ pooling_layers = [
     'MaxPool2d',
     'AvgPool1d',
     'AvgPool2d',
-    'QuantMaxPool1d',
-    'QuantMaxPool2d',
 ]  # TODO add support for special quantized average pool layers
 
 

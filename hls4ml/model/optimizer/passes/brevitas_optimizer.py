@@ -54,9 +54,9 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
                 quant_node = model.make_node(
                     'Quant', f'quant_input_for_{node.get_attr("name")}_input_{i}', attributes, [input]
                 )
-                quant_node.set_attr('name', f'quant_input_for_{node.get_attr("name")}')
+                quant_node.set_attr('name', f'quant_input_for_{node.get_attr("name")}_input_{i}')
 
-                model.insert_node(quant_node)
+                model.insert_node(quant_node, input_idx=i)
 
             node.attributes['input_quantization'] = {}
 
