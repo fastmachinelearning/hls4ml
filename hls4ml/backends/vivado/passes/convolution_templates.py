@@ -131,13 +131,27 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         namespace = params['namespace']
 
         if node.get_attr('strategy').lower() == 'latency':
-            mult_params['dense_function'] = 'nnet::DenseLatency'
-        elif node.get_attr('strategy').lower() == 'resource':
-            if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
-                mult_params['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+            if isinstance(node, DepthwiseConv1D):
+                mult_params['dense_function'] = 'nnet::DepthwiseDenseLatency'
             else:
-                mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
-            # The 3rd case is never used
+                mult_params['dense_function'] = 'nnet::DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if isinstance(node, DepthwiseConv1D):
+                if int(mult_params['reuse_factor']) <= int(mult_params['n_out']):
+                    mult_params['dense_function'] = 'nnet::DepthwiseDenseResource_rf_leq_nout'
+                else:
+                    if int(mult_params['reuse_factor']) % int(mult_params['n_out']) == 0:
+                        mult_params['dense_function'] = 'nnet::DepthwiseDenseResource_rf_gt_nout_rem0'
+                    else:
+                        mult_params['dense_function'] = 'nnet::DepthwiseDenseResource_rf_gt_nout'
+            else:
+                if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
+                    mult_params['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+                else:
+                    if int(mult_params['reuse_factor']) % int(mult_params['n_in']) == 0:
+                        mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
+                    else:
+                        mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin'
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             mult_params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
 
@@ -262,13 +276,27 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
 
         namespace = params['namespace']
         if node.get_attr('strategy').lower() == 'latency':
-            mult_params['dense_function'] = 'nnet::DenseLatency'
-        elif node.get_attr('strategy').lower() == 'resource':
-            if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
-                mult_params['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+            if isinstance(node, DepthwiseConv2D):
+                mult_params['dense_function'] = 'nnet::DepthwiseDenseLatency'
             else:
-                mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
-            # The 3rd case is never used
+                mult_params['dense_function'] = 'nnet::DenseLatency'
+        elif node.get_attr('strategy').lower() == 'resource':
+            if isinstance(node, DepthwiseConv2D):
+                if int(mult_params['reuse_factor']) <= int(mult_params['n_out']):
+                    mult_params['dense_function'] = 'nnet::DepthwiseDenseResource_rf_leq_nout'
+                else:
+                    if int(mult_params['reuse_factor']) % int(mult_params['n_out']) == 0:
+                        mult_params['dense_function'] = 'nnet::DepthwiseDenseResource_rf_gt_nout_rem0'
+                    else:
+                        mult_params['dense_function'] = 'nnet::DepthwiseDenseResource_rf_gt_nout'
+            else:
+                if int(mult_params['reuse_factor']) <= int(mult_params['n_in']):
+                    mult_params['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+                else:
+                    if int(mult_params['reuse_factor']) % int(mult_params['n_in']) == 0:
+                        mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
+                    else:
+                        mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin'
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             mult_params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
 
