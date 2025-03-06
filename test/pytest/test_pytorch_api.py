@@ -80,6 +80,7 @@ def test_activations(activation_function, backend, io_type):
     model.eval()
 
     X_input = np.random.rand(1)
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 

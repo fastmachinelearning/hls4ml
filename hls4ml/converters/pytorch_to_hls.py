@@ -225,9 +225,17 @@ def parse_pytorch_model(config, verbose=True):
             # parse info from class object
             input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
             if pytorch_class in ["RNN", "GRU", "LSTM"]:
-                # we currently don't support the passing of the initial value of the hidden state to RNN models
-                input_names = [inputs_map.get(str(node.args[0]), str(node.args[0]))]
-                input_shapes = [output_shapes[str(node.args[0])]]
+                input_shapes = []
+                input_names = []
+                for arg in node.args:
+                    if isinstance(arg, tuple):
+                        for input in arg:
+                            input_shapes.append(output_shapes[str(input)])
+                            input_names.append(inputs_map.get(str(input), str(input)))
+                    else:
+                        input_shapes.append(output_shapes[str(arg)])
+                        input_names.append(inputs_map.get(str(arg), str(arg)))
+
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif "getitem" in node.args[0].name:
                 for tmp_node in traced_model.graph.nodes:
