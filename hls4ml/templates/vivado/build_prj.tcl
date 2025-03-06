@@ -179,6 +179,7 @@ if {$opt(csim)} {
 
 if {$opt(synth)} {
     puts "***** C/RTL SYNTHESIS *****"
+
     set time_start [clock clicks -milliseconds]
     csynth_design
     set time_end [clock clicks -milliseconds]

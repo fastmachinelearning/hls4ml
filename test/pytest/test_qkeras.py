@@ -620,7 +620,7 @@ def test_qlstm(backend):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision="ap_fixed<8,1>", backend=backend
     )
-    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qsimplernn_{backend}')
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qlstm_{backend}')
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 

@@ -565,6 +565,9 @@ class ModelGraph:
                     if outputs[0] == nxt_inp:
                         next_node.inputs[i] = inputs[0]
 
+        if node.outputs[0] in self.outputs:
+            prev_node = node.get_input_node(node.inputs[0])
+            self.outputs[self.outputs.index(node.outputs[0])] = prev_node.outputs[0]
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
 

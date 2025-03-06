@@ -34,6 +34,13 @@ class VitisBackend(VivadoBackend):
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
+        # Register the fifo depth optimization flow which is different from the one for vivado
+        fifo_depth_opt_passes = [
+            'vitis:fifo_depth_optimization'
+        ] + writer_passes  # After optimization, a new project will be written
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)
+
     def create_initial_config(
         self,
         part='xcvu13p-flga2577-2-e',
