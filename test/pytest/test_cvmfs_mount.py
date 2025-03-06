@@ -18,11 +18,12 @@ def test_vivado_hls_availability():
     os.environ['PATH'] += os.pathsep + vivado_bin_dir
 
     try:
-        result = subprocess.run(
-            ['vivado', '-version'], capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
-        )
+        result = subprocess.run(['vivado', '-version'], capture_output=True, check=True, text=True)
         print("Vivado HLS Version Information:")
-        print(result.stdout.decode())
+        print(result.stdout)
+        if result.stderr:
+            print("Error:", result.stderr)
     except subprocess.CalledProcessError as e:
-        print("Failed to execute vivado_hls for version check:", e)
+        print("Failed to execute vivado for version check:", e)
+        print(e.stderr)
         pytest.fail("Vivado HLS version check failed.")
