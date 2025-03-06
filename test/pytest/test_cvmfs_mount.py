@@ -6,7 +6,7 @@ import pytest
 
 def test_vivado_hls_availability():
 
-    vivado_bin_dir = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/bin'
+    vivado_bin_dir = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1/bin'
 
     try:
         contents = os.listdir(vivado_bin_dir)
