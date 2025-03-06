@@ -119,8 +119,7 @@ class VivadoWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        for name in model.graph:
-            print(name)
+
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         f = open(os.path.join(filedir, '../templates/vivado/firmware/myproject.cpp'))
