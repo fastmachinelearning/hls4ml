@@ -4,7 +4,7 @@ import json
 import re
 
 
-def convert_to_oneapi_naming(s):
+def _convert_to_oneapi_naming(s):
     s2 = s.lower()
 
     # Capitalize the first letter
@@ -19,7 +19,41 @@ def convert_to_oneapi_naming(s):
     return s2
 
 
-def parse_oneapi_report(prjDir):
+def _find_projects(hls_dir):
+    makeImportance = ["fpga_emu", "report", "fpga_sim", "fpga"]
+    hls_dir = hls_dir.rstrip("/")
+    if hls_dir[-4:] == ".prj":
+        prjList = [hls_dir]
+    else:
+        prjList = glob.glob(os.path.join(hls_dir, "**/*.prj"), recursive=True)
+        
+    prjDict = {}
+    for prjDir in prjList:
+        path = os.path.dirname(prjDir)
+        targetName, makeType, _ = os.path.basename(prjDir).rsplit(".", 2)
+        lastModified = os.stat(prjDir).st_mtime
+        if targetName not in prjDict:
+            prjDict[targetName] = {"path": path, "makeType": makeType, "lastModified": lastModified, "counter": 1}
+        else:
+            prjDict[targetName]["counter"] += 1
+            if makeImportance.index(makeType) > makeImportance.index(prjDict[targetName]["makeType"]):
+                prjDict[targetName]["path"] = path
+                prjDict[targetName]["makeType"] = makeType
+                prjDict[targetName]["lastModified"] = lastModified
+            elif makeImportance.index(makeType) == makeImportance.index(prjDict[targetName]["makeType"]):
+                if lastModified > prjDict[targetName]["lastModified"]:
+                    prjDict[targetName]["path"] = path
+                    prjDict[targetName]["lastModified"] = lastModified
+
+    for targetName, prjInfo in prjDict.items():
+        if prjInfo["counter"] > 1:
+            print(f"Multiple instances of the project \"{targetName}\" have been found in the rootdir \"{hls_dir}\":")
+            print(f"Only \"{prjInfo['path']}/{targetName}.{prjInfo['makeType']}.prj\" will be analyzed.\n")
+
+    return prjDict
+
+
+def _parse_single_report(prjDir):
     
     if not os.path.exists(prjDir):
         print(f'Path {prjDir} does not exist. Exiting.')
@@ -34,7 +68,7 @@ def parse_oneapi_report(prjDir):
     #PathSimDataJson = PathJson + "simulation_raw.ndjson"
 
     targetName, makeType, _ = os.path.basename(prjDir).rsplit(".", 2)
-    simTask = convert_to_oneapi_naming(targetName)
+    simTask = _convert_to_oneapi_naming(targetName)
     #if targetName not in report:
     #    report[targetName] = {}
 
@@ -87,11 +121,25 @@ def parse_oneapi_report(prjDir):
     return report
 
 
+def parse_oneapi_report(hls_dir):
+    prjDict = _find_projects(hls_dir)
+
+    report = {}
+    for targetName, prjInfo in prjDict.items():
+        report[targetName] = _parse_single_report(os.path.join(prjInfo['path'], f"{targetName}.{prjInfo['makeType']}.prj"))
+
+    return report
+
+
 def print_oneapi_report(report_dict):
-    if _is_running_in_notebook():
-        _print_ipython_report(report_dict)
-    else:
-        _print_str_report(report_dict)
+    for prjName, prjReport in report_dict.items():
+        if len(report_dict) > 1:
+            print('*' * 54 + '\n')
+            print(f"Report for {prjName}:")
+        if _is_running_in_notebook():
+            _print_ipython_report(prjReport)
+        else:
+            _print_str_report(prjReport)
 
 def _print_ipython_report(report_dict):
     from IPython.display import HTML, display
@@ -207,7 +255,7 @@ def _make_html_header(report_header):
 
 
 def _make_str_header(report_header):
-    sep = '=' * 54 + '\n'
+    sep = '=' * 50 + '\n'
     return '\n' + sep + '== ' + report_header + '\n' + sep
     
 
