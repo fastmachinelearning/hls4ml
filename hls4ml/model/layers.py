@@ -31,6 +31,7 @@ from hls4ml.model.types import (
     find_minimum_width,
 )
 from hls4ml.utils import attribute_descriptions as descriptions
+from hls4ml.utils.einsum_utils import parse_einsum
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 # TODO move this to some utility module
