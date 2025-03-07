@@ -59,7 +59,7 @@ add_files -norecurse ./${project_name}_vivado_accelerator/project_1.srcs/sources
 reset_run impl_1
 reset_run synth_1
 launch_runs impl_1 -to_step write_bitstream -jobs 6
-wait_on_run -timeout 360 impl_1
+wait_on_run -timeout 480 impl_1
 
 open_run impl_1
 report_utilization -file util.rpt -hierarchical -hierarchical_percentages
