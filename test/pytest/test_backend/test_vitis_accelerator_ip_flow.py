@@ -100,7 +100,7 @@ def build_and_check(hls_model, run_fifo_depth_optimization):
 
     # build the new project with optimized depths and execute cosimulation to check for deadlocks
     # due to the new FIFO depths
-    hls_model.build(synth=True, csim=False, export=True, cosim=True, bitfile=True, vsynth=False)
+    hls_model.build(reset=False, synth=True, csim=False, export=True, cosim=True, bitfile=True, fifo_opt=run_fifo_depth_optimization)
 
     # checks if the fifo depths decreased/were optimized
     fifo_depths_decreased = False
@@ -142,7 +142,7 @@ def test_runtime_error(backend):
     expect_exception(RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel')
 
 
-# @pytest.mark.skip(reason='Skipping synthesis tests for now')
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_successful_execution_of_dummy_keras(backend):
     """Test the correct execution of the FIFO depth optimizer."""
@@ -200,6 +200,9 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
         io_type=io_type,
         backend=backend,
         hls_config=config,
+        part="xczu9eg-ffvb1156-2-e", 
+        board='zcu102',
+        clock_period=10
     )
     hls_model.compile()
     y_hls4ml = hls_model.predict(np.ascontiguousarray(X))
@@ -221,7 +224,7 @@ def test_successful_execution_of_tiny_unet(backend):
     )
 
 
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
+# @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_successful_execution_of_tiny_unet_with_fifo_optimization(backend):
     """Test the correct execution of the FIFO depth optimizer."""
