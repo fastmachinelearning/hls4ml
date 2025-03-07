@@ -20,7 +20,7 @@ backend_options = ['VitisAcceleratorIPFlow']
 
 def parse_cosim_report_and_search_for_bitstream(project_path):
     """Parse the cosimulation report to check whether the cosimulation passed or failed and therefore a deadlock is
-    detected.
+    detected and check if the bitstream was generated without errors.
     """
     prj_dir = None
     top_func_name = None
@@ -43,16 +43,18 @@ def parse_cosim_report_and_search_for_bitstream(project_path):
 
     if cosim_report_exists and bitstream_exists:
         return cosim_file_path, bitstream_exists
+    elif (not cosim_report_exists) and (not bitstream_exists):
+        raise FileNotFoundError("Co-simulation report and Bitstream not found.")
     elif not cosim_report_exists:
         raise FileNotFoundError("Co-simulation report not found.")
-    elif not bitstream_exists:
-        raise FileNotFoundError("Bitstream not found.")
     else:
-        raise FileNotFoundError("Co-simulation report and Bitstream not found.")
+        raise FileNotFoundError("Bitstream not found.")
 
 
-def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type, run_fifo_depth_optimization):
-    """Execute the FIFO depth optimization sequence on a dummy Keras model."""
+def run_bitstream_generation_keras(backend, profiling_fifo_depth, io_type, run_fifo_depth_optimization):
+    """Execute bitstream generation on a dummy Keras model and the FIFO optimization sequence if
+    `run_fifo_depth_optimization` is set.
+    """
 
     # create a keras model
     input_shape = (16, 16, 3)
@@ -72,16 +74,17 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type, ru
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32, 16>')
 
-    # include the FIFO Depth optimizer do the flows
+    # include the FIFO Depth optimizer do the flows if `run_fifo_depth_optimization` is set
     if run_fifo_depth_optimization:
         config['Flows'] = ['vitisacceleratoripflow:fifo_depth_optimization']
         hls4ml.model.optimizer.get_optimizer('vitisacceleratoripflow:fifo_depth_optimization').configure(
             profiling_fifo_depth=profiling_fifo_depth
         )
 
-    output_dir = str(test_root_path / f'hls4mlprj_vitis_accelerator_backend_{backend}')
+    output_dir = str(
+        test_root_path / f'hls4mlprj_keras_model_backend_{backend}_fifo_optimization_{run_fifo_depth_optimization}'
+    )
 
-    # execute fifo optimization
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, io_type=io_type, hls_config=config, output_dir=output_dir, backend=backend, clock_period=10
     )
@@ -91,15 +94,16 @@ def run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type, ru
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.01)
 
-    # check that the FIFOs have been optimized succesfully
+    # build the hls4ml model and check if the bitstream was generated and the FIFOs were optimized if
+    # `run_fifo_depth_optimization` is set
     build_and_check(hls_model, run_fifo_depth_optimization)
 
 
 def build_and_check(hls_model, run_fifo_depth_optimization):
     """Execute the FIFO depth optimization sequence on an hls4ml model."""
 
-    # build the new project with optimized depths and execute cosimulation to check for deadlocks
-    # due to the new FIFO depths
+    # try to generate a bitstream. Use the optimized FIFO depths and execute cosimulation to check for deadlocks
+    # due to the new FIFO depths if `run_fifo_depth_optimization` is set
     hls_model.build(
         reset=False, synth=True, csim=False, export=True, cosim=True, bitfile=True, fifo_opt=run_fifo_depth_optimization
     )
@@ -130,47 +134,12 @@ def build_and_check(hls_model, run_fifo_depth_optimization):
 
 def expect_exception(error, message, backend, profiling_fifo_depth, io_type):
     with pytest.raises(error, match=re.escape(message)):
-        run_fifo_depth_optimization_keras(backend, profiling_fifo_depth, io_type)
-
-
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
-@pytest.mark.parametrize('backend', backend_options)
-@pytest.mark.parametrize('profiling_fifo_depth', [-2, 3.14, "a"])
-def test_value_error(backend, profiling_fifo_depth):
-    """Test the FIFO depth optimizer with faulty inputs of profiling_fifo_depth to verify that an exception is raised."""
-    message = "The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer."
-    expect_exception(ValueError, message, backend, profiling_fifo_depth, io_type='io_stream')
-
-
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
-@pytest.mark.parametrize('backend', backend_options)
-def test_runtime_error(backend):
-    """Test the FIFO depth optimizer with io_type='io_parallel' to verify that an exception is raised."""
-    message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
-    expect_exception(RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel')
-
-
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
-@pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution_of_dummy_keras(backend):
-    """Test the correct execution of the FIFO depth optimizer."""
-    run_fifo_depth_optimization_keras(
-        backend, profiling_fifo_depth=200_000, io_type='io_stream', run_fifo_depth_optimization=False
-    )
-
-
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
-@pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution_of_dummy_keras_with_fifo_optimization(backend):
-    """Test the correct execution of the FIFO depth optimizer."""
-    run_fifo_depth_optimization_keras(
-        backend, profiling_fifo_depth=200_000, io_type='io_stream', run_fifo_depth_optimization=True
-    )
+        run_bitstream_generation_keras(backend, profiling_fifo_depth, io_type)
 
 
 def get_branched_model():
     """
-    Load branched model, already channels-last and cleaned
+    Load branched model, already channels-last and cleaned.
     """
     dl_file = str(example_model_path / "onnx/branched_model_ch_last.onnx")
     assert os.path.isfile(dl_file)
@@ -178,8 +147,10 @@ def get_branched_model():
     return model
 
 
-def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, model, run_fifo_depth_optimization):
-    """Execute the FIFO depth optimization sequence on a ONNX/QONNX model."""
+def run_bitstream_generation_onnx(backend, profiling_fifo_depth, io_type, model, run_fifo_depth_optimization):
+    """Execute bitstream generation on a QONNX branched model and the FIFO optimization sequence if
+    `run_fifo_depth_optimization` is set.
+    """
 
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
@@ -200,7 +171,9 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
             profiling_fifo_depth=profiling_fifo_depth
         )
 
-    output_dir = str(test_root_path / f'hls4mlprj_fifo_depth_optimization_branched_model_backend_{backend}')
+    output_dir = str(
+        test_root_path / f'hls4mlprj_branched_model_backend_{backend}_fifo_optimization_{run_fifo_depth_optimization}'
+    )
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
@@ -221,9 +194,48 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution_of_tiny_unet(backend):
-    """Test the correct execution of the FIFO depth optimizer."""
-    run_fifo_depth_optimization_onnx(
+@pytest.mark.parametrize('profiling_fifo_depth', [-2, 3.14, "a"])
+def test_value_error(backend, profiling_fifo_depth):
+    """Test the FIFO depth optimizer with faulty inputs of profiling_fifo_depth to verify that an exception is raised."""
+    message = "The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer."
+    expect_exception(
+        ValueError, message, backend, profiling_fifo_depth, io_type='io_stream', run_fifo_depth_optimization=True
+    )
+
+
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
+@pytest.mark.parametrize('backend', backend_options)
+def test_runtime_error(backend):
+    """Test the FIFO depth optimizer with io_type='io_parallel' to verify that an exception is raised."""
+    message = "To use this optimization you have to set `IOType` field to `io_stream` in the HLS config."
+    expect_exception(
+        RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel', run_fifo_depth_optimization=True
+    )
+
+
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
+@pytest.mark.parametrize('backend', backend_options)
+def test_successful_execution_of_dummy_keras(backend):
+    """Test the correct execution of the bitstream generation."""
+    run_bitstream_generation_keras(
+        backend, profiling_fifo_depth=200_000, io_type='io_stream', run_fifo_depth_optimization=False
+    )
+
+
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
+@pytest.mark.parametrize('backend', backend_options)
+def test_successful_execution_of_dummy_keras_with_fifo_optimization(backend):
+    """Test the correct execution of the bitstream generation with the FIFO depth optimizer."""
+    run_bitstream_generation_keras(
+        backend, profiling_fifo_depth=200_000, io_type='io_stream', run_fifo_depth_optimization=True
+    )
+
+
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
+@pytest.mark.parametrize('backend', backend_options)
+def test_successful_execution_of_branched_model(backend):
+    """Test the correct execution of the bitstream generation."""
+    run_bitstream_generation_onnx(
         backend,
         profiling_fifo_depth=200_000,
         io_type='io_stream',
@@ -232,11 +244,11 @@ def test_successful_execution_of_tiny_unet(backend):
     )
 
 
-@pytest.mark.skip(reason='Skipping synthesis tests for now')
+# @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution_of_tiny_unet_with_fifo_optimization(backend):
-    """Test the correct execution of the FIFO depth optimizer."""
-    run_fifo_depth_optimization_onnx(
+def test_successful_execution_of_branched_model_with_fifo_optimization(backend):
+    """Test the correct execution of the bitstream generation with the FIFO depth optimizer."""
+    run_bitstream_generation_onnx(
         backend,
         profiling_fifo_depth=200_000,
         io_type='io_stream',
