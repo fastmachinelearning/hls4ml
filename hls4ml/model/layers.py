@@ -27,10 +27,12 @@ from hls4ml.model.types import (
     find_minimum_width,
 )
 from hls4ml.utils import attribute_descriptions as descriptions
+from hls4ml.utils.einsum_utils import parse_einsum
 from hls4ml.utils.string_utils import convert_to_snake_case
 
-
 # TODO move this to some utility module
+
+
 class classproperty:
     def __init__(self, func):
         self.func = func
@@ -1621,6 +1623,131 @@ class SymbolicExpression(Layer):
         self.add_output_variable([len(self.get_attr('expression'))], [f'N_OUTPUTS_{self.index}'], var_name='y')
 
 
+class EinsumDense(Layer):
+    _expected_attributes = [
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+
+        kernel: np.ndarray = self.attributes.attributes['weight_data']
+        bias: np.ndarray | None = self.attributes.attributes['bias_data']
+        equation = self.attributes['equation']
+        inp_shape = self.attributes['inp_shape']
+        out_shape = self.attributes['out_shape']
+
+        kernel_shape = kernel.shape
+        recipe = parse_einsum(equation, inp_shape, kernel_shape)
+        assert not any(recipe['direct_sum_axis']), (
+            'Do not put direct sum indices (e.g., only appears in one of the operands) in the equation.'
+            'Use explicit addition operator before instead.'
+        )
+        inp_tpose_idxs, ker_tpose_idxs = recipe['in_transpose_idxs']
+        out_tpose_idxs = recipe['out_transpose_idxs']
+
+        # Pre-transpose kernel (and bias) to save a transpose in cpp. Shouldn't matter for latency strategy though.
+        # hls4ml dense acts like i,ij->j
+        # parser assumes ij,j->i, so we need to transpose the kernel to match
+        kernel = kernel.transpose(ker_tpose_idxs)
+        kernel = kernel.reshape(recipe['I'], recipe['L1'], recipe['C']).transpose(0, 2, 1)
+
+        def to_original_kernel(tkernel: np.ndarray) -> np.ndarray:
+            _kernel = tkernel.transpose(0, 2, 1)
+            _kernel = _kernel.reshape(tuple(kernel_shape[i] for i in ker_tpose_idxs))
+            return _kernel.transpose(np.argsort(ker_tpose_idxs))
+
+        # TODO: for weight in bram mode (resource), broadcasting bias here shall be avoided.
+        if bias is not None:
+            bias = np.broadcast_to(bias, out_shape).transpose(np.argsort(out_tpose_idxs))
+        else:
+            # The automatically created bias is just the last dimension of the output shape
+            # Which is too small in general for einsum dense.
+            # The transpose is just to match the shape in case of have real bias, no real effect.
+            bias = np.zeros(out_shape).transpose(np.argsort(out_tpose_idxs))
+
+        self.attributes.attributes['weight_data'] = kernel
+        self.attributes.attributes['to_original_kernel'] = to_original_kernel
+        self.attributes.attributes['bias_data'] = bias
+        self.attributes['inp_tpose_idxs'] = inp_tpose_idxs
+        self.attributes['out_tpose_idxs'] = out_tpose_idxs
+        self.attributes['out_interpert_shape'] = recipe['out_interpert_shape']
+        self.attributes['n_free_data'] = recipe['L0']
+        self.attributes['n_free_kernel'] = recipe['L1']
+        self.attributes['n_inplace'] = recipe['I']
+        self.attributes['n_contract'] = recipe['C']
+        pf = self.attributes.attributes.get('parallelization_factor', recipe['L0'])
+        self.attributes['parallelization_factor'] = pf
+
+        self.add_weights(compression=self.model.config.get_compression(self))
+        self.add_bias()
+
+
+class Matmul(Layer):
+    _expected_attributes = [
+        TypeAttribute('accum'),
+        Attribute('inup1_shape', value_type=tuple),
+        Attribute('inp2_shape', value_type=tuple),
+    ]
+
+
+class Einsum(Layer):
+    _expected_attributes = [
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp0_shape', value_type=tuple),
+        Attribute('inp1_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+
+        equation = self.attributes['equation']
+        inp0_shape = self.attributes['inp0_shape']
+        inp1_shape = self.attributes['inp1_shape']
+        out_shape = self.attributes['out_shape']
+
+        recipe = parse_einsum(equation, inp0_shape, inp1_shape)
+        assert not any(recipe['direct_sum_axis']), (
+            'Do not put direct sum indices (e.g., only appears in one of the operands) in the equation.'
+            'Use explicit addition operator before instead.'
+        )
+        inp0_tpose_idxs, inp1_tpose_idxs = recipe['in_transpose_idxs']
+        out_tpose_idxs = recipe['out_transpose_idxs']
+
+        self.attributes.attributes.update(recipe)
+        self.attributes['n_free0'] = recipe['L0']
+        self.attributes['n_free1'] = recipe['L1']
+        self.attributes['n_inplace'] = recipe['I']
+        self.attributes['n_contract'] = recipe['C']
+        self.attributes['out_interpert_shape'] = recipe['out_interpert_shape']
+
+        self.attributes['inp0_tpose_idxs'] = inp0_tpose_idxs
+        self.attributes['inp1_tpose_idxs'] = inp1_tpose_idxs
+        self.attributes['out_tpose_idxs'] = out_tpose_idxs
+
+        pf = self.attributes.attributes.get('parallelization_factor', recipe['L0'])
+        self.attributes['parallelization_factor'] = pf
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1687,6 +1814,8 @@ layer_map = {
     'BatchNormOnnx': BatchNormOnnx,
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
+    'EinsumDense': EinsumDense,
+    'Einsum': Einsum,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }
