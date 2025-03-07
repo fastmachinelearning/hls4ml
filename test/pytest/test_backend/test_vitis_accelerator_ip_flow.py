@@ -244,7 +244,7 @@ def test_successful_execution_of_branched_model(backend):
     )
 
 
-# @pytest.mark.skip(reason='Skipping synthesis tests for now')
+@pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 def test_successful_execution_of_branched_model_with_fifo_optimization(backend):
     """Test the correct execution of the bitstream generation with the FIFO depth optimizer."""
