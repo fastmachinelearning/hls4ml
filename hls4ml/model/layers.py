@@ -21,6 +21,9 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     NamedType,
+    PrecisionType,
+    RoundingMode,
+    SaturationMode,
     TensorVariable,
     UnspecifiedPrecisionType,
     WeightVariable,
@@ -28,6 +31,9 @@ from hls4ml.model.types import (
 )
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
+
+if typing.TYPE_CHECKING:
+    from hls4ml.model import ModelGraph
 
 
 # TODO move this to some utility module
@@ -80,7 +86,7 @@ class Layer:
                 "No model layer should be named 'input' because that is a reserved;"
                 + "layer name in ModelGraph; Please rename the layer in your model"
             )
-        self.model = model
+        self.model: 'ModelGraph' = model
         self.name = name
         self.index = model.next_layer()
         self.inputs = inputs
@@ -145,6 +151,9 @@ class Layer:
 
         # Validate existing attributes
         for attr_name, attr_value in self.attributes.items():
+            if isinstance(attr_value, PrecisionType):
+                attr_value = self._wrap_precision_to_type(f'{self.name}_{attr_name}', attr_value)
+                self.set_attr(attr_name, attr_value)
             exp_attr = all_attributes.pop(attr_name, None)
             if exp_attr is not None:
                 if not exp_attr.validate_value(attr_value):
@@ -910,7 +919,8 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
-        self.set_attr('n_in', self.get_input_variable().size())
+        if 'n_in' not in self.attributes:
+            self.set_attr('n_in', self.get_input_variable().size())
 
 
 class ParametrizedActivation(Activation):
@@ -975,6 +985,31 @@ class PReLU(Activation):
 
 
 class Softmax(Activation):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('activation', value_type=str),
+        Attribute('n_outer', value_type=int, default=1),
+        Attribute('n_inner', value_type=int, default=1),
+        ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'),
+        ConfigurableAttribute('skip', value_type=bool, default=False),
+        TypeAttribute(
+            'exp_table',
+            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+        ),
+        TypeAttribute(
+            'inv_table',
+            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+        ),
+        TypeAttribute(
+            'inv_inp',
+            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+        ),
+        TypeAttribute(
+            'accum',
+            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+        ),
+    ]
+
     def initialize(self):
         super().initialize()
 
