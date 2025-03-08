@@ -1,4 +1,5 @@
 import typing
+from copy import copy
 
 import numpy as np
 
@@ -168,7 +169,7 @@ class Layer(Serializable):
         for attr_name, attr in all_attributes.items():
             if attr.default is not None:
                 if isinstance(attr, TypeAttribute):
-                    self.set_attr(attr_name, self._wrap_precision_to_type(self.name + '_' + attr_name, attr.default))
+                    self.set_attr(attr_name, self._wrap_precision_to_type(self.name + '_' + attr_name, copy(attr.default)))
                 else:
                     self.set_attr(attr_name, attr.default)
             else:
