@@ -40,8 +40,6 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     PrecisionType,
-    RoundingMode,
-    SaturationMode,
     UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
