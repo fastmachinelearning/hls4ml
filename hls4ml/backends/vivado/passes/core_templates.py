@@ -57,8 +57,16 @@ class DenseConfigTemplate(LayerConfigTemplate):
             # The 3rd case is never used
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'distributed_arithmetic':
+            # Only triggered in io_streaming mode
+            params['dense_function'] = f'{namespace}::dense_da_wrapper_{node.index}'
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            return False  # DA does not use common dense template
+        return super().match(node)
 
 
 class DenseFunctionTemplate(FunctionCallTemplate):
@@ -72,6 +80,11 @@ class DenseFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            return False  # DA does not use common dense template
+        return super().match(node)
 
 
 # BatchNormalization templates
