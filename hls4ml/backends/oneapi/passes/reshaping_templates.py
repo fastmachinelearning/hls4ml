@@ -185,16 +185,8 @@ class TransposeConfigTemplate(LayerConfigTemplate):
         perm = tuple(node.get_attr('perm'))
         name = f'config{node.index}'
 
-        new_shape, perm_strides = node.model.config.backend.permute_config_gen(name, shape, perm)
-        return transpose_config_template.format(
-            dims=len(shape),
-            N=int(np.prod(shape)),
-            from_shape=', '.join(str(x) for x in shape),
-            perm=', '.join(str(x) for x in perm),
-            perm_strides=', '.join(str(x) for x in perm_strides),
-            to_shape=', '.join(str(x) for x in new_shape),
-            config_name=name,
-        )
+        conf = node.model.config.backend.transpose_config_gen(name, shape, perm)
+        return transpose_config_template.format(**conf)
 
 
 class TransposeFunctionTemplate(FunctionCallTemplate):

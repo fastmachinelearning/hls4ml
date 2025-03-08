@@ -914,7 +914,7 @@ class FPGABackend(Backend):
         return generated_code
 
     @staticmethod
-    def permute_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
+    def transpose_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
         """
         Generate new shape and perm_strides for a permute operation. Operates by mapping the output index
         to input input index by:
@@ -933,12 +933,20 @@ class FPGABackend(Backend):
             perm (tuple[int, ...]): The permutation of the dimensions.
 
         Returns:
-            (new_shape, perm_strides) (tuple, tuple):  the output shape and permutation strides.
+            dict: Dictionary containing the configuration.
         """
         new_shape = tuple(shape[i] for i in perm)
         strides = np.cumprod((shape[1:] + (1,))[::-1])[::-1]
         perm_strides = tuple(int(strides[i]) for i in perm)
-        return (new_shape, perm_strides)
+        return dict(
+            dims=len(shape),
+            N=math.prod(shape),
+            from_shape=', '.join(str(x) for x in shape),
+            perm=', '.join(str(x) for x in perm),
+            perm_strides=', '.join(str(x) for x in perm_strides),
+            to_shape=', '.join(str(x) for x in new_shape),
+            config_name=name,
+        )
 
     @model_optimizer()
     def write_hls(self, model):
