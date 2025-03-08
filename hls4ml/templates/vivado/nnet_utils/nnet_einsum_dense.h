@@ -3,6 +3,7 @@
 
 #include "hls_stream.h"
 #include "nnet_common.h"
+#include "nnet_dense.h"
 #include "nnet_dense_latency.h"
 #include "nnet_dense_resource.h"
 #include "nnet_function_stubs.h"
