@@ -113,8 +113,11 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
             'vivado:fix_softmax_table_size',
-            'vivado:process_fixed_point_quantizer_layer',
             'infer_precision_types',
+            'vivado:distributed_arithmetic_codegen',
+            'vivado:distributed_arithmetic_einsum_codegen',
+            'vivado:fuse_quantizer_into_d_a_layers',
+            'vivado:process_fixed_point_quantizer_layer',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -127,6 +130,8 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_pointwise_conv1_d',
             'vivado:generate_unrolled_dense_resource',
             'vivado:set_pipeline_style',
+            'vivado:d_a_latency_dense_template',
+            'vivado:d_a_latency_conv_template',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -294,6 +299,11 @@ class VivadoBackend(FPGABackend):
             else:
                 self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 layer.set_attr('strategy', 'resource_unrolled')
+        elif layer.model.config.get_strategy(layer).lower() == 'distributed_arithmetic':
+            rf = layer.get_attr('reuse_factor')
+            if rf != 1:
+                raise Exception(f'Layer {layer.name} has rf = {rf} != 1, but has strategy = "distributed_arithmetic".')
+            layer.set_attr('strategy', 'distributed_arithmetic')
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))
@@ -331,6 +341,11 @@ class VivadoBackend(FPGABackend):
             else:
                 self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 layer.set_attr('strategy', 'resource_unrolled')
+        elif layer.model.config.get_strategy(layer).lower() == 'distributed_arithmetic':
+            rf = layer.get_attr('reuse_factor')
+            if rf != 1:
+                raise Exception(f'Layer {layer.name} has rf = {rf} != 1, but has strategy = "distributed_arithmetic".')
+            layer.set_attr('strategy', 'distributed_arithmetic')
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -452,6 +467,11 @@ class VivadoBackend(FPGABackend):
             else:
                 self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 layer.set_attr('strategy', 'resource_unrolled')
+        elif layer.model.config.get_strategy(layer).lower() == 'distributed_arithmetic':
+            rf = layer.get_attr('reuse_factor')
+            if rf != 1:
+                raise Exception(f'Layer {layer.name} has rf = {rf} != 1, but has strategy = "distributed_arithmetic".')
+            layer.set_attr('strategy', 'distributed_arithmetic')
         else:
             layer.set_attr('strategy', 'latency')
 
