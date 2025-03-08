@@ -129,7 +129,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
         codegen_backend = VitisCodegenBackend(fn_name=fn_name)
 
         with Namer().tmp_scope():
-            states = compile_kernel(kernel, k, b, i, [False] * n_in, [0] * n_in, 1, 0, 128, 64)  # type: ignore
+            states = compile_kernel(kernel, k, b, i, [False] * n_in, [0] * n_in, 1, None, 128, 64)  # type: ignore
             inp, out = graph_compile_states(states, False)
             if node.attributes['bias'] is not None:
                 bias = node.attributes['bias'].data.ravel()
