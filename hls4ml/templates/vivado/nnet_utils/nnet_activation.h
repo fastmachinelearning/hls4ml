@@ -240,7 +240,6 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     Op_max<data_T> op_max;
     data_T x_max = reduce<data_T, CONFIG_T::n_in, Op_max<data_T>>(data, op_max);
 
-    // For the diffs, use the same type as the input but force rounding and saturation
     typename CONFIG_T::inp_norm_t d_xi_xmax[CONFIG_T::n_in];
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS unroll
@@ -255,6 +254,8 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
         #pragma HLS unroll
         unsigned x = softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(d_xi_xmax[i]);
         exp_res[i] = exp_table[x];
+        std::cout << "exp_res[" << i << "](" << d_xi_xmax[i].to_float() << "->" << x << ") = " << exp_res[i].to_float()
+                  << std::endl;
     }
 
     // Explicitly sum the results with an adder tree.

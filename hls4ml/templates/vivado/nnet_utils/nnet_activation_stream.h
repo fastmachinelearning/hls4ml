@@ -207,7 +207,6 @@ SoftmaxArrayLoop:
         typename data_T::value_type x_max =
             reduce<typename data_T::value_type, data_T::size, Op_max<typename data_T::value_type>>(data_array, op_max);
 
-        // For the diffs, use the same type as the input but force rounding and saturation
         typename CONFIG_T::inp_norm_t d_xi_xmax[data_T::size];
         for (unsigned j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
@@ -229,8 +228,8 @@ SoftmaxArrayLoop:
         Op_add<typename CONFIG_T::accum_t> op_add;
         exp_sum = reduce<typename CONFIG_T::accum_t, data_T::size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
-        typename CONFIG_T::inv_table_t inv_exp_sum =
-            invert_table[softmax_idx_from_real_val<typename CONFIG_T::accum_t, CONFIG_T::inv_table_size>(exp_sum)];
+        typename CONFIG_T::accum_t inv_exp_sum =
+            invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
 
         res_T out_pack;
         PRAGMA_DATA_PACK(out_pack)

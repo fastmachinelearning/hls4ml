@@ -197,7 +197,7 @@ class KV3SoftmaxHandler(KerasV3LayerHandler):
             raise ValueError(f"Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}")
         config['axis'] = layer.axis
         config['activation'] = 'softmax'
-        config['n_outer'] = (n_outer,)
+        config['n_outer'] = n_outer
         config['n_inner'] = n_inner
 
         return (config,)
