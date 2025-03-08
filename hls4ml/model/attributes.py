@@ -182,7 +182,7 @@ class AttributeDict(MutableMapping):
         self.attributes[key] = value
 
     def __delitem__(self, key):
-        self.attributes.remove(key)
+        del self.attributes[key]
 
 
 class AttributeMapping(MutableMapping):
@@ -208,7 +208,7 @@ class AttributeMapping(MutableMapping):
         self.attributes[key] = value
 
     def __delitem__(self, key):
-        self.attributes.remove(key)
+        del self.attributes[key]
 
 
 class WeightMapping(AttributeMapping):
