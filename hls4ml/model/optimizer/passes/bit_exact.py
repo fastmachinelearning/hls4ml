@@ -651,19 +651,20 @@ def _(node: Softmax):
         return
 
     inv_inp_t: FixedPrecisionType = node.attributes['inv_inp_t'].precision
+    exp_table_t: FixedPrecisionType = node.attributes['exp_table_t'].precision
     accum_t = copy(inv_inp_t)
+    n_in = node.attributes['n_in']
+    scale = ceil(log2(n_in))
+    f_exp = exp_table_t.width - exp_table_t.integer
+    f = f_exp + scale
+    accum_t.width = f + inv_inp_t.integer
+    accum_t.width += scale
     if inv_inp_t.saturation_mode != SaturationMode.WRAP:
         accum_t.saturation_mode = SaturationMode.WRAP
         n_in = node.attributes['n_in']
         scale = ceil(log2(n_in))
         accum_t.width += scale
         accum_t.integer += scale
-    if inv_inp_t.rounding_mode == RoundingMode.TRN:
-        pass
-    elif inv_inp_t.rounding_mode == RoundingMode.RND:
-        accum_t.width += 1
-    else:
-        accum_t.width += 3
     accum_t.rounding_mode = RoundingMode.TRN
     default_register_precision(node)
     impl = node.attributes['implementation']
