@@ -32,7 +32,6 @@ from hls4ml.model.layers import (
     SeparableConv1D,
     SeparableConv2D,
     SimpleRNN,
-    Softmax,
 )
 from hls4ml.model.optimizer import model_optimizer
 from hls4ml.model.types import (
