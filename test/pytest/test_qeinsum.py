@@ -3,18 +3,16 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from keras.api.layers import Input
 
 from hls4ml.converters import convert_from_keras_model
-
-if keras.__version__ < '3.0.0':
-    pytest.skip('Only keras v3 is supported for now', allow_module_level=True)
 
 try:
     from hgq.layers import QEinsum
     from hgq.utils import trace_mode
 except ImportError:
     pytest.skip('s-quark is not installed', allow_module_level=True)
+
+from keras.api.layers import Input
 
 test_root_path = Path(__file__).parent
 
