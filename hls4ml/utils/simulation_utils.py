@@ -1,7 +1,8 @@
+import csv
 import os
+from collections import defaultdict
 
 import numpy as np
-import pandas as pd
 
 
 def write_verilog_testbench(nn_config, testbench_output_path):
@@ -510,33 +511,55 @@ def read_testbench_log(testbench_log_path, outputs):
         return {}
 
     try:
-        df = pd.read_csv(testbench_log_path)
-        BestLatency = df[df['output_name'] == 'BestLatency']['value'].iloc[0]
-        WorstLatency = df[df['output_name'] == 'WorstLatency']['value'].iloc[0]
-        output_df = df[~df['output_name'].isin(['BestLatency', 'WorstLatency'])]
+        with open(testbench_log_path, encoding='utf-8') as file:
+            reader = csv.reader(file)
+            header = next(reader)
+            required_columns = {'output_name', 'value', 'index'}
+            if not required_columns.issubset(set(header)):
+                print("Error: Missing required columns in the CSV file.")
+                return {}
 
-        sim_dict = {'BestLatency': int(BestLatency), 'WorstLatency': int(WorstLatency), 'BehavSimResults': []}
+            col_index = {col: idx for idx, col in enumerate(header)}
+            best_latency = worst_latency = None
+            output_data = defaultdict(list)
 
-        ordered_output_names = [entry['name'] for entry in outputs]
-        for name in ordered_output_names:
-            group = output_df[output_df['output_name'] == name]
-            if group.empty:
-                print(f"Warning: Expected output '{name}' not found in testbench log.")
-                continue
+            for row in reader:
+                output_name = row[col_index['output_name']]
+                value = row[col_index['value']]
+                if output_name == 'BestLatency':
+                    best_latency = int(value)
+                elif output_name == 'WorstLatency':
+                    worst_latency = int(value)
+                else:
+                    index = int(row[col_index['index']])
+                    output_data[output_name].append((index, float(value)))
 
-            indices = group['index'].astype(int)
-            values = group['value'].astype(float)
-            array = np.zeros(max(indices) + 1, dtype=np.float64)
-            array[indices] = values
-            sim_dict['BehavSimResults'].append(array)
+            if best_latency is None or worst_latency is None:
+                print("Error: BestLatency or WorstLatency not found.")
+                return {}
+            sim_dict = {'BestLatency': best_latency, 'WorstLatency': worst_latency, 'BehavSimResults': []}
+            ordered_output_names = [entry['name'] for entry in outputs]
 
-        if len(sim_dict['BehavSimResults']) == 1:
-            sim_dict['BehavSimResults'] = sim_dict['BehavSimResults'][0]
+            for name in ordered_output_names:
+                if name not in output_data:
+                    print(f"Warning: Expected output '{name}' not found in testbench log.")
+                    continue
 
-        return sim_dict
+                indices_values = output_data[name]
+                max_index = max(index for index, _ in indices_values)
+                array = np.zeros(max_index + 1, dtype=np.float64)
+                for index, value in indices_values:
+                    array[index] = value
+                sim_dict['BehavSimResults'].append(array)
 
-    except (KeyError, IndexError) as e:
-        print(f"Error: Missing expected columns or values in the file: {e}")
+            # If only one set of results, return it as a single array instead of a list
+            if len(sim_dict['BehavSimResults']) == 1:
+                sim_dict['BehavSimResults'] = sim_dict['BehavSimResults'][0]
+
+            return sim_dict
+
+    except (KeyError, IndexError, ValueError) as e:
+        print(f"Error: Issue with CSV file format or data: {e}")
         return {}
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
