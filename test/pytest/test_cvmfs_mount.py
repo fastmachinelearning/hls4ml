@@ -15,7 +15,8 @@ def test_vivado_hls_availability():
         print("Failed to list directory contents:", e)
         pytest.fail(f"Unable to access the directory {vivado_bin_dir}")
 
-    # os.environ['PATH'] += os.pathsep + vivado_bin_dir
+    os.environ['PATH'] += os.pathsep + vivado_bin_dir
+    os.environ['XILINX_VIVADO'] = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1'
 
     try:
         result = subprocess.run(['vivado', '-version'], capture_output=True, check=True, text=True)
