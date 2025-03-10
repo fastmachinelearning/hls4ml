@@ -15,7 +15,7 @@ def test_vivado_hls_availability():
         print("Failed to list directory contents:", e)
         pytest.fail(f"Unable to access the directory {vivado_bin_dir}")
 
-    os.environ['PATH'] += os.pathsep + vivado_bin_dir
+    # os.environ['PATH'] += os.pathsep + vivado_bin_dir
 
     try:
         result = subprocess.run(['vivado', '-version'], capture_output=True, check=True, text=True)
