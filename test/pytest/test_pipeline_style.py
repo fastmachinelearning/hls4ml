@@ -1,4 +1,4 @@
-""" Test that pipeline style is properly handled by optimizers (respected if user-defined, correctly set if 'auto'). """
+"""Test that pipeline style is properly handled by optimizers (respected if user-defined, correctly set if 'auto')."""
 
 from pathlib import Path
 

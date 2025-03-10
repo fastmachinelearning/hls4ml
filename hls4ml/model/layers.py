@@ -1245,8 +1245,7 @@ class Transpose(Layer):
         perm = self.get_attr('perm')
         self.set_attr('dim', f'{len(inp.shape)}d')
 
-        if len(perm) > 3:
-            raise Exception('ERROR: Transpose of tensors with rank > 3 is not yet supported.')
+        # TODO: dim>3 is only supported for vivado/vitis backend
 
         # ONNX double transpose specific, sometimes ONNX injects
         # useless double transpose layers when converting
@@ -1266,11 +1265,14 @@ class Transpose(Layer):
             self.set_attr('depth', 1)
             self.set_attr('height', inp.shape[0])
             self.set_attr('width', inp.shape[1])
-        elif len(shape) > 2:
+        elif len(shape) == 3:
             dims = [f'OUT_DEPTH_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
             self.set_attr('depth', inp.shape[0])
             self.set_attr('height', inp.shape[1])
             self.set_attr('width', inp.shape[2])
+        elif len(shape) > 3:
+            # Differentiate between 2/3/3+ dim does not really appear to be needed. To be removed?
+            dims = [f'OUT_DIM_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 
@@ -1301,6 +1303,7 @@ class SimpleRNN(Layer):
         Attribute('activation', value_type=str),
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
+        Attribute('pass_initial_states', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -1349,6 +1352,7 @@ class LSTM(Layer):
         Attribute('recurrent_activation', value_type=str),
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
+        Attribute('pass_initial_states', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         WeightAttribute('weight'),
@@ -1405,6 +1409,7 @@ class GRU(Layer):
         Attribute('recurrent_activation', value_type=str),
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
+        Attribute('pass_initial_states', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         ChoiceAttribute('apply_reset_gate', ['before', 'after'], default='after'),

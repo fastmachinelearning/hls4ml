@@ -1,5 +1,4 @@
-""" Test that reshape is properly handled by optimizers.
-"""
+"""Test that reshape is properly handled by optimizers."""
 
 from pathlib import Path
 

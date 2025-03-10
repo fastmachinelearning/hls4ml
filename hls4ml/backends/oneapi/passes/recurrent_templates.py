@@ -92,10 +92,14 @@ gru_config_template = '''struct config{index} : nnet::gru_config {{
     using activation_recr = nnet::activation::{recurrent_activation}<x_T, y_T, config_T>;
 
     static const unsigned reuse_factor = {reuse};
+    static const unsigned pytorch_order = {pytorch};
     static const bool store_weights_in_bram = false;
 }};\n'''
 
 gru_function_template = 'nnet::gru<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
+gru_function_initial_state_template = (
+    'nnet::gru_init_state<{input_t}, {h_t}, {output_t}, {config}>({input}, {init_state}, {output}, {w}, {wr}, {b}, {br});'
+)
 gru_task_sequence_template = 'task_sequence<nnet::gru_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 gru_stream_function_template = '{name}.async({w}, {wr}, {b}, {br});'
 
@@ -120,6 +124,7 @@ class GRUConfigTemplate(LayerConfigTemplate):
         params['config_mult_h'] = f'config{node.index}_h_mult'
         params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), str(node.index) + '_act')
         params['act_recurrent_t'] = '{}_config{}'.format(node.get_attr('recurrent_activation'), str(node.index) + '_rec_act')
+        params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
         gru_config = self.gru_template.format(**params)
 
         # Activation is on candidate hidden state, dimensionality (1, n_units)
@@ -163,15 +168,23 @@ class GRUConfigTemplate(LayerConfigTemplate):
 class GRUFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(GRU, include_header=recurrent_include_list)
-        self.template = gru_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
+        if params['pass_initial_states'] == 'true':
+            params['h_t'] = node.get_input_variable(node.inputs[1]).type.name
+            params['init_state'] = node.get_input_variable(node.inputs[1]).name
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
         params['wr'] = node.get_weights('recurrent_weight').name
         params['br'] = node.get_weights('recurrent_bias').name
-        return self.template.format(**params)
+
+        if params['pass_initial_states'] == 'true':
+            template = gru_function_initial_state_template
+        else:
+            template = gru_function_template
+
+        return template.format(**params)
 
 
 class GRUTaskSequenceTemplate(TaskSequenceTemplate):
@@ -235,6 +248,10 @@ lstm_config_template = """struct config{index} : nnet::lstm_config {{
 }};\n"""
 
 lstm_function_template = 'nnet::lstm<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
+lstm_function_initial_state_template = (
+    'nnet::lstm_init_state<{input_t}, {h_t}, {hc_t}, {output_t}, {config}>'
+    '({input}, {init_state}, {init_cell}, {output}, {weights});'
+)
 
 
 class LSTMConfigTemplate(LayerConfigTemplate):
@@ -275,10 +292,15 @@ class LSTMConfigTemplate(LayerConfigTemplate):
 class LSTMFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(LSTM, include_header=recurrent_include_list)
-        self.template = lstm_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
+
+        if params['pass_initial_states'] == 'true':
+            params['h_t'] = node.get_input_variable(node.inputs[1]).type.name
+            params['init_state'] = node.get_input_variable(node.inputs[1]).name
+            params['init_cell'] = node.get_input_variable(node.inputs[2]).name
+            params['hc_t'] = node.get_input_variable(node.inputs[2]).type.name
 
         types = ['i', 'f', 'c', 'o']
         params['weights'] = ''
@@ -289,13 +311,18 @@ class LSTMFunctionTemplate(FunctionCallTemplate):
         for t in types:
             params['weights'] += 'bias_{}_{}{}'.format(t, str(node.index), ',' if t != 'o' else '')
 
-        return self.template.format(**params)
+        if params['pass_initial_states'] == 'true':
+            template = lstm_function_initial_state_template
+        else:
+            template = lstm_function_template
+
+        return template.format(**params)
 
 
 ################################################
 # SimpleRNN Template
 ################################################
-simple_rnn_config_template = """struct config{index} : nnet::simpleRNN_config {{
+simple_rnn_config_template = """struct config{index} : nnet::simple_rnn_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned n_outputs = {n_outputs};
@@ -306,6 +333,7 @@ simple_rnn_config_template = """struct config{index} : nnet::simpleRNN_config {{
     typedef {weight_t.name} weight_t;
     typedef {bias_t.name} bias_t;
     typedef {recurrent_weight_t.name} recurrent_weight_t;
+    typedef {recurrent_bias_t.name} recurrent_bias_t;
 
     typedef {act_t} ACT_CONFIG_T;
     template<class x_T, class y_T, class config_T>
@@ -320,6 +348,10 @@ simple_rnn_config_template = """struct config{index} : nnet::simpleRNN_config {{
 }};\n"""
 
 simple_rnn_function_template = 'nnet::simple_rnn<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
+simple_rnn_pytorch_function_template = (
+    'nnet::simple_rnn_pytorch<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
+)
+simple_rnn_pytorch_function_initial_state_template = 'nnet::simple_rnn_pytorch_init_state<{input_t}, {h_t}, {output_t}, {config}>({input}, {init_state}, {output}, {weights});'  # noqa E501
 
 
 class SimpleRNNConfigTemplate(LayerConfigTemplate):
@@ -340,6 +372,9 @@ class SimpleRNNConfigTemplate(LayerConfigTemplate):
             node.get_attr('recurrent_activation'), str(node.index) + '_rec_act'
         )
         simple_rnn_params['recurrent_activation'] = 'relu'
+
+        # In Keras there is no recurrent bias, so put a placeholder
+        simple_rnn_params.setdefault('recurrent_bias_t', simple_rnn_params['bias_t'])
 
         simple_rnn_config = self.template.format(**simple_rnn_params)
 
@@ -365,5 +400,17 @@ class SimpleRNNFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['weights'] = 'w{0}, wr{0}, b{0}'.format(str(node.index))
-        return self.template.format(**params)
+        if params['pass_initial_states'] == 'true':
+            params['h_t'] = node.get_input_variable(node.inputs[1]).type.name
+            params['init_state'] = node.get_input_variable(node.inputs[1]).name
+
+        if node.get_attr('pytorch', False):
+            if params['pass_initial_states'] == 'true':
+                template = simple_rnn_pytorch_function_initial_state_template
+            else:
+                template = simple_rnn_pytorch_function_template
+            params['weights'] = 'w{0}, wr{0}, b{0}, br{0}'.format(str(node.index))
+        else:
+            template = simple_rnn_function_template
+            params['weights'] = 'w{0}, wr{0}, b{0}'.format(str(node.index))
+        return template.format(**params)

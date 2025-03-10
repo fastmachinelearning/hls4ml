@@ -494,7 +494,7 @@ class ModelGraph:
                 next_nodes.append(x)
 
         if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs[0] in prev_node.outputs), None)
+            next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] in prev_node.outputs), None)
         else:
             if before not in next_nodes:
                 raise Exception(
@@ -565,6 +565,9 @@ class ModelGraph:
                     if outputs[0] == nxt_inp:
                         next_node.inputs[i] = inputs[0]
 
+        if node.outputs[0] in self.outputs:
+            prev_node = node.get_input_node(node.inputs[0])
+            self.outputs[self.outputs.index(node.outputs[0])] = prev_node.outputs[0]
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
 
@@ -732,7 +735,7 @@ class ModelGraph:
         if x0.dtype in [np.single, np.float32]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
-        elif x0.dtype in [np.double, np.float64, np.float_]:
+        elif x0.dtype in [np.double, np.float64]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
         else:
