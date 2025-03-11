@@ -108,8 +108,9 @@ def backend_configs():
 
 
 @pytest.fixture
-def hls_model_setup(request, backend_configs):
-    """Fixture to create, write, and configure the HLS model for a given backend."""
+def hls_model_setup(request, backend_configs, tmp_path):
+    """Fixture to create, write, and copy the report files of the HLS model
+       for a given backend."""
     backend_config = backend_configs[request.param] 
 
     model = Sequential()
@@ -117,8 +118,8 @@ def hls_model_setup(request, backend_configs):
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='model')
 
-    output_dir = str(test_root_path / f'hls4mlprj_report_{backend_config["backend"]}')
-    test_report_dir = test_root_path / 'test_report'
+    output_dir = str(tmp_path / f'hls4mlprj_report_{backend_config["backend"]}')
+    test_report_dir = test_root_path / f'test_report/{backend_config["backend"]}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
@@ -140,7 +141,7 @@ def hls_model_setup(request, backend_configs):
 
 @pytest.mark.parametrize("hls_model_setup", ['Vivado', 'oneAPI'], indirect=True)
 def test_report(hls_model_setup, capsys):
-    """Runs the HLS report test for different backends."""
+    """Tests that the report parsing and printing functions work for different backends."""
     output_dir, backend_config = hls_model_setup
    
     report = backend_config['parse_func'](output_dir) 
