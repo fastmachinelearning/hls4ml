@@ -1,6 +1,6 @@
 import glob
-import os
 import json
+import os
 import re
 
 
@@ -9,13 +9,13 @@ def _convert_to_oneapi_naming(s):
 
     # Capitalize the first letter
     s2 = s.capitalize()
-    
+
     # Capitalize letters after numbers and underscores, and remove underscores
     s2 = re.sub(r'(_|\d)([a-z])', lambda m: m.group(1) + m.group(2).upper(), s2)
-    
+
     # Remove underscores
     s2 = s2.replace('_', '')
-    
+
     return s2
 
 
@@ -26,7 +26,7 @@ def _find_projects(hls_dir):
         prjList = [hls_dir]
     else:
         prjList = glob.glob(os.path.join(hls_dir, "**/*.prj"), recursive=True)
-        
+
     prjDict = {}
     for prjDir in prjList:
         path = os.path.dirname(prjDir)
@@ -54,48 +54,48 @@ def _find_projects(hls_dir):
 
 
 def _parse_single_report(prjDir):
-    
+
     if not os.path.exists(prjDir):
         print(f'Path {prjDir} does not exist. Exiting.')
         return
-    
+
     report = {}
 
     PathJson = prjDir + "/reports/resources/json/"
     PathQuartusJson = PathJson + "quartus.ndjson"
     PathHLSJson = PathJson + "area.ndjson"
     PathLoopJson = PathJson + "loop_attr.ndjson"
-    #PathInfoJson = PathJson + "info.ndjson"
-    #PathSimDataJson = PathJson + "simulation_raw.ndjson"
+    # PathInfoJson = PathJson + "info.ndjson"
+    # PathSimDataJson = PathJson + "simulation_raw.ndjson"
 
     targetName, makeType, _ = os.path.basename(prjDir).rsplit(".", 2)
     simTask = _convert_to_oneapi_naming(targetName)
-    #if targetName not in report:
+    # if targetName not in report:
     #    report[targetName] = {}
 
     # you will probably need to modify this section if you compile a design with
     # multiple HLS components.
     if not os.path.exists(PathQuartusJson) or not os.path.exists(PathHLSJson):
-        print(f'Unable to read project data. Exiting.')
+        print('Unable to read project data. Exiting.')
         return
 
-    with open(PathQuartusJson, 'r') as fileQuartusData:
+    with open(PathQuartusJson) as fileQuartusData:
         JsonDataQuartus = json.load(fileQuartusData)
-    with open(PathHLSJson, 'r') as fileHLSData:
+    with open(PathHLSJson) as fileHLSData:
         JsonDataHLS = []
         for line in fileHLSData:
             JsonDataHLS.append(json.loads(line))
-    with open(PathLoopJson, 'r') as fileLoopData:
+    with open(PathLoopJson) as fileLoopData:
         JsonDataLoop = []
         for line in fileLoopData:
-            JsonDataLoop.append(json.loads(line))        
-    #with open(PathInfoJson, 'r') as fileInfo:
+            JsonDataLoop.append(json.loads(line))
+    # with open(PathInfoJson, 'r') as fileInfo:
     #    JsonInfo = json.load(fileInfo)
-    #simTask = str(JsonInfo["compileInfo"]["nodes"][0]["name"])
+    # simTask = str(JsonInfo["compileInfo"]["nodes"][0]["name"])
 
-    # read synthesis info in quartus.ndjson 
+    # read synthesis info in quartus.ndjson
     if makeType == "fpga":
-        quartusReport = {}  
+        quartusReport = {}
 
         componentNode = -1
         for nodeIdx in range(len(JsonDataQuartus["quartusFitResourceUsageSummary"]["nodes"])):
@@ -103,13 +103,16 @@ def _parse_single_report(prjDir):
                 componentNode = nodeIdx
         if componentNode == -1:
             componentNode = 0
-            print("Could not find component named %s in quartus data. use component %s instead." % (simTask, JsonDataQuartus["quartusFitResourceUsageSummary"]["nodes"][componentNode]["name"]))   
-        
+            print(
+                "Could not find component named %s in quartus data. use component %s instead."
+                % (simTask, JsonDataQuartus["quartusFitResourceUsageSummary"]["nodes"][componentNode]["name"])
+            )
+
         quartusReport["fmax"] = JsonDataQuartus["quartusFitClockSummary"]["nodes"][0]["clock fmax"]
         resourcesList = ["alm", "alut", "reg", "dsp", "ram", "mlab"]
         for resource in resourcesList:
             quartusReport[resource] = JsonDataQuartus["quartusFitResourceUsageSummary"]["nodes"][componentNode][resource]
-    
+
         report["Quartus"] = quartusReport
 
     # read HLS info in area.ndjson
@@ -137,12 +140,10 @@ def _parse_single_report(prjDir):
             worstII = int(loopInfo["ii"])
         if float(loopInfo["lt"]) > worstLatency:
             worstLatency = float(loopInfo["lt"])
-    loopReport = {"worstFrequency": str(worstFrequency),
-                  "worstII": str(worstII),
-                  "worstLatency": str(worstLatency)}
+    loopReport = {"worstFrequency": str(worstFrequency), "worstII": str(worstII), "worstLatency": str(worstLatency)}
 
     report["Loop"] = loopReport
-             
+
     return report
 
 
@@ -166,6 +167,7 @@ def print_oneapi_report(report_dict):
         else:
             _print_str_report(prjReport)
 
+
 def _print_ipython_report(report_dict):
     from IPython.display import HTML, display
 
@@ -174,9 +176,11 @@ def _print_ipython_report(report_dict):
     html += body + '\n</div>\n</html>'
     display(HTML(html))
 
+
 def _print_str_report(report_dict):
     body = _make_report_body(report_dict, _make_str_table_template, _make_str_header)
     print(body)
+
 
 def _is_running_in_notebook():
     try:
@@ -191,6 +195,7 @@ def _is_running_in_notebook():
             return False  # Other type (?)
     except NameError:
         return False  # Probably standard Python interpreter
+
 
 _table_css = """
 <style>
@@ -248,17 +253,18 @@ _table_base_template = """
 </table>
 """
 
+
 def _make_html_table_template(table_header, row_templates):
 
     num_columns = len(next(iter(row_templates.values())))
 
-    _row_html_template = "        <tr><td>{row_title}</td>" + \
-                         "".join("<td>{{{}}}</td>" for _ in range(num_columns)) + "</tr>"
+    _row_html_template = "        <tr><td>{{}}</td>" + "".join("<td>{{{}}}</td>" for _ in range(num_columns)) + "</tr>"
 
     table_rows = '\n'.join(
-        [_row_html_template.format(row_title=row_title, *row_keys) for row_title, row_keys in row_templates.items()]
+        [_row_html_template.format(row_title, *row_keys) for row_title, row_keys in row_templates.items()]
     )
-    return _table_base_template.format(colspan=num_columns+1, table_header=table_header, table_rows=table_rows)
+    return _table_base_template.format(colspan=num_columns + 1, table_header=table_header, table_rows=table_rows)
+
 
 def _make_str_table_template(table_header, row_templates):
 
@@ -269,11 +275,14 @@ def _make_str_table_template(table_header, row_templates):
 
     head = f'\n - {table_header}:\n'
     table_rows = '\n'.join(
-        ['    ' + f'{row_title}:'.ljust(len_title + 2) + "".join(f" {{{entry}:<17}}" for entry in row_keys) \
-                                                                                     for row_title, row_keys in row_templates.items()]
+        [
+            '    ' + f'{row_title}:'.ljust(len_title + 2) + "".join(f" {{{entry}:<17}}" for entry in row_keys)
+            for row_title, row_keys in row_templates.items()
+        ]
     )
-    
+
     return head + table_rows + '\n'
+
 
 def _make_html_header(report_header):
     return f'<h3>{report_header}:</h3>'
@@ -282,7 +291,7 @@ def _make_html_header(report_header):
 def _make_str_header(report_header):
     sep = '=' * 50 + '\n'
     return '\n' + sep + '== ' + report_header + '\n' + sep
-    
+
 
 def _get_percentage(part, total):
     percentage = round(part / total * 100, 1)
@@ -296,20 +305,20 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
     body = ''
 
     perf_rows = {
-            'Minimum Frequency (HLS)': ['worst_freq'],
-                #'Best-case latency': 'best_latency',
-            'Worst-case latency (HLS)': ['worst_latency'],
-                #'Interval Min': 'interval_min',
-            'Max II (HLS)': ['worst_II']
-                #'Estimated Clock Period': 'estimated_clock',
-        }
+        'Minimum Frequency (HLS)': ['worst_freq'],
+        # 'Best-case latency': 'best_latency',
+        'Worst-case latency (HLS)': ['worst_latency'],
+        # 'Interval Min': 'interval_min',
+        'Max II (HLS)': ['worst_II'],
+        # 'Estimated Clock Period': 'estimated_clock',
+    }
     area_rows = {
-        "":      ["hls",      "avail"],
+        "": ["hls", "avail"],
         "ALUTs": ["alut_hls", "alut_avail"],
-        "FFs":   ["reg_hls",  "reg_avail"],
-        "DSPs":  ["dsp_hls",  "dsp_avail"],
-        "RAMs":  ["ram_hls",  "ram_avail"],
-        "MLABs": ["mlab_hls", "mlab_avail"]
+        "FFs": ["reg_hls", "reg_avail"],
+        "DSPs": ["dsp_hls", "dsp_avail"],
+        "RAMs": ["ram_hls", "ram_avail"],
+        "MLABs": ["mlab_hls", "mlab_avail"],
     }
 
     if "Quartus" not in report_dict:
@@ -319,14 +328,14 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
 
         perf_rows["Maximum Frequency"] = ['fmax']
 
-        area_rows["ALMs" ] = ["alm_quartus", "alm_hls", "alm_avail"]
+        area_rows["ALMs"] = ["alm_quartus", "alm_hls", "alm_avail"]
         area_rows[""].insert(0, "quartus")
         area_rows["ALUTs"].insert(0, "alut_quartus")
-        area_rows["FFs"  ].insert(0, "reg_quartus")
-        area_rows["DSPs" ].insert(0, "dsp_quartus")
-        area_rows["RAMs" ].insert(0, "ram_quartus")
+        area_rows["FFs"].insert(0, "reg_quartus")
+        area_rows["DSPs"].insert(0, "dsp_quartus")
+        area_rows["RAMs"].insert(0, "ram_quartus")
         area_rows["MLABs"].insert(0, "mlab_quartus")
-        
+
     body += make_table_template('Performance estimates', perf_rows)
     body += make_table_template('Resource estimates', area_rows)
 
@@ -338,14 +347,14 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
     params["avail"] = "Available"
     resourcesList = ["alut", "reg", "ram", "dsp", "mlab"]
     for resource in resourcesList:
-        resource_hls   = int(report_dict["HLS"]["total"][resource])
+        resource_hls = int(report_dict["HLS"]["total"][resource])
         resource_avail = int(report_dict["HLS"]["available"][resource])
-        params[resource+"_hls"] = str(resource_hls) + _get_percentage(resource_hls, resource_avail)
-        params[resource+"_avail"] = str(resource_avail)
+        params[resource + "_hls"] = str(resource_hls) + _get_percentage(resource_hls, resource_avail)
+        params[resource + "_avail"] = str(resource_avail)
         if "Quartus" in report_dict:
             resource_quartus = int(report_dict["Quartus"][resource])
-            params[resource+"_quartus"] = str(resource_quartus) + _get_percentage(resource_quartus, resource_avail)
-    
+            params[resource + "_quartus"] = str(resource_quartus) + _get_percentage(resource_quartus, resource_avail)
+
     if "Quartus" in report_dict:
         params["quartus"] = "Quartus Synthesis"
         params["fmax"] = report_dict["Quartus"]['fmax']
