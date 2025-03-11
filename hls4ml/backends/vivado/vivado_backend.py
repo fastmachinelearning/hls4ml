@@ -30,7 +30,7 @@ from hls4ml.model.layers import (
     Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType, RoundingMode, SaturationMode
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils import attribute_descriptions as descriptions
 
@@ -82,6 +82,16 @@ class VivadoBackend(FPGABackend):
                     description=descriptions.conv_implementation,
                 )
             )
+            self.attribute_map[layer] = attrs
+        
+        # Add LayerNorm attributes
+        ln_layers = [LayerNormalization]
+        for layer in ln_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('table_range_power2', default=0, description=descriptions.table_range_power2))
+            attrs.append(ConfigurableAttribute('table_size', default=4096, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(8, 5, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT), description=descriptions.table_type))
+            attrs.append(TypeAttribute('accum', default=FixedPrecisionType(14, 4, signed=True, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT), description=descriptions.accum_type))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -558,21 +568,6 @@ class VivadoBackend(FPGABackend):
             assert (
                 len(layer.get_input_variable().shape) == 1
             ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
-
-    @layer_optimizer(LayerNormalization)
-    def init_layernormalization(self, layer):
-        if 'table_t' not in layer.attributes:
-            layer.set_attr(
-                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=16, integer=6))
-            )
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 4096)  # table size
-        if 'table_range' not in layer.attributes:
-            layer.set_attr('table_range', 1.0)  # table range
-        if 'mean_t' not in layer.attributes:
-            layer.set_attr(
-                'mean_t', NamedType(name=layer.name + '_mean_t', precision=FixedPrecisionType(width=19, integer=6))
-            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):

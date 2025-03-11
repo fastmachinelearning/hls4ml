@@ -135,16 +135,16 @@ class BatchNormalizationFunctionTemplate(FunctionCallTemplate):
 layernorm_config_template = """struct config{index} : nnet::layernorm_config {{
     static const unsigned n_in = {n_in};
     static const unsigned seq_len = {seq_len};
+    static const unsigned axis = {axis};
+    static const unsigned epsilon_power_of_10 = {epsilon_power_of_10};
+    static const unsigned table_range_power2 = {table_range_power2};
     static const unsigned table_size = {table_size};
-    static constexpr double table_range = {table_range};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    static const bool store_weights_in_bram = false;
-    static constexpr double epsilon = {epsilon};
+    typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
-    typedef {mean_t.name} mean_t;
     typedef {table_t.name} table_t;
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -162,7 +162,6 @@ class LayerNormalizationConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['seq_len'] = node.get_attr('seq_len')
         params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('scale').type.precision
         )

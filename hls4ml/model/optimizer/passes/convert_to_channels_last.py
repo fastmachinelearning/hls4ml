@@ -44,7 +44,7 @@ class ChannelsLastConverter(OptimizerPass):
                 node.get_output_variable().shape = input_shape
                 dim_names = [f'N_INPUT_{i}_{node.index}' for i in range(1, len(input_shape) + 1)]
                 node.get_output_variable().dim_names = dim_names
-        elif isinstance(node, LayerNormalization):
+        elif isinstance(node, LayerNormalization) and not model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "off":
             # LayerNorm only works on the last dimension in PyTorch
             perm = [1, 0]
             pre_transpose = model.make_node(
@@ -54,9 +54,7 @@ class ChannelsLastConverter(OptimizerPass):
             model.insert_node(pre_transpose)
 
             # If not the output layer, transpose again
-            if not (
-                node.get_attr('name') in model.outputs and model.config.config['HLSConfig']['Model']['TransposeOutputs']
-            ):
+            if not node.get_attr('name') in model.outputs or model.config.config['HLSConfig']['Model']['TransposeOutputs']:
                 post_transpose = model.make_node(
                     'Transpose', f'post_transpose_for_{node.get_attr("name")}', {'perm': perm}, [node.name]
                 )

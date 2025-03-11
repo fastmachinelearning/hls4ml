@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
@@ -175,14 +176,18 @@ def parse_layernorm_layer(operation, layer_name, input_names, input_shapes, node
     layer['n_in'] = layer['n_out'] = in_size
 
     if not ((len(input_shapes[0])) == 3):
-        raise Exception('input size is not currently supported by hls4ml, only dim3 is supported')
+        raise Exception('input size is not currently supported by hls4ml; only three-dimensional input (including batch dimension) is supported')
     layer['seq_len'] = input_shapes[0][-2]
+
+    layer['axis'] = 2
 
     layer['gamma_data'] = class_object.weight.data.numpy()
     layer['beta_data'] = class_object.bias.data.numpy()
 
-    layer['epsilon'] = class_object.eps
-    if layer['epsilon'] <= 0:
+    if class_object.eps <= 0:
         raise Exception('epsilon must be positive')
+    layer['epsilon_power_of_10'] = -round(math.log10(class_object.eps))
+    if layer['epsilon_power_of_10'] <= 0:
+        raise Exception('epsilon must be less than 1e-1')
 
     return layer, [shape for shape in input_shapes[0]]

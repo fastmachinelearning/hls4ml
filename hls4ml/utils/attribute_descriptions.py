@@ -49,3 +49,7 @@ recurrent_static = (
     'If set to True, will reuse the the same recurrent block for computation, resulting in lower resource '
     'usage at the expense of serialized computation and higher latency/II.'
 )
+
+# LayerNorm-related attributes
+
+table_range_power2 = 'The negative power of 2 that represents the range of the lookup table, e.g. a value of 1 would represent a range of 0.5.'

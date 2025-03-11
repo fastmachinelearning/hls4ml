@@ -1062,7 +1062,8 @@ class LayerNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('seq_len'),
-        Attribute('epsilon', value_type=float, default=1e-3),
+        Attribute('axis', value_type=int, default=2),
+        Attribute('epsilon_power_of_10', value_type=int, default=3),
         WeightAttribute('scale'),
         WeightAttribute('bias'),
         TypeAttribute('scale'),

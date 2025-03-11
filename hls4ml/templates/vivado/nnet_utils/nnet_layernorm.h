@@ -14,25 +14,30 @@ struct layernorm_config {
     // Internal data type definitions
     typedef float bias_t;
     typedef float scale_t;
+    typedef float accum_t;
+    typedef float table_t;
 
     // Layer Sizes
     static const unsigned n_in = 20;
     static const unsigned seq_len = 4;
+    static const unsigned axis = 2;
+    static const unsigned epsilon_power_of_10 = 3;
+    static const unsigned table_range_power2 = 0;
+    static const unsigned table_size = 1024;
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;
-    static const unsigned n_zeros = 0;
 
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-template <typename CONFIG_T, int N_TABLE> void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE]) {
+template <typename CONFIG_T, int N_TABLE> 
+void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE]) {
     // Inversion function:
     //   result = 1/sqrt(x)
-    float min_val = CONFIG_T::epsilon;
-    float max_val = CONFIG_T::table_range;
+    float min_val = pow(10.0f, -(int)CONFIG_T::epsilon_power_of_10);
+    float max_val = pow(2.0f, -(int)CONFIG_T::table_range_power2);
     float step = max_val / (float)(N_TABLE);
     for (int ii = 0; ii < N_TABLE; ii++) {
         float in_val = min_val + step * ii;
@@ -47,7 +52,7 @@ void layernorm_1d(data_T data[CONFIG_T::n_in / CONFIG_T::seq_len], res_T res[CON
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     #pragma HLS ARRAY_PARTITION variable=data complete
     #pragma HLS ARRAY_PARTITION variable=res complete
-    int inv_range_inv = (int)1 / CONFIG_T::table_range;
+    int inv_range_inv = (int)1 << CONFIG_T::table_range_power2;
     typename CONFIG_T::table_t deno_inver = 0;
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -62,33 +67,30 @@ void layernorm_1d(data_T data[CONFIG_T::n_in / CONFIG_T::seq_len], res_T res[CON
     }
 
     static const unsigned dim = CONFIG_T::n_in / CONFIG_T::seq_len;
-    typename CONFIG_T::mean_t sum_cache = 0;
-    typename CONFIG_T::mean_t sum_cache2 = 0;
-    typename CONFIG_T::mean_t var, mean, diff;
-    typename CONFIG_T::mean_t data_diff[dim];
-    typename CONFIG_T::mean_t var_epsilon = (typename CONFIG_T::mean_t)CONFIG_T::epsilon;
+    typename CONFIG_T::accum_t sum_cache = 0;
+    typename CONFIG_T::accum_t sum_cache2 = 0;
+    typename CONFIG_T::accum_t var, mean, diff;
+    typename CONFIG_T::accum_t data_diff[dim];
 
     #pragma HLS ARRAY_PARTITION variable=data_diff complete
 
-    const typename CONFIG_T::mean_t k_inv = 1.0 / dim;
+    const typename CONFIG_T::accum_t k_inv = 1.0 / dim;
 
 LAYERNORM_1D_SUM:
     for (int i = 0; i < dim; ++i) {
-        sum_cache += static_cast<typename CONFIG_T::mean_t>(data[i]);
+        sum_cache += static_cast<typename CONFIG_T::accum_t>(data[i]);
     }
-    mean = CONFIG_T::template product<typename CONFIG_T::mean_t, typename CONFIG_T::mean_t>::product(sum_cache, k_inv);
+    mean = CONFIG_T::template product<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t>::product(sum_cache, k_inv);
 
 LAYERNORM_1D_VAR:
     for (int i = 0; i < dim; ++i) {
-        data_diff[i] = static_cast<typename CONFIG_T::mean_t>(data[i]) - mean;
+        data_diff[i] = static_cast<typename CONFIG_T::accum_t>(data[i]) - mean;
         diff = data_diff[i] * data_diff[i];
         sum_cache2 += diff;
     }
-    var = CONFIG_T::template product<typename CONFIG_T::mean_t, typename CONFIG_T::mean_t>::product(sum_cache2, k_inv);
+    var = CONFIG_T::template product<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t>::product(sum_cache2, k_inv);
 
     int index = (var) * (CONFIG_T::table_size)*inv_range_inv;
-    if (CONFIG_T::table_range > 1)
-        index = (var) * (CONFIG_T::table_size) / (int)CONFIG_T::table_range;
     if (index < 0)
         index = 0;
     if (index > CONFIG_T::table_size - 1)
