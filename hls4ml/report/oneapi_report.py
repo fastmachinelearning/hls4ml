@@ -64,6 +64,7 @@ def _parse_single_report(prjDir):
     PathJson = prjDir + "/reports/resources/json/"
     PathQuartusJson = PathJson + "quartus.ndjson"
     PathHLSJson = PathJson + "area.ndjson"
+    PathLoopJson = PathJson + "loop_attr.ndjson"
     #PathInfoJson = PathJson + "info.ndjson"
     #PathSimDataJson = PathJson + "simulation_raw.ndjson"
 
@@ -83,7 +84,11 @@ def _parse_single_report(prjDir):
     with open(PathHLSJson, 'r') as fileHLSData:
         JsonDataHLS = []
         for line in fileHLSData:
-            JsonDataHLS.append(json.loads(line))           
+            JsonDataHLS.append(json.loads(line))
+    with open(PathLoopJson, 'r') as fileLoopData:
+        JsonDataLoop = []
+        for line in fileLoopData:
+            JsonDataLoop.append(json.loads(line))        
     #with open(PathInfoJson, 'r') as fileInfo:
     #    JsonInfo = json.load(fileInfo)
     #simTask = str(JsonInfo["compileInfo"]["nodes"][0]["name"])
@@ -117,6 +122,26 @@ def _parse_single_report(prjDir):
         hlsReport["available"][resource] = JsonDataHLS[0]["max_resources"][i_resource]
 
     report["HLS"] = hlsReport
+
+    # read latency and II in loop_attr.ndjson
+    loopReport = {}
+    worstFrequency = 1e9
+    worstII = 0
+    worstLatency = 0
+    for loopInfo in JsonDataLoop:
+        if "af" not in loopInfo or "ii" not in loopInfo or "lt" not in loopInfo:
+            continue
+        if float(loopInfo["af"]) < worstFrequency:
+            worstFrequency = float(loopInfo["af"])
+        if int(loopInfo["ii"]) > worstII:
+            worstII = int(loopInfo["ii"])
+        if float(loopInfo["lt"]) > worstLatency:
+            worstLatency = float(loopInfo["lt"])
+    loopReport = {"worstFrequency": str(worstFrequency),
+                  "worstII": str(worstII),
+                  "worstLatency": str(worstLatency)}
+
+    report["Loop"] = loopReport
              
     return report
 
@@ -270,7 +295,14 @@ def _get_percentage(part, total):
 def _make_report_body(report_dict, make_table_template, make_header_template):
     body = ''
 
-    perf_rows = {}
+    perf_rows = {
+            'Minimum Frequency (HLS)': ['worst_freq'],
+                #'Best-case latency': 'best_latency',
+            'Worst-case latency (HLS)': ['worst_latency'],
+                #'Interval Min': 'interval_min',
+            'Max II (HLS)': ['worst_II']
+                #'Estimated Clock Period': 'estimated_clock',
+        }
     area_rows = {
         "":      ["hls",      "avail"],
         "ALUTs": ["alut_hls", "alut_avail"],
@@ -285,14 +317,7 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
     else:
         body += make_header_template('FPGA Hardware Synthesis')
 
-        perf_rows = {
-            'Maximum Frequency': ['fmax']
-                #'Best-case latency': 'best_latency',
-                #'Worst-case latency': 'worst_latency',
-                #'Interval Min': 'interval_min',
-                #'Interval Max': 'interval_max',
-                #'Estimated Clock Period': 'estimated_clock',
-        }
+        perf_rows["Maximum Frequency"] = ['fmax']
 
         area_rows["ALMs" ] = ["alm_quartus", "alm_hls", "alm_avail"]
         area_rows[""].insert(0, "quartus")
@@ -302,10 +327,13 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
         area_rows["RAMs" ].insert(0, "ram_quartus")
         area_rows["MLABs"].insert(0, "mlab_quartus")
         
-        body += make_table_template('Performance estimates', perf_rows)
+    body += make_table_template('Performance estimates', perf_rows)
     body += make_table_template('Resource estimates', area_rows)
 
     params = {}
+    params["worst_freq"] = report_dict["Loop"]["worstFrequency"]
+    params["worst_II"] = report_dict["Loop"]["worstII"]
+    params["worst_latency"] = report_dict["Loop"]["worstLatency"]
     params["hls"] = "HLS Estimation"
     params["avail"] = "Available"
     resourcesList = ["alut", "reg", "ram", "dsp", "mlab"]
