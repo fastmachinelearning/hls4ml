@@ -32,8 +32,7 @@ struct layernorm_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-template <typename CONFIG_T, int N_TABLE> 
-void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE]) {
+template <typename CONFIG_T, int N_TABLE> void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE]) {
     // Inversion function:
     //   result = 1/sqrt(x)
     float min_val = pow(10.0f, -(int)CONFIG_T::epsilon_power_of_10);

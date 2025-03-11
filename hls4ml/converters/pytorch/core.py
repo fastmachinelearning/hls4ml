@@ -1,4 +1,5 @@
 import math
+
 import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
@@ -176,7 +177,9 @@ def parse_layernorm_layer(operation, layer_name, input_names, input_shapes, node
     layer['n_in'] = layer['n_out'] = in_size
 
     if not ((len(input_shapes[0])) == 3):
-        raise Exception('input size is not currently supported by hls4ml; only three-dimensional input (including batch dimension) is supported')
+        raise Exception(
+            'input size is not currently supported by hls4ml; only three-dimensional input (including batch dimension) is supported'
+        )
     layer['seq_len'] = input_shapes[0][-2]
 
     layer['axis'] = 2

@@ -22,9 +22,7 @@ def data():
 
 @pytest.fixture(scope='module')
 def model():
-    model = nn.Sequential(OrderedDict([
-        ('layer_normalization', nn.LayerNorm(in_shape[-1]))
-        ]))
+    model = nn.Sequential(OrderedDict([('layer_normalization', nn.LayerNorm(in_shape[-1]))]))
     model.eval()
 
     with torch.no_grad():
@@ -36,16 +34,16 @@ def model():
 
 @pytest.fixture(scope='module')
 def custom_epsilon_model():
-    model = nn.Sequential(OrderedDict([
-        ('layer_normalization', nn.LayerNorm(in_shape[-1], eps=1e-4))
-        ]))
+    model = nn.Sequential(OrderedDict([('layer_normalization', nn.LayerNorm(in_shape[-1], eps=1e-4))]))
     model.eval()
     return model
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_layernorm_parsing(custom_epsilon_model, backend):
-    custom_config = hls4ml.utils.config_from_pytorch_model(custom_epsilon_model, in_shape, granularity='name', backend=backend, channels_last_conversion='off')
+    custom_config = hls4ml.utils.config_from_pytorch_model(
+        custom_epsilon_model, in_shape, granularity='name', backend=backend, channels_last_conversion='off'
+    )
     custom_config['LayerName']['layer_normalization']['Precision']['accum'] = 'ap_fixed<10,4>'
     custom_config['LayerName']['layer_normalization']['table_t'] = 'ap_fixed<12,5>'
     custom_config['LayerName']['layer_normalization']['TableSize'] = 2048
@@ -57,7 +55,7 @@ def test_layernorm_parsing(custom_epsilon_model, backend):
     hls_model.compile()
 
     # Check that custom configuration is picked up correctly
-    hls_layer = list(hls_model.get_layers())[1] # 0 is input, 1 is LayerNorm
+    hls_layer = list(hls_model.get_layers())[1]  # 0 is input, 1 is LayerNorm
     assert hls_layer.attributes['accum_t'].precision.definition_cpp() == 'ap_fixed<10,4>'
     assert hls_layer.attributes['table_t'].precision.definition_cpp() == 'ap_fixed<12,5>'
     assert hls_layer.attributes['table_size'] == 2048

@@ -83,15 +83,31 @@ class VivadoBackend(FPGABackend):
                 )
             )
             self.attribute_map[layer] = attrs
-        
+
         # Add LayerNorm attributes
         ln_layers = [LayerNormalization]
         for layer in ln_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('table_range_power2', default=0, description=descriptions.table_range_power2))
             attrs.append(ConfigurableAttribute('table_size', default=4096, description=descriptions.table_size))
-            attrs.append(TypeAttribute('table', default=FixedPrecisionType(8, 5, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT), description=descriptions.table_type))
-            attrs.append(TypeAttribute('accum', default=FixedPrecisionType(14, 4, signed=True, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT), description=descriptions.accum_type))
+            attrs.append(
+                TypeAttribute(
+                    'table',
+                    default=FixedPrecisionType(
+                        8, 5, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                    ),
+                    description=descriptions.table_type,
+                )
+            )
+            attrs.append(
+                TypeAttribute(
+                    'accum',
+                    default=FixedPrecisionType(
+                        14, 4, signed=True, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                    ),
+                    description=descriptions.accum_type,
+                )
+            )
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):

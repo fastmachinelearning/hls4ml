@@ -56,7 +56,7 @@ def test_layernorm_parsing(custom_epsilon_model, backend):
     hls_model.compile()
 
     # Check that custom configuration is picked up correctly
-    hls_layer = list(hls_model.get_layers())[1] # 0 is input, 1 is LayerNorm
+    hls_layer = list(hls_model.get_layers())[1]  # 0 is input, 1 is LayerNorm
     assert hls_layer.attributes['accum_t'].precision.definition_cpp() == 'ap_fixed<10,4>'
     assert hls_layer.attributes['table_t'].precision.definition_cpp() == 'ap_fixed<12,5>'
     assert hls_layer.attributes['table_size'] == 2048
