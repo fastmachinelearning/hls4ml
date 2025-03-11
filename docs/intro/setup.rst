@@ -46,7 +46,9 @@ Dependencies
 The ``hls4ml`` library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed
 by ``pip`` or ``conda``.
 
-* `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) and `QKeras <https://pypi.org/project/qkeras/>`_ are required by the Keras converter. One may want to install newer versions of QKeras from GitHub. Newer versions of TensorFlow can be used, but QKeras and hl4ml do not currently support Keras v3.
+* `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) and `QKeras <https://pypi.org/project/qkeras/>`_ are required by the Keras v2 converter. One may want to install newer versions of QKeras from GitHub.
+
+* `Keras <https://pypi.org/project/keras/>`_ (version 3.0.0 and newer) is required by the Keras v3 converter. Keras v3 supports multiple backends for training and inference, and the convertion is not tied any specific backend. Notice that Keras v3 may **not** coexist with Keras v2 in the same Python environment.
 
 * `ONNX <https://pypi.org/project/onnx/>`_ (version 1.4.0 and newer) is required by the ONNX converter.
 
