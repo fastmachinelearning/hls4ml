@@ -20,6 +20,17 @@ def _convert_to_oneapi_naming(s):
 
 
 def _find_projects(hls_dir):
+    """Search recursively inside the input path for oneAPI project directories
+    whose report will be parsed. Projects need to have different names.
+    If multiple projects with the same name are found, priority will be given
+    based on the compilation type, in the following order:
+    1) FPGA Hardware Image (build_type=fpga)
+    2) FPGA Simulator (build_type=fpga_sim)
+    3) FPGA Optimization Report (build_type=report)
+    4) FPGA emulator (build_type_fpga_emu)
+    If multiple projects with the same name and same compilation type are found,
+    priority will be given to the most recent."""
+
     makeImportance = ["fpga_emu", "report", "fpga_sim", "fpga"]
     hls_dir = hls_dir.rstrip("/")
     if hls_dir[-4:] == ".prj":
