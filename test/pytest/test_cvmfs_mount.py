@@ -4,7 +4,7 @@ import subprocess
 import pytest
 
 
-def test_vivado_hls_availability():
+def test_vivado_availability():
 
     vivado_bin_dir = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1/bin'
 
@@ -20,19 +20,19 @@ def test_vivado_hls_availability():
 
     try:
         result = subprocess.run(['vivado', '-version'], capture_output=True, check=True, text=True)
-        print("Vivado HLS Version Information:")
+        print("Vivado Version Information:")
         print(result.stdout)
         if result.stderr:
             print("Error:", result.stderr)
     except subprocess.CalledProcessError as e:
         print("Failed to execute vivado for version check:", e)
         print(e.stderr)
-        pytest.fail("Vivado HLS version check failed.")
+        pytest.fail("Vivado version check failed.")
 
 
 def test_vitis_availability():
 
-    base_path = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vitis/2020.1'
+    base_path = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1'
     vitis_path = "/opt/Xilinx/Vitis/2020.1"
     original_paths = (
         "/opt/Xilinx/Vitis/2020.1/bin:"
@@ -50,16 +50,20 @@ def test_vitis_availability():
 
     update_environment(base_path, original_paths, vitis_path)
 
+    vivado_bin_dir = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1/bin'
+    os.environ['PATH'] += os.pathsep + vivado_bin_dir
+    os.environ['XILINX_VIVADO'] = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1'
+
     try:
         result = subprocess.run(['vitis', '-version'], capture_output=True, check=True, text=True)
-        print("Vivado HLS Version Information:")
+        print("Vitis Version Information:")
         print(result.stdout)
         if result.stderr:
             print("Error:", result.stderr)
     except subprocess.CalledProcessError as e:
-        print("Failed to execute vivado for version check:", e)
+        print("Failed to execute vitis for version check:", e)
         print(e.stderr)
-        pytest.fail("Vivado HLS version check failed.")
+        pytest.fail("Vitis version check failed.")
 
 
 def update_environment(base_path, original_paths, vivado_path):
@@ -69,4 +73,4 @@ def update_environment(base_path, original_paths, vivado_path):
         os.environ['PATH'] += os.pathsep + full_path
 
     # Set the XILINX_VIVADO environment variable
-    os.environ['XILINX_VIVADO'] = os.path.join(base_path, vivado_path.lstrip('/'))
+    os.environ['XILINX_VITIS'] = os.path.join(base_path, vivado_path.lstrip('/'))
