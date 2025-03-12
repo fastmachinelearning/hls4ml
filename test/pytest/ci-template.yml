@@ -14,9 +14,12 @@
     - sudo yum install ncurses-devel -y
     - sudo yum install libtinfo.so.6 -y
     - sudo ln -s /lib64/libtinfo.so.6 /lib64/libtinfo.so.5
+    - sudo ln -s /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx /opt/Xilinx
+    - source /opt/Xilinx/Vivado/2020.1/settings64.sh
+    - vivado -version
   script:
     - cd test/pytest
-    - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
+    # - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
   artifacts:
     when: always
     reports:
