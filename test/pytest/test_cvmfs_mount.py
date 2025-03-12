@@ -55,7 +55,7 @@ def test_vitis_availability():
     os.environ['XILINX_VIVADO'] = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1'
 
     try:
-        result = subprocess.run(['vitis', '-version'], capture_output=True, check=True, text=True)
+        result = subprocess.run(['vitis', '--help'], capture_output=True, check=True, text=True)
         print("Vitis Version Information:")
         print(result.stdout)
         if result.stderr:

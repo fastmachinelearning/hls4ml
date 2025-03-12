@@ -15,7 +15,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(backend, io_type):
     model = tf.keras.models.Sequential()
@@ -56,6 +56,24 @@ def test_dense(backend, io_type):
     os.environ['PATH'] += os.pathsep + vivado_bin_dir
     os.environ['XILINX_VIVADO'] = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1'
 
+    base_path = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1'
+    vitis_path = "/opt/Xilinx/Vitis/2020.1"
+    original_paths = (
+        "/opt/Xilinx/Vitis/2020.1/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/microblaze/lin/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/arm/lin/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/microblaze/linux_toolchain/lin64_le/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch32/lin/gcc-arm-none-eabi/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch64/lin/aarch64-linux/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch64/lin/aarch64-none/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/gnu/armr5/lin/gcc-arm-none-eabi/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/tps/lnx64/cmake-3.3.2/bin:"
+        + "/opt/Xilinx/Vitis/2020.1/cardano/bin"
+    )
+
+    update_environment(base_path, original_paths, vitis_path)
+
     data = hls_model.build()
     print(data)
 
@@ -79,3 +97,13 @@ def compare_synthesis(data, filename):
         return True
     else:
         return False
+
+
+def update_environment(base_path, original_paths, vivado_path):
+    # Append the new paths to the PATH environment variable
+    for path in original_paths.split(':'):
+        full_path = os.path.join(base_path, path.lstrip('/'))  # Remove leading '/' to correctly join paths
+        os.environ['PATH'] += os.pathsep + full_path
+
+    # Set the XILINX_VIVADO environment variable
+    os.environ['XILINX_VITIS'] = os.path.join(base_path, vivado_path.lstrip('/'))
