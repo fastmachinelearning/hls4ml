@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import numpy as np
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
+from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.layers import (
     GRU,
     LSTM,
@@ -32,7 +32,6 @@ from hls4ml.model.layers import (
     SeparableConv1D,
     SeparableConv2D,
     SimpleRNN,
-    Softmax,
 )
 from hls4ml.model.optimizer import model_optimizer
 from hls4ml.model.types import (
@@ -40,8 +39,6 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     PrecisionType,
-    RoundingMode,
-    SaturationMode,
     UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
@@ -108,34 +105,6 @@ class FPGABackend(Backend):
         act_attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
         act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
         self.attribute_map[Activation] = act_attrs
-
-        softmax_attrs = self.attribute_map.get(Softmax, [])
-        softmax_attrs.append(
-            ChoiceAttribute(
-                'implementation',
-                ['latency', 'stable', 'argmax', 'legacy'],
-                default='stable',
-                description=descriptions.softmax_implementation,
-            )
-        )
-        softmax_attrs.append(
-            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip)
-        )
-        softmax_attrs.append(
-            TypeAttribute(
-                'exp_table',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
-                description=descriptions.table_type,
-            )
-        )
-        softmax_attrs.append(
-            TypeAttribute(
-                'inv_table',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
-                description=descriptions.table_type,
-            )
-        )
-        self.attribute_map[Softmax] = softmax_attrs
 
     def create_layer_class(self, layer_class):
         new_attrubutes = []
@@ -914,7 +883,7 @@ class FPGABackend(Backend):
         return generated_code
 
     @staticmethod
-    def permute_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
+    def transpose_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
         """
         Generate new shape and perm_strides for a permute operation. Operates by mapping the output index
         to input input index by:
@@ -933,12 +902,20 @@ class FPGABackend(Backend):
             perm (tuple[int, ...]): The permutation of the dimensions.
 
         Returns:
-            (new_shape, perm_strides) (tuple, tuple):  the output shape and permutation strides.
+            dict: Dictionary containing the configuration.
         """
         new_shape = tuple(shape[i] for i in perm)
         strides = np.cumprod((shape[1:] + (1,))[::-1])[::-1]
         perm_strides = tuple(int(strides[i]) for i in perm)
-        return (new_shape, perm_strides)
+        return dict(
+            dims=len(shape),
+            N=math.prod(shape),
+            from_shape=', '.join(str(x) for x in shape),
+            perm=', '.join(str(x) for x in perm),
+            perm_strides=', '.join(str(x) for x in perm_strides),
+            to_shape=', '.join(str(x) for x in new_shape),
+            config_name=name,
+        )
 
     @model_optimizer()
     def write_hls(self, model):
