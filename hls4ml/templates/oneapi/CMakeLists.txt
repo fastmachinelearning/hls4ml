@@ -38,12 +38,13 @@ set(LIBRARY_NAME myproject-${LIB_STAMP})
 # You can also specify a device family (E.g. "Arria10" or "Stratix10") or a
 # specific part number (E.g. "10AS066N3F40E2SG") to generate a standalone IP.
 if(NOT DEFINED FPGA_DEVICE)
-    set(FPGA_DEVICE "Arria10")
+    set(FPGA_DEVICE "Agilex7")
 endif()
 
 # Use cmake -DUSER_FPGA_FLAGS=<flags> to set extra flags for FPGA backend
 # compilation.
-set(USER_FPGA_FLAGS -Wno-unused-label ${USER_FPGA_FLAGS})
+# -Xsoptimize=latency Turns off the hyper-optimized handshake
+set(USER_FPGA_FLAGS -Wno-unused-label;${USER_FPGA_FLAGS};-Xsoptimize=latency)
 
 # Use cmake -DUSER_FLAGS=<flags> to set extra flags for general compilation.
 set(USER_FLAGS -Wno-unused-label -fconstexpr-steps=134217728 ${USER_FLAGS})
