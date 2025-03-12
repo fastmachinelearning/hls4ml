@@ -20,48 +20,24 @@ def _convert_to_oneapi_naming(s):
 
 
 def _find_projects(hls_dir):
-    """Search recursively inside the input path for oneAPI project directories
-    whose report will be parsed. Projects need to have different names.
-    If multiple projects with the same name are found, priority will be given
-    based on the compilation type, in the following order:
-    1) FPGA Hardware Image (build_type=fpga)
-    2) FPGA Simulator (build_type=fpga_sim)
-    3) FPGA Optimization Report (build_type=report)
-    4) FPGA emulator (build_type_fpga_emu)
-    If multiple projects with the same name and same compilation type are found,
-    priority will be given to the most recent."""
+    prjList = glob.glob(os.path.join(hls_dir, "**/*.prj"))
 
-    makeImportance = ["fpga_emu", "report", "fpga_sim", "fpga"]
-    hls_dir = hls_dir.rstrip("/")
-    if hls_dir[-4:] == ".prj":
-        prjList = [hls_dir]
-    else:
-        prjList = glob.glob(os.path.join(hls_dir, "**/*.prj"), recursive=True)
+    if not prjList:
+        print("No project folders found in target directory!")
+        return
 
-    prjDict = {}
-    for prjDir in prjList:
-        path = os.path.dirname(prjDir)
-        targetName, makeType, _ = os.path.basename(prjDir).rsplit(".", 2)
-        lastModified = os.stat(prjDir).st_mtime
-        if targetName not in prjDict:
-            prjDict[targetName] = {"path": path, "makeType": makeType, "lastModified": lastModified, "counter": 1}
-        else:
-            prjDict[targetName]["counter"] += 1
-            if makeImportance.index(makeType) > makeImportance.index(prjDict[targetName]["makeType"]):
-                prjDict[targetName]["path"] = path
-                prjDict[targetName]["makeType"] = makeType
-                prjDict[targetName]["lastModified"] = lastModified
-            elif makeImportance.index(makeType) == makeImportance.index(prjDict[targetName]["makeType"]):
-                if lastModified > prjDict[targetName]["lastModified"]:
-                    prjDict[targetName]["path"] = path
-                    prjDict[targetName]["lastModified"] = lastModified
+    if len(prjList) > 1:
+        firstName = os.path.basename(prjList[0]).rsplit(".", 2)[0]
+        for prj in prjList[1:]:
+            newName = os.path.basename(prj).rsplit(".", 2)[0]
+            if newName != firstName:
+                print(
+                    "Multiple project folders found in target directory! "
+                    + "Make sure that only one is present (multiple targets are allowed)"
+                )
+                return
 
-    for targetName, prjInfo in prjDict.items():
-        if prjInfo["counter"] > 1:
-            print(f"Multiple instances of the project \"{targetName}\" have been found in the rootdir \"{hls_dir}\":")
-            print(f"Only \"{prjInfo['path']}/{targetName}.{prjInfo['makeType']}.prj\" will be analyzed.\n")
-
-    return prjDict
+    return prjList
 
 
 def _parse_single_report(prjDir):
@@ -159,20 +135,23 @@ def _parse_single_report(prjDir):
 
 
 def parse_oneapi_report(hls_dir):
-    prjDict = _find_projects(hls_dir)
+    prjList = _find_projects(hls_dir)
+    if not prjList:
+        return
 
     report = {}
-    for targetName, prjInfo in prjDict.items():
-        report[targetName] = _parse_single_report(os.path.join(prjInfo['path'], f"{targetName}.{prjInfo['makeType']}.prj"))
+    for prj in prjList:
+        targetType = os.path.basename(prjList[0]).rsplit(".", 2)[1]
+        report[targetType] = _parse_single_report(prj)
 
     return report
 
 
 def print_oneapi_report(report_dict):
-    for prjName, prjReport in report_dict.items():
+    for prjTarget, prjReport in report_dict.items():
         if len(report_dict) > 1:
             print('*' * 54 + '\n')
-            print(f"Report for {prjName}:")
+            print(f"Report for {prjTarget}:")
         if _is_running_in_notebook():
             _print_ipython_report(prjReport)
         else:
