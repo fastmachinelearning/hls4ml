@@ -1,5 +1,3 @@
-import json
-import os
 from pathlib import Path
 
 import numpy as np
@@ -52,28 +50,6 @@ def test_dense(backend, io_type):
 
     hls_prediction = hls_model.predict(X_input)
 
-    vivado_bin_dir = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1/bin'
-    os.environ['PATH'] += os.pathsep + vivado_bin_dir
-    os.environ['XILINX_VIVADO'] = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx/Vivado/2020.1'
-
-    base_path = '/cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1'
-    vitis_path = "/opt/Xilinx/Vitis/2020.1"
-    original_paths = (
-        "/opt/Xilinx/Vitis/2020.1/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/microblaze/lin/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/arm/lin/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/microblaze/linux_toolchain/lin64_le/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch32/lin/gcc-arm-none-eabi/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch64/lin/aarch64-linux/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/aarch64/lin/aarch64-none/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/gnu/armr5/lin/gcc-arm-none-eabi/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/tps/lnx64/cmake-3.3.2/bin:"
-        + "/opt/Xilinx/Vitis/2020.1/cardano/bin"
-    )
-
-    update_environment(base_path, original_paths, vitis_path)
-
     data = hls_model.build()
     print(data)
 
@@ -88,22 +64,3 @@ def test_dense(backend, io_type):
     assert list(hls_model.get_layers())[1].attributes['n_out'] == model.layers[0].output_shape[1:][0]
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
-
-
-def compare_synthesis(data, filename):
-    with open(filename, "w") as fp:
-        baseline = json.dump(data, fp)
-    if data == baseline:
-        return True
-    else:
-        return False
-
-
-def update_environment(base_path, original_paths, vivado_path):
-    # Append the new paths to the PATH environment variable
-    for path in original_paths.split(':'):
-        full_path = os.path.join(base_path, path.lstrip('/'))  # Remove leading '/' to correctly join paths
-        os.environ['PATH'] += os.pathsep + full_path
-
-    # Set the XILINX_VIVADO environment variable
-    os.environ['XILINX_VITIS'] = os.path.join(base_path, vivado_path.lstrip('/'))
