@@ -17,6 +17,8 @@ from hls4ml.model.layers import (
     Dense,
     DepthwiseConv1D,
     DepthwiseConv2D,
+    Einsum,
+    EinsumDense,
     Embedding,
     GarNet,
     GarNetStack,
@@ -660,3 +662,30 @@ class VivadoBackend(FPGABackend):
     @layer_optimizer(GarNetStack)
     def init_garnet_stack(self, layer):
         self.init_garnet(layer)
+
+    @layer_optimizer(EinsumDense)
+    def init_einsum_dense(self, layer: EinsumDense) -> None:
+        strategy: str | None = layer.model.config.get_strategy(layer)
+        if not strategy:
+            layer.set_attr('strategy', 'latency')
+            return
+        if strategy in ('latency', 'resource', 'distributed_arithmetic'):
+            layer.set_attr('strategy', strategy)
+            return
+        warn(f'Invalid strategy "{strategy}" for EinsumDense layer "{layer.name}". Using "latency" strategy instead.')
+        layer.set_attr('strategy', 'latency')
+
+    @layer_optimizer(Einsum)
+    def init_einsum(self, layer: Einsum) -> None:
+        strategy: str | None = layer.model.config.get_strategy(layer)
+        if not strategy:
+            layer.set_attr('strategy', 'latency')
+            return
+        if strategy.lower() == 'resource':
+            layer.set_attr('strategy', 'resource')
+            return
+        if strategy.lower() in ('latency', 'distributed_arithmetic'):
+            layer.set_attr('strategy', 'latency')
+            return
+        warn(f'Invalid strategy "{strategy}" for Einsum layer "{layer.name}". Using "latency" strategy instead.')
+        layer.set_attr('strategy', 'latency')
