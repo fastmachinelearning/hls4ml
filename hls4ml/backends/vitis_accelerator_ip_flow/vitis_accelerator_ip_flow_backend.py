@@ -34,7 +34,7 @@ class VitisAcceleratorIPFlowBackend(VitisBackend):
             validation=validation,
             export=export,
             vsynth=vsynth,
-            fifo_opt=True,
+            fifo_opt=fifo_opt,
         )
 
         # now make a bitfile
