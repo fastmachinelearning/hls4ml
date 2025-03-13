@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from hls4ml.model import ModelGraph
@@ -61,6 +63,59 @@ def get_weights_data(data_reader, layer_name, var_name):
         return (*data,)
 
 
+def convert_uaq_to_apfixed(bitwidth, scale_factor):
+    """
+    parameters:
+    bitwidth: int
+    scale_factor: float
+    zero_point: float
+
+    return:
+    int_bitwidth: int
+    fract_bitwidth: int
+    """
+    fract_bitwidth = -math.log2(scale_factor)
+    int_bitwidth = bitwidth - fract_bitwidth
+
+    return (fract_bitwidth, int_bitwidth)
+
+
+# embed quantization information into the layer dictionary for a Quant layer
+# so that this layer can be added to the model
+def addQuantizationParameters(layer, quant_object, quant_type, act=False, scale_up=False):
+    if not act:
+        # currently not used, might be use later for non-power-of-2 scales
+        bit_width = int(quant_object.bit_width)
+        signed = quant_object.signed
+        scale = float(quant_object.scale)
+        zeropoint = float(quant_object.zero_point)
+        if signed:
+            narrow = True
+        else:
+            narrow = False
+        rounding_mode = 'ROUND'
+    else:
+        bit_width = int(quant_object.bit_width())
+        signed = quant_object.is_signed
+        scale = float(quant_object.scale())
+        # bit of a hack to make adding operations with QuantEltWiseAdd work
+        if scale_up:
+            scale = 2 ** (math.log2(scale) + 1)
+        zeropoint = float(quant_object.zero_point())
+        narrow = quant_object.is_narrow_range
+        rounding_mode = quant_object.rounding_mode
+
+    layer[f'{quant_type}_quantization'] = {
+        'bit_width': bit_width,
+        'signed': signed,
+        'scale': scale,
+        'zeropoint': zeropoint,
+        'narrow': narrow,
+        'rounding_mode': rounding_mode,
+    }
+    return layer
+
+
 # ----------------------Layer handling--------------------- #
 layer_handlers = {}
 
@@ -119,7 +174,8 @@ def parse_pytorch_model(config, verbose=True):
         ModelGraph: hls4ml model object.
     """
     import torch
-    from torch.fx import symbolic_trace
+
+    from hls4ml.converters.pytorch.tracer import CustomFXTracer
 
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -140,9 +196,10 @@ def parse_pytorch_model(config, verbose=True):
     children = {c[0]: c[1] for c in model.named_children()}
     # use symbolic_trace to get a full graph of the model
 
-    traced_model = symbolic_trace(model)
+    tracer = CustomFXTracer()
+    traced_model = tracer.trace(model)
     # Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Sequential']
+    skip_layers = ['Dropout', 'QuantDropout', 'Sequential']
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
@@ -167,21 +224,19 @@ def parse_pytorch_model(config, verbose=True):
     # check for constant nodes
     merge_layers = ['add', 'mul', 'sub', 'fmin', 'fmax']
     i = 0  # count number of consts and use it in the name
-    for node in traced_model.graph.nodes:
+    for node in traced_model.nodes:
         if node.name.split('_')[0] in merge_layers:
             for arg in node.args:
                 if np.isscalar(arg):
                     # add an input node with the constant value
-                    new_node = traced_model.graph.placeholder(
-                        name='const_' + str(i), type_expr=torch.Tensor, default_value=arg
-                    )
+                    new_node = traced_model.placeholder(name='const_' + str(i), type_expr=torch.Tensor, default_value=arg)
                     node.prepend(new_node)
                     node.update_arg(1, new_node)
                     i += 1
 
-    traced_model.graph.lint()
+    traced_model.lint()
 
-    for node in traced_model.graph.nodes:
+    for node in traced_model.nodes:
         if node.op == 'call_module':
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
             # where x is an integer numbering the elements of the Sequential
@@ -199,6 +254,10 @@ def parse_pytorch_model(config, verbose=True):
 
             if pytorch_class not in supported_layers:
                 raise Exception(f'Unsupported layer {pytorch_class}')
+
+            if 'IOType' in config.keys():
+                if "QuantUpsampl" in pytorch_class and config['IOType'] == 'io_stream':
+                    raise Exception('Quant upsampling layers currently not supported with io_stream')
 
             if layer_counter != 0:
                 input_shapes = [output_shape]  # In case there are multiple inputs
@@ -224,7 +283,7 @@ def parse_pytorch_model(config, verbose=True):
 
             # parse info from class object
             input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
-            if pytorch_class in ["RNN", "GRU", "LSTM"]:
+            if pytorch_class in ['RNN', 'GRU', 'LSTM', 'QuantRNN', 'QuantLSTM']:
                 input_shapes = []
                 input_names = []
                 for arg in node.args:
@@ -238,7 +297,7 @@ def parse_pytorch_model(config, verbose=True):
 
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif "getitem" in node.args[0].name:
-                for tmp_node in traced_model.graph.nodes:
+                for tmp_node in traced_model.nodes:
                     if tmp_node.name == node.args[0].name:
                         if "getitem" in tmp_node.args[0].name:
                             raise Exception('Nested getitem calles not resolved at the moment.')
