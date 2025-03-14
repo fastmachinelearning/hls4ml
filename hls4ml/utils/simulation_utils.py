@@ -395,9 +395,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
                 f.write(f'            for (idx_{i} = 0; idx_{i} < {batch_size}; idx_{i} = idx_{i} + 1) begin\n')
                 f.write(f'                fixed_val_{i} = {layer_name}_tdata[(idx_{i}+1)*{total_bits}-1 -: {total_bits}];\n')
                 f.write(f'                real_val_{i}  = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
-                f.write(f'                $display("Output {layer_name}[%0d]: %f", idx_{i}, real_val_{i});\n')
+                f.write(f'                $display("Output {layer_name}[%0d]: %.15f", idx_{i}, real_val_{i});\n')
                 f.write('                // Log result to CSV\n')
-                f.write(f'                $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", idx_{i}, real_val_{i});\n')
+                f.write(f'                $fwrite(csv_file, "%s,%0d,%.15f\\n", "{layer_name}", idx_{i}, real_val_{i});\n')
                 f.write('            end\n')
             else:
                 f.write(
@@ -407,9 +407,9 @@ def write_verilog_testbench(nn_config, testbench_output_path):
                 for idx in range(batch_size):
                     f.write(f'            fixed_val_{i} = {layer_name}_{idx}[{total_bits - 1}:0];\n')
                     f.write(f'            real_val_{i} = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
-                    f.write(f'            $display("Output {layer_name}_{idx}: %f", real_val_{i});\n')
+                    f.write(f'            $display("Output {layer_name}_{idx}: %.15f", real_val_{i});\n')
                     f.write('            // Log result to CSV\n')
-                    f.write(f'            $fwrite(csv_file, "%s,%0d,%f\\n", "{layer_name}", {idx}, real_val_{i});\n')
+                    f.write(f'            $fwrite(csv_file, "%s,%0d,%.15f\\n", "{layer_name}", {idx}, real_val_{i});\n')
             f.write('        end\n')
             f.write('    end\n\n')
 

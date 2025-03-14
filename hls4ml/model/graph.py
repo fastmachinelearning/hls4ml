@@ -1320,7 +1320,17 @@ class MultiModelGraph:
                 graph_reports=self.graph_reports,
                 simulation_input_data=x,
             )
-            return stitched_report['BehavSimResults']
+
+            results = stitched_report.get('BehavSimResults', [])
+            if isinstance(results, np.ndarray):
+                return results.astype(np.float32) if x.dtype in [np.single, np.float32] else results.astype(np.float64)
+            elif isinstance(results, list):
+                return [
+                    arr.astype(np.float32) if x.dtype in [np.single, np.float32] else arr.astype(np.float64)
+                    for arr in results
+                ]
+            else:
+                return results
         else:
             print('Unknown simulation option given.')
 
