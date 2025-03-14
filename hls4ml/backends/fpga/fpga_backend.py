@@ -45,6 +45,7 @@ from hls4ml.model.types import (
     UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.writer import get_writer
 
 
@@ -74,7 +75,7 @@ class FPGABackend(Backend):
 
         for layer in accum_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(TypeAttribute('accum'))
+            attrs.append(TypeAttribute('accum', description=descriptions.accum_type))
             self.attribute_map[layer] = attrs
 
         rf_layers = accum_layers + [
@@ -90,10 +91,10 @@ class FPGABackend(Backend):
 
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('reuse_factor', default=1, description=descriptions.reuse_factor))
             self.attribute_map[layer] = attrs
 
-        # seperable is kind of special because it is effectively two layers that will be split
+        # separable is kind of special because it is effectively two layers that will be split
         for layer in (SeparableConv1D, SeparableConv2D):
             attrs = self.attribute_map.get(layer, [])
             attrs.append(TypeAttribute('depthwise_accum'))
@@ -104,23 +105,34 @@ class FPGABackend(Backend):
             self.attribute_map[layer] = attrs
 
         act_attrs = self.attribute_map.get(Activation, [])
-        act_attrs.append(ConfigurableAttribute('table_size', default=1024))
-        act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+        act_attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+        act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
         self.attribute_map[Activation] = act_attrs
 
         softmax_attrs = self.attribute_map.get(Softmax, [])
-        softmax_attrs.append(ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'))
-        softmax_attrs.append(ConfigurableAttribute('skip', value_type=bool, default=False))
+        softmax_attrs.append(
+            ChoiceAttribute(
+                'implementation',
+                ['latency', 'stable', 'argmax', 'legacy'],
+                default='stable',
+                description=descriptions.softmax_implementation,
+            )
+        )
+        softmax_attrs.append(
+            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip)
+        )
         softmax_attrs.append(
             TypeAttribute(
                 'exp_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                description=descriptions.table_type,
             )
         )
         softmax_attrs.append(
             TypeAttribute(
                 'inv_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                description=descriptions.table_type,
             )
         )
         self.attribute_map[Softmax] = softmax_attrs
@@ -743,7 +755,7 @@ class FPGABackend(Backend):
 
         generated_code = (
             "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public FillConv1DBuffer<data_T, CONFIG_T> {{\n"
+            "class fill_buffer_{index} : public nnet::FillConv1DBuffer<data_T, CONFIG_T> {{\n"
             "    public:\n"
             "    static void fill_buffer(\n"
             "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
@@ -873,7 +885,7 @@ class FPGABackend(Backend):
 
         generated_code = (
             "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public FillConv2DBuffer<data_T, CONFIG_T> {{\n"
+            "class fill_buffer_{index} : public nnet::FillConv2DBuffer<data_T, CONFIG_T> {{\n"
             "    public:\n"
             "    static void fill_buffer(\n"
             "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
@@ -900,6 +912,33 @@ class FPGABackend(Backend):
         generated_code += '};\n'
 
         return generated_code
+
+    @staticmethod
+    def permute_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
+        """
+        Generate new shape and perm_strides for a permute operation. Operates by mapping the output index
+        to input input index by:
+        - unravel the output index
+        - map each dimension to the corresponding stride in the input tensor, sum
+        The operation can be expressed as:
+
+        new_shape = tuple(shape[i] for i in perm)
+        strides = np.cumprod((shapes[1:] + (1,))[::-1])[::-1]
+        perm_strides = [strides[i] for i in perm]
+        out[index] = inp[np.dot(np.unravel_index(index, new_shape), perm_strides)]
+
+        Args:
+            name (str): The name of the configuration.
+            shape (tuple[int, ...]): The shape of the input tensor.
+            perm (tuple[int, ...]): The permutation of the dimensions.
+
+        Returns:
+            (new_shape, perm_strides) (tuple, tuple):  the output shape and permutation strides.
+        """
+        new_shape = tuple(shape[i] for i in perm)
+        strides = np.cumprod((shape[1:] + (1,))[::-1])[::-1]
+        perm_strides = tuple(int(strides[i]) for i in perm)
+        return (new_shape, perm_strides)
 
     @model_optimizer()
     def write_hls(self, model):

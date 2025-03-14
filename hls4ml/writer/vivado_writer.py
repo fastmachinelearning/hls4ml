@@ -539,10 +539,10 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model_inputs:
-                    newline += '    ' + inp.definition_cpp() + ';\n'
-                    newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
+                    newline += indent + inp.definition_cpp() + ';\n'
+                    newline += indent + f'nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
-                    newline += '    ' + out.definition_cpp() + ';\n'
+                    newline += indent + out.definition_cpp() + ';\n'
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
@@ -717,6 +717,8 @@ class VivadoWriter(Writer):
             f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
             f.write('variable version\n')
             f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
+            f.write('variable maximum_size\n')
+            f.write('set maximum_size {}\n'.format(model.config.get_config_value('MaximumSize', '4096')))
 
         # build_prj.tcl
         srcpath = (filedir / '../templates/vivado/build_prj.tcl').resolve()
@@ -790,6 +792,7 @@ class VivadoWriter(Writer):
         contents = f.readlines()
         f.close()
         f = open(path, 'w')
+        namespace = model.config.get_writer_config().get('Namespace', None)
 
         for line in contents:
             if '// hls4ml insert code' in line:
@@ -799,6 +802,9 @@ class VivadoWriter(Writer):
                         newline += str(generated_code)
             else:
                 newline = line
+            if namespace is not None:
+                if 'namespace nnet' in newline:
+                    newline = newline.replace('namespace nnet', f'namespace {namespace}')
             f.write(newline)
         f.close()
 
@@ -815,7 +821,9 @@ class VivadoWriter(Writer):
             return dumper.represent_scalar('!keras_model', model_path)
 
         try:
-            from tensorflow.keras import Model as KerasModel
+            import keras
+
+            KerasModel = keras.models.Model
 
             yaml.add_multi_representer(KerasModel, keras_model_representer)
         except Exception:

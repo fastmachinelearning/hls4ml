@@ -11,6 +11,7 @@ from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Em
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_quartus_report
+from hls4ml.utils import attribute_descriptions as descriptions
 
 
 @contextmanager
@@ -39,9 +40,9 @@ class QuartusBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
-            attrs.append(ConfigurableAttribute('table_size', default=1024))
-            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -130,13 +131,16 @@ class QuartusBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', **_):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, **_):
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
         config['ClockPeriod'] = clock_period if clock_period is not None else 5
         config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
+        config['WriterConfig'] = {
+            'WriteTar': write_tar,
+        }
 
         return config
 
