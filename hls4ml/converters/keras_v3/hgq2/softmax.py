@@ -30,6 +30,7 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False):
         f = int(f.max())
 
     k, b, I = k, k + i + f, k + i  # noqa: E741
+    b = max(1, b)
     round_mode = q.round_mode
     if round_mode.startswith('S_'):
         round_mode = round_mode[2:]  # stochastic rounding
@@ -49,15 +50,15 @@ class SQSoftmaxHandler(SQLayerHandler):
         out_tensors: Sequence['KerasTensor'],
     ):
         assert not layer._allow_heterogeneous_table, 'Heterogeneous table is not supported in QSoftmax layer'
-        if len(layer.axis) == 1:
-            ax = layer.axis[0]
+        if len(layer.axes) == 1:
+            ax = layer.axes[0]
             ax = ax if ax >= 0 else len(in_tensors[0].shape) + ax
-            # io_stream asserts axis=-1, convert to -1 when it is
+            # io_stream asserts axes=-1, convert to -1 when it is
             n_outer: int = prod(in_tensors[0].shape[1:ax])  # type: ignore
             n_inner: int = prod(in_tensors[0].shape[ax + 1 :])  # type: ignore
             ax = -1 if ax == len(in_tensors[0].shape) - 1 else ax
         else:  # softmax along multiple axes
-            axs = [ax if ax >= 0 else len(in_tensors[0].shape) + ax for ax in layer.axis]
+            axs = [ax if ax >= 0 else len(in_tensors[0].shape) + ax for ax in layer.axes]
             axs = sorted(axs)
             assert all(ax1 - ax0 == 1 for ax0, ax1 in zip(axs[:-1], axs[1:])), 'Softmax must act on adjacent axes'
             n_outer: int = prod(in_tensors[0].shape[1 : axs[0]])  # type: ignore

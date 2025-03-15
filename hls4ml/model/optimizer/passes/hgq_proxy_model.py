@@ -122,7 +122,7 @@ class FuseFixedPointQuantizer(OptimizerPass):
             precision: FixedPrecisionType = copy(node.get_output_variable().type.precision)
         else:
             k, b, i = node.mask_kbi
-            k, b, i = bool(k.ravel()[0]), int(b.ravel()[0]), int(i.ravel()[0])
+            k, b, i = bool(k.ravel()[0]), max(int(b.ravel()[0]), 1), int(i.ravel()[0])
             precision = FixedPrecisionType(b, i, k, node.RND, node.SAT)
 
         inp_layer = get_input_layers(node)[0]
