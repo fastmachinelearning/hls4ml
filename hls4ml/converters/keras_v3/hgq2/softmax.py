@@ -55,7 +55,6 @@ class SQSoftmaxHandler(SQLayerHandler):
             # io_stream asserts axis=-1, convert to -1 when it is
             n_outer: int = prod(in_tensors[0].shape[1:ax])  # type: ignore
             n_inner: int = prod(in_tensors[0].shape[ax + 1 :])  # type: ignore
-            n_in: int = in_tensors[0].shape[ax]  # type: ignore
             ax = -1 if ax == len(in_tensors[0].shape) - 1 else ax
         else:  # softmax along multiple axes
             axs = [ax if ax >= 0 else len(in_tensors[0].shape) + ax for ax in layer.axis]
@@ -63,8 +62,8 @@ class SQSoftmaxHandler(SQLayerHandler):
             assert all(ax1 - ax0 == 1 for ax0, ax1 in zip(axs[:-1], axs[1:])), 'Softmax must act on adjacent axes'
             n_outer: int = prod(in_tensors[0].shape[1 : axs[0]])  # type: ignore
             n_inner: int = prod(in_tensors[0].shape[axs[-1] + 1 :])  # type: ignore
-            n_in: int = prod(in_tensors[0].shape[axs[0] : axs[-1] + 1])  # type: ignore
             ax = -1  # if n_inner == 1 else 999  # 999 as placeholder
+        n_in: int = prod(in_tensors[0].shape[1:])  # type: ignore
 
         from hgq.quantizer.internal import FixedPointQuantizerBase
         from keras import ops
@@ -72,7 +71,7 @@ class SQSoftmaxHandler(SQLayerHandler):
         impl = 'stable' if layer.stable else 'latency'
 
         if impl == 'stable':
-            exp_table_size = 2 ** int(ops.convert_to_numpy(ops.max(layer.exp_table.iq.quantizer.bits)))
+            exp_table_size = 2 ** int(ops.convert_to_numpy(ops.max(layer.exp_table.iq.quantizer.bits)))  # type: ignore
         else:
             exp_table_size = None  # Placeholder, will be overridden in bit-exact pass
 
@@ -124,8 +123,8 @@ class SQSoftmaxHandler(SQLayerHandler):
 
         if layer.stable:
             inp_norm_t = fixed_quantizer_to_hls4ml_t(layer.exp_table.iq.quantizer)
-            inp_norm_t.saturation_mode = SaturationMode.WRAP
-            inp_norm_t.rounding_mode = RoundingMode.TRN
+            # inp_norm_t.saturation_mode = SaturationMode.WRAP
+            # inp_norm_t.rounding_mode = RoundingMode.TRN
             config['inp_norm_t'] = inp_norm_t
 
         return (config,)

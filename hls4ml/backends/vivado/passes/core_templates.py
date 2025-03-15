@@ -167,6 +167,7 @@ const {shift_t.name} {type}_config{index}::shift = {shift};\n"""
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
+    static const unsigned n_slice = {n_slice};
     static const unsigned n_outer = {n_outer};
     static const unsigned n_inner = {n_inner};
     static const unsigned parallelization_factor = {parallelization_factor};
@@ -242,8 +243,12 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         params.setdefault('n_outer', 1)
         params.setdefault('exp_scale', 1.0)
         params.setdefault('parallelization_factor', -1)
+
+        n_slice = params['n_in'] // params['n_inner'] // params['n_outer']  # type: ignore
+        params['n_slice'] = n_slice
+
         if params['accum_t'].name == 'model_default_t':  # type: ignore
-            scale = ceil(log2(node.attributes['n_in']))
+            scale = ceil(log2(n_slice))
             exp_table_t = node.attributes['exp_table_t'].precision
             signed, width, integers = exp_table_t.signed, exp_table_t.width, exp_table_t.integer
             params['accum_t_str'] = f'ap_{"" if signed else "u"}fixed<{width + scale}, {integers + scale}>'
@@ -252,18 +257,21 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         if params['inv_inp_t'].name == 'model_default_t':  # type: ignore
             params['inv_inp_t'] = params['exp_table_t']
 
-        if 'inp_norm_t' not in params:
-            # Only used in stable (max-normalized) implementation
-            input_t = node.get_input_variable().type.precision
-            width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
-            width, iwidth = width - signed, iwidth - signed
-            if signed:
-                # Fix table size if too large
-                exp_table_size = params['inv_table_size']
-                params['exp_table_size'] = str(min(int(exp_table_size), 2**width))
-            params['inp_norm_t_str'] = f'ap_ufixed<{width}, {iwidth}>'
+        if params['implementation'] == 'stable':
+            if 'inp_norm_t' not in params:
+                # Only used in stable (max-normalized) implementation
+                input_t = node.get_input_variable().type.precision
+                width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
+                width, iwidth = width - signed, iwidth - signed
+                if signed:
+                    # Fix table size if too large
+                    exp_table_size = params['inv_table_size']
+                    params['exp_table_size'] = str(min(int(exp_table_size), 2**width))
+                params['inp_norm_t_str'] = f'ap_ufixed<{width}, {iwidth}>'
+            else:
+                params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore
         else:
-            params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore
+            params['inp_norm_t_str'] = 'ap_fixed<1,0>'
 
         return self.template.format(**params)
 

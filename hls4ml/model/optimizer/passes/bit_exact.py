@@ -492,7 +492,8 @@ def _(layer: Softmax):
     i_exp, f_exp = I_exp, b_exp - I_exp
     i_inv, f_inv = I_inv, b_inv - I_inv
     k = np.zeros(out_shape, dtype=np.int8)
-    i = np.full(out_shape, min(i_exp + i_inv, 1), dtype=np.int8)
+
+    i = np.full(out_shape, i_exp + i_inv, dtype=np.int8)
     f = np.full(out_shape, f_exp + f_inv, dtype=np.int8)
 
     return k, i, f
@@ -653,18 +654,17 @@ def _(node: Softmax):
     inv_inp_t: FixedPrecisionType = node.attributes['inv_inp_t'].precision
     exp_table_t: FixedPrecisionType = node.attributes['exp_table_t'].precision
     accum_t = copy(inv_inp_t)
-    n_in = node.attributes['n_in']
-    scale = ceil(log2(n_in))
+    n_slice = node.attributes['n_in'] // node.attributes.get('n_inner', 1) // node.attributes.get('n_outer', 1)
+    scale = ceil(log2(n_slice))
     f_exp = exp_table_t.width - exp_table_t.integer
     f = f_exp + scale
     accum_t.width = f + inv_inp_t.integer
     accum_t.width += scale
     if inv_inp_t.saturation_mode != SaturationMode.WRAP:
         accum_t.saturation_mode = SaturationMode.WRAP
-        n_in = node.attributes['n_in']
-        scale = ceil(log2(n_in))
         accum_t.width += scale
         accum_t.integer += scale
+    accum_t.width = max(accum_t.width, 1)  # Prevent crashes on absurd bw configurations
     accum_t.rounding_mode = RoundingMode.TRN
     default_register_precision(node)
     impl = node.attributes['implementation']
@@ -776,10 +776,14 @@ class FixInputPrecision(OptimizerPass):
             return False
 
         # Unhandled input precision, usually by a heterogeneous quantizer with non-WRAP saturation
-        return node.get_output_variable().type.precision.width > 120
+        return node.get_output_variable().type.precision.width > 100
 
     def transform(self, model, node: Layer):
-        out_layers: list[FixedPointQuantizer] = get_output_layers(node)
+        out_layers: list[FixedPointQuantizer] = get_output_layers(node)  # type: ignore
+        for layer in out_layers:
+            assert isinstance(
+                layer, FixedPointQuantizer
+            ), f'Input {node.name} connected to non-quantizer {layer.name} with non-trivial configuration'
 
         if len(out_layers) == 0:  # Input connected to nothing
             new_type = to_hls4ml_fixed(0, 0, 1, f'{node.name}_t')
@@ -793,16 +797,30 @@ class FixInputPrecision(OptimizerPass):
 
         sat_modes = [l.SAT for l in out_layers]
         sat_modes_set = set(sat_modes)
+        rnd_modes = [l.RND for l in out_layers]
+        rnd_modes_set = set(rnd_modes)
         illegal_sat_modes = sat_modes_set - {'WRAP', 'SAT', 'SAT_SYM'}
+        illegal_rnd_modes = rnd_modes_set - {'TRN', 'RND'}
         if illegal_sat_modes:
-            raise ValueError(f'Input {node.name} has quantizer with illegal saturation mode {illegal_sat_modes} after.')
+            warn(f'Saturation mode {illegal_sat_modes} may compromise bit-exactness.')
+        if len(sat_modes_set) > 1 and not all('SAT' in s for s in sat_modes):
+            warn(f'Inconsistent saturation modes {sat_modes_set} in the input quantizers may compromise bit-exactness.')
+        if illegal_rnd_modes:
+            warn(f'Saturation mode {illegal_rnd_modes} may compromise bit-exactness. Forcing at maximum 24 fractional bits.')
 
         kifs = [_produce_kif(l) for l in out_layers]
         i = np.max([np.max(i) for _, i, _ in kifs])
         k = np.max([np.max(k) for k, _, _ in kifs])
-        f = node.get_output_variable().type.precision.fractional
+        if illegal_rnd_modes:
+            f = 24
+        else:
+            f = node.get_output_variable().type.precision.fractional
         new_type = to_hls4ml_fixed(k, i, f, f'{node.name}_t')
-        new_type.precision.saturation_mode = 'SAT'
+        if not all('SAT' in s for s in sat_modes):
+            # If any of the quantizers are not in SAT mode, set the input to WRAP mode
+            new_type.precision.saturation_mode = 'WRAP'
+        else:
+            new_type.precision.saturation_mode = 'SAT'
         node.get_output_variable().type = new_type
         node.model.config.layer_name_precision[node.name] = str(new_type)
         return False
