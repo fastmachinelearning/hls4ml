@@ -52,6 +52,14 @@ hls4ml.utils.plot module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.profiling\_utils module
+------------------------------------
+
+.. automodule:: hls4ml.utils.profiling_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.utils.string\_utils module
 ---------------------------------
 
