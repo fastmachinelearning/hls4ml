@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Status and Features &mdash; hls4ml 1.0.0 documentation</title>
+  <title>Status and Features &mdash; hls4ml 1.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
@@ -15,7 +15,7 @@
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/documentation_options.js?v=fc837d61"></script>
       <script src="../_static/doctools.js?v=9a2dae69"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -136,8 +136,8 @@
 <h1>Status and Features<a class="headerlink" href="#status-and-features" title="Link to this heading"></a></h1>
 <section id="status">
 <h2>Status<a class="headerlink" href="#status" title="Link to this heading"></a></h2>
-<p>The latest version (built from <code class="docutils literal notranslate"><span class="pre">main</span></code>) is 1.1.0.dev40+gad86cb68.
-The stable version (released on PyPI) is 1.0.0.
+<p>The latest version (built from <code class="docutils literal notranslate"><span class="pre">main</span></code>) is 1.2.0.dev1+gac79a8c3.
+The stable version (released on PyPI) is 1.1.0.
 See the <a class="reference internal" href="release_notes.html#release-notes"><span class="std std-ref">Release Notes</span></a> section for a changelog.</p>
 </section>
 <section id="features">
@@ -224,17 +224,18 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <p>Other feature notes:</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is tested on Linux, and supports</dt><dd><ul>
+<dt><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is tested on the following platforms. Newer versions might work just fine, but try at your own risk.</dt><dd><ul>
 <li><p>Vivado HLS versions 2018.2 to 2020.1</p></li>
-<li><p>Intel HLS versions 20.1 to 21.4</p></li>
-<li><p>Vitis HLS versions 2022.2 to 2024.1</p></li>
+<li><p>Intel HLS versions 20.1 to 21.4, versions &gt; 21.4 have not been tested.</p></li>
+<li><p>Vitis HLS versions 2022.2 to 2024.1. Versions &lt;= 2022.1 are known not to work.</p></li>
 <li><p>Catapult HLS versions 2024.1_1 to 2024.2</p></li>
 <li><p>oneAPI versions 2024.1 to 2025.0</p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><p>Windows and macOS are not supported</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports Linux and requires python &gt;=3.10. hlsml does not require a specific Linux distribution version and we recommended to follow the requirements of the HLS tool you are using.</p></li>
+<li><p>Windows and macOS are not supported. Setting up <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> on these platforms, for example using the Windows Subsystem for Linux (WSL) should be possible, but we do not provide support for such use cases.</p></li>
 <li><p>BDT support has moved to the <a class="reference external" href="https://github.com/thesps/conifer">Conifer</a> package</p></li>
 </ul>
 </section>
