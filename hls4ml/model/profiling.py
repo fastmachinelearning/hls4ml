@@ -394,8 +394,10 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
 
 def weights_torch(model, fmt='longform', plot='boxplot'):
     from hls4ml.utils.profiling_utils import WeightsTorch
+
     wt = WeightsTorch(model, fmt, plot)
     return wt.get_weights()
+
 
 def activations_torch(model, X, fmt='longform', plot='boxplot'):
     X = torch.Tensor(X)

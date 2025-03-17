@@ -1,6 +1,6 @@
-import torch
-import pandas
 import numpy as np
+import pandas
+import torch
 
 from hls4ml.model.profiling import array_to_summary
 
@@ -32,7 +32,6 @@ def _torch_rnn(layer):
     return list(layer.parameters()), ['w_ih_l0', 'w_hh_l0', 'b_ih_l0', 'b_hh_l0']
 
 
-
 torch_process_layer_map = defaultdict(
     lambda: _torch_layer,
     {
@@ -43,6 +42,7 @@ torch_process_layer_map = defaultdict(
         'GRU': _torch_rnn,
     },
 )
+
 
 class WeightsTorch:
 
