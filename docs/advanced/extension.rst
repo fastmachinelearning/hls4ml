@@ -18,6 +18,9 @@ To implement a custom layer in ``hls4ml`` with the extension API, the required c
 * Function config template
 * Registration of layer, source code, and templates
 
+.. note::
+    currently, then extension API supports keras models. Support for pytorch models is in development.
+
 Complete example
 ================
 
