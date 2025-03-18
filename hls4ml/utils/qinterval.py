@@ -104,7 +104,7 @@ class QIntervalArray(_QIntervalArray):
         v2 = self.max * other
         _min = np.minimum(v1, v2)
         _max = np.maximum(v1, v2)
-        _delta = self.delta * other
+        _delta = self.delta * 2.0 ** -_minimal_f(other)
         return QIntervalArray(_min, _max, _delta)
 
     @__mul__.register

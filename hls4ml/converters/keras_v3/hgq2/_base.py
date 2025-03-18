@@ -180,10 +180,10 @@ class SQBatchNormalizationHandler(SQLayerHandler):
         scale = ops.convert_to_numpy(scale)
         offset = ops.convert_to_numpy(offset)
 
-        assert layer.axis in (len(in_tensors[0].shape) - 1, -1), 'Only batch_norm with axis=-1 is supported'
+        assert layer.axis in (len(in_tensors[0].shape) - 1, -1), 'Only batch_norm with axis=-1 is supported in hls4ml'
 
         return {
-            'n_filt': scale.size,
+            'n_filt': scale.size,  # type: ignore
             'n_in': prod(in_tensors[0].shape[1:]),  # type: ignore
             'scale_data': scale,
             'bias_data': offset,
