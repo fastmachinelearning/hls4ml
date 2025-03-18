@@ -285,6 +285,7 @@ def parse_keras_v3_model(model: 'keras.Model'):
     input_layer_names = [provides[tname] for tname in model_inputs]
     output_layer_names = [provides[tname] for tname in model_outputs]
     batch_output_shapes = [list(tensors[tname].shape) for tname in model_outputs]
+    batch_output_shapes = [shape if shape != [None] else [1] for shape in batch_output_shapes]
 
     return layer_list, input_layer_names, output_layer_names, batch_output_shapes
 

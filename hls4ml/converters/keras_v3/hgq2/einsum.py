@@ -25,6 +25,8 @@ class SQEinsumHandler(SQLayerHandler):
         inp0_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
         inp1_shape: tuple[int, ...] = in_tensors[1].shape[1:]  # type: ignore
         out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
+        if out_shape == ():
+            out_shape = (1,)  # Scalar output
 
         # fmt: off
         assert all(d is not None for d in inp0_shape), \
