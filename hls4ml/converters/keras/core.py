@@ -144,7 +144,8 @@ def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader):
 
     if not ((len(input_shapes[0])) == 3):
         raise Exception(
-            'input size is not currently supported by hls4ml; only three-dimensional input (including batch dimension) is supported'
+            'input size is not currently supported by hls4ml; '
+            'only three-dimensional input (including batch dimension) is supported'
         )
     layer['seq_len'] = input_shapes[0][-2]
 

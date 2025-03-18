@@ -52,4 +52,7 @@ recurrent_static = (
 
 # LayerNorm-related attributes
 
-table_range_power2 = 'The negative power of 2 that represents the range of the lookup table, e.g. a value of 1 would represent a range of 0.5.'
+table_range_power2 = (
+    'The negative power of 2 that represents the range of the lookup table, '
+    'e.g. a value of 1 would represent a range of 0.5.'
+)
