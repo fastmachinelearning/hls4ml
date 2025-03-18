@@ -137,8 +137,14 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning read in' in line:
                     newline = line
                     if io_type == 'io_parallel':
+                        restartable_kernel_loop = (
+                            f"bool keep_going = true;\n\n"
+                            f"{indent}while (keep_going) {{\n"
+                        )
+                        newline += indent + restartable_kernel_loop
                         for inp in model_inputs:
-                            newline += indent + f'auto {inp.name} = {inp.pipe_name}::read();\n'
+                            newline += indent * 2 + f'auto {inp.name}_beat = {inp.pipe_name}::read();\n'
+                            newline += indent * 2 + f'auto {inp.name} = {inp.name}_beat.data;\n'
                     # for streaming we don't need to read it in
 
                 # Insert weights
@@ -151,16 +157,21 @@ class OneAPIWriter(Writer):
 
                 # Insert task sequences
                 elif '// hls-fpga-machine-learning declare task sequences' in line:
-                    newline = line
                     if io_type == 'io_stream':  # only need this for io_stream
+                        newline = line
                         for layer in model.get_layers():
                             ts = layer.get_attr('tast_sequence_cpp')
                             if ts:
                                 newline += '    ' + ts + '\n'
+                    else:
+                        newline = indent + line
 
                 # Neural net instantiation
                 elif '// hls-fpga-machine-learning insert layers' in line:
-                    newline = line + '\n'
+                    if io_type == 'io_parallel':
+                        newline = indent + line + '\n'
+                    else:
+                        newline = line + '\n'
                     for layer in model.get_layers():
                         if io_type != 'io_stream':
                             vars = layer.get_variables()
@@ -168,14 +179,14 @@ class OneAPIWriter(Writer):
                                 if var not in model_inputs:
                                     def_cpp = var.definition_cpp()
                                     if def_cpp is not None:
-                                        newline += '    ' + def_cpp + ';\n'
+                                        newline += indent * 2 + def_cpp + ';\n'
                         func = (
                             layer.get_attr('function_cpp')
                             if io_type == 'io_parallel'
                             else layer.get_attr('stream_function_cpp')
                         )
                         if func:
-                            newline += '    ' + func + '\n'
+                            newline += (indent * 2 if io_type == 'io_parallel' else indent) + func + '\n'
                             if model.config.trace_output and layer.get_attr('trace', False):
                                 newline += '#ifndef HLS_SYNTHESIS\n'
                                 for var in vars:
@@ -188,8 +199,15 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning return' in line:
                     newline = line
                     if io_type == 'io_parallel':
+                        newline = indent + newline
                         for out in model_outputs:
-                            newline += indent + f'{out.pipe_name}::write({out.name});\n'
+                            out_beat = f"{out.name}_beat"
+                            newline += indent * 2 + f'typename nnet::ExtractPipeType<{out.pipe_name}>::value_type {out_beat};\n'
+                            newline += indent * 2 + f'{out_beat}.data = {out.name};\n'
+                            newline += indent * 2 + f'{out.pipe_name}::write({out_beat});\n'
+                        newline += indent * 2 + '// stops the kernel when the last input seen.\n'
+                        newline += indent * 2 + f'keep_going = !{model_inputs[0].name}_beat.eop;\n'
+                        newline += f"{indent}}}\n"
                     # don't need to add anything in io_stream
 
                 # Just copy line
@@ -396,27 +414,39 @@ class OneAPIWriter(Writer):
                     newline = line
                     for bram in model_brams:
                         newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                elif '// hls-fpga-machine-learning insert runtime contant' in line:
+                    newline = line
+                    insert_constant_lines = (
+                        f'{indent}const size_t kInputSz = {model_inputs[0].size_cpp()} * num_iterations;\n'
+                        f'{indent}const size_t kOutputSz = {model_outputs[0].size_cpp()} * num_iterations;\n'
+                        f'{indent}const size_t kInputLayerSize = {model_inputs[0].size_cpp()};\n'
+                        f'{indent}const size_t kOutLayerSize = {model_outputs[0].size_cpp()};\n'
+                    )
+                    newline += insert_constant_lines;
                 elif '// hls-fpga-machine-learning insert zero' in line:
                     newline = line
                     inp = model_inputs[0]
-                    newline += indent + f'float vals[{inp.size_cpp()}]; \n'
-                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
-                    newline += indent + '    vals[j] = 0.0; \n'
-                    newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    insert_zero_lines = (
+                        f'{indent}for (int j = 0 ; j < kInputSz; j++)\n'
+                        f'{indent}    vals[j] = 0.0;\n'
+                        f'{indent}q.single_task(nnet::DMA_convert_data<float, {inp.pipe_name}>{{vals, num_iterations}});\n'
+                    )
+                    newline += insert_zero_lines
                 elif '// hls-fpga-machine-learning insert data' in line:
                     newline = line
                     inp = model_inputs[0]
-                    newline += indent + f'float vals[{inp.size_cpp()}]; \n'
-                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
-                    newline += indent + '    vals[j] = in[j]; \n'
-                    newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    insert_data_lines = (
+                        f'{indent}for (int i = 0; i < num_iterations; i++)\n'
+                        f'{indent}    for (int j = 0 ; j < kInputLayerSize; j++)\n'
+                        f'{indent}        vals[i * kInputLayerSize + j] = inputs[i][j]; \n'
+                        f'{indent}q.single_task(nnet::DMA_convert_data<float, {inp.pipe_name}>{{vals, num_iterations}});\n'
+                    )
+                    newline += insert_data_lines
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
-                    newline += indent + f'float outputs[{out.size_cpp()}];\n'
-                    newline += indent + f'nnet::convert_data_back<{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
+                    newline += \
+                        f'{indent}q.single_task(nnet::DMA_convert_data_back<{out.pipe_name}, float>{{outputs, num_iterations}}).wait();\n'
                 else:
                     newline = line
 

@@ -29,23 +29,33 @@ LinearActLoop:
 // *************************************************
 //       ReLU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> void relu_stream() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> 
+[[intel::use_stall_enable_clusters]] void relu_stream() {
+    using namespace nnet;
+    using ResT = typename ExtractDataType<typename ExtractPipeType<res_pipe>::value_type>::value_type;
+    [[intel::fpga_register]] typename ExtractPipeType<res_pipe>::value_type out_data;
+    
+    bool keep_going = true;
 ReLUActLoop:
-    [[intel::initiation_interval(
-        1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; i++) {
-        auto in_data = data_pipe::read();
-        typename ExtractPipeType<res_pipe>::value_type out_data;
+    [[intel::initiation_interval(1)]]
+    while(keep_going) {
+        for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<ResT>{}; i++) {
+            [[intel::fpga_register]] auto in_data = data_pipe::read();
+ReLUPackLoop:
+            #pragma unroll
+            for (int j = 0; j < std::tuple_size<ResT>{}; j++) {
+                if (in_data.data[j] > 0)
+                    out_data.data[j] = in_data.data[j];
+                else
+                    out_data.data[j] = 0;
+            }
 
-    ReLUPackLoop:
-        #pragma unroll
-        for (int j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
-            if (in_data[j] > 0)
-                out_data[j] = in_data[j];
-            else
-                out_data[j] = 0;
+            out_data.sop = in_data.sop;
+            out_data.eop = in_data.eop;
+            res_pipe::write(out_data);
+
+            keep_going = !in_data.eop;
         }
-
-        res_pipe::write(out_data);
     }
 }
 
