@@ -199,7 +199,8 @@ class SQMergeHandler(SQLayerHandler, KV3MergeHandler):
         'hgq.layers.ops.merge.QAverage',
         'hgq.layers.ops.merge.QMaximum',
         'hgq.layers.ops.merge.QMinimum',
-        'hgq.layers.ops.merge.QConcatenate',
+        'hgq.layers.ops.merge.QAveragePow2',
+        'hgq.layers.ops.merge.QDot',
     )
 
     def handle(
@@ -209,4 +210,17 @@ class SQMergeHandler(SQLayerHandler, KV3MergeHandler):
         out_tensors: Sequence['KerasTensor'],
     ):
         cls_name = layer.__class__.__name__[1:]
-        return super().handle(layer, in_tensors, out_tensors, cls_name)
+        conf = super().handle(layer, in_tensors, out_tensors, cls_name)
+        if cls_name == 'AveragePow2':
+            conf['op'] = 'average'
+            conf['scale'] = layer._scale
+        elif cls_name == 'Dot':
+            msg = (
+                f'Dot operation in hls4ml only supports two flatten, identical tensors. Got '
+                f'{in_tensors[0].shape} and {in_tensors[1].shape} for layer {layer.name}.'
+            )
+            assert all(len(t.shape) == 2 for t in in_tensors) and in_tensors[0].shape == in_tensors[1].shape, msg
+            conf['class_name'] = 'Dot'
+            conf['op'] = 'dot1d'
+            conf['axes'] = layer.axes
+        return conf

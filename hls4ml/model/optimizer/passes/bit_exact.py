@@ -274,16 +274,39 @@ def _(layer: Merge):
         case 'add':
             qint_ins = [QIntervalArray.from_kif(*kif) for kif in kif_ins]
             k, i, f = reduce(lambda a, b: a + b, qint_ins).to_kif()  # type: ignore
-            return k.astype(np.int8), i, f
+        case 'subtract':
+            qint_in0, qint_in1 = (QIntervalArray.from_kif(*kif) for kif in kif_ins)
+            k, i, f = (qint_in0 - qint_in1).to_kif()
         case 'concatename':
             axis = layer.attributes.attributes['axis']
             _ks, _is, _fs = zip(*[kif for kif in kif_ins])
             k = np.concatenate(_ks, axis=axis)
             i = np.concatenate(_is, axis=axis)
             f = np.concatenate(_fs, axis=axis)
-            return k, i, f
+        case 'maximum':
+            k, i, f = map(np.maximum, *kif_ins)
+        case 'minimum':
+            k, i, f = map(np.maximum, *kif_ins)
+        case 'multiply':
+            qint_ins = [QIntervalArray.from_kif(*kif) for kif in kif_ins]
+            k, i, f = reduce(lambda a, b: a * b, qint_ins).to_kif()
+        case 'average':
+            qint_ins = [QIntervalArray.from_kif(*kif) for kif in kif_ins]
+            k, i, f = reduce(lambda a, b: a + b, qint_ins).to_kif()  # type: ignore
+            scale = layer.attributes.get('scale', 1 / len(qint_ins))
+            shift = -int(log2(scale))
+            if int(log2(scale)) == log2(scale):
+                f = f + shift
+            else:
+                f[:] = 126
+            i = i - shift
+        case 'dot1d':
+            qint_in0 = QIntervalArray.from_kif(*kif_ins[0])
+            qint_in1 = QIntervalArray.from_kif(*kif_ins[1])
+            k, i, f = (qint_in0 @ qint_in1).to_kif()
         case _:
             raise NotImplementedError(f'No implementation of Merge for {op}')
+    return k.astype(np.int8), i, f
 
 
 @_produce_kif.register
