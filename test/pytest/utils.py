@@ -17,7 +17,7 @@ def get_baselines_dir():
     Raises:
         ValueError: If `BASELINES_DIR` is not set or is not a valid absolute path.
     """
-    baselines_dir = os.getenv('BASELINE_DIR')
+    baselines_dir = os.getenv('BASELINES_DIR')
     
     if not baselines_dir:
         raise ValueError("The 'BASELINES_DIR' environment variable must be set.")

@@ -24,7 +24,7 @@ from tensorflow.keras.layers import (
 import hls4ml
 
 test_root_path = Path(__file__).parent
-baselines_path = get_baselines_dir()
+baselines_path = Path(get_baselines_dir())
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
