@@ -92,7 +92,7 @@ AverageLoop:
     AveragePack:
         for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            out_data[j] = (in_data1[j] + in_data2[j]) / (typename res_T::value_type)2;
+            out_data[j] = (in_data1[j] + in_data2[j]) * ap_ufixed<1, 0>(0.5);
         }
 
         res.write(out_data);
