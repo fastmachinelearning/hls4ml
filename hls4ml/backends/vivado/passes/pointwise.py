@@ -66,7 +66,8 @@ def register_pointwise(backend):
 class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):
         if node.get_attr('strategy') == 'distributed_arithmetic':
-            return False
+            if node.class_name == 'Conv1D':
+                return False
         return (
             node.class_name in ('Conv1D', 'Conv2D')
             and node.get_attr('filt_height', 1) == 1
@@ -81,10 +82,6 @@ class OptimizePointwiseConv(OptimizerPass):
             'PointwiseConv' + dim, node.name, new_attrs, node.inputs.copy(), outputs=node.outputs.copy()
         )
         # Set strategy to ensure lowercase string is passed to the template
-        if model.config.is_resource_strategy(pw_node):
-            pw_node.set_attr('strategy', 'resource')
-        else:
-            pw_node.set_attr('strategy', 'latency')
+        pw_node.set_attr('strategy', node.get_attr('strategy'))
         model.replace_node(node, pw_node)
-
         return True
