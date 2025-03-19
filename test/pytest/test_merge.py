@@ -17,8 +17,8 @@ test_root_path = Path(__file__).parent
 def test_merge(merge_layer, io_type, backend, swap_inputs):
     input_shape = (10, 10, 3)
 
-    in1 = Input(shape=input_shape)
-    in2 = Input(shape=input_shape)
+    in1 = Input(shape=input_shape, name='inp1')
+    in2 = Input(shape=input_shape, name='inp2')
     if swap_inputs:
         out = merge_layer()([in2, in1])
     else:
@@ -27,11 +27,13 @@ def test_merge(merge_layer, io_type, backend, swap_inputs):
     model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
     output_dir = str(
         test_root_path
         / f'hls4mlprj_merge_{"swap_inputs_" if swap_inputs else ""}{merge_layer.__name__.lower()}_{backend}_{io_type}'
     )
+
+    config = {'Model': {'Precision': 'fixed<32,16>', 'ReuseFactor': 1}, 'LayerName': {'inp2': {'Precision': 'fixed<32,15>'}}}
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
