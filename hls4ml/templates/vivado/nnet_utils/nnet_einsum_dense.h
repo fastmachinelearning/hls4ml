@@ -80,8 +80,7 @@ einsum_dense(data_T data[CONFIG_T::n_free_data * CONFIG_T::n_contract * CONFIG_T
              typename CONFIG_T::bias_t biases[CONFIG_T::n_free_data * CONFIG_T::n_free_kernel * CONFIG_T::n_inplace]) {
 
     data_T inp_tpose[CONFIG_T::n_free_data * CONFIG_T::n_contract * CONFIG_T::n_inplace];
-    res_T out_tpose[CONFIG_T::n_free_data * CONFIG_T::n_free_kernel * CONFIG_T::n_inplace];
-    res_T out_buffer[CONFIG_T::n_free_kernel];
+    typename CONFIG_T::accum_t out_tpose[CONFIG_T::n_free_data * CONFIG_T::n_free_kernel * CONFIG_T::n_inplace];
 
     #pragma HLS ARRAY_PARTITION variable = inp_tpose complete
     #pragma HLS ARRAY_PARTITION variable = out_tpose complete
@@ -95,10 +94,6 @@ einsum_dense(data_T data[CONFIG_T::n_free_data * CONFIG_T::n_contract * CONFIG_T
 
     for (unsigned l0 = 0; l0 < L0; l0++) {
         #pragma HLS UNROLL factor = CONFIG_T::parallelization_factor
-        //         for (unsigned i = 0; i < I; i++) {
-        //             #pragma HLS UNROLL
-        //             inp_tpose[(i * L0 + l0) * C]->out_tpose[(i * L0 + l0) * L1];
-        //         }
         CONFIG_T::da_kernel(inp_tpose, out_tpose, l0);
     }
     for (unsigned ii = 0; ii < (L0 * L1 * I); ii++) {
@@ -106,7 +101,7 @@ einsum_dense(data_T data[CONFIG_T::n_free_data * CONFIG_T::n_contract * CONFIG_T
         out_tpose[ii] = out_tpose[ii] + biases[ii];
     }
 
-    nnet::transpose<res_T, res_T, typename CONFIG_T::tpose_out_conf>(out_tpose, res);
+    nnet::transpose<typename CONFIG_T::accum_t, res_T, typename CONFIG_T::tpose_out_conf>(out_tpose, res);
 }
 
 } // namespace nnet
