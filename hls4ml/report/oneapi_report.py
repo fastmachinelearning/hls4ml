@@ -50,7 +50,7 @@ def _parse_single_report(prjDir):
 
     PathJson = prjDir + "/reports/resources/json/"
     PathQuartusJson = PathJson + "quartus.ndjson"
-    PathHLSJson = PathJson + "area.ndjson"
+    PathHLSJson = PathJson + "summary.ndjson"
     PathLoopJson = PathJson + "loop_attr.ndjson"
     # PathInfoJson = PathJson + "info.ndjson"
     # PathSimDataJson = PathJson + "simulation_raw.ndjson"
@@ -62,7 +62,7 @@ def _parse_single_report(prjDir):
 
     # you will probably need to modify this section if you compile a design with
     # multiple HLS components.
-    if not os.path.exists(PathQuartusJson) or not os.path.exists(PathHLSJson):
+    if not os.path.exists(PathQuartusJson) or not os.path.exists(PathHLSJson) or not os.path.exists(PathLoopJson):
         print('Unable to read project data. Exiting.')
         return
 
@@ -102,14 +102,16 @@ def _parse_single_report(prjDir):
 
         report["Quartus"] = quartusReport
 
-    # read HLS info in area.ndjson
+    # read HLS info in summary.ndjson
     hlsReport = {}
     hlsReport["total"] = {}
     hlsReport["available"] = {}
     resourcesList = ["alut", "reg", "ram", "dsp", "mlab"]
-    for i_resource, resource in enumerate(resourcesList):
-        hlsReport["total"][resource] = JsonDataHLS[0]["total"][i_resource]
-        hlsReport["available"][resource] = JsonDataHLS[0]["max_resources"][i_resource]
+    for line in JsonDataHLS:
+        if line["name"] == "Available" or line["name"] == "Total":
+            resourceType = line["name"].lower()
+            for i_resource, resource in enumerate(resourcesList):
+                hlsReport[resourceType][resource] = line["data"][i_resource]
 
     report["HLS"] = hlsReport
 

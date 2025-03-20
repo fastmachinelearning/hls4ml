@@ -31,7 +31,7 @@ def copy_oneapi_report(output_dir, test_report_dir):
     json_dir = f'{output_dir}/build/myproject.fpga.prj/reports/resources/json'
     os.makedirs(json_dir, exist_ok=True)
     shutil.copy(test_report_dir / 'quartus.ndjson', f'{json_dir}/quartus.ndjson')
-    shutil.copy(test_report_dir / 'area.ndjson', f'{json_dir}/area.ndjson')
+    shutil.copy(test_report_dir / 'summary.ndjson', f'{json_dir}/summary.ndjson')
     shutil.copy(test_report_dir / 'loop_attr.ndjson', f'{json_dir}/loop_attr.ndjson')
 
     return
@@ -96,7 +96,7 @@ def backend_configs():
             + '    FFs:    16419 (0.8%)      7938 (0.4%)       1948800          \n'
             + '    DSPs:   40 (0.9%)         0 (< 0.1%)        4510             \n'
             + '    RAMs:   36 (0.5%)         77 (1.1%)         7110             \n'
-            + '    MLABs:  52 (0.1%)         92 (0.2%)         48720            \n'
+            + '    MLABs:  52 (0.2%)         92 (0.4%)         24360            \n'
             + '    ALMs:   4520.0            N/A               N/A              \n\n',
         },
     }
