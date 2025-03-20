@@ -99,7 +99,7 @@ class QIntervalArray(_QIntervalArray):
 
     @singledispatchmethod
     def __mul__(self, other):
-        other = np.float64(other)
+        other = np.array(other, dtype=np.float64)
         v1 = self.min * other
         v2 = self.max * other
         _min = np.minimum(v1, v2)
