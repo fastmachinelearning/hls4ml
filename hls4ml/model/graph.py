@@ -494,7 +494,9 @@ class ModelGraph:
                 next_nodes.append(x)
 
         if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] in prev_node.outputs), None)
+            next_node = next(
+                (x for x in self.graph.values() if x.inputs and set(x.inputs).intersection(prev_node.outputs)), None
+            )
         else:
             if before not in next_nodes:
                 raise Exception(
@@ -594,7 +596,6 @@ class ModelGraph:
             for i, n in enumerate(node.outputs):
                 if n in repl:
                     node.outputs[i] = repl[n]
-
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
         old_name = old_node.name
