@@ -20,14 +20,8 @@ If you want to use our :doc:`profiling <../advanced/profiling>` toolbox, you mig
 
    pip install hls4ml[profiling]
 
-``hls4ml`` is also available as a ``conda`` package in the ``conda-forge`` repository. To install, run:
-
 .. warning::
-   Version of hls4ml available on ``conda-forge`` is outdated, we recommend installing with ``pip`` to get the latest version.
-
-.. code-block::
-
-   conda install -c conda-forge hls4ml
+   Previously, versions of hls4ml were made available on ``conda-forge``. These are outdated and should NOT be used. Installing with ``pip`` is currently the only supported method.
 
 Development version
 -------------------

@@ -544,14 +544,14 @@ class ModelGraph:
         if len(inputs) > 1 or len(outputs) > 1:
             raise Exception('Cannot delete a node with multiple inputs/outputs')
 
-        if len(inputs) == 1:
+        if len(outputs) == 1 and len(inputs) == 1:
+
             # Connect inputs -> $outputs
-            if node.name in self.outputs:
+            if node.outputs[0] in self.outputs:
                 msg = f'Remove leaf node {node.name} will connect its input node {inputs[0]} to output, but it already is.'
                 assert inputs[0] not in self.outputs, msg
-                self.outputs = [inputs[0] if name == node.name else name for name in self.outputs]
+                self.outputs = [inputs[0] if name == node.outputs[0] else name for name in self.outputs]
 
-        if len(outputs) == 1 and len(inputs) == 1:
             inp_var = node.get_input_variable()
             out_var = node.get_output_variable()
 
@@ -567,9 +567,6 @@ class ModelGraph:
                     if outputs[0] == nxt_inp:
                         next_node.inputs[i] = inputs[0]
 
-        if node.outputs[0] in self.outputs:
-            prev_node = node.get_input_node(node.inputs[0])
-            self.outputs[self.outputs.index(node.outputs[0])] = prev_node.outputs[0]
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
 
