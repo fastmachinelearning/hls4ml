@@ -74,8 +74,8 @@ void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG
     #pragma HLS ARRAY_PARTITION variable=s_actstate   complete
 
     nnet::dense<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config1>(data, tmpres, param, param_b);
-    nnet::dense<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config2>(h_newstate, tmpres_state, param_r,
-                                                                                     param_br);
+    nnet::dense<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config2>(h_newstate, tmpres_state, param_r,
+                                                                                    param_br);
 
     for (int iacc = 0; iacc < (3 * CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL

@@ -102,13 +102,6 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
         if class_object.output_quant.is_quant_enabled:
             layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True)
 
-    else:
-        layer['weight_data'] = class_object.weight.data.numpy()
-        if class_object.bias is not None:
-            layer['bias_data'] = class_object.bias.data.numpy()
-        else:
-            layer['bias_data'] = None
-
     if class_object is not None:
         layer['n_in'] = class_object.in_features
         layer['n_out'] = class_object.out_features
