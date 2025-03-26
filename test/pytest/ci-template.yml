@@ -13,7 +13,7 @@
     - pip install .[testing,sr,optimization]
   script:
     - cd test/pytest
-    - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
+    - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed --synthesis
   artifacts:
     when: always
     reports:
