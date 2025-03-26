@@ -28,23 +28,19 @@ using sycl::ext::intel::experimental::property::usm::buffer_location;
 // Functions that reads input and prediction data from files.
 // Returns `true` if files are read successfully and not empty.
 // Returns `false` otherwise.
-bool prepare_data_from_file(
-    std::string &fin_path,
-    std::string &fpr_path,
-    std::vector<std::vector<float>> &inputs,
-    std::vector<std::vector<float>> &predictions
-) {
+bool prepare_data_from_file(std::string &fin_path, std::string &fpr_path, std::vector<std::vector<float>> &inputs,
+                            std::vector<std::vector<float>> &predictions) {
     // load input data from text file
     std::ifstream fin(fin_path.c_str());
     // load predictions from text file
     std::ifstream fpr(fpr_path.c_str());
-    
+
     std::string iline;
     std::string pline;
 
     if (fin.is_open() && fpr.is_open()) {
         size_t num_iterations = 0;
-        
+
         // Prepare input data from file. Load predictions from file.
         for (; std::getline(fin, iline) && std::getline(fpr, pline); num_iterations++) {
             if (num_iterations % CHECKPOINT == 0) {
@@ -106,8 +102,8 @@ int main(int argc, char **argv) {
 
     std::cout << "Running on device: " << device.get_info<sycl::info::device::name>().c_str() << std::endl;
 
-    std::string INPUT_FILE  = "tb_data/tb_input_features.dat";
-    std::string PRED_FILE   = "tb_data/tb_output_predictions.dat";
+    std::string INPUT_FILE = "tb_data/tb_input_features.dat";
+    std::string PRED_FILE = "tb_data/tb_output_predictions.dat";
     std::string RESULTS_LOG = "tb_data/results.log";
     std::ofstream fout(RESULTS_LOG);
 
@@ -138,10 +134,12 @@ int main(int argc, char **argv) {
             std::cerr << "ERROR: host allocation failed for output\n";
             fout.close();
             return 1;
-        }    
+        }
 #else
-        float *vals = sycl::malloc_shared<float>(kInputSz, q, sycl::property_list{buffer_location(nnet::kInputBufferLocation)});
-        float *outputs = sycl::malloc_shared<float>(kOutputSz, q, sycl::property_list{buffer_location(nnet::kOutputBufferLocation)});
+        float *vals =
+            sycl::malloc_shared<float>(kInputSz, q, sycl::property_list{buffer_location(nnet::kInputBufferLocation)});
+        float *outputs =
+            sycl::malloc_shared<float>(kOutputSz, q, sycl::property_list{buffer_location(nnet::kOutputBufferLocation)});
 #endif
 
         if (file_valid) {
@@ -175,7 +173,7 @@ int main(int argc, char **argv) {
             }
         } else {
             std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations
-                    << " invocations." << std::endl;
+                      << " invocations." << std::endl;
             q.single_task(MyProject{});
             // hls-fpga-machine-learning insert top-level-function
             // hls-fpga-machine-learning insert zero
@@ -195,12 +193,10 @@ int main(int argc, char **argv) {
         std::cout << "INFO: Saved inference results to file: " << RESULTS_LOG << std::endl;
     } catch (sycl::exception const &e) {
         // Catches exceptions in the host code.
-        std::cerr << "Caught a SYCL host exception:\n"
-                  << e.what() << "\n";
+        std::cerr << "Caught a SYCL host exception:\n" << e.what() << "\n";
 
         // Most likely the runtime couldn't find FPGA hardware!
-        if (e.code().value() == CL_DEVICE_NOT_FOUND)
-        {
+        if (e.code().value() == CL_DEVICE_NOT_FOUND) {
             std::cerr << "If you are targeting an FPGA, please ensure that your "
                          "system has a correctly configured FPGA board.\n";
             std::cerr << "Run sys_check in the oneAPI root directory to verify.\n";

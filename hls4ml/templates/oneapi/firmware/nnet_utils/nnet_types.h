@@ -8,7 +8,7 @@
 #include <tuple>
 #include <utility>
 
-#include <sycl/ext/intel/prototype/pipes_ext.hpp>   // Streaming Beat and pipe properties.
+#include <sycl/ext/intel/prototype/pipes_ext.hpp> // Streaming Beat and pipe properties.
 
 namespace nnet {
 

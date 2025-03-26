@@ -29,19 +29,17 @@ LinearActLoop:
 // *************************************************
 //       ReLU Activation
 // *************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T> 
-[[intel::use_stall_enable_clusters]] void relu_stream() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> [[intel::use_stall_enable_clusters]] void relu_stream() {
     using namespace nnet;
     using ResT = typename ExtractDataType<typename ExtractPipeType<res_pipe>::value_type>::value_type;
     [[intel::fpga_register]] typename ExtractPipeType<res_pipe>::value_type out_data;
-    
+
     bool keep_going = true;
 ReLUActLoop:
-    [[intel::initiation_interval(1)]]
-    while(keep_going) {
+    [[intel::initiation_interval(1)]] while (keep_going) {
         for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<ResT>{}; i++) {
             [[intel::fpga_register]] auto in_data = data_pipe::read();
-ReLUPackLoop:
+        ReLUPackLoop:
             #pragma unroll
             for (int j = 0; j < std::tuple_size<ResT>{}; j++) {
                 if (in_data.data[j] > 0)

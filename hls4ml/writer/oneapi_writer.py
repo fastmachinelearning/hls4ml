@@ -137,10 +137,7 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning read in' in line:
                     newline = line
                     if io_type == 'io_parallel':
-                        restartable_kernel_loop = (
-                            f"bool keep_going = true;\n\n"
-                            f"{indent}while (keep_going) {{\n"
-                        )
+                        restartable_kernel_loop = f"bool keep_going = true;\n\n" f"{indent}while (keep_going) {{\n"
                         newline += indent + restartable_kernel_loop
                         for inp in model_inputs:
                             newline += indent * 2 + f'auto {inp.name}_beat = {inp.pipe_name}::read();\n'
@@ -202,7 +199,9 @@ class OneAPIWriter(Writer):
                         newline = indent + newline
                         for out in model_outputs:
                             out_beat = f"{out.name}_beat"
-                            newline += indent * 2 + f'typename nnet::ExtractPipeType<{out.pipe_name}>::value_type {out_beat};\n'
+                            newline += (
+                                indent * 2 + f'typename nnet::ExtractPipeType<{out.pipe_name}>::value_type {out_beat};\n'
+                            )
                             newline += indent * 2 + f'{out_beat}.data = {out.name};\n'
                             newline += indent * 2 + f'{out.pipe_name}::write({out_beat});\n'
                         newline += indent * 2 + '// stops the kernel when the last input seen.\n'
@@ -422,7 +421,7 @@ class OneAPIWriter(Writer):
                         f'{indent}const size_t kInputLayerSize = {model_inputs[0].size_cpp()};\n'
                         f'{indent}const size_t kOutLayerSize = {model_outputs[0].size_cpp()};\n'
                     )
-                    newline += insert_constant_lines;
+                    newline += insert_constant_lines
                 elif '// hls-fpga-machine-learning insert zero' in line:
                     newline = line
                     inp = model_inputs[0]
@@ -445,8 +444,8 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
-                    newline += \
-                        f'{indent}q.single_task(nnet::DMA_convert_data_back<{out.pipe_name}, float>{{outputs, num_iterations}}).wait();\n'
+                    newline += f'{indent}q.single_task(nnet::DMA_convert_data_back<{out.pipe_name}, float>'
+                    newline += '{outputs, num_iterations}).wait();\n'
                 else:
                     newline = line
 

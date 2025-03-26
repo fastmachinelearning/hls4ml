@@ -200,7 +200,7 @@ class OneAPIStreamVariableDefinition(VariableDefinition):
         return f'{self.name}{name_suffix}'
 
     def declare_cpp(self, indent=''):
-        streaming_beat_t = f"{self.pipe_name}BeatT";
+        streaming_beat_t = f"{self.pipe_name}BeatT"
         lines = (
             f"{indent}class {self.pipe_id};\n"
             f"{indent}using {streaming_beat_t} = "
