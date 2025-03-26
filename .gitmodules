@@ -10,3 +10,6 @@
 [submodule "hls4ml/templates/catapult/ac_math"]
 	path = hls4ml/templates/catapult/ac_math
 	url = https://github.com/hlslibs/ac_math.git
+[submodule "test/pytest/baselines"]
+	path = test/pytest/baselines
+	url = https://github.com/marco66colombo/baselines.git

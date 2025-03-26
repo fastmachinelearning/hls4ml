@@ -1,7 +1,6 @@
 import math
 from pathlib import Path
-from utils import check_synthesis, get_baselines_dir
-
+from synthesis_helpers import test_synthesis
 import numpy as np
 import pytest
 import tensorflow as tf
@@ -24,7 +23,6 @@ from tensorflow.keras.layers import (
 import hls4ml
 
 test_root_path = Path(__file__).parent
-baselines_path = Path(get_baselines_dir())
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
@@ -55,7 +53,7 @@ def test_dense(backend, io_type, synthesis):
 
     config = hls4ml.utils.config_from_keras_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
-    baseline_path = str(baselines_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
+    baseline_file_name = f'hls4mlprj_keras_api_dense_{backend}_{io_type}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -77,7 +75,7 @@ def test_dense(backend, io_type, synthesis):
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
 
-    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+    test_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 
@@ -108,7 +106,7 @@ def test_activations(activation_function, backend, io_type, synthesis):
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
-    baseline_path = str(baselines_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
+    baseline_file_name = f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -122,7 +120,7 @@ def test_activations(activation_function, backend, io_type, synthesis):
 
     assert list(hls_model.get_layers())[2].attributes['class_name'] == activation_function.__class__.__name__
 
-    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+    test_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 padds_options = ['same', 'valid']
@@ -166,7 +164,7 @@ def test_conv1d(padds, backend, strategy, io_type, synthesis):
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{strategy}_{io_type}')
-    baseline_path = str(baselines_path / f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{strategy}_{io_type}')
+    baseline_file_name = f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{strategy}_{io_type}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -208,7 +206,7 @@ def test_conv1d(padds, backend, strategy, io_type, synthesis):
             assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
             assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
         
-    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+    test_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 chans_options = ['channels_last']
@@ -252,7 +250,7 @@ def test_conv2d(chans, padds, backend, strategy, io_type, synthesis):
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv2d_{backend}_{strategy}_{chans}_{padds}_{io_type}')
-    baseline_path = str(baselines_path / f'hls4mlprj_keras_api_conv2d_{backend}_{strategy}_{chans}_{padds}_{io_type}')
+    baseline_file_name = f'hls4mlprj_keras_api_conv2d_{backend}_{strategy}_{chans}_{padds}_{io_type}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -332,7 +330,7 @@ def test_conv2d(chans, padds, backend, strategy, io_type, synthesis):
         assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
     
-    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+    test_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 # Currently only Vivado and Vitis is supported for io_stream.
@@ -352,7 +350,7 @@ def test_depthwise2d(backend, io_type, synthesis):
         model, granularity='name', default_precision='fixed<32,12>', backend=backend
     )
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}')
-    baseline_path = str(baselines_path / f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}')
+    baseline_file_name = f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -364,7 +362,7 @@ def test_depthwise2d(backend, io_type, synthesis):
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
-    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+    test_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 # Currently only Vivado and Vitis is supported for io_stream.
@@ -382,7 +380,7 @@ def test_depthwise1d(backend, io_type, synthesis):
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv1d_{backend}_{io_type}')
-    baseline_path = str(baselines_path / f'hls4mlprj_keras_api_depthwiseconv1d_{backend}_{io_type}')
+    baseline_file_name = f'hls4mlprj_keras_api_depthwiseconv1d_{backend}_{io_type}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -394,7 +392,7 @@ def test_depthwise1d(backend, io_type, synthesis):
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
-    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+    test_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D]
@@ -418,9 +416,7 @@ def test_pooling(pooling, padds, chans, backend, synthesis):
     output_dir = str(
         test_root_path / f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
     )
-    baseline_path = str(
-        baselines_path / f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
-    )
+    baseline_file_name = f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
     
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_cfg, output_dir=output_dir, backend=backend
@@ -526,4 +522,4 @@ def test_pooling(pooling, padds, chans, backend, synthesis):
             assert hls_pool.attributes['pad_left'] == 0
             assert hls_pool.attributes['pad_right'] == 0
     
-    check_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_path=baseline_path)
+    test_synthesis(synthesis=synthesis, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
