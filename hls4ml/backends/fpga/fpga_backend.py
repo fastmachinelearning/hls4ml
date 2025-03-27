@@ -755,7 +755,7 @@ class FPGABackend(Backend):
 
         generated_code = (
             "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public FillConv1DBuffer<data_T, CONFIG_T> {{\n"
+            "class fill_buffer_{index} : public nnet::FillConv1DBuffer<data_T, CONFIG_T> {{\n"
             "    public:\n"
             "    static void fill_buffer(\n"
             "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
@@ -885,7 +885,7 @@ class FPGABackend(Backend):
 
         generated_code = (
             "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public FillConv2DBuffer<data_T, CONFIG_T> {{\n"
+            "class fill_buffer_{index} : public nnet::FillConv2DBuffer<data_T, CONFIG_T> {{\n"
             "    public:\n"
             "    static void fill_buffer(\n"
             "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
@@ -912,6 +912,33 @@ class FPGABackend(Backend):
         generated_code += '};\n'
 
         return generated_code
+
+    @staticmethod
+    def permute_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...]):
+        """
+        Generate new shape and perm_strides for a permute operation. Operates by mapping the output index
+        to input input index by:
+        - unravel the output index
+        - map each dimension to the corresponding stride in the input tensor, sum
+        The operation can be expressed as:
+
+        new_shape = tuple(shape[i] for i in perm)
+        strides = np.cumprod((shapes[1:] + (1,))[::-1])[::-1]
+        perm_strides = [strides[i] for i in perm]
+        out[index] = inp[np.dot(np.unravel_index(index, new_shape), perm_strides)]
+
+        Args:
+            name (str): The name of the configuration.
+            shape (tuple[int, ...]): The shape of the input tensor.
+            perm (tuple[int, ...]): The permutation of the dimensions.
+
+        Returns:
+            (new_shape, perm_strides) (tuple, tuple):  the output shape and permutation strides.
+        """
+        new_shape = tuple(shape[i] for i in perm)
+        strides = np.cumprod((shape[1:] + (1,))[::-1])[::-1]
+        perm_strides = tuple(int(strides[i]) for i in perm)
+        return (new_shape, perm_strides)
 
     @model_optimizer()
     def write_hls(self, model):

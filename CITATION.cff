@@ -4,7 +4,8 @@ type: software
 authors:
 - given-names: "FastML Team"
 title: "hls4ml"
-version: "v1.0.0"
+version: "v1.1.0"
+date-released: "2025-03-17"
 doi: 10.5281/zenodo.1201549
 repository-code: "https://github.com/fastmachinelearning/hls4ml"
 url: "https://fastmachinelearning.org/hls4ml"
