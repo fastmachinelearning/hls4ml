@@ -1432,38 +1432,12 @@ class GRU(Layer):
 
 class TimeDistributed(Layer):
     _expected_attributes = [
-        Attribute('wrapped_layer', value_type=Layer),
+        Attribute('wrapped_layer', value_type=None),  # Value type can be a 'dict' (unprocessed) or 'Layer' (processed)
         Attribute('n_time_steps'),
         Attribute('output_shape', value_type=list),
     ]
 
     def initialize(self):
-        # The wrapped_layer attribute can be a dict (an unprocessed layer) coming from the converter
-        # or a Layer instance, coming from an optimizer
-        wrapped_layer = self.attributes['wrapped_layer']
-        if not isinstance(wrapped_layer, Layer):
-            kind = wrapped_layer['class_name']
-            name = wrapped_layer['name']
-            inputs = wrapped_layer.get('inputs', [])
-            outputs = wrapped_layer.get('outputs', [])
-            if len(inputs) == 0:
-                inputs = [self.attributes['name']]
-            if len(outputs) == 0:
-                outputs = [name]
-
-            wrapped_layer = self.model.make_node(kind, name, wrapped_layer, inputs, outputs)
-            # Set the new Layer object as the wrapped_layer attribute for optimizer to process
-            self.set_attr('wrapped_layer', wrapped_layer)
-
-        # We recognize two cases, one when the wrapped layer is TimeDistributed, and one when it is not.
-        # If wrapped_layer is TimeDistributed, it is used to mark a special case when the graph is flattened.
-        # When the graph is flattened by the optimizer, the wrapped layer will have modified output shape that
-        # we must be aware of.
-        if isinstance(wrapped_layer, TimeDistributed):
-            assert (
-                wrapped_layer.name + '_end' == self.name
-            ), f'Layer {self.name} expected to wrap {self.name[:-4]} not {wrapped_layer.name}.'
-
         shape = self.attributes['output_shape']
         dims = [f'N_TIME_STEPS_{self.index}']
         if len(shape[1:]) == 1:

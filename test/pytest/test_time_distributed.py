@@ -51,6 +51,46 @@ def test_time_distributed_layer(io_type, backend, use_h5):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Vivado'])
+@pytest.mark.parametrize('use_h5', [True, False])
+def test_time_distributed_layer_lstm(io_type, backend, use_h5):
+    input_shape = (8, 8)
+
+    inputs = keras.layers.Input(shape=input_shape)
+    lstm_layer = keras.layers.LSTM(4, return_sequences=True)
+    dense_layer = keras.layers.Dense(1)
+    lstm_outputs = (lstm_layer)(inputs)
+    outputs = keras.layers.TimeDistributed(dense_layer)(lstm_outputs)
+    keras_model = keras.models.Model(inputs, outputs)
+
+    prj_name = f'hls4mlprj_time_distributed_lstm_h5_{use_h5}_{io_type}_{backend}'
+    out_dir = str(test_root_path / prj_name)
+
+    config = hls4ml.utils.config.create_config(output_dir=out_dir)
+
+    if use_h5:
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        keras_model.save(out_dir + '/time_distributed.h5')
+        config['KerasH5'] = out_dir + '/time_distributed.h5'
+    else:
+        config['KerasModel'] = keras_model
+
+    config['Backend'] = backend
+    config['IOType'] = io_type
+    config['HLSConfig'] = hls4ml.utils.config_from_keras_model(keras_model, default_precision='fixed<32,16>')
+
+    hls_model = hls4ml.converters.keras_to_hls(config)
+    hls_model.compile()
+
+    x = np.random.rand(10, *input_shape) - 0.5
+    keras_prediction = keras_model.predict(x)
+
+    hls_prediction = hls_model.predict(x)
+    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0, atol=5e-2)
+
+
+@pytest.mark.parametrize('io_type', ['io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('use_h5', [True, False])
 def test_time_distributed_model(io_type, backend, use_h5):
@@ -88,7 +128,6 @@ def test_time_distributed_model(io_type, backend, use_h5):
     config['HLSConfig'] = hls4ml.utils.config_from_keras_model(keras_model, default_precision='fixed<10,8>')
 
     hls_model = hls4ml.converters.keras_to_hls(config)
-    hls_model.write()
     hls_model.compile()
 
     x = np.random.randint(0, 5, size=(10, *input_shape)).astype('float')

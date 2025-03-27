@@ -21,7 +21,6 @@ class ExpandTimeDistributed(OptimizerPass):
         return isinstance(node, TimeDistributed) and not isinstance(node.get_attr('wrapped_layer'), TimeDistributed)
 
     def transform(self, model, node):
-        wrapped_node = node.get_attr('wrapped_layer')
         output_var = node.get_output_variable()
 
         # Save the real output shape that the end marker will use
@@ -35,6 +34,8 @@ class ExpandTimeDistributed(OptimizerPass):
 
         # Insert the node into the graph after existing TimeDistributed layer
         # (which should pick up the input shape as one time step)
+        wrapped_node = self._make_wrapped_node(model, node)
+        node.set_attr('wrapped_layer', wrapped_node)
         model.insert_node(wrapped_node)
 
         # Create a new TimeDistributed layer to serve as a marker. It will have "_end" appended to the name and will
@@ -52,3 +53,19 @@ class ExpandTimeDistributed(OptimizerPass):
         node.set_attr('wrapped_layer', new_td_node)
 
         return True
+
+    def _make_wrapped_node(self, model, parent_node):
+        # At this stage, the wrapped_layer attribute is a dict (an unprocessed layer) coming from the frontend converter
+        layer_proto = parent_node.attributes['wrapped_layer']
+        kind = layer_proto['class_name']
+        name = layer_proto['name']
+        inputs = layer_proto.get('inputs', [])
+        outputs = layer_proto.get('outputs', [])
+        if len(inputs) == 0:
+            inputs = [parent_node.attributes['name']]
+        if len(outputs) == 0:
+            outputs = [name]
+
+        wrapped_node = model.make_node(kind, name, layer_proto, inputs, outputs)
+
+        return wrapped_node
