@@ -137,6 +137,15 @@ def _parse_single_report(prjDir):
 
 
 def parse_oneapi_report(hls_dir):
+    '''
+    Parse a report from a given oneAPI project as a dictionary.
+
+    Args:
+        hls_dir (string): The directory where the project is found
+    Returns:
+        results (dict): The report dictionary, containing latency, resource usage etc.
+
+    '''
     prjList = _find_projects(hls_dir)
     if not prjList:
         return
@@ -150,6 +159,16 @@ def parse_oneapi_report(hls_dir):
 
 
 def print_oneapi_report(report_dict):
+    '''
+    Prints the onePI report dictionary as a table.
+
+    Args:
+        report_dict (dictionary): The report dictionary, containing latency, resource usage etc.
+
+    Returns:
+        None
+
+    '''
     for prjTarget, prjReport in report_dict.items():
         if len(report_dict) > 1:
             print('*' * 54 + '\n')
