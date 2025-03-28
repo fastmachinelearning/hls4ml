@@ -568,20 +568,25 @@ class VivadoWriter(Writer):
 
             elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
-                for out in model_outputs:
-                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
-                        out.type.name, out.size_cpp(), out.name
-                    )  # TODO enable this
+                tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
+                if tb_stream != 'stdout':
+                    for out in model_outputs:
+                        newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
+                            out.type.name, out.size_cpp(), out.name
+                        )  # TODO enable this
 
             elif (
                 '// hls-fpga-machine-learning insert output' in line
                 or '// hls-fpga-machine-learning insert quantized' in line
             ):
                 newline = line
-                for out in model_outputs:
-                    newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, true);\n'.format(
-                        out.type.name, out.size_cpp(), out.name
-                    )
+                tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
+                keep_output = str(tb_stream != 'stdout').lower()  # We keep output if we need to write it to file too.
+                if tb_stream != 'file':
+                    for out in model_outputs:
+                        newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, {});\n'.format(
+                            out.type.name, out.size_cpp(), out.name, keep_output
+                        )
 
             elif '// hls-fpga-machine-learning insert namespace' in line:
                 newline = ''
