@@ -38,7 +38,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         attributes['gamma_quantizer'] = gamma_node.get_attr('quantizer')
 
         node.inputs[1] = ''
-        model.remove_node(gamma_node, rewire=False)
+        model.remove_node(gamma_node)
 
         beta_node = node.get_input_node(node.inputs[2])
         if not isinstance(beta_node, Constant):
@@ -47,7 +47,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         attributes['beta_data'] = beta
         attributes['beta_quantizer'] = beta_node.get_attr('quantizer')
         node.inputs[2] = ''
-        model.remove_node(beta_node, rewire=False)
+        model.remove_node(beta_node)
 
         moving_mean_node = node.get_input_node(node.inputs[3])
         if not isinstance(moving_mean_node, Constant):
@@ -56,7 +56,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         attributes['mean_data'] = moving_mean
         attributes['mean_quantizer'] = moving_mean_node.get_attr('quantizer')
         node.inputs[3] = ''
-        model.remove_node(moving_mean_node, rewire=False)
+        model.remove_node(moving_mean_node)
 
         moving_variance_node = node.get_input_node(node.inputs[4])
         if not isinstance(moving_variance_node, Constant):
@@ -65,7 +65,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         attributes['variance_data'] = moving_variance
         attributes['variance_quantizer'] = moving_variance_node.get_attr('quantizer')
         node.inputs[4] = ''
-        model.remove_node(moving_variance_node, rewire=False)
+        model.remove_node(moving_variance_node)
 
         node.inputs = [inp for inp in node.inputs if inp]
         if len(node.inputs) != 1:
@@ -148,7 +148,7 @@ class ConstantBatchNormFusion(OptimizerPass):
             const_node.get_output_variable().type.precision = node.get_output_variable().type.precision
 
         # remove the batch norm node
-        model.remove_node(node, rewire=True)
+        model.remove_node(node)
 
         return True
 
@@ -250,7 +250,7 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         node.add_weights_variable(name='scale', var_name='s{index}', data=scale_new, quantizer=s_quantizer, precision=s_prec)
         node.add_weights_variable(name='bias', var_name='b{index}', data=bias_new, quantizer=b_quantizer, precision=b_prec)
 
-        model.remove_node(prev_node, rewire=True)
+        model.remove_node(prev_node)
         return True
 
 
@@ -270,5 +270,5 @@ class RemoveNopBatchNormalization(OptimizerPass):
             return False
 
     def transform(self, model, node):
-        model.remove_node(node, rewire=True)
+        model.remove_node(node)
         return True

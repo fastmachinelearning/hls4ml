@@ -96,7 +96,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             bn_layer.get_weights('scale').data, bn_layer.get_weights('bias').data, node.get_attr('threshold', 0.5)
         )
         # Remove the BatchNormalization layer
-        model.remove_node(bn_layer, rewire=True)
+        model.remove_node(bn_layer)
         # Replace the old Activation layer with this one
         model.replace_node(node, bnbt_layer)
 
