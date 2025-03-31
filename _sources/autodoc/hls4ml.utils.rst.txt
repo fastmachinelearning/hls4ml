@@ -76,6 +76,14 @@ hls4ml.utils.symbolic\_utils module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.torch module
+-------------------------
+
+.. automodule:: hls4ml.utils.torch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
