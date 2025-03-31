@@ -175,6 +175,7 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd">hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">hls4ml.model.optimizer.passes.convert_to_channels_last module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">hls4ml.model.optimizer.passes.expand_layer_group module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_time_distributed">hls4ml.model.optimizer.passes.expand_time_distributed module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.hgq_proxy_model">hls4ml.model.optimizer.passes.hgq_proxy_model module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.infer_precision">hls4ml.model.optimizer.passes.infer_precision module</a></li>
@@ -1267,6 +1268,17 @@ before HLS is produced.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.layers.TernaryTanh.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.TernaryTanh.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.TimeDistributed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">TimeDistributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.TimeDistributed" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.TimeDistributed.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.TimeDistributed.initialize" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

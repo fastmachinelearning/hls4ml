@@ -194,6 +194,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.recurrent">hls4ml.converters.keras.recurrent module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer"><code class="docutils literal notranslate"><span class="pre">parse_rnn_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_time_distributed_layer"><code class="docutils literal notranslate"><span class="pre">parse_time_distributed_layer()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.reshape">hls4ml.converters.keras.reshape module</a><ul>
@@ -328,6 +329,28 @@
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasWrappedLayerFileReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasWrappedLayerFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasWrappedLayerFileReader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasFileReader" title="hls4ml.converters.keras_to_hls.KerasFileReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasFileReader</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasWrappedLayerReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasWrappedLayerReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasWrappedLayerReader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasReader" title="hls4ml.converters.keras_to_hls.KerasReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasReader</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasWrappedLayerReader.get_weights_data">
+<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasWrappedLayerReader.get_weights_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_layer_handlers">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_layer_handlers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_layer_handlers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_model_arch">
@@ -733,7 +756,7 @@ will have the channels dimension last.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_shape</strong> (<em>list</em><em> or </em><em>tuple</em>) – Input shape of 2D or 3D tensor with optional batch dimension of <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>input_shape</strong> (<em>list</em><em> or </em><em>tuple</em>) – Input shape of 2D, 3D or 4D tensor with optional batch dimension of <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>data_format</strong> (<em>str</em><em>, </em><em>optional</em>) – Data format type, one of <code class="docutils literal notranslate"><span class="pre">channels_first</span></code> or <code class="docutils literal notranslate"><span class="pre">channels_last</span></code>. (case insensitive).
 Defaults to ‘channels_last’.</p></li>
 </ul>

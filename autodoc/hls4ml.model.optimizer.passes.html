@@ -462,6 +462,53 @@ In this case we can remove the expensive transpose and instead transpose the wei
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.model.optimizer.passes.expand_time_distributed">
+<span id="hls4ml-model-optimizer-passes-expand-time-distributed-module"></span><h2>hls4ml.model.optimizer.passes.expand_time_distributed module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.expand_time_distributed" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.expand_time_distributed.</span></span><span class="sig-name descname"><span class="pre">ExpandTimeDistributed</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Expands TimeDistributed’s wrapped layer into the graph and inserts a marker at the end.</p>
+<dl class="simple">
+<dt>For example, the layer defined as:</dt><dd><p>TimeDistributed(Dense(…))</p>
+</dd>
+<dt>will be expanded to:</dt><dd><p>TimeDistributed(…)
+Dense(…)
+TimeDistributed(…)</p>
+</dd>
+</dl>
+<p>the latter TimeDistributed serving as a marker of the end of the block and it will have “_end” appended to its name.</p>
+<p>Handling flattened hierarchy has advantages of exposing the wrapped layer(s) to the optimizers. Backends may choose
+to undo this after all optimizers have been applied on the wrapped layers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.model.optimizer.passes.fuse_biasadd">
 <span id="hls4ml-model-optimizer-passes-fuse-biasadd-module"></span><h2>hls4ml.model.optimizer.passes.fuse_biasadd module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.fuse_biasadd" title="Link to this heading"></a></h2>
 <dl class="py class">

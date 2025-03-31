@@ -833,6 +833,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup">ExpandLayerGroup (class in hls4ml.model.optimizer.passes.expand_layer_group)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed">ExpandTimeDistributed (class in hls4ml.model.optimizer.passes.expand_time_distributed)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.expected_attributes">expected_attributes (hls4ml.model.layers.Layer attribute)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.ExponentPrecisionType">ExponentPrecisionType (class in hls4ml.model.types)</a>
@@ -1268,6 +1270,10 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate.format">(hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.ResizeFunctionTemplate.format">(hls4ml.backends.vivado.passes.reshaping_templates.ResizeFunctionTemplate method)</a>
@@ -1465,6 +1471,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.get_layer_config_value">get_layer_config_value() (hls4ml.model.graph.HLSConfig method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_layer_handlers">get_layer_handlers() (in module hls4ml.converters.keras_to_hls)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_layer_mult_size">get_layer_mult_size() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
   </ul></td>
@@ -1571,6 +1579,8 @@
         <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data">(hls4ml.converters.keras_to_hls.KerasModelReader method)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasReader.get_weights_data">(hls4ml.converters.keras_to_hls.KerasReader method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasWrappedLayerReader.get_weights_data">(hls4ml.converters.keras_to_hls.KerasWrappedLayerReader method)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.pytorch_to_hls.PyTorchModelReader.get_weights_data">(hls4ml.converters.pytorch_to_hls.PyTorchModelReader method)</a>
 </li>
@@ -2343,8 +2353,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pointwise_codegen">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pooling_templates
 
@@ -2352,6 +2360,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.quantization_templates
 
@@ -2770,6 +2780,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.model.optimizer.passes.expand_time_distributed
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_time_distributed">module</a>
 </li>
       </ul></li>
       <li>
@@ -3213,6 +3230,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_softmax">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_time_distributed">init_time_distributed() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.broadcast_stream.Broadcast.initialize">initialize() (hls4ml.backends.catapult.passes.broadcast_stream.Broadcast method)</a>
 
       <ul>
@@ -3308,6 +3327,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TernaryTanh.initialize">(hls4ml.model.layers.TernaryTanh method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TimeDistributed.initialize">(hls4ml.model.layers.TimeDistributed method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Transpose.initialize">(hls4ml.model.layers.Transpose method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.ZeroPadding1D.initialize">(hls4ml.model.layers.ZeroPadding1D method)</a>
@@ -3367,13 +3388,17 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasFileReader">KerasFileReader (class in hls4ml.converters.keras_to_hls)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasModelReader">KerasModelReader (class in hls4ml.converters.keras_to_hls)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasNestedFileReader">KerasNestedFileReader (class in hls4ml.converters.keras_to_hls)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasReader">KerasReader (class in hls4ml.converters.keras_to_hls)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasWrappedLayerFileReader">KerasWrappedLayerFileReader (class in hls4ml.converters.keras_to_hls)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasWrappedLayerReader">KerasWrappedLayerReader (class in hls4ml.converters.keras_to_hls)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -3539,6 +3564,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.RemoveTransposeBeforeFlatten.match">(hls4ml.model.optimizer.passes.convert_to_channels_last.RemoveTransposeBeforeFlatten method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup.match">(hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed.match">(hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.match">(hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd method)</a>
 </li>
@@ -3979,6 +4006,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">hls4ml.model.optimizer.passes.expand_layer_group</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_time_distributed">hls4ml.model.optimizer.passes.expand_time_distributed</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.hgq_proxy_model">hls4ml.model.optimizer.passes.hgq_proxy_model</a>
@@ -4343,6 +4372,8 @@
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_squeeze_layer">parse_squeeze_layer() (in module hls4ml.converters.pytorch.reshape)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_time_distributed_layer">parse_time_distributed_layer() (in module hls4ml.converters.keras.recurrent)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -4918,6 +4949,12 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TernaryTanh">TernaryTanh (class in hls4ml.model.layers)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TimeDistributed">TimeDistributed (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate">TimeDistributedConfigTemplate (class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate">TimeDistributedFunctionTemplate (class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.hgq_proxy_model.to_acfixed">to_acfixed() (in module hls4ml.backends.fpga.passes.hgq_proxy_model)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.hgq_proxy_model.to_apfixed">to_apfixed() (in module hls4ml.backends.fpga.passes.hgq_proxy_model)</a>
@@ -5068,6 +5105,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.RemoveTransposeBeforeFlatten.transform">(hls4ml.model.optimizer.passes.convert_to_channels_last.RemoveTransposeBeforeFlatten method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup.transform">(hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed.transform">(hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform">(hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd method)</a>
 </li>

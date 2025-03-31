@@ -52,6 +52,14 @@ hls4ml.model.optimizer.passes.expand\_layer\_group module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.expand\_time\_distributed module
+--------------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.expand_time_distributed
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.fuse\_biasadd module
 --------------------------------------------------
 
