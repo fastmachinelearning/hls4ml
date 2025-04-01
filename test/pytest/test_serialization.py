@@ -66,7 +66,7 @@ def test_qkeras_model(io_type, backend):
     np.testing.assert_equal(y_original, y_clone)
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vitis'])  # Disabling OneAPI for now excessive run time
 def test_qonnx_model(backend):
     dl_file = str(example_model_path / 'onnx/branched_model_ch_last.onnx')
 
