@@ -1,9 +1,11 @@
-import pytest
 import os
+
+import pytest
 
 
 def str_to_bool(val):
     return str(val).lower() in ("1", "true")
+
 
 @pytest.fixture(scope="module")
 def synthesis_config():
@@ -28,6 +30,6 @@ def synthesis_config():
             "Vivado": {"csim": False, "synth": True, "export": False},
             "Vitis": {"csim": False, "synth": True, "export": False},
             "Quartus": {"synth": True, "fpgasynth": False},
-            "oneAPI": {"build_type": "fpga_emu", "run": False}
-        }
+            "oneAPI": {"build_type": "fpga_emu", "run": False},
+        },
     }

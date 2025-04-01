@@ -1,7 +1,7 @@
 import json
-import os
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 def get_baseline_path(baseline_file_name, backend, version):
@@ -16,10 +16,7 @@ def get_baseline_path(baseline_file_name, backend, version):
     Returns:
         Path: A pathlib.Path object pointing to the baseline file location.
     """
-    return (
-        Path(__file__).parent /
-        "baselines" / backend / version / baseline_file_name
-    )
+    return Path(__file__).parent / "baselines" / backend / version / baseline_file_name
 
 
 def save_report(data, filename):
@@ -62,7 +59,7 @@ def get_tolerance(key):
         "AvailableURAM": 0.0,
     }
 
-    default_tolerance = 0.01  
+    default_tolerance = 0.01
 
     return tolerances.get(key, default_tolerance)
 
@@ -86,8 +83,9 @@ def compare_reports_with_tolerance(data, baseline):
             # Convert to float for numerical comparison
             expected_num = float(expected_value)
             actual_num = float(actual_value)
-            assert actual_num == pytest.approx(expected_num, rel=tolerance), \
-                f"{key}: expected {expected_num}, got {actual_num} (tolerance={tolerance*100}%)"
+            assert actual_num == pytest.approx(
+                expected_num, rel=tolerance
+            ), f"{key}: expected {expected_num}, got {actual_num} (tolerance={tolerance*100}%)"
         except ValueError:
             # Exact match for non-numeric values
             assert actual_value == expected_value, f"{key}: expected '{expected_value}', got '{actual_value}'"
@@ -97,7 +95,7 @@ def test_synthesis(config, hls_model, baseline_file_name, backend):
     """
     Run HLS synthesis and compare the output with a stored baseline report.
 
-    If synthesis is disabled via the configuration (`run_synthesis=False`), 
+    If synthesis is disabled via the configuration (`run_synthesis=False`),
     no synthesis is executed and the test silently returns.
 
     Args:
@@ -109,9 +107,9 @@ def test_synthesis(config, hls_model, baseline_file_name, backend):
     if not config.get("run_synthesis", False):
         # TODO: should this info be printed or logged?
         return
-    
+
     if backend == 'oneAPI':
-        pytest.skip(f'oneAPI backend not supported in synthesis tests.')
+        pytest.skip('oneAPI backend not supported in synthesis tests.')
 
     build_args = config["build_args"]
 
@@ -122,14 +120,15 @@ def test_synthesis(config, hls_model, baseline_file_name, backend):
 
     save_report(data, f"synthesis_report_{baseline_file_name}")
 
-    assert data and {'CSynthesisReport'}.issubset(data.keys()), \
-        "Synthesis failed: Missing expected keys in the synthesis report"
+    assert data and {'CSynthesisReport'}.issubset(
+        data.keys()
+    ), "Synthesis failed: Missing expected keys in the synthesis report"
 
     version = config["tools_version"].get(backend)
     baseline_path = get_baseline_path(baseline_file_name, backend, version)
 
     try:
-        with open(baseline_path, "r") as fp:
+        with open(baseline_path) as fp:
             baseline = json.load(fp)
     except FileNotFoundError:
         pytest.skip(f"Baseline file '{baseline_path}' not found.")

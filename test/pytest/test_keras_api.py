@@ -1,10 +1,10 @@
 import math
 from pathlib import Path
 
-from synthesis_helpers import test_synthesis
 import numpy as np
 import pytest
 import tensorflow as tf
+from synthesis_helpers import test_synthesis
 from tensorflow.keras.layers import (
     ELU,
     Activation,
@@ -55,7 +55,7 @@ def test_dense(backend, io_type, synthesis_config):
     config = hls4ml.utils.config_from_keras_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
     baseline_file_name = f'hls4mlprj_keras_api_dense_{backend}_{io_type}.json'
-    
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -205,7 +205,7 @@ def test_conv1d(padds, backend, strategy, io_type, synthesis_config):
         elif model.layers[0].padding == 'valid':
             assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
             assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
-        
+
     test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
@@ -329,7 +329,7 @@ def test_conv2d(chans, padds, backend, strategy, io_type, synthesis_config):
         assert list(hls_model.get_layers())[1].attributes['pad_bottom'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
-    
+
     test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
@@ -416,8 +416,10 @@ def test_pooling(pooling, padds, chans, backend, synthesis_config):
     output_dir = str(
         test_root_path / f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
     )
-    baseline_file_name = f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}.json'
-    
+    baseline_file_name = (
+        f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}.json'
+    )
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_cfg, output_dir=output_dir, backend=backend
     )
@@ -521,5 +523,5 @@ def test_pooling(pooling, padds, chans, backend, synthesis_config):
             assert hls_pool.attributes['n_out'] == out_valid
             assert hls_pool.attributes['pad_left'] == 0
             assert hls_pool.attributes['pad_right'] == 0
-    
+
     test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
