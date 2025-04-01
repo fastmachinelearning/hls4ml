@@ -1,5 +1,6 @@
 import math
 from pathlib import Path
+
 from synthesis_helpers import test_synthesis
 import numpy as np
 import pytest
@@ -19,7 +20,6 @@ from tensorflow.keras.layers import (
     MaxPooling2D,
     PReLU,
 )
-import os
 
 import hls4ml
 
