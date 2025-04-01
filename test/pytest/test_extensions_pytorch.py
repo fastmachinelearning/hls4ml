@@ -2,26 +2,23 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import tensorflow as tf
+import torch
 
 import hls4ml
+import hls4ml.utils.torch
 
 test_root_path = Path(__file__).parent
 
 
-# Keras implementation of a custom layer
-class KReverse(tf.keras.layers.Layer):
-    '''Keras implementation of a hypothetical custom layer'''
+# PyTorch implementation of a custom layer
+class TReverse(hls4ml.utils.torch.HLS4MLModule):
+    '''PyTorch implementation of a hypothetical custom layer'''
 
     def __init__(self):
         super().__init__()
 
-    def call(self, inputs):
-        return tf.reverse(inputs, axis=[-1])
-
-    def get_config(self):
-        # Breaks serialization and parsing in hls4ml if not defined
-        return super().get_config()
+    def forward(self, inputs):
+        return torch.flip(inputs, dims=[-1])
 
 
 # hls4ml layer implementation
@@ -52,10 +49,12 @@ class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
 
 
 # Parser for converter
-def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader):
+def parse_reverse_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'TReverse'
+
     layer = {}
     layer['class_name'] = 'HReverse'
-    layer['name'] = keras_layer['config']['name']
+    layer['name'] = layer_name
     layer['n_in'] = input_shapes[0][1]
 
     if input_names is not None:
@@ -123,15 +122,15 @@ void reverse(
 
 @pytest.fixture(scope='session', autouse=True)
 def register_custom_layer():
-    # Register the converter for custom Keras layer
-    hls4ml.converters.register_keras_layer_handler('KReverse', parse_reverse_layer)
+    # Register the converter for custom PyTorch layer
+    hls4ml.converters.register_pytorch_layer_handler('TReverse', parse_reverse_layer)
 
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('HReverse', HReverse)
 
 
 @pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
-def test_extensions(tmp_path, backend_id):
+def test_extensions_pytorch(tmp_path, backend_id):
     # Register the optimization passes (if any)
     backend = hls4ml.backends.get_backend(backend_id)
     ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
@@ -150,35 +149,44 @@ def test_extensions(tmp_path, backend_id):
     backend.register_source(p)
 
     # Test if it works
-    kmodel = tf.keras.models.Sequential(
-        [
-            tf.keras.layers.Input(shape=(8,)),
-            KReverse(),
-            tf.keras.layers.ReLU(),
-            # These two should be removed by the optimizer
-            KReverse(),
-            KReverse(),
-        ]
+    class PyTorchModel(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.reverse1 = TReverse()
+            self.relu = torch.nn.ReLU()
+            self.reverse2 = TReverse()
+            self.reverse3 = TReverse()
+
+        def forward(self, x):
+            x = self.reverse1(x)
+            x = self.relu(x)
+            x = self.reverse2(x)
+            x = self.reverse3(x)
+            return x
+
+    pmodel = PyTorchModel()
+
+    x = torch.randint(-5, 5, (8,), dtype=torch.int32)
+    pres = pmodel(x).detach().numpy()
+
+    config = hls4ml.utils.config_from_pytorch_model(
+        pmodel, (8,), default_precision='ap_int<6>', granularity='name', backend=backend_id
     )
-
-    x = np.random.randint(-5, 5, (8,), dtype='int32')
-    kres = kmodel(x)
-
-    hmodel = hls4ml.converters.convert_from_keras_model(
-        kmodel,
-        output_dir=str(test_root_path / f'hls4mlprj_extensions_{backend_id}'),
+    hmodel = hls4ml.converters.convert_from_pytorch_model(
+        pmodel,
+        output_dir=str(test_root_path / f'hls4mlprj_extensions_torch_{backend_id}'),
         backend=backend_id,
         io_type='io_parallel',
-        hls_config={'Model': {'Precision': 'ap_int<6>', 'ReuseFactor': 1}},
+        hls_config=config,
     )
 
     hmodel.compile()
-    hres = hmodel.predict(x.astype('float32'))
+    hres = hmodel.predict(x.numpy().astype('float32'))
 
     # Check if the optimizer pass was applied
     assert optmizer_name in hmodel._applied_flows[0][optimize_flow]
 
-    # Remove flow from
+    # Remove flow from "optimize" step
     hls4ml.model.flow.update_flow(optimize_flow, remove_optimizers=[optmizer_name])
 
-    np.testing.assert_array_equal(kres, hres)
+    np.testing.assert_array_equal(pres, hres)

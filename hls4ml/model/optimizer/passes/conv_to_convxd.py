@@ -84,9 +84,9 @@ class ConvToConvXD(OptimizerPass):
 
         # removing and replacing old nodes
         if bias_node:
-            model.remove_node(bias_node, rewire=False)
+            model.remove_node(bias_node)
             del node.inputs[2]
-        model.remove_node(weight_node, rewire=False)
+        model.remove_node(weight_node)
         del node.inputs[1]
         model.replace_node(node, new_node)
 
