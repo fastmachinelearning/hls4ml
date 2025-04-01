@@ -4,37 +4,50 @@ import pytest
 from pathlib import Path
 
 
-def save_baseline(data, filename):
-    """ Saves the given data as a baseline in the specified file. """
-    with open(filename, "w") as fp:
-        json.dump(data, fp, indent=4)
+def get_baseline_path(baseline_file_name, backend, version):
+    """
+    Construct the full path to a baseline synthesis report file.
 
+    Args:
+        baseline_file_name (str): The name of the baseline report file.
+        backend (str): The backend used (e.g., 'Vivado', 'Vitis').
+        version (str): The tool version (e.g., '2020.1').
 
-def get_baseline_path(baseline_file_name, backend):
-
-    tool_versions = {
-        'Vivado': '2023.1',
-        'Vitis': '2023.1',
-    }
-
-    default_version = 'latest'
-
-    version = tool_versions.get(backend, default_version)
-
+    Returns:
+        Path: A pathlib.Path object pointing to the baseline file location.
+    """
     return (
         Path(__file__).parent /
         "baselines" / backend / version / baseline_file_name
     )
 
 
+def save_report(data, filename):
+    """
+    Save synthesis data to a JSON file in the same directory as this script.
+
+    Args:
+        data (dict): The synthesis output data to be saved.
+        filename (str): The filename to write to (e.g., 'synthesis_report_test_x.json').
+
+    Raises:
+        OSError: If the file cannot be written.
+    """
+    out_path = Path(__file__).parent / filename
+    with open(out_path, "w") as fp:
+        json.dump(data, fp, indent=4)
+
+
 def get_tolerance(key):
     """
-    Get the tolerance for a given key, using a predefined set of tolerances.
+    Get the relative tolerance for a specific synthesis report field.
 
-    :param key: The synthesis report key to check.
-    :return: The tolerance value for the given key.
+    Args:
+        key (str): The key in the synthesis report to compare.
+
+    Returns:
+        float: The relative tolerance allowed for that key. Defaults to 1% (0.01).
     """
-
     tolerances = {
         "EstimatedClockPeriod": 0.01,
         "FF": 0.05,
@@ -49,20 +62,19 @@ def get_tolerance(key):
         "AvailableURAM": 0.0,
     }
 
-    # Default tolerance for unspecified keys
     default_tolerance = 0.01  
 
     return tolerances.get(key, default_tolerance)
 
 
-def compare_synthesis_tolerance(data, filename):
-    """ Compare synthesis report values with a given tolerance. """
-    try:
-        with open(filename, "r") as fp:
-            baseline = json.load(fp)
-    except FileNotFoundError:
-        pytest.skip(f"Baseline file '{filename}' not found.")
+def compare_reports_with_tolerance(data, baseline):
+    """
+    Compare two synthesis reports using tolerances defined per key.
 
+    Args:
+        data (dict): The current synthesis report.
+        baseline (dict): The baseline synthesis report to compare against.
+    """
     csrBaseline = baseline.get("CSynthesisReport")
     csrData = data.get("CSynthesisReport")
 
@@ -81,21 +93,45 @@ def compare_synthesis_tolerance(data, filename):
             assert actual_value == expected_value, f"{key}: expected '{expected_value}', got '{actual_value}'"
 
 
-def test_synthesis(synthesis, hls_model, baseline_file_name, backend):
-    """Function to run synthesis and compare results."""
-    if synthesis:
+def test_synthesis(config, hls_model, baseline_file_name, backend):
+    """
+    Run HLS synthesis and compare the output with a stored baseline report.
 
-        if hls_model.config.get_config_value('Backend') == 'oneAPI':
-            pytest.skip(f'oneAPI backend not supported in synthesis tests.')
+    If synthesis is disabled via the configuration (`run_synthesis=False`), 
+    no synthesis is executed and the test silently returns.
 
-        try:
-            # TODO: should csim be True? whaat other params should be set?
-            data = hls_model.build(csim=True)
-        except Exception as e:
-            pytest.skip(str(e))
+    Args:
+        config (dict): Test-wide synthesis configuration fixture.
+        hls_model (object): hls4ml model instance to build and synthesize.
+        baseline_file_name (str): The name of the baseline file for comparison.
+        backend (str): The synthesis backend used (e.g., 'Vivado', 'Vitis').
+    """
+    if not config.get("run_synthesis", False):
+        # TODO: should this info be printed or logged?
+        return
+    
+    if backend == 'oneAPI':
+        pytest.skip(f'oneAPI backend not supported in synthesis tests.')
 
-        assert {'CSimResults', 'CSynthesisReport'}.issubset(data.keys()), \
-            "Synthesis failed: Missing expected keys in the synthesis report"
+    build_args = config["build_args"]
 
-        baseline_path = get_baseline_path(baseline_file_name, backend)
-        compare_synthesis_tolerance(data, baseline_path)
+    try:
+        data = hls_model.build(**build_args.get(backend, {}))
+    except Exception as e:
+        pytest.skip(f"hls_model.build failed: {e}")
+
+    assert {'CSimResults', 'CSynthesisReport'}.issubset(data.keys()), \
+        "Synthesis failed: Missing expected keys in the synthesis report"
+    
+    save_report(data, f"synthesis_report_{baseline_file_name}")
+
+    version = config["tools_version"].get(backend)
+    baseline_path = get_baseline_path(baseline_file_name, backend, version)
+
+    try:
+        with open(baseline_path, "r") as fp:
+            baseline = json.load(fp)
+    except FileNotFoundError:
+        pytest.skip(f"Baseline file '{baseline_path}' not found.")
+
+    compare_reports_with_tolerance(data, baseline)
