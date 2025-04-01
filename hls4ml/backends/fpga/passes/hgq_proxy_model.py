@@ -53,7 +53,7 @@ class ProcessFixedPointQuantizerLayer(OptimizerPass):
 
     def transform(self, model, node: FixedPointQuantizer):
         if node.fusible:
-            model.remove_node(node, rewire=True)
+            model.remove_node(node)
             return True
 
         if model.config.config['IOType'] != 'io_parallel':
@@ -75,10 +75,12 @@ class ProcessFixedPointQuantizerLayer(OptimizerPass):
 class ProcessFixedPointQuantizerCall(FunctionCallTemplate):
     def __init__(self):
         super().__init__(FixedPointQuantizer, include_header=[])
-        self.template = 'nnet::{name}<{input_t}, {output_t}>({input}, {output});'
+        self.template = '{namespace}::{name}<{input_t}, {output_t}>({input}, {output});'
 
     def format(self, node):
         params = self._default_function_params(node)
+        namespace = node.model.config.writer_config.get('Namespace', None) or 'nnet'
+        params['namespace'] = namespace
 
         return self.template.format(**params)
 

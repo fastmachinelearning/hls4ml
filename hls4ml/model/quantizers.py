@@ -5,8 +5,6 @@ behave like simple wrappers.
 """
 
 import numpy as np
-import tensorflow as tf
-from qkeras.quantizers import get_quantizer
 
 from hls4ml.model.types import (
     ExponentPrecisionType,
@@ -105,6 +103,8 @@ class QKerasQuantizer(Quantizer):
     """
 
     def __init__(self, config):
+        from qkeras.quantizers import get_quantizer
+
         self.qkeras_config = config
         self.quantizer_fn = get_quantizer(config)
         self.alpha = config['config'].get('alpha', None)
@@ -125,8 +125,8 @@ class QKerasQuantizer(Quantizer):
             self.hls_type = FixedPrecisionType(width=16, integer=6, signed=True)
 
     def __call__(self, data):
-        tf_data = tf.convert_to_tensor(data)
-        return self.quantizer_fn(tf_data).numpy()
+        data = np.array(data, dtype='float32')
+        return self.quantizer_fn(data).numpy()
         # return self.quantizer_fn(data)
 
     def _get_type(self, quantizer_config):
@@ -157,6 +157,8 @@ class QKerasBinaryQuantizer(Quantizer):
     """
 
     def __init__(self, config, xnor=False):
+        from qkeras.quantizers import get_quantizer
+
         self.qkeras_config = config
         self.bits = 1 if xnor else 2
         self.hls_type = XnorPrecisionType() if xnor else IntegerPrecisionType(width=2, signed=True)
@@ -167,8 +169,8 @@ class QKerasBinaryQuantizer(Quantizer):
         self.binary_quantizer = BinaryQuantizer(1) if xnor else BinaryQuantizer(2)
 
     def __call__(self, data):
-        x = tf.convert_to_tensor(data)
-        y = self.quantizer_fn(x).numpy()
+        data = np.array(data, dtype='float32')
+        y = self.quantizer_fn(data).numpy()
         return self.binary_quantizer(y)
 
     def serialize_state(self):
@@ -184,6 +186,8 @@ class QKerasPO2Quantizer(Quantizer):
     """
 
     def __init__(self, config):
+        from qkeras.quantizers import get_quantizer
+
         self.qkeras_config = config
         self.bits = config['config']['bits']
         self.quantizer_fn = get_quantizer(config)
@@ -191,8 +195,8 @@ class QKerasPO2Quantizer(Quantizer):
 
     def __call__(self, data):
         # Weights are quantized to nearest power of two
-        x = tf.convert_to_tensor(data)
-        y = self.quantizer_fn(x)
+        data = np.array(data, dtype='float32')
+        y = self.quantizer_fn(data)
         if hasattr(y, 'numpy'):
             y = y.numpy()
         return y

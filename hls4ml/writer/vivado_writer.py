@@ -241,7 +241,8 @@ class VivadoWriter(Writer):
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
-                                    newline += '    ' + self._make_array_pragma(var) + '\n'
+                                    newline += '    ' + self._make_array_pragma(var) + '\n\n'
+                for layer in model.get_layers():
                     func = layer.get_attr('function_cpp', None)
                     if func:
                         if not isinstance(func, (list, set)):
@@ -253,6 +254,7 @@ class VivadoWriter(Writer):
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
+                            vars = layer.get_variables()
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
                                 newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(
@@ -539,10 +541,10 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model_inputs:
-                    newline += '    ' + inp.definition_cpp() + ';\n'
-                    newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
+                    newline += indent + inp.definition_cpp() + ';\n'
+                    newline += indent + f'nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
-                    newline += '    ' + out.definition_cpp() + ';\n'
+                    newline += indent + out.definition_cpp() + ';\n'
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
@@ -792,6 +794,7 @@ class VivadoWriter(Writer):
         contents = f.readlines()
         f.close()
         f = open(path, 'w')
+        namespace = model.config.get_writer_config().get('Namespace', None)
 
         for line in contents:
             if '// hls4ml insert code' in line:
@@ -801,6 +804,9 @@ class VivadoWriter(Writer):
                         newline += str(generated_code)
             else:
                 newline = line
+            if namespace is not None:
+                if 'namespace nnet' in newline:
+                    newline = newline.replace('namespace nnet', f'namespace {namespace}')
             f.write(newline)
         f.close()
 
@@ -817,7 +823,9 @@ class VivadoWriter(Writer):
             return dumper.represent_scalar('!keras_model', model_path)
 
         try:
-            from tensorflow.keras import Model as KerasModel
+            import keras
+
+            KerasModel = keras.models.Model
 
             yaml.add_multi_representer(KerasModel, keras_model_representer)
         except Exception:

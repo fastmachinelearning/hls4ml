@@ -590,7 +590,7 @@ class ModelGraph(Serializable):
                 next_nodes.append(x)
 
         if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs[0] in prev_node.outputs), None)
+            next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] in prev_node.outputs), None)
         else:
             if before not in next_nodes:
                 raise Exception(
@@ -613,7 +613,7 @@ class ModelGraph(Serializable):
 
         self.graph = new_graph
 
-    def remove_node(self, node, rewire=True):
+    def remove_node(self, node):
         """Removes a node from the graph.
 
         By default, this function connects the outputs of the previous
@@ -622,14 +622,10 @@ class ModelGraph(Serializable):
 
         Args:
             node (Layer): The node to remove.
-            rewire (bool, optional): Deprecated, has no effect.
 
         Raises:
-            Exception: If an attempt is made to rewire a node with
+            Exception: If an attempt is made to remove a node with
             multiple inputs/outputs.
-
-        Note:
-            The `rewire` parameter is deprecated and has no effect.
         """
 
         inputs = [inp for inp in node.inputs if inp]
@@ -638,14 +634,14 @@ class ModelGraph(Serializable):
         if len(inputs) > 1 or len(outputs) > 1:
             raise Exception('Cannot delete a node with multiple inputs/outputs')
 
-        if len(inputs) == 1:
+        if len(outputs) == 1 and len(inputs) == 1:
+
             # Connect inputs -> $outputs
-            if node.name in self.outputs:
+            if node.outputs[0] in self.outputs:
                 msg = f'Remove leaf node {node.name} will connect its input node {inputs[0]} to output, but it already is.'
                 assert inputs[0] not in self.outputs, msg
-                self.outputs = [inputs[0] if name == node.name else name for name in self.outputs]
+                self.outputs = [inputs[0] if name == node.outputs[0] else name for name in self.outputs]
 
-        if len(outputs) == 1 and len(inputs) == 1:
             inp_var = node.get_input_variable()
             out_var = node.get_output_variable()
 
@@ -828,7 +824,7 @@ class ModelGraph(Serializable):
         if x0.dtype in [np.single, np.float32]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
-        elif x0.dtype in [np.double, np.float64, np.float_]:
+        elif x0.dtype in [np.double, np.float64]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
         else:
