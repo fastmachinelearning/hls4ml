@@ -12,8 +12,7 @@ class RemoveFinalReshape(OptimizerPass):
     def transform(self, model, node):
         if model.config.get_config_value('IOType') == 'io_parallel':
             print('WARNING: Final layer is a Reshape, which does not affect the output for io_parallel; removing it')
-            # remove, but don't rewire because it's the output layer
-            model.remove_node(node, rewire=False)
+            model.remove_node(node)
             return True
         elif model.config.get_config_value('IOType') == 'io_stream':
             print(
