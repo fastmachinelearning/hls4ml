@@ -79,7 +79,6 @@ def test_dense(backend, io_type, synthesis_config):
     test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
-
 # TODO: add ThresholdedReLU test when it can be made to pass
 # https://github.com/fastmachinelearning/hls4ml/issues/376
 @pytest.mark.parametrize(
