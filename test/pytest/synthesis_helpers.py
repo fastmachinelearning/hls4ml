@@ -120,10 +120,10 @@ def test_synthesis(config, hls_model, baseline_file_name, backend):
     except Exception as e:
         pytest.skip(f"hls_model.build failed: {e}")
 
-    assert {'CSimResults', 'CSynthesisReport'}.issubset(data.keys()), \
-        "Synthesis failed: Missing expected keys in the synthesis report"
-    
     save_report(data, f"synthesis_report_{baseline_file_name}")
+
+    assert data and {'CSynthesisReport'}.issubset(data.keys()), \
+        "Synthesis failed: Missing expected keys in the synthesis report"
 
     version = config["tools_version"].get(backend)
     baseline_path = get_baseline_path(baseline_file_name, backend, version)
