@@ -1716,5 +1716,5 @@ layer_map = {
 
 
 def register_layer(name, clazz):
-    global layer_map
+    global layer_map  # noqa 824
     layer_map[name] = clazz
