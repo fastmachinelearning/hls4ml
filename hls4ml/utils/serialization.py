@@ -126,7 +126,7 @@ def deserialize_model(file_path, output_dir=None):
                 node = model.make_node(kind, layer_name, attributes, inputs, outputs, initialize=False)
                 model.graph[layer_name] = node
 
-    # This is a temporary hack until we restructure so we can apply the type transformation flow more intuintively
+    # This is a temporary hack until we restructure so we can apply the type transformation flow more intuitively
     _reapply_type_conversion_flow(model)
 
     return model
