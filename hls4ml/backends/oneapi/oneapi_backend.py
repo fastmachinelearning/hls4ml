@@ -129,7 +129,8 @@ class OneAPIBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, **_):
+    def create_initial_config(
+            self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, use_oneapi_bsp=False, **_):
         """Create initial configuration of the oneAPI backend.
 
         Args:
@@ -153,10 +154,7 @@ class OneAPIBackend(FPGABackend):
             # TODO:  add namespace
             'WriteTar': write_tar,
         }
-        # Target oneAPI Board Support Package (BSP).
-        if "use_oneapi_bsp" in _:
-            config['UseOneAPIBSP'] = _["use_oneapi_bsp"]
-
+        config['UseOneAPIBSP'] = use_oneapi_bsp
         return config
 
     def compile(self, model):
