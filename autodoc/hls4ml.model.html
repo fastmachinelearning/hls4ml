@@ -630,29 +630,22 @@ functions.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.graph.ModelGraph.remove_node">
-<span class="sig-name descname"><span class="pre">remove_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewire</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph.remove_node" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">remove_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph.remove_node" title="Link to this definition"></a></dt>
 <dd><p>Removes a node from the graph.</p>
 <p>By default, this function connects the outputs of the previous
 node to the inputs of the next node. If the removed node has multiple
 input/output tensors, an exception is raised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>node</strong> (<a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The node to remove.</p></li>
-<li><p><strong>rewire</strong> (<em>bool</em><em>, </em><em>optional</em>) – Deprecated, has no effect.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The node to remove.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>Exception</strong> – If an attempt is made to rewire a node with</p></li>
+<li><p><strong>Exception</strong> – If an attempt is made to remove a node with</p></li>
 <li><p><strong>multiple inputs/outputs.</strong> – </p></li>
 </ul>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <cite>rewire</cite> parameter is deprecated and has no effect.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
