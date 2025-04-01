@@ -46,8 +46,8 @@ class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
         first = node.get_input_node()
         second = node
 
-        model.remove_node(first, rewire=True)
-        model.remove_node(second, rewire=True)
+        model.remove_node(first)
+        model.remove_node(second)
         return True
 
 
