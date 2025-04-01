@@ -20,7 +20,7 @@ def synthesis_config():
         "run_synthesis": str_to_bool(os.getenv("RUN_SYNTHESIS", "false")),
         "tools_version": {
             "Vivado": os.getenv("VIVADO_VERSION", "2020.1"),
-            "Vitis": os.getenv("VITIS_VERSION", "2021.2"),
+            "Vitis": os.getenv("VITIS_VERSION", "2020.1"),
             "Quartus": os.getenv("QUARTUS_VERSION", "latest"),
             "oneAPI": os.getenv("ONEAPI_VERSION", "latest"),
         },
