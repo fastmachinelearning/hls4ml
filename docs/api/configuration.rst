@@ -101,6 +101,20 @@ Finally, one then uses the configuration to create an hls model:
         backend='Vitis'
     )
 
+To target an oneAPI Board Support Package (BSP) enabled FPGA for offload acceleration, you can specify the ``part`` argument to be the path to your BSP and the BSP variant. Then, set ``use_oneapi_bsp=True``.
+
+.. code-block:: python
+
+  hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir="my_project_dir",
+        io_type="io_parallel",
+        backend="oneAPI",
+        part="/path/to/my/bsp:bsp_variant",
+        use_oneapi_bsp=True
+    )
+
 See :py:class:`~hls4ml.converters.convert_from_keras_model` for more information on the various options. Similar functions exist for ONNX and PyTorch.
 
 ----
@@ -132,6 +146,9 @@ It looks like this:
    ClockPeriod: 5
    IOType: io_parallel # options: io_parallel/io_stream
 
+   # oneAPI Offload Acceleration flag.
+   UseOneAPIBSP: True
+
    HLSConfig:
      Model:
        Precision: fixed<16,6>
@@ -156,6 +173,7 @@ The backend-specific section of the configuration depends on the backend. You ca
 For Vivado backend the options are:
 
 * **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex UltraScale+ VU13P FPGA
+* **UseOneAPIBSP**\ : path to the oneAPI Board Support Package (and the BSP variant) to enable offload acceleration with an Altera FPGA. This is only needed if you are using the oneAPI backend.
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
 * **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines the type of data structure used for inputs, intermediate activations between layers, and outputs. For ``io_parallel``, arrays are used that, in principle, can be fully unrolled and are typically implemented in RAMs. For ``io_stream``, HLS streams are used, which are a more efficient/scalable mechanism to represent data that are produced and consumed in a sequential manner. Typically, HLS streams are implemented with FIFOs instead of RAMs. For more information see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
