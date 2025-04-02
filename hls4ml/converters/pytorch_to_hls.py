@@ -175,7 +175,7 @@ def parse_pytorch_model(config, verbose=True):
     """
     import torch
 
-    from hls4ml.converters.pytorch.tracer import CustomFXTracer
+    from hls4ml.utils.torch import CustomFXTracer
 
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []

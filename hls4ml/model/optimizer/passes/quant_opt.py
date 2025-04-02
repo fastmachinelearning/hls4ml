@@ -126,11 +126,11 @@ class QuantToActivation(OptimizerPass):
         if _ALSO_MATCH_PO2 and not (scale == np.ones_like(scale)).all():
             _, exp = np.frexp(next(iter(scale.flat)))
             integer = bitwidth + exp - 1
-
+        print(integer, bitwidth)
         precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
 
         attributes = {'activation': 'linear', 'quantizer': quantizer}
-
+        print(str(precision))
         # update the configuration
         config = model.config.get_layer_config(node)
         prec_config = config.setdefault('Precision', {})

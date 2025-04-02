@@ -19,7 +19,7 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
 
         # See if Quant layer needs to be added for the output
         if 'output_quantization' in node.attributes.keys() and not len(node.attributes['output_quantization']) == 0:
-
+            print(node.attributes['output_quantization'])
             attributes = {}
 
             input = node.name
