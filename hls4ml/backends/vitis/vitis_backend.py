@@ -50,6 +50,7 @@ class VitisBackend(VivadoBackend):
         namespace=None,
         write_weights_txt=True,
         write_tar=False,
+        tb_output_stream='both',
         **_,
     ):
         """Create initial configuration of the Vitis backend.
@@ -64,6 +65,8 @@ class VitisBackend(VivadoBackend):
             write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
                 Defaults to True.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+            tb_output_stream (str, optional): Controls where to write the output. Options are 'stdout', 'file' and 'both'.
+                Defaults to 'both'.
 
         Returns:
             dict: initial configuration.
@@ -79,6 +82,7 @@ class VitisBackend(VivadoBackend):
             'Namespace': namespace,
             'WriteWeightsTxt': write_weights_txt,
             'WriteTar': write_tar,
+            'TBOutputStream': tb_output_stream,
         }
 
         return config
