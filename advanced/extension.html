@@ -135,8 +135,8 @@
 <p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> natively supports a large number of neural network layers.
 But what if a desired layer is not supported?
 If it is standard enough and its implementation would benefit the community as a whole, we would welcome a contribution to add it to the standard set of supported layers.
-However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the <em>extension API</em>.</p>
-<p>This documentation will walk through a complete <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions.py">complete end-to-end example</a>, which is part of our testing suite.
+However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the <em>extension API</em>. This feature is support for both keras and pytorch layers.</p>
+<p>Complete end-to-end examples are available for both <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions.py">keras</a> and <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions_pytorch.py">pytorch</a>, which are part of our testing suite. The description here uses the keras example.
 To implement a custom layer in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> with the extension API, the required components are:</p>
 <ul class="simple">
 <li><p>Your custom layer class</p></li>
@@ -147,10 +147,6 @@ To implement a custom layer in <code class="docutils literal notranslate"><span 
 <li><p>Function config template</p></li>
 <li><p>Registration of layer, source code, and templates</p></li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>currently, then extension API supports keras models. Support for pytorch models is in development.</p>
-</div>
 <section id="complete-example">
 <h2>Complete example<a class="headerlink" href="#complete-example" title="Link to this heading"></a></h2>
 <p>For concreteness, let’s say our custom layer <code class="docutils literal notranslate"><span class="pre">KReverse</span></code> is implemented in Keras and reverses the order of the last dimension of the input.</p>
