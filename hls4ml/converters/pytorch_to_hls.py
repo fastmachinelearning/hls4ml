@@ -139,7 +139,7 @@ def pytorch_handler(*args):
     return decorator
 
 
-# map names of operations between toch.nn and torch.nn.functionals
+# map names of operations between torch.nn and torch.nn.functionals
 layer_name_map = {
     'relu': 'ReLU',
     'tanh': 'Tanh',
@@ -192,7 +192,7 @@ def parse_pytorch_model(config, verbose=True):
 
     model = reader.torch_model
 
-    # dict of layer objects in non-traced form for access lateron
+    # dict of layer objects in non-traced form for access later on
     children = {c[0]: c[1] for c in model.named_children()}
     # use symbolic_trace to get a full graph of the model
 
