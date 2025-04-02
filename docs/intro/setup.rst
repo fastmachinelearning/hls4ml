@@ -72,29 +72,35 @@ Here we give line-by-line instructions to demonstrate the general workflow.
 .. code-block:: python
 
    import hls4ml
+   import tensorflow as tf
+   from tensorflow.keras.layers import Dense
 
-   # Fetch a keras model from our example repository
-   # This will download our example model to your working directory and return an example configuration file
-   config = hls4ml.utils.fetch_example_model('KERAS_3layer.json')
+   # Construct a basic, untrained keras model
+   model = tf.keras.models.Sequential()
+   model.add(Dense(64, input_shape=(1,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
 
-   # You can print it to see some default parameters
+   # Generate an hls configuration from the keras model
+   config = hls4ml.utils.config_from_keras_model(model)
+
+   # You can print the config to see some default parameters
    print(config)
 
-   # Convert it to a hls project
-   hls_model = hls4ml.converters.keras_to_hls(config)
+   # Convert the model to an hls project using the config
+   hls_model = hls4ml.converters.convert_from_keras_model(
+      model=model,
+      hls_config=config,
+      backend='Vitis'
+   )
 
-   # Print full list of example model if you want to explore more
-   hls4ml.utils.fetch_example_list()
-
-After that, you can use :code:`Vivado HLS` to synthesize the model:
+After that, you can use :code:`Vitis HLS` to synthesize the model:
 
 .. code-block:: python
 
-   # Use Vivado HLS to synthesize the model
+   # Use Vitis HLS to synthesize the model
    # This might take several minutes
    hls_model.build()
 
-   # Print out the report if you want
+   # Optional: print out the report
    hls4ml.report.read_vivado_report('my-hls-test')
 
 Done! You've built your first project using ``hls4ml``! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
