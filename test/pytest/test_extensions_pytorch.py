@@ -22,7 +22,8 @@ class TReverse(hls4ml.utils.torch.HLS4MLModule):
 
 
 # hls4ml layer implementation
-class HReverse(hls4ml.model.layers.Layer):
+# Note that the `Torch` suffix is added here to avoid clashes with other tests and not mandatory
+class HReverseTorch(hls4ml.model.layers.Layer):
     '''hls4ml implementation of a hypothetical custom layer'''
 
     def initialize(self):
@@ -34,10 +35,10 @@ class HReverse(hls4ml.model.layers.Layer):
 
 # hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
-    '''OptimizerPass to remove consecutive HReverse layers.'''
+    '''OptimizerPass to remove consecutive HReverseTorch layers.'''
 
     def match(self, node):
-        return isinstance(node, HReverse) and isinstance(node.get_input_node(), HReverse)
+        return isinstance(node, HReverseTorch) and isinstance(node.get_input_node(), HReverseTorch)
 
     def transform(self, model, node):
         first = node.get_input_node()
@@ -53,7 +54,7 @@ def parse_reverse_layer(operation, layer_name, input_names, input_shapes, node, 
     assert operation == 'TReverse'
 
     layer = {}
-    layer['class_name'] = 'HReverse'
+    layer['class_name'] = 'HReverseTorch'
     layer['name'] = layer_name
     layer['n_in'] = input_shapes[0][1]
 
@@ -75,7 +76,7 @@ rev_include_list = ['nnet_utils/nnet_reverse.h']
 
 class HReverseConfigTemplate(hls4ml.backends.template.LayerConfigTemplate):
     def __init__(self):
-        super().__init__(HReverse)
+        super().__init__(HReverseTorch)
         self.template = rev_config_template
 
     def format(self, node):
@@ -85,7 +86,7 @@ class HReverseConfigTemplate(hls4ml.backends.template.LayerConfigTemplate):
 
 class HReverseFunctionTemplate(hls4ml.backends.template.FunctionCallTemplate):
     def __init__(self):
-        super().__init__(HReverse, include_header=rev_include_list)
+        super().__init__(HReverseTorch, include_header=rev_include_list)
         self.template = rev_function_template
 
     def format(self, node):
@@ -126,7 +127,7 @@ def register_custom_layer():
     hls4ml.converters.register_pytorch_layer_handler('TReverse', parse_reverse_layer)
 
     # Register the hls4ml's IR layer
-    hls4ml.model.layers.register_layer('HReverse', HReverse)
+    hls4ml.model.layers.register_layer('HReverseTorch', HReverseTorch)
 
 
 @pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
@@ -136,7 +137,7 @@ def test_extensions_pytorch(tmp_path, backend_id):
     ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
     # Add the pass into the main optimization flow
     optimize_flow = [flow for flow in ip_flow.requires if ':optimize' in flow][0]
-    optmizer_name = f'{backend_id.lower()}:remove_duplicate_reverse'
+    optmizer_name = f'{backend_id.lower()}:remove_duplicate_reverse_torch'
     backend.register_pass(optmizer_name, RemoveDuplicateReverse, flow=optimize_flow)
 
     # Register template passes for the given backend
