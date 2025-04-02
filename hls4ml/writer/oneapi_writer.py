@@ -557,6 +557,10 @@ class OneAPIWriter(Writer):
                 if 'set(FPGA_DEVICE' in line:
                     line = f'    set(FPGA_DEVICE "{device}")\n'
 
+                if model.config.get_config_value('UseOneAPIBSP'):
+                    if 'hls-fpga-machine-learning insert oneapi_bsp_cmake_flag' in line:
+                        line = f'set(BSP_FLAG "-DIS_BSP")'
+
                 fout.write(line)
 
     def write_nnet_utils(self, model):
