@@ -559,7 +559,7 @@ class OneAPIWriter(Writer):
 
                 if model.config.get_config_value('UseOneAPIBSP'):
                     if 'hls-fpga-machine-learning insert oneapi_bsp_cmake_flag' in line:
-                        line = f'set(BSP_FLAG "-DIS_BSP")'
+                        line = 'set(BSP_FLAG "-DIS_BSP")'
 
                 fout.write(line)
 
