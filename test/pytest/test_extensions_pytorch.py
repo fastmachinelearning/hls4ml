@@ -22,6 +22,7 @@ class TReverse(hls4ml.utils.torch.HLS4MLModule):
 
 
 # hls4ml layer implementation
+# Note that the `Torch` suffix is added here to avoid clashes with other tests and not mandatory
 class HReverseTorch(hls4ml.model.layers.Layer):
     '''hls4ml implementation of a hypothetical custom layer'''
 
