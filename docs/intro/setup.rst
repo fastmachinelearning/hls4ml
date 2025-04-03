@@ -77,7 +77,10 @@ Here we give line-by-line instructions to demonstrate the general workflow.
 
    # Construct a basic, untrained keras model
    model = tf.keras.models.Sequential()
-   model.add(Dense(64, input_shape=(1,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
+   model.add(Dense(64, input_shape=(16,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
+   model.add(Activation(activation='elu', name='Activation'))
+   model.add(Dense(32, name='Dense2', kernel_initializer='lecun_uniform', kernel_regularizer=None))
+   model.add(Activation(activation='elu', name='Activation2'))
 
    # Generate an hls configuration from the keras model
    config = hls4ml.utils.config_from_keras_model(model)
@@ -91,6 +94,20 @@ Here we give line-by-line instructions to demonstrate the general workflow.
       hls_config=config,
       backend='Vitis'
    )
+
+Once converted to an HLS project, you can connect the project into the Python runtime and use it to run predictions on a numpy array:
+
+.. code-block:: python
+   import numpy as np
+
+   # Compile the hls project and link it into the Python runtime
+   hls_model.compile()
+
+   # Generate random input data
+   X_input = np.random.rand(100, 16)
+
+   # Run the model on the input data
+   hls_prediction = hls_model.predict(X_input)
 
 After that, you can use :code:`Vitis HLS` to synthesize the model:
 
