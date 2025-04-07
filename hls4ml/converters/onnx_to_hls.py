@@ -44,7 +44,7 @@ def get_global_input_shape(graph, inp):
     Raises:
         StopIteration:  If the global input name is not found
     """
-    try: 
+    try:
         inp_shape = next(x.type.tensor_type.shape.dim for x in graph.input if x.name == inp)
     except StopIteration:
         # The input is not in the graph input, likely it's the output
