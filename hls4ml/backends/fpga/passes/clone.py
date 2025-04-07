@@ -66,6 +66,8 @@ class CloneOutput(OptimizerPass):
             if len(output_map[output]) + in_output > 1:
                 # model output also need a stream
                 return True
+            elif output in node.model.outputs:
+                return True
 
         return False
 
@@ -76,7 +78,8 @@ class CloneOutput(OptimizerPass):
 
         transformed = False
         for output in node.outputs:
-            n_outputs = len(output_map[output]) + in_output
+            in_output_tmp = in_output + (output in node.model.outputs)
+            n_outputs = len(output_map[output]) + in_output_tmp
             if n_outputs == 1:
                 continue
             if n_outputs > 3:
@@ -88,10 +91,10 @@ class CloneOutput(OptimizerPass):
             attrs = {'size': prod(out_var.shape)}
 
             init_stream_idx = 1
-            if in_output:
+            if in_output_tmp:
                 # If the value is used as output, add one extra stream
-                idx = node.model.outputs.index(node.name)
-                node.model.outputs[idx] = node.name + '_cpy1'
+                idx = node.model.outputs.index(output)
+                node.model.outputs[idx] = output + '_cpy1'
                 init_stream_idx = 2
             for i, layer in enumerate(output_map[output], init_stream_idx):
                 idx = layer.inputs.index(output)
