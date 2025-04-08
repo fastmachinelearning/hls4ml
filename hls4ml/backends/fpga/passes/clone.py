@@ -61,10 +61,8 @@ class CloneOutput(OptimizerPass):
 
         # Check if the output is used more than once
         output_map = node.get_output_use_map()
-        in_output = False
         for output in node.outputs:
-            in_output = in_output or (output in node.model.outputs)
-        for output in node.outputs:
+            in_output = output in node.model.outputs
             if len(output_map[output]) + in_output > 1:
                 # model output also need a stream
                 return True
@@ -74,12 +72,10 @@ class CloneOutput(OptimizerPass):
     def transform(self, model, node):
 
         output_map = node.get_output_use_map()
-        in_output = False
-        for output in node.outputs:
-            in_output = in_output or (output in node.model.outputs)
 
         transformed = False
         for output in node.outputs:
+            in_output = output in node.model.outputs
             n_outputs = len(output_map[output]) + in_output
             if n_outputs == 1:
                 continue
@@ -106,7 +102,7 @@ class CloneOutput(OptimizerPass):
                 'clone_' + node.name,
                 attrs,
                 [output],
-                [output + '_cpy' + str(i + 1) for i in range(n_outputs)],
+                [f'{output}_cpy{i + 1}' for i in range(n_outputs)],
             )
             for i in range(n_outputs):
                 key = output + '_cpy' + str(i + 1)
