@@ -14,6 +14,29 @@ from .._version import version
 
 
 def serialize_model(model, file_path):
+    """
+    Serializes an hls4ml model into a compressed file format (.fml).
+
+    This function saves the model's architecture, configuration, internal state,
+    and version information into a temporary directory. It then compresses the
+    directory into a `.fml` file (a tar.gz archive with a custom extension) at
+    the specified file path.
+
+    Args:
+        model (ModelGraph): The hls4ml model to be serialized.
+        file_path (str or pathlib.Path): The path where the serialized model
+            will be saved. If the file extension is not `.fml`, it will be
+            automatically appended.
+
+    Raises:
+        OSError: If the file cannot be written or an I/O error occurs.
+
+    Notes:
+        - The function also handles serialization of NumPy arrays and ensures
+          that input/output testbench data files are included if specified in
+          the model configuration.
+        - Existing files at the specified path will be overwritten.
+    """
     arch_dict = {}
     for name, layer in model.graph.items():
         arch_dict[name] = layer.serialize()
@@ -75,6 +98,33 @@ def serialize_model(model, file_path):
 
 
 def deserialize_model(file_path, output_dir=None):
+    """
+    Deserializes an hls4ml model from a compressed file format (.fml).
+
+    This function extracts the model's architecture, configuration, internal state,
+    and version information from the provided `.fml` file and returns a new instance of ModelGraph.
+    If testbench data was provided during the serialization, it will be restored to the specified output directory.
+
+    Args:
+        file_path (str or pathlib.Path): The path to the serialized model file (.fml).
+        output_dir (str or pathlib.Path, optional): The directory where extracted
+            testbench data files will be saved. If not specified, the files will
+            be restored to the same directory as the `.fml` file.
+
+    Returns:
+        ModelGraph: The deserialized hls4ml model.
+
+    Raises:
+        FileNotFoundError: If the specified `.fml` file does not exist.
+        OSError: If an I/O error occurs during extraction or file operations.
+
+    Notes:
+        - The function ensures that input/output testbench data files are restored
+          to the specified output directory if they were included during serialization.
+        - The deserialized model includes its architecture, configuration, and internal
+          state, allowing it to be used as if it were freshly created.
+    """
+
     if isinstance(file_path, str):
         file_path = Path(file_path)
     if output_dir is None:

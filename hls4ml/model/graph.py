@@ -1006,5 +1006,5 @@ class ModelGraph(Serializable):
     @classmethod
     def deserialize(cls, state):
         raise Exception(
-            '{cls.__name__} is not intended to be deserialized directly. Use {cls.__name__}.from_saved_state instead.'
+            f'{cls.__name__} is not intended to be deserialized directly. Use {cls.__name__}.from_saved_state instead.'
         )
