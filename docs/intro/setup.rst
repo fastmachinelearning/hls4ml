@@ -75,12 +75,14 @@ Here we give line-by-line instructions to demonstrate the general workflow.
    import tensorflow as tf
    from tensorflow.keras.layers import Dense
 
-   # Construct a basic, untrained keras model
+   # Construct a basic keras model
    model = tf.keras.models.Sequential()
    model.add(Dense(64, input_shape=(16,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
    model.add(Activation(activation='elu', name='Activation'))
    model.add(Dense(32, name='Dense2', kernel_initializer='lecun_uniform', kernel_regularizer=None))
    model.add(Activation(activation='elu', name='Activation2'))
+
+   # This is where you would train the model in a real-world scenario
 
    # Generate an hls configuration from the keras model
    config = hls4ml.utils.config_from_keras_model(model)
@@ -98,6 +100,7 @@ Here we give line-by-line instructions to demonstrate the general workflow.
 Once converted to an HLS project, you can connect the project into the Python runtime and use it to run predictions on a numpy array:
 
 .. code-block:: python
+
    import numpy as np
 
    # Compile the hls project and link it into the Python runtime
