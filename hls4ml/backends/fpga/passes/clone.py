@@ -61,12 +61,12 @@ class CloneOutput(OptimizerPass):
 
         # Check if the output is used more than once
         output_map = node.get_output_use_map()
-        in_output = node.name in node.model.outputs
+        in_output = False
+        for output in node.outputs:
+            in_output = in_output or (output in node.model.outputs)
         for output in node.outputs:
             if len(output_map[output]) + in_output > 1:
                 # model output also need a stream
-                return True
-            elif output in node.model.outputs:
                 return True
 
         return False
