@@ -1375,7 +1375,7 @@ class LSTM(Layer):
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
         # biases
-        self.add_weights_variable(name='bias', var_name='b{index}', quantizer=self.get_attr('bias_quantizer'))
+        self.add_weights_variable(name='bias', var_name='b{index}')
 
         if "pytorch" in self.attributes.keys():
             self.add_weights_variable(name='recurrent_bias', var_name='br{index}')

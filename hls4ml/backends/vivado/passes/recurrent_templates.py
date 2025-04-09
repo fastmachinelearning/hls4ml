@@ -58,7 +58,6 @@ recr_activ_config_template = """struct {type}_config{index}_recr : nnet::activ_c
     typedef {table_t.name} table_t;
 }};\n"""
 
-
 # LSTM + GRU templates
 
 recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
