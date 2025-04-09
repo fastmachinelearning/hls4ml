@@ -8,7 +8,7 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
-    (layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
+    (*_, layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
 
     if layer['class_name'] in ['Conv1D', 'QConv1D']:
         layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')
@@ -49,7 +49,7 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
-    (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
+    (*_, layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
 
     if layer['class_name'] in ['Conv2D', 'QConv2D', 'QConv2DBatchnorm']:
         layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')

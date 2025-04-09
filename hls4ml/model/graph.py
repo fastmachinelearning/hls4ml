@@ -519,7 +519,7 @@ class ModelGraph:
 
         self.graph = new_graph
 
-    def remove_node(self, node, rewire=True):
+    def remove_node(self, node):
         """Removes a node from the graph.
 
         By default, this function connects the outputs of the previous
@@ -528,14 +528,10 @@ class ModelGraph:
 
         Args:
             node (Layer): The node to remove.
-            rewire (bool, optional): Deprecated, has no effect.
 
         Raises:
-            Exception: If an attempt is made to rewire a node with
+            Exception: If an attempt is made to remove a node with
             multiple inputs/outputs.
-
-        Note:
-            The `rewire` parameter is deprecated and has no effect.
         """
 
         inputs = [inp for inp in node.inputs if inp]
