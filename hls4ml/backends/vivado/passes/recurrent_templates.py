@@ -58,21 +58,6 @@ recr_activ_config_template = """struct {type}_config{index}_recr : nnet::activ_c
     typedef {table_t.name} table_t;
 }};\n"""
 
-activ_config_template_brevitas = """struct {type}_config{index} : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    typedef {act_t.name} table_t;
-}};\n"""
-
-recr_activ_config_template_brevitas = """struct {type}_config{index}_recr : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    typedef {recurr_act_t.name} table_t;
-}};\n"""
 
 # LSTM + GRU templates
 
@@ -115,8 +100,6 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         self.template = recr_config_template
         self.act_template = activ_config_template
         self.recr_act_template = recr_activ_config_template
-        self.act_template_brevitas = activ_config_template_brevitas
-        self.recr_act_template_brevitas = recr_activ_config_template_brevitas
         self.mult1_template = recr_mult_config_template_1
         self.mult2_template = recr_mult_config_template_2
 
@@ -162,12 +145,8 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
             act_params['n_in'] = node.get_output_variable().shape[0]
             recr_act_params['n_in'] = node.get_output_variable().shape[0] * (n_recr_mult - 1)
 
-        if 'act_t' in act_params.keys():
-            act_config = self.act_template_brevitas.format(**act_params)
-            recr_act_config = self.recr_act_template_brevitas.format(**recr_act_params)
-        else:
-            act_config = self.act_template.format(**act_params)
-            recr_act_config = self.recr_act_template.format(**recr_act_params)
+        act_config = self.act_template.format(**act_params)
+        recr_act_config = self.recr_act_template.format(**recr_act_params)
 
         mult_params1 = self._default_config_params(node)
         mult_params2 = self._default_config_params(node)

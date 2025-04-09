@@ -14,7 +14,7 @@ namespace nnet {
 template <class data_T, class res_T, class weight_t, int N_IN, int N_OUT>
 void multiply_W(data_T input[N_IN], res_T out[N_OUT], const weight_t weight[N_IN * N_OUT]) {
 MULTIPLY_W_LOOP_I:
-    #pragma unroll,
+    #pragma unroll
     for (int i = 0; i < N_OUT; i++) {
         out[i] = 0;
 

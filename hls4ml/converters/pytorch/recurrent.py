@@ -76,7 +76,7 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
     return layer, output_shape
 
 
-quant_rnn_layers = ['QuantRNN', 'QuantLSTM']  # No QuantGRU in brevitas at this point
+quant_rnn_layers = ['QuantRNN']  # QuantLSTM very complex, might come later. No QuantGRU in brevitas at this point
 
 
 @pytorch_handler(*quant_rnn_layers)
@@ -124,39 +124,20 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
 
     layer['n_out'] = class_object._modules['layers'][0][0].hidden_size
 
-    if 'LSTM' in operation:
-        LSTMObject = class_object._modules['layers'][0][0]
+    RNNObject = class_object._modules['layers'][0][0]
 
-        input_weight = LSTMObject.input_gate_params.input_weight
-        forget_weight = LSTMObject.forget_gate_params.input_weight
-        cell_weight = LSTMObject.cell_gate_params.input_weight
-        output_weight = LSTMObject.output_gate_params.input_weight
-
-        input_hidden_weight = LSTMObject.input_gate_params.hidden_weight
-        forget_hidden_weight = LSTMObject.forget_gate_params.hidden_weight
-        cell_hidden_weight = LSTMObject.cell_gate_params.hidden_weight
-        output_hidden_weight = LSTMObject.output_gate_params.hidden_weight
-
-        width = int(input_weight.quant_weight().bit_width)
-        scale = input_weight.quant_weight().scale.detach().numpy()
-
+    if RNNObject.gate_params.input_weight.weight_quant.is_quant_enabled:
+        width = int(RNNObject.gate_params.input_weight.quant_weight().bit_width)
+        scale = RNNObject.gate_params.input_weight.quant_weight().scale.detach().numpy()
+        signed = RNNObject.gate_params.input_weight.quant_weight().signed
         mantissa, _ = np.frexp(scale)
         # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
         # use the already quantized tensor from brevitas
         if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(width, scale)
-            combined_weight = np.concatenate(
-                (
-                    input_weight.quant_weight().detach().value.numpy(),
-                    forget_weight.quant_weight().detach().value.numpy(),
-                    cell_weight.quant_weight().detach().value.numpy(),
-                    output_weight.quant_weight().detach().value.numpy(),
-                ),
-                axis=0,
-            )
-            layer['weight_data'] = combined_weight
+            ap_fixed_params = convert_uaq_to_apfixed(width, float(RNNObject.gate_params.input_weight.quant_weight().scale))
+            layer['weight_data'] = RNNObject.gate_params.input_weight.quant_weight().detach().value.numpy()
             layer['weight_quantizer'] = BrevitasQuantizer(
-                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
             )
         else:
             raise Exception(
@@ -164,26 +145,37 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
                 Please used QONNX instead.'''
             )
 
-        width = int(input_hidden_weight.quant_weight().bit_width)
-        scale = input_hidden_weight.quant_weight().scale.detach().numpy()
+    if RNNObject.gate_params.hidden_weight.weight_quant.is_quant_enabled:
+        width = int(RNNObject.gate_params.hidden_weight.quant_weight().bit_width)
+        scale = RNNObject.gate_params.hidden_weight.quant_weight().scale.detach().numpy()
+        signed = RNNObject.gate_params.input_weight.quant_weight().signed
+        mantissa, _ = np.frexp(scale)
+        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
+        # use the already quantized tensor from brevitas
+        if mantissa == 0.5:
+            ap_fixed_params = convert_uaq_to_apfixed(width, float(RNNObject.gate_params.hidden_weight.quant_weight().scale))
+            layer['recurrent_weight_data'] = RNNObject.gate_params.hidden_weight.quant_weight().detach().value.numpy()
+            layer['recurrent_weight_quantizer'] = BrevitasQuantizer(
+                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
+            )
+        else:
+            raise Exception(
+                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                Please used QONNX instead.'''
+            )
+
+    input_bias = RNNObject.gate_params.quant_bias()
+    if input_bias is not None:
+        width = int(input_bias.bit_width)
+        scale = input_bias.scale.detach().numpy()
         mantissa, _ = np.frexp(scale)
         # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
         # use the already quantized tensor from brevitas
         if mantissa == 0.5:
             ap_fixed_params = convert_uaq_to_apfixed(width, scale)
 
-            combined_hidden_weight = np.concatenate(
-                (
-                    input_hidden_weight.quant_weight().detach().value.numpy(),
-                    forget_hidden_weight.quant_weight().detach().value.numpy(),
-                    cell_hidden_weight.quant_weight().detach().value.numpy(),
-                    output_hidden_weight.quant_weight().detach().value.numpy(),
-                ),
-                axis=0,
-            )
-
-            layer['recurrent_weight_data'] = combined_hidden_weight
-            layer['recurrent_weight_quantizer'] = BrevitasQuantizer(
+            layer['bias_data'] = input_bias.detach().value.numpy()
+            layer['bias_quantizer'] = BrevitasQuantizer(
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
             )
         else:
@@ -191,189 +183,32 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
                 '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
                 Please used QONNX instead.'''
             )
+    else:
+        layer['bias_data'] = np.zeros(layer['weight_data'].shape[0])
+        layer['bias_quantizer'] = layer['weight_quantizer']
 
-        input_bias = LSTMObject.input_gate_params.quant_bias()
-        forget_bias = LSTMObject.forget_gate_params.quant_bias()
-        cell_bias = LSTMObject.cell_gate_params.quant_bias()
-        output_bias = LSTMObject.output_gate_params.quant_bias()
+    layer['recurrent_bias_data'] = np.zeros(layer['recurrent_weight_data'].shape[0])
+    layer['recurrent_bias_quantizer'] = layer['weight_quantizer']
 
-        if input_bias is not None:
-            width = int(input_bias.bit_width)
-            scale = input_bias.scale.detach().numpy()
-            mantissa, _ = np.frexp(scale)
-            # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-            # use the already quantized tensor from brevitas
-            if mantissa == 0.5:
-                ap_fixed_params = convert_uaq_to_apfixed(width, scale)
-
-                combined_hidden_weight = np.concatenate(
-                    (
-                        input_bias.detach().value.numpy(),
-                        forget_bias.detach().value.numpy(),
-                        cell_bias.detach().value.numpy(),
-                        output_bias.detach().value.numpy(),
-                    ),
-                    axis=0,
-                )
-
-                layer['bias_data'] = combined_hidden_weight
-                layer['bias_quantizer'] = BrevitasQuantizer(
-                    width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-                )
-            else:
-                raise Exception(
-                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                    Please used QONNX instead.'''
-                )
-        else:
-            layer['bias_data'] = np.zeros(layer['weight_data'].shape[0])
-            layer['bias_quantizer'] = layer['weight_quantizer']
-
-        layer['recurrent_bias_data'] = np.zeros(layer['recurrent_weight_data'].shape[0])
-        layer['recurrent_bias_quantizer'] = layer['bias_quantizer']
-
-        acc_scale = LSTMObject.cell.forget_acc_quant.scale()
-        acc_bitwdith = int(LSTMObject.cell.forget_acc_quant.bit_width())
-        mantissa, _ = np.frexp(acc_scale)
-        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-        # use the already quantized tensor from brevitas
-        if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(acc_bitwdith, acc_scale)
-            precision = FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-            layer['accum_t'] = NamedType(layer["name"] + '_accum_t', precision)
-
-        else:
-            raise Exception(
-                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead.'''
-            )
-
-        tanh_scale = LSTMObject.cell.cell_tanh_quant.scale()
-        tanh_bitwdith = int(LSTMObject.cell.cell_tanh_quant.bit_width())
-        mantissa, _ = np.frexp(tanh_scale)
-        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-        # use the already quantized tensor from brevitas
-        if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(tanh_bitwdith, tanh_scale)
-            precision = FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-            layer['act_t'] = NamedType(layer["name"] + '_act_t', precision)
-
-        else:
-            raise Exception(
-                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead.'''
-            )
-
-        sigmoid_scale = LSTMObject.cell.cell_tanh_quant.scale()
-        sigmoid_bitwdith = int(LSTMObject.cell.cell_tanh_quant.bit_width())
-        mantissa, _ = np.frexp(sigmoid_scale)
-        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-        # use the already quantized tensor from brevitas
-        if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(sigmoid_bitwdith, sigmoid_scale)
-            precision = FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-            layer['recurr_act_t'] = NamedType(layer["name"] + '_recurr_act_t', precision)
-
-        else:
-            raise Exception(
-                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead.'''
-            )
-        if LSTMObject.cell.output_quant.is_quant_enabled:
-            layer = addQuantizationParameters(layer, LSTMObject.cell.output_quant, 'output', act=True)
-            layer = addQuantizationParameters(layer, LSTMObject.cell.output_quant, 'input', act=True)
+    acc_scale = RNNObject.cell.gate_acc_quant.scale()
+    acc_bitwdith = int(RNNObject.cell.gate_acc_quant.bit_width())
+    mantissa, _ = np.frexp(acc_scale)
+    # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
+    # use the already quantized tensor from brevitas
+    if mantissa == 0.5:
+        ap_fixed_params = convert_uaq_to_apfixed(acc_bitwdith, acc_scale)
+        precision = FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
+        layer['accum_t'] = NamedType(layer["name"] + '_accum_t', precision)
 
     else:
+        raise Exception(
+            '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
+            Please used QONNX instead.'''
+        )
 
-        RNNObject = class_object._modules['layers'][0][0]
-
-        if RNNObject.gate_params.input_weight.weight_quant.is_quant_enabled:
-            width = int(RNNObject.gate_params.input_weight.quant_weight().bit_width)
-            scale = RNNObject.gate_params.input_weight.quant_weight().scale.detach().numpy()
-            signed = RNNObject.gate_params.input_weight.quant_weight().signed
-            mantissa, _ = np.frexp(scale)
-            # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-            # use the already quantized tensor from brevitas
-            if mantissa == 0.5:
-                ap_fixed_params = convert_uaq_to_apfixed(
-                    width, float(RNNObject.gate_params.input_weight.quant_weight().scale)
-                )
-                layer['weight_data'] = RNNObject.gate_params.input_weight.quant_weight().detach().value.numpy()
-                layer['weight_quantizer'] = BrevitasQuantizer(
-                    width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
-                )
-            else:
-                raise Exception(
-                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                    Please used QONNX instead.'''
-                )
-
-        if RNNObject.gate_params.hidden_weight.weight_quant.is_quant_enabled:
-            width = int(RNNObject.gate_params.hidden_weight.quant_weight().bit_width)
-            scale = RNNObject.gate_params.hidden_weight.quant_weight().scale.detach().numpy()
-            signed = RNNObject.gate_params.input_weight.quant_weight().signed
-            mantissa, _ = np.frexp(scale)
-            # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-            # use the already quantized tensor from brevitas
-            if mantissa == 0.5:
-                ap_fixed_params = convert_uaq_to_apfixed(
-                    width, float(RNNObject.gate_params.hidden_weight.quant_weight().scale)
-                )
-                layer['recurrent_weight_data'] = RNNObject.gate_params.hidden_weight.quant_weight().detach().value.numpy()
-                layer['recurrent_weight_quantizer'] = BrevitasQuantizer(
-                    width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
-                )
-            else:
-                raise Exception(
-                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                    Please used QONNX instead.'''
-                )
-
-        input_bias = RNNObject.gate_params.quant_bias()
-        if input_bias is not None:
-            width = int(input_bias.bit_width)
-            scale = input_bias.scale.detach().numpy()
-            mantissa, _ = np.frexp(scale)
-            # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-            # use the already quantized tensor from brevitas
-            if mantissa == 0.5:
-                ap_fixed_params = convert_uaq_to_apfixed(width, scale)
-
-                layer['bias_data'] = input_bias.detach().value.numpy()
-                layer['bias_quantizer'] = BrevitasQuantizer(
-                    width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-                )
-            else:
-                raise Exception(
-                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                    Please used QONNX instead.'''
-                )
-        else:
-            layer['bias_data'] = np.zeros(layer['weight_data'].shape[0])
-            layer['bias_quantizer'] = layer['weight_quantizer']
-
-        layer['recurrent_bias_data'] = np.zeros(layer['recurrent_weight_data'].shape[0])
-        layer['recurrent_bias_quantizer'] = layer['weight_quantizer']
-
-        acc_scale = RNNObject.cell.gate_acc_quant.scale()
-        acc_bitwdith = int(RNNObject.cell.gate_acc_quant.bit_width())
-        mantissa, _ = np.frexp(acc_scale)
-        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-        # use the already quantized tensor from brevitas
-        if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(acc_bitwdith, acc_scale)
-            precision = FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-            layer['accum_t'] = NamedType(layer["name"] + '_accum_t', precision)
-
-        else:
-            raise Exception(
-                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead.'''
-            )
-
-        if RNNObject.cell.output_quant.is_quant_enabled:
-            layer = addQuantizationParameters(layer, RNNObject.cell.output_quant, 'output', act=True)
-            layer = addQuantizationParameters(layer, RNNObject.cell.output_quant, 'input', act=True)
+    if RNNObject.cell.output_quant.is_quant_enabled:
+        layer = addQuantizationParameters(layer, RNNObject.cell.output_quant, 'output', act=True)
+        layer = addQuantizationParameters(layer, RNNObject.cell.output_quant, 'input', act=True)
 
     if layer['class_name'] == 'GRU':
         layer['apply_reset_gate'] = 'after'  # Might be true for pytorch? It's not a free parameter
