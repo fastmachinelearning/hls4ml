@@ -185,27 +185,51 @@ to run C/SYCL simulations.</p>
 <p>For basic concepts to understand the tool, please visit the <a class="reference internal" href="../api/concepts.html"><span class="doc">Concepts</span></a> chapter.
 Here we give line-by-line instructions to demonstrate the general workflow.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hls4ml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dense</span>
 
-<span class="c1"># Fetch a keras model from our example repository</span>
-<span class="c1"># This will download our example model to your working directory and return an example configuration file</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fetch_example_model</span><span class="p">(</span><span class="s1">&#39;KERAS_3layer.json&#39;</span><span class="p">)</span>
+<span class="c1"># Construct a basic keras model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dense&#39;</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="s1">&#39;lecun_uniform&#39;</span><span class="p">,</span> <span class="n">kernel_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Activation&#39;</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dense2&#39;</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="s1">&#39;lecun_uniform&#39;</span><span class="p">,</span> <span class="n">kernel_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Activation2&#39;</span><span class="p">))</span>
 
-<span class="c1"># You can print it to see some default parameters</span>
+<span class="c1"># This is where you would train the model in a real-world scenario</span>
+
+<span class="c1"># Generate an hls configuration from the keras model</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># You can print the config to see some default parameters</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-<span class="c1"># Convert it to a hls project</span>
-<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras_to_hls</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-
-<span class="c1"># Print full list of example model if you want to explore more</span>
-<span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fetch_example_list</span><span class="p">()</span>
+<span class="c1"># Convert the model to an hls project using the config</span>
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span>
+   <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+   <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+   <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;Vitis&#39;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>After that, you can use <code class="code docutils literal notranslate"><span class="pre">Vivado</span> <span class="pre">HLS</span></code> to synthesize the model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use Vivado HLS to synthesize the model</span>
+<p>Once converted to an HLS project, you can connect the project into the Python runtime and use it to run predictions on a numpy array:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Compile the hls project and link it into the Python runtime</span>
+<span class="n">hls_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+
+<span class="c1"># Generate random input data</span>
+<span class="n">X_input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="c1"># Run the model on the input data</span>
+<span class="n">hls_prediction</span> <span class="o">=</span> <span class="n">hls_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_input</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After that, you can use <code class="code docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> to synthesize the model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use Vitis HLS to synthesize the model</span>
 <span class="c1"># This might take several minutes</span>
 <span class="n">hls_model</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
 
-<span class="c1"># Print out the report if you want</span>
+<span class="c1"># Optional: print out the report</span>
 <span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">&#39;my-hls-test&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
