@@ -304,6 +304,8 @@ def _(layer: Merge):
             qint_in0 = QIntervalArray.from_kif(*kif_ins[0])
             qint_in1 = QIntervalArray.from_kif(*kif_ins[1])
             k, i, f = (qint_in0 @ qint_in1).to_kif()
+            if k.shape == ():
+                k, i, f = k[None], i[None], f[None]
         case _:
             raise NotImplementedError(f'No implementation of Merge for {op}')
     return k.astype(np.int8), i, f
