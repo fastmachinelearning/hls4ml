@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-from synthesis_helpers import test_synthesis
+from synthesis_helpers import run_synthesis_test
 from tensorflow.keras.layers import (
     ELU,
     Activation,
@@ -76,7 +76,7 @@ def test_dense(backend, io_type, synthesis_config):
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
 
-    test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 # TODO: add ThresholdedReLU test when it can be made to pass
@@ -120,7 +120,7 @@ def test_activations(activation_function, backend, io_type, synthesis_config):
 
     assert list(hls_model.get_layers())[2].attributes['class_name'] == activation_function.__class__.__name__
 
-    test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 padds_options = ['same', 'valid']
@@ -206,7 +206,7 @@ def test_conv1d(padds, backend, strategy, io_type, synthesis_config):
             assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
             assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
 
-    test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 chans_options = ['channels_last']
@@ -330,7 +330,7 @@ def test_conv2d(chans, padds, backend, strategy, io_type, synthesis_config):
         assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
 
-    test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 # Currently only Vivado and Vitis is supported for io_stream.
@@ -362,7 +362,7 @@ def test_depthwise2d(backend, io_type, synthesis_config):
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
-    test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 # Currently only Vivado and Vitis is supported for io_stream.
@@ -392,7 +392,7 @@ def test_depthwise1d(backend, io_type, synthesis_config):
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
-    test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D]
@@ -524,4 +524,4 @@ def test_pooling(pooling, padds, chans, backend, synthesis_config):
             assert hls_pool.attributes['pad_left'] == 0
             assert hls_pool.attributes['pad_right'] == 0
 
-    test_synthesis(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)

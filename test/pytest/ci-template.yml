@@ -9,12 +9,14 @@
     - source /opt/intel/oneapi/setvars.sh --force
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
+    - git submodule update --init --recursive test/pytest/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
     - pip install .[testing,sr,optimization]
     - sudo yum install libtinfo.so.6 -y
     - sudo ln -s /lib64/libtinfo.so.6 /lib64/libtinfo.so.5
     - sudo ln -s /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx /opt/Xilinx
     - source /opt/Xilinx/Vivado/2020.1/settings64.sh
+    - export RUN_SYNTHESIS=true
   script:
     - cd test/pytest
     - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed

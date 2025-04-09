@@ -35,16 +35,41 @@ def save_report(data, filename):
         json.dump(data, fp, indent=4)
 
 
-def get_tolerance(key):
+def compare_dicts(data, baseline, tolerances):
     """
-    Get the relative tolerance for a specific synthesis report field.
+    Compare two flat dictionaries with tolerances.
 
     Args:
-        key (str): The key in the synthesis report to compare.
+        report (dict): The generated report dictionary.
+        baseline (dict): The expected/baseline dictionary.
+        tolerances (dict): Dictionary of tolerances per key.
 
-    Returns:
-        float: The relative tolerance allowed for that key. Defaults to 1% (0.01).
+    Raises:
+        AssertionError: If values differ outside the allowed tolerance.
     """
+    for key, expected in baseline.items():
+        actual = data.get(key)
+        tolerance = tolerances.get(key, 0)
+
+        try:
+            actual = float(actual)
+            expected = float(expected)
+            assert actual == pytest.approx(
+                expected, rel=tolerance
+            ), f"{key}: expected {expected}, got {actual} (tolerance={tolerance*100}%)"
+        except ValueError:
+            assert actual == expected, f"{key}: expected '{expected}', got '{actual}'"
+
+
+def compare_vitis_backend(data, baseline):
+    """
+    Compare reports from Vivado/Vitis backends.
+
+    Args:
+        data (dict): The current synthesis report.
+        baseline (dict): The expected synthesis report.
+    """
+
     tolerances = {
         "EstimatedClockPeriod": 0.01,
         "FF": 0.05,
@@ -59,44 +84,54 @@ def get_tolerance(key):
         "AvailableURAM": 0.0,
     }
 
-    default_tolerance = 0.01
-
-    return tolerances.get(key, default_tolerance)
+    compare_dicts(data["CSynthesisReport"], baseline["CSynthesisReport"], tolerances)
 
 
-def compare_reports_with_tolerance(data, baseline):
+def compare_oneapi_backend(data, baseline):
     """
-    Compare two synthesis reports using tolerances defined per key.
+    Compare reports from the oneAPI backend.
 
     Args:
         data (dict): The current synthesis report.
-        baseline (dict): The baseline synthesis report to compare against.
+        baseline (dict): The expected synthesis report.
     """
-    csrBaseline = baseline.get("CSynthesisReport")
-    csrData = data.get("CSynthesisReport")
 
-    for key, expected_value in csrBaseline.items():
-        actual_value = csrData.get(key)
-        tolerance = get_tolerance(key)
+    tolerances = {
+        "HLS": {
+            "total": {"alut": 0.01, "reg": 0.1, "ram": 0.01, "dsp": 0.01, "mlab": 0.01},
+            "available": {"alut": 0.01, "reg": 0.01, "ram": 0.01, "dsp": 0.01, "mlab": 0.01},
+        },
+        "Loop": {"worstFrequency": 0.01, "worstII": 0.01, "worstLatency": 0.01},
+    }
 
-        try:
-            # Convert to float for numerical comparison
-            expected_num = float(expected_value)
-            actual_num = float(actual_value)
-            assert actual_num == pytest.approx(
-                expected_num, rel=tolerance
-            ), f"{key}: expected {expected_num}, got {actual_num} (tolerance={tolerance*100}%)"
-        except ValueError:
-            # Exact match for non-numeric values
-            assert actual_value == expected_value, f"{key}: expected '{expected_value}', got '{actual_value}'"
+    data = data["report"]
+    baseline = baseline["report"]
+
+    compare_dicts(data["HLS"]["total"], baseline["HLS"]["total"], tolerances["HLS"]["total"])
+    compare_dicts(data["HLS"]["available"], baseline["HLS"]["available"], tolerances["HLS"]["available"])
+    compare_dicts(data["Loop"], baseline["Loop"], tolerances["Loop"])
 
 
-def test_synthesis(config, hls_model, baseline_file_name, backend):
+COMPARE_FUNCS = {
+    "Vivado": compare_vitis_backend,
+    "Vitis": compare_vitis_backend,
+    "oneAPI": compare_oneapi_backend,
+}
+
+
+EXPECTED_REPORT_KEYS = {
+    "Vivado": {"CSynthesisReport"},
+    "Vitis": {"CSynthesisReport"},
+    "oneAPI": {"report"},
+}
+
+
+def run_synthesis_test(config, hls_model, baseline_file_name, backend):
     """
     Run HLS synthesis and compare the output with a stored baseline report.
 
     If synthesis is disabled via the configuration (`run_synthesis=False`),
-    no synthesis is executed and the test silently returns.
+    no synthesis is executed and the method silently returns.
 
     Args:
         config (dict): Test-wide synthesis configuration fixture.
@@ -105,32 +140,40 @@ def test_synthesis(config, hls_model, baseline_file_name, backend):
         backend (str): The synthesis backend used (e.g., 'Vivado', 'Vitis').
     """
     if not config.get("run_synthesis", False):
-        # TODO: should this info be printed or logged?
         return
 
-    if backend == 'oneAPI':
-        pytest.skip('oneAPI backend not supported in synthesis tests.')
+    # Skip Quartus backend
+    if backend == 'Quartus':
+        return
 
+    # Run synthesis
     build_args = config["build_args"]
-
     try:
         data = hls_model.build(**build_args.get(backend, {}))
     except Exception as e:
         pytest.skip(f"hls_model.build failed: {e}")
 
+    # Save synthesis report
     save_report(data, f"synthesis_report_{baseline_file_name}")
 
-    assert data and {'CSynthesisReport'}.issubset(
+    # Check synthesis report keys
+    expected_keys = EXPECTED_REPORT_KEYS.get(backend, set())
+    assert data and expected_keys.issubset(
         data.keys()
-    ), "Synthesis failed: Missing expected keys in the synthesis report"
+    ), f"Synthesis failed: Missing expected keys in synthesis report: expected {expected_keys}, got {set(data.keys())}"
 
+    # Load baseline report
     version = config["tools_version"].get(backend)
     baseline_path = get_baseline_path(baseline_file_name, backend, version)
-
     try:
         with open(baseline_path) as fp:
             baseline = json.load(fp)
     except FileNotFoundError:
         pytest.skip(f"Baseline file '{baseline_path}' not found.")
 
-    compare_reports_with_tolerance(data, baseline)
+    # Compare report against baseline using backend-specific rules
+    compare_func = COMPARE_FUNCS.get(backend)
+    if compare_func is None:
+        raise AssertionError(f"No comparison function defined for backend: {backend}")
+
+    compare_func(data, baseline)

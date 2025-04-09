@@ -24,12 +24,12 @@ def synthesis_config():
             "Vivado": os.getenv("VIVADO_VERSION", "2020.1"),
             "Vitis": os.getenv("VITIS_VERSION", "2020.1"),
             "Quartus": os.getenv("QUARTUS_VERSION", "latest"),
-            "oneAPI": os.getenv("ONEAPI_VERSION", "latest"),
+            "oneAPI": os.getenv("ONEAPI_VERSION", "2025.0.1"),
         },
         "build_args": {
             "Vivado": {"csim": False, "synth": True, "export": False},
             "Vitis": {"csim": False, "synth": True, "export": False},
             "Quartus": {"synth": True, "fpgasynth": False},
-            "oneAPI": {"build_type": "fpga_emu", "run": False},
+            "oneAPI": {"build_type": "report", "run": False},
         },
     }
