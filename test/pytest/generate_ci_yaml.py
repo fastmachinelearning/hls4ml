@@ -7,10 +7,10 @@ in the pytests directory to parallelise the CI jobs.
 
 
 template = """
-pytest.test_cvmfs_mount:
+pytest.test_synthesis:
   extends: .pytest
   variables:
-    PYTESTFILE: test_keras_api.py
+    PYTESTFILE: test_keras_api_temp.py
     EXAMPLEMODEL: 0
 """
 
