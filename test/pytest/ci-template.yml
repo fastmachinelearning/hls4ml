@@ -12,6 +12,7 @@
     - git submodule update --init --recursive test/pytest/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
     - pip install .[testing,sr,optimization]
+    - sudo yum install -y libidn
     - sudo yum install libtinfo.so.6 -y
     - sudo ln -s /lib64/libtinfo.so.6 /lib64/libtinfo.so.5
     - sudo ln -s /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx /opt/Xilinx
