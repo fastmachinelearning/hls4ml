@@ -10,6 +10,7 @@ from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.report import parse_oneapi_report
 from hls4ml.utils import attribute_descriptions as descriptions
 
 # from hls4ml.report import parse_oneapi_report
@@ -206,6 +207,8 @@ class OneAPIBackend(FPGABackend):
         if run and build_type in ('fpga_emu', 'fpga_sim', 'fpga'):
             executable = builddir / f'{model.config.get_project_name()}.{build_type}'
             subprocess.run(f'{str(executable)}', shell=True, cwd=builddir, check=True)
+
+        return parse_oneapi_report(model.config.get_output_dir())
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
