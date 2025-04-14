@@ -17,6 +17,7 @@
     - sudo ln -s /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx /opt/Xilinx
     - source /opt/Xilinx/Vivado/2020.1/settings64.sh
     - export RUN_SYNTHESIS=true
+    - export PATH=/usr/local/bin
     - which cmake
     - cmake --version
     - ldd $(which cmake)
