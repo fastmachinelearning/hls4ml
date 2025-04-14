@@ -18,9 +18,6 @@
     - source /opt/Xilinx/Vivado/2020.1/settings64.sh
     - export RUN_SYNTHESIS=true
     - export PATH=/usr/bin:$PATH
-    - which cmake
-    - cmake --version
-    - ldd $(which cmake)
   script:
     - cd test/pytest
     - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
