@@ -58,14 +58,6 @@ MULTIPLY_VECT_LOOP:
     }
 }
 
-template <class data_T, class s_T, class res_T, int N> void multiply_vectors(data_T in1[N], s_T in2[N], res_T out[N]) {
-MULTIPLY_VECT_LOOP:
-    #pragma unroll
-    for (int i = 0; i < N; i++) {
-        out[i] = in1[i] * in2[i];
-    }
-}
-
 template <class data_T, class res_T, int N> void add_vectors(data_T in1[N], data_T in2[N], res_T out[N]) {
 ADD_VECTOR_LOOP:
     #pragma unroll
@@ -726,168 +718,6 @@ OUTPUT_WRITE_LOOP:
     }
 }
 
-template <class data_T, class h_T, class s_T, class res_T, typename CONFIG_T>
-void lstm_cell(data_T inputs[CONFIG_T::n_in], h_T hidden_state[CONFIG_T::n_out], h_T hidden_state_o[CONFIG_T::n_out],
-               s_T cell_state[CONFIG_T::n_out], s_T cell_state_o[CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t WI[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t WF[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t WC[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t WO[CONFIG_T::n_in * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWI[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWF[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWC[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::weight_t RWO[CONFIG_T::n_out * CONFIG_T::n_out],
-               const typename CONFIG_T::bias_t BI[CONFIG_T::n_out], const typename CONFIG_T::bias_t BF[CONFIG_T::n_out],
-               const typename CONFIG_T::bias_t BC[CONFIG_T::n_out], const typename CONFIG_T::bias_t BO[CONFIG_T::n_out]) {
-
-    // Internals definitions
-    typename CONFIG_T::accum_t i_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t i_afterBias[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_afterBias[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_afterBias[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_afterW[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_afterBias[CONFIG_T::n_out] hls_register;
-
-    // Hidden state Gate candidates, intermediate variables
-    typename CONFIG_T::accum_t i_hiddenCand[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_hiddenCand[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_hiddenCand[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_hiddenCand[CONFIG_T::n_out] hls_register;
-
-    // After addition, intermediate variables
-    typename CONFIG_T::accum_t i_afterAdd[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t f_afterAdd[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t c_afterAdd[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t o_afterAdd[CONFIG_T::n_out] hls_register;
-
-    // Gate outputs
-    typename CONFIG_T::accum_t gate_i[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_f[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_c[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_o[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_ic[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t gate_forget[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t h[CONFIG_T::n_out] hls_register;
-
-    // Intermediate variable cell calculation
-    typename CONFIG_T::accum_t cell_act_multp[CONFIG_T::n_out] hls_register;
-    typename CONFIG_T::accum_t cell_act_add[CONFIG_T::n_out] hls_register;
-
-    //-----------Gate I Calculations
-    // Weight multiplication
-    multiply_W<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(
-        inputs, i_afterW, WI);
-
-    // Bias addition
-    add_bias<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::bias_t, CONFIG_T::n_out>(
-        i_afterW, i_afterBias, BI);
-
-    // Hidden Candidate
-    multiply_U<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_out>(hidden_state, i_hiddenCand,
-                                                                                                 RWI);
-
-    // Vector addition
-    add_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(i_afterBias, i_hiddenCand,
-                                                                                         i_afterAdd);
-
-    // Activation
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
-                                       typename CONFIG_T::ACT_CONFIG_RECURRENT_T>::activation(i_afterAdd, gate_i);
-
-    //-----------Gate F Calculations
-    // Weight multiplication
-    multiply_W<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(
-        inputs, f_afterW, WF);
-
-    // Bias addition
-    add_bias<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::bias_t, CONFIG_T::n_out>(
-        f_afterW, f_afterBias, BF);
-
-    // Hidden Candidate
-    multiply_U<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_out>(hidden_state, f_hiddenCand,
-                                                                                                 RWF);
-
-    // Vector addition
-    add_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(f_afterBias, f_hiddenCand,
-                                                                                         f_afterAdd);
-
-    // Activation
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
-                                       typename CONFIG_T::ACT_CONFIG_RECURRENT_T>::activation(f_afterAdd, gate_f);
-
-    //-----------Gate C Calculations
-    // Weight multiplication
-    multiply_W<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(
-        inputs, c_afterW, WC);
-
-    // Bias addition
-    add_bias<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::bias_t, CONFIG_T::n_out>(
-        c_afterW, c_afterBias, BC);
-
-    // Hidden Candidate
-    multiply_U<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_out>(hidden_state, c_hiddenCand,
-                                                                                                 RWC);
-
-    // Vector addition
-    add_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(c_afterBias, c_hiddenCand,
-                                                                                         c_afterAdd);
-
-    // Activation
-    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
-                                  typename CONFIG_T::ACT_CONFIG_RECURRENT_T>::activation(c_afterAdd, gate_c);
-
-    //-----------gate I and C multiply
-    // Vector multiplication
-    multiply_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(gate_i, gate_c, gate_ic);
-
-    //-----------Gate O Calculations
-    // Weight multiplication
-    multiply_W<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(
-        inputs, o_afterW, WO);
-
-    // Bias addition
-    add_bias<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, typename CONFIG_T::bias_t, CONFIG_T::n_out>(
-        o_afterW, o_afterBias, BO);
-
-    // Hidden Candidate
-    multiply_U<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_out>(hidden_state, o_hiddenCand,
-                                                                                                 RWO);
-
-    // Vector addition
-    add_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(o_afterBias, o_hiddenCand,
-                                                                                         o_afterAdd);
-
-    // Activation
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
-                                       typename CONFIG_T::ACT_CONFIG_RECURRENT_T>::activation(o_afterAdd, gate_o);
-
-    //-----------Cell State Calculation
-    // Vector multiplication
-    multiply_vectors<typename CONFIG_T::accum_t, s_T, typename CONFIG_T::accum_t, CONFIG_T::n_out>(gate_f, cell_state,
-                                                                                                   cell_act_multp);
-
-    // Vector addition
-    add_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(gate_ic, cell_act_multp,
-                                                                                         cell_act_add);
-
-    //-----------Forget gate Calculation
-    // Activation
-    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t,
-                                  typename CONFIG_T::ACT_CONFIG_RECURRENT_T>::activation(cell_act_add, gate_forget);
-
-    // Vector multiplication
-    multiply_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(gate_o, gate_forget, h);
-
-OUTPUT_WRITE_LOOP:
-    #pragma unroll
-    for (int x = (CONFIG_T::n_out - 1); x >= 0; x--) {
-        hidden_state_o[x] = h[x];
-        cell_state_o[x] = cell_act_add[x];
-    }
-}
-
 template <class data_T, class res_T, class CONFIG_T>
 void lstm(data_T data[CONFIG_T::n_timesteps * CONFIG_T::n_in], res_T res[CONFIG_T::n_outputs * CONFIG_T::n_out],
           const typename CONFIG_T::weight_t WI[CONFIG_T::n_in * CONFIG_T::n_out],
@@ -1005,8 +835,8 @@ INIT_LOOP:
         }
 
         // Do LSTM
-        lstm_cell<data_T, h_T, s_T, res_T, CONFIG_T>(in, hidden_state_temp, h, cell_state_temp, c, WI, WF, WC, WO, RWI, RWF,
-                                                     RWC, RWO, BI, BF, BC, BO);
+        lstm_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, cell_state_temp, c, WI, WF, WC, WO, RWI, RWF, RWC, RWO,
+                                           BI, BF, BC, BO);
 
         // Write result
         #pragma unroll
