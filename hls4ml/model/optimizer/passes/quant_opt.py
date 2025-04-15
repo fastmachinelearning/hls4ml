@@ -52,14 +52,14 @@ class QuantConstantParameters(OptimizerPass):
             if isinstance(scale_node, Constant):
                 node.set_attr('scale', scale_node.get_attr('value'))
                 node.inputs[1] = ''
-                model.remove_node(scale_node, rewire=False)
+                model.remove_node(scale_node)
 
         if node.get_input_node(node.inputs[2]):
             zeropt_node = node.get_input_node(node.inputs[2])
             if isinstance(zeropt_node, Constant):
                 node.set_attr('zeropt', zeropt_node.get_attr('value'))
                 node.inputs[2] = ''
-                model.remove_node(zeropt_node, rewire=False)
+                model.remove_node(zeropt_node)
 
         if node.get_input_node(node.inputs[3]):
             bitwidth_node = node.get_input_node(node.inputs[3])
@@ -69,7 +69,7 @@ class QuantConstantParameters(OptimizerPass):
                     raise RuntimeError('Only scalar bitwidth values are supporeted by the Quant node')
                 node.set_attr('bitwidth', bitwidth[0])
                 node.inputs[3] = ''
-                model.remove_node(bitwidth_node, rewire=False)
+                model.remove_node(bitwidth_node)
 
         node.inputs = [inp for inp in node.inputs if inp]
         if len(node.inputs) != 1:
@@ -199,7 +199,7 @@ class FuseQuantWithConstant(OptimizerPass):
         # Should we update the configuration to reflect the new precision? I don't think it's necessary
 
         # remove the Quant node
-        model.remove_node(node, rewire=True)
+        model.remove_node(node)
 
         return True
 

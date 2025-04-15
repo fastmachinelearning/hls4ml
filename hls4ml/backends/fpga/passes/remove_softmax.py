@@ -9,5 +9,5 @@ class SkipSoftmax(OptimizerPass):
         return is_softmax and remove_softmax
 
     def transform(self, model, node):
-        model.remove_node(node, rewire=True)
+        model.remove_node(node)
         return True

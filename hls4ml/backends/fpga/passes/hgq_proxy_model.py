@@ -53,7 +53,7 @@ class ProcessFixedPointQuantizerLayer(OptimizerPass):
 
     def transform(self, model, node: FixedPointQuantizer):
         if node.fusible:
-            model.remove_node(node, rewire=True)
+            model.remove_node(node)
             return True
 
         if model.config.config['IOType'] != 'io_parallel':

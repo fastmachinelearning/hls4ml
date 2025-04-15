@@ -1,6 +1,6 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import GRU, LSTM
+from hls4ml.model.layers import GRU, LSTM, TimeDistributed
 
 # recurrent multiplication template
 
@@ -237,3 +237,69 @@ class RecurrentFunctionTemplate(FunctionCallTemplate):
             template = recr_function_template
 
         return template.format(**params)
+
+
+time_distributed_config_template = """struct config{index} : nnet::time_distributed_config {{
+    static const unsigned dim = {dim};
+
+    static const unsigned n_time_steps = {n_time_steps};
+    static const unsigned in_height = {in_height};
+    static const unsigned in_width = {in_width};
+    static const unsigned n_chan = {n_chan};
+}};\n"""
+
+time_distributed_loop_start_template = """for (int ts = 0; ts < config{index}::n_time_steps; ts++) {{
+        {loop_mode}
+        nnet::read_time_step_{dim}d<{input_t}, {config}>(ts, {input}, {output});"""
+
+time_distributed_loop_end_template = """    nnet::write_time_step_{dim}d<{output_t}, {config}>(ts, {input}, {output});
+    }}"""
+
+time_distributed_include_list = ['nnet_utils/nnet_time_distributed.h']
+
+
+class TimeDistributedConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(TimeDistributed)
+        self.template = time_distributed_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+
+        input_shape = node.get_input_variable().shape
+        params['dim'] = len(input_shape)
+        if node.name.endswith('_end'):
+            params['dim'] += 1  # The input variable will be from the wrapped layer, without time dimension
+        params['in_height'] = input_shape[-3] if params['dim'] == 4 else 1
+        params['in_width'] = input_shape[-2] if params['dim'] >= 3 else 1
+        params['n_chan'] = input_shape[-1]
+
+        return self.template.format(**params)
+
+
+class TimeDistributedFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__((TimeDistributed), include_header=time_distributed_include_list)
+        self.template_start = time_distributed_loop_start_template
+        self.template_end = time_distributed_loop_end_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+
+        input_shape = node.get_input_variable().shape
+        params['dim'] = len(input_shape)
+        if node.name.endswith('_end'):
+            params['dim'] += 1  # The input variable will be from the wrapped layer, without time dimension
+
+        loop_mode = node.get_attr('time_step_loop_parallelism')
+        if loop_mode == 'unroll':
+            params['loop_mode'] = '#pragma HLS UNROLL'
+        elif loop_mode == 'pipeline':
+            params['loop_mode'] = '#pragma HLS PIPELINE'
+        else:
+            params['loop_mode'] = ''
+
+        if node.attributes['wrapped_layer'].name == node.name + '_end':
+            return self.template_start.format(**params)
+        else:
+            return self.template_end.format(**params)

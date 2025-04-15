@@ -241,7 +241,8 @@ class VivadoWriter(Writer):
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
-                                    newline += '    ' + self._make_array_pragma(var) + '\n'
+                                    newline += '    ' + self._make_array_pragma(var) + '\n\n'
+                for layer in model.get_layers():
                     func = layer.get_attr('function_cpp', None)
                     if func:
                         if not isinstance(func, (list, set)):
@@ -253,6 +254,7 @@ class VivadoWriter(Writer):
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
+                            vars = layer.get_variables()
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
                                 newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(
@@ -568,20 +570,25 @@ class VivadoWriter(Writer):
 
             elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
-                for out in model_outputs:
-                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
-                        out.type.name, out.size_cpp(), out.name
-                    )  # TODO enable this
+                tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
+                if tb_stream != 'stdout':
+                    for out in model_outputs:
+                        newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
+                            out.type.name, out.size_cpp(), out.name
+                        )  # TODO enable this
 
             elif (
                 '// hls-fpga-machine-learning insert output' in line
                 or '// hls-fpga-machine-learning insert quantized' in line
             ):
                 newline = line
-                for out in model_outputs:
-                    newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, true);\n'.format(
-                        out.type.name, out.size_cpp(), out.name
-                    )
+                tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
+                keep_output = str(tb_stream != 'stdout').lower()  # We keep output if we need to write it to file too.
+                if tb_stream != 'file':
+                    for out in model_outputs:
+                        newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, {});\n'.format(
+                            out.type.name, out.size_cpp(), out.name, keep_output
+                        )
 
             elif '// hls-fpga-machine-learning insert namespace' in line:
                 newline = ''

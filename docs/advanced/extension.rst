@@ -5,9 +5,9 @@ Extension API
 ``hls4ml`` natively supports a large number of neural network layers.
 But what if a desired layer is not supported?
 If it is standard enough and its implementation would benefit the community as a whole, we would welcome a contribution to add it to the standard set of supported layers.
-However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the *extension API*.
+However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the *extension API*. This feature is support for both keras and pytorch layers.
 
-This documentation will walk through a complete `complete end-to-end example <https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions.py>`_, which is part of our testing suite.
+Complete end-to-end examples are available for both `keras <https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions.py>`_ and `pytorch <https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions_pytorch.py>`_, which are part of our testing suite. The description here uses the keras example.
 To implement a custom layer in ``hls4ml`` with the extension API, the required components are:
 
 * Your custom layer class

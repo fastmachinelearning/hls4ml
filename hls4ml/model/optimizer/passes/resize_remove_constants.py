@@ -23,16 +23,16 @@ class ResizeRemoveConstants(OptimizerPass):
         scales_node = node.get_input_node(node.inputs[scales_idx])
         node.inputs[scales_idx] = ''
         if not isinstance(scales_node, Constant):
-            raise RuntimeError("Non-constant shape inputs are not supported")
-        model.remove_node(scales_node, rewire=False)
+            raise RuntimeError('Non-constant shape inputs are not supported')
+        model.remove_node(scales_node)
         # RoI position is always 1 when present
         roi_node = node.get_input_node(node.inputs[roi_index])
         if roi_node.get_attr('value'):
             warn('RoI value vector is not empty. Consider that RoI is not supported in hls4ml', stacklevel=2)
         node.inputs[roi_index] = ''
         if not isinstance(roi_node, Constant):
-            raise RuntimeError("Non-constant RoI inputs are not supported")
-        model.remove_node(roi_node, rewire=False)
+            raise RuntimeError('Non-constant RoI inputs are not supported')
+        model.remove_node(roi_node)
         # Clean all the '' inputs
         node.inputs = list(filter(None, node.inputs))
         return True

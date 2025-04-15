@@ -33,7 +33,7 @@ class TransformTypes(GlobalOptimizerPass):
                     new_var = self.interface_var_converter.convert(var, pragma='stream')
                 elif out_name in node.model.outputs:
                     new_var = self.interface_var_converter.convert(var, pragma='stream')
-                if isinstance(var, InplaceTensorVariable):
+                elif isinstance(var, InplaceTensorVariable):
                     new_var = self.inplace_stream_var_converter.convert(var, pragma='stream')
                 else:
                     new_var = self.stream_var_converter.convert(var, pragma='stream')
