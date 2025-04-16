@@ -68,16 +68,16 @@ def _get_precision_from_quantizer(quantizer):
         'linear',
     ]
     signed = True
-    rnd = "AP_TRN"
-    overflow = "AP_WRAP"
+    rnd = 'AP_TRN'
+    overflow = 'AP_WRAP'
 
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits - 1)) + 1
         # for quantizers use the following default rounding and overflow
-        rnd = "AP_RND_CONV"
-        overflow = "AP_SAT"
+        rnd = 'AP_RND_CONV'
+        overflow = 'AP_SAT'
         if quantizer['class_name'] in ('quantized_relu', 'quantized_relu_po2'):
             if quantizer['config']['negative_slope'] != 0.0:
                 signed = True
@@ -85,7 +85,7 @@ def _get_precision_from_quantizer(quantizer):
                 signed = False
                 integer -= 1
         elif quantizer['class_name'] == 'quantized_tanh':
-            overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
+            overflow = 'AP_SAT_SYM' if quantizer['config']['symmetric'] else 'AP_SAT'
             integer = 1
         elif quantizer['class_name'] == 'quantized_sigmoid':
             integer = 0

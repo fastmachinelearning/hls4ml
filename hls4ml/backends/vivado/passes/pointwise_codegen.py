@@ -63,7 +63,7 @@ def generate_pointwise_conv1d_fn(layer_idx, reuse_factor=1):
 
 
 class GeneratePointwiseConv1D(OptimizerPass):
-    '''Generates code for pointwise 1D convolution'''
+    """Generates code for pointwise 1D convolution"""
 
     def match(self, node):
         return (

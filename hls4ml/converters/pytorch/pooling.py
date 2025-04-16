@@ -34,9 +34,9 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
         (*_, layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
         if node.op == 'call_module':
             layer['pool_width'] = (
-                class_object.kernel_size if not type(class_object.kernel_size) is tuple else class_object.kernel_size[0]
+                class_object.kernel_size if type(class_object.kernel_size) is not tuple else class_object.kernel_size[0]
             )
-            layer['stride_width'] = class_object.stride if not type(class_object.stride) is tuple else class_object.stride[0]
+            layer['stride_width'] = class_object.stride if type(class_object.stride) is not tuple else class_object.stride[0]
 
             if type(class_object.padding) is tuple:
                 padding = class_object.padding[0]

@@ -100,7 +100,7 @@ class HLSCodePrinter(CXX11CodePrinter):
                     name = fname
                     break
             else:
-                raise ValueError("No matching printer")
+                raise ValueError('No matching printer')
 
         # Setting precision of math functions required some rethinking
         # Doing e.g., hls::pow<x.width, x.iwidth>(x, y) passes C sim, but fails synthesis, need to use hls::pow<16,6>(x,y)

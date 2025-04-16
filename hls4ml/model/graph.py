@@ -333,8 +333,8 @@ class ModelGraph:
         self.inputs = self._find_output_variable_names(layer_list, input_layers)
         if self.inputs != input_layers:
             raise RuntimeError(
-                "Currently only support the case when input variables and input layer names match\n"
-                + f"Input layers = {input_layers}, input_vars = {self.inputs}"
+                'Currently only support the case when input variables and input layer names match\n'
+                + f'Input layers = {input_layers}, input_vars = {self.inputs}'
             )
         self.outputs = self._find_output_variable_names(layer_list, output_layers)
 
@@ -540,7 +540,6 @@ class ModelGraph:
             raise Exception('Cannot delete a node with multiple inputs/outputs')
 
         if len(outputs) == 1 and len(inputs) == 1:
-
             # Connect inputs -> $outputs
             if node.outputs[0] in self.outputs:
                 msg = f'Remove leaf node {node.name} will connect its input node {inputs[0]} to output, but it already is.'
@@ -694,7 +693,7 @@ class ModelGraph:
     def _compile(self):
         lib_name = self.config.backend.compile(self)
         if self._top_function_lib is not None:
-            if platform.system() == "Linux":
+            if platform.system() == 'Linux':
                 libdl_libs = ['libdl.so', 'libdl.so.2']
                 for libdl in libdl_libs:
                     try:
@@ -702,7 +701,7 @@ class ModelGraph:
                         break
                     except Exception:
                         continue
-            elif platform.system() == "Darwin":
+            elif platform.system() == 'Darwin':
                 dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
             dlclose_func.argtypes = [ctypes.c_void_p]
@@ -740,7 +739,7 @@ class ModelGraph:
             )
 
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist) + n_outputs)]
+        top_function.argtypes = [npc.ndpointer(ctype, flags='C_CONTIGUOUS') for i in range(len(xlist) + n_outputs)]
 
         return top_function, ctype
 

@@ -76,7 +76,6 @@ def test_pysr_luts(data):
 @pytest.mark.parametrize('clock_unc', ['15%', None])
 @pytest.mark.parametrize('compiler', ['vivado_hls', 'vitis_hls'])
 def test_sr_backend_config(part, clock_period, clock_unc, compiler):
-
     expr = 'x0**2 + 2.5382*cos_lut(x3) - 0.5'
 
     if clock_unc is not None:

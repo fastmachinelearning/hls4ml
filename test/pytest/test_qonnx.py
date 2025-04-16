@@ -23,18 +23,18 @@ example_model_path = (test_root_path / '../../example-models').resolve()
 
 @pytest.fixture(scope='module')
 def tfc_2w2a_model():
-    '''
+    """
     Load the tiny fully-connected model
-    '''
+    """
     dl_dir = test_root_path
-    dl_file = str(dl_dir / "qonnx-tfc-2w2a.onnx")
+    dl_file = str(dl_dir / 'qonnx-tfc-2w2a.onnx')
     tfc_w2a2_qonnx_url = (
-        "https://raw.githubusercontent.com/fastmachinelearning/"
-        "QONNX_model_zoo/main/models/MNIST/Brevitas_FINN_TFC/TFC/TFC_2W2A.onnx"
+        'https://raw.githubusercontent.com/fastmachinelearning/'
+        'QONNX_model_zoo/main/models/MNIST/Brevitas_FINN_TFC/TFC/TFC_2W2A.onnx'
     )
     urllib.request.urlretrieve(tfc_w2a2_qonnx_url, dl_file)
     assert os.path.isfile(dl_file)
-    out_file = str(dl_dir / "qonnx-tfc-2w2a-clean.onnx")
+    out_file = str(dl_dir / 'qonnx-tfc-2w2a-clean.onnx')
 
     # cleanup
     qonnx.util.cleanup.cleanup(dl_file, out_file=out_file)
@@ -44,20 +44,20 @@ def tfc_2w2a_model():
 
 @pytest.fixture(scope='module')
 def cnv_2w2a_model():
-    '''
+    """
     Load the small convolution model
-    '''
+    """
     dl_dir = test_root_path
-    dl_file = str(dl_dir / "qonnx-cnv-2w2a.onnx")
+    dl_file = str(dl_dir / 'qonnx-cnv-2w2a.onnx')
     cnv_w2a2_qonnx_url = (
-        "https://raw.githubusercontent.com/fastmachinelearning/"
-        "QONNX_model_zoo/main/models/CIFAR10/Brevitas_FINN_CNV/CNV_2W2A.onnx"
+        'https://raw.githubusercontent.com/fastmachinelearning/'
+        'QONNX_model_zoo/main/models/CIFAR10/Brevitas_FINN_CNV/CNV_2W2A.onnx'
     )
     urllib.request.urlretrieve(cnv_w2a2_qonnx_url, dl_file)
     assert os.path.isfile(dl_file)
-    out_clean = str(dl_dir / "qonnx-cnv-2w2a-clean.onnx")
-    out_chanlast = str(dl_dir / "qonnx-cnv-2w2a-clean-channels-last.onnx")
-    out_file = str(dl_dir / "qonnx-cnv-2w2a-clean-channels-last-clean.onnx")
+    out_clean = str(dl_dir / 'qonnx-cnv-2w2a-clean.onnx')
+    out_chanlast = str(dl_dir / 'qonnx-cnv-2w2a-clean-channels-last.onnx')
+    out_file = str(dl_dir / 'qonnx-cnv-2w2a-clean-channels-last-clean.onnx')
 
     # cleanup
     qonnx.util.cleanup.cleanup(dl_file, out_file=out_clean)
@@ -69,18 +69,18 @@ def cnv_2w2a_model():
 
 @pytest.fixture(scope='module')
 def jettagging_model():
-    '''
+    """
     Load the 3 hidden layer QKeras example model trained on the jet tagging dataset
-    '''
+    """
     dl_dir = test_root_path
-    dl_file = str(dl_dir / "qkeras_jettagging.onnx")
+    dl_file = str(dl_dir / 'qkeras_jettagging.onnx')
     jet_tagging_qonnx_url = (
-        "https://raw.githubusercontent.com/fastmachinelearning/"
-        "QONNX_model_zoo/main/models/JetTagging/QKeras_hls4ml_3layer/qkeras_jettagging.onnx"
+        'https://raw.githubusercontent.com/fastmachinelearning/'
+        'QONNX_model_zoo/main/models/JetTagging/QKeras_hls4ml_3layer/qkeras_jettagging.onnx'
     )
     urllib.request.urlretrieve(jet_tagging_qonnx_url, dl_file)
     assert os.path.isfile(dl_file)
-    out_file = str(dl_dir / "qkeras_jettagging-clean.onnx")
+    out_file = str(dl_dir / 'qkeras_jettagging-clean.onnx')
 
     # cleanup
     qonnx.util.cleanup.cleanup(dl_file, out_file=out_file)
@@ -93,7 +93,7 @@ def sep_conv_model():
     """
     Load separabale conv model, already channels-last and cleaned
     """
-    dl_file = str(example_model_path / "onnx/separable_conv_model_ch_last.onnx")
+    dl_file = str(example_model_path / 'onnx/separable_conv_model_ch_last.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -106,7 +106,7 @@ def branched_model():
     """
     Load branched model using separable convs, already channels-last and cleaned
     """
-    dl_file = str(example_model_path / "onnx/branched_model_ch_last.onnx")
+    dl_file = str(example_model_path / 'onnx/branched_model_ch_last.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -119,7 +119,7 @@ def tiny_unet_model():
     """
     Load tiny unet model, already channels-last and cleaned
     """
-    dl_file = str(example_model_path / "onnx/tiny_unet_ch_last.onnx")
+    dl_file = str(example_model_path / 'onnx/tiny_unet_ch_last.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -132,7 +132,7 @@ def two_layer_keras_model():
     """
     Load a simple, two-layer, originally keras, unquantized model
     """
-    dl_file = str(example_model_path / "onnx/two_layer_keras.onnx")
+    dl_file = str(example_model_path / 'onnx/two_layer_keras.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -145,7 +145,7 @@ def three_layer_keras_model():
     """
     Load a simple, three-layer, originally keras, unquantized model
     """
-    dl_file = str(example_model_path / "onnx/three_layer_keras.onnx")
+    dl_file = str(example_model_path / 'onnx/three_layer_keras.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -158,7 +158,7 @@ def two_layer_pytorch_model():
     """
     Load a simple, two-layer, originally pytorch, unquantized model
     """
-    dl_file = str(example_model_path / "onnx/two_layer_keras.onnx")
+    dl_file = str(example_model_path / 'onnx/two_layer_keras.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -173,7 +173,7 @@ def three_layer_pytorch_model():
     """
     Load a simple, three-layer, originally pytorch, unquantized model
     """
-    dl_file = str(example_model_path / "onnx/three_layer_pytorch.onnx")
+    dl_file = str(example_model_path / 'onnx/three_layer_pytorch.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -188,7 +188,7 @@ def conv1d_small_keras_model():
     """
     Load a simple conv1d, originally keras, unquantized model
     """
-    dl_file = str(example_model_path / "onnx/conv1d_small_keras.onnx")
+    dl_file = str(example_model_path / 'onnx/conv1d_small_keras.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -204,7 +204,7 @@ def conv2d_small_keras_model():
     """
     Load a simple conv2d, originally keras, unquantized model
     """
-    dl_file = str(example_model_path / "onnx/conv2d_small_keras.onnx")
+    dl_file = str(example_model_path / 'onnx/conv2d_small_keras.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -220,7 +220,7 @@ def conv2d_small_mp_keras_model():
     """
     Load a conv2d model with max pooling, originally keras, unquantized model
     """
-    dl_file = str(example_model_path / "onnx/conv2d_small_mp_keras.onnx")
+    dl_file = str(example_model_path / 'onnx/conv2d_small_mp_keras.onnx')
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
@@ -362,7 +362,6 @@ def test_branched_model(branched_model, backend):
 
 @pytest.mark.parametrize('backend', ['Vitis'])
 def test_tiny_unet_model(tiny_unet_model, backend):
-
     model = tiny_unet_model
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)

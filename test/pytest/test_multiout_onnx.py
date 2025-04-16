@@ -56,7 +56,6 @@ def onnx_model(tmp_path):
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_multiout_onnx(onnx_model, io_type):
-
     X = np.random.rand(1, 16)
     X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
 

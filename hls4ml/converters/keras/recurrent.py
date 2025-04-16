@@ -96,7 +96,7 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
         if isinstance(data_reader, KerasModelReader):
             nested_data_reader = KerasWrappedLayerReader(data_reader.model.get_layer(layer['name']).layer)
         else:
-            nested_data_reader = KerasWrappedLayerFileReader(data_reader, f"{layer['name']}/{layer['name']}")
+            nested_data_reader = KerasWrappedLayerFileReader(data_reader, f'{layer["name"]}/{layer["name"]}')
 
         wrapped_layer, layer_output_shape = handler(wrapped_keras_layer, [layer['name']], input_shapes, nested_data_reader)
         wrapped_layer['output_shape'] = layer_output_shape

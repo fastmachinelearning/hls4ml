@@ -4,7 +4,7 @@ import tensorflow as tf
 
 @tf.function
 def get_model_gradients(model, loss_fn, X, y):
-    '''
+    """
     Calculate model gradients with respect to weights
 
     Args:
@@ -15,7 +15,7 @@ def get_model_gradients(model, loss_fn, X, y):
 
     Returns:
         grads (dict): Per-layer gradients of loss with respect to weights
-    '''
+    """
     grads = {}
     # While persistent GradientTape slows down execution,
     # Is faster than performing forward pass and non-persistent for every layer
@@ -32,7 +32,7 @@ def get_model_gradients(model, loss_fn, X, y):
 
 @tf.function
 def get_model_hessians(model, loss_fn, X, y):
-    '''
+    """
     Calculate the second derivatives of the loss with repsect to model weights.
 
     Note, only diagonal elements of the Hessian are computed.
@@ -45,7 +45,7 @@ def get_model_hessians(model, loss_fn, X, y):
 
     Returns:
         grads (dict): Per-layer second derivatives of loss with respect to weights
-    '''
+    """
     grads = {}
     with tf.GradientTape(persistent=True) as tape:
         output = model(X, training=False)
@@ -59,7 +59,7 @@ def get_model_hessians(model, loss_fn, X, y):
 
 
 def get_model_sparsity(model):
-    '''
+    """
     Calculate total and per-layer model sparsity
 
     Args:
@@ -72,7 +72,7 @@ def get_model_sparsity(model):
         - layers (dict): Key-value dictionary; each key is a layer name and the associated value is the layer's sparsity
 
     TODO - Extend support for recurrent layers (reccurent_kernel)
-    '''
+    """
 
     total_weights = 0
     zero_weights = 0
@@ -93,7 +93,7 @@ def get_model_sparsity(model):
 
 # TODO - Does this work for non-linear models (e.g. skip connections) ?
 def get_last_layer_with_weights(model):
-    '''
+    """
     Finds the last layer with weights
 
     The last layer with weights determined the output shape, so, pruning is sometimes not applicable to it.
@@ -105,7 +105,7 @@ def get_last_layer_with_weights(model):
 
     Returns:
         idx (int): Index location of last layer with params
-    '''
+    """
     for idx, layer in reversed(list(enumerate(model.layers))):
         if hasattr(layer, 'kernel'):
             return idx

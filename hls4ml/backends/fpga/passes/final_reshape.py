@@ -3,7 +3,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class RemoveFinalReshape(OptimizerPass):
-    '''Remove reshape if final layer'''
+    """Remove reshape if final layer"""
 
     def match(self, node):
         # match if reshape is final node

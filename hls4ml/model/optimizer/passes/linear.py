@@ -19,14 +19,14 @@ _safe_parents = (Dense, Conv1D, Conv2D, BatchNormalization, Activation)
 
 
 class MergeLinearActivation(OptimizerPass):
-    '''
+    """
     For many objects it's safe to change the output precision independently of the calculation.
-    '''
+    """
 
     def match(self, node):
-        '''
+        """
         Only match if the parent is safe and the precision is not explicitly set.
-        '''
+        """
         if isinstance(node, Activation) and node.get_attr('activation') == 'linear':
             parent = node.get_input_node(node.inputs[0])
             safe_parent = isinstance(parent, _safe_parents)
@@ -36,10 +36,10 @@ class MergeLinearActivation(OptimizerPass):
 
     def transform(self, model, node):
         prev_node = node.get_input_node(node.inputs[0])
-        quantizer = node.get_attr("quantizer")
+        quantizer = node.get_attr('quantizer')
         # if the activation has a quantizer (usually from a QONNX Quant node), set the previous node's output precision
         if quantizer is not None:
-            prev_node.set_attr("quantizer", quantizer)
+            prev_node.set_attr('quantizer', quantizer)
             prev_node.get_output_variable().type.precision = quantizer.hls_type
         model.remove_node(node)
         return True

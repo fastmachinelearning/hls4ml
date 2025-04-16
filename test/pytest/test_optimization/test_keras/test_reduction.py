@@ -12,11 +12,11 @@ from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_model_sparsity
 pytest.skip(allow_module_level=True)
 
 
-'''
+"""
 Set some neurons / filters to zero and verify that these are removed
 Even is some neurons (columns) in the output layer are zero, these should not be removed (to match data set labels)
 Test verify the above property, by setting some zeros in the last layer and verifying these remain in place
-'''
+"""
 
 
 @pytest.mark.skipif(

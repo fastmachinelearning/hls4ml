@@ -78,7 +78,7 @@ class Layer:
         if name == 'input':
             raise RuntimeError(
                 "No model layer should be named 'input' because that is a reserved;"
-                + "layer name in ModelGraph; Please rename the layer in your model"
+                + 'layer name in ModelGraph; Please rename the layer in your model'
             )
         self.model = model
         self.name = name
@@ -348,7 +348,7 @@ class Input(Layer):
     def initialize(self):
         shape = self.attributes['input_shape']
         if shape[0] is None:
-            raise RuntimeError(f"Unexpectedly have a None in {shape=} of Input layer")
+            raise RuntimeError(f'Unexpectedly have a None in {shape=} of Input layer')
         dims = [f'N_INPUT_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         if self.index == 1:
             default_type_name = 'input_t'
@@ -419,7 +419,7 @@ class Reshape(Layer):
             if isinstance(shape_node, Constant):
                 target_shape = shape_node.attributes['value'][1:]
             else:
-                raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
+                raise RuntimeError('Reshape for ONNX requires the target shape to be a second input.')
 
         # remove Nones -- Seems to be used by pytorch parser
         if target_shape[0] is None:
@@ -936,12 +936,12 @@ class ParametrizedActivation(Activation):
 
 
 class HardActivation(Activation):
-    '''
+    """
     Implements the hard sigmoid and tanh function in keras and qkeras
     (Default parameters in qkeras are different, so should be configured)
     The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
     hard tanh function is 2 * hard_sigmoid - 1
-    '''
+    """
 
     _expected_attributes = [
         Attribute('slope', value_type=float, default=0.2, configurable=False),
@@ -985,10 +985,10 @@ class TernaryTanh(Activation):
 
 
 class BatchNormOnnx(Layer):
-    '''
+    """
     A transient layer formed from ONNX BatchNormalization that gets converted to
     BatchNormalization after the scale and bias are determined
-    '''
+    """
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -1030,8 +1030,8 @@ class BatchNormalization(Layer):
 
 # TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
 class ApplyAlpha(BatchNormalization):
-    '''A custom layer to scale the output of a QDense layer which used 'alpha != 1'
-    Inference computation uses BatchNormalization methods'''
+    """A custom layer to scale the output of a QDense layer which used 'alpha != 1'
+    Inference computation uses BatchNormalization methods"""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -1317,7 +1317,7 @@ class SimpleRNN(Layer):
 
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
-        if "pytorch" in self.attributes.keys():
+        if 'pytorch' in self.attributes.keys():
             self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
@@ -1371,7 +1371,7 @@ class LSTM(Layer):
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
 
-        if "pytorch" in self.attributes.keys():
+        if 'pytorch' in self.attributes.keys():
             self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
         else:
             recurrent_bias = np.zeros(recurrent_weight.shape[1])
@@ -1626,7 +1626,7 @@ class LayerGroup(Layer):
         shape = self.get_attr('output_shape')
         if shape[0] is None:
             shape.pop(0)
-        dims = [f'N_INPUT_{self.index}_{i+1}' for i in range(len(shape))]
+        dims = [f'N_INPUT_{self.index}_{i + 1}' for i in range(len(shape))]
 
         self.add_output_variable(shape, dims)
 

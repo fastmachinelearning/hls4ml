@@ -316,7 +316,6 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             bias_precision = node.types['bias_t'].precision
 
             if self._all_supported_types((input_precision, scale_precision, bias_precision)):
-
                 after_scale_signed = scale_precision.signed or input_precision.signed
                 after_scale_width = input_precision.width + scale_precision.width
                 after_scale_integer = input_precision.integer + scale_precision.integer

@@ -131,12 +131,12 @@ def hls_model_setup(request, backend_configs, tmp_path):
     # to actually generate the reports (using Vivado 2020.1 or oneAPI 2025.0)
     # hls_model.build(**(backend_config['build']))
 
-    backend_config["copy_func"](output_dir, test_report_dir)
+    backend_config['copy_func'](output_dir, test_report_dir)
 
     yield output_dir, backend_config
 
 
-@pytest.mark.parametrize("hls_model_setup", ['Vivado', 'oneAPI'], indirect=True)
+@pytest.mark.parametrize('hls_model_setup', ['Vivado', 'oneAPI'], indirect=True)
 def test_report(hls_model_setup, capsys):
     """Tests that the report parsing and printing functions work for different backends."""
     output_dir, backend_config = hls_model_setup
