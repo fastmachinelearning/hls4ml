@@ -139,6 +139,16 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
     # Create external ports for 'ap_clk' and 'ap_rst'
     # ap_clk
     if {[llength $ap_clk_ports] > 0} {
+        set clk_freq [get_property CONFIG.FREQ_HZ [lindex $ap_clk_ports 0]]
+
+        # Warn if modules are synthesized with different clk
+        foreach clk_pin $ap_clk_ports {
+            if {[get_property CONFIG.FREQ_HZ $clk_pin] ne $clk_freq} {
+                puts "Warning: Inconsistent CONFIG.FREQ_HZ for ap_clk ports."
+                break
+            }
+        }
+        # NOTE: Probably we will need the lowest clock frequency among all IPs here
         create_bd_port -dir I -type clk -freq_hz 100000000 ap_clk
         set ap_clk_port [get_bd_ports ap_clk]
         # Connect all 'ap_clk' pins to the 'ap_clk' port
@@ -152,6 +162,14 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         # Get the CONFIG.POLARITY property from one of the IP's 'ap_rst' pins
         set sample_rst_pin [lindex $ap_rst_ports 0]
         set rst_polarity [get_property CONFIG.POLARITY $sample_rst_pin]
+
+        foreach ap_rst_port $ap_rst_ports {
+            # All ports should have the same polarity
+            if {[get_property CONFIG.POLARITY $ap_rst_port] ne $rst_polarity} {
+                puts "Error: Inconsistent CONFIG.POLARITY for ap_rst ports. Aborting."
+                exit 1
+            }
+        }
 
         # Only proceed if the polarity is defined
         if {$rst_polarity ne ""} {
@@ -247,6 +265,9 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
                     set layer_out_ports_by_index($index) $port
                 } elseif {[regexp {^layer(?:\d+_)?out_(\d+)_ap_vld$} $port_name all index]} {
                     set layer_out_vld_ports_by_index($index) $port
+                } else {
+                    # NOTE: We expect data ports to follow the previous naming pattern
+                    # NOTE: This is not treated as an error because it might be a valid control port or non-standard signal
                 }
             }
 
@@ -288,7 +309,8 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
                     # Connect the ports
                     connect_bd_net $out_vld_port $in_vld_port
                 } else {
-                    puts "Warning: No matching input ap_vld port found for output [get_property NAME $out_vld_port]"
+                    puts "Error: No matching input ap_vld port found for output [get_property NAME $out_vld_port]"
+                    exit 1
                 }
             }
 

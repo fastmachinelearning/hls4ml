@@ -34,7 +34,7 @@ for g in "${graph_project_names[@]}"; do
     ) &
     PIDS+=($!)
     OBJECT_FILES+=("${OBJ_FILE}")
-    INCFLAGS+="-I${BASEDIR}/${g}/ "  # Only generic include paths here
+    INCFLAGS+="-I${BASEDIR}/${g}/ "
 done
 
 for pid in "${PIDS[@]}"; do
