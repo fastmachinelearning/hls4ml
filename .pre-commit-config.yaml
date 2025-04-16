@@ -1,13 +1,12 @@
 exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pytest/test_report/)
 
 repos:
-- repo: https://github.com/psf/black
-  rev: 25.1.0
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.11.5
   hooks:
-  - id: black
-    language_version: python3
-    args: ['--line-length=125',
-           '--skip-string-normalization']
+    - id: ruff
+      args: [--fix]
+    - id: ruff-format
 
 - repo: https://github.com/tox-dev/pyproject-fmt
   rev: v2.5.1
@@ -29,11 +28,6 @@ repos:
   - id: requirements-txt-fixer
   - id: trailing-whitespace
 
-- repo: https://github.com/PyCQA/isort
-  rev: 6.0.1
-  hooks:
-  - id: isort
-
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.19.1
   hooks:
@@ -47,7 +41,9 @@ repos:
     exclude: docs/conf.py
     additional_dependencies: [flake8-bugbear, flake8-print]
     args: ['--max-line-length=125',  # github viewer width
-           '--extend-ignore=E203,T201']  # E203 is not PEP8 compliant
+           '--extend-ignore=E203,T201,F401']
+           # E203 is not PEP8 compliant
+           # F401 included in ruff (behaves slightly differently for noqa flags)
 
 - repo: https://github.com/mgedmin/check-manifest
   rev: "0.50"
