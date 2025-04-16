@@ -17,7 +17,7 @@ T_kv3_handler = Callable[
 
 
 def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None):
-    """Given a keras layer, return a list of tuples of input and output
+    '''Given a keras layer, return a list of tuples of input and output
     tensors. If the layer is called only once (i.e., no shared layers),
     the list will contain only one tuple.
 
@@ -37,7 +37,7 @@ def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None)
     -------
     list[tuple[tuple['KerasTensor', ...], tuple['KerasTensor', ...]]]
         A list of tuples of input and output tensors.
-    """
+    '''
     in_nodes = layer._inbound_nodes
     if node_whitelist is not None:
         in_nodes = [node for node in in_nodes if id(node) in node_whitelist]
@@ -51,7 +51,7 @@ def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None)
 
 
 def resolve_dependency_relation(model: 'keras.Model'):
-    """Given a keras model, return the following information:
+    '''Given a keras model, return the following information:
     - A list of input tensor names
     - A list of output tensor names
     - A list of (layer_name, input_tensor_names, output_tensor_names) tuples
@@ -66,13 +66,13 @@ def resolve_dependency_relation(model: 'keras.Model'):
     -------
     tuple[tuple[str, ...], tuple[str, ...], list[tuple[str, tuple[str, ...], tuple[str, ...]]], dict[str, KerasTensor]]
         inp_tensor_names, out_tensor_names, layer_io, tensors
-    """
+    '''
     tensors: dict[str, 'KerasTensor'] = {}
-    "tensor_name -> KerasTensor"
+    'tensor_name -> KerasTensor'
     depends_on: dict[str, tuple[str, ...]] = {}
-    "tensor_name -> {tensor_name}"
+    'tensor_name -> {tensor_name}'
     layer_io: list[tuple[str, tuple[str, ...], tuple[str, ...]]] = []
-    "layer_name -> ((input_tensor_names), (output_tensor_names))"
+    'layer_name -> ((input_tensor_names), (output_tensor_names))'
 
     inputs = tuple(t.name for t in model.inputs)
     outputs = tuple(t.name for t in model.outputs)
@@ -92,7 +92,7 @@ def resolve_dependency_relation(model: 'keras.Model'):
 
 
 class UniqueName:
-    """Helper class to generate unique names for layers, if one being used multiple times."""
+    '''Helper class to generate unique names for layers, if one being used multiple times.'''
 
     def __init__(self):
         self.used_names: set[str] = set()
@@ -114,7 +114,7 @@ class UniqueName:
 
 
 class KerasV3HandlerDispatcher:
-    """Dispatcher class to handle different types of keras v3 layers."""
+    '''Dispatcher class to handle different types of keras v3 layers.'''
 
     def __init__(self, layer_handlers: dict[str, T_kv3_handler], v2_layer_handlers=None):
         self.registry = layer_handlers
@@ -123,7 +123,7 @@ class KerasV3HandlerDispatcher:
     def __call__(
         self, layer: 'keras.Layer', in_tensors: Sequence['keras.KerasTensor'], out_tensors: Sequence['keras.KerasTensor']
     ) -> tuple[dict[str, Any], ...]:
-        assert layer.built, f"Layer {layer.name} is not built"
+        assert layer.built, f'Layer {layer.name} is not built'
 
         ret = self.v3_call(layer, in_tensors, out_tensors)
         if ret is not None:
@@ -133,7 +133,7 @@ class KerasV3HandlerDispatcher:
             return ret
 
         raise ValueError(
-            f"Layer {layer.__class__.__module__}.{layer.__class__.__name__} not found in either v3 or v2 handlers"
+            f'Layer {layer.__class__.__module__}.{layer.__class__.__name__} not found in either v3 or v2 handlers'
         )
 
     def v3_call(
@@ -141,7 +141,7 @@ class KerasV3HandlerDispatcher:
     ):
         cls_name = layer.__class__.__name__
         module = layer.__module__
-        key = f"{module}.{cls_name}"
+        key = f'{module}.{cls_name}'
 
         # keras v3 handlers
         handler = self.registry.get(key, None)
@@ -155,7 +155,7 @@ class KerasV3HandlerDispatcher:
         self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
     ):
         # keras v2 handlers fallback
-        print(f"v2 handler used for layer {layer.name}")
+        print(f'v2 handler used for layer {layer.name}')
 
         import keras
 
@@ -164,7 +164,7 @@ class KerasV3HandlerDispatcher:
 
         class DummyReader:
             def get_weights_data(self, layer_name, var_name):
-                assert layer_name == layer.name, f"Processing {layer.name}, but handler tried to read {layer_name}"
+                assert layer_name == layer.name, f'Processing {layer.name}, but handler tried to read {layer_name}'
                 for w in layer.weights:
                     if var_name in w.name:
                         return np.array(w)
@@ -186,7 +186,7 @@ class KerasV3HandlerDispatcher:
 
         activation = getattr(layer, 'activation', None)
         if activation not in (keras.activations.linear, None):
-            assert isinstance(activation, FunctionType), f"Activation function for layer {layer.name} is not a function"
+            assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
             intermediate_tensor_name = f'{output_names[0]}_activation'
             ret[0]['output_keras_tensor_names'] = (intermediate_tensor_name,)
             act_cls_name = activation.__name__
@@ -202,7 +202,7 @@ class KerasV3HandlerDispatcher:
 
 
 def parse_keras_v3_model(model: 'keras.Model'):
-    """Parse a keras model into a list of dictionaries, each
+    '''Parse a keras model into a list of dictionaries, each
     representing a layer in the HLS model, and a list of input and
     output layer names.
 
@@ -220,9 +220,9 @@ def parse_keras_v3_model(model: 'keras.Model'):
     ------
     ValueError
         If a circular dependency is detected.
-    """
+    '''
 
-    assert model.built, "Model must be built before parsing"
+    assert model.built, 'Model must be built before parsing'
 
     import keras
 
@@ -267,7 +267,7 @@ def parse_keras_v3_model(model: 'keras.Model'):
             break  # Restart the loop to add another layer
         else:
             # If no layer was added in the loop, then there is a circular dependency
-            raise ValueError("Circular dependency detected")
+            raise ValueError('Circular dependency detected')
 
     # Mark inputs[inp layer name] for ModelGraph to parse from i/o keras tensor names
     provides: dict[str, str] = {}  # tensor_name -> src_layer_name

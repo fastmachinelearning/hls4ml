@@ -26,7 +26,7 @@ class KV3DenseHandler(KerasV3LayerHandler):
 
         kernel = self.load_weight(layer, 'kernel')
         bias = self.load_weight(layer, 'bias') if layer.use_bias else None
-        n_in, n_out = kernel.shape
+        n_in, n_out = kernel.shape  # type: ignore
 
         config = {
             'data_format': 'channels_last',

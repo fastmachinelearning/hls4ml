@@ -6,7 +6,7 @@ from .reshaping_templates import transpose_config_template
 
 # Shared Dense template
 
-dense_config_template = """struct config{index}_dense : nnet::dense_config {{
+dense_config_template = '''struct config{index}_dense : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
@@ -20,7 +20,7 @@ dense_config_template = """struct config{index}_dense : nnet::dense_config {{
     using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
-}};\n"""
+}};\n'''
 
 # EinsumDense template
 

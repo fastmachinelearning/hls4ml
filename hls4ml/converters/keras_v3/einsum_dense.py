@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
 
 
 def strip_batch_dim(equation: str, einsum_dense: bool = True):
-    """Remove the batch dimension from the equation.
+    '''Remove the batch dimension from the equation.
 
     Args:
         equation (str): The einsum equation.
@@ -17,7 +17,7 @@ def strip_batch_dim(equation: str, einsum_dense: bool = True):
 
     Returns:
         str: The einsum equation without the batch dimension.
-    """
+    '''
 
     _inps, out = equation.split('->')
     inp0, inp1 = _inps.split(',')
