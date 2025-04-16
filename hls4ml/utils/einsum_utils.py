@@ -16,26 +16,18 @@ class EinsumRecipe(TypedDict):
 
 
 def _validate_einsum_expr(fn: str, shape0: tuple[int, ...], shape1: tuple[int, ...]):
-    """Validate, resolve broadcasting, and compute output shape for einsum string
+    """Validate, resolve broadcasting, and compute output shape for einsum string.
 
-    Parameters
-    ----------
-    fn : str
-        einsum string, e.g. 'ij,jk->ik'
-    shape0 : tuple[int,...]
-        shape of input0
-    shape1 : tuple[int,...]
-        shape of input1
+    Args:
+        fn: einsum string, e.g. 'ij,jk->ik'
+        shape0: shape of input0
+        shape1: shape of input1
 
-    Returns
-    -------
-    tuple[str, tuple[int,...]]
-        einsum string w/o broadcasting, and output shape
+    Returns:
+        tuple[str, tuple[int,...]]: einsum string w/o broadcasting, and output shape
 
-    Raises
-    ------
-    ValueError
-        If the einsum string is invalid, or if it is incompatible with the input shapes
+    Raises:
+        ValueError: If the einsum string is invalid, or if it is incompatible with the input shapes
     """
     inp, out = map(str.strip, fn.split('->'))
     in0, in1 = map(str.strip, inp.split(','))
@@ -140,21 +132,15 @@ def _validate_einsum_expr(fn: str, shape0: tuple[int, ...], shape1: tuple[int, .
 
 
 def parse_einsum(fn: str, input_shape0: tuple[int, ...], input_shape1: tuple[int, ...]) -> EinsumRecipe:
-    """Parse einsum operation on two input arrays, return a recipe for execution
+    """Parse einsum operation on two input arrays, return a recipe for execution.
 
-    Parameters
-    ----------
-    fn : str
-        einsum string, e.g. 'ij,jk->ik'
-    input : np.ndarray
-        input0, the first input array
-    input1 : np.ndarray
-        input1, the second input array
+    Args:
+        fn: einsum string, e.g. 'ij,jk->ik'
+        input_shape0: shape of the first input array
+        input_shape1: shape of the second input array
 
-    Returns
-    -------
-    EinsumRecipe
-        einsum recipe; executed by _exec_einsum
+    Returns:
+        EinsumRecipe: einsum recipe; executed by _exec_einsum
     """
 
     fn, _ = _validate_einsum_expr(fn, input_shape0, input_shape1)
@@ -209,21 +195,15 @@ def parse_einsum(fn: str, input_shape0: tuple[int, ...], input_shape1: tuple[int
 
 
 def _exec_einsum(recipe: EinsumRecipe, input0: np.ndarray, input1: np.ndarray) -> np.ndarray:
-    """Execute einsum operation on two input arrays
+    """Execute einsum operation on two input arrays.
 
-    Parameters
-    ----------
-    recipe : EinsumRecipe
-        einsum recipe
-    input0 : np.ndarray
-        input0, the first input array
-    input1 : np.ndarray
-        input1, the second input array
+    Args:
+        recipe: einsum recipe
+        input0: the first input array
+        input1: the second input array
 
-    Returns
-    -------
-    np.ndarray
-        output array
+    Returns:
+        np.ndarray: output array
     """
     sum_axis0, sum_axis1 = recipe['direct_sum_axis']
     if sum_axis0:
@@ -248,21 +228,16 @@ def _exec_einsum(recipe: EinsumRecipe, input0: np.ndarray, input1: np.ndarray) -
 def einsum(fn: str, input0: np.ndarray, input1: np.ndarray) -> np.ndarray:
     """Execute einsum operation on two input arrays.
 
-    WARNING: Order of multiplication is reversed -- watchout if you are using non-commutative operators
+    Warning:
+        Order of multiplication is reversed -- watchout if you are using non-commutative operators
 
-    Parameters
-    ----------
-    fn : str
-        einsum string, e.g. 'ij,jk->ik'
-    input : np.ndarray
-        input0, the first input array
-    input1 : np.ndarray
-        input1, the second input array
+    Args:
+        fn: einsum string, e.g. 'ij,jk->ik'
+        input0: the first input array
+        input1: the second input array
 
-    Returns
-    -------
-    np.ndarray
-        output array
+    Returns:
+        np.ndarray: output array
     """
     recipe = parse_einsum(fn, input0.shape, input1.shape)
     return _exec_einsum(recipe, input0, input1)

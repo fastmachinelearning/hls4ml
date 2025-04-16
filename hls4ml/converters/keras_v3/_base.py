@@ -37,26 +37,23 @@ def register(cls: str) -> Callable[[T_kv3_handler], T_kv3_handler]: ...
 def register(cls: str | type):
     """Decorator to register a handler for a specific layer class. Suggested to decorate the `KerasV3LayerHandler` class.
 
-    Parameters
-    ----------
-    cls : str|type
-        If str, the key to register the handler under. If type, the class to register the handler for.
+    Args:
+        cls: If str, the key to register the handler under. If type, the class to register the handler for.
 
-    Examples
-    --------
-    ```python
-    @keras_dispatcher.register
-    class MyLayerHandler(KerasV3LayerHandler):
-        handles = ('my_package.src.submodule.MyLayer', 'MyLayer2')
+    Examples:
+        ```python
+        @keras_dispatcher.register
+        class MyLayerHandler(KerasV3LayerHandler):
+            handles = ('my_package.src.submodule.MyLayer', 'MyLayer2')
 
-        def handle(self, layer, inp_tensors, out_tensors):
+            def handle(self, layer, inp_tensors, out_tensors):
+                # handler code
+
+
+        @keras_dispatcher.register('MyLayer3')
+        def my_layer_handler(layer, inp_tensors, out_tensors):
             # handler code
-
-
-    @keras_dispatcher.register('MyLayer3')
-    def my_layer_handler(layer, inp_tensors, out_tensors):
-        # handler code
-    ```
+        ```
     """
 
     def deco(func):
@@ -91,40 +88,34 @@ class KerasV3LayerHandler:
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ) -> tuple[dict[str, Any], ...]:
-        """Handle a keras layer. Return a tuple of dictionaries, each
-        dictionary representing a layer (module) in the HLS model. One
-        layer may correspond one or more dictionaries (e.g., layers with
-        activation functions will be split into two layers).
+        """Handle a keras layer. Return a tuple of dictionaries, each dictionary representing
+        a layer (module) in the HLS model.
 
-        Some common attributes are automatically added to the dictionary
-        if the handler returns a single dictionary. If the handler
-        returns multiple dictionaries, the attributes must be added
-        manually. Anything returned by the handler will override the
-        automatic attributes.
+        One layer may correspond to one or more dictionaries
+        (e.g., layers with activation functions will be split into two layers).
 
-        Automatic attributes: - name - class_name - module -
-        input_keras_tensor_names - input_shape -
-        output_keras_tensor_names
+        Some common attributes are automatically added to the dictionary if the handler returns a single dictionary.
+        If the handler returns multiple dictionaries, the attributes must be added manually.
+        Anything returned by the handler will override the automatic attributes.
 
-        If the layer has an activation function, an additional
-        dictionary will be added to the return value representing the
-        activation function.
+        Automatic attributes:
+            - name
+            - class_name
+            - module
+            - input_keras_tensor_names
+            - input_shape
+            - output_keras_tensor_names
 
+        If the layer has an activation function, an additional dictionary will be added to the return value
+        representing the activation function.
 
-        Parameters
-        ----------
-        layer : keras.Layer
-            The layer to be converted to HLS configuration(s).
-        in_tensors : Sequence[KerasTensor]
-            The list of input tensors to the layer.
-        out_tensors : Sequence[KerasTensor]
-            The list of output tensors from the layer.
+        Args:
+            layer: The layer to be converted to HLS configuration(s).
+            in_tensors: The list of input tensors to the layer.
+            out_tensors: The list of output tensors from the layer.
 
-        Returns
-        -------
-        dict[str, Any] | tuple[dict[str, Any], ...]
-            layer configuration(s) for the HLS model to be consumed by
-            the ModelGraph constructor
+        Returns:
+            Layer configuration(s) for the HLS model to be consumed by the ModelGraph constructor.
         """
 
         name = layer.name
@@ -199,17 +190,12 @@ class KerasV3LayerHandler:
     def load_weight(self, layer: 'keras.Layer', key: str):
         """Load a weight from a layer.
 
-        Parameters
-        ----------
-        layer : keras.Layer
-            The layer to load the weight from.
-        key : str
-            The key of the weight to load.
+        Args:
+            layer: The layer to load the weight from.
+            key: The key of the weight to load.
 
-        Returns
-        -------
-        np.ndarray
-            The weight.
+        Returns:
+            np.ndarray: The weight.
         """
         import keras
 
