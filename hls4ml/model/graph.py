@@ -1051,11 +1051,16 @@ class ModelGraph(Serializable):
             raise ValueError("No split layer names provided.")
 
         layer_names = [layer['name'] for layer in layer_list]
+        restricted_merge_layers = {'add', 'subtract', 'multiply', 'average', 'maximum', 'minimum', 'concatenate', 'dot'}
 
-        # NOTE - Might need to validate again that split layer names exist in layer list
-        for name in split_layer_names:
-            if name not in layer_names:
-                raise ValueError(f"Layer '{name}' not found in the model.")
+        # Validate that each provided split layer exists and is not a merge layer.
+        for split_layer in split_layer_names:
+            if split_layer not in layer_names:
+                raise ValueError(f"Layer '{split_layer}' not found in the model.")
+
+            layer = next(layer for layer in layer_list if layer['name'] == split_layer)
+            if layer.get('class_name', "").lower() in restricted_merge_layers:
+                raise ValueError('Split layer must not be a merge layer')
 
         # Split the layer_list into subgraphs
         split_indices = sorted([layer_names.index(name) for name in split_layer_names])
@@ -1302,7 +1307,7 @@ class MultiModelGraph:
 
     def compile(self):
         for g in self.graphs:
-            g.compile()
+            g.write()
         # Bypass VitisWriter and invoke write_hls directly from VivadoWriter
         super(self.backend.writer.__class__, self.backend.writer).write_hls(self, is_multigraph=True)
         self._compile()
