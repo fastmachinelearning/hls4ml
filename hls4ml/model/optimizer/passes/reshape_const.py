@@ -21,7 +21,7 @@ class ReshapeConstant(OptimizerPass):
         shape_node = node.get_input_node(node.inputs[1])
         node.inputs[1] = ''
         if not isinstance(shape_node, Constant):
-            raise RuntimeError("Nonconstant shape inputs are not currently supported")
-        model.remove_node(shape_node, rewire=False)
+            raise RuntimeError('Nonconstant shape inputs are not currently supported')
+        model.remove_node(shape_node)
 
         return True

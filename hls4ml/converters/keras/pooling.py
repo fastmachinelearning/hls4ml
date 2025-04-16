@@ -11,7 +11,7 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     if int(layer['class_name'][-2]) == 1:
-        (layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
+        (*_, layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
 
         layer['pool_width'] = keras_layer['config']['pool_size'][0]
         layer['stride_width'] = keras_layer['config']['strides'][0]
@@ -25,7 +25,9 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
         elif layer['data_format'] == 'channels_first':
             output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
     elif int(layer['class_name'][-2]) == 2:
-        (layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
+        (*_, layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(
+            input_shapes[0], layer['data_format']
+        )
 
         layer['stride_height'] = keras_layer['config']['strides'][0]
         layer['stride_width'] = keras_layer['config']['strides'][1]
@@ -68,7 +70,7 @@ def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_read
     layer['keepdims'] = keras_layer['config']['keepdims']
 
     if int(layer['class_name'][-2]) == 1:
-        (layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
+        (*_, layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
 
         if layer['keepdims']:
             if layer['data_format'] == 'channels_last':
@@ -78,7 +80,9 @@ def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_read
         else:
             output_shape = [input_shapes[0][0], layer['n_filt']]
     elif int(layer['class_name'][-2]) == 2:
-        (layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
+        (*_, layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(
+            input_shapes[0], layer['data_format']
+        )
 
         if layer['keepdims']:
             if layer['data_format'] == 'channels_last':

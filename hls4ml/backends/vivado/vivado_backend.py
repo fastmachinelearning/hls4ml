@@ -27,6 +27,7 @@ from hls4ml.model.layers import (
     SeparableConv2D,
     SimpleRNN,
     Softmax,
+    TimeDistributed,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
@@ -82,6 +83,18 @@ class VivadoBackend(FPGABackend):
                 )
             )
             self.attribute_map[layer] = attrs
+
+        # Add TimeStepLoopParallelism to TimeDistributed
+        attrs = self.attribute_map.get(TimeDistributed, [])
+        attrs.append(
+            ChoiceAttribute(
+                'time_step_loop_parallelism',
+                choices=['Off', 'Unroll', 'Pipeline'],
+                default='Off',
+                description=descriptions.time_distributed_loop,
+            )
+        )
+        self.attribute_map[TimeDistributed] = attrs
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
@@ -189,6 +202,7 @@ class VivadoBackend(FPGABackend):
         namespace=None,
         write_weights_txt=True,
         write_tar=False,
+        tb_output_stream='both',
         **_,
     ):
         """Create initial configuration of the Vivado backend.
@@ -203,6 +217,8 @@ class VivadoBackend(FPGABackend):
             write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
                 Defaults to True.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+            tb_output_stream (str, optional): Controls where to write the output. Options are 'stdout', 'file' and 'both'.
+                Defaults to 'both'.
 
         Returns:
             dict: initial configuration.
@@ -218,6 +234,7 @@ class VivadoBackend(FPGABackend):
             'Namespace': namespace,
             'WriteWeightsTxt': write_weights_txt,
             'WriteTar': write_tar,
+            'TBOutputStream': tb_output_stream,
         }
 
         return config
@@ -631,6 +648,14 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
 
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
+
+    @layer_optimizer(TimeDistributed)
+    def init_time_distributed(self, layer):
+        loop_mode = layer.get_attr('time_step_loop_parallelism', 'off').lower()
+        if loop_mode == 'unroll' and layer.model.config.get_config_value('IOType') == 'io_stream':
+            warn(f'Cannot unroll time step loop in layer "{layer.name}" while using "io_stream".')
+            loop_mode = 'off'
+        layer.set_attr('time_step_loop_parallelism', loop_mode)
 
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):

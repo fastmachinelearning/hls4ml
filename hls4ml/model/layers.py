@@ -1430,6 +1430,28 @@ class GRU(Layer):
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
+class TimeDistributed(Layer):
+    _expected_attributes = [
+        Attribute('wrapped_layer', value_type=None),  # Value type can be a 'dict' (unprocessed) or 'Layer' (processed)
+        Attribute('n_time_steps'),
+        Attribute('output_shape', value_type=list),
+    ]
+
+    def initialize(self):
+        shape = self.attributes['output_shape']
+        dims = [f'N_TIME_STEPS_{self.index}']
+        if len(shape[1:]) == 1:
+            dims += [f'N_OUT_{self.index}']
+        elif len(shape[1:]) == 2:
+            dims += [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        elif len(shape[1:]) == 3:
+            dims += [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            dims += [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+
 class GarNet(Layer):
     ref_impl = False
 
@@ -1680,6 +1702,7 @@ layer_map = {
     'QSimpleRNN': SimpleRNN,
     'QLSTM': LSTM,
     'QGRU': GRU,
+    'TimeDistributed': TimeDistributed,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
     'Quant': Quant,
@@ -1693,5 +1716,5 @@ layer_map = {
 
 
 def register_layer(name, clazz):
-    global layer_map
+    global layer_map  # noqa 824
     layer_map[name] = clazz

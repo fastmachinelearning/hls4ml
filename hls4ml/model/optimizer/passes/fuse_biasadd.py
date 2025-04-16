@@ -13,6 +13,6 @@ class FuseBiasAdd(OptimizerPass):
         dense_layer = node.get_input_node()
         dense_layer.get_weights('bias').data = node.get_weights('bias').data
 
-        model.remove_node(node, rewire=True)
+        model.remove_node(node)
 
         return True
