@@ -75,8 +75,6 @@ def _validate_einsum_expr(fn: str, shape0: tuple[int, ...], shape1: tuple[int, .
 
     # Invalid broadcasting
     if '0' in sax_in0 or '0' in sax_in1 or '0' in sax_out:
-        if '0' in sax_in0 and '0' in sax_in1:
-            raise ValueError(f"einsum string {fn} is invalid: both input0 and input1 allows broadcasting")
         if '0' not in sax_out:
             raise ValueError(f"einsum string {fn} is invalid: output does not allow broadcasting, but inputs do")
         if '0' not in sax_in0 and '0' not in sax_in1:
@@ -88,31 +86,45 @@ def _validate_einsum_expr(fn: str, shape0: tuple[int, ...], shape1: tuple[int, .
 
     _common_in = sax_in0 & sax_in1
 
-    # Invalid input dimensions
-    if '0' in sax_in0:
-        if len(sax_in0) - 1 > len(shape0):
-            raise ValueError(f"Input0 requires at least {len(sax_in0)-1} dimensions, but only {len(shape0)} given")
-        # Replace broadcasting indices with free indices
-        n_broadcast = len(shape0) - len(sax_in0) + 1
-        in0 = in0.replace('0', free_indices[:n_broadcast])
-        out = out.replace('0', free_indices[:n_broadcast])
-        ax_in0 = list(in0)
-        ax_out = list(out)
+    if '0' in sax_in0 and '0' in sax_in1:
+        # Simultaneous axes expansion in both inputs
+        n_boardcast0 = len(shape0) - len(sax_in0) + 1
+        n_boardcast1 = len(shape1) - len(sax_in1) + 1
+        assert n_boardcast0 == n_boardcast1, f'... expands to {n_boardcast0} and {n_boardcast1}-axis in input0 and input1.'
+        # Replace expansion indices with free indices
+        in0 = in0.replace('0', free_indices[:n_boardcast0])
+        in1 = in1.replace('0', free_indices[:n_boardcast1])
+        out = out.replace('0', free_indices[:n_boardcast0])
+        ax_in0, ax_in1, ax_out = list(in0), list(in1), list(out)
+        _common_in = set(ax_in0) & set(ax_in1)
+
     else:
-        if len(sax_in0) != len(shape0):
-            raise ValueError(f"Input0 requires {len(sax_in0)} dimensions, but {len(shape0)} is given")
-    if '0' in sax_in1:
-        if len(sax_in1) - 1 > len(shape1):
-            raise ValueError(f"Input1 requires at least {len(sax_in1)-1} dimensions, but only {len(shape1)} given")
-        # Replace broadcasting indices with free indices
-        n_broadcast = len(shape1) - len(sax_in1) + 1
-        in1 = in1.replace('0', free_indices[:n_broadcast])
-        out = out.replace('0', free_indices[:n_broadcast])
-        ax_in1 = list(in1)
-        ax_out = list(out)
-    else:
-        if len(sax_in1) != len(shape1):
-            raise ValueError(f"Input1 requires {len(sax_in1)} dimensions, but {len(shape1)} is given")
+        # Axes expansion in input0 or input1 only
+        if '0' in sax_in0:
+            if len(sax_in0) - 1 > len(shape0):
+                raise ValueError(f"Input0 requires at least {len(sax_in0)-1} dimensions, but only {len(shape0)} given")
+            # Replace auto expansion indices with free indices
+            n_broadcast = len(shape0) - len(sax_in0) + 1
+            in0 = in0.replace('0', free_indices[:n_broadcast])
+            out = out.replace('0', free_indices[:n_broadcast])
+            ax_in0 = list(in0)
+            ax_out = list(out)
+        else:
+            if len(sax_in0) != len(shape0):
+                raise ValueError(f"Input0 requires {len(sax_in0)} dimensions, but {len(shape0)} is given")
+
+        if '0' in sax_in1:
+            if len(sax_in1) - 1 > len(shape1):
+                raise ValueError(f"Input1 requires at least {len(sax_in1)-1} dimensions, but only {len(shape1)} given")
+            # Replace expansion indices with free indices
+            n_broadcast = len(shape1) - len(sax_in1) + 1
+            in1 = in1.replace('0', free_indices[:n_broadcast])
+            out = out.replace('0', free_indices[:n_broadcast])
+            ax_in1 = list(in1)
+            ax_out = list(out)
+        else:
+            if len(sax_in1) != len(shape1):
+                raise ValueError(f"Input1 requires {len(sax_in1)} dimensions, but {len(shape1)} is given")
 
     # Input dimension mismatch
     for a in _common_in:
