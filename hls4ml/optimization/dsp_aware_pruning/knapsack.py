@@ -5,7 +5,7 @@ import numpy as np
 
 
 def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs):
-    '''
+    """
     A function for solving the Knapsack problem
 
     Args:
@@ -52,7 +52,7 @@ def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs
             For pruning & weight sharing this is never a problem
             In case non-integer weights and capacities are requires,
             All of the values should be scaled by an appropriate scaling factor
-    '''
+    """
     if implementation not in ('dynamic', 'greedy', 'branch_bound', 'CBC_MIP'):
         raise Exception('Unknown algorithm for solving Knapsack')
 
@@ -111,13 +111,13 @@ def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs
 
 
 def __solve_1d_knapsack_dp(values, weights, capacity):
-    '''
+    """
     Helper function to solve the 1-dimensional Knapsack problem exactly through dynamic programming
     The dynamic programming approach is only suitable for one-dimensional weight constraints
     Furthermore, it has a high computational complexity and it is not suitable for highly-dimensional arrays
     NOTE: The weights and corresponding weight constraint need to be integers;
     If not, the they should be scaled and rounded beforehand
-    '''
+    """
     assert len(weights.shape) == 1
 
     # Build look-up table in bottom-up approach
@@ -148,11 +148,11 @@ def __solve_1d_knapsack_dp(values, weights, capacity):
 
 
 def __solve_knapsack_greedy(values, weights, capacity):
-    '''
+    """
     Helper function that solves the n-dimensional Knapsack algorithm with a greedy algorithm
     The greedy approach should only be used for problems with many items or highly dimensional weights
     The solution can [and often will] be sub-optimal; otherwise, dynamic programming, branch & bound etc. should be used
-    '''
+    """
 
     # For each item, calculate the value per weight ratio (this can be thought of as item efficiency)
     # The weights are scaled for every dimension, to avoid inherent bias towards large weights in a single dimension
@@ -183,7 +183,7 @@ def __solve_knapsack_greedy(values, weights, capacity):
 
 
 def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.float_info.max, scaling_factor=10e4):
-    '''
+    """
     Helper function to solve Knapsack problem using Branch and Bound;
     Implemented using Google OR-Tools [weights & capacities need to be integers]
     The algorithm explores the search space (a tree of all the posible combinations, 2^N nodes),
@@ -194,7 +194,7 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
             After which B&B search should stop and return a sub-optimal solution
         - scaling_factor - Factor to scale floats in values arrays;
             OR-Tools requires all values & weights to be integers;
-    '''
+    """
     try:
         from ortools.algorithms import pywrapknapsack_solver
     except ModuleNotFoundError:
@@ -211,7 +211,7 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
 
 
 def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_info.max, scaling_factor=10e4):
-    '''
+    """
     Helper function to solve Knapsack problem using the CBC MIP solver using Google OR-Tools
 
     Additional args:
@@ -219,7 +219,7 @@ def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_inf
         - scaling_factor - Factor to scale floats in values arrays;
             OR-Tools requires all values & weights to be integers;
             So all of the values are scaled by a large number
-    '''
+    """
     try:
         from ortools.algorithms import pywrapknapsack_solver
     except ModuleNotFoundError:
@@ -236,12 +236,12 @@ def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_inf
 
 
 def __solve_knapsack_equal_weights(values, weights, capacity):
-    '''
+    """
     Helper function that solves the n-dimensional Knapsack algorithm with a greedy algorithm
     The assumption is that all the items have the same weight; while this seems a bit artificial
     It occurs often in pruning - e.g. in pattern pruning, each DSP block saves one DSP; however, as a counter-example
     In structured pruning, each structure can save a different amount of FLOPs (Conv2D filter vs Dense neuron)
-    '''
+    """
     assert np.all([weights[i, :] == weights[i, 0] for i in range(weights.shape[0])])
 
     # Find items with the highest value

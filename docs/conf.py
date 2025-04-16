@@ -99,7 +99,7 @@ html_static_path = []
 
 # -- Extension configuration -------------------------------------------------
 html_show_sourcelink = False
-html_logo = "img/hls4ml_logo_navbar.png"
+html_logo = 'img/hls4ml_logo_navbar.png'
 
 html_theme_options = {
     'canonical_url': '',
@@ -120,7 +120,7 @@ html_theme_options = {
 html_context = {
     'display_github': True,  # Integrate GitHub
     'github_user': 'fastmachinelearning',  # Username
-    'github_repo': "hls4ml",  # Repo name
+    'github_repo': 'hls4ml',  # Repo name
     'github_version': 'main',  # Version
     'conf_py_path': '/docs/',  # Path in the checkout to the docs root
 }

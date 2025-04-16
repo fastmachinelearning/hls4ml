@@ -1,11 +1,11 @@
-from hls4ml import converters, report, utils  # noqa: F401, E402
+from hls4ml import converters, report, utils
 
 try:
     from ._version import version as __version__
     from ._version import version_tuple
 except ImportError:
-    __version__ = "unknown version"
-    version_tuple = (0, 0, "unknown version")
+    __version__ = 'unknown version'
+    version_tuple = (0, 0, 'unknown version')
 
 
 def reseed(newseed):

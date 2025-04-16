@@ -33,20 +33,20 @@ class FixSoftmaxTableSize(OptimizerPass):
                 # 125 characters long line.
                 warnings.warn(
                     (
-                        f"Softmax layer {node.name} table size is too large for input"
-                        f"bitwidth {input_bw}. Setting table size to {2**input_bw}."
-                        "To avoid this warning, please increase input bitwidth or"
-                        "decrease table size."
+                        f'Softmax layer {node.name} table size is too large for input'
+                        f'bitwidth {input_bw}. Setting table size to {2**input_bw}.'
+                        'To avoid this warning, please increase input bitwidth or'
+                        'decrease table size.'
                     ),
                     stacklevel=1,
                 )
             if 2**table_bw < table_size:
                 warnings.warn(
                     (
-                        f"Softmax layer {node.name} table size is too large for input"
-                        f"bitwidth {input_bw}. Setting table size to {2**input_bw}."
-                        "To avoid this warning, please increase input bitwidth or"
-                        "decrease table size."
+                        f'Softmax layer {node.name} table size is too large for input'
+                        f'bitwidth {input_bw}. Setting table size to {2**input_bw}.'
+                        'To avoid this warning, please increase input bitwidth or'
+                        'decrease table size.'
                     ),
                     stacklevel=1,
                 )
@@ -54,7 +54,7 @@ class FixSoftmaxTableSize(OptimizerPass):
                 warnings.warn(
                     (
                         "Quartus backend's table size is half of 2^min(input_bw-1,table_bw-1)"
-                        " instead of 2^min(input_bw,table_bw)."
+                        ' instead of 2^min(input_bw,table_bw).'
                     ),
                     stacklevel=1,
                 )

@@ -464,7 +464,7 @@ _table_base_template = """
 </table>
 """
 
-_row_base_template = "        <tr><td>{row_title}</td><td>{{{row_key}}}</td>"
+_row_base_template = '        <tr><td>{row_title}</td><td>{{{row_key}}}</td>'
 
 
 def _make_html_table_template(table_header, row_templates):

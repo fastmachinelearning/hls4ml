@@ -130,7 +130,7 @@ def test_graph_branch(iotype, batch):
 
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
 def test_final_reshape(iotype):
-    '''Test case for a model with a Reshape as the final layer'''
+    """Test case for a model with a Reshape as the final layer"""
     inputs = tf.keras.layers.Input(shape=(1, 1, 1))  # 1 input pixel
     conv = tf.keras.layers.Conv2D(6, 1)  # 6 filters, 1x1 kernel
     x = conv(inputs)
@@ -167,7 +167,7 @@ def test_final_reshape(iotype):
     ],
 )
 def test_broadcast_stream(shapes, layer):
-    '''Test case for stream broadcast before Add but not before Concatenate'''
+    """Test case for stream broadcast before Add but not before Concatenate"""
     input1 = tf.keras.layers.Input(shape=shapes[0])
     input2 = tf.keras.layers.Input(shape=shapes[1])
     inputs = [input1, input2]
@@ -199,7 +199,7 @@ def test_broadcast_stream(shapes, layer):
 
 @pytest.mark.parametrize('batch', [1, 32])
 def test_multiple_outputs(batch):
-    '''Test case for multiple outputs'''
+    """Test case for multiple outputs"""
     input1 = tf.keras.layers.Input(shape=(10,))
     inputs = [input1]
     output1 = tf.keras.layers.Dense(5, kernel_initializer='ones', use_bias=False)(input1)

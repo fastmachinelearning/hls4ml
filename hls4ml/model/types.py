@@ -471,7 +471,7 @@ class WeightVariable(Variable):
             self.precision_fmt = f'{{:.{decimal_spaces}f}}'
 
         else:
-            raise RuntimeError(f"Unexpected new precision type: {new_precision}")
+            raise RuntimeError(f'Unexpected new precision type: {new_precision}')
 
 
 class CompressedWeightVariable(WeightVariable):

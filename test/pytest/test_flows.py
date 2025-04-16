@@ -2,12 +2,12 @@ import pytest
 
 import hls4ml
 
-'''
+"""
 Tests for model flows.
 Construct some dummy optimizer passes and flows that do nothing.
 Passes record their label to the model.
 Tests check that the order of applied passes matches the expectations
-'''
+"""
 
 
 class DummyPass(hls4ml.model.optimizer.OptimizerPass):

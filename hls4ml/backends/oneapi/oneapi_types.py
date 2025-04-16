@@ -1,6 +1,6 @@
-'''
+"""
 This package includes oneAPI-specific customizations to the variable types
-'''
+"""
 
 import numpy as np
 

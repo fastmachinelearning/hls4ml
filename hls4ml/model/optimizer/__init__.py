@@ -1,7 +1,7 @@
 import os
 
 from hls4ml.model.flow.flow import register_flow
-from hls4ml.model.optimizer.optimizer import (  # noqa: F401
+from hls4ml.model.optimizer.optimizer import (
     ConfigurableOptimizerPass,
     GlobalOptimizerPass,
     LayerOptimizerPass,

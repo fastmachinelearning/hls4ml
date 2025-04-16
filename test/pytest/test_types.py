@@ -79,7 +79,7 @@ def test_precision_type_creation(capsys):
     ],
 )
 def test_sign_parsing(prec_pair):
-    '''Test that convert_precisions_string determines the signedness correctly'''
+    """Test that convert_precisions_string determines the signedness correctly"""
     strprec = prec_pair[0]
     signed = prec_pair[1]
 

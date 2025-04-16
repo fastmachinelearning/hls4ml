@@ -6,7 +6,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class Clone(Layer):
-    '''Inserted after the layer whose output is used more than once.'''
+    """Inserted after the layer whose output is used more than once."""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -47,7 +47,7 @@ def register_clone(backend):
 
 
 class CloneOutput(OptimizerPass):
-    '''Clones streams that are used multiple times'''
+    """Clones streams that are used multiple times"""
 
     def match(self, node):
         # We may have already inserted the Clone layer
@@ -70,7 +70,6 @@ class CloneOutput(OptimizerPass):
         return False
 
     def transform(self, model, node):
-
         output_map = node.get_output_use_map()
 
         transformed = False

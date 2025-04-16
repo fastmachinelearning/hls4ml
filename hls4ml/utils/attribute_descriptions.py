@@ -39,8 +39,7 @@ conv_pf = (
     'Currently only supported in io_parallel.'
 )
 conv_implementation = (
-    '"LineBuffer" implementation is preferred over "Encoded" for most use cases. '
-    'This attribute only applies to io_stream.'
+    '"LineBuffer" implementation is preferred over "Encoded" for most use cases. This attribute only applies to io_stream.'
 )
 
 # Recurrent-related attributes

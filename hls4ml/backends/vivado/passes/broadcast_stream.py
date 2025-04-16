@@ -6,7 +6,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class Broadcast(Layer):
-    '''Inserted between layers for broadcasting.'''
+    """Inserted between layers for broadcasting."""
 
     def initialize(self):
         shape = self.attributes['target_shape']

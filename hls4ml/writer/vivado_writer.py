@@ -76,8 +76,8 @@ class VivadoWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        if not os.path.isdir(f"{model.config.get_output_dir()}/firmware/weights"):
-            os.makedirs(f"{model.config.get_output_dir()}/firmware/weights")
+        if not os.path.isdir(f'{model.config.get_output_dir()}/firmware/weights'):
+            os.makedirs(f'{model.config.get_output_dir()}/firmware/weights')
 
     @staticmethod
     def _make_array_pragma(variable):
@@ -165,7 +165,6 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 if model.config.get_writer_config()['WriteWeightsTxt']:
-
                     newline += '#ifndef __SYNTHESIS__\n'
                     newline += '    static bool loaded_weights = false;\n'
                     newline += '    if (!loaded_weights) {\n'
@@ -410,7 +409,7 @@ class VivadoWriter(Writer):
                         if w.storage.lower() != 'bram':
                             newline += f'#include "weights/{w.name}.h"\n'
 
-            elif "// hls-fpga-machine-learning insert layer-config" in line:
+            elif '// hls-fpga-machine-learning insert layer-config' in line:
                 newline = line
                 for layer in model.get_layers():
                     config = layer.get_attr('config_cpp', None)
@@ -460,10 +459,10 @@ class VivadoWriter(Writer):
         """
 
         # Take in data from current supported data files
-        if original_path[-3:] == "npy":
+        if original_path[-3:] == 'npy':
             data = np.load(original_path)
         else:
-            raise Exception("Unsupported input/output data files.")
+            raise Exception('Unsupported input/output data files.')
 
         # Faltten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
@@ -471,11 +470,11 @@ class VivadoWriter(Writer):
         def print_data(f):
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    f.write(str(data[i][j]) + " ")
-                f.write("\n")
+                    f.write(str(data[i][j]) + ' ')
+                f.write('\n')
 
         # Print out in dat file
-        with open(project_path, "w") as f:
+        with open(project_path, 'w') as f:
             print_data(f)
 
     def write_test_bench(self, model):
@@ -494,13 +493,13 @@ class VivadoWriter(Writer):
         output_predictions = model.config.get_config_value('OutputPredictions')
 
         if input_data:
-            if input_data[-3:] == "dat":
+            if input_data[-3:] == 'dat':
                 copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
             else:
                 self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
 
         if output_predictions:
-            if output_predictions[-3:] == "dat":
+            if output_predictions[-3:] == 'dat':
                 copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
             else:
                 self.__make_dat_file(
@@ -524,7 +523,7 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
@@ -630,7 +629,7 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
