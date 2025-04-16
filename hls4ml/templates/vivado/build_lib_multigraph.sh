@@ -21,20 +21,29 @@ WEIGHTS_DIR="\"${BASEDIR}/stitched/firmware/weights\""
 
 mkdir -p "${OUTPUT_DIR}"
 
-# Compile all graphs
+# Compile all graphs in parallel
 OBJECT_FILES=()
+PIDS=()
+
 for g in "${graph_project_names[@]}"; do
     SRC_FILE="${g}/firmware/${ORIGINAL_PROJECT}_${g}.cpp"
     OBJ_FILE="${ORIGINAL_PROJECT}_${g}.o"
     AP_TYPES_PATH="-I${BASEDIR}/${g}/firmware/ap_types/"
-
-    ${CC} ${CFLAGS} ${AP_TYPES_PATH} -D WEIGHTS_DIR="${WEIGHTS_DIR}" -c "${BASEDIR}/${SRC_FILE}" -o "${OBJ_FILE}"
+    (
+        ${CC} ${CFLAGS} ${AP_TYPES_PATH} -D WEIGHTS_DIR="${WEIGHTS_DIR}" -c "${BASEDIR}/${SRC_FILE}" -o "${OBJ_FILE}"
+    ) &
+    PIDS+=($!)
     OBJECT_FILES+=("${OBJ_FILE}")
-    INCFLAGS+="-I${BASEDIR}/${g}/ "
+    INCFLAGS+="-I${BASEDIR}/${g}/ "  # Only generic include paths here
 done
 
-${CC} ${CFLAGS} ${INCFLAGS} ${AP_TYPES_PATH} -c "${PROJECT}_bridge.cpp" -o ${PROJECT}_bridge.o
+for pid in "${PIDS[@]}"; do
+    wait $pid
+done
 
+AP_TYPES_PATH="-I${BASEDIR}/${graph_project_names[@]: -1}/firmware/ap_types/"
+
+${CC} ${CFLAGS} ${INCFLAGS} ${AP_TYPES_PATH} -c "${PROJECT}_bridge.cpp" -o ${PROJECT}_bridge.o
 ${CC} ${CFLAGS} ${INCFLAGS} ${AP_TYPES_PATH} -shared "${OBJECT_FILES[@]}" ${PROJECT}_bridge.o -o "${OUTPUT_DIR}/${PROJECT}-${LIB_STAMP}.so"
 
 rm -f "${OBJECT_FILES[@]}"
