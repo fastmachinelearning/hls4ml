@@ -35,6 +35,14 @@ struct lstm_config {
     template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
 };
+
+struct blstm_config : lstm_config{
+    // Internal data type definitions
+    typedef float weight_b_t;
+    typedef float recurrent_weight_b_t;
+    typedef float bias_b_t;
+    typedef float recurrent_bias_b_t;
+};
 // Long Short term Memory NN (LSTM)
 // Resources:
 // https://github.com/nicodjimenez/lstm/blob/master/lstm.py
@@ -234,6 +242,76 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CO
         }
 }
 
+
+template <class data_T, class res_T, typename CONFIG_T>
+void blstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CONFIG_T::n_sequence_out * 2 * CONFIG_T::n_state],
+    typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
+    typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+    typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
+    typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4],
+    typename CONFIG_T::weight_b_t param_back[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
+    typename CONFIG_T::recurrent_weight_b_t param_r_back[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+    typename CONFIG_T::bias_b_t param_b_back[CONFIG_T::n_state * 4],
+    typename CONFIG_T::recurrent_bias_b_t param_br_back[CONFIG_T::n_state * 4]) {
+
+    res_T h_newstate[CONFIG_T::n_state];
+    res_T s_newstate[CONFIG_T::n_state];
+    data_T data_in[CONFIG_T::n_in];
+    res_T h_newstate_back[CONFIG_T::n_state];
+    res_T s_newstate_back[CONFIG_T::n_state];
+    data_T data_in_back[CONFIG_T::n_in];
+    bool reset_state = true;
+
+    #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+    #pragma HLS ARRAY_PARTITION variable=s_newstate complete
+    #pragma HLS ARRAY_PARTITION variable=h_newstate_back complete
+    #pragma HLS ARRAY_PARTITION variable=s_newstate_back complete
+
+    for (int ii = 0; ii < CONFIG_T::n_state; ii++) {
+        #pragma HLS UNROLL
+        h_newstate[ii] = 0;
+        s_newstate[ii] = 0;
+        h_newstate_back[ii] = 0;
+        s_newstate_back[ii] = 0;
+
+    }
+    for (int iloop = 0; iloop < CONFIG_T::n_sequence; iloop++) {
+        for (int j = 0; j < CONFIG_T::n_in; j++) {
+            #pragma HLS UNROLL
+            data_in[j]      = data[j + iloop * CONFIG_T::n_in];
+            data_in_back[j] = data[CONFIG_T::n_in -1 -j + iloop * CONFIG_T::n_in];
+            //printf("%u", j + iloop * CONFIG_T::n_in);
+            //printf("%u", CONFIG_T::n_in -1 -j + iloop * CONFIG_T::n_in);
+        }
+        if (CONFIG_T::use_static) {
+            nnet::lstm_static<data_T, res_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b,
+                                                       param_br);
+            nnet::lstm_static<data_T, res_T, CONFIG_T>(reset_state, data_in_back, h_newstate_back, s_newstate_back, param_back, param_r_back, param_b_back,
+                                                       param_br_back);
+        }
+        else {
+            nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b,
+                                                param_br);
+            nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data_in_back, h_newstate_back, s_newstate_back, param_back, param_r_back, param_b_back,
+                                                param_br_back);
+        }
+        if (CONFIG_T::n_sequence_out > 1)
+            for (int i = CONFIG_T::n_state * 2 * iloop, j = 0; i < (CONFIG_T::n_state * (2 * iloop + 1)); i++, j++) {
+                #pragma HLS UNROLL
+                res[i] = h_newstate[j];
+                res[i+CONFIG_T::n_state] = h_newstate_back[j];
+            }
+        reset_state = false;
+    }
+    if (CONFIG_T::n_sequence_out == 1)
+        for (int i = 0; i < (CONFIG_T::n_state); i++) {
+            #pragma HLS UNROLL
+            res[i] = h_newstate[i];
+            res[i+CONFIG_T::n_state] = h_newstate_back[i];
+        }
+}
+
+
 template <class data_T, class h_T, class s_T, class res_T, typename CONFIG_T>
 void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_newstate[CONFIG_T::n_state],
                 s_T s_newstate[CONFIG_T::n_state], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
@@ -269,6 +347,54 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_newsta
         }
 }
 
+template <class data_T, class h_T, class s_T, class res_T, typename CONFIG_T>
+void blstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_newstate[CONFIG_T::n_state],
+    s_T s_newstate[CONFIG_T::n_state], h_T h_newstate_back[CONFIG_T::n_state],
+    s_T s_newstate_back[CONFIG_T::n_state], res_T res[CONFIG_T::n_sequence_out * 2 * CONFIG_T::n_state],
+    typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
+    typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+    typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
+    typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4],
+    typename CONFIG_T::weight_b_t param_back[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
+    typename CONFIG_T::recurrent_weight_b_t param_r_back[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+    typename CONFIG_T::bias_b_t param_b_back[CONFIG_T::n_state * 4],
+    typename CONFIG_T::recurrent_bias_b_t param_br_back[CONFIG_T::n_state * 4]) {
+
+    data_T data_in[CONFIG_T::n_in];
+    data_T data_in_back[CONFIG_T::n_in];
+    bool reset_state = true;
+
+    #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+    #pragma HLS ARRAY_PARTITION variable=s_newstate complete
+    #pragma HLS ARRAY_PARTITION variable=h_newstate_back complete
+    #pragma HLS ARRAY_PARTITION variable=s_newstate_back complete
+
+    for (int iloop = 0; iloop < CONFIG_T::n_sequence; iloop++) {
+        for (int j = 0; j < CONFIG_T::n_in; j++) {
+            #pragma HLS UNROLL
+            data_in[j]      = data[j + iloop * CONFIG_T::n_in];
+            data_in_back[j] = data[CONFIG_T::n_in -1 -j + iloop * CONFIG_T::n_in];
+        }
+        nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b,
+                                            param_br);
+        nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data_in_back, h_newstate_back, s_newstate_back, param_back, param_r_back, param_b_back,
+                                            param_br_back);
+        if (CONFIG_T::n_sequence_out > 1)
+            for (int i = CONFIG_T::n_state *2 * iloop, j = 0; i < (CONFIG_T::n_state * (2 * iloop + 1)); i++, j++) {
+                #pragma HLS UNROLL
+                res[i] = h_newstate[j];
+                res[i+CONFIG_T::n_state] = h_newstate_back[j];
+            }
+        reset_state = false;
+    }
+    if (CONFIG_T::n_sequence_out == 1)
+        for (int i = 0; i < (CONFIG_T::n_state); i++) {
+            #pragma HLS UNROLL
+            res[i] = h_newstate[i];
+            res[i+CONFIG_T::n_state] = h_newstate_back[i];
+        }
+}
+
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
                 typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
@@ -288,6 +414,80 @@ void lstm_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream
     }
 
     typename data_T::value_type data_in[CONFIG_T::n_in];
+    bool reset_state = true;
+
+DataPropagation:
+    for (int i_in = 0; i_in < CONFIG_T::n_sequence * CONFIG_T::n_in / data_T::size; i_in++) {
+        if (CONFIG_T::n_sequence * CONFIG_T::n_in / data_T::size > 1) {
+            // #pragma HLS PIPELINE
+        }
+        data_T data_pack = data_stream.read();
+    DataPack:
+        for (int i_pack = 0; i_pack < data_T::size; i_pack++) {
+            #pragma HLS UNROLL
+            data_in[i_pack] = data_pack[i_pack];
+        }
+        if (CONFIG_T::use_static)
+            nnet::lstm_static<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+                reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
+        else
+            nnet::lstm<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+                reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
+        if (CONFIG_T::n_sequence_out > 1) {
+            res_T res_pack;
+            PRAGMA_DATA_PACK(res_pack)
+        ResPack_sequences:
+            for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+                #pragma HLS UNROLL
+                res_pack[i_pack] = h_newstate[i_pack];
+            }
+            res_stream.write(res_pack);
+        }
+        reset_state = false;
+    }
+
+    if (CONFIG_T::n_sequence_out == 1) {
+        res_T res_pack;
+        PRAGMA_DATA_PACK(res_pack)
+    ResPack:
+        for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+            #pragma HLS UNROLL
+            res_pack[i_pack] = h_newstate[i_pack];
+        }
+        res_stream.write(res_pack);
+    }
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void blstm_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
+                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
+                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
+                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4],
+                typename CONFIG_T::weight_b_t param_back[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
+                typename CONFIG_T::recurrent_weight_b_t param_r_back[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                typename CONFIG_T::bias_b_t param_b_back[CONFIG_T::n_state * 4],
+                typename CONFIG_T::recurrent_bias_b_t param_br_back[CONFIG_T::n_state * 4]) {
+                
+    typename res_T::value_type h_newstate[CONFIG_T::n_state];
+    typename res_T::value_type s_newstate[CONFIG_T::n_state];
+    typename res_T::value_type h_newstate_back[CONFIG_T::n_state];
+    typename res_T::value_type s_newstate_back[CONFIG_T::n_state];
+    #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+    #pragma HLS ARRAY_PARTITION variable=s_newstate complete
+    #pragma HLS ARRAY_PARTITION variable=h_newstate_back complete
+    #pragma HLS ARRAY_PARTITION variable=s_newstate_back complete
+
+    for (int ii = 0; ii < CONFIG_T::n_state; ii++) {
+        #pragma HLS UNROLL
+        h_newstate[ii] = 0;
+        s_newstate[ii] = 0;
+        h_newstate_back[ii] = 0;
+        s_newstate_back[ii] = 0;
+    }
+
+    typename data_T::value_type data_in[CONFIG_T::n_in];
+    typename data_T::value_type data_in_back[CONFIG_T::n_in];
     bool reset_state = true;
 
 DataPropagation:

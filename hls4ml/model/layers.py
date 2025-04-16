@@ -1353,7 +1353,7 @@ class LSTM(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         Attribute('pass_initial_states', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        ChoiceAttribute('direction', ['forward', 'backward', 'bidirectional'], configurable=False, default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -1384,7 +1384,7 @@ class LSTM(Layer):
             self.add_output_variable(
                 state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
             )
-
+            
         # weights
         self.add_weights()
 
@@ -1402,6 +1402,39 @@ class LSTM(Layer):
             self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
 
+class BLSTM(LSTM):
+    _expected_attributes = [
+        WeightAttribute('weight_b'),
+        WeightAttribute('bias_b'),
+        WeightAttribute('recurrent_weight_b'),
+        WeightAttribute('recurrent_bias_b'),
+        TypeAttribute('weight_b'),
+        TypeAttribute('bias_b'),
+        TypeAttribute('recurrent_weight_b'),
+        TypeAttribute('recurrent_bias_b'),
+        ChoiceAttribute('merge_mode', ['sum', 'mul', 'concat', 'ave'], configurable=False, default='concat'),
+    ]
+    def initialize(self):
+        super().initialize()
+        
+        #Add backward layer parameters
+        # weights
+        self.add_weights_variable(name='weight_b', var_name='w_b{index}')
+
+        # recurrent weights
+        self.add_weights_variable(name='recurrent_weight_b', var_name='wr_b{index}')
+
+        # biases
+        self.add_weights_variable(name='bias_b', var_name='b_b{index}')
+
+        if "pytorch" in self.attributes.keys():
+            self.add_weights_variable(name='recurrent_bias_b', var_name='br_b{index}')
+        else:
+            recurrent_weight_b = self.get_attr('recurrent_weight_b_data')
+            recurrent_bias_b = np.zeros(recurrent_weight_b.shape[1])
+            self.add_weights_variable(name='recurrent_bias_b', var_name='br_b{index}', data=recurrent_bias_b)
+
+
 class GRU(Layer):
     _expected_attributes = [
         Attribute('n_out'),
@@ -1410,9 +1443,9 @@ class GRU(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         Attribute('pass_initial_states', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        ChoiceAttribute('direction', ['forward', 'backward', 'bidirectional'], configurable=False, default='forward'),
         Attribute('time_major', value_type=bool, default=False),
-        ChoiceAttribute('apply_reset_gate', ['before', 'after'], default='after'),
+        ChoiceAttribute('apply_reset_gate', ['before', 'after'], configurable=False, default='after'),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
@@ -1474,6 +1507,33 @@ class TimeDistributed(Layer):
             dims += [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape))]
 
         self.add_output_variable(shape, dims)
+
+        
+class BGRU(GRU):
+    _expected_attributes = [
+        WeightAttribute('weight_b'),
+        WeightAttribute('bias_b'),
+        WeightAttribute('recurrent_weight_b'),
+        WeightAttribute('recurrent_bias_b'),
+        TypeAttribute('weight_b'),
+        TypeAttribute('bias_b'),
+        TypeAttribute('recurrent_weight_b'),
+        TypeAttribute('recurrent_bias_b'),
+        ChoiceAttribute('merge_mode', ['sum', 'mul', 'concat', 'ave'], configurable=False, default='concat'),
+    ]
+    def initialize(self):
+        super().initialize()
+        
+        #Add backward layer parameters
+        # weights
+        self.add_weights_variable(name='weight_b', var_name='w_b{index}')
+
+        # recurrent weights
+        self.add_weights_variable(name='recurrent_weight_b', var_name='wr_b{index}')
+
+        # biases
+        self.add_weights_variable(name='bias_b', var_name='b_b{index}')
+        self.add_weights_variable(name='recurrent_bias_b', var_name='br_b{index}')
 
 
 class GarNet(Layer):
@@ -1764,6 +1824,8 @@ layer_map = {
     'SimpleRNN': SimpleRNN,
     'LSTM': LSTM,
     'GRU': GRU,
+    'BLSTM': BLSTM,
+    'BGRU': BGRU,
     'QSimpleRNN': SimpleRNN,
     'QLSTM': LSTM,
     'QGRU': GRU,

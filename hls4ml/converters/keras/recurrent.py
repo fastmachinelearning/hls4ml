@@ -12,6 +12,7 @@ from hls4ml.converters.keras_v2_to_hls import (
 import numpy as np
 
 rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
+merge_modes = ['sum', 'mul', 'concat', 'ave']
 
 
 @keras_handler(*rnn_layers)
@@ -121,6 +122,7 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
 
     layer = parse_default_keras_layer(rnn_layer, input_names)
     layer['name'] = keras_layer['config']['name']
+    layer['class_name'] = 'B' + layer['class_name']
     layer['direction'] = 'bidirectional'
 
     layer['return_sequences'] = rnn_layer['config']['return_sequences']
@@ -138,26 +140,27 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
     layer['n_timesteps'] = input_shapes[0][1]
     layer['n_in'] = input_shapes[0][2]
 
-    layer['n_out'] = 2*rnn_layer['config']['units']
+    assert keras_layer['config']['merge_mode'] in merge_modes
+    layer['merge_mode'] = keras_layer['config']['merge_mode']
 
+    layer['n_out'] = rnn_layer['config']['units']
+    if keras_layer['config']['merge_mode'] == 'concat':
+        layer['n_out'] *= 2
 
     if 'SimpleRNN' in layer['class_name']:
         cell_name = 'simple_rnn'
     else:
-        cell_name = layer['class_name'].lower()
-    weight_data_f, recurrent_weight_data_f, bias_data_f = get_weights_data(
-        data_reader, layer['name'], [f'forward_{cell_name}/{cell_name}_cell/kernel',
-                                     f'forward_{cell_name}/{cell_name}_cell/recurrent_kernel', 
-                                     f'forward_{cell_name}/{cell_name}_cell/bias']
+        cell_name = rnn_layer['class_name'].lower()
+    layer['weight_data'], layer['recurrent_weight_data'], layer['bias_data'] = get_weights_data(
+        data_reader, layer['name'], [f'{cell_name}_cell/kernel',
+                                     f'{cell_name}_cell/recurrent_kernel', 
+                                     f'{cell_name}_cell/bias']
     )
-    weight_data_b, recurrent_weight_data_b, bias_data_b = get_weights_data(
-        data_reader, layer['name'], [f'backward_{cell_name}/{cell_name}_cell/kernel',
-                                     f'backward_{cell_name}/{cell_name}_cell/recurrent_kernel', 
-                                     f'backward_{cell_name}/{cell_name}_cell/bias']
+    layer['weight_b_data'], layer['recurrent_weight_b_data'], layer['bias_b_data'] = get_weights_data(
+        data_reader, layer['name'], [f'{cell_name}_cell/kernel',
+                                     f'{cell_name}_cell/recurrent_kernel', 
+                                     f'{cell_name}_cell/bias']
     )
-    layer['weight_data'] = np.stack((weight_data_f, weight_data_b), axis=0)
-    layer['recurrent_weight_data'] = np.stack((recurrent_weight_data_f, recurrent_weight_data_b), axis=0)
-    layer['bias_data'] = np.stack((bias_data_f, bias_data_b), axis=0)
 
     if 'GRU' in layer['class_name']:
         layer['apply_reset_gate'] = 'after' if rnn_layer['config']['reset_after'] else 'before'
@@ -165,8 +168,11 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
         # biases array is actually a 2-dim array of arrays (bias + recurrent bias)
         # both arrays have shape: n_units * 3 (z, r, h_cand)
         biases = layer['bias_data']
+        biases_b = layer['bias_b_data']
         layer['bias_data'] = biases[0]
         layer['recurrent_bias_data'] = biases[1]
+        layer['bias_b_data'] = biases_b[0]
+        layer['recurrent_bias_b_data'] = biases_b[1]
 
     if layer['return_sequences']:
         output_shape = [input_shapes[0][0], layer['n_timesteps'], layer['n_out']]
