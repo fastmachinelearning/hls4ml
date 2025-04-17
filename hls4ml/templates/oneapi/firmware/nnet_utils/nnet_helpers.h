@@ -13,22 +13,28 @@
 namespace nnet {
 
 template <class srcType, class dest_pipe, size_t SIZE> void convert_data(sycl::queue &q, srcType *src) {
-    constexpr auto dstTypeSize = std::tuple_size<typename ExtractPipeType<dest_pipe>::value_type>{};
+    using PipeDataType = typename nnet::ExtractPipeType<dest_pipe>::value_type;
+    using SrcDataType = typename nnet::ExtractDataType<PipeDataType>::value_type;
+    constexpr auto dstTypeSize = std::tuple_size<SrcDataType>{};
     for (size_t i = 0; i < SIZE / dstTypeSize; i++) {
-        typename ExtractPipeType<dest_pipe>::value_type ctype;
+        PipeDataType packet;
         for (size_t j = 0; j < dstTypeSize; j++) {
-            ctype[j] = src[i * dstTypeSize + j];
+            packet.data[j] = src[i * dstTypeSize + j];
         }
-        dest_pipe::write(q, ctype);
+        packet.sop = (i == 0);
+        packet.eop = (i == (SIZE / dstTypeSize - 1));
+        dest_pipe::write(q, packet);
     }
 }
 
 template <class src_pipe, class dstType, size_t SIZE> void convert_data_back(sycl::queue &q, dstType *dst) {
-    constexpr auto srcTypeSize = std::tuple_size<typename ExtractPipeType<src_pipe>::value_type>{};
+    using PipeDataType = typename nnet::ExtractPipeType<src_pipe>::value_type;
+    using SrcDataType = typename nnet::ExtractDataType<PipeDataType>::value_type;
+    constexpr auto srcTypeSize = std::tuple_size<SrcDataType>{};
     for (size_t i = 0; i < SIZE / srcTypeSize; i++) {
-        auto ctype = src_pipe::read(q);
+        auto packet = src_pipe::read(q);
         for (size_t j = 0; j < srcTypeSize; j++) {
-            dst[i * srcTypeSize + j] = ctype[j].to_double();
+            dst[i * srcTypeSize + j] = packet.data[j].to_double();
         }
     }
 }

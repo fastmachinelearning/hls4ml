@@ -131,12 +131,12 @@ class OneAPIBackend(FPGABackend):
         return self._writer_flow
 
     def create_initial_config(
-        self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, use_oneapi_bsp=False, **_
+        self, part='Agilex7', clock_period=5, io_type='io_parallel', write_tar=False, use_oneapi_bsp=False, **_
     ):
         """Create initial configuration of the oneAPI backend.
 
         Args:
-            part (str, optional): The FPGA part to be used. Defaults to 'Arria10'.
+            part (str, optional): The FPGA part to be used. Defaults to 'Agilex7'.
             clock_period (int, optional): The clock period. Defaults to 5.
             io_type (str, optional): Type of implementation used. One of
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
@@ -148,7 +148,7 @@ class OneAPIBackend(FPGABackend):
 
         config = {}
 
-        config['Part'] = part if part is not None else 'Arria10'
+        config['Part'] = part if part is not None else 'Agilex7'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}

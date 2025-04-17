@@ -173,7 +173,6 @@ The backend-specific section of the configuration depends on the backend. You ca
 For Vivado backend the options are:
 
 * **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex UltraScale+ VU13P FPGA
-* **UseOneAPIBSP**\ : path to the oneAPI Board Support Package (and the BSP variant) to enable offload acceleration with an Altera FPGA. This is only needed if you are using the oneAPI backend.
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
 * **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines the type of data structure used for inputs, intermediate activations between layers, and outputs. For ``io_parallel``, arrays are used that, in principle, can be fully unrolled and are typically implemented in RAMs. For ``io_stream``, HLS streams are used, which are a more efficient/scalable mechanism to represent data that are produced and consumed in a sequential manner. Typically, HLS streams are implemented with FIFOs instead of RAMs. For more information see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
@@ -185,6 +184,10 @@ For Vivado backend the options are:
   * **PipelineStyle**\ : Set the top level pipeline style. Valid options are "auto", "pipeline" and "dataflow". If unspecified, it defaults to "auto".
   * **PipelineInterval**\ : Optionally override the desired initiation interval of the design. Only valid in combination with "pipeline" style. If unspecified, it is left to the compiler to decide, ideally matching the largest reuse factor of the network.
   * **Precision**\ : this defines the precision of your inputs, outputs, weights and biases. It is denoted by ``fixed<X,Y>``\ , where ``Y`` is the number of bits representing the signed number above the binary point (i.e. the integer part), and ``X`` is the total number of bits. Additionally, integers in the type (\ ``int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. The format follows ``ap_fixed`` and ``ap_int`` conventions. You have a chance to further configure this more finely with per-layer configuration described below. In the per-layer configuration (but not globally) one can also use ``'auto'`` precision.
+
+For oneaAPI the options are similar but also include:
+
+* **UseOneAPIBSP**\ : path to the oneAPI Board Support Package (and the BSP variant) to enable offload acceleration with an Altera FPGA. This is only needed if you are using oneAPI in the accelerator style.
 
 2.2 Per-Layer Configuration
 ---------------------------
