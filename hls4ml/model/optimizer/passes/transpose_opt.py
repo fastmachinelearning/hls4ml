@@ -13,11 +13,7 @@ class RemoveNopTranspose(OptimizerPass):
 
     def transform(self, model, node):
         print(f'Unnecessary transpose node ({node.name}) detected, optimizing ...')
-        if not node.get_output_nodes():
-            print(f'WARNING: {node.name} is the output layer! No rewiring performed.')
-            model.remove_node(node, rewire=False)  # Don't rewire if there is no output layer
-        else:
-            model.remove_node(node, rewire=True)
+        model.remove_node(node)
 
         return True
 
