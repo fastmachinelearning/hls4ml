@@ -1,6 +1,6 @@
 import typing
+from collections.abc import Sequence
 from math import ceil
-from typing import Sequence
 
 from ._base import KerasV3LayerHandler, register
 

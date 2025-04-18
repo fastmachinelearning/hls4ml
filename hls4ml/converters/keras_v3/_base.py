@@ -1,6 +1,7 @@
 import typing
+from collections.abc import Callable, Sequence
 from types import FunctionType
-from typing import Any, Callable, Sequence, TypedDict, overload
+from typing import Any, TypedDict, overload
 
 
 class DefaultConfig(TypedDict, total=False):

@@ -1,5 +1,5 @@
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from ._base import KerasV3LayerHandler, register
 

@@ -1,7 +1,8 @@
 import inspect
 import typing
+from collections.abc import Sequence
 from math import prod
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 

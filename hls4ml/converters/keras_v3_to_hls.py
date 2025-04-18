@@ -1,7 +1,8 @@
 import typing
+from collections.abc import Callable, Sequence
 from itertools import chain
 from types import FunctionType
-from typing import Any, Callable, Sequence
+from typing import Any
 
 if typing.TYPE_CHECKING:
     import keras
