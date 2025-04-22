@@ -26,9 +26,13 @@ class SQMultiHeadAttentionHandler(SQLayerHandler):
         from hgq.layers import QEinsum
         from keras import KerasTensor
 
-        assert len(in_tensors) in (3, 4), 'MultiHead layer must have 3 (Q, K, V) or 4 (Q, K, V, M) input tensors'
+        # fmt: off
+        assert len(in_tensors) in (2, 3, 4,), (
+            'MultiHead layer must have 2 (Q, V), 3 (Q, V, K) or 4 (Q, V, K, M) input tensors'
+        )
+        # fmt: on
         assert len(out_tensors) == 1, 'Attention score output is not supported yet'
-        assert len(in_tensors) == 3, 'Mask tensor is not supported yet'
+        assert len(in_tensors) <= 3, 'Mask tensor is not supported yet'
         tensor_q, *_ = in_tensors
         tensor_O, *tensor_attn = out_tensors
         unique_name: str = layer.name
@@ -50,6 +54,8 @@ class SQMultiHeadAttentionHandler(SQLayerHandler):
         tensor_q = bound.arguments['query']
         tensor_k = bound.arguments['key']
         tensor_v = bound.arguments['value']
+        if tensor_k is None:
+            tensor_k = tensor_v
         tensor_q_mask = bound.arguments['query_mask']
         tensor_k_mask = bound.arguments['key_mask']
         tensor_v_mask = bound.arguments['value_mask']

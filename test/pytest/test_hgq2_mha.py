@@ -9,7 +9,7 @@ if keras.__version__ < '3.0.0':
 import numpy as np
 from hgq.config import QuantizerConfigScope
 from hgq.layers import QMultiHeadAttention
-from hgq.utils import trace_mode
+from hgq.utils import trace_minmax
 
 from hls4ml.converters import convert_from_keras_model
 
@@ -30,8 +30,7 @@ def test_hgq2_mha(strategy):
     data_k = np.random.randn(10000, 12, 7).astype(np.float32) * 3
     data = [data_q, data_v, data_k]
 
-    with trace_mode(model):
-        r_keras = model.predict(data, batch_size=1000)
+    r_keras = trace_minmax(model, data, return_results=True)
 
     model_hls = convert_from_keras_model(
         model,
