@@ -116,8 +116,10 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml import VitisCodegenBackend, compile_kernel, graph_compile_states
-        from da4ml.cmvm.codegen import Namer
+        from da4ml.cmvm import solve
+        from da4ml.cmvm.types import QInterval
+        from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
+        from da4ml.trace import FixedVariable, Tracer, trace_to_solution
 
         kernel: np.ndarray = node.attributes['weight'].data
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -125,19 +127,29 @@ class DistributedArithmeticCodegen(OptimizerPass):
         fn_name = f'dense_da_{node.index}'
 
         k, i, f = get_kernel_inp_kif(node)
-        k, b, i = list(k), list(i + f), list(i)
-        codegen_backend = VitisCodegenBackend(fn_name=fn_name)
+        _step = 2.0**-f
+        _min, _max = -(2.0**i) * k, 2.0**i - _step
+        qints = [QInterval(_mi, _ma, _st) for _mi, _ma, _st in zip(_min, _max, _step)]
 
-        with Namer().tmp_scope():
-            states = compile_kernel(kernel, k, b, i, [False] * n_in, [0] * n_in, 1, None, 128, 64)  # type: ignore
-            inp, out = graph_compile_states(states, False)
+        sol0 = solve(kernel, hard_dc=4, qintervals=qints)
+        # cascaded CMVM solution
+
+        with Tracer() as tracer:
+            # retrace to flatten out and add bias
+            inp = [FixedVariable(*qint) for qint in qints]
+            out = list(sol0(inp))
             if node.attributes['bias'] is not None:
                 bias = node.attributes['bias'].data.ravel()
                 assert len(bias) == n_out
                 for i, b in enumerate(bias):
                     out[i] = out[i] + b
-            _fn, fn_str = codegen_backend(inp, out)
-        fn_str = fn_str.replace('{', '{\n    #pragma HLS INLINE', 1)  # add pragma to first line
+            tracer.set_outputs(out)
+        sol = trace_to_solution(tracer.trace)
+
+        flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
+        pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
+
+        fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas)
 
         io_type = node.model.config.get_config_value("IOType")
         if io_type != 'io_parallel':
@@ -342,28 +354,35 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml import VitisCodegenBackend, compile_kernel, graph_compile_states
-        from da4ml.cmvm.codegen import Namer
+        from da4ml.cmvm import solve
+        from da4ml.cmvm.types import QInterval
+        from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
+        from da4ml.trace import FixedVariable, Tracer, trace_to_solution
 
         kernel: np.ndarray = node.attributes['weight'].data
         I, C, L_ker = kernel.shape
         L_data = node.attributes['n_free_data']
 
-        codegen_backend = VitisCodegenBackend()
         inp_kifs = get_kernel_inp_kif(node)
-        n_in = C
         fn_strs = []
         fn_calls = []
 
         for i in range(I):
             _k, _i, _f = (v[i] for v in inp_kifs)
-            _b = _i + _f
             fn_name = f'einsum_{node.index}_da_{i}_of_{I}'
-            with Namer().tmp_scope():
-                states = compile_kernel(kernel[i], _k, _b, _i, [False] * n_in, [0] * n_in, 1, 0, 128, 64)  # type: ignore
-                inp, out = graph_compile_states(states, False)
-                _fn, fn_str = codegen_backend.gen_fn(inp, out, fn_name=fn_name)
-            fn_str = fn_str.replace('{', '{\n    #pragma HLS INLINE', 1)  # add pragma to first line
+            _min, _max, _step = -(2.0**_i) * _k, 2.0**_i - 2.0**-_f, 2.0**-_f
+            qints = [QInterval(_mi, _mx, _st) for _mi, _mx, _st in zip(_min, _max, _step)]
+            sol0 = solve(kernel[i], hard_dc=4, qintervals=qints)
+            with Tracer() as tracer:
+                inp = [FixedVariable(*qint) for qint in qints]
+                out = list(sol0(inp))
+                tracer.set_outputs(out)
+            sol = trace_to_solution(tracer.trace)
+
+            flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
+            pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
+            fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas)
+
             fn_strs.append(fn_str)
             fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'
             fn_calls.append(fn_call)
