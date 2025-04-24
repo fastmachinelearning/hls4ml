@@ -119,7 +119,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
         from da4ml.cmvm import solve
         from da4ml.cmvm.types import QInterval
         from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
-        from da4ml.trace import FixedVariable, Tracer, trace_to_solution
+        from da4ml.trace import FixedVariable, trace
 
         kernel: np.ndarray = node.attributes['weight'].data
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -134,22 +134,20 @@ class DistributedArithmeticCodegen(OptimizerPass):
         sol0 = solve(kernel, hard_dc=4, qintervals=qints)
         # cascaded CMVM solution
 
-        with Tracer() as tracer:
-            # retrace to flatten out and add bias
-            inp = [FixedVariable(*qint) for qint in qints]
-            out = list(sol0(inp))
-            if node.attributes['bias'] is not None:
-                bias = node.attributes['bias'].data.ravel()
-                assert len(bias) == n_out
-                for i, b in enumerate(bias):
-                    out[i] = out[i] + b
-            tracer.set_outputs(out)
-        sol = trace_to_solution(tracer.trace)
+        # retrace to flatten out and add bias
+        inp = [FixedVariable(*qint) for qint in qints]
+        out = list(sol0(inp))
+        if node.attributes['bias'] is not None:
+            bias = node.attributes['bias'].data.ravel()
+            assert len(bias) == n_out
+            for i, b in enumerate(bias):
+                out[i] = out[i] + float(b)
+        sol = trace(inp, out)
 
         flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
         pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
 
-        fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas)
+        fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
         io_type = node.model.config.get_config_value("IOType")
         if io_type != 'io_parallel':
@@ -199,7 +197,7 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
                 else:
                     var_def = f'ap_ufixed<1, 0> {_dst} = 0;'
                 quantization_lines.append(var_def)
-                replaces.append((_src, _dst))
+                replaces.append((f'{_src};', f'{_dst};'))
 
             replaces.append(('#pragma HLS INLINE', '#pragma HLS INLINE\n  ' + '\n    '.join(quantization_lines)))
 
@@ -357,7 +355,7 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
         from da4ml.cmvm import solve
         from da4ml.cmvm.types import QInterval
         from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
-        from da4ml.trace import FixedVariable, Tracer, trace_to_solution
+        from da4ml.trace import FixedVariable, trace
 
         kernel: np.ndarray = node.attributes['weight'].data
         I, C, L_ker = kernel.shape
@@ -373,15 +371,13 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
             _min, _max, _step = -(2.0**_i) * _k, 2.0**_i - 2.0**-_f, 2.0**-_f
             qints = [QInterval(_mi, _mx, _st) for _mi, _mx, _st in zip(_min, _max, _step)]
             sol0 = solve(kernel[i], hard_dc=4, qintervals=qints)
-            with Tracer() as tracer:
-                inp = [FixedVariable(*qint) for qint in qints]
-                out = list(sol0(inp))
-                tracer.set_outputs(out)
-            sol = trace_to_solution(tracer.trace)
+            inp = [FixedVariable(*qint) for qint in qints]
+            out = list(sol0(inp))
+            sol = trace(inp, out)
 
             flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
             pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
-            fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas)
+            fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
             fn_strs.append(fn_str)
             fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'
