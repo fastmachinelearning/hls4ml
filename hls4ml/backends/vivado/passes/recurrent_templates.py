@@ -1,6 +1,10 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+<<<<<<< HEAD
 from hls4ml.model.layers import GRU, LSTM, BLSTM, BGRU, TimeDistributed
+=======
+from hls4ml.model.layers import BGRU, BLSTM, GRU, LSTM
+>>>>>>> d2d3b452 (ADD fixes)
 
 # recurrent multiplication template
 
@@ -120,7 +124,7 @@ recr_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config
 recr_function_template_initial_states_lstm = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {input3_t}, {output_t}, {config}>({input}, {input2}, {input3}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
 recr_function_template_initial_states_gru = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {output_t}, {config}>({input}, {input2}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
 
-recr_bidir_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br}, {w_b}, {wr_b}, {b_b}, {br_b});'
+recr_bidir_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br}, {w_b}, {wr_b}, {b_b}, {br_b});'  # noqa: E501
 recr_bidir_function_template_initial_states_lstm = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {input3_t}, {output_t}, {config}>({input}, {input2}, {input3}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
 recr_bidir_function_template_initial_states_gru = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {output_t}, {config}>({input}, {input2}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
 
@@ -240,6 +244,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
 
         return mult_config1 + '\n' + mult_config2 + '\n' + recr_act_config + '\n' + act_config + '\n' + recr_config
 
+
 class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__((BLSTM, BGRU))
@@ -256,11 +261,11 @@ class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
         params['n_sequence'] = node.get_input_variable().dim_names[0]
         if node.get_attr('return_sequences'):
             params['n_sequence_out'] = node.get_output_variable().dim_names[0]
-            params['n_state'] = node.get_output_variable().dim_names[1]
+            params['n_state'] = f'{node.get_output_variable().dim_names[1]} / 2'
             params['n_out'] = node.get_output_variable().dim_names[1]
         else:
             params['n_sequence_out'] = 1
-            params['n_state'] = node.get_output_variable().dim_names[0]
+            params['n_state'] = f'{node.get_output_variable().dim_names[0]} / 2'
             params['n_out'] = node.get_output_variable().dim_names[0]
         params['config_mult_t1'] = f'config{node.index}_1'
         params['config_mult_t2'] = f'config{node.index}_2'
@@ -299,9 +304,9 @@ class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
 
         mult_params1['n_in'] = node.get_input_variable().shape[1]
         if node.get_attr('return_sequences'):
-            mult_params1['n_out'] = node.get_output_variable().shape[1] / 2 * n_recr_mult
+            mult_params1['n_out'] = node.get_output_variable().shape[1] // 2 * n_recr_mult
         else:
-            mult_params1['n_out'] = node.get_output_variable().shape[0] / 2 * n_recr_mult
+            mult_params1['n_out'] = node.get_output_variable().shape[0] // 2 * n_recr_mult
         mult_params1['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
@@ -324,11 +329,11 @@ class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
             mult_params1['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}_1'
 
         if node.get_attr('return_sequences'):
-            mult_params2['n_in'] = node.get_output_variable().shape[1] / 2
-            mult_params2['n_out'] = node.get_output_variable().shape[1] / 2 * n_recr_mult
+            mult_params2['n_in'] = node.get_output_variable().shape[1] // 2
+            mult_params2['n_out'] = node.get_output_variable().shape[1] // 2 * n_recr_mult
         else:
-            mult_params2['n_in'] = node.get_output_variable().shape[0] / 2
-            mult_params2['n_out'] = node.get_output_variable().shape[0] / 2 * n_recr_mult
+            mult_params2['n_in'] = node.get_output_variable().shape[0] // 2
+            mult_params2['n_out'] = node.get_output_variable().shape[0] // 2 * n_recr_mult
         mult_params2['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
         )
@@ -352,6 +357,7 @@ class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
         mult_config2 = self.mult2_template.format(**mult_params2)
 
         return mult_config1 + '\n' + mult_config2 + '\n' + recr_act_config + '\n' + act_config + '\n' + recr_config
+
 
 class RecurrentFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
