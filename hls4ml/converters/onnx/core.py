@@ -120,3 +120,15 @@ def parse_quant_layer(node, input_names, input_shapes, graph):
     layer['signed'] = bool(get_onnx_attribute(node, 'signed'))
 
     return layer
+
+
+@onnx_handler('BipolarQuant')
+def parse_bipolar_quant_layer(node, input_names, input_shapes, graph):
+    layer = {}
+
+    layer['class_name'] = 'BipolarQuant'
+    layer['name'] = node.name
+    layer['inputs'] = input_names
+    layer['outputs'] = list(node.output)
+    return layer
+

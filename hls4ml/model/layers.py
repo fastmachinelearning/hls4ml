@@ -403,6 +403,21 @@ class Quant(Layer):  # The QONNX quantization layer
         self.add_output_variable(shape, dims)
 
 
+class BipolarQuant(Layer):  # The QONNX quantization layer
+    """
+    This is a QONNX quantization layer. Optimizations should convert it
+    before HLS is produced.
+    """
+
+    _expected_attributes = []
+
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+
 class Reshape(Layer):
     _expected_attributes = [
         Attribute('target_shape', value_type=typing.Sequence),
@@ -1706,6 +1721,7 @@ layer_map = {
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
     'Quant': Quant,
+    'BipolarQuant': BipolarQuant,
     'ApplyAlpha': ApplyAlpha,
     'BatchNormOnnx': BatchNormOnnx,
     'LayerGroup': LayerGroup,
