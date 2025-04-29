@@ -84,7 +84,9 @@ def boxplot(data, fmt='longform'):
         if hue is not None:
             vp.get_legend().remove()
         vp.set_xscale('log', base=2)
-        plt.gca().axvline(x=1, color='gray', linestyle='--', linewidth=1, zorder=0, label='x = 1')  # Add vertical line for 1 (2^0) behind the boxes
+        plt.gca().axvline(
+            x=1, color='gray', linestyle='--', linewidth=1, zorder=0, label='x = 1'
+        )  # Add vertical line for 1 (2^0) behind the boxes
         plt.legend()
         return f
     elif fmt == 'summary':
@@ -94,7 +96,9 @@ def boxplot(data, fmt='longform'):
         f, ax = plt.subplots(1, 1)
         data.reverse()
         colors = sb.color_palette("Blues", len(data))
-        ax.axvline(x=1, color='gray', linestyle='--', linewidth=1, zorder=0, label='x = 1')  # Add vertical line for 1 (2^0) behind the boxes
+        ax.axvline(
+            x=1, color='gray', linestyle='--', linewidth=1, zorder=0, label='x = 1'
+        )  # Add vertical line for 1 (2^0) behind the boxes
         bp = ax.bxp(data, showfliers=False, vert=False, medianprops=medianprops)
         # add colored boxes
         for line, color in zip(bp['boxes'], colors):
