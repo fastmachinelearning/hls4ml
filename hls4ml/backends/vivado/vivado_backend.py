@@ -85,7 +85,6 @@ class VivadoBackend(FPGABackend):
             )
             self.attribute_map[layer] = attrs
 
-
         # Add LayerNorm attributes
         ln_layers = [LayerNormalization]
         for layer in ln_layers:
@@ -123,7 +122,6 @@ class VivadoBackend(FPGABackend):
             )
         )
         self.attribute_map[TimeDistributed] = attrs
-
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
