@@ -260,7 +260,7 @@ def parse_onnx_model(onnx_model):
         sanitize_layer_name(layer)
         print(f"Layer name: {layer['name']}, layer type: {layer['class_name']}, current shape: {input_shapes}")
         layer_list.append(layer)
-    print(output_layers)
+
     return layer_list, input_layers, output_layers
 
 
