@@ -60,6 +60,7 @@ class HLSConfig:
                 'Namespace': None,
                 'WriteWeightsTxt': True,
                 'WriteTar': False,
+                'TBOutputStream': 'both',
             }
 
         self._parse_hls_config()
