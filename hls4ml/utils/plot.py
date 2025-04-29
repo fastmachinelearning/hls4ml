@@ -85,6 +85,11 @@ def model_to_dot(
         layer_name = layer.name
         class_name = layer.class_name
 
+        accum_precision = None
+
+        if layer.get_attr('accum_t'):
+            accum_precision = layer.get_attr('accum_t').precision
+
         # Create node's label.
         if show_layer_names:
             # label = '{}: {}'.format(class_name, layer_name)
@@ -147,6 +152,11 @@ def model_to_dot(
                         tensor_name, format_precision(var.type.precision)
                     )
                 precision_labels.append(tensor_label)
+            if accum_precision is not None:
+                accum_label = '<tr><td align="left">accum:</td><td align="left">{}</td></tr>'.format(
+                    format_precision(accum_precision)
+                )
+                precision_labels.append(accum_label)
             # precision_label = '<br align="left" />'.join(precision_labels)
             precision_label = ''.join(precision_labels)
             precision_label = '<table border="0" cellspacing="0">' + precision_label + '</table>'
