@@ -41,7 +41,7 @@ def convert(load_jettagging_model):
 
 def test_plot_model(convert):
     # Test the plot_model function with a sample model.
-    output_file = "model_plot.png"
+    output_file = 'model_plot.png'
     hls_model = convert
 
     plot_model(
@@ -55,7 +55,7 @@ def test_plot_model(convert):
     )
 
     # Assert that the output file was created and is not empty
-    assert os.path.exists(output_file), f"Plot file was not created: {output_file}"
-    assert os.path.getsize(output_file) > 0, f"Plot file is empty: {output_file}"
+    assert os.path.exists(output_file), f'Plot file was not created: {output_file}'
+    assert os.path.getsize(output_file) > 0, f'Plot file is empty: {output_file}'
 
-    logger.info(f"Plot file generated at: {os.path.abspath(output_file)}")
+    logger.info(f'Plot file generated at: {os.path.abspath(output_file)}')
