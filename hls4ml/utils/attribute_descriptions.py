@@ -60,5 +60,5 @@ table_range_power2 = (
 time_distributed_loop = (
     'Controls the amont and type of parallelism in the loop over time steps. If set to "off", no parallelism will be used. '
     'If set to "unroll", the loop will be unrolled. This may result in excessive resource use and cannot be used in '
-    '"io_stream" mode. If set to "pipeline", the loop will be pipelined.
+    '"io_stream" mode. If set to "pipeline", the loop will be pipelined.'
 )
