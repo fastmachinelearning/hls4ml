@@ -207,7 +207,7 @@ void concatenate3d_2(const input1_T &data1, const input2_T &data2, res_T &res) {
             }
 
             #pragma unroll
-            for (int k = 0; k < CONFIG_T::n_elem1_2; k++) {
+            for (int k = 0; k < CONFIG_T::n_elem2_2; k++) {
                 int res_idx = i * CONFIG_T::n_elem1_1 * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2) +
                               j * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2) + k + CONFIG_T::n_elem1_2;
                 int data_idx = i * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2 + j * CONFIG_T::n_elem2_2 + k;
