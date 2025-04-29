@@ -9,7 +9,7 @@ def parse_data_format(input_shape, data_format='channels_last'):
     will have the channels dimension last.
 
     Args:
-        input_shape (list or tuple): Input shape of 2D or 3D tensor with optional batch dimension of ``None``.
+        input_shape (list or tuple): Input shape of 2D, 3D or 4D tensor with optional batch dimension of ``None``.
         data_format (str, optional): Data format type, one of ``channels_first`` or ``channels_last``. (case insensitive).
             Defaults to 'channels_last'.
 
@@ -23,17 +23,24 @@ def parse_data_format(input_shape, data_format='channels_last'):
         # Ignore batch size
         input_shape = input_shape[1:]
 
+    if len(input_shape) > 4:
+        raise Exception(f'Cannot parse tensor with {len(input_shape)} dimensions.')
+
     if data_format.lower() == 'channels_last':
         if len(input_shape) == 2:  # 1D, (n_in, n_filt)
             return (input_shape[0], input_shape[1])
         elif len(input_shape) == 3:  # 2D, (in_height, in_width, n_filt)
             return (input_shape[0], input_shape[1], input_shape[2])
+        elif len(input_shape) == 4:  # 3D, (time_steps, in_height, in_width, n_filt)
+            return (input_shape[0], input_shape[1], input_shape[2], input_shape[3])
 
     elif data_format.lower() == 'channels_first':
         if len(input_shape) == 2:  # 1D, (n_filt, n_in)
             return (input_shape[1], input_shape[0])
         elif len(input_shape) == 3:  # 2D, (n_filt, in_height, in_width)
             return (input_shape[1], input_shape[2], input_shape[0])
+        elif len(input_shape) == 4:  # 3D, (time_steps, n_filt, in_height, in_width)
+            return (input_shape[0], input_shape[2], input_shape[3], input_shape[1])
     else:
         raise Exception(f'Unknown data format: {data_format}')
 

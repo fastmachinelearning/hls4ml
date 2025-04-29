@@ -64,6 +64,7 @@ register_flow(
         'remove_nop_transpose',
         'remove_single_channel_transpose',
         'fuse_bias_add',
+        'expand_time_distributed',
         'expand_layer_group',
         'output_rounding_saturation_mode',
         'qkeras_factorize_alpha',
