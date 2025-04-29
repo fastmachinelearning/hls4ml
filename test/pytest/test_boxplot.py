@@ -20,10 +20,10 @@ def mock_data():
 def generate_random_summary_data(num_layers=3, num_weights_per_layer=2):
     data = []
     for layer_idx in range(1, num_layers + 1):
-        layer_name = f"dense_{layer_idx}"
+        layer_name = f'dense_{layer_idx}'
         for weight_idx in range(num_weights_per_layer):
-            weight_type = "w" if weight_idx == 0 else "b"
-            weight_label = f"{layer_name}/{weight_type}"
+            weight_type = 'w' if weight_idx == 0 else 'b'
+            weight_label = f'{layer_name}/{weight_type}'
             med = np.random.uniform(0.1, 1.0)
             q1 = med - np.random.uniform(0.05, 0.2)
             q3 = med + np.random.uniform(0.05, 0.2)
@@ -43,31 +43,31 @@ def generate_random_summary_data(num_layers=3, num_weights_per_layer=2):
     return data
 
 
-@pytest.mark.parametrize("fmt", ["longform", "summary"])
+@pytest.mark.parametrize('fmt', ['longform', 'summary'])
 def test_boxplot_vertical_line(mock_data, fmt):
     # Test if the vertical line at x=1 exists in the boxplot.
-    if fmt == "summary":
+    if fmt == 'summary':
         mock_data = generate_random_summary_data()
     fig = boxplot(mock_data, fmt=fmt)
-    output_path = f"boxplot_vertical_line_{fmt}.png"
+    output_path = f'boxplot_vertical_line_{fmt}.png'
     fig.savefig(output_path)
-    logger.info(f"Boxplot with vertical line ({fmt}) saved to: {output_path}")
+    logger.info(f'Boxplot with vertical line ({fmt}) saved to: {output_path}')
     ax = plt.gca()
     found_vertical_line = any(
         len(line.get_xdata()) == 2 and line.get_xdata()[0] == line.get_xdata()[1] == 1 for line in ax.get_lines()
     )
-    assert found_vertical_line, f"Vertical line at x=1 (2^0) is missing in the boxplot ({fmt})."
+    assert found_vertical_line, f'Vertical line at x=1 (2^0) is missing in the boxplot ({fmt}).'
     plt.close(fig)
 
 
-@pytest.mark.parametrize("fmt", ["longform", "summary"])
+@pytest.mark.parametrize('fmt', ['longform', 'summary'])
 def test_boxplot_output(mock_data, fmt):
     # Test if the boxplot function produces a valid matplotlib figure.
-    if fmt == "summary":
+    if fmt == 'summary':
         mock_data = generate_random_summary_data()
     fig = boxplot(mock_data, fmt=fmt)
-    output_path = f"boxplot_output_{fmt}.png"
+    output_path = f'boxplot_output_{fmt}.png'
     fig.savefig(output_path)
-    logger.info(f"Boxplot output ({fmt}) saved to: {output_path}")
-    assert isinstance(fig, plt.Figure), f"The boxplot function did not return a matplotlib Figure ({fmt})."
+    logger.info(f'Boxplot output ({fmt}) saved to: {output_path}')
+    assert isinstance(fig, plt.Figure), f'The boxplot function did not return a matplotlib Figure ({fmt}).'
     plt.close(fig)
