@@ -1,8 +1,64 @@
 import csv
 import os
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 import numpy as np
+
+
+def parse_component_xml(component_xml_path):
+    """
+    Parse the component.xml from the generated Vivado IP and return a dict of the port metadata.
+    """
+    if not os.path.exists(component_xml_path):
+        raise FileNotFoundError(f"component.xml not found at {component_xml_path}")
+
+    tree = ET.parse(component_xml_path)
+    root = tree.getroot()
+
+    ns = {
+        'spirit': 'http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009',
+        'xilinx': 'http://www.xilinx.com',
+        'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+    }
+
+    ports = root.findall('.//spirit:model/spirit:ports/spirit:port', namespaces=ns)
+    port_dict = {}
+
+    for port in ports:
+        name = port.find('spirit:name', namespaces=ns).text
+        wire = port.find('spirit:wire', namespaces=ns)
+        if wire is not None:
+            direction = wire.find('spirit:direction', namespaces=ns).text
+            vector = wire.find('spirit:vector', namespaces=ns)
+            if vector is not None:
+                left = vector.find('spirit:left', namespaces=ns).text
+                right = vector.find('spirit:right', namespaces=ns).text
+                width = abs(int(left) - int(right)) + 1
+            else:
+                width = 1
+
+            port_dict[name] = {'direction': direction, 'width': width}
+
+    return port_dict
+
+
+def annotate_axis_stream_widths(nn_config, vivado_project_path):
+    """
+    Annotate nn_config with Vivado IP AXIS bus and per-element widths.
+    """
+    component_xml_path = os.path.join(vivado_project_path, 'solution1/impl/ip/component.xml')
+    port_dict = parse_component_xml(component_xml_path)
+    for layer in nn_config.get('outputs', []):
+        batch = layer['batch_size']
+        # find the TDATA port (case-insensitive)
+        port, info = next(((p, i) for p, i in port_dict.items() if p.lower() == f"{layer['name']}_tdata"), (None, None))
+        if port is None:
+            raise KeyError(f"No TDATA port for '{layer['name']}' in {component_xml_path}")
+        w = info['width']
+        if w % batch:
+            raise ValueError(f"Bus width ({w}) not divisible by No of output elements ({batch})")
+        layer.update({'axis_bus_width': w, 'axis_element_width': w // batch})
 
 
 def write_verilog_testbench(nn_config, testbench_output_path):
@@ -71,7 +127,8 @@ def write_verilog_testbench(nn_config, testbench_output_path):
                 name = layer["name"]
                 total_bits = layer['integer_bits'] + layer['fractional_bits']
                 batch_size = layer['batch_size']
-                f.write(f'    wire [{(total_bits * batch_size) - 1}:0] {name}_tdata;\n')
+                axis_bus_width = layer['axis_bus_width']
+                f.write(f'    wire [{axis_bus_width - 1}:0] {name}_tdata;\n')
                 f.write(f'    wire {name}_tvalid;\n')
                 f.write(f'    reg  {name}_tready;\n\n')
         else:
@@ -391,9 +448,12 @@ def write_verilog_testbench(nn_config, testbench_output_path):
                 f.write(f'    real real_val_{i};\n')
             f.write('    always @(posedge ap_clk) begin\n')
             if pragma == 'stream':
+                axis_element_width = layer['axis_element_width']
                 f.write(f'        if (done_counter == 1 && {layer_name}_tvalid && {layer_name}_tready) begin\n')
                 f.write(f'            for (idx_{i} = 0; idx_{i} < {batch_size}; idx_{i} = idx_{i} + 1) begin\n')
-                f.write(f'                fixed_val_{i} = {layer_name}_tdata[(idx_{i}+1)*{total_bits}-1 -: {total_bits}];\n')
+                f.write(
+                    f'                fixed_val_{i} = {layer_name}_tdata[idx_{i}*{axis_element_width} +: {total_bits}];\n'
+                )
                 f.write(f'                real_val_{i}  = fixed_val_{i} / (1.0 * (1 << {f_bits}));\n')
                 f.write(f'                $display("Output {layer_name}[%0d]: %.15f", idx_{i}, real_val_{i});\n')
                 f.write('                // Log result to CSV\n')
