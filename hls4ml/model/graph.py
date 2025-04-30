@@ -1295,6 +1295,7 @@ class MultiModelGraph:
                 raise FileExistsError(f"Vivado stitched project folder '{vivado_folder}' already exists.")
             nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
+                self,
                 stitch_design=stitch_design,
                 sim_stitched_design=sim_stitched_design,
                 export_stitched_design=export_stitched_design,
@@ -1318,6 +1319,7 @@ class MultiModelGraph:
         elif sim == 'rtl':
             nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
+                self,
                 stitch_design=False,
                 sim_stitched_design=True,
                 export_stitched_design=False,
