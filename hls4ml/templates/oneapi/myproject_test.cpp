@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "firmware/myproject.h"
+#include "firmware/nnet_utils/nnet_data_movement.h"
 #include "firmware/parameters.h"
 
 #include <sycl/ext/intel/fpga_extensions.hpp>
