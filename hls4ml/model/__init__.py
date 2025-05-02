@@ -1,1 +1,1 @@
-from hls4ml.model.graph import FilesystemModelGraph, HLSConfig, ModelGraph  # noqa: F401
+from hls4ml.model.graph import HLSConfig, ModelGraph  # noqa: F401
