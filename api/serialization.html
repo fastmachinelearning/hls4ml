@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>oneAPI &mdash; hls4ml 1.1.0 documentation</title>
+  <title>Saving/Loading hls4ml models &mdash; hls4ml 1.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Catapult" href="catapult.html" />
-    <link rel="prev" title="VivadoAccelerator" href="accelerator.html" /> 
+    <link rel="next" title="Keras and QKeras" href="../frontend/keras.html" />
+    <link rel="prev" title="Command Line Interface (deprecated)" href="command.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -55,11 +55,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Saving/Loading hls4ml models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#linking-with-existing-project">Linking with existing project</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
 <ul>
@@ -68,16 +71,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Backends</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="vitis.html">Vivado/Vitis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">oneAPI</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#io-parallel-and-io-stream">io_parallel and io_stream</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="catapult.html">Catapult</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quartus.html">Quartus</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sr.html">SymbolicExpression</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
@@ -121,9 +121,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">oneAPI</li>
+      <li class="breadcrumb-item active">Saving/Loading hls4ml models</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/backend/oneapi.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/api/serialization.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -131,33 +131,41 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="oneapi">
-<h1>oneAPI<a class="headerlink" href="#oneapi" title="Link to this heading"></a></h1>
-<p>The <strong>oneAPI</strong> backend of hls4ml is designed for deploying NNs on Intel/Altera FPGAs. It will eventually
-replace the <strong>Quartus</strong> backend, which targeted Intel HLS. (Quartus continues to be used with IP produced by the
-<strong>oneAPI</strong> backend.) This section discusses details of the <strong>oneAPI</strong> backend.</p>
-<p>The <strong>oneAPI</strong> code uses SYCL kernels to implement the logic that is deployed on FPGAs. It naturally leads to the
-accelerator style of programming. In the SYCL HLS (IP Component) flow, which is currently the only flow supported, the
-kernel becomes the IP, and the “host code” becomes the testbench. An accelerator flow, with easier deployment on
-PCIe accelerator boards, is planned to be added in the future.</p>
-<p>The produced work areas use cmake to build the projects in a style based
-<a class="reference external" href="https://github.com/oneapi-src/oneAPI-samples/tree/main/DirectProgramming/C%2B%2BSYCL_FPGA">oneAPI-samples</a>.
-The standard <code class="docutils literal notranslate"><span class="pre">fpga_emu</span></code>, <code class="docutils literal notranslate"><span class="pre">report</span></code>, <code class="docutils literal notranslate"><span class="pre">fpga_sim</span></code>, and <code class="docutils literal notranslate"><span class="pre">fpga</span></code> make targets are supported. Additionally, <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">lib</span></code>
-produces the library used for calling the <code class="docutils literal notranslate"><span class="pre">predict</span></code> function from hls4ml. The <code class="docutils literal notranslate"><span class="pre">compile</span></code> and <code class="docutils literal notranslate"><span class="pre">build</span></code> commands
-in hls4ml interact with the cmake system, so one does not need to manually use the build system, but it there
-if desired.</p>
-<p>The <strong>oneAPI</strong> backend, like the <strong>Quartus</strong> backend, only implements the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy for the layers. There
-is no <code class="docutils literal notranslate"><span class="pre">Latency</span></code> implementation of any of the layers.</p>
-<p>Note:  currently tracing and external weights (i.e. setting BramFactor) are not supported.</p>
-<section id="io-parallel-and-io-stream">
-<h2>io_parallel and io_stream<a class="headerlink" href="#io-parallel-and-io-stream" title="Link to this heading"></a></h2>
-<p>As mentioned in the <a class="reference internal" href="../api/concepts.html#i-o-types"><span class="std std-ref">I/O Types</span></a> section, <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> is for small models, while <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> is for
-larger models. In <code class="docutils literal notranslate"><span class="pre">oneAPI</span></code>, there is an additional difference: <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> implements each layer on its
-own <code class="docutils literal notranslate"><span class="pre">task_sequence</span></code>. Thus, the layers run in parallel, with pipes connecting the inputs and outputs. This
-is similar in style to the <cite>dataflow</cite> implementation on Vitis HLS, but more explicit. It is also a change
-relative to the Intel HLS-based <code class="docutils literal notranslate"><span class="pre">Quartus</span></code> backend. On the other hand, <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> always uses a single task,
-relying on pipelining within the task for good performance. In contrast, the Vitis backend sometimes uses dataflow
-with <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code>.</p>
+  <section id="saving-loading-hls4ml-models">
+<h1>Saving/Loading hls4ml models<a class="headerlink" href="#saving-loading-hls4ml-models" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> model objects (instances of <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> class) can be saved to disk and loaded at a later stage. The saved model doesn’t require original Keras/PyTorch/ONNX model for loading.</p>
+<p>To save/load a model use the following API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_keras_model</span><span class="p">,</span> <span class="n">load_saved_model</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+<span class="c1"># Save a model to some path</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;some/path/my_hls4ml_model.fml&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load a model from a file</span>
+<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">load_saved_model</span><span class="p">(</span><span class="s1">&#39;some/path/my_hls4ml_model.fml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Saved model will have a <code class="docutils literal notranslate"><span class="pre">.fml</span></code> extension, but is in fact a gzipped tar archive. Loaded model can be used in the same way as the original one. This includes modification of certain config parameters, for example output directory, layer reuse factor etc.</p>
+<section id="linking-with-existing-project">
+<h2>Linking with existing project<a class="headerlink" href="#linking-with-existing-project" title="Link to this heading"></a></h2>
+<p>Once the project has been written to disk with <code class="docutils literal notranslate"><span class="pre">ModelGraph.write()</span></code>, it can also be linked with at later stage. Similarly to loading a saved model, this feature allows skipping the conversion step. Additionally, it may be used to test manual changes to the generated project.</p>
+<p>Linking function will create a special instance of <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> that only allows calls to <code class="docutils literal notranslate"><span class="pre">compile()</span></code>, <code class="docutils literal notranslate"><span class="pre">predict()</span></code> and <code class="docutils literal notranslate"><span class="pre">build()</span></code>. Other calls to the <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> instance are disabled.</p>
+<p>To link a model use the following API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_keras_model</span><span class="p">,</span> <span class="n">link_existing_project</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;/some/path/&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+<span class="c1"># Generate the project files and write them to some path</span>
+<span class="n">model</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+<span class="c1"># Later on, link this path to the Python runtime</span>
+<span class="n">linked_model</span> <span class="o">=</span> <span class="n">link_existing_project</span><span class="p">(</span><span class="s1">&#39;some/path/&#39;</span><span class="p">)</span>
+<span class="n">linked_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<span class="n">linked_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">linked_model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -165,8 +173,8 @@ with <code class="docutils literal notranslate"><span class="pre">io_parallel</s
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="accelerator.html" class="btn btn-neutral float-left" title="VivadoAccelerator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="catapult.html" class="btn btn-neutral float-right" title="Catapult" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="command.html" class="btn btn-neutral float-left" title="Command Line Interface (deprecated)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../frontend/keras.html" class="btn btn-neutral float-right" title="Keras and QKeras" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

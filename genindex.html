@@ -56,6 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api/concepts.html">Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/serialization.html">Saving/Loading hls4ml models</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
 <ul>
@@ -390,6 +391,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.build">(hls4ml.model.graph.ModelGraph method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.build">(hls4ml.utils.link.FilesystemModelGraph method)</a>
+</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -455,6 +458,8 @@
         <li><a href="autodoc/hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.compile">(hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.compile">(hls4ml.model.graph.ModelGraph method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.compile">(hls4ml.utils.link.FilesystemModelGraph method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.CompressedType">CompressedType (class in hls4ml.model.types)</a>
@@ -791,6 +796,22 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.DepthwiseConv2DFunctionTemplate">(class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.deserialize">deserialize() (hls4ml.model.graph.HLSConfig class method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.deserialize">(hls4ml.model.graph.ModelGraph class method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.InplaceTensorVariable.deserialize">(hls4ml.model.types.InplaceTensorVariable class method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Serializable.deserialize">(hls4ml.model.types.Serializable class method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.deserialize">(hls4ml.model.types.TensorVariable class method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.WeightVariable.deserialize">(hls4ml.model.types.WeightVariable class method)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.serialization.deserialize_model">deserialize_model() (in module hls4ml.utils.serialization)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Dot">Dot (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.merge_templates.DotConfigTemplate">DotConfigTemplate (class in hls4ml.backends.catapult.passes.merge_templates)</a>
@@ -871,6 +892,10 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization">(class in hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph">FilesystemModelGraph (class in hls4ml.utils.link)</a>
+</li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.VariableWrapper">FilesystemModelGraph.VariableWrapper (class in hls4ml.utils.link)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.find_minimum_width">find_minimum_width() (in module hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.hgq_proxy_model.fixedpoint_quantizer_handler">fixedpoint_quantizer_handler() (in module hls4ml.converters.keras.hgq_proxy_model)</a>
@@ -1297,6 +1322,10 @@
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType.fractional">(hls4ml.model.types.IntegerPrecisionType property)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.from_layer_list">from_layer_list() (hls4ml.model.graph.ModelGraph class method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.from_saved_state">from_saved_state() (hls4ml.model.graph.ModelGraph class method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.RoundingMode.from_string">from_string() (hls4ml.model.types.RoundingMode class method)</a>
 
       <ul>
@@ -1456,7 +1485,11 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_input_variable">get_input_variable() (hls4ml.model.layers.Layer method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_input_variables">get_input_variables() (hls4ml.model.graph.ModelGraph method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.get_input_variables">(hls4ml.utils.link.FilesystemModelGraph method)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_interface">get_interface() (hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_io_bitwidth">get_io_bitwidth() (hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig method)</a>
@@ -1516,7 +1549,11 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_output_variable">get_output_variable() (hls4ml.model.layers.Layer method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_output_variables">get_output_variables() (hls4ml.model.graph.ModelGraph method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.get_output_variables">(hls4ml.utils.link.FilesystemModelGraph method)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_part">get_part() (hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_platform">get_platform() (hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig method)</a>
@@ -2360,8 +2397,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.quantization_templates
 
@@ -2369,6 +2404,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.quantization_templates">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.recurrent_templates
 
@@ -3000,10 +3037,24 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.utils.link
+
+      <ul>
+        <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.link">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.utils.plot
 
       <ul>
         <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.plot">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.utils.serialization
+
+      <ul>
+        <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.serialization">module</a>
 </li>
       </ul></li>
       <li>
@@ -3423,8 +3474,12 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.LayerOptimizerPass">LayerOptimizerPass (class in hls4ml.model.optimizer.optimizer)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.link_existing_project">link_existing_project() (in module hls4ml.converters)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.load_saved_model">load_saved_model() (in module hls4ml.converters)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LSTM">LSTM (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.oneapi.passes.html#hls4ml.backends.oneapi.passes.recurrent_templates.LSTMConfigTemplate">LSTMConfigTemplate (class in hls4ml.backends.oneapi.passes.recurrent_templates)</a>
@@ -4075,7 +4130,11 @@
 </li>
         <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.fixed_point_utils">hls4ml.utils.fixed_point_utils</a>
 </li>
+        <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.link">hls4ml.utils.link</a>
+</li>
         <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.plot">hls4ml.utils.plot</a>
+</li>
+        <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.serialization">hls4ml.utils.serialization</a>
 </li>
         <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils</a>
 </li>
@@ -4503,7 +4562,11 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.PrecisionType">PrecisionType (class in hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.predict">predict() (hls4ml.model.graph.ModelGraph method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.predict">(hls4ml.utils.link.FilesystemModelGraph method)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.PReLU">PReLU (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.oneapi.passes.html#hls4ml.backends.oneapi.passes.core_templates.PReLUActivationStreamFunctionTemplate">PReLUActivationStreamFunctionTemplate (class in hls4ml.backends.oneapi.passes.core_templates)</a>
@@ -4824,6 +4887,8 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.SaturationMode">SaturationMode (class in hls4ml.model.types)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.save">save() (hls4ml.model.graph.ModelGraph method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd">ScaleDownAdd (class in hls4ml.model.optimizer.passes.move_scales)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv">ScaleDownConv (class in hls4ml.model.optimizer.passes.move_scales)</a>
@@ -4860,6 +4925,66 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv">SeparableToDepthwiseAndConv (class in hls4ml.model.optimizer.passes.seperable_to_dw_conv)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Serializable">Serializable (class in hls4ml.model.types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.serialize">serialize() (hls4ml.model.graph.HLSConfig method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.serialize">(hls4ml.model.graph.ModelGraph method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Serializable.serialize">(hls4ml.model.types.Serializable method)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Serializable.serialize_class_name">serialize_class_name() (hls4ml.model.types.Serializable method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Source.serialize_class_name">(hls4ml.model.types.Source method)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.serialization.serialize_model">serialize_model() (in module hls4ml.utils.serialization)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.serialize_state">serialize_state() (hls4ml.model.layers.Layer method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer.serialize_state">(hls4ml.model.quantizers.BinaryQuantizer method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QKerasBinaryQuantizer.serialize_state">(hls4ml.model.quantizers.QKerasBinaryQuantizer method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QKerasPO2Quantizer.serialize_state">(hls4ml.model.quantizers.QKerasPO2Quantizer method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QKerasQuantizer.serialize_state">(hls4ml.model.quantizers.QKerasQuantizer method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.Quantizer.serialize_state">(hls4ml.model.quantizers.Quantizer method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QuantNodeQuantizer.serialize_state">(hls4ml.model.quantizers.QuantNodeQuantizer method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.TernaryQuantizer.serialize_state">(hls4ml.model.quantizers.TernaryQuantizer method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.CompressedType.serialize_state">(hls4ml.model.types.CompressedType method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.serialize_state">(hls4ml.model.types.FixedPrecisionType method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.InplaceTensorVariable.serialize_state">(hls4ml.model.types.InplaceTensorVariable method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.NamedType.serialize_state">(hls4ml.model.types.NamedType method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.PackedType.serialize_state">(hls4ml.model.types.PackedType method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.PrecisionType.serialize_state">(hls4ml.model.types.PrecisionType method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Serializable.serialize_state">(hls4ml.model.types.Serializable method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Source.serialize_state">(hls4ml.model.types.Source method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.serialize_state">(hls4ml.model.types.TensorVariable method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Variable.serialize_state">(hls4ml.model.types.Variable method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.WeightVariable.serialize_state">(hls4ml.model.types.WeightVariable method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.set_attr">set_attr() (hls4ml.model.layers.Layer method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.set_big_fifos">set_big_fifos() (in module hls4ml.backends.catapult.passes.fifo_depth_optimization)</a>
@@ -4878,8 +5003,6 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits">set_msb_bits() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.set_name_config">set_name_config() (hls4ml.model.graph.HLSConfig method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.set_optimized_fifo_depths">set_optimized_fifo_depths() (in module hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
@@ -4905,7 +5028,11 @@
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.size">size() (hls4ml.model.types.TensorVariable method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.VariableWrapper.size">(hls4ml.utils.link.FilesystemModelGraph.VariableWrapper method)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.size_cpp">size_cpp() (hls4ml.model.types.TensorVariable method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax">SkipSoftmax (class in hls4ml.backends.fpga.passes.remove_softmax)</a>

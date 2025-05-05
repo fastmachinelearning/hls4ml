@@ -59,6 +59,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
 <ul>
@@ -106,8 +107,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.dependency">hls4ml.utils.dependency module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.example_models">hls4ml.utils.example_models module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.fixed_point_utils">hls4ml.utils.fixed_point_utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.link">hls4ml.utils.link module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.plot">hls4ml.utils.plot module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-profiling-utils-module">hls4ml.utils.profiling_utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.serialization">hls4ml.utils.serialization module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.symbolic_utils">hls4ml.utils.symbolic_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-torch-module">hls4ml.utils.torch module</a></li>
@@ -432,6 +435,58 @@ and return the corresponding configuration:</p>
 <dd></dd></dl>
 
 </section>
+<section id="module-hls4ml.utils.link">
+<span id="hls4ml-utils-link-module"></span><h2>hls4ml.utils.link module<a class="headerlink" href="#module-hls4ml.utils.link" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.link.</span></span><span class="sig-name descname"><span class="pre">FilesystemModelGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelGraph</span></code></a></p>
+<p>A subclass of ModelGraph that can link with an existing project in the filesystem.</p>
+<p>This allows the user to call <cite>compile()</cite>, <cite>predict()</cite> and <cite>build()</cite> functions.
+All other methods are disabled and will raise an exception if accessed.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph.VariableWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">VariableWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph.VariableWrapper" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph.VariableWrapper.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph.VariableWrapper.size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph.build" title="Link to this definition"></a></dt>
+<dd><p>Builds the generated project using HLS compiler.</p>
+<p>Please see the <cite>build()</cite> function of backends for a list of possible arguments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph.compile" title="Link to this definition"></a></dt>
+<dd><p>Compile the generated project and link the library into current environment.</p>
+<p>Users should call this function if they want to use <cite>predict</cite> functionality for simulation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph.get_input_variables">
+<span class="sig-name descname"><span class="pre">get_input_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph.get_input_variables" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph.get_output_variables">
+<span class="sig-name descname"><span class="pre">get_output_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph.get_output_variables" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.link.FilesystemModelGraph.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.link.FilesystemModelGraph.predict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.utils.plot">
 <span id="hls4ml-utils-plot-module"></span><h2>hls4ml.utils.plot module<a class="headerlink" href="#module-hls4ml.utils.plot" title="Link to this heading"></a></h2>
 <p>Utilities related to model visualization.</p>
@@ -505,6 +560,77 @@ This enables in-line display of the model plots in notebooks.</p>
 </section>
 <section id="hls4ml-utils-profiling-utils-module">
 <h2>hls4ml.utils.profiling_utils module<a class="headerlink" href="#hls4ml-utils-profiling-utils-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.utils.serialization">
+<span id="hls4ml-utils-serialization-module"></span><h2>hls4ml.utils.serialization module<a class="headerlink" href="#module-hls4ml.utils.serialization" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.serialization.deserialize_model">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.serialization.</span></span><span class="sig-name descname"><span class="pre">deserialize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.serialization.deserialize_model" title="Link to this definition"></a></dt>
+<dd><p>Deserializes an hls4ml model from a compressed file format (.fml).</p>
+<p>This function extracts the model’s architecture, configuration, internal state,
+and version information from the provided <cite>.fml</cite> file and returns a new instance of ModelGraph.
+If testbench data was provided during the serialization, it will be restored to the specified output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The path to the serialized model file (.fml).</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em>, </em><em>optional</em>) – The directory where extracted
+testbench data files will be saved. If not specified, the files will
+be restored to the same directory as the <cite>.fml</cite> file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The deserialized hls4ml model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph">ModelGraph</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If the specified <cite>.fml</cite> file does not exist.</p></li>
+<li><p><strong>OSError</strong> – If an I/O error occurs during extraction or file operations.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The function ensures that input/output testbench data files are restored
+to the specified output directory if they were included during serialization.</p></li>
+<li><p>The deserialized model includes its architecture, configuration, and internal
+state, allowing it to be used as if it were freshly created.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.serialization.serialize_model">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.serialization.</span></span><span class="sig-name descname"><span class="pre">serialize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.serialization.serialize_model" title="Link to this definition"></a></dt>
+<dd><p>Serializes an hls4ml model into a compressed file format (.fml).</p>
+<p>This function saves the model’s architecture, configuration, internal state,
+and version information into a temporary directory. It then compresses the
+directory into a <cite>.fml</cite> file (a tar.gz archive with a custom extension) at
+the specified file path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The hls4ml model to be serialized.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The path where the serialized model
+will be saved. If the file extension is not <cite>.fml</cite>, it will be
+automatically appended.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>OSError</strong> – If the file cannot be written or an I/O error occurs.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The function also handles serialization of NumPy arrays and ensures
+that input/output testbench data files are included if specified in
+the model configuration.</p></li>
+<li><p>Existing files at the specified path will be overwritten.</p></li>
+</ul>
+</dd></dl>
+
 </section>
 <section id="module-hls4ml.utils.string_utils">
 <span id="hls4ml-utils-string-utils-module"></span><h2>hls4ml.utils.string_utils module<a class="headerlink" href="#module-hls4ml.utils.string_utils" title="Link to this heading"></a></h2>
