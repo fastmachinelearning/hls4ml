@@ -1,3 +1,4 @@
+import os
 import typing
 from functools import singledispatch
 from math import prod
@@ -116,10 +117,8 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.cmvm import solve
-        from da4ml.cmvm.types import QInterval
         from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
-        from da4ml.trace import FixedVariable, trace
+        from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
 
         kernel: np.ndarray = node.attributes['weight'].data
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -127,22 +126,15 @@ class DistributedArithmeticCodegen(OptimizerPass):
         fn_name = f'dense_da_{node.index}'
 
         k, i, f = get_kernel_inp_kif(node)
-        _step = 2.0**-f
-        _min, _max = -(2.0**i) * k, 2.0**i - _step
-        qints = [QInterval(_mi, _ma, _st) for _mi, _ma, _st in zip(_min, _max, _step)]
-
-        sol0 = solve(kernel, hard_dc=4, qintervals=qints)
-        # cascaded CMVM solution
-
-        # retrace to flatten out and add bias
-        inp = [FixedVariable(*qint) for qint in qints]
-        out = list(sol0(inp))
+        hard_dc = int(os.environ.get('DA_HARD_DC', 2))
+        options = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
+        inp = FixedVariableArray.from_kif(k, i, f, HWConfig(1, -1, -1), solver_options=options)
+        out = kernel @ inp
         if node.attributes['bias'] is not None:
             bias = node.attributes['bias'].data.ravel()
             assert len(bias) == n_out
-            for i, b in enumerate(bias):
-                out[i] = out[i] + float(b)
-        sol = trace(inp, out)
+            out += bias
+        sol = comb_trace(inp, out)
 
         flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
         pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
@@ -352,10 +344,8 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.cmvm import solve
-        from da4ml.cmvm.types import QInterval
         from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
-        from da4ml.trace import FixedVariable, trace
+        from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
 
         kernel: np.ndarray = node.attributes['weight'].data
         I, C, L_ker = kernel.shape
@@ -368,12 +358,11 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
         for i in range(I):
             _k, _i, _f = (v[i] for v in inp_kifs)
             fn_name = f'einsum_{node.index}_da_{i}_of_{I}'
-            _min, _max, _step = -(2.0**_i) * _k, 2.0**_i - 2.0**-_f, 2.0**-_f
-            qints = [QInterval(_mi, _mx, _st) for _mi, _mx, _st in zip(_min, _max, _step)]
-            sol0 = solve(kernel[i], hard_dc=4, qintervals=qints)
-            inp = [FixedVariable(*qint) for qint in qints]
-            out = list(sol0(inp))
-            sol = trace(inp, out)
+            hard_dc = int(os.environ.get('DA_HARD_DC', 2))
+            options = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
+            inp = FixedVariableArray.from_kif(_k, _i, _f, HWConfig(1, -1, -1), solver_options=options)
+            out = inp @ kernel[i]
+            sol = comb_trace(inp, out)
 
             flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
             pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
