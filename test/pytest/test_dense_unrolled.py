@@ -107,6 +107,7 @@ def test_resource_unrolled_rnn(rnn_layer, backend, io_type, static, reuse_factor
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
+    X = np.round(X * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
 
     layer_name = rnn_layer.__name__.lower()
     keras_model = Sequential()
