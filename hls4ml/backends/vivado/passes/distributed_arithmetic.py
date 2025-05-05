@@ -129,12 +129,13 @@ class DistributedArithmeticCodegen(OptimizerPass):
         hard_dc = int(os.environ.get('DA_HARD_DC', 2))
         options = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
         inp = FixedVariableArray.from_kif(k, i, f, HWConfig(1, -1, -1), solver_options=options)
-        out = kernel @ inp
+        out = inp @ kernel
         if node.attributes['bias'] is not None:
             bias = node.attributes['bias'].data.ravel()
             assert len(bias) == n_out
             out += bias
         sol = comb_trace(inp, out)
+        node.attributes['da_kernel_cost'] = sol.cost
 
         flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
         pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
