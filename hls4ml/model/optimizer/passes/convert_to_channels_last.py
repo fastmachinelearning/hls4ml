@@ -116,7 +116,7 @@ class ChannelsLastConverter(OptimizerPass):
 
             # Add transpose for output layer
             elif (
-                node.get_attr('name') in model.outputs
+                node.name in model.outputs
                 and len(outshape) > 1
                 and model.config.config['HLSConfig']['Model']['TransposeOutputs']
             ):
