@@ -5,11 +5,10 @@ from warnings import warn
 
 import numpy as np
 
-from hls4ml.backends.fpga.fpga_types import NamedType
 from hls4ml.model.attributes import Attribute, TypeAttribute, WeightAttribute
 from hls4ml.model.layers import Layer, Reshape, register_layer
 from hls4ml.model.optimizer import OptimizerPass, register_pass
-from hls4ml.model.types import FixedPrecisionType, UnspecifiedPrecisionType, WeightVariable
+from hls4ml.model.types import FixedPrecisionType, UnspecifiedPrecisionType
 
 if typing.TYPE_CHECKING:
     from hls4ml.model import ModelGraph
@@ -181,26 +180,8 @@ class EnforceProxyModelEmbeddedConfig(OptimizerPass):
                     continue
 
                 if k.endswith('_t'):
-                    var_type = target_node.get_attr(k)  # type: ignore
-                    if var_type is None:
-                        continue
-                    var_type: NamedType
-                    precision = to_hls4ml_fixed(v)
-                    var_type.precision = precision
-                    if k == 'result_t':
-                        type_name = f'{name}_t'
-                    else:
-                        type_name = f'{name}_{k}'
-                    var_type.name = type_name
-                    # Need to overwrite kernel/bias writing precision also, or written weights will likely be wrong.
-                    if k[:-2] in target_node.attributes.keys():
-                        weight_var: WeightVariable = target_node.attributes[k[:-2]]
-                        # weight_var should be a StaticWeightVariable, which is again, defined with meta programming
-                        # Type hinting using StaticWeightVariableDefinition which is the base class.
-                        weight_var.update_precision(precision)
-                    # Well, it turned out that there is yet ANOTHER copy saved in config.
-                    model.config.layer_name_precision[f'{name}_{k[:-2]}'] = v
-                elif k in target_node.attributes:
+                    continue  # Handled in bit-exact flow.
+                elif k in target_node.attributes.attributes:
                     target_node.set_attr(k, v)
                 elif k == 'parallelization_factor':
                     target_node.set_attr(k, int(v))
@@ -219,5 +200,5 @@ def register_hgq_proxy_model():
     register_layer('HGQ>FixedPointQuantizer', FixedPointQuantizer)
     register_layer('UnaryLUT', UnaryLUT)
     register_layer('HGQ>UnaryLUT', UnaryLUT)
-    # register_pass('enforce_proxy_model_embedded_config', EnforceProxyModelEmbeddedConfig)
+    register_pass('enforce_proxy_model_embedded_config', EnforceProxyModelEmbeddedConfig)
     register_pass('fuse_fixed_point_quantizer', FuseFixedPointQuantizer)
