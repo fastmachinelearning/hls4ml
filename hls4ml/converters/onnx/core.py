@@ -131,4 +131,3 @@ def parse_bipolar_quant_layer(node, input_names, input_shapes, graph):
     layer['inputs'] = input_names
     layer['outputs'] = list(node.output)
     return layer
-

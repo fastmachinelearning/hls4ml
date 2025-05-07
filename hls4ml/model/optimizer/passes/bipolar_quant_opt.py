@@ -14,12 +14,9 @@ and Linear nodes are immediately merged into the Constant.
 
 """
 
-import copy
-import math  # prefer to use math.ceil for scalar values
-
 import numpy as np
 
-from hls4ml.model.layers import Activation, ApplyAlpha, Constant, BipolarQuant
+from hls4ml.model.layers import Activation, BipolarQuant, Constant
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import BinaryQuantizer
 from hls4ml.model.types import XnorPrecisionType
@@ -34,9 +31,7 @@ class BipolarQuantConstantParameters(OptimizerPass):
         is_match = (
             isinstance(node, BipolarQuant)
             and len(node.inputs) == 2
-            and (
-                (node.get_input_node(node.inputs[1]) and isinstance(node.get_input_node(node.inputs[1]), Constant))
-            )
+            and (node.get_input_node(node.inputs[1]) and isinstance(node.get_input_node(node.inputs[1]), Constant))
         )
 
         return is_match
@@ -118,7 +113,9 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
     def match(self, node):
         # only matches after the other inputs are already folded
         is_match = (
-            isinstance(node, BipolarQuant) and len(node.inputs) == 1 and isinstance(node.get_input_node(node.inputs[0]), Constant)
+            isinstance(node, BipolarQuant)
+            and len(node.inputs) == 1
+            and isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
         # Only match if the scale is power of 2 and the zero-point is 0s
@@ -138,7 +135,7 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
 
         scale = node.get_attr('scale')
         assert np.all(scale == 1.0)  # TODO: Is this required?
-        
+
         precision = XnorPrecisionType()
         quantizer = BinaryQuantizer(bits=1)
 
@@ -152,4 +149,3 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
         model.remove_node(node)
 
         return True
-

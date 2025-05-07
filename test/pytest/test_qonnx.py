@@ -13,6 +13,7 @@ from qonnx.core.modelwrapper import ModelWrapper
 from qonnx.transformation.channels_last import ConvertToChannelsLastAndClean
 from qonnx.transformation.gemm_to_matmul import GemmToMatMul
 from qonnx.util.cleanup import cleanup_model
+
 import hls4ml
 
 test_root_path = Path(__file__).parent
@@ -437,7 +438,7 @@ def test_bnn(io_type, backend):
     test_dir = os.path.dirname(os.path.abspath(__file__))
     qonnx_model = ModelWrapper(f'{test_dir}/bnn_model_fc_1layer.onnx')
     qonnx_model = cleanup_model(qonnx_model)
-    qonnx_model = qonnx_model.transform(GemmToMatMul())    # ishape = (1, 3)
+    qonnx_model = qonnx_model.transform(GemmToMatMul())  # ishape = (1, 3)
     qonnx_model = qonnx.util.cleanup.cleanup_model(qonnx_model)
     config = hls4ml.utils.config.config_from_onnx_model(
         qonnx_model, granularity='name', backend=backend, default_precision='fixed<16,6>'
@@ -451,18 +452,22 @@ def test_bnn(io_type, backend):
         hls_config=config,
     )
     hls_model.compile()
-    
-    X = np.array([[[+1, +1, +1]],
-                  [[+1, +1, -1]],
-                  [[+1, -1, +1]],
-                  [[-1, -1, -1]],
-                  [[-1, +1, +1]],
-                  [[-1, +1, -1]],
-                  [[-1, -1, +1]],
-                  [[-1, -1, -1]],
-                  ], dtype=np.float32)
+
+    X = np.array(
+        [
+            [[+1, +1, +1]],
+            [[+1, +1, -1]],
+            [[+1, -1, +1]],
+            [[-1, -1, -1]],
+            [[-1, +1, +1]],
+            [[-1, +1, -1]],
+            [[-1, -1, +1]],
+            [[-1, -1, -1]],
+        ],
+        dtype=np.float32,
+    )
     for x in X:
-        idict = {qonnx_model.graph.input[0].name: X[0]}
+        idict = {qonnx_model.graph.input[0].name: x}
         y_qonnx = oxe.execute_onnx(qonnx_model, idict)[qonnx_model.graph.output[0].name]
         y_hls4ml = hls_model.predict(X)
         np.array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
