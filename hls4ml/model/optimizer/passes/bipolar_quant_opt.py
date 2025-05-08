@@ -1,17 +1,6 @@
 """
 This file includes optimizations related to BipolarQuant nodes.
 
-As a first step, QuantConstantParameters converts the extra inputs to attributes.
-
-The next step differs between the case of (1) (positive) power-of-2 scale and zero offset, or (2) other cases. In the first
-case no explicit scaling is required, so a Quant node logically becomes a linear activation. (Cases when the scale is a
-power of 2 not equal to one are implicitly scaled with fixed precision types.) When the activation is applied to a constant
-weight, the activation is immediately merged with the weight, quantizing the weights. In case (2), we need to explicitly
-scale and unscale, so the Quant node becomes 3 nodes, an ApplyAlpha node to apply a scale/shift, a Linear node to apply the
-quantization, and another ApplyAlpha to unscale/shift. We depend on optimization steps to move the unscaling ApplyAlpha
-down as needed so that we can do integer or fixed-point calculations. When the Quant is a applied to a weight, the scaling
-and Linear nodes are immediately merged into the Constant.
-
 """
 
 from hls4ml.model.layers import Activation, BipolarQuant, Constant
