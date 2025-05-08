@@ -40,7 +40,6 @@ register_flow(
         'fuse_quant_with_constant',
         'const_quant_to_const_alpha',
         'quant_to_alpha_activation_alpha',
-        'bipolar_quant_constant_parameters',
         'bipolar_quant_to_activation',
         'fuse_bipolar_quant_with_constant',
         'batch_norm_onnx_constant_parameters',
