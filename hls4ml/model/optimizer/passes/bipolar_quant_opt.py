@@ -77,43 +77,31 @@ class BipolarQuantToActivation(OptimizerPass):
 
 class FuseBipolarQuantWithConstant(OptimizerPass):
     """
-    This is for the case when scale is a positive power of 2 and zeropt is 0.
+    This is for the case when scale is 1 and zeropt is 0.
     """
 
     def match(self, node):
+        scale = node.get_attr('scale')
         # only matches after the other inputs are already folded
+        # and scale is unit
         is_match = (
             isinstance(node, BipolarQuant)
             and len(node.inputs) == 1
             and isinstance(node.get_input_node(node.inputs[0]), Constant)
+            and (scale == 1.0).all()
         )
-
-        # Only match if the scale is power of 2 and the zero-point is 0s
-        if is_match:  # to make sure this is a quant node with inputs
-            scale = node.get_attr('scale')
-
-            # check if scale is ones-like or a power of two
-            scale_unit_or_po2 = (scale == np.ones_like(scale)).all()
-            is_match = scale_unit_or_po2
-
         return is_match
 
     def transform(self, model, node):
         """
         Fuse Quant with Constant.
         """
-
-        scale = node.get_attr('scale')
-        assert np.all(scale == 1.0)  # TODO: Is this required?
-
         precision = XnorPrecisionType()
         quantizer = BinaryQuantizer(bits=1)
 
         const_node = node.get_input_node(node.inputs[0])
         const_node.set_attr('quantizer', quantizer)
         const_node.get_output_variable().type.precision = precision
-
-        # Should we update the configuration to reflect the new precision? I don't think it's necessary
 
         # remove the Quant node
         model.remove_node(node)
