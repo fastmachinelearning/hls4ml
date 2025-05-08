@@ -14,8 +14,6 @@ and Linear nodes are immediately merged into the Constant.
 
 """
 
-import numpy as np
-
 from hls4ml.model.layers import Activation, BipolarQuant, Constant
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import BinaryQuantizer
@@ -26,27 +24,24 @@ _ALSO_MATCH_PO2 = True
 
 class BipolarQuantToActivation(OptimizerPass):
     """
-    This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a a 1:1 transformation of
-    a BipolarQuant to an Activation.
-
+    This is for the case when scale is a (positive) 1 and zeropt is 0.
+    It is a a 1:1 transformation of a BipolarQuant to an Activation.
     As an optimization, this is not called when the input is constant.
     """
 
     def match(self, node):
         # only matches after the other inputs are already folded
-
         is_match = (
             isinstance(node, BipolarQuant)
             and len(node.inputs) == 1
             and not isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
-        # Only match if the scale is power of 2 and the zero-point is 0s
+        # Only match if the scale is 1 and the zero-point is 0s
         if is_match:  # to make sure this is a quant node with inputs
             scale = node.get_attr('scale')
-            # check if scale is ones-like or a power of two
-            scale_unit_or_po2 = (scale == np.ones_like(scale)).all()
-            is_match = scale_unit_or_po2
+            scale_unit = (scale == 1.0).all()
+            is_match = scale_unit
 
         return is_match
 
@@ -54,9 +49,6 @@ class BipolarQuantToActivation(OptimizerPass):
         """
         Change quant node to Activation
         """
-        scale = node.get_attr('scale')
-        assert np.all(scale == 1.0)  # TODO: Is this required?
-
         precision = XnorPrecisionType()
         quantizer = BinaryQuantizer(bits=1)
 
@@ -70,7 +62,7 @@ class BipolarQuantToActivation(OptimizerPass):
         model.config.set_name_config(new_name, config)
         model.config.parse_name_config(new_name, config)
 
-        new_node = model.make_node(Activation, new_name, attributes, [node.inputs[0]], [x for x in node.outputs])
+        new_node = model.make_node(Activation, new_name, attributes, list(node.inputs[0]), list(node.outputs))
         model.replace_node(node, new_node)
         return True
 
@@ -81,15 +73,21 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
     """
 
     def match(self, node):
-        scale = node.get_attr('scale')
+
         # only matches after the other inputs are already folded
         # and scale is unit
         is_match = (
             isinstance(node, BipolarQuant)
             and len(node.inputs) == 1
             and isinstance(node.get_input_node(node.inputs[0]), Constant)
-            and (scale == 1.0).all()
         )
+
+        # Only match if the scale is 1 and the zero-point is 0s
+        if is_match:  # to make sure this is a quant node with inputs
+            scale = node.get_attr('scale')
+            scale_unit = (scale == 1.0).all()
+            is_match = scale_unit
+
         return is_match
 
     def transform(self, model, node):
@@ -105,5 +103,4 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
 
         # remove the Quant node
         model.remove_node(node)
-
         return True
