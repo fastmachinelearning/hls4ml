@@ -11,6 +11,36 @@ from hls4ml.model.types import XnorPrecisionType
 _ALSO_MATCH_PO2 = True
 
 
+class BipolarQuantConstantParameters(OptimizerPass):
+    """Remove Constant from the Qaunt node parameters (but not input[0])"""
+
+    def match(self, node):
+        is_match = (
+            isinstance(node, BipolarQuant)
+            and len(node.inputs) == 2
+            and (node.get_input_node(node.inputs[1]) and isinstance(node.get_input_node(node.inputs[1]), Constant))
+        )
+
+        return is_match
+
+    def transform(self, model, node):
+        """
+        Remove Constant from the Quant node parameters (but not input[0])
+        """
+        if node.get_input_node(node.inputs[1]):
+            scale_node = node.get_input_node(node.inputs[1])
+            if isinstance(scale_node, Constant):
+                node.set_attr('scale', scale_node.get_attr('value'))
+                node.inputs[1] = ''
+                model.remove_node(scale_node)
+
+        node.inputs = [inp for inp in node.inputs if inp]
+        if len(node.inputs) != 1:
+            raise RuntimeError("hls4ml only supports constant scale")
+
+        return True
+
+
 class BipolarQuantToActivation(OptimizerPass):
     """
     This is for the case when scale is a (positive) 1 and zeropt is 0.
