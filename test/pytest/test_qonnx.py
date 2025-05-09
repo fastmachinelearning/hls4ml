@@ -232,6 +232,21 @@ def conv2d_small_mp_keras_model():
     return model
 
 
+@pytest.fixture(scope='module')
+def bnn_fc_small_qonnx_model():
+    """
+    Load a small binarized model of a single fully connected layer.
+    """
+    dl_file = str(example_model_path / "onnx/bnn_model_fc_1layer.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = cleanup_model(model)
+    model = model.transform(GemmToMatMul())  # ishape = (1, 3)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
 # The actual tests
 
 
@@ -433,13 +448,11 @@ def test_simple_model(model_name, io_type, backend, request):
 
 @pytest.mark.parametrize('backend', ['Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_bnn(io_type, backend):
+def test_bnn(bnn_fc_small_qonnx_model, io_type, backend):
     "Checks if a basic binarized model works correctly."
     test_dir = os.path.dirname(os.path.abspath(__file__))
-    qonnx_model = ModelWrapper(f'{test_dir}/bnn_model_fc_1layer.onnx')
-    qonnx_model = cleanup_model(qonnx_model)
-    qonnx_model = qonnx_model.transform(GemmToMatMul())  # ishape = (1, 3)
-    qonnx_model = qonnx.util.cleanup.cleanup_model(qonnx_model)
+    qonnx_model = bnn_fc_small_qonnx_model
+
     config = hls4ml.utils.config.config_from_onnx_model(
         qonnx_model, granularity='name', backend=backend, default_precision='fixed<16,6>'
     )

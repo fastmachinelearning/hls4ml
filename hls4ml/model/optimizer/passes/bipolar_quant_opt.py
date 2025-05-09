@@ -8,8 +8,6 @@ from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import BinaryQuantizer
 from hls4ml.model.types import XnorPrecisionType
 
-_ALSO_MATCH_PO2 = True
-
 
 class BipolarQuantConstantParameters(OptimizerPass):
     """Remove Constant from the Qaunt node parameters (but not input[0])"""
