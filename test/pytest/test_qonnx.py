@@ -12,6 +12,7 @@ import qonnx.util.to_channels_last
 from qonnx.core.modelwrapper import ModelWrapper
 from qonnx.transformation.channels_last import ConvertToChannelsLastAndClean
 from qonnx.transformation.gemm_to_matmul import GemmToMatMul
+from qonnx.util.cleanup import cleanup_model
 
 import hls4ml
 
@@ -231,6 +232,21 @@ def conv2d_small_mp_keras_model():
     return model
 
 
+@pytest.fixture(scope='module')
+def bnn_fc_small_qonnx_model():
+    """
+    Load a small binarized model of a single fully connected layer.
+    """
+    dl_file = str(example_model_path / "onnx/bnn_model_fc_1layer.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = cleanup_model(model)
+    model = model.transform(GemmToMatMul())  # ishape = (1, 3)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
 # The actual tests
 
 
@@ -428,3 +444,43 @@ def test_simple_model(model_name, io_type, backend, request):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
+
+@pytest.mark.parametrize('backend', ['Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_bnn(bnn_fc_small_qonnx_model, io_type, backend):
+    "Checks if a basic binarized model works correctly."
+    test_dir = os.path.dirname(os.path.abspath(__file__))
+    qonnx_model = bnn_fc_small_qonnx_model
+
+    config = hls4ml.utils.config.config_from_onnx_model(
+        qonnx_model, granularity='name', backend=backend, default_precision='fixed<16,6>'
+    )
+    model_name = 'bnn_model_fc_1layer'
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        qonnx_model,
+        output_dir=str(test_root_path / f'hls4mlprj_onnx_{model_name}_{io_type}_{backend}'),
+        io_type=io_type,
+        backend=backend,
+        hls_config=config,
+    )
+    hls_model.compile()
+
+    X = np.array(
+        [
+            [[+1, +1, +1]],
+            [[+1, +1, -1]],
+            [[+1, -1, +1]],
+            [[-1, -1, -1]],
+            [[-1, +1, +1]],
+            [[-1, +1, -1]],
+            [[-1, -1, +1]],
+            [[-1, -1, -1]],
+        ],
+        dtype=np.float32,
+    )
+    for x in X:
+        idict = {qonnx_model.graph.input[0].name: x}
+        y_qonnx = oxe.execute_onnx(qonnx_model, idict)[qonnx_model.graph.output[0].name]
+        y_hls4ml = hls_model.predict(X)
+        np.array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
