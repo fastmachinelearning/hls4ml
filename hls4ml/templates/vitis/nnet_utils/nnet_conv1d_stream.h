@@ -16,17 +16,19 @@ void conv_1d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
 
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
     ReadInputWidth:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             compute_output_buffer_1d<data_T, res_T, CONFIG_T>(data.read(), res, weights, biases);
         }
-    } else {
+    } else if (CONFIG_T::strategy == nnet::resource || CONFIG_T::strategy == nnet::resource_unrolled) {
     ReadInputWidthSerial:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             compute_output_buffer_1d<data_T, res_T, CONFIG_T>(data.read(), res, weights, biases);
         }
+    } else {
+        throw std::runtime_error("Unsupported strategy for conv_1d_cl");
     }
 }
 
