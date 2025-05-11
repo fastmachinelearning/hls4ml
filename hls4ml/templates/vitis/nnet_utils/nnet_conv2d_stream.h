@@ -5,6 +5,7 @@
 #include "hls_stream.h"
 #include "nnet_common.h"
 #include "nnet_conv_stream.h"
+#include <cassert>
 
 namespace nnet {
 
@@ -76,7 +77,7 @@ void conv_2d_cl(
     } else if (CONFIG_T::strategy == nnet::resource || CONFIG_T::strategy == nnet::resource_unrolled) {
         conv_2d_buffer_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
-        throw std::runtime_error("Unknown strategy for conv_2d_cl");
+        assert(false && "Unsupported strategy for conv_2d_cl");
     }
 }
 

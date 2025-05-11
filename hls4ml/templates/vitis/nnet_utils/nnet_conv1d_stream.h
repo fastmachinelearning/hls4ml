@@ -4,6 +4,7 @@
 #include "hls_stream.h"
 #include "nnet_common.h"
 #include "nnet_conv_stream.h"
+#include <cassert>
 
 namespace nnet {
 
@@ -28,7 +29,7 @@ void conv_1d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
             compute_output_buffer_1d<data_T, res_T, CONFIG_T>(data.read(), res, weights, biases);
         }
     } else {
-        throw std::runtime_error("Unsupported strategy for conv_1d_cl");
+        assert(false && "Unsupported strategy for conv_1d_cl");
     }
 }
 
