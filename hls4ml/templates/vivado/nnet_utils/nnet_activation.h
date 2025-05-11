@@ -717,7 +717,7 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(data_T data[CO
         initialized = true;
     }
 
-    typedef ap_fixed<16,6> selu_const_t;          // ±512 range, ≈1.5e-2 LSB
+    typedef ap_fixed<16,2> selu_const_t;          // ±512 range, ≈1.5e-2 LSB
     static const selu_const_t lambda = 1.0507009873554805;
     
     #pragma HLS PIPELINE
