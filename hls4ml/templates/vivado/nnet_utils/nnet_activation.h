@@ -717,9 +717,9 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(data_T data[CO
         initialized = true;
     }
 
-    typedef ap_fixed<16,2> selu_const_t;          // ±512 range, ≈1.5e-2 LSB
+    typedef ap_ufixed<16,2> selu_const_t;
     static const selu_const_t lambda = 1.0507009873554805;
-    
+
     #pragma HLS PIPELINE
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         data_T datareg = data[ii];
@@ -730,13 +730,13 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(data_T data[CO
         } else {
             // Negative branch  y = table(x)
             int index = datareg * CONFIG_T::table_size / -8;
-    
+
             // clamp index to [0, table_size-1]
             if (index < 0)
                 index = 0;
             else if (index > CONFIG_T::table_size - 1)
                 index = CONFIG_T::table_size - 1;
-    
+
             res[ii] = selu_table[index];
         }
     }
