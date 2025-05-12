@@ -717,13 +717,13 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(data_T data[CO
         initialized = true;
     }
 
-    typedef ap_ufixed<16,1> selu_const_t;
+    typedef ap_ufixed<16, 1> selu_const_t;
     static const selu_const_t lambda = 1.0507009873554805;
 
     #pragma HLS PIPELINE
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         data_T datareg = data[ii];
-    
+
         if (datareg >= 0) {
             // Positive branch  y = λ · x
             res[ii] = lambda * datareg;
