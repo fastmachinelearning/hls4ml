@@ -734,8 +734,9 @@ template <class data_T, class res_T, typename CONFIG_T> void selu(data_T data[CO
             // clamp index to [0, table_size-1]
             if (index < 0)
                 index = 0;
-            else if (index > CONFIG_T::table_size - 1)
+            else if (index > CONFIG_T::table_size - 1) {
                 index = CONFIG_T::table_size - 1;
+            }
 
             res[ii] = selu_table[index];
         }
