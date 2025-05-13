@@ -4,11 +4,11 @@ This file includes optimizations related to BipolarQuant nodes.
 """
 
 import numpy as np
+
 from hls4ml.model.layers import Activation, BipolarQuant, Constant
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import BinaryQuantizer
 from hls4ml.model.types import XnorPrecisionType
-
 
 
 class BipolarQuantConstantParameters(OptimizerPass):
@@ -56,7 +56,7 @@ class BipolarQuantToActivation(OptimizerPass):
             and not isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
-        # Only match if the scale is po2 
+        # Only match if the scale is po2
         if is_match:  # to make sure this is a quant node with inputs
             scale = node.get_attr('scale')
             scale_unit_or_po2 = (scale == 1.0).all()

@@ -1,11 +1,11 @@
+import copy
 import os
 import urllib
-import copy
 from pathlib import Path
 
 import numpy as np
-import pytest
 import onnx
+import pytest
 import qonnx.core.onnx_exec as oxe
 import qonnx.util.cleanup
 import qonnx.util.to_channels_last
@@ -257,18 +257,8 @@ def bnn_fc_small_qonnx_model_scale_nonunit(bnn_fc_small_qonnx_model):
     """
 
     model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying neccessary?
-    new_iscale = onnx.helper.make_tensor(
-        "BipolarQuant_0_param0",
-        1,
-        [1],
-        [0.5]
-    )
-    new_wscale = onnx.helper.make_tensor(
-        "BipolarQuant_1_param1",
-        1,
-        [1],
-        [0.5]
-    )
+    new_iscale = onnx.helper.make_tensor("BipolarQuant_0_param0", 1, [1], [0.5])
+    new_wscale = onnx.helper.make_tensor("BipolarQuant_1_param1", 1, [1], [0.5])
     old_iscale = old_wscale = None
     for init in model.graph.initializer:
         if init.name == "BipolarQuant_0_param0":
@@ -291,18 +281,8 @@ def bnn_fc_small_qonnx_model_scale_nonunit2(bnn_fc_small_qonnx_model):
     """
 
     model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying neccessary?
-    new_iscale = onnx.helper.make_tensor(
-        "BipolarQuant_0_param0",
-        1,
-        [1],
-        [2]
-    )
-    new_wscale = onnx.helper.make_tensor(
-        "BipolarQuant_1_param1",
-        1,
-        [1],
-        [4]
-    )
+    new_iscale = onnx.helper.make_tensor("BipolarQuant_0_param0", 1, [1], [2])
+    new_wscale = onnx.helper.make_tensor("BipolarQuant_1_param1", 1, [1], [4])
     old_iscale = old_wscale = None
     for init in model.graph.initializer:
         if init.name == "BipolarQuant_0_param0":
@@ -518,11 +498,7 @@ def test_simple_model(model_name, io_type, backend, request):
 
 @pytest.mark.parametrize(
     'model_name',
-    [
-        'bnn_fc_small_qonnx_model',
-        'bnn_fc_small_qonnx_model_scale_nonunit',
-        'bnn_fc_small_qonnx_model_scale_nonunit2'
-    ],
+    ['bnn_fc_small_qonnx_model', 'bnn_fc_small_qonnx_model_scale_nonunit', 'bnn_fc_small_qonnx_model_scale_nonunit2'],
 )
 @pytest.mark.parametrize('backend', ['Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
