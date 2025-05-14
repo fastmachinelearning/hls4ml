@@ -2,8 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import tensorflow as tf
-from tensorflow.keras.layers import Activation, Conv2D, Dense, Flatten, Input, MaxPooling2D
+from tensorflow.keras.layers import Activation, Dense, GlobalAveragePooling1D, Input
+from tensorflow.keras.models import Model
 
 import hls4ml
 
@@ -15,23 +15,26 @@ def create_test_model():
     This architecture ensures testing of corner cases such as:
     double layer outputs and variety of layers to serve as spliting points.
     """
-    inp = Input(shape=(4, 4, 3), name='input_layer')
-    x = Conv2D(4, (3, 3), padding='same', name='conv1')(inp)
+    inp = Input(shape=(6, 8), name='input_layer')
+    x = Dense(16, name='dense1')(inp)
     x = Activation('relu', name='relu1')(x)
-    x = MaxPooling2D((2, 2), name='pool1')(x)
-    x = Flatten(name='flatten')(x)
-    x = Dense(16, activation='relu', name='dense_common')(x)
-    output1 = Dense(5, activation='relu', name='dense1')(x)
-    output2 = Dense(5, activation='relu', name='dense2')(x)
-    model = tf.keras.Model(inputs=inp, outputs=[output1, output2])
-
+    x = Dense(8, name='dense2')(x)
+    x = Activation('relu', name='relu2')(x)
+    x = GlobalAveragePooling1D(name='avg_pool')(x)
+    x = Dense(16, name='dense_common')(x)
+    x = Activation('relu', name='relu_common')(x)
+    output1 = Dense(5, name='dense1_out')(x)
+    output1 = Activation('relu', name='relu_out1')(output1)
+    output2 = Dense(5, name='dense2_out')(x)
+    output2 = Activation('relu', name='relu_out2')(output2)
+    model = Model(inputs=inp, outputs=[output1, output2])
     return model
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['model', 'name'])
-@pytest.mark.parametrize('split_layers', [('pool1', 'dense_common'), ('relu1', 'flatten')])
+@pytest.mark.parametrize('split_layers', [('dense2', 'avg_pool'), ('relu1', 'relu_common')])
 def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     """
     Tests the multi-graph splitting and stitching process.
@@ -42,7 +45,7 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     backend = 'vitis'
     model = create_test_model()
     model.compile(optimizer='adam', loss='categorical_crossentropy')
-    X_input = np.random.rand(5, 4, 4, 3).astype(np.float32)
+    X_input = np.random.rand(5, 6, 8).astype(np.float32)
 
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity, default_precision='ap_fixed<32,16>')
     config['Model']['Strategy'] = strategy
@@ -76,11 +79,6 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
         np.testing.assert_allclose(multi_out, mono_out, rtol=0, atol=1e-5)
 
     if granularity == 'name':
-        if io_type == 'io_parallel' and split_layers == ('relu1', 'flatten'):
-            pytest.skip(
-                "Skipping RTL simulation for io_parallel with split layer at flatten due to improper simulation behavior."
-            )
-
         # --- Optional: Build the HLS project and run simulation ---
         hls_model_multi.build(
             csim=False,
@@ -96,4 +94,4 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
         inp = np.expand_dims(X_input[0], axis=0)
         sim_results = hls_model_multi.predict(inp, sim='rtl')
         for sim_out, pred_out in zip(sim_results, list([pred_multi[0][0], pred_multi[1][0]])):
-            np.testing.assert_allclose(sim_out, pred_out, rtol=0, atol=0.3)
+            np.testing.assert_allclose(sim_out, pred_out, rtol=0, atol=1e-5)

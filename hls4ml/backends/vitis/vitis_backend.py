@@ -10,10 +10,8 @@ from hls4ml.model.flow import get_flow, register_flow
 from hls4ml.report import aggregate_graph_reports, parse_vivado_report
 from hls4ml.utils.simulation_utils import (
     annotate_axis_stream_widths,
-    prepare_testbench_input,
-    prepare_zero_input,
+    prepare_tb_inputs,
     read_testbench_log,
-    write_testbench_input,
     write_verilog_testbench,
 )
 
@@ -159,11 +157,11 @@ class VitisBackend(VivadoBackend):
         stitch_design=True,
         sim_stitched_design=False,
         export_stitched_design=False,
-        nn_config=None,
         graph_reports=None,
         simulation_input_data=None,
     ):
 
+        nn_config = model.nn_config
         os.makedirs(nn_config['OutputDir'], exist_ok=True)
         stitched_design_dir = os.path.join(nn_config['OutputDir'], nn_config['StitchedProjectName'])
         if stitch_design:
@@ -184,31 +182,18 @@ class VitisBackend(VivadoBackend):
         except Exception as e:
             print(f"Error: {e}. Cannot copy 'ip_stitcher.tcl' to {nn_config['StitchedProjectName']} folder.")
 
-        if nn_config:
-            if nn_config['outputs'][0]['pragma'] == 'stream':
-                last_graph_project_path = os.path.join(
-                    model.graphs[-1].config.get_output_dir(), model.graphs[-1].config.get_project_dir()
-                )
-                annotate_axis_stream_widths(nn_config, last_graph_project_path)
-                with open(nn_config_path, "w") as file:
-                    json.dump(nn_config, file, indent=4)
+        if nn_config['outputs'][0]['pragma'] == 'stream':
+            last_graph_project_path = os.path.join(
+                model.graphs[-1].config.get_output_dir(), model.graphs[-1].config.get_project_dir()
+            )
+            annotate_axis_stream_widths(nn_config, last_graph_project_path)
+        with open(nn_config_path, "w") as file:
+            json.dump(nn_config, file, indent=4)
 
         if sim_stitched_design:
             write_verilog_testbench(nn_config, testbench_path)
-            # Produce a testbench input file for every input layer
-            for i, layer in enumerate(nn_config['inputs']):
-                testbench_input_path = os.path.join(stitched_design_dir, f"{layer['name']}_input_data.txt")
-                # We reshape input simulation data to (fifo_depth, batch_size)
-                if simulation_input_data is None:
-                    input_data_reshaped = prepare_zero_input(layer)
-                    print("No simulation input provided. Using zero-filled inputs.")
-                else:
-                    # Handles both single and multi-layer cases. First dim should always be batch size
-                    data = simulation_input_data[i]
-                    input_data_reshaped = prepare_testbench_input(data, layer['fifo_depth'], layer['batch_size'])
-                write_testbench_input(
-                    input_data_reshaped, testbench_input_path, layer['integer_bits'], layer['fractional_bits']
-                )
+            tb_inputs = prepare_tb_inputs(simulation_input_data, nn_config['inputs'])
+            model.write_tb_inputs(tb_inputs, stitched_design_dir)
             print('Verilog testbench and its input data were generated.')
 
         print('Running build process of stitched IP...\n')

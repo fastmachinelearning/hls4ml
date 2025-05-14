@@ -1157,6 +1157,7 @@ class ModelGraph(Serializable):
 class MultiModelGraph:
     def __init__(self, graphs):
         self.graphs = graphs
+        self.nn_config = None
         self._initialize_config(graphs[0])
         self._bind_modelgraph_methods()
         self._initialize_io_attributes(graphs)
@@ -1293,13 +1294,12 @@ class MultiModelGraph:
             vivado_folder = os.path.join(self.config.config['OutputDir'], self.config.config['StitchedProjectName'])
             if os.path.exists(vivado_folder):
                 raise FileExistsError(f"Vivado stitched project folder '{vivado_folder}' already exists.")
-            nn_config = self.parse_nn_config()
+            self.nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
                 self,
                 stitch_design=stitch_design,
                 sim_stitched_design=sim_stitched_design,
                 export_stitched_design=export_stitched_design,
-                nn_config=nn_config,
                 graph_reports=self.graph_reports,
             )
             return stitched_report
@@ -1309,6 +1309,7 @@ class MultiModelGraph:
     def compile(self):
         for g in self.graphs:
             g.write()
+        self.nn_config = self.parse_nn_config()
         # Bypass VitisWriter and invoke write_hls directly from VivadoWriter
         super(self.backend.writer.__class__, self.backend.writer).write_hls(self, is_multigraph=True)
         self._compile()
@@ -1317,13 +1318,12 @@ class MultiModelGraph:
         if sim == 'csim':
             return self._predict(x)
         elif sim == 'rtl':
-            nn_config = self.parse_nn_config()
+            self.nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
                 self,
                 stitch_design=False,
                 sim_stitched_design=True,
                 export_stitched_design=False,
-                nn_config=nn_config,
                 graph_reports=self.graph_reports,
                 simulation_input_data=x,
             )
@@ -1422,6 +1422,46 @@ class MultiModelGraph:
         length = 8
         stamp = uuid.uuid4()
         return str(stamp)[-length:]
+
+    def write_tb_inputs(self, x, folder_path):
+        """
+        Dump inputs (for Verilog testbench) via the C++ bridge functions:
+        dump_tb_inputs_float
+        dump_tb_inputs_double
+        """
+        if self._top_function_lib is None:
+            self._compile()
+
+        if isinstance(x, (list, tuple)):
+            xlist = list(x)
+        else:
+            xlist = [x]
+
+        first = xlist[0]
+        if first.dtype in [np.single, np.float32]:
+            fn_name = "dump_tb_inputs_float"
+            ctype = ctypes.c_float
+        elif first.dtype in [np.double, np.float64]:
+            fn_name = "dump_tb_inputs_double"
+            ctype = ctypes.c_double
+        else:
+            raise Exception(
+                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
+                    first.dtype
+                )
+            )
+
+        for arr in xlist:
+            if arr.dtype != first.dtype:
+                raise ValueError("All inputs must have same dtype")
+            if not arr.flags["C_CONTIGUOUS"]:
+                raise ValueError("Input arrays must be C_CONTIGUOUS")
+
+        fn = getattr(self._top_function_lib, fn_name)
+        fn.restype = None
+        fn.argtypes = [ctypes.c_char_p] + [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for _ in xlist]
+
+        fn(folder_path.encode("ascii"), *xlist)
 
     def _replace_logos(self):
         spec = importlib.util.find_spec("hls4ml")

@@ -837,6 +837,70 @@ class VivadoWriter(Writer):
                 if namespace is not None:
                     newline += indent + f'using namespace {namespace};\n'
 
+            elif '// hls-fpga-machine-learning insert tb_input_writer' in line:
+                funcs = [
+                    ("float", "dump_tb_inputs_float"),
+                    ("double", "dump_tb_inputs_double"),
+                ]
+                newline = ""
+                for dtype, funcname in funcs:
+                    newline += f'void {funcname}(\n'
+                    newline += '    const char* output_path'
+                    for inp in model_inputs:
+                        newline += f',\n    {dtype} {inp.name}[{inp.size_cpp()}]'
+                    newline += '\n) {\n\n'
+
+                    for inp in model_inputs:
+                        decl = inp.definition_cpp(name_suffix='_ap').strip()
+                        ap = inp.name + "_ap"
+                        if decl.startswith("hls::stream"):
+                            newline += f'    {decl};\n'
+                        else:
+                            newline += f'    {inp.type.name} {ap}[{inp.size_cpp()}];\n'
+                        newline += (
+                            f'    nnet::convert_data<{dtype}, {inp.type.name}, {inp.size_cpp()}>' f'({inp.name}, {ap});\n'
+                        )
+                    newline += "\n"
+                    newline += f'    std::ofstream fout(std::string(output_path) + "/{inp.name}_input_data.txt");\n'
+
+                    for inp in model_inputs:
+                        decl = inp.definition_cpp(name_suffix='_ap').strip()
+                        dims = inp.shape
+
+                        if decl.startswith("hls::stream"):
+                            if len(dims) == 1:
+                                N = dims[0]
+                                newline += f'    for(int i = 0; i < {N}; i++) {{\n'
+                                newline += f'        auto temp = {inp.name}_ap.read();\n'
+                                newline += (
+                                    f'        ap_uint<{inp.type.name}::value_type::width> bits = ' f'temp[0].range();\n'
+                                )
+                                newline += f'        fout << bits.to_uint()' f' << (i+1<{N} ? \' \' : \'\\n\');\n'
+                                newline += '    }\n'
+                            else:
+                                inputs_list = model.nn_config['inputs']
+                                fifo_depth = next((e['fifo_depth'] for e in inputs_list if e['name'] == inp.name), None)
+                                batch_size = next((e['batch_size'] for e in inputs_list if e['name'] == inp.name), None)
+                                newline += f'    for(int r = 0; r < {fifo_depth}; r++) {{\n'
+                                newline += f'        auto temp = {inp.name}_ap.read();\n'
+                                newline += f'        for(int c = 0; c < {batch_size}; c++) {{\n'
+                                newline += (
+                                    f'            ap_uint<{inp.type.name}::value_type::width> bits = ' f'temp[c].range();\n'
+                                )
+                                newline += (
+                                    f'            fout << bits.to_uint()' f' << (c+1<{batch_size} ? \' \' : \'\\n\');\n'
+                                )
+                                newline += '        }\n'
+                                newline += '    }\n'
+                        else:
+                            ap = inp.name + "_ap"
+                            N = inp.size_cpp()
+                            newline += f'    for(int i = 0; i < {N}; i++) {{\n'
+                            newline += f'        ap_uint<{inp.type.name}::width> bits = ' f'{ap}[i].range();\n'
+                            newline += f'        fout << bits.to_uint()' f' << (i+1<{N} ? \' \' : \'\\n\');\n'
+                            newline += '    }\n'
+                    newline += "    fout.close();\n"
+                    newline += "}\n"
             else:
                 newline = line
             fout.write(newline)

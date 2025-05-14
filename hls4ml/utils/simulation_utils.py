@@ -509,57 +509,34 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         f.write('endmodule\n')
 
 
-def float_to_fixed(float_value, integer_bits=6, fractional_bits=10):
-    scaling_factor = 1 << fractional_bits
-    total_bits = integer_bits + fractional_bits
-    max_val = (1 << (total_bits - 1)) - 1
-    min_val = -(1 << (total_bits - 1))
-
-    float_value = float(float_value)  # Convert to Python float if it's a numpy type
-
-    fixed_value = int(np.round(float_value * scaling_factor))
-    fixed_value = max(min(fixed_value, max_val), min_val)
-
-    if fixed_value < 0:
-        fixed_value = fixed_value + (1 << total_bits)  # Two's complement
-
-    return fixed_value
+def prepare_zero_inputs(input_layers):
+    zero_list = [np.zeros((layer['fifo_depth'], layer['batch_size']), dtype=np.float32) for layer in input_layers]
+    return zero_list[0] if len(zero_list) == 1 else zero_list
 
 
-def write_testbench_input(float_inputs, file_name, integer_bits=6, fractional_bits=10):
-    """
-    Convert 1D or 2D arrays (or lists of floats) to fixed-point and write to file.
+def prepare_tb_inputs(simulation_input_data, input_layers):
+    if simulation_input_data is None:
+        return prepare_zero_inputs(input_layers)
 
-    If 'float_inputs' is 1D: writes a single line.
-    If 'float_inputs' is 2D: flattens each row and writes one line per row.
-    """
-    with open(file_name, "w") as f:
-        if len(float_inputs) > 0 and isinstance(float_inputs[0], (list, np.ndarray)):
-            for row in float_inputs:
-                row_array = np.array(row).ravel()  # flatten if necessary
-                fixed_line = [float_to_fixed(val, integer_bits, fractional_bits) for val in row_array]
-                f.write(" ".join(map(str, fixed_line)) + "\n")
-        else:
-            flattened = np.array(float_inputs).ravel()  # ensure it's a flat array of scalars
-            fixed_line = [float_to_fixed(val, integer_bits, fractional_bits) for val in flattened]
-            f.write(" ".join(map(str, fixed_line)) + "\n")
+    if isinstance(simulation_input_data, np.ndarray):
+        data_list = [simulation_input_data]
+    elif isinstance(simulation_input_data, (list, tuple)):
+        data_list = list(simulation_input_data)
+    else:
+        raise TypeError(f"simulation_input_data must be None, ndarray or list/tuple, got {type(simulation_input_data)}")
 
+    if len(data_list) != len(input_layers):
+        raise ValueError(f"Expected {len(input_layers)} input arrays, got {len(data_list)}.")
 
-def prepare_zero_input(layer):
-    batch_size = layer['batch_size']
-    fifo_depth = layer['fifo_depth']
-    zero_input = np.zeros((fifo_depth, batch_size), dtype=np.int32)
-    return zero_input
+    reshaped = []
+    for data, layer in zip(data_list, input_layers):
+        arr = np.asarray(data)
+        total = layer['fifo_depth'] * layer['batch_size']
+        if arr.size != total:
+            raise ValueError(f"Layer '{layer['name']}' has {arr.size} elements; expected {total}.")
+        reshaped.append(arr.reshape((layer['fifo_depth'], layer['batch_size'])))
 
-
-def prepare_testbench_input(data, fifo_depth, batch_size):
-    data_arr = np.array(data)
-    # Ensure that total elements = fifo_depth * batch_size
-    total_elements = fifo_depth * batch_size
-    if data_arr.size != total_elements:
-        raise ValueError(f"Data size {data_arr.size} does not match fifo_depth * batch_size = {total_elements}")
-    data_reshaped = data_arr.reshape((fifo_depth, batch_size))
-    return data_reshaped
+    return reshaped[0] if len(reshaped) == 1 else reshaped
 
 
 def read_testbench_log(testbench_log_path, outputs):
