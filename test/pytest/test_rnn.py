@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from tensorflow.keras.layers import GRU, LSTM, Input, SimpleRNN
+from tensorflow.keras.layers import GRU, LSTM, Bidirectional, Input, SimpleRNN
 from tensorflow.keras.models import Model, Sequential
 
 import hls4ml
@@ -14,13 +14,21 @@ rnn_layers = [SimpleRNN, LSTM, GRU]
 
 @pytest.mark.parametrize('rnn_layer', rnn_layers)
 @pytest.mark.parametrize('return_sequences', [True, False])
-def test_rnn_parsing(rnn_layer, return_sequences):
+@pytest.mark.parametrize('bidirectional', [True, False])
+def test_rnn_parsing(rnn_layer, return_sequences, bidirectional):
+
+    if rnn_layer is SimpleRNN and bidirectional:
+        pytest.skip("SimpleRNN does not support bidirectional layers")
+
     time_steps = 3
     input_size = 8
     input_shape = (time_steps, input_size)
 
     model_input = Input(shape=input_shape)
-    model_output = rnn_layer(64, return_sequences=return_sequences)(model_input)
+    if not bidirectional:
+        model_output = rnn_layer(64, return_sequences=return_sequences)(model_input)
+    else:
+        model_output = Bidirectional(rnn_layer(64, return_sequences=return_sequences))(model_input)
 
     model = Model(model_input, model_output)
     model.compile(optimizer='adam', loss='mse')
@@ -34,13 +42,26 @@ def test_rnn_parsing(rnn_layer, return_sequences):
     keras_layer = model.layers[1]
 
     # Basic sanity check, I/O, activations
-    assert hls_layer.class_name == rnn_layer.__name__
-    assert hls_layer.attributes['n_out'] == keras_layer.units
-    assert hls_layer.attributes['activation'] == keras_layer.activation.__name__
-    if 'recurrent_activation' in hls_layer.attributes:  # SimpleRNN doesn't have this
-        assert hls_layer.attributes['recurrent_activation'] == keras_layer.recurrent_activation.__name__
-    assert hls_layer.get_input_variable().shape == list(input_shape)
-    assert hls_layer.get_output_variable().shape == model_output.shape.as_list()[1:]  # Ignore the batch size
+    if not bidirectional:
+        assert hls_layer.class_name == rnn_layer.__name__
+        assert hls_layer.attributes['n_out'] == keras_layer.units
+        assert hls_layer.attributes['activation'] == keras_layer.activation.__name__
+        if 'recurrent_activation' in hls_layer.attributes:  # SimpleRNN doesn't have this
+            assert hls_layer.attributes['recurrent_activation'] == keras_layer.recurrent_activation.__name__
+        assert hls_layer.get_input_variable().shape == list(input_shape)
+        assert hls_layer.get_output_variable().shape == model_output.shape.as_list()[1:]  # Ignore the batch size
+    else:
+        assert hls_layer.class_name == 'Bidirectional' + rnn_layer.__name__
+        assert hls_layer.attributes['merge_mode'] == keras_layer.merge_mode
+        if hls_layer.attributes['merge_mode'] == 'concat':
+            assert hls_layer.attributes['n_out'] == 2 * keras_layer.forward_layer.units
+        else:
+            assert hls_layer.attributes['n_out'] == keras_layer.forward_layer.units
+        assert hls_layer.attributes['activation'] == keras_layer.forward_layer.activation.__name__
+        if 'recurrent_activation' in hls_layer.attributes:  # SimpleRNN doesn't have this
+            assert hls_layer.attributes['recurrent_activation'] == keras_layer.forward_layer.recurrent_activation.__name__
+        assert hls_layer.get_input_variable().shape == list(input_shape)
+        assert hls_layer.get_output_variable().shape == model_output.shape.as_list()[1:]  # Ignore the batch size
 
     # Compare weights
     hls_weights = list(hls_layer.get_weights())  # [weights, recurrent_weights, bias, recurrent_bias]
@@ -66,54 +87,66 @@ def test_rnn_parsing(rnn_layer, return_sequences):
 
 
 @pytest.mark.parametrize(
-    'rnn_layer, backend, io_type, strategy',
+    'rnn_layer, bidirectional, backend, io_type, strategy',
     [
-        (SimpleRNN, 'Quartus', 'io_parallel', 'resource'),
-        (SimpleRNN, 'oneAPI', 'io_parallel', 'resource'),
-        (LSTM, 'Vivado', 'io_parallel', 'resource'),
-        (LSTM, 'Vivado', 'io_parallel', 'latency'),
-        (LSTM, 'Vitis', 'io_parallel', 'resource'),
-        (LSTM, 'Vitis', 'io_parallel', 'latency'),
-        (LSTM, 'Quartus', 'io_parallel', 'resource'),
-        (LSTM, 'oneAPI', 'io_parallel', 'resource'),
-        (LSTM, 'Vivado', 'io_stream', 'resource'),
-        (LSTM, 'Vivado', 'io_stream', 'latency'),
-        (LSTM, 'Vitis', 'io_stream', 'resource'),
-        (LSTM, 'Vitis', 'io_stream', 'latency'),
-        (GRU, 'Vivado', 'io_parallel', 'resource'),
-        (GRU, 'Vivado', 'io_parallel', 'latency'),
-        (GRU, 'Vitis', 'io_parallel', 'resource'),
-        (GRU, 'Vitis', 'io_parallel', 'latency'),
-        (GRU, 'Quartus', 'io_parallel', 'resource'),
-        (GRU, 'oneAPI', 'io_parallel', 'resource'),
-        (GRU, 'Vivado', 'io_stream', 'resource'),
-        (GRU, 'Vivado', 'io_stream', 'latency'),
-        (GRU, 'Vitis', 'io_stream', 'resource'),
-        (GRU, 'Vitis', 'io_stream', 'latency'),
-        (GRU, 'Quartus', 'io_stream', 'resource'),
-        (GRU, 'oneAPI', 'io_stream', 'resource'),
+        (SimpleRNN, False, 'Quartus', 'io_parallel', 'resource'),
+        (SimpleRNN, False, 'oneAPI', 'io_parallel', 'resource'),
+        (LSTM, False, 'Vivado', 'io_parallel', 'resource'),
+        (LSTM, False, 'Vivado', 'io_parallel', 'latency'),
+        (LSTM, False, 'Vitis', 'io_parallel', 'resource'),
+        (LSTM, False, 'Vitis', 'io_parallel', 'latency'),
+        (LSTM, True, 'Vivado', 'io_parallel', 'resource'),
+        (LSTM, True, 'Vivado', 'io_parallel', 'latency'),
+        (LSTM, True, 'Vitis', 'io_parallel', 'resource'),
+        (LSTM, True, 'Vitis', 'io_parallel', 'latency'),
+        (LSTM, False, 'Quartus', 'io_parallel', 'resource'),
+        (LSTM, False, 'oneAPI', 'io_parallel', 'resource'),
+        (LSTM, False, 'Vivado', 'io_stream', 'resource'),
+        (LSTM, False, 'Vivado', 'io_stream', 'latency'),
+        (LSTM, False, 'Vitis', 'io_stream', 'resource'),
+        (LSTM, False, 'Vitis', 'io_stream', 'latency'),
+        (GRU, False, 'Vivado', 'io_parallel', 'resource'),
+        (GRU, False, 'Vivado', 'io_parallel', 'latency'),
+        (GRU, False, 'Vitis', 'io_parallel', 'resource'),
+        (GRU, False, 'Vitis', 'io_parallel', 'latency'),
+        (GRU, True, 'Vivado', 'io_parallel', 'resource'),
+        (GRU, True, 'Vivado', 'io_parallel', 'latency'),
+        (GRU, True, 'Vitis', 'io_parallel', 'resource'),
+        (GRU, True, 'Vitis', 'io_parallel', 'latency'),
+        (GRU, False, 'Quartus', 'io_parallel', 'resource'),
+        (GRU, False, 'oneAPI', 'io_parallel', 'resource'),
+        (GRU, False, 'Vivado', 'io_stream', 'resource'),
+        (GRU, False, 'Vivado', 'io_stream', 'latency'),
+        (GRU, False, 'Vitis', 'io_stream', 'resource'),
+        (GRU, False, 'Vitis', 'io_stream', 'latency'),
+        (GRU, False, 'Quartus', 'io_stream', 'resource'),
+        (GRU, False, 'oneAPI', 'io_stream', 'resource'),
     ],
 )
 @pytest.mark.parametrize('return_sequences', [True, False])
 @pytest.mark.parametrize('static', [True, False])
-def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, static):
+def test_rnn_accuracy(rnn_layer, bidirectional, return_sequences, backend, io_type, strategy, static):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
 
-    layer_name = rnn_layer.__name__
+    layer_name = ("Bidirectional" if bidirectional else "") + rnn_layer.__name__
     keras_model = Sequential()
-    keras_model.add(
-        rnn_layer(
-            units=32,
-            input_shape=input_shape,
-            kernel_initializer='lecun_uniform',
-            recurrent_initializer='lecun_uniform',
-            bias_initializer='lecun_uniform',
-            return_sequences=return_sequences,
-            name=layer_name,
-        )
+    keras_model.add(Input(shape=input_shape))
+    test_layer = rnn_layer(
+        units=32,
+        input_shape=input_shape,
+        kernel_initializer='lecun_uniform',
+        recurrent_initializer='lecun_uniform',
+        bias_initializer='lecun_uniform',
+        return_sequences=return_sequences,
+        name=layer_name,
     )
+    if not bidirectional:
+        keras_model.add(test_layer)
+    else:
+        keras_model.add(Bidirectional(test_layer, name=layer_name))
+
     keras_model.compile()
 
     default_precision = 'ap_fixed<32, 16>' if backend in ['Vivado', 'Vitis'] else 'ac_fixed<32, 16, true>'
@@ -123,7 +156,9 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, s
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
     prj_name = (
-        f'hls4mlprj_rnn_accuracy_{layer_name}_static_{int(static)}_ret_seq_{int(return_sequences)}_'
+        'hls4mlprj_rnn_accuracy_'
+        + ('bidirectional_' if bidirectional else '')
+        + f'{layer_name}_static_{int(static)}_ret_seq_{int(return_sequences)}_'
         f'{backend}_{io_type}_{strategy}'
     )
     output_dir = str(test_root_path / prj_name)
