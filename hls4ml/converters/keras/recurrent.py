@@ -116,14 +116,18 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
 @keras_handler('Bidirectional')
 def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reader):
     assert keras_layer['class_name'] == 'Bidirectional'
-    
+
     rnn_layer = keras_layer['config']['layer']
     assert rnn_layer['class_name'] in rnn_layers or rnn_layer['class_name'][1:] in rnn_layers
 
     layer = parse_default_keras_layer(rnn_layer, input_names)
     layer['name'] = keras_layer['config']['name']
-    layer['class_name'] = 'B' + layer['class_name']
+    layer['class_name'] = 'Bidirectional' + layer['class_name']
     layer['direction'] = 'bidirectional'
+
+    # TODO Should we handle different architectures for forward and backward layer?
+    if keras_layer['config'].get('backward_layer'):
+        raise Exception('Different architectures between forward and backward layers are not supported by hls4ml')
 
     layer['return_sequences'] = rnn_layer['config']['return_sequences']
     layer['return_state'] = rnn_layer['config']['return_state']
@@ -147,19 +151,28 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
     if keras_layer['config']['merge_mode'] == 'concat':
         layer['n_out'] *= 2
 
+    rnn_layer_name = rnn_layer['config']['name']
     if 'SimpleRNN' in layer['class_name']:
         cell_name = 'simple_rnn'
     else:
         cell_name = rnn_layer['class_name'].lower()
     layer['weight_data'], layer['recurrent_weight_data'], layer['bias_data'] = get_weights_data(
-        data_reader, layer['name'], [f'{cell_name}_cell/kernel',
-                                     f'{cell_name}_cell/recurrent_kernel', 
-                                     f'{cell_name}_cell/bias']
+        data_reader,
+        layer['name'],
+        [
+            f'forward_{rnn_layer_name}/{cell_name}_cell/kernel',
+            f'forward_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
+            f'forward_{rnn_layer_name}/{cell_name}_cell/bias',
+        ],
     )
     layer['weight_b_data'], layer['recurrent_weight_b_data'], layer['bias_b_data'] = get_weights_data(
-        data_reader, layer['name'], [f'{cell_name}_cell/kernel',
-                                     f'{cell_name}_cell/recurrent_kernel', 
-                                     f'{cell_name}_cell/bias']
+        data_reader,
+        layer['name'],
+        [
+            f'backward_{rnn_layer_name}/{cell_name}_cell/kernel',
+            f'backward_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
+            f'backward_{rnn_layer_name}/{cell_name}_cell/bias',
+        ],
     )
 
     if 'GRU' in layer['class_name']:
