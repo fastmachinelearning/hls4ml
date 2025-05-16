@@ -14,6 +14,8 @@ from hls4ml.model.layers import (
     Activation,
     BatchNormalization,
     BatchNormOnnx,
+    BidirectionalGRU,
+    BidirectionalLSTM,
     Conv,
     Conv1D,
     Conv2D,
@@ -68,6 +70,8 @@ class FPGABackend(Backend):
             SimpleRNN,
             LSTM,
             GRU,
+            BidirectionalLSTM,
+            BidirectionalGRU,
             Dot,
             Conv,
             MatMul,
@@ -213,10 +217,24 @@ class FPGABackend(Backend):
             n_out = layer.get_attr('n_filt')
             return n_in, n_out
 
+        if 'BidirectionalLSTM' in layer.class_name:
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out') * 2  # /2*4
+            n_in_recr = layer.get_attr('n_out') // 2
+            n_out_recr = n_out
+            return n_in, n_out, n_in_recr, n_out_recr
+
         if 'LSTM' in layer.class_name:
             n_in = layer.get_attr('n_in')
             n_out = layer.get_attr('n_out') * 4
             n_in_recr = layer.get_attr('n_out')
+            n_out_recr = n_out
+            return n_in, n_out, n_in_recr, n_out_recr
+
+        if 'BidirectionalGRU' in layer.class_name:
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out') // 2 * 3
+            n_in_recr = layer.get_attr('n_out') // 2
             n_out_recr = n_out
             return n_in, n_out, n_in_recr, n_out_recr
 

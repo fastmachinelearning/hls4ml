@@ -1,6 +1,16 @@
 import numpy as np
 
-from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import (
+    GRU,
+    LSTM,
+    BidirectionalGRU,
+    BidirectionalLSTM,
+    Conv1D,
+    Conv2D,
+    Dense,
+    SeparableConv1D,
+    SeparableConv2D,
+)
 from hls4ml.model.optimizer import OptimizerPass
 
 
@@ -8,10 +18,11 @@ class ApplyResourceStrategy(OptimizerPass):
     '''Transposes the weights to use the dense_resource matrix multiply routine'''
 
     def match(self, node):
-        node_matches = isinstance(node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU))
+        node_matches = isinstance(
+            node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU, BidirectionalLSTM, BidirectionalGRU)
+        )
         is_resource_strategy = node.get_attr('strategy', '').lower() in ['resource', 'resource_unrolled']
         already_transformed = node.get_attr('_weights_transposed', False) is True
-
         return node_matches and is_resource_strategy and not already_transformed
 
     def transform(self, model, node):
@@ -37,6 +48,11 @@ class ApplyResourceStrategy(OptimizerPass):
             node.weights['pointwise'].data = np.transpose(
                 node.weights['pointwise'].data, axes=[3, 0, 1, 2]
             )  # (H,W,C,F) => (F,H,W,C)
+        elif isinstance(node, (BidirectionalLSTM, BidirectionalGRU)):
+            node.weights['weight'].data = np.transpose(node.weights['weight'].data)
+            node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+            node.weights['weight_b'].data = np.transpose(node.weights['weight_b'].data)
+            node.weights['recurrent_weight_b'].data = np.transpose(node.weights['recurrent_weight_b'].data)
         elif isinstance(node, (LSTM, GRU)):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
             node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
