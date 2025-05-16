@@ -12,6 +12,8 @@ from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
     GRU,
     LSTM,
+    BidirectionalGRU,
+    BidirectionalLSTM,
     Conv1D,
     Conv2D,
     Dense,
@@ -46,11 +48,7 @@ class VivadoBackend(FPGABackend):
 
     def _register_layer_attributes(self):
         # Add RNN-specific attributes, recurrent_reuse_factor and static implementation
-        rnn_layers = [
-            SimpleRNN,
-            LSTM,
-            GRU,
-        ]
+        rnn_layers = [SimpleRNN, LSTM, GRU, BidirectionalLSTM, BidirectionalGRU]
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])

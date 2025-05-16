@@ -1,10 +1,6 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-<<<<<<< HEAD
-from hls4ml.model.layers import GRU, LSTM, BLSTM, BGRU, TimeDistributed
-=======
-from hls4ml.model.layers import BGRU, BLSTM, GRU, LSTM
->>>>>>> d2d3b452 (ADD fixes)
+from hls4ml.model.layers import GRU, LSTM, BidirectionalLSTM, BidirectionalGRU, TimeDistributed
 
 # recurrent multiplication template
 
@@ -247,7 +243,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
 
 class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((BLSTM, BGRU))
+        super().__init__((BidirectionalLSTM, BidirectionalGRU))
         self.template = bidir_recr_config_template
         self.act_template = activ_config_template
         self.recr_act_template = recr_activ_config_template
@@ -275,11 +271,11 @@ class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
         params['static'] = 'true' if node.attributes['static'] else 'false'
         params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
         params['recr_type'] = node.class_name.lower()
-        params['RECR_TYPE'] = node.class_name[1:]
+        params['RECR_TYPE'] = node.class_name[13:]
 
-        if node.class_name == 'BLSTM':
+        if node.class_name == 'BidirectionalLSTM':
             n_recr_mult = 4
-        else:  # BGRU
+        else:  # BidirectionalGRU
             n_recr_mult = 3
 
         recr_config = self.template.format(**params)
@@ -458,7 +454,7 @@ class TimeDistributedFunctionTemplate(FunctionCallTemplate):
     
 class BidirectionalRecurrentFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((BLSTM, BGRU), include_header=recr_include_list)
+        super().__init__((BidirectionalLSTM, BidirectionalGRU), include_header=recr_include_list)
 
     def format(self, node):
         params = self._default_function_params(node)
