@@ -477,9 +477,7 @@ def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
 
     pool_op = layer.attributes['pool_op']
     if pool_op == 'Average':
-        f_add = log2(prod(px_shape))
-        if not f_add.is_integer():
-            raise ValueError('Average pooling with non-power-of-2 pool size cannot be bit-exact')
+        f_add = minimal_kif(np.array(1 / prod(px_shape)))[2]
         f_out += int(f_add)
 
     if isinstance(layer, (GlobalPooling1D, GlobalPooling2D)):
