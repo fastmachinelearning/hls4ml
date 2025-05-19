@@ -133,12 +133,10 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
 
     layer = {}
     layer['name'] = keras_layer['config']['name']
-    layer['forward_layer'] = parse_default_keras_layer(rnn_forward_layer, input_names)
-    layer['backward_layer'] = parse_default_keras_layer(rnn_backward_layer, input_names)
-    layer['class_name'] = (
-        'Bidirectional' + layer['forward_layer']['class_name']
-    )  # TODO: to be changed if we ever implement different
-    # architecture for forward and backward layer
+    layer['class_name'] = keras_layer['class_name']
+    if input_names is not None:
+        layer['inputs'] = input_names
+
     layer['direction'] = 'bidirectional'
     layer['return_sequences'] = rnn_forward_layer['config']['return_sequences']
     layer['return_state'] = rnn_forward_layer['config']['return_state']
@@ -151,40 +149,52 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
     assert keras_layer['config']['merge_mode'] in merge_modes
     layer['merge_mode'] = keras_layer['config']['merge_mode']
 
-    for direction, rnn_layer in [('forward_layer', rnn_forward_layer), ('backward_layer', rnn_backward_layer)]:
+    for direction, rnn_layer in [('forward', rnn_forward_layer), ('backward', rnn_backward_layer)]:
+
+        layer[f'{direction}_name'] = rnn_layer['config']['name']
+        layer[f'{direction}_class_name'] = rnn_layer['class_name']
+
+        layer[f'{direction}_data_format'] = rnn_layer['config'].get('data_format', 'channels_last')
+
+        if 'activation' in rnn_layer['config']:
+            layer[f'{direction}_activation'] = rnn_layer['config']['activation']
+        if 'epsilon' in rnn_layer['config']:
+            layer[f'{direction}_epsilon'] = rnn_layer['config']['epsilon']
+        if 'use_bias' in rnn_layer['config']:
+            layer[f'{direction}_use_bias'] = rnn_layer['config']['use_bias']
 
         if 'SimpleRNN' not in rnn_layer['class_name']:
-            layer[direction]['recurrent_activation'] = rnn_layer['config']['recurrent_activation']
+            layer[f'{direction}_recurrent_activation'] = rnn_layer['config']['recurrent_activation']
 
         rnn_layer_name = rnn_layer['config']['name']
         if 'SimpleRNN' in layer['class_name']:
             cell_name = 'simple_rnn'
         else:
             cell_name = rnn_layer['class_name'].lower()
-        layer[direction]['weight_data'], layer[direction]['recurrent_weight_data'], layer[direction]['bias_data'] = (
+        layer[f'{direction}_weight_data'], layer[f'{direction}_recurrent_weight_data'], layer[f'{direction}_bias_data'] = (
             get_weights_data(
                 data_reader,
                 layer['name'],
                 [
-                    f'{direction[:-6]}_{rnn_layer_name}/{cell_name}_cell/kernel',
-                    f'{direction[:-6]}_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
-                    f'{direction[:-6]}_{rnn_layer_name}/{cell_name}_cell/bias',
+                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/kernel',
+                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
+                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/bias',
                 ],
             )
         )
 
         if 'GRU' in rnn_layer['class_name']:
-            layer[direction]['apply_reset_gate'] = 'after' if rnn_layer['config']['reset_after'] else 'before'
+            layer[f'{direction}_apply_reset_gate'] = 'after' if rnn_layer['config']['reset_after'] else 'before'
 
             # biases array is actually a 2-dim array of arrays (bias + recurrent bias)
             # both arrays have shape: n_units * 3 (z, r, h_cand)
-            biases = layer[direction]['bias_data']
-            layer[direction]['bias_data'] = biases[0]
-            layer[direction]['recurrent_bias_data'] = biases[1]
+            biases = layer[f'{direction}_bias_data']
+            layer[f'{direction}_bias_data'] = biases[0]
+            layer[f'{direction}_recurrent_bias_data'] = biases[1]
 
-        layer[direction]['n_states'] = rnn_layer['config']['units']
+        layer[f'{direction}_n_states'] = rnn_layer['config']['units']
 
-    layer['n_out'] = layer['forward_layer']['n_states'] + layer['backward_layer']['n_states']
+    layer['n_out'] = layer['forward_n_states'] + layer['backward_n_states']
 
     if layer['return_sequences']:
         output_shape = [input_shapes[0][0], layer['n_timesteps'], layer['n_out']]
