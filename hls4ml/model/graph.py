@@ -419,7 +419,7 @@ class ModelGraph(Serializable):
         self._top_function_lib = None
 
     @classmethod
-    def from_layer_list(cls, config_dict, layer_list, inputs=None, outputs=None):
+    def from_layer_list(cls, config_dict, layer_list, inputs=None, outputs=None, initial_index=0):
         def _find_output_variable_names(layer_list, layer_names):
             """Given a list of all layers, and a list input/output names, find the names of their outputs that will be used
             as the name of the output variables."""
@@ -445,7 +445,7 @@ class ModelGraph(Serializable):
             )
         output_names = _find_output_variable_names(layer_list, output_layers)
 
-        model = cls(config, input_names, output_names)
+        model = cls(config, input_names, output_names, initial_index)
         model._make_graph(layer_list)
         for flow in model.config.flows:
             model.apply_flow(flow)
@@ -1128,7 +1128,8 @@ class ModelGraph(Serializable):
 
             graph_output_layers = output_layers if idx == len(subgraph_layer_lists) - 1 else None
             graph_input_layers = input_layers if idx == 0 else None
-            hls_model = ModelGraph(
+            
+            hls_model = ModelGraph.from_layer_list(
                 sub_config, sub_layer_list, graph_input_layers, graph_output_layers, initial_index=current_index
             )
 
