@@ -90,9 +90,8 @@ def gen_conv_config(
     else:
         ch_in, *px_in_shape = in_shape
         ch_out, *px_out_shape = out_shape
-    assert (
-        len(px_in_shape) == len(px_out_shape) == len(ker_px_shape) == len(strides)
-    ), f"Invalid input shapes: {in_shape}, {out_shape}, {ker_px_shape}, {strides} for layer {name}"
+    if not px_out_shape:
+        px_out_shape = [1] * len(px_in_shape)
 
     if padding == 'same':
         n_padding = [ceil(N / n) * n - N for N, n in zip(px_in_shape, ker_px_shape)]
