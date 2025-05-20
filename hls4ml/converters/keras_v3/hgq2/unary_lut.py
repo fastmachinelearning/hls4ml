@@ -36,7 +36,10 @@ class SQUnaryLUTHandler(SQLayerHandler, KerasV3LayerHandler):
 
         iq = layer.iq.quantizer
         if isinstance(iq, FixedPointQuantizerBase):
-            k, i, f = (Decimal(int(ops.max(x))) for x in iq.kif)
+            k, i, f = iq.kif
+            mask = k + i + f > 0
+            i, f = np.where(mask, i, -32), np.where(mask, f, -32)  # type: ignore
+            k, i, f = (Decimal(int(ops.max(x))) for x in (k, i, f))  # type: ignore
             _min = -k * 2**i
             _eps = 2**-f
             _max = 2**i - _eps
