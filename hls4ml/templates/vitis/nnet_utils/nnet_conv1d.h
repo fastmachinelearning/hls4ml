@@ -55,7 +55,8 @@ void pointwise_conv_1d_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
     CONFIG_T::template conv_kernel<data_T, res_T, CONFIG_T>::conv(data, res, weights, biases);
 }
 
-template <class data_T, class res_T, typename CONFIG_T> class Conv1DLatency : public Conv1DKernel<data_T, res_T, CONFIG_T> {
+template <class data_T, class res_T, typename CONFIG_T>
+class Conv1DLatency : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T> {
   public:
     static void conv(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
                      typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -65,7 +66,8 @@ template <class data_T, class res_T, typename CONFIG_T> class Conv1DLatency : pu
     }
 };
 
-template <class data_T, class res_T, typename CONFIG_T> class Conv1DResource : public Conv1DKernel<data_T, res_T, CONFIG_T> {
+template <class data_T, class res_T, typename CONFIG_T>
+class Conv1DResource : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T> {
   public:
     static void conv(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
                      typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
