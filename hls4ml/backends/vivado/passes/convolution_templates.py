@@ -61,7 +61,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     template<unsigned K, unsigned S, unsigned W>
     using scale_index = nnet::{scale_index_type}<K, S, W>;
     template<class data_T, class res_T, class CONFIG_T>
-    using conv_kernel = nnet::{conv_fn}<data_T, res_T, CONFIG_T>;
+    using conv_kernel = {conv_fn}<data_T, res_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -90,8 +90,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         else:
             params['scale_index_type'] = 'scale_index_regular'
 
+        namespace = params['namespace']
         if node.model.config.get_config_value('IOType') == 'io_parallel':
-            namespace = params['namespace']
             params['fill_fn'] = f'{namespace}::fill_buffer_{node.index}'
         else:
             params['fill_fn'] = 'nnet::FillConv1DBuffer'
@@ -102,12 +102,12 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
             and node.model.config.get_config_value('IOType') == 'io_parallel'
         )
         if is_pointwise_parallel_latency:
-            params['conv_fn'] = f'pointwise_conv_{node.index}'
+            params['conv_fn'] = f'{namespace}::pointwise_conv_{node.index}'
         else:
             if node.get_attr('strategy').lower() == 'latency':
-                params['conv_fn'] = 'Conv1DLatency'
+                params['conv_fn'] = 'nnet::Conv1DLatency'
             else:
-                params['conv_fn'] = 'Conv1DResource'
+                params['conv_fn'] = 'nnet::Conv1DResource'
 
         params['min_width'] = node.get_attr('min_width', node.get_attr('in_width'))
         params['instructions'] = node.get_attr('instructions', '0')
