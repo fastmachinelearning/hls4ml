@@ -9,7 +9,7 @@ from ._base import SQLayerHandler, register
 if typing.TYPE_CHECKING:
     import hgq
     from hgq.quantizer.internal import FixedPointQuantizerBase
-    from keras.api import KerasTensor
+    from keras import KerasTensor
 
 
 def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False):

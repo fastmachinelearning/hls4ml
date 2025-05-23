@@ -10,12 +10,12 @@ from hls4ml.converters.keras_v3.einsum_dense import KV3EinsumDenseHandler
 
 if TYPE_CHECKING:
     import hgq
-    from keras.api import KerasTensor, Layer
+    from keras import KerasTensor, Layer
 
 
 def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> dict[str, Any]:
     from hgq.quantizer.internal.fixed_point_quantizer import FixedPointQuantizerKBI, FixedPointQuantizerKIF
-    from keras.api.ops import convert_to_numpy
+    from keras.ops import convert_to_numpy
 
     internal_q: FixedPointQuantizerKIF | FixedPointQuantizerKBI = q.quantizer
 
@@ -25,9 +25,10 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
     k, i, f = internal_q.kif
     k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
     k, B, I = convert_to_numpy(k), convert_to_numpy(B), convert_to_numpy(I)  # noqa: E741
+    I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
 
-    k = np.broadcast_to(k.astype(np.int8), (1,) + shape)
-    B = np.broadcast_to(B.astype(np.int8), (1,) + shape)
+    k = np.broadcast_to(k.astype(np.int8), (1,) + shape)  # type: ignore
+    B = np.broadcast_to(B.astype(np.int8), (1,) + shape)  # type: ignore
     I = np.broadcast_to(I.astype(np.int8), (1,) + shape)  # noqa: E741
 
     overflow_mode = internal_q.overflow_mode
@@ -98,7 +99,7 @@ class SQLayerHandler(KerasV3LayerHandler):
         return *iq_confs, *ret, *oq_confs
 
     def load_weight(self, layer: 'Layer', key: str):
-        from keras.api.ops import convert_to_numpy
+        from keras.ops import convert_to_numpy
 
         if hasattr(layer, f'q{key}'):
             return convert_to_numpy(getattr(layer, f'q{key}'))

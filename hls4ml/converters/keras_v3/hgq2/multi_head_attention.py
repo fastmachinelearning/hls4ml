@@ -10,7 +10,7 @@ from .softmax import SQSoftmaxHandler
 
 if typing.TYPE_CHECKING:
     import hgq
-    from keras.api import KerasTensor
+    from keras import KerasTensor
 
 
 @register
