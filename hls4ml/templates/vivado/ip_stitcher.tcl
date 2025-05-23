@@ -513,12 +513,18 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
             puts "Warning: Could not find 'ap_done' pin for last IP"
         }
 
+        set control_pins {ap_clk ap_rst ap_start ap_done ap_idle ap_ready}
+
         # Make external all inputs of the first IP (including 'vld' signals)
         set input_pin_names {}
         foreach pin $first_ip_pins {
             set pin_name [get_property NAME $pin]
+            set pin_dir [get_property DIR $pin]
+            puts "Pin name: $pin_name Pin dir: $pin_dir"
             # Match patterns for inputs and input valid pins
-            if {[regexp {^\w+_(input|inp|layer)(?:_(\d+))?(?:_ap_vld)?$} $pin_name]} {
+            if {$pin_dir eq "I" && [lsearch -exact $control_pins $pin_name] == -1} {
+                puts "Found input pin: $pin_name"
+
                 # Make the pin external
                 make_bd_pins_external $pin
                 # Retrieve the external port and change name to base name
@@ -536,8 +542,12 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         set output_pin_names {}
         foreach pin $last_ip_pins {
             set pin_name [get_property NAME $pin]
+            set pin_dir [get_property DIR $pin]
+            puts "Pin name: $pin_name Pin dir: $pin_dir"
+
             # Match patterns for outputs and output valid pins
-            if {[regexp {^layer(?:\d+_)?out(?:_(\d+))?(?:_ap_vld)?$} $pin_name]} {
+            if {$pin_dir eq "O" && [lsearch -exact $control_pins $pin_name] == -1} {
+                puts "Found output pin: $pin_name"
                 # Make the pin external
                 make_bd_pins_external $pin
                 # Retrieve the external port and change name to base name

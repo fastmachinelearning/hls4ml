@@ -1035,134 +1035,106 @@ class ModelGraph(Serializable):
 
         serialize_model(self, file_path)
 
-    @classmethod
-    def make_multi_graph(cls, config, layer_list, input_layers, output_layers, output_shapes, split_layer_names):
-        """Splits the layer list at the specified layers and creates multiple ModelGraphs.
-
-        Args:
-            config (dict): The configuration dictionary.
-            layer_list (list(dict)): The list of layers.
-            split_layer_names (List[str]): The names of the layers to split at.
-
-        Returns:
-            MultiModelGraph: An instance of MultiModelGraph containing the ModelGraphs created from the subgraphs.
-        """
-        if not split_layer_names:
-            raise ValueError("No split layer names provided.")
-
-        layer_names = [layer['name'] for layer in layer_list]
-        restricted_merge_layers = {'add', 'subtract', 'multiply', 'average', 'maximum', 'minimum', 'concatenate', 'dot'}
-
-        # Validate that each provided split layer exists and is not a merge layer.
-        for split_layer in split_layer_names:
-            if split_layer not in layer_names:
-                raise ValueError(f"Layer '{split_layer}' not found in the model.")
-
-            layer = next(layer for layer in layer_list if layer['name'] == split_layer)
-            if layer.get('class_name', "").lower() in restricted_merge_layers:
-                raise ValueError('Split layer must not be a merge layer')
-
-        # Split the layer_list into subgraphs
-        split_indices = sorted([layer_names.index(name) for name in split_layer_names])
-        indices = [0] + split_indices + [len(layer_list)]
-        subgraph_layer_lists = []
-        for i in range(len(indices) - 1):
-            start = indices[i]
-            end = indices[i + 1]
-            sub_layer_list = layer_list[start:end]
-            subgraph_layer_lists.append(sub_layer_list)
-
-        # Create ModelGraphs for each subgraph
-        model_graphs = []
-        original_OutputDir = config['OutputDir']
-        original_ProjectName = config['ProjectName']
-        current_index = 0
-        last_output_precision = None
-        for idx, sub_layer_list in enumerate(subgraph_layer_lists):
-
-            # Create a shallow copy of the config for each subgraph
-            sub_config = copy.copy(config)
-            sub_config['OutputDir'] = os.path.join(original_OutputDir, f'graph{idx + 1}')
-            sub_config['ProjectName'] = f'{original_ProjectName}_graph{idx + 1}'
-
-            # For subgraphs after the first one, configure new input layer
-            if idx > 0:
-                # Get the previous layer's name and output shape
-                previous_layer_index = indices[idx] - 1
-                previous_layer = layer_list[previous_layer_index]
-                previous_layer_name = previous_layer['name']
-                input_shape = output_shapes.get(previous_layer_name, None)
-                # NOTE - Verify that the input shape is correctly identified
-                if input_shape is None:
-                    raise ValueError(f"Could not find input_shape of '{split_layer_names[idx - 1]}'.")
-
-                current_split_layer = sub_layer_list[0]
-                input_layer_name = current_split_layer['name'] + '_input'
-                input_layer_dict = {
-                    'name': input_layer_name,
-                    'class_name': 'InputLayer',
-                    'data_format': 'channels_last',
-                    'input_shape': input_shape[1:],
-                }
-                # Reset the inputs of the split layer in the current graph
-                # NOTE - Better allow it to automatically determine its inputs
-                sub_layer_list[0]['inputs'] = []
-                # Then insert the new input layer at the beginning
-                sub_layer_list.insert(0, input_layer_dict)
-
-                # Copy 'Precision' and 'Trace' from the previous layer's config to the new input layer's config
-                if 'LayerName' in sub_config['HLSConfig']:
-                    if previous_layer_name in sub_config['HLSConfig']['LayerName']:
-                        prev_layer_config = sub_config['HLSConfig']['LayerName'][previous_layer_name]
-                        new_layer_config = {}
-                        new_layer_config['Precision'] = (
-                            last_output_precision if last_output_precision is not None else 'auto'
-                        )
-                        # NOTE - We copy Trace as well but it might be better to reset it
-                        new_layer_config['Trace'] = prev_layer_config['Trace']
-                        sub_config['HLSConfig']['LayerName'][input_layer_name] = new_layer_config
-                    else:
-                        raise KeyError(f"Layer '{previous_layer_name}' not found in subconfig.")
-                else:
-                    pass  # case of granularity='Model'
-
-            graph_output_layers = output_layers if idx == len(subgraph_layer_lists) - 1 else None
-            graph_input_layers = input_layers if idx == 0 else None
-            
-            hls_model = ModelGraph.from_layer_list(
-                sub_config, sub_layer_list, graph_input_layers, graph_output_layers, initial_index=current_index
-            )
-
-            # After creating the subgraph, extract the actual precision from the last layer's result.
-            if hls_model.graph:
-                last_layer = next(reversed(hls_model.graph.values()))
-                last_prec = last_layer.attributes.get('result_t')
-                last_output_precision = (
-                    (last_prec.precision if hasattr(last_prec, 'precision') else last_prec)
-                    if last_prec is not None
-                    else 'auto'
-                )
-                if last_output_precision == 'auto' or last_output_precision is None:
-                    raise ValueError("Could not extract a valid precision from the last layer!")
-
-            # Update current_index based on the new graph (accounting for the inserted input layer).
-            layer_indices = [layer.index for layer in hls_model.graph.values()]
-            if layer_indices:
-                max_index = max(layer_indices)
-                current_index = max_index - 1
-            model_graphs.append(hls_model)
-
-        return MultiModelGraph(model_graphs)
-
 
 class MultiModelGraph:
-    def __init__(self, graphs):
+    def __init__(self, graphs: list[ModelGraph]):
+        """
+        Initialize a MultiModelGraph from multiple ModelGraphs representing a single model.
+        """
         self.graphs = graphs
-        self.nn_config = None
-        self._initialize_config(graphs[0])
+        self._initialize_config(self.graphs[0])
         self._bind_modelgraph_methods()
-        self._initialize_io_attributes(graphs)
+        self._initialize_io_attributes(self.graphs)
         self._update_pragmas()
+
+    @classmethod
+    def make_multi_graph(cls, base_model: ModelGraph, split_before_layers: list[str]):
+        """
+        Creates a MultiModelGraph by splitting a base ModelGraph at specified layer names,
+        each initiating a subgraph.
+        """
+        cls._validate_split_points(base_model, split_before_layers)
+        all_nodes = list(base_model.graph.values())
+        layer_names = [node.name for node in all_nodes]
+
+        split_indices = sorted(layer_names.index(s) for s in split_before_layers)
+        bounds = [0] + split_indices + [len(all_nodes)]
+        slices: list[list] = [all_nodes[bounds[i] : bounds[i + 1]] for i in range(len(bounds) - 1)]
+
+        base_input_layer = base_model.graph[base_model.inputs[0]]
+        input_layer_kind = base_input_layer.attributes['class_name']
+        next_index = max(n.index for n in all_nodes)
+
+        subgraphs: list["ModelGraph"] = []
+        for idx, nodes_slice in enumerate(slices):
+            cfg_copy = copy.copy(base_model.config)
+            cfg_copy.config = copy.copy(base_model.config.config)
+            cfg_copy.config["ProjectName"] = f"{base_model.config.get_project_name()}_graph{idx + 1}"
+            cfg_copy.config["OutputDir"] = os.path.join(base_model.config.get_output_dir(), f"graph{idx + 1}")
+
+            subgraph = base_model.__class__(cfg_copy, inputs=[], outputs=[])
+            graph_dict = OrderedDict()
+
+            if idx > 0:
+                next_index += 1
+                input_layer = cls._create_input_node(subgraph, nodes_slice[0], input_layer_kind, next_index)
+                graph_dict[input_layer.name] = input_layer
+                nodes_slice[0].inputs = input_layer.outputs
+            else:
+                input_layer = base_input_layer
+
+            for node in nodes_slice:
+                # fix for layer.model.get_layer_output_variable(). Now layer.model points to its subgraph
+                node.model = subgraph
+                for out_name in node.outputs:
+                    subgraph.output_vars[out_name] = base_model.output_vars[out_name]
+                graph_dict[node.name] = node
+
+            subgraph.graph = graph_dict
+            subgraph.inputs = input_layer.outputs if idx > 0 else base_model.inputs
+            subgraph.outputs = nodes_slice[-1].outputs if idx < len(slices) - 1 else base_model.outputs
+            subgraph._applied_flows = base_model._applied_flows
+
+            # NOTE examine other subgraph-related flows (i.e., fifo_optimizer)
+            subgraph.apply_flow('vivado:specific_types')
+            subgraph.apply_flow('vitis:apply_templates')
+
+            subgraphs.append(subgraph)
+
+        return cls(subgraphs)
+
+    @staticmethod
+    def _validate_split_points(model: ModelGraph, split_names: list[str]):
+        if not split_names:
+            raise ValueError("No split layer names provided.")
+
+        nodes = list(model.graph.values())
+        model_layers = [node.name for node in nodes]
+        for name in split_names:
+            node = model.graph[name]
+
+            if name not in model_layers:
+                raise ValueError(f"Split layer '{name}' not found in the model.")
+
+            if len(node.inputs) > 1:
+                raise ValueError(f"Cannot split at layer '{name}' (multiple inputs detected).")
+
+            if model.graph[node.inputs[0]].class_name == 'Reshape' or node.class_name == 'Reshape':
+                raise ValueError(f"Cannot split at '{name}': Reshape layer found in this or previous layer.")
+
+    @staticmethod
+    def _create_input_node(model, next_node, kind, index):
+        layer_name = f"{next_node.name}_input"
+        attrs = {
+            'name': layer_name,
+            'class_name': 'InputLayer',
+            'data_format': 'channels_last',
+            'input_shape': next_node.get_input_variable().shape,
+        }
+        model.index = index
+        node = model.make_node(kind, layer_name, attrs, [layer_name], [layer_name], initialize=True)
+        model.output_vars[layer_name].type.precision = next_node.get_input_variable().type.precision
+        return node
 
     def _initialize_config(self, first_graph):
         self.config = copy.copy(first_graph.config)

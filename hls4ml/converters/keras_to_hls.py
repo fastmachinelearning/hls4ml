@@ -2,7 +2,7 @@ import json
 
 import h5py
 
-from hls4ml.model import ModelGraph
+from hls4ml.model import ModelGraph, MultiModelGraph
 
 MAXMULT = 4096
 
@@ -356,17 +356,17 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config, split_layer_names=None):
+def keras_to_hls(config, split_before_layers=None):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, output_shapes = parse_keras_model(model_arch, reader)
 
     print('Creating HLS model...')
-    if split_layer_names:
-        hls_model = ModelGraph.make_multi_graph(
-            config, layer_list, input_layers, output_layers, output_shapes, split_layer_names
-        )
+    base_model = ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
+
+    if split_before_layers:
+        hls_model = MultiModelGraph.make_multi_graph(base_model, split_before_layers)
         print('Multi-graph HLS model created.')
     else:
-        hls_model = ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
+        hls_model = base_model
         print('HLS model created.')
     return hls_model

@@ -29,7 +29,7 @@ For example, when converting a Keras model, you can specify the layers at which 
        model,
        hls_config=config,
        backend='vitis',
-       split_layer_names = ['layer3', 'layer7']
+       split_before_layers = ['layer3', 'layer7']
    )
 
 Here, the ``hls_model`` is actually a ``MultiModelGraph`` containing three subgraphs. Each subgraph is a ``ModelGraph`` accessible via indexing: ``hls_model[i]``.
@@ -52,12 +52,12 @@ Key Methods for MultiModelGraph
 ``make_multi_graph`` method
 ===========================
 
-The ``make_multi_graph`` method of ``ModelGraph`` takes a configuration, a full list of layers, the output shapes, and a list of split layers. It returns a ``MultiModelGraph`` that contains multiple ``ModelGraph`` instances.
+The ``make_multi_graph`` method of ``MultiModelGraph`` takes the original ``ModelGraph`` and a list of split layers. It returns a ``MultiModelGraph`` by partitioning the base ``ModelGraph`` at split layers with each one marking the start of each subgraph.
 
 .. code-block:: python
 
    from my_hls4ml_lib.modelgraph import ModelGraph
-   multi_graph = ModelGraph.make_multi_graph(config, layer_list, output_shapes, split_layer_names=['fc2', 'fc3'])
+   multi_graph = MultiModelGraph.make_multi_graph(base_model, split_before_layers=['fc2', 'fc3'])
 
 This allows modular design flows and easier debugging of large models.
 
@@ -85,9 +85,10 @@ Builds all subgraphs in parallel, each as if they were standalone ``ModelGraph``
 
 .. code-block:: python
 
-   report = multi_graph.build(export=True, stitch_design=True)
+   report = multi_graph.build(.., export=True, stitch_design=True, sim_stitched_design=True, export_stitched_design=True))
 
-The returned ``report`` contains data from each subgraph's build and, if stitching was performed, a combined report of the stitched design.
+The returned ``report`` contains results from each subgraph's build and, if stitching was performed, a combined report of the stitched design. Reports for individual ``ModelGraph`` instances are always accessible via
+``MultiModelGraph.graph_reports``.
 
 
 ----
@@ -97,7 +98,7 @@ The returned ``report`` contains data from each subgraph's build and, if stitchi
 ``predict`` method
 ==================
 
-Performs a forward pass through the chained bridge file using the C-simulation (``sim='csim'``). Data is automatically passed from one subgraph's output to the next subgraph's input. For large stitched designs, you can also leverage RTL simulation (``sim='rtl'``) to perform the forward pass at the register-transfer level. In this case, a Verilog testbench is dynamically generated and executed against the stitched IP design, providing behavioral simulation to accurately verify latency and output at the hardware level. Note that the input data for the RTL simulation must have a single batch dimension.
+Performs a forward pass through the chained bridge file using the C-simulation (``sim='csim'``), providing 1-to-1 output with the original model. You can also leverage RTL simulation (``sim='rtl'``) to perform the forward pass at the register-transfer level. In this case, a Verilog testbench is dynamically generated and executed against the stitched IP design, providing behavioral simulation to accurately verify latency and output at the hardware level. Note that the input data for the RTL simulation must have a single batch dimension.
 
 .. code-block:: python
 
@@ -113,13 +114,11 @@ Performs a forward pass through the chained bridge file using the C-simulation (
 ``trace`` method [TODO]
 ================
 
-Provides detailed layer-by-layer outputs across all sub-models, which is essential for debugging or tuning quantization and precision settings.
 
 .. code-block:: python
 
    final_output, trace_outputs = hls_model.trace(X)
 
-``trace_outputs`` includes intermediate results from each subgraph, enabling insights into the data flow.
 
 --------------------------
 Summary
@@ -127,11 +126,35 @@ Summary
 
 The ``MultiModelGraph`` class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility, parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.
 
---------------------------
-Other Notes
---------------------------
 
-* Branch Splitting Limitation: Splitting in the middle of a branched architecture (e.g., ResNet skip connections or multi-path networks) is currently unsupported. Also, each split subgraph must have a single input and a single output.
-* Handling Multiple NN Inputs & Outputs: The final NN output can support multiple output layers. However, for networks with multiple input layers, proper synchronization is required to drive inputs—especially for stream interfaces. A fork-join mechanism in the Verilog testbench can help manage input synchronization effectively.
-* RTL Simulation Issue: RTL simulation of stitched IPs with io_type='io_parallel' and a split at the flatten layer leads to improper simulation behavior and should be avoided.
-* Array Partitioning for Parallel I/O: For io_parallel interfaces, all IPs must use the 'partition' pragma instead of 'reshape'.
+Notes and Known Issues
+=======================
+
+Graph Splitting
+---------------
+
+-  Splitting in the middle of a branched architecture (e.g., ResNet skip connections or multi-path networks) is currently unsupported
+-  Each split subgraph must have exactly one input.
+
+Multiple Inputs & Outputs
+-------------------------
+
+- The final NN output can support multiple output layers.
+- For networks with multiple input layers (a relatively uncommon case), proper synchronization is required to drive inputs—especially for io_stream interfaces. A fork-join mechanism in the Verilog testbench can help manage input synchronization effectively.
+
+Interface Behavior
+------------------
+
+- All IPs currently use the ``partition`` pragma by default for ``io_parallel`` interfaces. Using this pragma between IP blocks typically results in different overall resource usage compared to the original model.
+
+Simulation Discrepancies
+------------------------
+
+- Users should carefully verify functional equivalence (particularly for models that use ``io_stream`` interface)
+- These discrepancies are more noticeable with raw output logits; applying a softmax layer at the model output can often help mask these differences.
+
+TODOs
+-----------------------
+
+- Add support for Verilator-based simulation to enable faster RTL simulation.
+- Investigate ``io_stream`` interface (output discrepancies, fifo optimization)

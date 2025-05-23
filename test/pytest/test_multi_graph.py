@@ -67,7 +67,7 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
         output_dir=output_dir_multi,
         backend=backend,
         io_type=io_type,
-        split_layer_names=list(split_layers),
+        split_before_layers=list(split_layers),
     )
     hls_model_multi.compile()
     pred_multi = hls_model_multi.predict(X_input)
