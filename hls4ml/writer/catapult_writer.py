@@ -417,15 +417,11 @@ class CatapultWriter(Writer):
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
 
-                defines_list = []
+                defines = set()
                 for layer in model.get_layers():
-                    defines = ''
                     for k, v in layer.get_output_variable().get_shape():
-                        defines += f'#define {k} {v}\n'
-
-                    defines_list.append(defines)
-
-                newline += ''.join(defines_list)
+                        defines.add(f'constexpr size_t {k} = {v};')
+                newline += '\n'.join(defines) + '\n'
 
             elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
