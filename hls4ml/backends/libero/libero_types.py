@@ -103,6 +103,9 @@ class LAPFixedPrecisionDefinition(PrecisionDefinition):
         if args[2] == 'AP_TRN' and args[3] == 'AP_WRAP':
             # This is the default, so we won't write the full definition for brevity
             args[2] = args[3] = None
+        else:
+            args[2] = 'hls::' + str(args[2])
+            args[3] = 'hls::' + str(args[3])
 
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'hls::ap_{signed}fixpt<{args}>'.format(signed='u' if not self.signed else '', args=args)
