@@ -1039,7 +1039,7 @@ class ModelGraph(Serializable):
 class MultiModelGraph:
     def __init__(self, graphs: list[ModelGraph]):
         """
-        Initialize a MultiModelGraph from multiple ModelGraphs representing a single model.
+        A MultiModelGraph created from multiple ModelGraphs representing a single model.
         """
         self.graphs = graphs
         self._initialize_config(self.graphs[0])
@@ -1084,7 +1084,7 @@ class MultiModelGraph:
                 input_layer = base_input_layer
 
             for node in nodes_slice:
-                # fix for layer.model.get_layer_output_variable(). Now layer.model points to its subgraph
+                # fix for layer.model.get_layer_output_variable().
                 node.model = subgraph
                 for out_name in node.outputs:
                     subgraph.output_vars[out_name] = base_model.output_vars[out_name]
@@ -1095,7 +1095,7 @@ class MultiModelGraph:
             subgraph.outputs = nodes_slice[-1].outputs if idx < len(slices) - 1 else base_model.outputs
             subgraph._applied_flows = base_model._applied_flows
 
-            # NOTE examine other subgraph-related flows (i.e., fifo_optimizer)
+            # NOTE might need to examine other subgraph-related flows (i.e., fifo_optimizer)
             subgraph.apply_flow('vivado:specific_types')
             subgraph.apply_flow('vitis:apply_templates')
 
@@ -1127,7 +1127,7 @@ class MultiModelGraph:
         layer_name = f"{next_node.name}_input"
         attrs = {
             'name': layer_name,
-            'class_name': 'InputLayer',
+            'class_name': kind,
             'data_format': 'channels_last',
             'input_shape': next_node.get_input_variable().shape,
         }
@@ -1138,7 +1138,6 @@ class MultiModelGraph:
 
     def _initialize_config(self, first_graph):
         self.config = copy.copy(first_graph.config)
-        # Deep copy only 'ProjectName' and 'OutputDir', shallow copy others
         keys_to_deepcopy = ['ProjectName', 'OutputDir']
         self.config.config = {
             k: copy.deepcopy(first_graph.config.config[k]) if k in keys_to_deepcopy else first_graph.config.config[k]
@@ -1161,7 +1160,7 @@ class MultiModelGraph:
         self._top_function_lib = None
         self.inputs = graphs[0].inputs
         self.outputs = graphs[-1].outputs
-        self.output_vars = graphs[-1].output_vars
+        self.output_vars = {k: v for graph in graphs for k, v in graph.output_vars.items()}
 
     def _update_project_config(self, first_graph):
         original_project_name = first_graph.config.get_project_name().partition('_graph')[0]
@@ -1317,6 +1316,46 @@ class MultiModelGraph:
     def trace(self, x):
         raise NotImplementedError("Trace function has not been implemented yet for MultiModelGraph.")
 
+    def write_tb_inputs(self, x, folder_path):
+        """
+        Dump inputs (for Verilog testbench) via the C++ bridge functions:
+        dump_tb_inputs_float
+        dump_tb_inputs_double
+        """
+        if self._top_function_lib is None:
+            self._compile()
+
+        if isinstance(x, (list, tuple)):
+            xlist = list(x)
+        else:
+            xlist = [x]
+
+        first = xlist[0]
+        if first.dtype in [np.single, np.float32]:
+            fn_name = "dump_tb_inputs_float"
+            ctype = ctypes.c_float
+        elif first.dtype in [np.double, np.float64]:
+            fn_name = "dump_tb_inputs_double"
+            ctype = ctypes.c_double
+        else:
+            raise Exception(
+                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
+                    first.dtype
+                )
+            )
+
+        for arr in xlist:
+            if arr.dtype != first.dtype:
+                raise ValueError("All inputs must have same dtype")
+            if not arr.flags["C_CONTIGUOUS"]:
+                raise ValueError("Input arrays must be C_CONTIGUOUS")
+
+        fn = getattr(self._top_function_lib, fn_name)
+        fn.restype = None
+        fn.argtypes = [ctypes.c_char_p] + [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for _ in xlist]
+
+        fn(folder_path.encode("ascii"), *xlist)
+
     def get_input_variables(self):
         variables = []
         for inp in self.inputs:
@@ -1395,46 +1434,6 @@ class MultiModelGraph:
         length = 8
         stamp = uuid.uuid4()
         return str(stamp)[-length:]
-
-    def write_tb_inputs(self, x, folder_path):
-        """
-        Dump inputs (for Verilog testbench) via the C++ bridge functions:
-        dump_tb_inputs_float
-        dump_tb_inputs_double
-        """
-        if self._top_function_lib is None:
-            self._compile()
-
-        if isinstance(x, (list, tuple)):
-            xlist = list(x)
-        else:
-            xlist = [x]
-
-        first = xlist[0]
-        if first.dtype in [np.single, np.float32]:
-            fn_name = "dump_tb_inputs_float"
-            ctype = ctypes.c_float
-        elif first.dtype in [np.double, np.float64]:
-            fn_name = "dump_tb_inputs_double"
-            ctype = ctypes.c_double
-        else:
-            raise Exception(
-                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
-                    first.dtype
-                )
-            )
-
-        for arr in xlist:
-            if arr.dtype != first.dtype:
-                raise ValueError("All inputs must have same dtype")
-            if not arr.flags["C_CONTIGUOUS"]:
-                raise ValueError("Input arrays must be C_CONTIGUOUS")
-
-        fn = getattr(self._top_function_lib, fn_name)
-        fn.restype = None
-        fn.argtypes = [ctypes.c_char_p] + [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for _ in xlist]
-
-        fn(folder_path.encode("ascii"), *xlist)
 
     def _replace_logos(self):
         spec = importlib.util.find_spec("hls4ml")

@@ -402,10 +402,12 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         set first_ip_intf_pins [get_bd_intf_pins -of $first_ip_cell]
         set input_pin_names {}
         foreach intf_pin $first_ip_intf_pins {
-            set pin_name [get_property NAME $intf_pin]
-            if {[string match "*s_axis*" $pin_name] || [string match "*inp*" $pin_name]} {
+            set intf_mode [get_property MODE $intf_pin]
+            set vlnv [get_property VLNV $intf_pin]
+            if {$intf_mode eq "Slave" && [string match "*:axis_rtl:*" $vlnv]} {
                 # Make the interface pin external
                 make_bd_intf_pins_external $intf_pin
+                set pin_name [get_property NAME $intf_pin]
                 # Retrieve the external interface port
                 set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
                 # Change name to base_name
@@ -427,10 +429,12 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         set last_ip_intf_pins [get_bd_intf_pins -of $last_ip_cell]
         set output_pin_names {}
         foreach intf_pin $last_ip_intf_pins {
-            set pin_name [get_property NAME $intf_pin]
-            if {[string match "*m_axis*" $pin_name] || [string match "*out*" $pin_name]} {
+            set intf_mode [get_property MODE $intf_pin]
+            set vlnv [get_property VLNV $intf_pin]
+            if {$intf_mode eq "Master" && [string match "*:axis_rtl:*" $vlnv]} {
                 # Make the interface pin external
                 make_bd_intf_pins_external $intf_pin
+                set pin_name [get_property NAME $intf_pin]
                 # Retrieve the external interface port and change name to base name
                 set external_intf_port [get_bd_intf_ports -filter "NAME =~ \"${pin_name}*\""]
                 set_property NAME $pin_name $external_intf_port
@@ -520,7 +524,6 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         foreach pin $first_ip_pins {
             set pin_name [get_property NAME $pin]
             set pin_dir [get_property DIR $pin]
-            puts "Pin name: $pin_name Pin dir: $pin_dir"
             # Match patterns for inputs and input valid pins
             if {$pin_dir eq "I" && [lsearch -exact $control_pins $pin_name] == -1} {
                 puts "Found input pin: $pin_name"
@@ -543,8 +546,6 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
         foreach pin $last_ip_pins {
             set pin_name [get_property NAME $pin]
             set pin_dir [get_property DIR $pin]
-            puts "Pin name: $pin_name Pin dir: $pin_dir"
-
             # Match patterns for outputs and output valid pins
             if {$pin_dir eq "O" && [lsearch -exact $control_pins $pin_name] == -1} {
                 puts "Found output pin: $pin_name"

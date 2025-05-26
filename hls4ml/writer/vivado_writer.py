@@ -716,14 +716,14 @@ class VivadoWriter(Writer):
         fout.close()
 
     def write_bridge_multigraph(self, model):
-        """Write the Python-C++ bridge (myproject_bridge.cpp)
+        """Write the Python-C++ bridge (myproject_stitched_bridge.cpp)
         Args:
             model (MultiModelGraph): the hls4ml multigraph model.
         """
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/vivado/myproject_bridge.cpp'))
-        fout = open(f"{model.config.get_output_dir()}/{model.config.config['ProjectName']}_bridge.cpp", 'w')
+        fout = open(f"{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp", 'w')
         model_inputs = model.graphs[0].get_input_variables()
         model_outputs = model.graphs[-1].get_output_variables()
         model_brams = [var for var in model.graphs[0].get_weight_variables() if var.storage.lower() == 'bram']
@@ -733,13 +733,13 @@ class VivadoWriter(Writer):
         for line in f.readlines():
             newline = ''
             if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(model.config.config['ProjectName'].upper()))
+                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'firmware/myproject' in line:
                 for graph_idx, g in enumerate(model.graphs):
                     newline += '#undef DEFINES_H_\n'
                     if len(g.outputs) == 1:
                         newline += '#define result_t ' + 'result_graph' + str(graph_idx + 1) + '_t\n'
-                    newline += line.replace('myproject', format(model.graphs[graph_idx].config.config['ProjectName']))
+                    newline += line.replace('myproject', format(model.graphs[graph_idx].config.get_project_name()))
                     if len(g.outputs) == 1:
                         newline += (
                             'typedef result_graph' + str(graph_idx + 1) + '_t graph' + str(graph_idx + 1) + '_result_t;\n'
@@ -747,7 +747,7 @@ class VivadoWriter(Writer):
                         newline += '#undef result_t\n\n' if graph_idx < len(model.graphs) - 1 else '\n'
                 newline += '\n'
             elif 'myproject' in line:
-                newline = line.replace('myproject', format(model.config.config['ProjectName']))
+                newline = line.replace('myproject', format(model.config.get_project_name()))
 
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
@@ -802,7 +802,7 @@ class VivadoWriter(Writer):
                     output_vars = ','.join([o.name + '_ap' for o in g.get_output_variables()])
                     # Concatenate the input, output, and bram variables. Filter out empty/null values
                     all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
-                    top_level += indent + f"{g.config.config['ProjectName']}({all_vars});\n"
+                    top_level += indent + f"{g.config.get_project_name()}({all_vars});\n"
                 newline += top_level
 
                 newline += '\n'
