@@ -137,6 +137,23 @@ class SQConvHandler(SQLayerHandler, KV3ConvHandler):
         # 'hgq.layers.conv.QConv3D',
     )
 
+    def handle(
+        self,
+        layer: 'hgq.layers.QConv1D|hgq.layers.QConv2D',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        conf = super().handle(layer, in_tensors, out_tensors)
+        pf = layer.parallelization_factor
+        out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
+        if pf < 0:
+            if layer.data_format == 'channels_last':
+                pf = prod(out_shape[:-1])
+            else:
+                pf = prod(out_shape[1:])
+        conf['parallelization_factor'] = pf
+        return conf
+
 
 @register
 class SQDenseHandler(SQLayerHandler, KV3DenseHandler):
@@ -152,11 +169,8 @@ class SQDenseHandler(SQLayerHandler, KV3DenseHandler):
         conf['class_name'] = 'Dense'
         in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
         if len(in_shape) > 1:
-            if hasattr(layer, 'parallelization_factor'):
-                parallelization_factor = layer.parallelization_factor
-            else:
-                parallelization_factor = prod(in_shape[:-1])
-            conf['parallelization_factor'] = parallelization_factor
+            pf = layer.parallelization_factor
+            conf['parallelization_factor'] = pf
         return conf
 
 
