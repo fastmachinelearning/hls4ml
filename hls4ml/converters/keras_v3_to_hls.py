@@ -290,4 +290,4 @@ def parse_keras_v3_model(model: 'keras.Model'):
 
 def keras_v3_to_hls(config):
     layer_list, input_layers, output_layers, _ = parse_keras_v3_model(config['KerasModel'])
-    return ModelGraph(config, layer_list, input_layers, output_layers)
+    return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
