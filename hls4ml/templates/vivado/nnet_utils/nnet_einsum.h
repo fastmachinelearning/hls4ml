@@ -8,8 +8,8 @@
 namespace nnet {
 
 struct config_einsum {
-    typedef void tpose_inp0_conf;
-    typedef void tpose_inp1_conf;
+    typedef void tpose_inp0_config;
+    typedef void tpose_inp1_config;
     typedef void tpose_out_conf;
 
     // Layer Sizes
@@ -23,28 +23,27 @@ struct config_einsum {
     static const unsigned strategy;
     static const unsigned reuse_factor;
     static const unsigned multiplier_limit;
-    static const bool store_weights_in_bram = false; // NOT USED
 
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
 template <typename data0_T, typename data1_T, typename res_T, typename CONFIG_T>
-void einsum(const data0_T data0[CONFIG_T::tpose_inp0_conf::N], const data1_T data1[CONFIG_T::tpose_inp1_conf::N],
+void einsum(const data0_T data0[CONFIG_T::tpose_inp0_config::N], const data1_T data1[CONFIG_T::tpose_inp1_config::N],
             res_T res[CONFIG_T::tpose_out_conf::N]) {
 
     #pragma HLS PIPELINE II = CONFIG_T::reuse_factor
     #pragma HLS ALLOCATION operation instances = mul limit = CONFIG_T::multiplier_limit
 
-    data0_T tpose_i0[CONFIG_T::tpose_inp0_conf::N];
-    data1_T tpose_i1[CONFIG_T::tpose_inp1_conf::N];
+    data0_T tpose_i0[CONFIG_T::tpose_inp0_config::N];
+    data1_T tpose_i1[CONFIG_T::tpose_inp1_config::N];
     res_T tpose_o[CONFIG_T::tpose_out_conf::N];
 
     #pragma HLS ARRAY_PARTITION variable = tpose_i0 complete
     #pragma HLS ARRAY_PARTITION variable = tpose_i1 complete
     #pragma HLS ARRAY_PARTITION variable = tpose_o complete
 
-    nnet::transpose<data0_T, data0_T, typename CONFIG_T::tpose_inp0_conf>(data0, tpose_i0);
-    nnet::transpose<data1_T, data1_T, typename CONFIG_T::tpose_inp1_conf>(data1, tpose_i1);
+    nnet::transpose<data0_T, data0_T, typename CONFIG_T::tpose_inp0_config>(data0, tpose_i0);
+    nnet::transpose<data1_T, data1_T, typename CONFIG_T::tpose_inp1_config>(data1, tpose_i1);
 
     // for l0 in range(L0):
     //     for i in range(I):

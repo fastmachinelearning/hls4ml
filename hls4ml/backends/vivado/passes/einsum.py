@@ -12,8 +12,8 @@ from .reshaping_templates import transpose_config_template
 
 einsum_config_template = '''
 struct config{index} {{
-    typedef config{index}_tpose_inp0 tpose_inp0_conf;
-    typedef config{index}_tpose_inp1 tpose_inp1_conf;
+    typedef config{index}_tpose_inp0 tpose_inp0_config;
+    typedef config{index}_tpose_inp1 tpose_inp1_config;
     typedef config{index}_tpose_out tpose_out_conf;
 
     typedef {accum_t.name} accum_t;
@@ -78,13 +78,13 @@ class EinsumConfigTemplate(LayerConfigTemplate):
         inp0_tpose_idxs = node.attributes['inp0_tpose_idxs']
         inp1_tpose_idxs = node.attributes['inp1_tpose_idxs']
         out_tpose_idxs = node.attributes['out_tpose_idxs']
-        tpose_inp0_conf_name = f'config{node.index}_tpose_inp0'
-        tpose_inp1_conf_name = f'config{node.index}_tpose_inp1'
+        tpose_inp0_config_name = f'config{node.index}_tpose_inp0'
+        tpose_inp1_config_name = f'config{node.index}_tpose_inp1'
         tpose_out_conf_name = f'config{node.index}_tpose_out'
 
-        conf = transpose_config_gen(tpose_inp0_conf_name, inp0_shape, inp0_tpose_idxs)
+        conf = transpose_config_gen(tpose_inp0_config_name, inp0_shape, inp0_tpose_idxs)
         inp0_tpose_conf = transpose_config_template.format(**conf)
-        conf = transpose_config_gen(tpose_inp1_conf_name, inp1_shape, inp1_tpose_idxs)
+        conf = transpose_config_gen(tpose_inp1_config_name, inp1_shape, inp1_tpose_idxs)
         inp1_tpose_conf = transpose_config_template.format(**conf)
         conf = transpose_config_gen(tpose_out_conf_name, out_interpert_shape, out_tpose_idxs)
         out_tpose_conf = transpose_config_template.format(**conf)

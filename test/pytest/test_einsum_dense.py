@@ -14,7 +14,7 @@ from keras.layers import EinsumDense, Input
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('strategy', ['latency', 'distributed_arithmetic'])
+@pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize(

@@ -45,7 +45,6 @@ struct config{index} {{
     static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse_factor};
     static const unsigned parallelization_factor = {parallelization_factor}; // Only useful when n_inplace > 1
-    static const bool store_weights_in_bram = false; // NOT USED
 }};
 '''
 

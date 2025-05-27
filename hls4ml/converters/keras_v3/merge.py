@@ -36,7 +36,7 @@ class MergeHandler(KerasV3LayerHandler):
         config: dict[str, Any] = {'output_shape': output_shape}
 
         op = cls_name.lower()
-        match cls_name.lower():
+        match cls_name:
             case 'Concatenate':
                 rank = len(output_shape)
                 class_name = f'Concatenate{rank}d'
