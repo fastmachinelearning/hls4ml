@@ -12,7 +12,7 @@ try:
 except ImportError:
     pytest.skip('s-quark is not installed', allow_module_level=True)
 
-from keras.api.layers import Input
+from keras.layers import Input
 
 test_root_path = Path(__file__).parent
 
