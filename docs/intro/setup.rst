@@ -42,7 +42,7 @@ Dependencies
 
 The ``hls4ml`` library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed by ``pip`` or ``conda``.
 
-The following Python packages are all optional and are only required if you intend to use the corresponding converter. Only install the packages you need.
+The following Python packages are all optional and are only required if you intend to use the corresponding converter.
 
 * `Keras <https://pypi.org/project/keras/>`_ is required by the Keras converter.
    * `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) is required by the Keras v2 converter (keras v2 is included in TensorFlow).

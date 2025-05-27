@@ -1,6 +1,6 @@
-================
+================================
 Keras and its quantized variants
-================
+================================
 
 Keras and the quantization library QKeras are well supported in ``hls4ml``. Both Keras v2 (``tf.keras``) and the new Keras v3 are supported. While the Keras v2 support is based on parsing the serialized json representation of the model, the Keras v3 support uses direct model inspection.
 
@@ -10,7 +10,7 @@ The ``data_format='channels_first'`` parameter of Keras layers is supported, but
 
 
 * `QKeras <https://github.com/fastmachinelearning/qkeras>`_
-    The equivalent QKeras API and its quantizers are also supported by ``hls4ml``. QKeras is not compatible with Keras v3.
+    The equivalent QKeras API and its quantizers are also supported by ``hls4ml``. QKeras is not compatible with Keras v3. Currently, only HGQ2 is compatible with Keras v3 (see below).
 * `HGQ <https://github.com/calad0i/HGQ>`_
     The equivalent HGQ API is also supported. HGQ is not compatible with Keras v3. See `advanced/HGQ <../advanced/hgq.html>`__ for more information.
 * `HGQ2 <https://github.com/calad0i/HGQ2>`_
