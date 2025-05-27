@@ -1,5 +1,6 @@
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Resize, Transpose, ZeroPadding1D, ZeroPadding2D
+from hls4ml.utils.transpose_utils import transpose_config_gen
 
 # ZeroPadding templates
 
@@ -131,7 +132,7 @@ class TransposeConfigTemplate(LayerConfigTemplate):
         shape = tuple(node.get_input_variable().shape)
         perm = tuple(node.get_attr('perm'))
         name = f'config{node.index}'
-        conf = node.model.config.backend.transpose_config_gen(name, shape, perm)
+        conf = transpose_config_gen(name, shape, perm)
         return transpose_config_template.format(**conf)
 
 

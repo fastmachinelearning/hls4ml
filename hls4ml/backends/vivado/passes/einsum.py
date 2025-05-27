@@ -3,6 +3,7 @@ from math import ceil
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Einsum
+from hls4ml.utils.transpose_utils import transpose_config_gen
 
 from .reshaping_templates import transpose_config_template
 
@@ -81,11 +82,11 @@ class EinsumConfigTemplate(LayerConfigTemplate):
         tpose_inp1_conf_name = f'config{node.index}_tpose_inp1'
         tpose_out_conf_name = f'config{node.index}_tpose_out'
 
-        conf = node.model.config.backend.transpose_config_gen(tpose_inp0_conf_name, inp0_shape, inp0_tpose_idxs)
+        conf = transpose_config_gen(tpose_inp0_conf_name, inp0_shape, inp0_tpose_idxs)
         inp0_tpose_conf = transpose_config_template.format(**conf)
-        conf = node.model.config.backend.transpose_config_gen(tpose_inp1_conf_name, inp1_shape, inp1_tpose_idxs)
+        conf = transpose_config_gen(tpose_inp1_conf_name, inp1_shape, inp1_tpose_idxs)
         inp1_tpose_conf = transpose_config_template.format(**conf)
-        conf = node.model.config.backend.transpose_config_gen(tpose_out_conf_name, out_interpert_shape, out_tpose_idxs)
+        conf = transpose_config_gen(tpose_out_conf_name, out_interpert_shape, out_tpose_idxs)
         out_tpose_conf = transpose_config_template.format(**conf)
 
         return '\n\n'.join((inp0_tpose_conf, inp1_tpose_conf, out_tpose_conf, einsum_conf))

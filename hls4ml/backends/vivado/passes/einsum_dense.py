@@ -1,6 +1,7 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import EinsumDense
+from hls4ml.utils.transpose_utils import transpose_config_gen
 
 from .reshaping_templates import transpose_config_template
 
@@ -118,9 +119,9 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         tpose_inp_conf_name = f'config{node.index}_tpose_inp'
         tpose_out_conf_name = f'config{node.index}_tpose_out'
 
-        conf = node.model.config.backend.transpose_config_gen(tpose_inp_conf_name, inp_shape, inp_tpose_idxs)
+        conf = transpose_config_gen(tpose_inp_conf_name, inp_shape, inp_tpose_idxs)
         inp_tpose_conf = transpose_config_template.format(**conf)
-        conf = node.model.config.backend.transpose_config_gen(tpose_out_conf_name, out_interpert_shape, out_tpose_idxs)
+        conf = transpose_config_gen(tpose_out_conf_name, out_interpert_shape, out_tpose_idxs)
         out_tpose_conf = transpose_config_template.format(**conf)
 
         if strategy.lower() == 'distributed_arithmetic':
