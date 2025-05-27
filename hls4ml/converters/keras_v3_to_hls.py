@@ -4,11 +4,13 @@ from itertools import chain
 from types import FunctionType
 from typing import Any
 
+import numpy as np
+
+from hls4ml.model import ModelGraph
+
 if typing.TYPE_CHECKING:
     import keras
-    from keras.api import KerasTensor
-
-import numpy as np
+    from keras import KerasTensor
 
 from .keras_v3 import layer_handlers as v3_layer_handlers
 
@@ -19,26 +21,24 @@ T_kv3_handler = Callable[
 
 def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None):
     '''Given a keras layer, return a list of tuples of input and output
-    tensors. If the layer is called only once (i.e., no shared layers),
+    tensors. If the layer is called only once (i.e., a layer is not used multiple times in the same model),
     the list will contain only one tuple.
 
     The layer must have been built before calling this function.
 
-    Parameters
-    ----------
-    layer : keras.Layer
-        The layer to get input and output tensors from.
-    node_whitelist : set[int]|None, optional
-        If not None, only return tensors from nodes with ids in this
-        set, used to filter out nodes that are not part of the model, by
-        default None
+    Args:
+        layer: The layer to get input and output tensors from.
+        node_whitelist: If not None, only return tensors from nodes
+            with ids in this set, used to filter out nodes that are not
+            part of the model. Defaults to None.
 
 
-    Returns
-    -------
-    list[tuple[tuple['KerasTensor', ...], tuple['KerasTensor', ...]]]
-        A list of tuples of input and output tensors.
+    Returns:
+        A list of tuples of input and output tensors. Each inner tuple
+        contains two tuples: the first with input KerasTensors and the
+        second with output KerasTensors.
     '''
+
     in_nodes = layer._inbound_nodes
     if node_whitelist is not None:
         in_nodes = [node for node in in_nodes if id(node) in node_whitelist]
@@ -53,21 +53,25 @@ def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None)
 
 def resolve_dependency_relation(model: 'keras.Model'):
     '''Given a keras model, return the following information:
-    - A list of input tensor names
-    - A list of output tensor names
-    - A list of (layer_name, input_tensor_names, output_tensor_names) tuples
-    - A dictionary of tensor_name -> KerasTensor
+        - A list of input tensor names
+        - A list of output tensor names
+        - A list of (layer_name, input_tensor_names, output_tensor_names) tuples
+        - A dictionary of tensor_name -> KerasTensor
 
-    Parameters
-    ----------
-    model : keras.Model
-        The keras model to analyze.
+    Args:
+        model: The keras model to analyze.
 
-    Returns
-    -------
-    tuple[tuple[str, ...], tuple[str, ...], list[tuple[str, tuple[str, ...], tuple[str, ...]]], dict[str, KerasTensor]]
-        inp_tensor_names, out_tensor_names, layer_io, tensors
+    Returns:
+        A tuple containing:
+            - inp_tensor_names (tuple[str, ...]): A tuple of input tensor names.
+            - out_tensor_names (tuple[str, ...]): A tuple of output tensor names.
+            - layer_io (list[tuple[str, tuple[str, ...], tuple[str, ...]]]): A list of
+                tuples, where each tuple contains the layer name, a tuple of its
+                input tensor names, and a tuple of its output tensor names.
+            - tensors (dict[str, KerasTensor]): A dictionary mapping tensor names
+                to KerasTensor objects.
     '''
+
     tensors: dict[str, 'KerasTensor'] = {}
     'tensor_name -> KerasTensor'
     depends_on: dict[str, tuple[str, ...]] = {}
@@ -163,7 +167,7 @@ class KerasV3HandlerDispatcher:
         config = layer.get_config()
         layer_dict = {'config': config, 'class_name': layer.__class__.__name__}
 
-        class DummyReader:
+        class IsolatedLayerReader:
             def get_weights_data(self, layer_name, var_name):
                 assert layer_name == layer.name, f'Processing {layer.name}, but handler tried to read {layer_name}'
                 for w in layer.weights:
@@ -171,7 +175,7 @@ class KerasV3HandlerDispatcher:
                         return np.array(w)
                 return None
 
-        reader = DummyReader()
+        reader = IsolatedLayerReader()
         input_shapes = [list(t.shape) for t in inp_tensors]
         input_names = [t.name for t in inp_tensors]
         output_names = [t.name for t in out_tensors]
@@ -207,20 +211,19 @@ def parse_keras_v3_model(model: 'keras.Model'):
     representing a layer in the HLS model, and a list of input and
     output layer names.
 
-    Parameters
-    ----------
-    model : keras.Model
+    Args:
+        model: keras.Model
 
-    Returns
-    -------
-    tuple[list[dict[str, Any]], list[str], list[str], list[list[int]]]
-        layer_list, input_layer_names, output_layer_names,
-        batch_output_shapes
+    Returns:
+        A tuple containing:
+            - layer_list (list[dict[str, Any]]): A list of dictionaries,
+                each representing a layer in the HLS model.
+            - input_layer_names (list[str]): A list of input layer names.
+            - output_layer_names (list[str]): A list of output layer names.
+            - batch_output_shapes (list[list[int]]): A list of output shapes.
 
-    Raises
-    ------
-    ValueError
-        If a circular dependency is detected.
+    Raises:
+        ValueError: If a circular dependency is detected.
     '''
 
     assert model.built, 'Model must be built before parsing'
@@ -230,7 +233,7 @@ def parse_keras_v3_model(model: 'keras.Model'):
     if isinstance(model, keras.Sequential):
         model = model._functional  # everything is functional under the hood lol
 
-    from .keras_to_hls import layer_handlers as v2_layer_handlers  # Delayed import to avoid circular import
+    from .keras_v2_to_hls import layer_handlers as v2_layer_handlers  # Delayed import to avoid circular import
 
     keras_v3_dispatcher = KerasV3HandlerDispatcher(v3_layer_handlers, v2_layer_handlers)
 
@@ -283,3 +286,8 @@ def parse_keras_v3_model(model: 'keras.Model'):
     batch_output_shapes = [list(tensors[tname].shape) for tname in model_outputs]
 
     return layer_list, input_layer_names, output_layer_names, batch_output_shapes
+
+
+def keras_v3_to_hls(config):
+    layer_list, input_layers, output_layers, _ = parse_keras_v3_model(config['KerasModel'])
+    return ModelGraph(config, layer_list, input_layers, output_layers)
