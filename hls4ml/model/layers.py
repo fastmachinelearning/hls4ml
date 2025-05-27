@@ -1670,8 +1670,8 @@ class EinsumDense(Layer):
             dims = [f'N_LAYER_{self.index}']
         self.add_output_variable(list(out_shape), dims)
 
-        kernel: np.ndarray = self.attributes.attributes['weight_data']
-        bias: np.ndarray | None = self.attributes.attributes['bias_data']
+        kernel: np.ndarray = self.attributes['weight_data']
+        bias: np.ndarray | None = self.attributes['bias_data']
         equation = self.attributes['equation']
         inp_shape = self.attributes['inp_shape']
         out_shape = self.attributes['out_shape']
@@ -1705,9 +1705,9 @@ class EinsumDense(Layer):
             # The transpose is just to match the shape in case of have real bias, no real effect.
             bias = np.zeros(out_shape).transpose(np.argsort(out_tpose_idxs))
 
-        self.attributes.attributes['weight_data'] = kernel
-        self.attributes.attributes['to_original_kernel'] = to_original_kernel
-        self.attributes.attributes['bias_data'] = bias
+        self.attributes['weight_data'] = kernel
+        self.attributes['to_original_kernel'] = to_original_kernel
+        self.attributes['bias_data'] = bias
         self.attributes['inp_tpose_idxs'] = inp_tpose_idxs
         self.attributes['out_tpose_idxs'] = out_tpose_idxs
         self.attributes['out_interpert_shape'] = recipe['out_interpert_shape']
@@ -1715,7 +1715,7 @@ class EinsumDense(Layer):
         self.attributes['n_free_kernel'] = recipe['L1']
         self.attributes['n_inplace'] = recipe['I']
         self.attributes['n_contract'] = recipe['C']
-        pf = self.attributes.attributes.get('parallelization_factor', recipe['L0'])
+        pf = self.attributes.get('parallelization_factor', recipe['L0'])
         self.attributes['parallelization_factor'] = pf
 
         self.add_weights(compression=self.model.config.get_compression(self))
@@ -1760,7 +1760,7 @@ class Einsum(Layer):
         inp0_tpose_idxs, inp1_tpose_idxs = recipe['in_transpose_idxs']
         out_tpose_idxs = recipe['out_transpose_idxs']
 
-        self.attributes.attributes.update(recipe)
+        self.attributes.update(recipe)
         self.attributes['n_free0'] = recipe['L0']
         self.attributes['n_free1'] = recipe['L1']
         self.attributes['n_inplace'] = recipe['I']
@@ -1771,7 +1771,7 @@ class Einsum(Layer):
         self.attributes['inp1_tpose_idxs'] = inp1_tpose_idxs
         self.attributes['out_tpose_idxs'] = out_tpose_idxs
 
-        pf = self.attributes.attributes.get('parallelization_factor', recipe['L0'])
+        pf = self.attributes.get('parallelization_factor', recipe['L0'])
         self.attributes['parallelization_factor'] = pf
 
 

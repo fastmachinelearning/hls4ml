@@ -115,7 +115,7 @@ def test_activations(activation_function, backend, io_type):
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.02)
 
     for layer in hls_model.get_layers():
-        print(layer.attributes.attributes['class_name'])
+        print(layer.attributes['class_name'])
     assert len(model.layers) + 1 == len(hls_model.get_layers())
 
     assert list(hls_model.get_layers())[2].attributes['class_name'] == activation_function.__class__.__name__

@@ -49,7 +49,7 @@ class EinsumConfigTemplate(LayerConfigTemplate):
     def format(self, node: Einsum):
         default_params = self._default_config_params(node)
 
-        strategy = node.attributes.attributes['strategy']
+        strategy = node.attributes['strategy']
         io_type = node.model.config.get_config_value('IOType')
 
         assert io_type == 'io_parallel', 'EinsumDense layer only supports io_parallel for now'
@@ -58,10 +58,10 @@ class EinsumConfigTemplate(LayerConfigTemplate):
         # EinsumDense config
         params = default_params.copy()
         params['strategy'] = strategy
-        params['n_free0'] = node.attributes.attributes['n_free0']
-        params['n_free1'] = node.attributes.attributes['n_free1']
-        params['n_contract'] = node.attributes.attributes['n_contract']
-        params['n_inplace'] = node.attributes.attributes['n_inplace']
+        params['n_free0'] = node.attributes['n_free0']
+        params['n_free1'] = node.attributes['n_free1']
+        params['n_contract'] = node.attributes['n_contract']
+        params['n_inplace'] = node.attributes['n_inplace']
         inp0_t = node.get_input_variable(node.inputs[0]).type.precision
         inp1_t = node.get_input_variable(node.inputs[1]).type.precision
         params['product_type'] = get_backend('vivado').product_type(inp0_t, inp1_t)
@@ -72,12 +72,12 @@ class EinsumConfigTemplate(LayerConfigTemplate):
         einsum_conf = self.template.format(**params)
 
         # inp/out transpose config
-        inp0_shape = node.attributes.attributes['inp0_shape']
-        inp1_shape = node.attributes.attributes['inp1_shape']
-        out_interpert_shape = node.attributes.attributes['out_interpert_shape']
-        inp0_tpose_idxs = node.attributes.attributes['inp0_tpose_idxs']
-        inp1_tpose_idxs = node.attributes.attributes['inp1_tpose_idxs']
-        out_tpose_idxs = node.attributes.attributes['out_tpose_idxs']
+        inp0_shape = node.attributes['inp0_shape']
+        inp1_shape = node.attributes['inp1_shape']
+        out_interpert_shape = node.attributes['out_interpert_shape']
+        inp0_tpose_idxs = node.attributes['inp0_tpose_idxs']
+        inp1_tpose_idxs = node.attributes['inp1_tpose_idxs']
+        out_tpose_idxs = node.attributes['out_tpose_idxs']
         tpose_inp0_conf_name = f'config{node.index}_tpose_inp0'
         tpose_inp1_conf_name = f'config{node.index}_tpose_inp1'
         tpose_out_conf_name = f'config{node.index}_tpose_out'

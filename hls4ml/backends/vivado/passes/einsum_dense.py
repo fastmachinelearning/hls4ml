@@ -65,9 +65,9 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         dense_params = self._default_config_params(node)
         strategy = node.attributes['strategy']
         dense_params['strategy'] = strategy
-        dense_params['n_in'] = node.attributes.attributes['n_contract']
-        dense_params['n_out'] = node.attributes.attributes['n_free_kernel']
-        if node.attributes.attributes['n_inplace'] == 1:
+        dense_params['n_in'] = node.attributes['n_contract']
+        dense_params['n_out'] = node.attributes['n_free_kernel']
+        if node.attributes['n_inplace'] == 1:
             dense_params['nzeros'] = node.get_weights('weight').nzeros  # type: ignore
         else:
             dense_params['nzeros'] = '-1; // Not making sense when kernels are switching'
@@ -91,10 +91,10 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         # EinsumDense config
         params = default_params.copy()
         params['strategy'] = strategy
-        params['n_free_data'] = node.attributes.attributes['n_free_data']
-        params['n_free_kernel'] = node.attributes.attributes['n_free_kernel']
-        params['n_contract'] = node.attributes.attributes['n_contract']
-        params['n_inplace'] = node.attributes.attributes['n_inplace']
+        params['n_free_data'] = node.attributes['n_free_data']
+        params['n_free_kernel'] = node.attributes['n_free_kernel']
+        params['n_contract'] = node.attributes['n_contract']
+        params['n_inplace'] = node.attributes['n_inplace']
         if strategy.lower() == 'latency':
             params['kernel_config'] = f'typedef config{node.index}_dense dense_conf'
         else:
@@ -104,7 +104,7 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
             index = node.index
             conf = f'constexpr static auto da_kernel = nnet::einsum_dense{index}_da_kernel<{inp_t}, {result_t}>'
             params['kernel_config'] = conf
-        pf = node.attributes.attributes['parallelization_factor']
+        pf = node.attributes['parallelization_factor']
         if pf < 0:
             pf = params['n_inplace']
         params['parallelization_factor'] = pf
@@ -112,10 +112,10 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         einsum_conf = self.template.format(**params)
 
         # inp/out transpose config
-        inp_shape = node.attributes.attributes['inp_shape']
-        out_interpert_shape = node.attributes.attributes['out_interpert_shape']
-        inp_tpose_idxs = node.attributes.attributes['inp_tpose_idxs']
-        out_tpose_idxs = node.attributes.attributes['out_tpose_idxs']
+        inp_shape = node.attributes['inp_shape']
+        out_interpert_shape = node.attributes['out_interpert_shape']
+        inp_tpose_idxs = node.attributes['inp_tpose_idxs']
+        out_tpose_idxs = node.attributes['out_tpose_idxs']
         tpose_inp_conf_name = f'config{node.index}_tpose_inp'
         tpose_out_conf_name = f'config{node.index}_tpose_out'
 
