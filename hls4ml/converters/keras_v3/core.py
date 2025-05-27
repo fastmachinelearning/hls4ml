@@ -10,12 +10,12 @@ from ._base import KerasV3LayerHandler, register
 
 if typing.TYPE_CHECKING:
     import keras
-    from keras.api import KerasTensor
+    from keras import KerasTensor
     from keras.src.layers.merging.base_merge import Merge
 
 
 @register
-class KV3DenseHandler(KerasV3LayerHandler):
+class DenseHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.core.dense.Dense',)
 
     def handle(
@@ -24,7 +24,6 @@ class KV3DenseHandler(KerasV3LayerHandler):
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
-
         kernel = self.load_weight(layer, 'kernel')
         bias = self.load_weight(layer, 'bias') if layer.use_bias else None
         n_in, n_out = kernel.shape  # type: ignore
@@ -40,7 +39,7 @@ class KV3DenseHandler(KerasV3LayerHandler):
 
 
 @register
-class KV3InputHandler(KerasV3LayerHandler):
+class InputHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.core.input_layer.InputLayer',)
 
     def handle(
@@ -54,7 +53,7 @@ class KV3InputHandler(KerasV3LayerHandler):
 
 
 @register
-class KV3MergeHandler(KerasV3LayerHandler):
+class MergeHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.merging.add.Add',
         'keras.src.layers.merging.multiply.Multiply',
@@ -73,33 +72,38 @@ class KV3MergeHandler(KerasV3LayerHandler):
         out_tensors: Sequence['KerasTensor'],
         cls_name: str | None = None,
     ):
-        assert len(out_tensors) == 1, f"Merge layer {layer.name} has more than one output"
+        assert len(out_tensors) == 1, f'Merge layer {layer.name} has more than one output'
         output_shape = list(out_tensors[0].shape[1:])
 
         cls_name = cls_name or layer.__class__.__name__
-        config: dict[str, Any] = {
-            'output_shape': output_shape,
-            'op': cls_name.lower(),
-        }
+        config: dict[str, Any] = {'output_shape': output_shape}
 
+        op = cls_name.lower()
         match cls_name.lower():
             case 'Concatenate':
                 rank = len(output_shape)
                 class_name = f'Concatenate{rank}d'
                 config['axis'] = layer.axis
             case 'Dot':
-                class_name = f'Dot{len(output_shape)}d'
-                rank = len(output_shape)
-                assert rank == 1, f"Dot product only supported for 1D tensors, got {rank}D on layer {layer.name}"
+                msg = (
+                    'Dot product only supported flatten tensors, got input shapes'
+                    f'{in_tensors[0].shape} and {in_tensors[1].shape} for layer {layer.name}.'
+                )
+                assert all(len(t.shape) == 2 for t in in_tensors), msg
+                assert in_tensors[0].shape[1] == in_tensors[1].shape[0], f'Input shape mismatch for layer {layer.name}.'
+                class_name = 'Dot'
+                op = 'dot1d'
+                config['axes'] = layer.axes
             case _:
                 class_name = 'Merge'
 
         config['class_name'] = class_name
+        config['op'] = op
         return config
 
 
 @register
-class KV3ActivationHandler(KerasV3LayerHandler):
+class ActivationHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.activation.Activation',)
 
     def handle(
@@ -133,11 +137,12 @@ class KV3ActivationHandler(KerasV3LayerHandler):
 
         config['activation'] = activation.__name__
         config['class_name'] = class_name
+        config['n_in'] = prod(in_tensors[0].shape[1:])  # type: ignore
         return (config,)
 
 
 @register
-class KV3ReLUHandler(KerasV3LayerHandler):
+class ReLUHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.activations.leaky_relu.LeakyReLU',
         'keras.src.layers.activations.prelu.PReLU',
@@ -171,7 +176,7 @@ class KV3ReLUHandler(KerasV3LayerHandler):
 
 
 @register
-class KV3SoftmaxHandler(KerasV3LayerHandler):
+class SoftmaxHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.softmax.Softmax',)
 
     def handle(
@@ -189,22 +194,22 @@ class KV3SoftmaxHandler(KerasV3LayerHandler):
         config = {}
         config.update(self.default_config)
         if len(in_tensors) == 2:
-            raise NotImplementedError("Masked softmax not supported yet")
+            raise NotImplementedError('Masked softmax not supported yet')
             config['class_name'] = 'MaskedSoftmax'
         elif len(in_tensors) == 1:
             config['class_name'] = 'Softmax'
         else:
-            raise ValueError(f"Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}")
+            raise ValueError(f'Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}')
         config['axis'] = layer.axis
         config['activation'] = 'softmax'
-        config['n_outer'] = (n_outer,)
+        config['n_outer'] = n_outer
         config['n_inner'] = n_inner
 
         return (config,)
 
 
 @register
-class KV3HardActivationHandler(KerasV3LayerHandler):
+class EluHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.elu.ELU',)
 
     def handle(
@@ -219,5 +224,36 @@ class KV3HardActivationHandler(KerasV3LayerHandler):
         config['class_name'] = 'ELU'
         config['activ_param'] = float(layer.alpha)
         config['activation'] = 'elu'
+        config['n_in'] = prod(in_tensors[0].shape[1:])  # type: ignore
 
         return (config,)
+
+
+@register
+class ReshapeHandler(KerasV3LayerHandler):
+    handles = ('keras.src.layers.reshaping.reshape.Reshape', 'keras.src.layers.reshaping.flatten.Flatten')
+
+    def handle(
+        self,
+        layer: 'keras.layers.Reshape',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        return {
+            'class_name': 'Reshape',
+            'target_shape': list(out_tensors[0].shape[1:]),
+        }
+
+
+@register
+class PermuteHandler(KerasV3LayerHandler):
+    handles = ('keras.src.layers.reshaping.permute.Permute',)
+
+    def handle(
+        self,
+        layer: 'keras.layers.Permute',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        config = {'class_name': 'Transpose', 'perm': [dim - 1 for dim in layer.dims]}  # rm batch dim
+        return config

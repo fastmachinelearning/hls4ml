@@ -1,7 +1,7 @@
 import typing
 from collections.abc import Callable, Sequence
 from types import FunctionType
-from typing import Any, TypedDict, overload
+from typing import Any, TypedDict
 
 
 class DefaultConfig(TypedDict, total=False):
@@ -18,57 +18,13 @@ class DefaultConfig(TypedDict, total=False):
 
 if typing.TYPE_CHECKING:
     import keras
-    from keras.api import KerasTensor
+    from keras import KerasTensor
 
 T_kv3_handler = Callable[
     ['keras.Layer', Sequence['keras.KerasTensor'], Sequence['keras.KerasTensor']], tuple[dict[str, Any], ...]
 ]
 
 registry: dict[str, T_kv3_handler] = {}
-
-
-@overload
-def register(cls: type) -> type: ...
-
-
-@overload
-def register(cls: str) -> Callable[[T_kv3_handler], T_kv3_handler]: ...
-
-
-def register(cls: str | type):
-    '''Decorator to register a handler for a specific layer class. Suggested to decorate the `KerasV3LayerHandler` class.
-
-    Args:
-        cls: If str, the key to register the handler under. If type, the class to register the handler for.
-
-    Examples:
-        ```python
-        @keras_dispatcher.register
-        class MyLayerHandler(KerasV3LayerHandler):
-            handles = ('my_package.src.submodule.MyLayer', 'MyLayer2')
-
-            def handle(self, layer, inp_tensors, out_tensors):
-                # handler code
-
-
-        @keras_dispatcher.register('MyLayer3')
-        def my_layer_handler(layer, inp_tensors, out_tensors):
-            # handler code
-        ```
-    '''
-
-    def deco(func):
-        if isinstance(cls, str):
-            registry[cls] = func
-        for k in getattr(func, 'handles', ()):
-            registry[k] = func
-        if isinstance(cls, type):
-            return cls
-        return func
-
-    if isinstance(cls, type):
-        return deco(cls())
-    return deco
 
 
 def maybe_add_attrs(config: dict[str, Any] | DefaultConfig, obj: Any, *attrs: str):
@@ -78,7 +34,7 @@ def maybe_add_attrs(config: dict[str, Any] | DefaultConfig, obj: Any, *attrs: st
 
 
 class KerasV3LayerHandler:
-    '''Base class for keras v3 layer handlers. Subclass this class to create a handler for a specific layer type.'''
+    """Base class for keras v3 layer handlers. Subclass this class to create a handler for a specific layer type."""
 
     handles = ()
     default_config: DefaultConfig
@@ -89,7 +45,7 @@ class KerasV3LayerHandler:
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ) -> tuple[dict[str, Any], ...]:
-        '''Handle a keras layer. Return a tuple of dictionaries, each dictionary representing
+        """Handle a keras layer. Return a tuple of dictionaries, each dictionary representing
         a layer (module) in the HLS model.
 
         One layer may correspond to one or more dictionaries
@@ -117,7 +73,7 @@ class KerasV3LayerHandler:
 
         Returns:
             Layer configuration(s) for the HLS model to be consumed by the ModelGraph constructor.
-        '''
+        """
 
         name = layer.name
         class_name = layer.__class__.__name__
@@ -189,7 +145,7 @@ class KerasV3LayerHandler:
         return {}
 
     def load_weight(self, layer: 'keras.Layer', key: str):
-        '''Load a weight from a layer.
+        """Load a weight from a layer.
 
         Args:
             layer: The layer to load the weight from.
@@ -197,7 +153,30 @@ class KerasV3LayerHandler:
 
         Returns:
             np.ndarray: The weight.
-        '''
+        """
         import keras
 
         return keras.ops.convert_to_numpy(getattr(layer, key))
+
+
+def register(cls: type):
+    """Decorator to register a handler for a specific layer class. Suggested to decorate the `KerasV3LayerHandler` class.
+
+    Args:
+        cls: the class to register the handler for.
+
+    Examples:
+        ```python
+        @keras_dispatcher.register
+        class MyLayerHandler(KerasV3LayerHandler):
+            handles = ('my_package.src.submodule.MyLayer', 'MyLayer2')
+
+            def handle(self, layer, inp_tensors, out_tensors):
+                # handler code
+        ```
+    """
+
+    fn = cls()
+    for k in fn.handles:
+        registry[k] = fn
+    return cls
