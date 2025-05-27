@@ -6,8 +6,6 @@ from hls4ml.model import ModelGraph
 
 from .keras_v3_to_hls import parse_keras_v3_model
 
-MAXMULT = 4096
-
 
 class KerasReader:
     def get_weights_data(self, layer_name, var_name):
