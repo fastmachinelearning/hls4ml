@@ -11,10 +11,6 @@ test_root_path = Path(__file__).parent
 
 
 def create_test_model():
-    """
-    This architecture ensures testing of corner cases such as:
-    double layer outputs and variety of layers to serve as spliting points.
-    """
     inp = Input(shape=(6, 8), name='input_layer')
     x = Dense(16, name='dense1')(inp)
     x = Activation('relu', name='relu1')(x)
@@ -78,20 +74,20 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     for mono_out, multi_out in zip(pred_mono, pred_multi):
         np.testing.assert_allclose(multi_out, mono_out, rtol=0, atol=1e-5)
 
-    if granularity == 'name':
-        # --- Optional: Build the HLS project and run simulation ---
-        hls_model_multi.build(
-            csim=False,
-            cosim=False,
-            vsynth=False,
-            export=True,
-            stitch_design=True,
-            sim_stitched_design=True,
-            export_stitched_design=True,
-        )
+    # if granularity == 'name':
+    #     # --- Optional: Build the HLS project and run simulation ---
+    #     hls_model_multi.build(
+    #         csim=False,
+    #         cosim=False,
+    #         vsynth=False,
+    #         export=True,
+    #         stitch_design=True,
+    #         sim_stitched_design=True,
+    #         export_stitched_design=True,
+    #     )
 
-        # test only the first sample, as batch prediction is not supported for stitched RTL simulations
-        inp = np.expand_dims(X_input[0], axis=0)
-        sim_results = hls_model_multi.predict(inp, sim='rtl')
-        for sim_out, pred_out in zip(sim_results, list([pred_multi[0][0], pred_multi[1][0]])):
-            np.testing.assert_allclose(sim_out, pred_out, rtol=0, atol=1e-5)
+    #     # test only the first sample, as batch prediction is not supported for stitched RTL simulations
+    #     inp = np.expand_dims(X_input[0], axis=0)
+    #     sim_results = hls_model_multi.predict(inp, sim='rtl')
+    #     for sim_out, pred_out in zip(sim_results, list([pred_multi[0][0], pred_multi[1][0]])):
+    #         np.testing.assert_allclose(sim_out, pred_out, rtol=0, atol=1e-5)

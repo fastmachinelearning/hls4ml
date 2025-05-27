@@ -133,28 +133,24 @@ Notes and Known Issues
 Graph Splitting
 ---------------
 
--  Splitting in the middle of a branched architecture (e.g., ResNet skip connections or multi-path networks) is currently unsupported
+-  Splitting in the middle of a branched architecture (e.g., ResNet skip connections) is currently unsupported.
 -  Each split subgraph must have exactly one input.
 
 Multiple Inputs & Outputs
 -------------------------
 
 - The final NN output can support multiple output layers.
-- For networks with multiple input layers (a relatively uncommon case), proper synchronization is required to drive inputs—especially for io_stream interfaces. A fork-join mechanism in the Verilog testbench can help manage input synchronization effectively.
-
-Interface Behavior
-------------------
-
-- All IPs currently use the ``partition`` pragma by default for ``io_parallel`` interfaces. Using this pragma between IP blocks typically results in different overall resource usage compared to the original model.
+- For networks with multiple input layers (a relatively uncommon case), proper synchronization is required in the testbench to drive inputs—especially for io_stream interfaces.
 
 Simulation Discrepancies
 ------------------------
 
 - Users should carefully verify functional equivalence (particularly for models that use ``io_stream`` interface)
-- These discrepancies are more noticeable with raw output logits; applying a softmax layer at the model output can often help mask these differences.
+- These discrepancies are more noticeable with raw output logits; applying a softmax layer at the model output can often help mask these differences, but this should be used with caution.
 
 TODOs
 -----------------------
 
 - Add support for Verilator-based simulation to enable faster RTL simulation.
 - Investigate ``io_stream`` interface (output discrepancies, fifo optimization)
+- Investigate differences in resource utilization for the ``io_parallel`` interface.

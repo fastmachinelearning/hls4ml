@@ -702,20 +702,20 @@ def aggregate_graph_reports(graph_reports):
     final_report['AvailableURAM'] = csynth_report.get('AvailableURAM', 'N/A')
 
     for k in keys_to_sum:
-        final_report[k] = int(base_report.get(k, '0'))
+        final_report[k] = float(base_report.get(k, '0'))
 
     for subgraph, data in graph_reports.items():
         if subgraph == first_subgraph:
             continue
-        report = data.get('CSynthesisReport', {})
+        report = data.get(reportChoice, {})
         est_cp = float(report.get('EstimatedClockPeriod', float('inf')))
         if est_cp > final_report['EstimatedClockPeriod']:
             final_report['EstimatedClockPeriod'] = est_cp
 
         for k in keys_to_sum:
-            final_report[k] += int(report.get(k, '0'))
+            final_report[k] += float(report.get(k, '0'))
             if k == 'DSP':
-                final_report[k] += int(report.get('DSP48E', '0'))
+                final_report[k] += float(report.get('DSP48E', '0'))
 
     final_report['EstimatedClockPeriod'] = f"{final_report['EstimatedClockPeriod']:.3f}"
     for k in keys_to_sum:

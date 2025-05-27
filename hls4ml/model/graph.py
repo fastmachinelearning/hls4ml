@@ -1039,65 +1039,66 @@ class ModelGraph(Serializable):
 class MultiModelGraph:
     def __init__(self, graphs: list[ModelGraph]):
         """
-        A MultiModelGraph created from multiple ModelGraphs representing a single model.
+        Create a stitched model from pre-optimized subgraphs.
         """
         self.graphs = graphs
         self._initialize_config(self.graphs[0])
         self._bind_modelgraph_methods()
         self._initialize_io_attributes(self.graphs)
-        self._update_pragmas()
 
     @classmethod
-    def make_multi_graph(cls, base_model: ModelGraph, split_before_layers: list[str]):
+    def from_model_graph(cls, base_model: ModelGraph, split_before_layers: list[str]):
         """
-        Creates a MultiModelGraph by splitting a base ModelGraph at specified layer names,
+        Create a MultiModelGraph by splitting a base ModelGraph at specified layer names,
         each initiating a subgraph.
         """
         cls._validate_split_points(base_model, split_before_layers)
         all_nodes = list(base_model.graph.values())
         layer_names = [node.name for node in all_nodes]
-
         split_indices = sorted(layer_names.index(s) for s in split_before_layers)
         bounds = [0] + split_indices + [len(all_nodes)]
-        slices: list[list] = [all_nodes[bounds[i] : bounds[i + 1]] for i in range(len(bounds) - 1)]
+        node_slices: list[list] = [all_nodes[bounds[i] : bounds[i + 1]] for i in range(len(bounds) - 1)]
 
         base_input_layer = base_model.graph[base_model.inputs[0]]
         input_layer_kind = base_input_layer.attributes['class_name']
         next_index = max(n.index for n in all_nodes)
 
-        subgraphs: list["ModelGraph"] = []
-        for idx, nodes_slice in enumerate(slices):
+        subgraphs: list['ModelGraph'] = []
+        for idx, slice_ in enumerate(node_slices):
             cfg_copy = copy.copy(base_model.config)
             cfg_copy.config = copy.copy(base_model.config.config)
-            cfg_copy.config["ProjectName"] = f"{base_model.config.get_project_name()}_graph{idx + 1}"
-            cfg_copy.config["OutputDir"] = os.path.join(base_model.config.get_output_dir(), f"graph{idx + 1}")
+            cfg_copy.config['ProjectName'] = f'{base_model.config.get_project_name()}_graph{idx + 1}'
+            cfg_copy.config['OutputDir'] = os.path.join(base_model.config.get_output_dir(), f'graph{idx + 1}')
 
             subgraph = base_model.__class__(cfg_copy, inputs=[], outputs=[])
             graph_dict = OrderedDict()
 
             if idx > 0:
                 next_index += 1
-                input_layer = cls._create_input_node(subgraph, nodes_slice[0], input_layer_kind, next_index)
+                input_layer = cls._create_input_node(subgraph, slice_[0], input_layer_kind, next_index)
                 graph_dict[input_layer.name] = input_layer
-                nodes_slice[0].inputs = input_layer.outputs
+                slice_[0].inputs = input_layer.outputs
             else:
                 input_layer = base_input_layer
 
-            for node in nodes_slice:
-                # fix for layer.model.get_layer_output_variable().
-                node.model = subgraph
+            for node in slice_:
+                node.model = subgraph  # fix for layer.model.get_layer_output_variable()
                 for out_name in node.outputs:
                     subgraph.output_vars[out_name] = base_model.output_vars[out_name]
                 graph_dict[node.name] = node
 
             subgraph.graph = graph_dict
             subgraph.inputs = input_layer.outputs if idx > 0 else base_model.inputs
-            subgraph.outputs = nodes_slice[-1].outputs if idx < len(slices) - 1 else base_model.outputs
+            subgraph.outputs = slice_[-1].outputs if idx < len(node_slices) - 1 else base_model.outputs
             subgraph._applied_flows = base_model._applied_flows
 
             # NOTE might need to examine other subgraph-related flows (i.e., fifo_optimizer)
             subgraph.apply_flow('vivado:specific_types')
             subgraph.apply_flow('vitis:apply_templates')
+
+            input_var = subgraph.output_vars[input_layer.name]
+            if getattr(input_var, 'pragma', None) == 'reshape':
+                input_var.pragma = 'partition'  # NOTE required for subgraph stitching; subject to refinement
 
             subgraphs.append(subgraph)
 
@@ -1106,25 +1107,22 @@ class MultiModelGraph:
     @staticmethod
     def _validate_split_points(model: ModelGraph, split_names: list[str]):
         if not split_names:
-            raise ValueError("No split layer names provided.")
+            raise ValueError('No split layer names provided.')
 
         nodes = list(model.graph.values())
         model_layers = [node.name for node in nodes]
         for name in split_names:
             node = model.graph[name]
-
             if name not in model_layers:
                 raise ValueError(f"Split layer '{name}' not found in the model.")
-
             if len(node.inputs) > 1:
                 raise ValueError(f"Cannot split at layer '{name}' (multiple inputs detected).")
-
             if model.graph[node.inputs[0]].class_name == 'Reshape' or node.class_name == 'Reshape':
                 raise ValueError(f"Cannot split at '{name}': Reshape layer found in this or previous layer.")
 
     @staticmethod
     def _create_input_node(model, next_node, kind, index):
-        layer_name = f"{next_node.name}_input"
+        layer_name = f'{next_node.name}_input'
         attrs = {
             'name': layer_name,
             'class_name': kind,
@@ -1153,7 +1151,6 @@ class MultiModelGraph:
         self._compute_n_samples = ModelGraph._compute_n_samples.__get__(self, MultiModelGraph)
         self._get_top_function = ModelGraph._get_top_function.__get__(self, MultiModelGraph)
         self._predict = ModelGraph.predict.__get__(self, MultiModelGraph)
-        self.trace = ModelGraph.trace.__get__(self, MultiModelGraph)
 
     def _initialize_io_attributes(self, graphs):
         self.graph_reports = None
@@ -1169,7 +1166,6 @@ class MultiModelGraph:
         original_output_dir = first_graph.config.get_output_dir().partition('/graph')[0]
         self.config.config['OutputDir'] = os.path.join(original_output_dir, 'stitched')
         self.config.config['StitchedProjectName'] = 'vivado_stitched_design'
-        self.config.config['Stamp'] = self._make_stamp()
 
     def __getitem__(self, index):
         return self.graphs[index]
@@ -1207,19 +1203,34 @@ class MultiModelGraph:
         return nn_config
 
     def build(
-        self, stitch_design=False, sim_stitched_design=False, export_stitched_design=False, max_workers=None, **kwargs
+        self,
+        export=True,
+        stitch_design=False,
+        sim_stitched_design=False,
+        export_stitched_design=False,
+        max_workers=None,
+        **kwargs,
     ):
         """
-        Builds all ModelGraph instances in parallel, with optional stitching and export.
-        """
+        Builds all ModelGraph instances in parallel, with optional stitching, simulation and export.
 
-        export = kwargs.get('export', False)
+        Args:
+            export (bool): If True, export each subgraph as an IP (must be true for stiching design).
+            stitch_design (bool): If True, create a Vivado stitched design project.
+            sim_stitched_design (bool): If True, simulate the stitched design using Verilog in RTL level.
+            export_stitched_design (bool): If True, export stitched design as a single IP.
+            max_workers (int, optional): Maximum number of threads to use for parallel subgraph synthesis.
+            **kwargs: Additional arguments passed to each subgraph's '.build()' method.
+        Returns:
+            Report from each subgraph's build and, if stitching was performed, a combined report of the stitched design.
+        """
         if (stitch_design or sim_stitched_design or export_stitched_design) and not export:
             raise ValueError(
-                "You can't enable stitch_design, sim_stitched_design, or export_stitched_design without having export=True."
+                'You cannot enable stitch_design, sim_stitched_design, or export_stitched_design without having export=True.'
             )
         if (sim_stitched_design or export_stitched_design) and not stitch_design:
-            raise ValueError("You can't simulate or export a stitched design without enabling stitch_design.")
+            raise ValueError('You cannot simulate or export a stitched design without enabling stitch_design.')
+
         build_results = {}
         status = {}
         status_lock = threading.Lock()
@@ -1233,7 +1244,7 @@ class MultiModelGraph:
                 status[graph_name] = 'Running'
                 self._print_status(status)
             try:
-                result = g.build(log_to_stdout=False, **kwargs)
+                result = g.build(log_to_stdout=False, export=export, **kwargs)
                 with status_lock:
                     status[graph_name] = 'Completed'
                     self._print_status(status)
@@ -1256,16 +1267,13 @@ class MultiModelGraph:
                     build_results[graph_name] = result
                 except Exception as exc:
                     build_results[graph_name] = None
-                    print(f"Error while building {graph_name}: {exc}")
+                    print(f'Error while building {graph_name}: {exc}')
 
         self.graph_reports = build_results
         self._replace_logos()
 
         if stitch_design or sim_stitched_design or export_stitched_design:
             self._assert_consistent_pragmas()
-            vivado_folder = os.path.join(self.config.config['OutputDir'], self.config.config['StitchedProjectName'])
-            if os.path.exists(vivado_folder):
-                raise FileExistsError(f"Vivado stitched project folder '{vivado_folder}' already exists.")
             self.nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(
                 self,
@@ -1278,12 +1286,16 @@ class MultiModelGraph:
 
         return self.graph_reports
 
-    def compile(self):
+    def write(self):
         for g in self.graphs:
             g.write()
         self.nn_config = self.parse_nn_config()
+        self.config.config['Stamp'] = self._make_stamp()
         # Bypass VitisWriter and invoke write_hls directly from VivadoWriter
         super(self.backend.writer.__class__, self.backend.writer).write_hls(self, is_multigraph=True)
+
+    def compile(self):
+        self.write()
         self._compile()
 
     def predict(self, x, sim='csim'):
@@ -1291,6 +1303,9 @@ class MultiModelGraph:
             return self._predict(x)
         elif sim == 'rtl':
             self.nn_config = self.parse_nn_config()
+            assert (
+                np.prod(x.shape) == self.nn_config['inputs'][0]['fifo_depth'] * self.nn_config['inputs'][0]['batch_size']
+            ), 'Only single batch supported for stitched simulation.'
             stitched_report = self.backend.build_stitched_design(
                 self,
                 stitch_design=False,
@@ -1314,7 +1329,7 @@ class MultiModelGraph:
             print('Unknown simulation option given.')
 
     def trace(self, x):
-        raise NotImplementedError("Trace function has not been implemented yet for MultiModelGraph.")
+        raise NotImplementedError('Trace function has not been implemented yet for MultiModelGraph.')
 
     def write_tb_inputs(self, x, folder_path):
         """
@@ -1323,7 +1338,7 @@ class MultiModelGraph:
         dump_tb_inputs_double
         """
         if self._top_function_lib is None:
-            self._compile()
+            self.compile()
 
         if isinstance(x, (list, tuple)):
             xlist = list(x)
@@ -1332,10 +1347,10 @@ class MultiModelGraph:
 
         first = xlist[0]
         if first.dtype in [np.single, np.float32]:
-            fn_name = "dump_tb_inputs_float"
+            fn_name = 'dump_tb_inputs_float'
             ctype = ctypes.c_float
         elif first.dtype in [np.double, np.float64]:
-            fn_name = "dump_tb_inputs_double"
+            fn_name = 'dump_tb_inputs_double'
             ctype = ctypes.c_double
         else:
             raise Exception(
@@ -1346,15 +1361,15 @@ class MultiModelGraph:
 
         for arr in xlist:
             if arr.dtype != first.dtype:
-                raise ValueError("All inputs must have same dtype")
-            if not arr.flags["C_CONTIGUOUS"]:
-                raise ValueError("Input arrays must be C_CONTIGUOUS")
+                raise ValueError('All inputs must have same dtype')
+            if not arr.flags['C_CONTIGUOUS']:
+                raise ValueError('Input arrays must be C_CONTIGUOUS')
 
         fn = getattr(self._top_function_lib, fn_name)
         fn.restype = None
-        fn.argtypes = [ctypes.c_char_p] + [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for _ in xlist]
+        fn.argtypes = [ctypes.c_char_p] + [npc.ndpointer(ctype, flags='C_CONTIGUOUS') for _ in xlist]
 
-        fn(folder_path.encode("ascii"), *xlist)
+        fn(folder_path.encode('ascii'), *xlist)
 
     def get_input_variables(self):
         variables = []
@@ -1379,7 +1394,7 @@ class MultiModelGraph:
             pragma_str = pragma[0]  # 'stream' pragma
             fifo_depth = pragma[1]
         else:
-            raise ValueError(f"Unexpected format for pragma: {pragma}")
+            raise ValueError(f'Unexpected format for pragma: {pragma}')
 
         return pragma_str, fifo_depth
 
@@ -1388,18 +1403,6 @@ class MultiModelGraph:
         status_icons = {'Pending': '○', 'Running': '⌛', 'Completed': '✅', 'Failed': '❌'}
         status_str = ' | '.join(f'{proj}: {status_icons.get(stat, "?")}' for proj, stat in status.items())
         print(status_str, flush=True)
-
-    def _update_pragmas(self):
-        """
-        Modifies the pragma for all layers in all graphs, replacing 'reshape' with 'partition' where applicable
-        """
-        for g in self.graphs:
-            for layer_name in g.output_vars:
-                if hasattr(g.output_vars[layer_name], 'pragma'):
-                    layer_pragma = g.output_vars[layer_name].pragma
-                    if isinstance(layer_pragma, str) and layer_pragma == 'reshape':
-                        g.output_vars[layer_name].pragma = 'partition'
-                        print(f"Updating pragma in Layer '{layer_name}' from 'reshape' to 'partition'.")
 
     def _assert_consistent_pragmas(self):
         """
@@ -1414,8 +1417,8 @@ class MultiModelGraph:
 
         if len(ref_pragmas) != 1:
             raise ValueError(
-                f"Multiple pragmas detected in 1st graph: {ref_pragmas}. "
-                "Ensure all graphs have the same interface (stream or partition)."
+                f'Multiple pragmas detected in 1st graph: {ref_pragmas}. '
+                'Ensure all graphs have the same interface (stream or partition).'
             )
 
         for idx, g in enumerate(self.graphs[1:], start=1):
@@ -1427,7 +1430,7 @@ class MultiModelGraph:
 
             if ref_pragmas != current_pragmas:
                 raise ValueError(
-                    f"Pragma mismatch in graph {idx}:\n" f"Expected: {ref_pragmas}\n" f"Found: {current_pragmas}"
+                    f'Pragma mismatch in graph {idx}:\n' f'Expected: {ref_pragmas}\n' f'Found: {current_pragmas}'
                 )
 
     def _make_stamp(self):
@@ -1436,12 +1439,12 @@ class MultiModelGraph:
         return str(stamp)[-length:]
 
     def _replace_logos(self):
-        spec = importlib.util.find_spec("hls4ml")
+        spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
         hls4ml_logo = os.path.join(hls4ml_path, '../docs/img/logo_small.png')
 
         if not os.path.isfile(hls4ml_logo):
-            raise FileNotFoundError(f"hls4ml logo not found at: {hls4ml_logo}")
+            raise FileNotFoundError(f'hls4ml logo not found at: {hls4ml_logo}')
 
         for g in self.graphs:
             graph_logo_paths = [
@@ -1456,4 +1459,4 @@ class MultiModelGraph:
                 for logo in graph_logo_paths:
                     shutil.copy(hls4ml_logo, logo)
             except Exception as e:
-                print(f"Error copying hls4ml logo to {g.config.get_output_dir()} project: {e}")
+                print(f'Error copying hls4ml logo to {g.config.get_output_dir()} project: {e}')

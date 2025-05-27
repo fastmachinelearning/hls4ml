@@ -526,7 +526,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
             set pin_dir [get_property DIR $pin]
             # Match patterns for inputs and input valid pins
             if {$pin_dir eq "I" && [lsearch -exact $control_pins $pin_name] == -1} {
-                puts "Found input pin: $pin_name"
+                puts "Found NN model input pin: $pin_name"
 
                 # Make the pin external
                 make_bd_pins_external $pin
@@ -548,7 +548,7 @@ proc stitch_procedure {base_dir stitch_project_name original_project_name bd_nam
             set pin_dir [get_property DIR $pin]
             # Match patterns for outputs and output valid pins
             if {$pin_dir eq "O" && [lsearch -exact $control_pins $pin_name] == -1} {
-                puts "Found output pin: $pin_name"
+                puts "Found NN model output pin: $pin_name"
                 # Make the pin external
                 make_bd_pins_external $pin
                 # Retrieve the external port and change name to base name

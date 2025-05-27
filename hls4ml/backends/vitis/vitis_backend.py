@@ -165,8 +165,9 @@ class VitisBackend(VivadoBackend):
         os.makedirs(nn_config['OutputDir'], exist_ok=True)
         stitched_design_dir = os.path.join(nn_config['OutputDir'], nn_config['StitchedProjectName'])
         if stitch_design:
-            if not os.path.exists(stitched_design_dir):
-                os.makedirs(stitched_design_dir)
+            if os.path.exists(stitched_design_dir):
+                shutil.rmtree(stitched_design_dir)
+            os.makedirs(stitched_design_dir)
 
         spec = importlib.util.find_spec('hls4ml')
         hls4ml_path = os.path.dirname(spec.origin)
@@ -182,6 +183,7 @@ class VitisBackend(VivadoBackend):
         except Exception as e:
             print(f"Error: {e}. Cannot copy 'ip_stitcher.tcl' to {nn_config['StitchedProjectName']} folder.")
 
+        # Verilog output bitwidths are rounded up and may differ from HLS output bitwidths
         if nn_config['outputs'][0]['pragma'] == 'stream':
             last_graph_project_path = os.path.join(
                 model.graphs[-1].config.get_output_dir(), model.graphs[-1].config.get_project_dir()

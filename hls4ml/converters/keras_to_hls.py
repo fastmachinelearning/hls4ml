@@ -358,15 +358,12 @@ def parse_keras_model(model_arch, reader):
 
 def keras_to_hls(config, split_before_layers=None):
     model_arch, reader = get_model_arch(config)
-    layer_list, input_layers, output_layers, output_shapes = parse_keras_model(model_arch, reader)
-
-    print('Creating HLS model...')
+    layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
     base_model = ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
 
     if split_before_layers:
-        hls_model = MultiModelGraph.make_multi_graph(base_model, split_before_layers)
-        print('Multi-graph HLS model created.')
+        hls_model = MultiModelGraph.from_model_graph(base_model, split_before_layers)
     else:
         hls_model = base_model
-        print('HLS model created.')
+
     return hls_model
