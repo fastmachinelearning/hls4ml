@@ -28,5 +28,5 @@ def test_fetch_example_utils(backend):
     config['Backend'] = backend
     config['OutputDir'] = str(test_root_path / f'hls4mlprj_fetch_example_{backend}')
 
-    hls_model = hls4ml.converters.keras_to_hls(config)
+    hls_model = hls4ml.converters.keras_v2_to_hls(config)
     hls_model.compile()  # For now, it is enough if it compiles, we're only testing downloading works as expected

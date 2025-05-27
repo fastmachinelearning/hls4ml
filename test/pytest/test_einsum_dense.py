@@ -9,7 +9,7 @@ from hls4ml.converters import convert_from_keras_model
 if keras.__version__ < '3.0.0':
     pytest.skip('Only keras v3 is supported for now', allow_module_level=True)
 
-from keras.api.layers import EinsumDense, Input
+from keras.layers import EinsumDense, Input
 
 test_root_path = Path(__file__).parent
 
