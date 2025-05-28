@@ -1270,9 +1270,14 @@ class MultiModelGraph:
                     print(f'Error while building {graph_name}: {exc}')
 
         self.graph_reports = build_results
-        self._replace_logos()
 
         if stitch_design or sim_stitched_design or export_stitched_design:
+            failed_graphs = [name for name, report in build_results.items() if report is None]
+            if failed_graphs:
+                print(f"Skipping stitching. Build failed for the following subgraphs: {', '.join(failed_graphs)}")
+                return self.graph_reports
+
+            self._replace_logos()
             self._assert_consistent_pragmas()
             self.nn_config = self.parse_nn_config()
             stitched_report = self.backend.build_stitched_design(

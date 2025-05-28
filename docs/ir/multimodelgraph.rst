@@ -151,6 +151,7 @@ Simulation Discrepancies
 TODOs
 -----------------------
 
+- Currently tested with Vitis 2024.1. Investigate compatibility with other versions.
 - Add support for Verilator-based simulation to enable faster RTL simulation.
 - Investigate ``io_stream`` interface (output discrepancies, fifo optimization)
 - Investigate differences in resource utilization for the ``io_parallel`` interface.
