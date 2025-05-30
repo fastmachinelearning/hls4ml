@@ -867,12 +867,6 @@ class ModelGraph(Serializable):
         return int(n_sample)
 
     def predict(self, x):
-        if isinstance(x, np.ndarray) and not x.flags['C_CONTIGUOUS']:
-            x = np.ascontiguousarray(x)
-
-        # Compile the model if it wasn't compiled yet
-        if self._top_function_lib is None:
-            self.compile()
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
@@ -888,7 +882,7 @@ class ModelGraph(Serializable):
                 inp = [np.asarray(x[i])]
             else:
                 inp = [np.asarray(xj[i]) for xj in x]
-            inp = [_inp if _inp.flags['C_CONTIGUOUS'] else np.ascontiguousarray(_inp) for _inp in inp]
+            inp = [np.ascontiguousarray(_inp) for _inp in inp]
 
             top_function(*inp, *predictions)
             output.append(predictions)
