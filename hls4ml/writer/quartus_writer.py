@@ -1349,7 +1349,6 @@ class QuartusWriter(Writer):
                 archive.add(model.config.get_output_dir(), recursive=True)
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -1363,4 +1362,3 @@ class QuartusWriter(Writer):
         self.write_activation_tables(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')

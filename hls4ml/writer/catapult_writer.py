@@ -910,7 +910,6 @@ class CatapultWriter(Writer):
             print("Project .tar.gz archive already exists")
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_output_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -924,4 +923,3 @@ class CatapultWriter(Writer):
         self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')

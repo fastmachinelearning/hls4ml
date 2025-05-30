@@ -851,7 +851,6 @@ class VivadoWriter(Writer):
                 archive.add(model.config.get_output_dir(), recursive=True, arcname='')
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -865,4 +864,3 @@ class VivadoWriter(Writer):
         self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')
