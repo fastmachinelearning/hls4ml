@@ -100,7 +100,8 @@ class UniqueName:
     '''Helper class to generate unique names for layers, if one being used multiple times.'''
 
     def __init__(self):
-        self.used_names: set[str] = set()
+        self.used_names: set[str] = set('input')
+        # input is reserved in hls4ml, avoid conflict with it
 
     def next_name(self, name: str):
         i = 0
