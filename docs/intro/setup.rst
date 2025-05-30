@@ -37,14 +37,26 @@ version can be installed directly from ``git``:
 Dependencies
 ============
 
-The ``hls4ml`` library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed
-by ``pip`` or ``conda``.
+.. note::
+   As of version 1.1.0+, all conversion frontend specific packages are optional. Only install the packages you need.
 
-* `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) and `QKeras <https://pypi.org/project/qkeras/>`_ are required by the Keras converter. One may want to install newer versions of QKeras from GitHub. Newer versions of TensorFlow can be used, but QKeras and hl4ml do not currently support Keras v3.
+The ``hls4ml`` library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed by ``pip`` or ``conda``.
+
+The following Python packages are all optional and are only required if you intend to use the corresponding converter.
+
+* `Keras <https://pypi.org/project/keras/>`_ is required by the Keras converter.
+   * `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) is required by the Keras v2 converter (keras v2 is included in TensorFlow).
+   * `Keras <https://pypi.org/project/keras/>` 3.0 or above is required by the Keras v3 converter. Keras v3 supports multiple backends for training and inference, and the conversion is not tied any specific backend. Notice that Keras v3 may **not** coexist with Keras v2 in the same Python environment.
 
 * `ONNX <https://pypi.org/project/onnx/>`_ (version 1.4.0 and newer) is required by the ONNX converter.
 
-* `PyTorch <https://pytorch.org/get-started>`_ package is optional. If not installed, the PyTorch converter will not be available.
+* `PyTorch <https://pytorch.org/get-started>`_ is required by the PyTorch converter.
+
+* Quantization support
+   * `QKeras <https://github.com/fastmachinelearning/qkeras>`_: based on Keras v2. See `frontend/keras <../frontend/keras.html>`_ for more details
+   * `HGQ <https://github.com/calad0i/HGQ>`_: Based on Keras v2. See `advanced/HGQ <../advanced/hgq.html>`_ for more details.
+   * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
+   * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/onnx <../frontend/onnx.html>`_ for more details.
 
 Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent
 Linux should work. On MacOS, the *clang*-based ``g++`` is enough. For the oneAPI backend, one must have oneAPI installed, along with the FPGA compiler,

@@ -21,7 +21,7 @@ from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import math_ops
 
 import hls4ml
-from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_v2_to_hls import parse_default_keras_layer
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
