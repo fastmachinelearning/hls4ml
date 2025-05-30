@@ -28,6 +28,14 @@ hls4ml.utils.dependency module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.einsum\_utils module
+---------------------------------
+
+.. automodule:: hls4ml.utils.einsum_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.utils.example\_models module
 -----------------------------------
 
@@ -96,6 +104,14 @@ hls4ml.utils.torch module
 -------------------------
 
 .. automodule:: hls4ml.utils.torch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.utils.transpose\_utils module
+------------------------------------
+
+.. automodule:: hls4ml.utils.transpose_utils
    :members:
    :undoc-members:
    :show-inheritance:

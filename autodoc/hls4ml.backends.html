@@ -63,7 +63,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
 </ul>
@@ -262,7 +262,6 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_valid_conv_partition_splits"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_valid_conv_partition_splits()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_valid_reuse_factors"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_valid_reuse_factors()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">FPGABackend.get_writer_flow()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.permute_config_gen"><code class="docutils literal notranslate"><span class="pre">FPGABackend.permute_config_gen()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.product_type"><code class="docutils literal notranslate"><span class="pre">FPGABackend.product_type()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.set_closest_reuse_factor"><code class="docutils literal notranslate"><span class="pre">FPGABackend.set_closest_reuse_factor()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.set_target_reuse_factor"><code class="docutils literal notranslate"><span class="pre">FPGABackend.set_target_reuse_factor()</span></code></a></li>
@@ -640,6 +639,8 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.conv_stream">hls4ml.backends.vivado.passes.conv_stream module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.convolution_templates">hls4ml.backends.vivado.passes.convolution_templates module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.core_templates">hls4ml.backends.vivado.passes.core_templates module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.einsum">hls4ml.backends.vivado.passes.einsum module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.einsum_dense">hls4ml.backends.vivado.passes.einsum_dense module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.fifo_depth_optimization">hls4ml.backends.vivado.passes.fifo_depth_optimization module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.garnet_templates">hls4ml.backends.vivado.passes.garnet_templates module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.merge_templates">hls4ml.backends.vivado.passes.merge_templates module</a></li>
@@ -671,6 +672,8 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_dense"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_dense()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_depconv1d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_depconv1d()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_depconv2d"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_depconv2d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_einsum"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_einsum()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_einsum_dense"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_einsum_dense()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_embed"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_embed()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_garnet"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_garnet()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_garnet_stack"><code class="docutils literal notranslate"><span class="pre">VivadoBackend.init_garnet_stack()</span></code></a></li>

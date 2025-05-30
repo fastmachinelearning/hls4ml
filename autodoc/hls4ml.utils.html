@@ -63,7 +63,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
 </ul>
@@ -105,6 +105,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.attribute_descriptions">hls4ml.utils.attribute_descriptions module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.config">hls4ml.utils.config module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.dependency">hls4ml.utils.dependency module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.einsum_utils">hls4ml.utils.einsum_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.example_models">hls4ml.utils.example_models module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.fixed_point_utils">hls4ml.utils.fixed_point_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.link">hls4ml.utils.link module</a></li>
@@ -114,6 +115,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.symbolic_utils">hls4ml.utils.symbolic_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-torch-module">hls4ml.utils.torch module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.transpose_utils">hls4ml.utils.transpose_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils">Module contents</a></li>
 </ul>
 </li>
@@ -334,6 +336,101 @@ Defaults to ‘1.0.0’.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>pkg</strong> (<em>str</em>) – The package to require. ‘name’ requires hls4ml[name] to be installed.
 ‘_name’ requires name to be installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.utils.einsum_utils">
+<span id="hls4ml-utils-einsum-utils-module"></span><h2>hls4ml.utils.einsum_utils module<a class="headerlink" href="#module-hls4ml.utils.einsum_utils" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.einsum_utils.</span></span><span class="sig-name descname"><span class="pre">EinsumRecipe</span></span><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.C">
+<span class="sig-name descname"><span class="pre">C</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.C" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.I">
+<span class="sig-name descname"><span class="pre">I</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.I" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.L0">
+<span class="sig-name descname"><span class="pre">L0</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.L0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.L1">
+<span class="sig-name descname"><span class="pre">L1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.L1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.direct_sum_axis">
+<span class="sig-name descname"><span class="pre">direct_sum_axis</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.direct_sum_axis" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.in_transpose_idxs">
+<span class="sig-name descname"><span class="pre">in_transpose_idxs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.in_transpose_idxs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.out_interpert_shape">
+<span class="sig-name descname"><span class="pre">out_interpert_shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.out_interpert_shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.EinsumRecipe.out_transpose_idxs">
+<span class="sig-name descname"><span class="pre">out_transpose_idxs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hls4ml.utils.einsum_utils.EinsumRecipe.out_transpose_idxs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.einsum">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.einsum_utils.</span></span><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hls4ml.utils.einsum_utils.einsum" title="Link to this definition"></a></dt>
+<dd><p>Execute einsum operation on two input arrays.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Order of multiplication is reversed – watchout if you are using non-commutative operators</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> – einsum string, e.g. ‘ij,jk-&gt;ik’</p></li>
+<li><p><strong>input0</strong> – the first input array</p></li>
+<li><p><strong>input1</strong> – the second input array</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>output array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.einsum_utils.parse_einsum">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.einsum_utils.</span></span><span class="sig-name descname"><span class="pre">parse_einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.utils.einsum_utils.EinsumRecipe" title="hls4ml.utils.einsum_utils.EinsumRecipe"><span class="pre">EinsumRecipe</span></a></span></span><a class="headerlink" href="#hls4ml.utils.einsum_utils.parse_einsum" title="Link to this definition"></a></dt>
+<dd><p>Parse einsum operation on two input arrays, return a recipe for execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> – einsum string, e.g. ‘ij,jk-&gt;ik’</p></li>
+<li><p><strong>input_shape0</strong> – shape of the first input array</p></li>
+<li><p><strong>input_shape1</strong> – shape of the second input array</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>einsum recipe; executed by _exec_einsum</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hls4ml.utils.einsum_utils.EinsumRecipe" title="hls4ml.utils.einsum_utils.EinsumRecipe">EinsumRecipe</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -734,6 +831,38 @@ Defaults to None.</p></li>
 </section>
 <section id="hls4ml-utils-torch-module">
 <h2>hls4ml.utils.torch module<a class="headerlink" href="#hls4ml-utils-torch-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.utils.transpose_utils">
+<span id="hls4ml-utils-transpose-utils-module"></span><h2>hls4ml.utils.transpose_utils module<a class="headerlink" href="#module-hls4ml.utils.transpose_utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.transpose_utils.transpose_config_gen">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.transpose_utils.</span></span><span class="sig-name descname"><span class="pre">transpose_config_gen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.transpose_utils.transpose_config_gen" title="Link to this definition"></a></dt>
+<dd><p>Generate new shape and perm_strides for a permute operation. Operates by mapping the output index
+to input input index by:
+- unravel the output index
+- map each dimension to the corresponding stride in the input tensor, sum
+The operation can be expressed as:</p>
+<p>new_shape = tuple(shape[i] for i in perm)
+strides = np.cumprod((shapes[1:] + (1,))[::-1])[::-1]
+perm_strides = [strides[i] for i in perm]
+out[index] = inp[np.dot(np.unravel_index(index, new_shape), perm_strides)]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the configuration.</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – The shape of the input tensor.</p></li>
+<li><p><strong>perm</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – The permutation of the dimensions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing the configuration.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-hls4ml.utils">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.utils" title="Link to this heading"></a></h2>

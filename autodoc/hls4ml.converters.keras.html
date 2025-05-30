@@ -21,7 +21,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hls4ml.converters.onnx package" href="hls4ml.converters.onnx.html" />
+    <link rel="next" title="hls4ml.converters.keras_v3 package" href="hls4ml.converters.keras_v3.html" />
     <link rel="prev" title="hls4ml.converters package" href="hls4ml.converters.html" /> 
 </head>
 
@@ -63,7 +63,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
 </ul>
@@ -99,7 +99,8 @@
 <li class="toctree-l1 current"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="hls4ml.converters.html#subpackages">Subpackages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.keras_to_hls">hls4ml.converters.keras_to_hls module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.keras_v2_to_hls">hls4ml.converters.keras_v2_to_hls module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.keras_v3_to_hls">hls4ml.converters.keras_v3_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.onnx_to_hls">hls4ml.converters.onnx_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.pytorch_to_hls">hls4ml.converters.pytorch_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.utils">hls4ml.converters.utils module</a></li>
@@ -196,12 +197,12 @@
 <span id="hls4ml-converters-keras-hgq-proxy-model-module"></span><h2>hls4ml.converters.keras.hgq_proxy_model module<a class="headerlink" href="#module-hls4ml.converters.keras.hgq_proxy_model" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras.hgq_proxy_model.fixedpoint_quantizer_handler">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">fixedpoint_quantizer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasReader" title="hls4ml.converters.keras_to_hls.KerasReader"><span class="pre">KerasReader</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.hgq_proxy_model.fixedpoint_quantizer_handler" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">fixedpoint_quantizer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasReader" title="hls4ml.converters.keras_v2_to_hls.KerasReader"><span class="pre">KerasReader</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.hgq_proxy_model.fixedpoint_quantizer_handler" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras.hgq_proxy_model.unary_lut_keras_handler">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">unary_lut_keras_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasReader" title="hls4ml.converters.keras_to_hls.KerasReader"><span class="pre">KerasReader</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.hgq_proxy_model.unary_lut_keras_handler" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">unary_lut_keras_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasReader" title="hls4ml.converters.keras_v2_to_hls.KerasReader"><span class="pre">KerasReader</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.hgq_proxy_model.unary_lut_keras_handler" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
@@ -351,7 +352,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="hls4ml.converters.html" class="btn btn-neutral float-left" title="hls4ml.converters package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hls4ml.converters.onnx.html" class="btn btn-neutral float-right" title="hls4ml.converters.onnx package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hls4ml.converters.keras_v3.html" class="btn btn-neutral float-right" title="hls4ml.converters.keras_v3 package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

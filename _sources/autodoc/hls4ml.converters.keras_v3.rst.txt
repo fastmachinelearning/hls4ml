@@ -1,0 +1,53 @@
+hls4ml.converters.keras\_v3 package
+===================================
+
+Submodules
+----------
+
+hls4ml.converters.keras\_v3.conv module
+---------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.conv
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.keras\_v3.core module
+---------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.keras\_v3.einsum\_dense module
+------------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.einsum_dense
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.keras\_v3.merge module
+----------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.merge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.keras\_v3.pooling module
+------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.pooling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.converters.keras_v3
+   :members:
+   :undoc-members:
+   :show-inheritance:

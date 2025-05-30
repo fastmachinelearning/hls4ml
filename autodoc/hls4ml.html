@@ -61,7 +61,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and QKeras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
 </ul>
@@ -267,6 +267,16 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html">hls4ml.converters.keras_v3 package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.conv">hls4ml.converters.keras_v3.conv module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.core">hls4ml.converters.keras_v3.core module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.einsum_dense">hls4ml.converters.keras_v3.einsum_dense module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.merge">hls4ml.converters.keras_v3.merge module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.pooling">hls4ml.converters.keras_v3.pooling module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.onnx.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.convolution">hls4ml.converters.onnx.convolution module</a></li>
@@ -291,34 +301,51 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.keras_to_hls">hls4ml.converters.keras_to_hls module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasFileReader"><code class="docutils literal notranslate"><span class="pre">KerasFileReader</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasFileReader.get_weights_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.keras_v2_to_hls">hls4ml.converters.keras_v2_to_hls module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasFileReader"><code class="docutils literal notranslate"><span class="pre">KerasFileReader</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasFileReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasFileReader.get_weights_data()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasModelReader"><code class="docutils literal notranslate"><span class="pre">KerasModelReader</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasModelReader.get_weights_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasModelReader"><code class="docutils literal notranslate"><span class="pre">KerasModelReader</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasModelReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasModelReader.get_weights_data()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasNestedFileReader"><code class="docutils literal notranslate"><span class="pre">KerasNestedFileReader</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasReader"><code class="docutils literal notranslate"><span class="pre">KerasReader</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasReader.get_weights_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasNestedFileReader"><code class="docutils literal notranslate"><span class="pre">KerasNestedFileReader</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasReader"><code class="docutils literal notranslate"><span class="pre">KerasReader</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasReader.get_weights_data()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasWrappedLayerFileReader"><code class="docutils literal notranslate"><span class="pre">KerasWrappedLayerFileReader</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasWrappedLayerReader"><code class="docutils literal notranslate"><span class="pre">KerasWrappedLayerReader</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasWrappedLayerReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasWrappedLayerReader.get_weights_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasWrappedLayerFileReader"><code class="docutils literal notranslate"><span class="pre">KerasWrappedLayerFileReader</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasWrappedLayerReader"><code class="docutils literal notranslate"><span class="pre">KerasWrappedLayerReader</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.KerasWrappedLayerReader.get_weights_data"><code class="docutils literal notranslate"><span class="pre">KerasWrappedLayerReader.get_weights_data()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_layer_handlers"><code class="docutils literal notranslate"><span class="pre">get_layer_handlers()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_model_arch"><code class="docutils literal notranslate"><span class="pre">get_model_arch()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_supported_keras_layers"><code class="docutils literal notranslate"><span class="pre">get_supported_keras_layers()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_weights_data"><code class="docutils literal notranslate"><span class="pre">get_weights_data()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.keras_handler"><code class="docutils literal notranslate"><span class="pre">keras_handler()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.keras_to_hls"><code class="docutils literal notranslate"><span class="pre">keras_to_hls()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.parse_default_keras_layer"><code class="docutils literal notranslate"><span class="pre">parse_default_keras_layer()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.parse_keras_model"><code class="docutils literal notranslate"><span class="pre">parse_keras_model()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_to_hls.register_keras_layer_handler"><code class="docutils literal notranslate"><span class="pre">register_keras_layer_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.get_layer_handlers"><code class="docutils literal notranslate"><span class="pre">get_layer_handlers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.get_model_arch"><code class="docutils literal notranslate"><span class="pre">get_model_arch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.get_supported_keras_layers"><code class="docutils literal notranslate"><span class="pre">get_supported_keras_layers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.get_weights_data"><code class="docutils literal notranslate"><span class="pre">get_weights_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.keras_handler"><code class="docutils literal notranslate"><span class="pre">keras_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.keras_v2_to_hls"><code class="docutils literal notranslate"><span class="pre">keras_v2_to_hls()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.parse_default_keras_layer"><code class="docutils literal notranslate"><span class="pre">parse_default_keras_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.parse_keras_model"><code class="docutils literal notranslate"><span class="pre">parse_keras_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.register_keras_layer_handler"><code class="docutils literal notranslate"><span class="pre">register_keras_layer_handler()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.keras_v3_to_hls">hls4ml.converters.keras_v3_to_hls module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.KerasV3HandlerDispatcher"><code class="docutils literal notranslate"><span class="pre">KerasV3HandlerDispatcher</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.KerasV3HandlerDispatcher.v2_call"><code class="docutils literal notranslate"><span class="pre">KerasV3HandlerDispatcher.v2_call()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.KerasV3HandlerDispatcher.v3_call"><code class="docutils literal notranslate"><span class="pre">KerasV3HandlerDispatcher.v3_call()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.UniqueName"><code class="docutils literal notranslate"><span class="pre">UniqueName</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.UniqueName.next_name"><code class="docutils literal notranslate"><span class="pre">UniqueName.next_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.UniqueName.reset"><code class="docutils literal notranslate"><span class="pre">UniqueName.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.get_io_tensors"><code class="docutils literal notranslate"><span class="pre">get_io_tensors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.keras_v3_to_hls"><code class="docutils literal notranslate"><span class="pre">keras_v3_to_hls()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.parse_keras_v3_model"><code class="docutils literal notranslate"><span class="pre">parse_keras_v3_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.html#hls4ml.converters.keras_v3_to_hls.resolve_dependency_relation"><code class="docutils literal notranslate"><span class="pre">resolve_dependency_relation()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.html#module-hls4ml.converters.onnx_to_hls">hls4ml.converters.onnx_to_hls module</a><ul>
@@ -525,6 +552,14 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Dot"><code class="docutils literal notranslate"><span class="pre">Dot</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Dot.initialize"><code class="docutils literal notranslate"><span class="pre">Dot.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Einsum"><code class="docutils literal notranslate"><span class="pre">Einsum</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Einsum.initialize"><code class="docutils literal notranslate"><span class="pre">Einsum.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.EinsumDense"><code class="docutils literal notranslate"><span class="pre">EinsumDense</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.EinsumDense.initialize"><code class="docutils literal notranslate"><span class="pre">EinsumDense.initialize()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Embedding"><code class="docutils literal notranslate"><span class="pre">Embedding</span></code></a><ul>
@@ -865,6 +900,22 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.dependency.requires"><code class="docutils literal notranslate"><span class="pre">requires()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#module-hls4ml.utils.einsum_utils">hls4ml.utils.einsum_utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.C"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.C</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.I"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.I</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.L0"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.L0</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.L1"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.L1</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.direct_sum_axis"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.direct_sum_axis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.in_transpose_idxs"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.in_transpose_idxs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.out_interpert_shape"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.out_interpert_shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.out_transpose_idxs"><code class="docutils literal notranslate"><span class="pre">EinsumRecipe.out_transpose_idxs</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.einsum"><code class="docutils literal notranslate"><span class="pre">einsum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.einsum_utils.parse_einsum"><code class="docutils literal notranslate"><span class="pre">parse_einsum()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#module-hls4ml.utils.example_models">hls4ml.utils.example_models module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.example_models.fetch_example_list"><code class="docutils literal notranslate"><span class="pre">fetch_example_list()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.example_models.fetch_example_model"><code class="docutils literal notranslate"><span class="pre">fetch_example_model()</span></code></a></li>
@@ -921,6 +972,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#hls4ml-utils-torch-module">hls4ml.utils.torch module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#module-hls4ml.utils.transpose_utils">hls4ml.utils.transpose_utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.transpose_utils.transpose_config_gen"><code class="docutils literal notranslate"><span class="pre">transpose_config_gen()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#module-hls4ml.utils">Module contents</a></li>
 </ul>
 </li>
