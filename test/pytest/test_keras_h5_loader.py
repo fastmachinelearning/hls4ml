@@ -32,7 +32,7 @@ def test_keras_h5_loader(backend):
     }
 
     model.save(config['KerasH5'])
-    hls_model = hls4ml.converters.keras_to_hls(config)
+    hls_model = hls4ml.converters.keras_v2_to_hls(config)
     hls_model.compile()
     data = np.random.rand(1000, 10).astype(np.float32)
     pred = hls_model.predict(data)
