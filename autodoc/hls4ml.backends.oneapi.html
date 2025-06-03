@@ -567,20 +567,21 @@
 <dd class="field-odd"><p>Returns the name of the compiled library.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>string</p>
+<dd class="field-even"><p>Path</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.create_initial_config">
-<span class="sig-name descname"><span class="pre">create_initial_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Arria10'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clock_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'io_parallel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_tar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.create_initial_config" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">create_initial_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Agilex7'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clock_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperopt_handshake</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'io_parallel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_tar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.create_initial_config" title="Link to this definition"></a></dt>
 <dd><p>Create initial configuration of the oneAPI backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>part</strong> (<em>str</em><em>, </em><em>optional</em>) – The FPGA part to be used. Defaults to ‘Arria10’.</p></li>
-<li><p><strong>clock_period</strong> (<em>int</em><em>, </em><em>optional</em>) – The clock period. Defaults to 5.</p></li>
+<li><p><strong>part</strong> (<em>str</em><em>, </em><em>optional</em>) – The FPGA part to be used. Defaults to ‘Agilex7’.</p></li>
+<li><p><strong>clock_period</strong> (<em>int</em><em>, </em><em>optional</em>) – The clock period in ns. Defaults to 5.</p></li>
+<li><p><strong>hyperopt_handshake</strong> (<em>bool</em><em>, </em><em>optional</em>) – Should hyper-optimized handshaking be used? Defaults to False</p></li>
 <li><p><strong>io_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of implementation used. One of
 ‘io_parallel’ or ‘io_stream’. Defaults to ‘io_parallel’.</p></li>
 <li><p><strong>write_tar</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, compresses the output directory into a .tar.gz file. Defaults to False.</p></li>
