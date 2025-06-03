@@ -84,6 +84,10 @@ def boxplot(data, fmt='longform'):
         if hue is not None:
             vp.get_legend().remove()
         vp.set_xscale('log', base=2)
+        plt.gca().axvline(
+            x=1, color='gray', linestyle='--', linewidth=1, zorder=0, label='x = 1'
+        )  # Add vertical line for 1 (2^0) behind the boxes
+        plt.legend()
         return f
     elif fmt == 'summary':
         from matplotlib.patches import Rectangle
@@ -92,6 +96,9 @@ def boxplot(data, fmt='longform'):
         f, ax = plt.subplots(1, 1)
         data.reverse()
         colors = sb.color_palette("Blues", len(data))
+        ax.axvline(
+            x=1, color='gray', linestyle='--', linewidth=1, zorder=0, label='x = 1'
+        )  # Add vertical line for 1 (2^0) behind the boxes
         bp = ax.bxp(data, showfliers=False, vert=False, medianprops=medianprops)
         # add colored boxes
         for line, color in zip(bp['boxes'], colors):
@@ -104,6 +111,7 @@ def boxplot(data, fmt='longform'):
         ax.set_yticklabels([d['weight'] for d in data])
         ax.set_xscale('log', base=2)
         plt.xlabel('x')
+        plt.legend()
         return f
     else:
         return None
@@ -467,6 +475,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
 
     if hls_model_present:
         data = weights_hlsmodel(hls_model_unoptimized, fmt='summary', plot=plot)
+        print(data)
     elif model_present:
         if __keras_profiling_enabled__ and isinstance(model, keras.Model):
             data = weights_keras(model, fmt='summary', plot=plot)
