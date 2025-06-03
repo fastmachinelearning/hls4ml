@@ -1,6 +1,6 @@
 import collections.abc
 
-from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
+from hls4ml.converters.keras_v2_to_hls import keras_handler, parse_default_keras_layer
 
 
 @keras_handler('ZeroPadding1D')
