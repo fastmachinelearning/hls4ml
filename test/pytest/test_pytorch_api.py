@@ -919,7 +919,7 @@ def test_einsum_outer_product(backend, io_type):
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
-    print(X_input, Y_input)
+
     hls_prediction = np.reshape(hls_model.predict([X_input, Y_input]), pytorch_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
@@ -949,7 +949,7 @@ def test_einsum_batch_matmul(backend, io_type):
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
-    print(X_input, Y_input)
+
     hls_prediction = np.reshape(hls_model.predict([X_input, Y_input]), pytorch_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)

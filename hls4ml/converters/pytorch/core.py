@@ -1,6 +1,7 @@
 import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.utils.einsum_utils import _validate_einsum_expr
 
 
 @pytorch_handler('Constant')
@@ -168,7 +169,6 @@ def parse_einsum_layer(operation, layer_name, input_names, input_shapes, node, c
     if len(input_names) != 2:
         raise Exception('Only einsum operations with two inputs are supported')
     layer['class_name'] = 'Einsum'
-    layer['equation'] = node.args[0]
     layer['name'] = layer_name
     layer['inputs'] = input_names
 
@@ -181,11 +181,6 @@ def parse_einsum_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['inp0_shape'] = tuple(input_shapes_tmp[0])
     layer['inp1_shape'] = tuple(input_shapes_tmp[1])
 
-    # Run einsum to infer output shape
-    import torch
-
-    a = torch.randn(input_shapes_tmp[0])
-    b = torch.randn(input_shapes_tmp[1])
-    layer['out_shape'] = tuple(torch.einsum(layer['equation'], a, b).shape)
+    layer['equation'], layer['out_shape'] = _validate_einsum_expr(node.args[0], layer['inp0_shape'], layer['inp1_shape'])
 
     return layer, [shape for shape in input_shapes[0]]
