@@ -179,6 +179,12 @@ class OneAPIBackend(FPGABackend):
         try:
             subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
+            try:
+                import pytest
+
+                pytest.skip('icpx not present')
+            except ImportError:
+                pass
             raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run('make lib', shell=True, cwd=builddir, check=True)
@@ -204,6 +210,12 @@ class OneAPIBackend(FPGABackend):
         try:
             subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
+            try:
+                import pytest
+
+                pytest.skip('icpx not present')
+            except ImportError:
+                pass
             raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)

@@ -14,7 +14,7 @@ void dense_wrapper(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
                    typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
                    typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     #pragma HLS INLINE recursive
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     }
     CONFIG_T::template kernel<data_T, res_T, CONFIG_T>::dense(data, res, weights, biases);
