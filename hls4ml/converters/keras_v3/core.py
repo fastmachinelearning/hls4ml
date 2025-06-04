@@ -208,7 +208,7 @@ class PermuteHandler(KerasV3LayerHandler):
 
 
 @register
-class KV3NoOp(KerasV3LayerHandler):
+class NoOp(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.preprocessing.image_preprocessing.random_brightness.RandomBrightness',
         'keras.src.layers.preprocessing.image_preprocessing.random_color_degeneration.RandomColorDegeneration',

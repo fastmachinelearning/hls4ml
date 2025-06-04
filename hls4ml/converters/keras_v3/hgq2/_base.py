@@ -1,12 +1,14 @@
+from collections.abc import Sequence
 from math import prod
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from hls4ml.converters.keras_v3._base import KerasV3LayerHandler, register
-from hls4ml.converters.keras_v3.conv import KV3ConvHandler
-from hls4ml.converters.keras_v3.core import KV3ActivationHandler, KV3DenseHandler, KV3MergeHandler
-from hls4ml.converters.keras_v3.einsum_dense import KV3EinsumDenseHandler
+from hls4ml.converters.keras_v3.conv import ConvHandler
+from hls4ml.converters.keras_v3.core import ActivationHandler, DenseHandler
+from hls4ml.converters.keras_v3.einsum_dense import EinsumDenseHandler
+from hls4ml.converters.keras_v3.merge import MergeHandler
 
 if TYPE_CHECKING:
     import hgq
@@ -107,7 +109,7 @@ class SQLayerHandler(KerasV3LayerHandler):
 
 
 @register
-class SQEinsumDenseHandler(SQLayerHandler, KV3EinsumDenseHandler):
+class SQEinsumDenseHandler(SQLayerHandler, EinsumDenseHandler):
     handles = (
         'hgq.layers.core.einsum_dense.QEinsumDense',
         'hgq.layers.einsum_dense_batchnorm.QEinsumDenseBatchnorm',
@@ -130,7 +132,7 @@ class SQStandaloneQuantizerHandler(KerasV3LayerHandler):
 
 
 @register
-class SQConvHandler(SQLayerHandler, KV3ConvHandler):
+class SQConvHandler(SQLayerHandler, ConvHandler):
     handles = (
         'hgq.layers.conv.QConv1D',
         'hgq.layers.conv.QConv2D',
@@ -156,7 +158,7 @@ class SQConvHandler(SQLayerHandler, KV3ConvHandler):
 
 
 @register
-class SQDenseHandler(SQLayerHandler, KV3DenseHandler):
+class SQDenseHandler(SQLayerHandler, DenseHandler):
     handles = ('hgq.layers.core.dense.QDense', 'hgq.layers.core.dense.QBatchNormDense')
 
     def handle(
@@ -175,7 +177,7 @@ class SQDenseHandler(SQLayerHandler, KV3DenseHandler):
 
 
 @register
-class SQActivationHandler(SQLayerHandler, KV3ActivationHandler):
+class SQActivationHandler(SQLayerHandler, ActivationHandler):
     handles = ('hgq.layers.activation.QActivation',)
 
 
@@ -206,7 +208,7 @@ class SQBatchNormalizationHandler(SQLayerHandler):
 
 
 @register
-class SQMergeHandler(SQLayerHandler, KV3MergeHandler):
+class SQMergeHandler(SQLayerHandler, MergeHandler):
     handles = (
         'hgq.layers.ops.merge.QAdd',
         'hgq.layers.ops.merge.QSubtract',
