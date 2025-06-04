@@ -1,9 +1,9 @@
 import re
 import typing
+from collections.abc import Sequence
 from copy import copy
 from functools import reduce, singledispatch
 from math import ceil, log2, prod
-from typing import Sequence
 from warnings import warn
 
 import numpy as np
@@ -313,18 +313,14 @@ def _(layer: Merge):
 
 @_produce_kif.register
 def _(layer: EinsumDense):
-    t_kernel = layer.attributes.attributes['weight'].data
-    to_original_kernel = layer.attributes.attributes['to_original_kernel']
-    kernel = to_original_kernel(t_kernel)
+    kernel = layer.attributes.attributes['weight'].data
     _bias = layer.attributes.attributes['bias']
     eq = layer.attributes.attributes['equation']
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
     qint_out = einsum(eq, qint_in, kernel)
     if _bias is not None:
-        t_bias = _bias.data
-        bias = t_bias.transpose(layer.attributes.attributes['out_tpose_idxs'])
-        qint_out = qint_out + bias
+        qint_out = qint_out + _bias.data
     k, i, f = qint_out.to_kif()
     return k.astype(np.int8), i, f
 
