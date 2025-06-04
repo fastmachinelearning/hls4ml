@@ -115,8 +115,10 @@ class VitisAcceleratorBackend(VitisBackend):
         return y
 
     def hardware_predict(self, model, x, target="hw", debug=False, profilingRepeat=-1):
+        command = ""
+
         if debug:
-            command = "DEBUG=1 "
+            command += "DEBUG=1 "
         if isinstance(profilingRepeat, int) and profilingRepeat > 0:
             command += "PROFILING_DATA_REPEAT_COUNT=" + profilingRepeat + " "
         self._validate_target(target)
