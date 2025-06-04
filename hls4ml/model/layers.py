@@ -3,6 +3,7 @@ from copy import copy
 
 import numpy as np
 
+from hls4ml.model import ModelGraph
 from hls4ml.model.attributes import (
     Attribute,
     AttributeDict,
@@ -22,6 +23,7 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     NamedType,
+    PrecisionType,
     Serializable,
     TensorVariable,
     UnspecifiedPrecisionType,
@@ -999,31 +1001,6 @@ class PReLU(Activation):
 
 
 class Softmax(Activation):
-    _expected_attributes = [
-        Attribute('n_in'),
-        Attribute('activation', value_type=str),
-        Attribute('n_outer', value_type=int, default=1),
-        Attribute('n_inner', value_type=int, default=1),
-        ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'),
-        ConfigurableAttribute('skip', value_type=bool, default=False),
-        TypeAttribute(
-            'exp_table',
-            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
-        ),
-        TypeAttribute(
-            'inv_table',
-            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
-        ),
-        TypeAttribute(
-            'inv_inp',
-            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
-        ),
-        TypeAttribute(
-            'accum',
-            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
-        ),
-    ]
-
     def initialize(self):
         super().initialize()
 

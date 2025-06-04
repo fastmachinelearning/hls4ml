@@ -36,7 +36,7 @@ class Attribute:
 
     """
 
-    def __init__(self, name, value_type=Integral, default=None, configurable=False, description=None):
+    def __init__(self, name, value_type: type = Integral, default=None, configurable=False, description=None):
         self.name = name
         self.value_type = value_type
         self.default = default
@@ -83,7 +83,7 @@ class ConfigurableAttribute(Attribute):
     when defining the expected attributes of layer classes.
     """
 
-    def __init__(self, name, value_type=Integral, default=None, description=None):
+    def __init__(self, name, value_type: type = Integral, default=None, description=None):
         super().__init__(name, value_type, default, configurable=True, description=description)
 
 
