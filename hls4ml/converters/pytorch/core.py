@@ -3,9 +3,7 @@ import numpy as np
 from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, convert_uaq_to_apfixed, pytorch_handler
 from hls4ml.model.quantizers import BrevitasQuantizer
 from hls4ml.model.types import FixedPrecisionType
-
 from hls4ml.utils.einsum_utils import _validate_einsum_expr
-
 
 
 @pytorch_handler('Constant')
