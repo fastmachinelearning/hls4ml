@@ -26,8 +26,8 @@ class LiberoBackend(FPGABackend):
             attrs.append(
                 ChoiceAttribute(
                     'strategy',
-                    choices=['Latency', 'Resource'],
-                    default='Latency',
+                    choices=['latency', 'resource'],
+                    default='latency',
                 )
             )
             self.attribute_map[layer] = attrs
