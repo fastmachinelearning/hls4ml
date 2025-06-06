@@ -1,5 +1,3 @@
-import numpy as np
-
 from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Reshape, Resize, Transpose, ZeroPadding1D, ZeroPadding2D
@@ -215,7 +213,7 @@ class TransposeTaskSequenceTemplate(TaskSequenceTemplate):
 
 
 # Reshape template (only used in streaming)
-reshape_task_sequence_template = 'task_sequence<nnet::repack_stream<{input_pipe}, {output_pipe}, {size}>> {name};'
+reshape_task_sequence_template = 'task_sequence<nnet::repack_stream<{input_pipe}, {output_pipe}>> {name};'
 reshape_include_list = ['nnet_utils/nnet_stream.h']
 
 
@@ -244,5 +242,4 @@ class ReshapeTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['size'] = int(np.prod(node.get_output_variable().shape))
         return self.template.format(**params)
