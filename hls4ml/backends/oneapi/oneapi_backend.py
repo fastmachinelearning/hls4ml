@@ -176,9 +176,12 @@ class OneAPIBackend(FPGABackend):
             subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
             try:
-                import pytest
+                import os
 
-                pytest.skip('icpx not present')
+                if "PYTEST_CURRENT_TEST" in os.environ:
+                    import pytest
+
+                    pytest.skip('icpx not present')
             except ImportError:
                 pass
             raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
@@ -207,9 +210,12 @@ class OneAPIBackend(FPGABackend):
             subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
             try:
-                import pytest
+                import os
 
-                pytest.skip('icpx not present')
+                if "PYTEST_CURRENT_TEST" in os.environ:
+                    import pytest
+
+                    pytest.skip('icpx not present')
             except ImportError:
                 pass
             raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
