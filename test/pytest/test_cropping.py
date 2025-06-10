@@ -39,7 +39,7 @@ def keras_model_1d():
     model.add(Cropping1D(input_shape=(in_width, in_feat), cropping=(crop_l, crop_r)))
     model.compile()
     return model
-    
+
 
 @pytest.fixture(scope='module')
 def keras_model_2d():
