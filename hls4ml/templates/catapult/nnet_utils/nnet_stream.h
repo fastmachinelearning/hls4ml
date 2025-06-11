@@ -61,6 +61,100 @@ void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<
     }
 }
 
+template <class data_T, class res_T, int N>
+void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<res_T> &res2, ac_channel<res_T> &res3,
+                  ac_channel<res_T> &res4) {
+#ifndef __SYNTHESIS__
+    while (data.available(1))
+#endif
+    {
+        data_T in_data = data.read();
+        res_T out_data;
+
+    ClonePack:
+        for (int j = 0; j < data_T::size; j++) {
+            out_data[j] = in_data[j];
+        }
+
+        res1.write(out_data);
+        res2.write(out_data);
+        res3.write(out_data);
+        res4.write(out_data);
+    }
+}
+
+template <class data_T, class res_T, int N>
+void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<res_T> &res2, ac_channel<res_T> &res3,
+                  ac_channel<res_T> &res4, ac_channel<res_T> &res5) {
+#ifndef __SYNTHESIS__
+    while (data.available(1))
+#endif
+    {
+        data_T in_data = data.read();
+        res_T out_data;
+
+    ClonePack:
+        for (int j = 0; j < data_T::size; j++) {
+            out_data[j] = in_data[j];
+        }
+
+        res1.write(out_data);
+        res2.write(out_data);
+        res3.write(out_data);
+        res4.write(out_data);
+        res5.write(out_data);
+    }
+}
+
+template <class data_T, class res_T, int N>
+void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<res_T> &res2, ac_channel<res_T> &res3,
+                  ac_channel<res_T> &res4, ac_channel<res_T> &res5, ac_channel<res_T> &res6) {
+#ifndef __SYNTHESIS__
+    while (data.available(1))
+#endif
+    {
+        data_T in_data = data.read();
+        res_T out_data;
+
+    ClonePack:
+        for (int j = 0; j < data_T::size; j++) {
+            out_data[j] = in_data[j];
+        }
+
+        res1.write(out_data);
+        res2.write(out_data);
+        res3.write(out_data);
+        res4.write(out_data);
+        res5.write(out_data);
+        res6.write(out_data);
+    }
+}
+
+template <class data_T, class res_T, int N>
+void clone_stream(ac_channel<data_T> &data, ac_channel<res_T> &res1, ac_channel<res_T> &res2, ac_channel<res_T> &res3,
+                  ac_channel<res_T> &res4, ac_channel<res_T> &res5, ac_channel<res_T> &res6, ac_channel<res_T> &res7) {
+#ifndef __SYNTHESIS__
+    while (data.available(1))
+#endif
+    {
+        data_T in_data = data.read();
+        res_T out_data;
+
+    ClonePack:
+        for (int j = 0; j < data_T::size; j++) {
+            out_data[j] = in_data[j];
+        }
+
+        res1.write(out_data);
+        res2.write(out_data);
+        res3.write(out_data);
+        res4.write(out_data);
+        res5.write(out_data);
+        res6.write(out_data);
+        res7.write(out_data);
+    }
+}
+
 template <class data_T, class res_T, int N> void repack_stream(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     if (data_T::size == res_T::size) {
         for (int i = 0; i < N / data_T::size; i++) {

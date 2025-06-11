@@ -30,8 +30,9 @@ from hls4ml.model.types import (
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
 
-
 # TODO move this to some utility module
+
+
 class classproperty:
     def __init__(self, func):
         self.func = func
@@ -1034,16 +1035,21 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.get_attr('gamma_data')
-        beta = self.get_attr('beta_data')
-        mean = self.get_attr('mean_data')
-        var = self.get_attr('variance_data')
+        if self.get_attr('scale_data') is None:
+            gamma = self.get_attr('gamma_data')
+            var = self.get_attr('variance_data')
+            scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+            self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        else:
+            self.add_weights_variable(name='scale', var_name='s{index}')
 
-        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - scale * mean
-
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        if self.get_attr('bias_data') is None:
+            beta = self.get_attr('beta_data')
+            mean = self.get_attr('mean_data')
+            bias = beta - scale * mean
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        else:
+            self.add_weights_variable(name='bias', var_name='b{index}')
 
 
 # TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
@@ -1661,6 +1667,47 @@ class SymbolicExpression(Layer):
         self.add_output_variable([len(self.get_attr('expression'))], [f'N_OUTPUTS_{self.index}'], var_name='y')
 
 
+class EinsumDense(Layer):
+    _expected_attributes = [
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+        self.add_weights(compression=self.model.config.get_compression(self))
+        self.add_bias()
+
+
+class Einsum(Layer):
+    _expected_attributes = [
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp0_shape', value_type=tuple),
+        Attribute('inp1_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1728,6 +1775,8 @@ layer_map = {
     'BatchNormOnnx': BatchNormOnnx,
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
+    'EinsumDense': EinsumDense,
+    'Einsum': Einsum,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }

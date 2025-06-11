@@ -79,9 +79,9 @@ class CloneOutput(OptimizerPass):
             n_outputs = len(output_map[output]) + in_output
             if n_outputs == 1:
                 continue
-            if n_outputs > 3:
+            if n_outputs > 7:
                 msg = f'ERROR: Cloning output {output} of {node.class_name}\
-                      ({node.name}) more than 3 times not currently supported'
+                      ({node.name}) more than 7 times not currently supported'
                 raise ValueError(msg)
 
             out_var = node.get_output_variable(output)
