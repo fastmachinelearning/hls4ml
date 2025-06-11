@@ -586,7 +586,7 @@ def request_kif(layer: Layer) -> tuple[KIF_t, ...]:
 def default_register_precision(layer: Layer):
     _pk, _pi, _pf = produce_kif(layer)  # Maximum possible k,i,f output from this layer
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
-    _ok, _oi, _of = np.minimum(_pk, _rk), np.minimum(_pi, _ri), np.minimum(_pf, _rf)
+    _ok, _oi, _of = _rk, np.minimum(_pi, _ri), np.minimum(_pf, _rf)
     ok, oi, of = kif_arrs_to_ints((_ok, _oi, _of))
 
     result_t = to_hls4ml_fixed(ok, oi, of, f'{layer.name}_t')
@@ -838,5 +838,7 @@ class FixInputPrecision(OptimizerPass):
         else:
             new_type.precision.saturation_mode = 'SAT'
         node.get_output_variable().type = new_type
+        node.model.config.layer_name_precision[node.name] = str(new_type)
+        return False
         node.model.config.layer_name_precision[node.name] = str(new_type)
         return False
