@@ -1,6 +1,6 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import GRU, LSTM, BidirectionalLSTM, BidirectionalGRU, TimeDistributed
+from hls4ml.model.layers import GRU, LSTM, Bidirectional, TimeDistributed
 
 # recurrent multiplication template
 
@@ -86,16 +86,14 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
     static const bool pytorch_order = {pytorch};
 }};\n"""
 
-bidir_recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
+# Bidirectional templates
+
+single_config_template = """struct config{index} : nnet::single_layer_config {{
     typedef {accum_t.name} accum_t;
     typedef {weight_t.name} weight_t;  // Matrix
     typedef {recurrent_weight_t.name} recurrent_weight_t;  // Matrix
     typedef {bias_t.name} bias_t;  // Vector
     typedef {recurrent_bias_t.name} recurrent_bias_t;  // Vector
-    typedef {weight_b_t.name} weight_b_t;  // Matrix
-    typedef {recurrent_weight_b_t.name} recurrent_weight_b_t;  // Matrix
-    typedef {bias_b_t.name} bias_b_t;  // Vector
-    typedef {recurrent_bias_b_t.name} recurrent_bias_b_t;  // Vector
     typedef {config_mult_t1} mult_config1;
     typedef {config_mult_t2} mult_config2;
     typedef {recr_act_t} ACT_CONFIG_{RECR_TYPE};
@@ -105,8 +103,20 @@ bidir_recr_config_template = """struct config{index} : nnet::{recr_type}_config 
     template<class x_T, class y_T, class config_T>
     using activation = nnet::activation::{activation}<x_T, y_T, config_T>;
     static const unsigned n_in  = {n_in};
-    static const unsigned n_out = {n_out};
     static const unsigned n_state = {n_state};
+    static const unsigned n_mult = {n_mult};
+    static const bool pytorch_order = {pytorch};
+}};\n"""
+
+bidirectional_config_template = """struct config{index} : nnet::bidirectional_config {{
+    typedef {forward_t} FORWARD_CONFIG;
+    template<class x_T, class y_T, typename config_T, bool backward>
+    using RNNfunc_forward = nnet::{forward_layer}<x_T, y_T, config_T, backward>;
+    typedef {backward_t} BACKWARD_CONFIG;
+    template<class x_T, class y_T, typename config_T, bool backward>
+    using RNNfunc_backward = nnet::{backward_layer}<x_T, y_T, config_T, backward>;
+    static const unsigned n_in  = {n_in};
+    static const unsigned n_out = {n_out};
     static const unsigned n_sequence = {n_sequence};
     static const unsigned n_sequence_out = {n_sequence_out};
     static const unsigned io_type = nnet::{strategy};
@@ -120,9 +130,7 @@ recr_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config
 recr_function_template_initial_states_lstm = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {input3_t}, {output_t}, {config}>({input}, {input2}, {input3}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
 recr_function_template_initial_states_gru = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {output_t}, {config}>({input}, {input2}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
 
-recr_bidir_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br}, {w_b}, {wr_b}, {b_b}, {br_b});'  # noqa: E501
-recr_bidir_function_template_initial_states_lstm = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {input3_t}, {output_t}, {config}>({input}, {input2}, {input3}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
-recr_bidir_function_template_initial_states_gru = 'nnet::{recr_type}_stack<{input_t}, {input2_t}, {output_t}, {config}>({input}, {input2}, {output}, {w}, {wr}, {b}, {br});'  # noqa: E501
+bidirectional_function_template = 'nnet::bidirectional_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br}, {w_b}, {wr_b}, {b_b}, {br_b});'  # noqa: E501
 
 recr_include_list = ['nnet_utils/nnet_recurrent.h']
 
@@ -241,118 +249,151 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         return mult_config1 + '\n' + mult_config2 + '\n' + recr_act_config + '\n' + act_config + '\n' + recr_config
 
 
-class BidirectionalRecurrentConfigTemplate(LayerConfigTemplate):
+class BidirectionalConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((BidirectionalLSTM, BidirectionalGRU))
-        self.template = bidir_recr_config_template
+        super().__init__(Bidirectional)
+        self.template = bidirectional_config_template
+        self.layer_template = single_config_template
         self.act_template = activ_config_template
         self.recr_act_template = recr_activ_config_template
         self.mult1_template = recr_mult_config_template_1
         self.mult2_template = recr_mult_config_template_2
 
     def format(self, node):
+
+        # ----- Bidirectional Layer Config -----#
         params = self._default_config_params(node)
 
         params['n_in'] = node.get_input_variable().dim_names[1]
         params['n_sequence'] = node.get_input_variable().dim_names[0]
         if node.get_attr('return_sequences'):
             params['n_sequence_out'] = node.get_output_variable().dim_names[0]
-            params['n_state'] = f'{node.get_output_variable().dim_names[1]} / 2'
-            params['n_out'] = node.get_output_variable().dim_names[1]
         else:
             params['n_sequence_out'] = 1
-            params['n_state'] = f'{node.get_output_variable().dim_names[0]} / 2'
-            params['n_out'] = node.get_output_variable().dim_names[0]
-        params['config_mult_t1'] = f'config{node.index}_1'
-        params['config_mult_t2'] = f'config{node.index}_2'
-        params['recr_act_t'] = '{}_config{}_recr'.format(node.get_attr('recurrent_activation'), node.index)
-        params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
+        params['n_out'] = node.get_attr('n_out')
         params['strategy'] = node.get_attr('strategy')
         params['static'] = 'true' if node.attributes['static'] else 'false'
         params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
-        params['recr_type'] = node.class_name.lower()
-        params['RECR_TYPE'] = node.class_name[13:]
-
-        if node.class_name == 'BidirectionalLSTM':
-            n_recr_mult = 4
-        else:  # BidirectionalGRU
-            n_recr_mult = 3
+        params['forward_t'] = f'config{node.index}_forward'
+        params['backward_t'] = f'config{node.index}_backward'
+        params['forward_layer'] = node.get_attr('forward_class_name').lower() + '_class'
+        params['backward_layer'] = node.get_attr('backward_class_name').lower() + '_class'
+        if node.attributes['static']:
+            params['forward_layer'] += '_static'
+            params['backward_layer'] += '_static'
 
         recr_config = self.template.format(**params)
 
-        act_params = self._default_config_params(node)
-        recr_act_params = self._default_config_params(node)
+        # ----- Forward and Backward Layers Config -----#
+        result = ''
+        for d in ['forward', 'backward']:
+            if node.get_attr(f'{d}_class_name') == 'LSTM':
+                n_recr_mult = 4
+            else:  # GRU
+                n_recr_mult = 3
 
-        act_params['type'] = node.get_attr('activation')
-        recr_act_params['type'] = node.get_attr('recurrent_activation')
-        if node.get_attr('return_sequences'):
-            act_params['n_in'] = node.get_output_variable().shape[1]
-            recr_act_params['n_in'] = node.get_output_variable().shape[1] * (n_recr_mult - 1)
-        else:
-            act_params['n_in'] = node.get_output_variable().shape[0]
-            recr_act_params['n_in'] = node.get_output_variable().shape[0] * (n_recr_mult - 1)
+            # ----- Layer Config -----#
+            layer_params = self._default_config_params(node)
+            layer_params['n_in'] = params['n_in']
+            layer_params['pytorch'] = params['pytorch']
+            layer_params['n_state'] = node.get_attr(f'{d}_n_states')
+            layer_params['n_mult'] = 4
+            if node.get_attr(f'{d}_class_name').lower() == 'gru':
+                layer_params['n_mult'] = 3
+            layer_params['config_mult_t1'] = f'config{node.index}_1_{d[0]}'
+            layer_params['config_mult_t2'] = f'config{node.index}_2_{d[0]}'
+            layer_params['recr_act_t'] = '{}_config{}_recr'.format(
+                node.get_attr(f'{d}_recurrent_activation'), str(node.index) + f'_{d[0]}'
+            )
+            layer_params['act_t'] = '{}_config{}'.format(node.get_attr(f'{d}_activation'), str(node.index) + f'_{d[0]}')
+            layer_params['RECR_TYPE'] = node.get_attr(f'{d}_class_name')
 
-        act_config = self.act_template.format(**act_params)
-        recr_act_config = self.recr_act_template.format(**recr_act_params)
+            layer_params['weight_t'] = layer_params[f'{d}_weight_t']
+            layer_params['recurrent_weight_t'] = layer_params[f'{d}_recurrent_weight_t']
+            layer_params['bias_t'] = layer_params[f'{d}_bias_t']
+            layer_params['recurrent_bias_t'] = layer_params[f'{d}_recurrent_bias_t']
+            layer_params['activation'] = layer_params[f'{d}_activation']
+            layer_params['recurrent_activation'] = layer_params[f'{d}_recurrent_activation']
 
-        mult_params1 = self._default_config_params(node)
-        mult_params2 = self._default_config_params(node)
+            layer_params['index'] = str(node.index) + f'_{d}'
 
-        mult_params1['n_in'] = node.get_input_variable().shape[1]
-        if node.get_attr('return_sequences'):
-            mult_params1['n_out'] = node.get_output_variable().shape[1] // 2 * n_recr_mult
-        else:
-            mult_params1['n_out'] = node.get_output_variable().shape[0] // 2 * n_recr_mult
-        mult_params1['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
-        )
-        mult_params1['reuse'] = params['reuse']
-        mult_params1['index'] = str(node.index) + '_1'
-        mult_params1['nzeros'] = node.get_weights('weight').nzeros
-        mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
+            layer_config = self.layer_template.format(**layer_params)
 
-        namespace = params['namespace']
+            # ----- Activations Config -----#
+            act_params = self._default_config_params(node)
+            recr_act_params = self._default_config_params(node)
 
-        if node.get_attr('strategy').lower() == 'latency':
-            mult_params1['dense_function'] = 'nnet::DenseLatency'
-        elif node.get_attr('strategy').lower() == 'resource':
-            if int(mult_params1['reuse_factor']) <= int(mult_params1['n_in']):
-                mult_params1['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
-            else:
-                mult_params1['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
-            # The 3rd case is never used
-        elif node.get_attr('strategy').lower() == 'resource_unrolled':
-            mult_params1['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}_1'
+            act_params['type'] = node.get_attr(f'{d}_activation')
+            recr_act_params['type'] = node.get_attr(f'{d}_recurrent_activation')
+            act_params['index'] = str(node.index) + f'_{d[0]}'
+            recr_act_params['index'] = str(node.index) + f'_{d[0]}'
+            act_params['n_in'] = node.get_attr(f'{d}_n_states')
+            recr_act_params['n_in'] = node.get_attr(f'{d}_n_states') * (n_recr_mult - 1)
 
-        if node.get_attr('return_sequences'):
-            mult_params2['n_in'] = node.get_output_variable().shape[1] // 2
-            mult_params2['n_out'] = node.get_output_variable().shape[1] // 2 * n_recr_mult
-        else:
-            mult_params2['n_in'] = node.get_output_variable().shape[0] // 2
-            mult_params2['n_out'] = node.get_output_variable().shape[0] // 2 * n_recr_mult
-        mult_params2['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
-        )
-        mult_params2['reuse'] = node.attributes['recurrent_reuse_factor']
-        mult_params2['index'] = str(node.index) + '_2'
-        mult_params2['nzeros'] = node.get_weights('recurrent_weight').nzeros
-        mult_params2['nonzeros'] = node.get_weights('recurrent_weight').nonzeros
+            act_config = self.act_template.format(**act_params)
+            recr_act_config = self.recr_act_template.format(**recr_act_params)
 
-        if node.get_attr('strategy').lower() == 'latency':
-            mult_params2['dense_function'] = 'nnet::DenseLatency'
-        elif node.get_attr('strategy').lower() == 'resource':
-            if int(mult_params2['reuse_factor']) <= int(mult_params2['n_in']):
-                mult_params2['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
-            else:
-                mult_params2['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
-            # The 3rd case is never used
-        elif node.get_attr('strategy').lower() == 'resource_unrolled':
-            mult_params2['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}_2'
+            # ----- Mult Config -----#
+            mult_params1 = self._default_config_params(node)
+            mult_params2 = self._default_config_params(node)
 
-        mult_config1 = self.mult1_template.format(**mult_params1)
-        mult_config2 = self.mult2_template.format(**mult_params2)
+            mult_params1['n_in'] = node.get_input_variable().shape[1]
+            mult_params1['n_out'] = node.get_attr(f'{d}_n_states') * n_recr_mult
+            mult_params1['product_type'] = get_backend('vivado').product_type(
+                node.get_input_variable().type.precision, node.get_weights(f'{d}_weight').type.precision
+            )
+            mult_params1['reuse'] = params['reuse']
+            mult_params1['index'] = str(node.index) + f'_1_{d[0]}'
+            mult_params1['nzeros'] = node.get_weights(f'{d}_weight').nzeros
+            mult_params1['nonzeros'] = node.get_weights(f'{d}_weight').nonzeros
 
-        return mult_config1 + '\n' + mult_config2 + '\n' + recr_act_config + '\n' + act_config + '\n' + recr_config
+            mult_params1['bias_t'] = mult_params1[f'{d}_bias_t']
+            mult_params1['weight_t'] = mult_params1[f'{d}_weight_t']
+            mult_params2['recurrent_bias_t'] = mult_params2[f'{d}_recurrent_bias_t']
+            mult_params2['recurrent_weight_t'] = mult_params2[f'{d}_recurrent_weight_t']
+
+            namespace = params['namespace']
+
+            if node.get_attr('strategy').lower() == 'latency':
+                mult_params1['dense_function'] = 'nnet::DenseLatency'
+            elif node.get_attr('strategy').lower() == 'resource':
+                if int(mult_params1[f'{d}_reuse_factor']) <= int(mult_params1['n_in']):
+                    mult_params1['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+                else:
+                    mult_params1['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
+                # The 3rd case is never used
+            elif node.get_attr('strategy').lower() == 'resource_unrolled':
+                mult_params1['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}_1'
+
+            mult_params2['n_in'] = node.get_attr(f'{d}_n_states')
+            mult_params2['n_out'] = node.get_attr(f'{d}_n_states') * n_recr_mult
+            mult_params2['product_type'] = get_backend('vivado').product_type(
+                node.get_input_variable().type.precision, node.get_weights(f'{d}_recurrent_weight').type.precision
+            )
+            mult_params2['reuse'] = node.attributes[f'{d}_recurrent_reuse_factor']
+            mult_params2['index'] = str(node.index) + f'_2_{d[0]}'
+            mult_params2['nzeros'] = node.get_weights(f'{d}_recurrent_weight').nzeros
+            mult_params2['nonzeros'] = node.get_weights(f'{d}_recurrent_weight').nonzeros
+
+            if node.get_attr('strategy').lower() == 'latency':
+                mult_params2['dense_function'] = 'nnet::DenseLatency'
+            elif node.get_attr('strategy').lower() == 'resource':
+                if int(mult_params2[f'{d}_reuse_factor']) <= int(mult_params2['n_in']):
+                    mult_params2['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+                else:
+                    mult_params2['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
+                # The 3rd case is never used
+            elif node.get_attr('strategy').lower() == 'resource_unrolled':
+                mult_params2['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}_2'
+
+            mult_config1 = self.mult1_template.format(**mult_params1)
+            mult_config2 = self.mult2_template.format(**mult_params2)
+
+            result += (
+                mult_config1 + '\n' + mult_config2 + '\n' + recr_act_config + '\n' + act_config + '\n' + layer_config + '\n'
+            )
+
+        return result + recr_config
 
 
 class RecurrentFunctionTemplate(FunctionCallTemplate):
@@ -452,37 +493,32 @@ class TimeDistributedFunctionTemplate(FunctionCallTemplate):
         else:
             return self.template_end.format(**params)
     
-class BidirectionalRecurrentFunctionTemplate(FunctionCallTemplate):
+class BidirectionalFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((BidirectionalLSTM, BidirectionalGRU), include_header=recr_include_list)
+        super().__init__((Bidirectional), include_header=recr_include_list)
 
     def format(self, node):
         params = self._default_function_params(node)
+
+        # TO DO: Add initial tates functions
+        '''
         if params['pass_initial_states'] == 'true':
             params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
             params['input2'] = node.get_input_variable(node.inputs[1]).name
             if node.class_name == 'BLSTM':
                 params['input3'] = node.get_input_variable(node.inputs[2]).name
                 params['input3_t'] = node.get_input_variable(node.inputs[2]).type.name
+        '''
 
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
-        params['wr'] = node.get_weights('recurrent_weight').name
-        params['br'] = node.get_weights('recurrent_bias').name
-        params['w_b'] = node.get_weights('weight_b').name
-        params['b_b'] = node.get_weights('bias_b').name
-        params['wr_b'] = node.get_weights('recurrent_weight_b').name
-        params['br_b'] = node.get_weights('recurrent_bias_b').name
-        params['activation'] = node.get_attr('activation')
-        params['recurrent_activation'] = node.get_attr('recurrent_activation')
-        params['recr_type'] = node.class_name.lower()
+        params['w'] = node.get_weights('forward_weight').name
+        params['b'] = node.get_weights('forward_bias').name
+        params['wr'] = node.get_weights('forward_recurrent_weight').name
+        params['br'] = node.get_weights('forward_recurrent_bias').name
+        params['w_b'] = node.get_weights('backward_weight').name
+        params['b_b'] = node.get_weights('backward_bias').name
+        params['wr_b'] = node.get_weights('backward_recurrent_weight').name
+        params['br_b'] = node.get_weights('backward_recurrent_bias').name
 
-        if params['pass_initial_states'] == 'true':
-            if node.class_name == 'BLSTM':
-                template = recr_bidir_function_template_initial_states_lstm
-            else:
-                template = recr_bidir_function_template_initial_states_gru
-        else:
-            template = recr_bidir_function_template
+        template = bidirectional_function_template
 
         return template.format(**params)
