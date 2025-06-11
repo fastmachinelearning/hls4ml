@@ -4,8 +4,6 @@ import h5py
 
 from hls4ml.model import ModelGraph
 
-MAXMULT = 4096
-
 
 class KerasReader:
     def get_weights_data(self, layer_name, var_name):
@@ -356,7 +354,7 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config):
+def keras_v2_to_hls(config):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
     print('Creating HLS model')
