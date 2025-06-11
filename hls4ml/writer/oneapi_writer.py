@@ -546,6 +546,8 @@ class OneAPIWriter(Writer):
         # Makefile
         filedir = os.path.dirname(os.path.abspath(__file__))
         device = model.config.get_config_value('Part')
+        period = model.config.get_config_value('ClockPeriod')
+        hyper = model.config.get_config_value('HyperoptHandshake')
         with (
             open(os.path.join(filedir, '../templates/oneapi/CMakeLists.txt')) as f,
             open(f'{model.config.get_output_dir()}/CMakeLists.txt', 'w') as fout,
@@ -560,6 +562,11 @@ class OneAPIWriter(Writer):
                 if model.config.get_config_value('UseOneAPIBSP'):
                     if 'hls-fpga-machine-learning insert oneapi_bsp_cmake_flag' in line:
                         line = 'set(BSP_FLAG "-DIS_BSP")'
+
+                if 'set(USER_FPGA_FLAGS' in line:
+                    line += f'set(USER_FPGA_FLAGS -Xsclock={period}ns; ${{USER_FPGA_FLAGS}})\n'
+                    if not hyper:
+                        line += 'set(USER_FPGA_FLAGS -Xsoptimize=latency; ${USER_FPGA_FLAGS})\n'
 
                 fout.write(line)
 

@@ -1,7 +1,6 @@
-import numpy as np
-
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Resize, Transpose, ZeroPadding1D, ZeroPadding2D
+from hls4ml.utils.transpose_utils import transpose_config_gen
 
 # ZeroPadding templates
 
@@ -128,22 +127,13 @@ transpose_function_template = 'nnet::transpose<{input_t}, {output_t}, {config_na
 class TransposeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Transpose)
-        self.template = transpose_config_template
 
     def format(self, node):
         shape = tuple(node.get_input_variable().shape)
         perm = tuple(node.get_attr('perm'))
         name = f'config{node.index}'
-        new_shape, perm_strides = node.model.config.backend.permute_config_gen(name, shape, perm)
-        return transpose_config_template.format(
-            dims=len(shape),
-            N=np.prod(shape),
-            from_shape=', '.join(str(x) for x in shape),
-            perm=', '.join(str(x) for x in perm),
-            perm_strides=', '.join(str(x) for x in perm_strides),
-            to_shape=', '.join(str(x) for x in new_shape),
-            config_name=name,
-        )
+        conf = transpose_config_gen(name, shape, perm)
+        return transpose_config_template.format(**conf)
 
 
 class TransposeFunctionTemplate(FunctionCallTemplate):

@@ -17,6 +17,8 @@ from hls4ml.model.layers import (
     Dense,
     DepthwiseConv1D,
     DepthwiseConv2D,
+    Einsum,
+    EinsumDense,
     Embedding,
     GarNet,
     GarNetStack,
@@ -33,6 +35,7 @@ from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils import attribute_descriptions as descriptions
+from hls4ml.utils.einsum_utils import parse_einsum
 
 
 class VivadoBackend(FPGABackend):
@@ -685,3 +688,108 @@ class VivadoBackend(FPGABackend):
     @layer_optimizer(GarNetStack)
     def init_garnet_stack(self, layer):
         self.init_garnet(layer)
+
+    @layer_optimizer(EinsumDense)
+    def init_einsum_dense(self, layer: EinsumDense) -> None:
+        kernel: np.ndarray = layer.attributes['weight_data']
+        bias: np.ndarray | None = layer.attributes['bias_data']
+        equation = layer.attributes['equation']
+        inp_shape = layer.attributes['inp_shape']
+        out_shape = layer.attributes['out_shape']
+
+        kernel_shape = kernel.shape
+        recipe = parse_einsum(equation, inp_shape, kernel_shape)
+        assert not any(recipe['direct_sum_axis']), (
+            'Do not put direct sum indices (e.g., only appears in one of the operands) in the equation.'
+            'Use explicit addition operator before instead.'
+        )
+        inp_tpose_idxs, ker_tpose_idxs = recipe['in_transpose_idxs']
+        out_tpose_idxs = recipe['out_transpose_idxs']
+
+        # Pre-transpose kernel (and bias) to save a transpose in cpp. Shouldn't matter for latency strategy though.
+        # hls4ml dense acts like i,ij->j
+        # parser assumes ij,j->i, so we need to transpose the kernel to match
+        kernel = kernel.transpose(ker_tpose_idxs)
+        kernel = kernel.reshape(recipe['I'], recipe['L1'], recipe['C']).transpose(0, 2, 1)
+
+        def to_original_kernel(tkernel: np.ndarray) -> np.ndarray:
+            _kernel = tkernel.transpose(0, 2, 1)
+            _kernel = _kernel.reshape(tuple(kernel_shape[i] for i in ker_tpose_idxs))
+            return _kernel.transpose(np.argsort(ker_tpose_idxs))
+
+        # TODO: for weight in bram mode (resource), broadcasting bias here shall be avoided.
+        if bias is not None:
+            bias = np.broadcast_to(bias, out_shape).transpose(np.argsort(out_tpose_idxs))
+        else:
+            # The automatically created bias is just the last dimension of the output shape
+            # Which is too small in general for einsum dense.
+            # The transpose is just to match the shape in case of have real bias, no real effect.
+            bias = np.zeros(out_shape).transpose(np.argsort(out_tpose_idxs))
+
+        layer.attributes['weight_data'] = kernel
+        layer.attributes['to_original_kernel'] = to_original_kernel
+        layer.attributes['bias_data'] = bias
+        layer.attributes['inp_tpose_idxs'] = inp_tpose_idxs
+        layer.attributes['out_tpose_idxs'] = out_tpose_idxs
+        layer.attributes['out_interpert_shape'] = recipe['out_interpert_shape']
+        layer.attributes['n_free_data'] = recipe['L0']
+        layer.attributes['n_free_kernel'] = recipe['L1']
+        layer.attributes['n_inplace'] = recipe['I']
+        layer.attributes['n_contract'] = recipe['C']
+        pf = layer.attributes.get('parallelization_factor', recipe['L0'])
+        layer.attributes['parallelization_factor'] = pf
+
+        layer.add_weights(compression=layer.model.config.get_compression(layer))
+        layer.add_bias()
+
+        strategy: str | None = layer.model.config.get_strategy(layer)
+        if not strategy:
+            layer.set_attr('strategy', 'latency')
+            return
+        if strategy in ('latency', 'resource', 'distributed_arithmetic'):
+            layer.set_attr('strategy', strategy)
+            return
+        warn(f'Invalid strategy "{strategy}" for EinsumDense layer "{layer.name}". Using "latency" strategy instead.')
+        layer.set_attr('strategy', 'latency')
+
+    @layer_optimizer(Einsum)
+    def init_einsum(self, layer: Einsum) -> None:
+
+        equation = layer.attributes['equation']
+        inp0_shape = layer.attributes['inp0_shape']
+        inp1_shape = layer.attributes['inp1_shape']
+
+        recipe = parse_einsum(equation, inp0_shape, inp1_shape)
+        assert not any(recipe['direct_sum_axis']), (
+            'Do not put direct sum indices (e.g., only appears in one of the operands) in the equation.'
+            'Use explicit addition operator before instead.'
+        )
+        inp0_tpose_idxs, inp1_tpose_idxs = recipe['in_transpose_idxs']
+        out_tpose_idxs = recipe['out_transpose_idxs']
+
+        layer.attributes.update(recipe)
+        layer.attributes['n_free0'] = recipe['L0']
+        layer.attributes['n_free1'] = recipe['L1']
+        layer.attributes['n_inplace'] = recipe['I']
+        layer.attributes['n_contract'] = recipe['C']
+        layer.attributes['out_interpert_shape'] = recipe['out_interpert_shape']
+
+        layer.attributes['inp0_tpose_idxs'] = inp0_tpose_idxs
+        layer.attributes['inp1_tpose_idxs'] = inp1_tpose_idxs
+        layer.attributes['out_tpose_idxs'] = out_tpose_idxs
+
+        pf = layer.attributes.get('parallelization_factor', recipe['L0'])
+        layer.attributes['parallelization_factor'] = pf
+
+        strategy: str | None = layer.model.config.get_strategy(layer)
+        if not strategy:
+            layer.set_attr('strategy', 'latency')
+            return
+        if strategy.lower() == 'resource':
+            layer.set_attr('strategy', 'resource')
+            return
+        if strategy.lower() in ('latency', 'distributed_arithmetic'):
+            layer.set_attr('strategy', 'latency')
+            return
+        warn(f'Invalid strategy "{strategy}" for Einsum layer "{layer.name}". Using "latency" strategy instead.')
+        layer.set_attr('strategy', 'latency')

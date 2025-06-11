@@ -21,6 +21,7 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     NamedType,
+    Serializable,
     TensorVariable,
     UnspecifiedPrecisionType,
     WeightVariable,
@@ -29,8 +30,9 @@ from hls4ml.model.types import (
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
 
-
 # TODO move this to some utility module
+
+
 class classproperty:
     def __init__(self, func):
         self.func = func
@@ -39,7 +41,7 @@ class classproperty:
         return self.func(owner)
 
 
-class Layer:
+class Layer(Serializable):
     """The base class for all layers, which are the nodes in the model graph.
     Note:  they don't necessarily correspond 1:1 with the network layers.
 
@@ -74,7 +76,7 @@ class Layer:
             all_attributes.extend(cls._expected_attributes)
         return all_attributes
 
-    def __init__(self, model, name, attributes, inputs, outputs=None):
+    def __init__(self, model, name, attributes, inputs, outputs=None, initialize=True):
         if name == 'input':
             raise RuntimeError(
                 "No model layer should be named 'input' because that is a reserved;"
@@ -82,7 +84,6 @@ class Layer:
             )
         self.model = model
         self.name = name
-        self.index = model.next_layer()
         self.inputs = inputs
         self.outputs = outputs
         if self.outputs is None:
@@ -91,33 +92,37 @@ class Layer:
         self.attributes = AttributeDict(self)
         self.attributes.update(attributes)
 
-        self.set_attr('index', self.index)
-
         self.weights = WeightMapping(self.attributes)
         self.variables = VariableMapping(self.attributes)
         self.types = TypeMapping(self.attributes)
         self.code = CodeMapping(self.attributes)
 
-        self._set_accum_t()
+        if initialize:
+            self.index = model.next_layer()
+            self.set_attr('index', self.index)
 
-        layer_config = self.model.config.get_layer_config(self)
-        for config_key, config_value in layer_config.items():
-            config_key = convert_to_snake_case(config_key)
-            if config_key in self.attributes:
-                print(
-                    'WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(
-                        config_key, self.name, self.class_name
+            self._set_accum_t()
+
+            layer_config = self.model.config.get_layer_config(self)
+            for config_key, config_value in layer_config.items():
+                config_key = convert_to_snake_case(config_key)
+                if config_key in self.attributes:
+                    print(
+                        'WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(
+                            config_key, self.name, self.class_name
+                        )
                     )
-                )
-            if config_key.endswith('_t') and isinstance(
-                config_value, str
-            ):  # TODO maybe move this to __setitem__ of AttributeDict?
-                precision = self.model.config.backend.convert_precision_string(config_value)
-                config_value = NamedType(self.name + '_' + config_key, precision)
-            self.attributes[config_key] = config_value
+                if config_key.endswith('_t') and isinstance(
+                    config_value, str
+                ):  # TODO maybe move this to __setitem__ of AttributeDict?
+                    precision = self.model.config.backend.convert_precision_string(config_value)
+                    config_value = NamedType(self.name + '_' + config_key, precision)
+                self.attributes[config_key] = config_value
 
-        self.initialize()
-        self._validate_attributes()
+            self.initialize()
+            self._validate_attributes()
+        else:
+            self.index = self.get_attr('index')
 
     @property
     def class_name(self, include_wrapped=False):
@@ -277,7 +282,7 @@ class Layer:
                 data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
             type_name = 'bias{index}_t'
-            quantizer = None  # Don't quantize non-existant bias
+            quantizer = None  # Don't quantize non-existent bias
 
         self.add_weights_variable(
             name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantizer=quantizer
@@ -342,6 +347,20 @@ class Layer:
         for data_type in self.types.values():
             precision[data_type.name] = data_type
         return precision
+
+    def serialize_state(self):
+        attrs = {}
+        for key, val in self.attributes.items():
+            if isinstance(val, Serializable):
+                attrs[key] = val.serialize()
+            else:
+                attrs[key] = val  # Should be safe, but maybe we'll need a copy here if the type is a reference
+        state = {
+            'inputs': self.inputs,
+            'outputs': self.outputs,
+            'attributes': attrs,
+        }
+        return state
 
 
 class Input(Layer):
@@ -441,7 +460,7 @@ class Reshape(Layer):
             dummy_x = np.ones(input_shape)
             dummy_y = np.reshape(dummy_x, target_shape)
             return list(dummy_y.shape)
-        return target_shape
+        return [int(dim) for dim in target_shape]  # Do not use numpy types
 
 
 class Dense(Layer):
@@ -1016,16 +1035,21 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.get_attr('gamma_data')
-        beta = self.get_attr('beta_data')
-        mean = self.get_attr('mean_data')
-        var = self.get_attr('variance_data')
+        if self.get_attr('scale_data') is None:
+            gamma = self.get_attr('gamma_data')
+            var = self.get_attr('variance_data')
+            scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+            self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        else:
+            self.add_weights_variable(name='scale', var_name='s{index}')
 
-        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - scale * mean
-
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        if self.get_attr('bias_data') is None:
+            beta = self.get_attr('beta_data')
+            mean = self.get_attr('mean_data')
+            bias = beta - scale * mean
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        else:
+            self.add_weights_variable(name='bias', var_name='b{index}')
 
 
 # TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
@@ -1643,6 +1667,47 @@ class SymbolicExpression(Layer):
         self.add_output_variable([len(self.get_attr('expression'))], [f'N_OUTPUTS_{self.index}'], var_name='y')
 
 
+class EinsumDense(Layer):
+    _expected_attributes = [
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+        self.add_weights(compression=self.model.config.get_compression(self))
+        self.add_bias()
+
+
+class Einsum(Layer):
+    _expected_attributes = [
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp0_shape', value_type=tuple),
+        Attribute('inp1_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1710,6 +1775,8 @@ layer_map = {
     'BatchNormOnnx': BatchNormOnnx,
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
+    'EinsumDense': EinsumDense,
+    'Einsum': Einsum,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }
