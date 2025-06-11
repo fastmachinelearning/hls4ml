@@ -1,6 +1,7 @@
 import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.utils.einsum_utils import _validate_einsum_expr
 
 
 @pytorch_handler('Constant')
@@ -155,5 +156,31 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
         layer['n_filt'] = -1
     elif len(input_shapes[0]) > 2:
         layer['n_filt'] = input_shapes[0][1]  # Always channel first for Pytorch
+
+    return layer, [shape for shape in input_shapes[0]]
+
+
+@pytorch_handler('einsum')
+def parse_einsum_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert 'einsum' in operation
+
+    layer = {}
+
+    if len(input_names) != 2:
+        raise Exception('Only einsum operations with two inputs are supported')
+    layer['class_name'] = 'Einsum'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+
+    # Need to set batch size to a real value instead of 'None'. Using '1' as dummy value
+    import copy
+
+    input_shapes_tmp = copy.deepcopy(input_shapes)
+    input_shapes_tmp[0][0] = 1
+    input_shapes_tmp[1][0] = 1
+    layer['inp0_shape'] = tuple(input_shapes_tmp[0])
+    layer['inp1_shape'] = tuple(input_shapes_tmp[1])
+
+    layer['equation'], layer['out_shape'] = _validate_einsum_expr(node.args[0], layer['inp0_shape'], layer['inp1_shape'])
 
     return layer, [shape for shape in input_shapes[0]]

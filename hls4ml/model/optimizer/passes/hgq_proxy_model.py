@@ -129,7 +129,7 @@ class EnforceProxyModelEmbeddedConfig(OptimizerPass):
                         weight_var.update_precision(precision)
                     # Well, it turned out that there is yet ANOTHER copy saved in config.
                     model.config.layer_name_precision[f'{name}_{k[:-2]}'] = v
-                elif k in target_node.attributes.attributes:
+                elif k in target_node.attributes:
                     target_node.set_attr(k, v)
                 elif k == 'parallelization_factor':
                     target_node.set_attr(k, int(v))

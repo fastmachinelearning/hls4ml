@@ -3,12 +3,13 @@ import os
 
 import yaml
 
-from hls4ml.converters.keras_to_hls import KerasFileReader  # noqa: F401
-from hls4ml.converters.keras_to_hls import KerasModelReader  # noqa: F401
-from hls4ml.converters.keras_to_hls import KerasReader  # noqa: F401
-from hls4ml.converters.keras_to_hls import get_supported_keras_layers  # noqa: F401
-from hls4ml.converters.keras_to_hls import parse_keras_model  # noqa: F401
-from hls4ml.converters.keras_to_hls import keras_to_hls, register_keras_layer_handler
+from hls4ml.converters.keras_v2_to_hls import KerasFileReader  # noqa: F401
+from hls4ml.converters.keras_v2_to_hls import KerasModelReader  # noqa: F401
+from hls4ml.converters.keras_v2_to_hls import KerasReader  # noqa: F401
+from hls4ml.converters.keras_v2_to_hls import get_supported_keras_layers  # noqa: F401
+from hls4ml.converters.keras_v2_to_hls import parse_keras_model  # noqa: F401
+from hls4ml.converters.keras_v2_to_hls import keras_v2_to_hls, register_keras_layer_handler
+from hls4ml.converters.keras_v3_to_hls import keras_v3_to_hls, parse_keras_v3_model  # noqa: F401
 from hls4ml.converters.onnx_to_hls import get_supported_onnx_layers  # noqa: F401
 from hls4ml.converters.onnx_to_hls import parse_onnx_model  # noqa: F401
 from hls4ml.converters.onnx_to_hls import onnx_to_hls, register_onnx_layer_handler
@@ -115,7 +116,7 @@ def convert_from_config(config):
     elif 'PytorchModel' in yamlConfig:
         model = pytorch_to_hls(yamlConfig)
     else:
-        model = keras_to_hls(yamlConfig)
+        model = keras_v2_to_hls(yamlConfig)
 
     return model
 
@@ -215,8 +216,13 @@ def convert_from_keras_model(
     config['HLSConfig']['Model'] = _check_model_config(model_config)
 
     _check_hls_config(config, hls_config)
+    if 'KerasModel' in config:
+        import keras
 
-    return keras_to_hls(config)
+        if keras.__version__ >= '3.0':
+            return keras_v3_to_hls(config)
+
+    return keras_v2_to_hls(config)
 
 
 @requires('_torch')
