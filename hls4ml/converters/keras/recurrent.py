@@ -118,12 +118,14 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
     assert keras_layer['class_name'] == 'Bidirectional'
 
     rnn_forward_layer = keras_layer['config']['layer']
+    swapped_order = False
     if keras_layer['config'].get('backward_layer'):
         rnn_backward_layer = keras_layer['config']['backward_layer']
         if rnn_forward_layer['config']['go_backwards']:
             temp_layer = rnn_forward_layer.copy()
             rnn_forward_layer = rnn_backward_layer.copy()
             rnn_backward_layer = temp_layer
+            swapped_order = True
     else:
         rnn_backward_layer = rnn_forward_layer
 
@@ -138,6 +140,7 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
         layer['inputs'] = input_names
 
     layer['direction'] = 'bidirectional'
+    layer['swapped_order'] = swapped_order
     layer['return_sequences'] = rnn_forward_layer['config']['return_sequences']
     layer['return_state'] = rnn_forward_layer['config']['return_state']
     layer['time_major'] = rnn_forward_layer['config']['time_major'] if 'time_major' in rnn_forward_layer['config'] else False
@@ -171,14 +174,17 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             cell_name = 'simple_rnn'
         else:
             cell_name = rnn_layer['class_name'].lower()
+        temp_dir = direction
+        if swapped_order:
+            temp_dir = 'backward' if direction == 'forward' else 'forward'
         layer[f'{direction}_weight_data'], layer[f'{direction}_recurrent_weight_data'], layer[f'{direction}_bias_data'] = (
             get_weights_data(
                 data_reader,
                 layer['name'],
                 [
-                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/kernel',
-                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
-                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/bias',
+                    f'{temp_dir}_{rnn_layer_name}/{cell_name}_cell/kernel',
+                    f'{temp_dir}_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
+                    f'{temp_dir}_{rnn_layer_name}/{cell_name}_cell/bias',
                 ],
             )
         )
