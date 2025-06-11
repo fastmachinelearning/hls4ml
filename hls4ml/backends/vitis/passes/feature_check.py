@@ -87,3 +87,21 @@ class ValidateBidirectionalLayerOrder(OptimizerPass):
             f'WARNING: The selected order for forward and backward layers in "{node.name}" ({node.class_name}) is not '
             'supported in Vitis backend. Switching to forward layer first, backward layer last.'
         )
+
+
+class ValidateBidirectionalIoType(OptimizerPass):
+    _unrolled_layer_cls = ['Bidirectional']
+
+    def match(self, node):
+        is_bidirectional_rnn_layer = (
+            len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
+        )
+        is_layer_io_type_stream = node.model.config.config['IOType'] != 'io_parallel'
+
+        return is_bidirectional_rnn_layer and is_layer_io_type_stream
+
+    def transform(self, model, node):
+        raise Exception(
+            f'WARNING: "{node.model.config.config["IOType"]}" IO Type is not supported in Vitis backend '
+            f'for "{node.name}" ({node.class_name}). Please use "io_parallel".'
+        )
