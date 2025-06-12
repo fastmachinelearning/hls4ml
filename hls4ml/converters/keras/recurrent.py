@@ -9,7 +9,6 @@ from hls4ml.converters.keras_v2_to_hls import (
     parse_default_keras_layer,
     parse_keras_model,
 )
-import numpy as np
 
 rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
 merge_modes = ['sum', 'mul', 'concat', 'ave']
@@ -112,7 +111,7 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
     layer['output_shape'] = output_shape[1:]  # Remove the batch dimension
     layer['n_time_steps'] = output_shape[1]
 
-    
+
 @keras_handler('Bidirectional')
 def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reader):
     assert keras_layer['class_name'] == 'Bidirectional'
