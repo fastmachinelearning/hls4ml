@@ -918,6 +918,47 @@ class ZeroPadding2D(Layer):
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 
+class Cropping1D(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('crop_left'),
+        Attribute('crop_right'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        # no data_format attribute for Cropping1D
+        shape = [self.attributes['out_width'], self.attributes['n_chan']]
+        dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
+
+
+class Cropping2D(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('crop_top'),
+        Attribute('crop_bottom'),
+        Attribute('crop_left'),
+        Attribute('crop_right'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
+
+
 class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -1752,6 +1793,8 @@ layer_map = {
     'GlobalAveragePooling2D': GlobalPooling2D,
     'ZeroPadding1D': ZeroPadding1D,
     'ZeroPadding2D': ZeroPadding2D,
+    'Cropping1D': Cropping1D,
+    'Cropping2D': Cropping2D,
     'Merge': Merge,
     'MatMul': MatMul,
     'Dot': Dot,

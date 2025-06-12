@@ -1,5 +1,5 @@
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import Resize, Transpose, ZeroPadding1D, ZeroPadding2D
+from hls4ml.model.layers import Cropping1D, Cropping2D, Resize, Transpose, ZeroPadding1D, ZeroPadding2D
 from hls4ml.utils.transpose_utils import transpose_config_gen
 
 # ZeroPadding templates
@@ -145,3 +145,61 @@ class TransposeFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['config_name'] = f'config{node.index}'
         return self.template.format(**params)
+
+
+# Cropping templates
+
+
+cropping1d_config_template = """struct config{index} : nnet::cropping1d_config {{
+    static const unsigned in_width = {in_width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned out_width = {out_width};
+    static const unsigned crop_left = {crop_left};
+    static const unsigned crop_right = {crop_right};
+}};\n"""
+
+cropping2d_config_template = """struct config{index} : nnet::cropping2d_config {{
+    static const unsigned in_height = {in_height};
+    static const unsigned in_width = {in_width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned out_height = {out_height};
+    static const unsigned out_width = {out_width};
+    static const unsigned crop_top = {crop_top};
+    static const unsigned crop_bottom = {crop_bottom};
+    static const unsigned crop_left = {crop_left};
+    static const unsigned crop_right = {crop_right};
+}};\n"""
+
+cropping1d_function_template = 'nnet::cropping1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+cropping2d_function_template = 'nnet::cropping2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+
+cropping_include_list = ['nnet_utils/nnet_cropping.h', 'nnet_utils/nnet_cropping_stream.h']
+
+
+class CroppingConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__((Cropping1D, Cropping2D))
+        self.templates = {
+            'Cropping1D': cropping1d_config_template,
+            'Cropping2D': cropping2d_config_template,
+        }
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        return self.templates[node.class_name].format(**params)
+
+
+class CroppingFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__((Cropping1D, Cropping2D), include_header=cropping_include_list)
+        self.templates = {
+            'Cropping1D': cropping1d_function_template,
+            'Cropping2D': cropping2d_function_template,
+        }
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        # Cropping1D doesn't have a data_format attribute
+        params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
+
+        return self.templates[node.class_name].format(**params)
