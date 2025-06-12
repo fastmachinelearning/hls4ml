@@ -500,7 +500,7 @@ class BidirectionalFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
 
-        # TO DO: Add initial tates functions
+        # TO DO: Add initial states functions
         '''
         if params['pass_initial_states'] == 'true':
             params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
