@@ -47,7 +47,7 @@ void conv_2d_cl(
     // Inlining helps reduce latency, but may also cause timing issues in some cases, use carefully.
     //#pragma HLS INLINE recursive
 
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
         conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         conv_2d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
@@ -65,7 +65,7 @@ void pointwise_conv_2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width *
     //#pragma HLS INLINE recursive
 
     // Nothing special to be done for io_parallel implementation
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
         conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         conv_2d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);

@@ -47,7 +47,7 @@ class MergeHandler(KerasV3LayerHandler):
                     f'{in_tensors[0].shape} and {in_tensors[1].shape} for layer {layer.name}.'
                 )
                 assert all(len(t.shape) == 2 for t in in_tensors), msg
-                assert in_tensors[0].shape[1] == in_tensors[1].shape[0], f'Input shape mismatch for layer {layer.name}.'
+                assert in_tensors[0].shape[1] == in_tensors[1].shape[1], f'Input shape mismatch for layer {layer.name}.'
                 class_name = 'Dot'
                 op = 'dot1d'
                 config['axes'] = layer.axes

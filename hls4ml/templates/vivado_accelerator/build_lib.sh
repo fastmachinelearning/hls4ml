@@ -1,11 +1,13 @@
 #!/bin/bash
 
 CC=g++
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    CFLAGS="-O3 -fPIC -std=c++11 -fno-gnu-unique"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    CFLAGS="-O3 -fPIC -std=c++11"
+CFLAGS="-O3 -fPIC -std=c++11"
+
+# Include -fno-gnu-unique if it is there
+if echo "" | ${CC} -Werror -fsyntax-only -fno-gnu-unique -xc++ - -o /dev/null &> /dev/null; then
+  CFLAGS+=" -fno-gnu-unique"
 fi
+
 INCFLAGS="-Ifirmware/ap_types/"
 PROJECT=myproject
 LIB_STAMP=mystamp

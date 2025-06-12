@@ -16,7 +16,7 @@ void depthwise_conv_2d_cl(
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],
     typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
     #pragma HLS INLINE recursive
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
         depthwise_conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         assert("Resource strategy for DepthwiseConv2D is not supported." && false);

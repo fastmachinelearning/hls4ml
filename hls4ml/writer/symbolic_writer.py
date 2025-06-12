@@ -102,7 +102,6 @@ class SymbolicExpressionWriter(VivadoWriter):
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -116,4 +115,3 @@ class SymbolicExpressionWriter(VivadoWriter):
         self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')

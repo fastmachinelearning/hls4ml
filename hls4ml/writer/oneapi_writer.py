@@ -265,17 +265,11 @@ class OneAPIWriter(Writer):
                 if '// hls-fpga-machine-learning insert numbers' in line:
                     newline = line
 
-                    defines_list = []
+                    defines = set()
                     for layer in model.get_layers():
-                        defines = ''
-                        # Note: this assumes all the layers have one ouput
-                        # (or in clones, one type of output)
                         for k, v in layer.get_output_variable().get_shape():
-                            defines += f'#define {k} {v}\n'
-
-                        defines_list.append(defines)
-
-                    newline += ''.join(defines_list)
+                            defines.add(f'constexpr size_t {k} = {v};')
+                    newline += '\n'.join(defines) + '\n'
 
                 elif '// hls-fpga-machine-learning insert layer-precision' in line:
                     newline = line
@@ -970,7 +964,6 @@ class OneAPIWriter(Writer):
                 archive.add(model.config.get_output_dir(), recursive=True)
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -984,4 +977,3 @@ class OneAPIWriter(Writer):
         self.write_activation_tables(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')

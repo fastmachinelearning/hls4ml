@@ -344,15 +344,11 @@ class VivadoWriter(Writer):
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
 
-                defines_list = []
+                defines = set()
                 for layer in model.get_layers():
-                    defines = ''
                     for k, v in layer.get_output_variable().get_shape():
-                        defines += f'#define {k} {v}\n'
-
-                    defines_list.append(defines)
-
-                newline += ''.join(defines_list)
+                        defines.add(f'constexpr size_t {k} = {v};')
+                newline += '\n'.join(defines) + '\n'
 
             elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
@@ -634,8 +630,8 @@ class VivadoWriter(Writer):
 
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
-                inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
-                outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
+                inputs_str = ', '.join([f'{dtype} *{i.name}' for i in model_inputs])
+                outputs_str = ', '.join([f'{dtype} *{o.name}' for o in model_outputs])
 
                 newline = ''
                 newline += indent + inputs_str + ',\n'
@@ -855,7 +851,6 @@ class VivadoWriter(Writer):
                 archive.add(model.config.get_output_dir(), recursive=True, arcname='')
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -869,4 +864,3 @@ class VivadoWriter(Writer):
         self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')
