@@ -200,7 +200,10 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
 
         layer[f'{direction}_n_states'] = rnn_layer['config']['units']
 
-    layer['n_out'] = layer['forward_n_states'] + layer['backward_n_states']
+    if layer['merge_mode'] == 'concat':
+        layer['n_out'] = layer['forward_n_states'] + layer['backward_n_states']
+    else:
+        layer['n_out'] = layer['forward_n_states']
 
     if layer['return_sequences']:
         output_shape = [input_shapes[0][0], layer['n_timesteps'], layer['n_out']]
