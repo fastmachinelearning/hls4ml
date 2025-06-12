@@ -131,7 +131,14 @@ class OneAPIBackend(FPGABackend):
         return self._writer_flow
 
     def create_initial_config(
-        self, part='Agilex7', clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, use_oneapi_bsp=False, **_
+        self,
+        part='Agilex7',
+        clock_period=5,
+        hyperopt_handshake=False,
+        io_type='io_parallel',
+        write_tar=False,
+        use_oneapi_bsp=False,
+        **_,
     ):
         """Create initial configuration of the oneAPI backend.
 
