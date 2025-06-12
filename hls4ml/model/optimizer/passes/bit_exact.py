@@ -228,12 +228,14 @@ def _(layer: FixedPointQuantizer):
     else:
         _i += ((lf > f) & (i > li) & k).astype(np.int8)
 
-    # Perserve repr boundaries unless overflow never happens
-    mask = (2.0**i - 2.0**-f >= 2.0**li - 2.0**-lf) & (k >= lk)
-    i = np.where(mask, _i, i)
-    f = np.where(mask, _f, f)
-    k = np.where(mask, _k, k)
-
+    if layer.SAT in ('SAT', 'SAT_SM'):
+        k, i, f = _k, _i, _f
+    else:
+        # Perserve repr boundaries unless overflow never happens
+        mask = (2.0**i - 2.0**-f >= 2.0**li - 2.0**-lf) & (k >= lk)
+        i = np.where(mask, _i, i)
+        f = np.where(mask, _f, f)
+        k = np.where(mask, _k, k)
     # Set zeros to zero
     idx_zeros = np.where(k + i + f <= 0)
     k[idx_zeros] = 0
@@ -583,10 +585,26 @@ def request_kif(layer: Layer) -> tuple[KIF_t, ...]:
     return kif
 
 
+def requested_by_quantizer(layer: Layer) -> bool:
+    """Check if the current requested kif is from a quantizer"""
+    for n in get_output_layers(layer):
+        if isinstance(n, FixedPointQuantizer):
+            return True
+        if isinstance(n, Reshape):
+            return requested_by_quantizer(n)
+    return False
+
+
 def default_register_precision(layer: Layer):
     _pk, _pi, _pf = produce_kif(layer)  # Maximum possible k,i,f output from this layer
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
-    _ok, _oi, _of = _rk, np.minimum(_pi, _ri), np.minimum(_pf, _rf)
+    _oi, _of = np.minimum(_pi, _ri), np.minimum(_pf, _rf)
+
+    if requested_by_quantizer(layer):
+        _ok = _rk
+    else:
+        _ok = np.minimum(_pk, _rk)
+
     ok, oi, of = kif_arrs_to_ints((_ok, _oi, _of))
 
     result_t = to_hls4ml_fixed(ok, oi, of, f'{layer.name}_t')
