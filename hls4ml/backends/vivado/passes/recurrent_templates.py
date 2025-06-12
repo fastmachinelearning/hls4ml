@@ -428,6 +428,37 @@ class RecurrentFunctionTemplate(FunctionCallTemplate):
         return template.format(**params)
 
 
+class BidirectionalFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__((Bidirectional), include_header=recr_include_list)
+
+    def format(self, node):
+        params = self._default_function_params(node)
+
+        # TO DO: Add initial states functions
+        '''
+        if params['pass_initial_states'] == 'true':
+            params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
+            params['input2'] = node.get_input_variable(node.inputs[1]).name
+            if node.class_name == 'BLSTM':
+                params['input3'] = node.get_input_variable(node.inputs[2]).name
+                params['input3_t'] = node.get_input_variable(node.inputs[2]).type.name
+        '''
+
+        params['w'] = node.get_weights('forward_weight').name
+        params['b'] = node.get_weights('forward_bias').name
+        params['wr'] = node.get_weights('forward_recurrent_weight').name
+        params['br'] = node.get_weights('forward_recurrent_bias').name
+        params['w_b'] = node.get_weights('backward_weight').name
+        params['b_b'] = node.get_weights('backward_bias').name
+        params['wr_b'] = node.get_weights('backward_recurrent_weight').name
+        params['br_b'] = node.get_weights('backward_recurrent_bias').name
+
+        template = bidirectional_function_template
+
+        return template.format(**params)
+
+
 time_distributed_config_template = """struct config{index} : nnet::time_distributed_config {{
     static const unsigned dim = {dim};
 
@@ -492,33 +523,3 @@ class TimeDistributedFunctionTemplate(FunctionCallTemplate):
             return self.template_start.format(**params)
         else:
             return self.template_end.format(**params)
-    
-class BidirectionalFunctionTemplate(FunctionCallTemplate):
-    def __init__(self):
-        super().__init__((Bidirectional), include_header=recr_include_list)
-
-    def format(self, node):
-        params = self._default_function_params(node)
-
-        # TO DO: Add initial states functions
-        '''
-        if params['pass_initial_states'] == 'true':
-            params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
-            params['input2'] = node.get_input_variable(node.inputs[1]).name
-            if node.class_name == 'BLSTM':
-                params['input3'] = node.get_input_variable(node.inputs[2]).name
-                params['input3_t'] = node.get_input_variable(node.inputs[2]).type.name
-        '''
-
-        params['w'] = node.get_weights('forward_weight').name
-        params['b'] = node.get_weights('forward_bias').name
-        params['wr'] = node.get_weights('forward_recurrent_weight').name
-        params['br'] = node.get_weights('forward_recurrent_bias').name
-        params['w_b'] = node.get_weights('backward_weight').name
-        params['b_b'] = node.get_weights('backward_bias').name
-        params['wr_b'] = node.get_weights('backward_recurrent_weight').name
-        params['br_b'] = node.get_weights('backward_recurrent_bias').name
-
-        template = bidirectional_function_template
-
-        return template.format(**params)
