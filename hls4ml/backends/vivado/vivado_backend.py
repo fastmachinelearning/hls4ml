@@ -674,7 +674,7 @@ class VivadoBackend(FPGABackend):
             warn(f'Cannot unroll time step loop in layer "{layer.name}" while using "io_stream".')
             loop_mode = 'off'
         layer.set_attr('time_step_loop_parallelism', loop_mode)
-        
+
     @layer_optimizer(Bidirectional)
     def init_bidirectional(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
