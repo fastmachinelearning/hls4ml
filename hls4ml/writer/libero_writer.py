@@ -216,16 +216,12 @@ class LiberoWriter(Writer):
                         pipeline_pragma += '\n'
 
                     if io_type == 'io_parallel':
-                        for i in model_inputs:
-                            newline += indent + self._make_array_pragma(i, is_argument=True) + '\n'
-                        for o in model_outputs:
-                            newline += indent + self._make_array_pragma(o, is_argument=True) + '\n'
                         # TODO Expose interface in a backend config
                         newline += indent + '#pragma HLS interface control type(simple)\n'
                         for input_name in all_inputs:
-                            newline += indent + f'#pragma HLS interface argument({input_name}) type(simple)\n'
+                            newline += indent + f'#pragma HLS interface argument({input_name}_fifo) type(simple)\n'
                         for output_name in all_outputs:
-                            newline += indent + f'#pragma HLS interface argument({output_name}) type(simple)\n'
+                            newline += indent + f'#pragma HLS interface argument({output_name}_fifo) type(simple)\n'
                         newline += pipeline_pragma
 
                     if io_type == 'io_stream':
@@ -235,12 +231,34 @@ class LiberoWriter(Writer):
                             newline += indent + f'#pragma HLS interface argument({bram_name}) dma(true)\n'
                         newline += pipeline_pragma
 
+                elif '// hls-fpga-machine-learning read input' in line:
+                    newline = ''
+                    for i in model_inputs:
+                        if i.pragma:
+                            newline += '    ' + self._make_array_pragma(i, is_argument=False) + '\n'
+                        tmp_struct_var_name = f'{i.name}_struct'
+                        newline += f'    {i.type.name} {i.name}[{i.size_cpp()}];\n'
+                        newline += f'    {i.struct_name} {tmp_struct_var_name} = {i.name}_fifo.read();\n'
+                        newline += f'    for (unsigned i = 0; i < {i.size_cpp()}; i++) {{\n'
+                        newline += f'        {i.name}[i] = {tmp_struct_var_name}.data[i];\n'
+                        newline += '    }\n'
+
+                elif '// hls-fpga-machine-learning write output' in line:
+                    newline = ''
+                    for o in model_outputs:
+                        tmp_struct_var_name = f'{o.name}_struct'
+                        newline += f'    {o.struct_name} {tmp_struct_var_name};\n'
+                        newline += f'    for (unsigned i = 0; i < {i.size_cpp()}; i++) {{\n'
+                        newline += f'        {tmp_struct_var_name}.data[i] = {o.name}[i];\n'
+                        newline += f'    {o.name}_fifo.write({tmp_struct_var_name});\n'
+                        newline += '    }\n'
+
                 elif '// hls-fpga-machine-learning insert layers' in line:
                     newline = line + '\n'
                     for layer in model.get_layers():
                         vars = layer.get_variables()
                         for var in vars:
-                            if var not in model_inputs and var not in model_outputs:
+                            if var not in model_inputs:
                                 def_cpp = var.definition_cpp()
                                 if def_cpp is not None:
                                     if var.pragma:
@@ -364,6 +382,14 @@ class LiberoWriter(Writer):
                                 all_precision[type_name] = type_var
                     for used_type in all_precision.values():
                         newline += used_type.definition_cpp()
+
+                elif '// hls-fpga-machine-learning insert struct-definitions' in line:
+                    newline = line
+
+                    model_inputs = model.get_input_variables()
+                    model_outputs = model.get_output_variables()
+
+                    newline += '\n'.join([var.definition_cpp(as_struct=True) for var in model_inputs + model_outputs])
 
                 elif '// hls-fpga-machine-learning insert namespace-start' in line:
                     newline = ''
@@ -528,13 +554,11 @@ class LiberoWriter(Writer):
                     newline = line
                     offset = 0
                     for inp in model_inputs:
-                        newline += '      ' + inp.definition_cpp() + ';\n'
-                        newline += '      nnet::copy_data<float, {}, {}, {}>(in, {});\n'.format(
+                        newline += indent + inp.definition_cpp() + ';\n'
+                        newline += indent + 'nnet::copy_data<float, {}, {}, {}>(in, {});\n'.format(
                             inp.type.name, offset, inp.size_cpp(), inp.name
                         )
                         offset += inp.size()
-                    for out in model_outputs:
-                        newline += '      ' + out.definition_cpp() + ';\n'
 
                 elif '// hls-fpga-machine-learning insert zero' in line:
                     newline = line
@@ -547,8 +571,8 @@ class LiberoWriter(Writer):
                 elif '// hls-fpga-machine-learning insert top-level-function' in line:
                     newline = line
 
-                    input_vars = ','.join([i.name for i in model_inputs])
-                    output_vars = ','.join([o.name for o in model_outputs])
+                    input_vars = ','.join([i.name + '_fifo' for i in model_inputs])
+                    output_vars = ','.join([o.name + '_fifo' for o in model_outputs])
                     bram_vars = ','.join([b.name for b in model_brams])
 
                     # Concatenate the input, output, and bram variables. Filter out empty/null values
@@ -557,6 +581,40 @@ class LiberoWriter(Writer):
                     top_level = indent + f'{model.config.get_project_name()}({all_vars});\n'
 
                     newline += top_level
+
+                elif '// hls-fpga-machine-learning pack-struct' in line:
+                    newline = line
+                    for inp in model_inputs:
+                        tmp_struct_var_name = f'{inp.name}_struct'
+                        newline += indent + f'{inp.struct_name} {tmp_struct_var_name};\n'
+                        newline += indent + f'for (unsigned i = 0; i < {inp.size_cpp()}; i++) {{\n'
+                        newline += indent + f'    {tmp_struct_var_name}.data[i] = {inp.name}[i];\n'
+                        newline += indent + '}\n'
+                        newline += indent + f'{inp.name}_fifo.write({tmp_struct_var_name});\n'
+
+                elif '// hls-fpga-machine-learning unpack-struct' in line:
+                    newline = line
+                    for out in model_outputs:
+                        tmp_struct_var_name = f'{out.name}_struct'
+                        newline += indent + f'{out.struct_name} {tmp_struct_var_name} = {out.name}_fifo.read();\n'
+                        newline += indent + out.definition_cpp() + ';\n'
+                        newline += indent + f'for (unsigned i = 0; i < {out.size_cpp()}; i++) {{\n'
+                        newline += indent + f'    {out.name}[i] = {tmp_struct_var_name}.data[i];\n'
+                        newline += indent + '}\n'
+
+                elif '// hls-fpga-machine-learning fifo-definitions' in line:
+                    newline = line
+                    for inp in model_inputs:
+                        newline += indent + f'hls::FIFO<{inp.struct_name}> {inp.name}_fifo(2);\n'
+                    for out in model_outputs:
+                        newline += indent + f'hls::FIFO<{out.struct_name}> {out.name}_fifo(2);\n'
+
+                elif '// hls-fpga-machine-learning zero-fifo-definitions' in line:
+                    newline = line
+                    for inp in model_inputs:
+                        newline += indent + f'hls::FIFO<{inp.struct_name}> {inp.name}_fifo(NUM_TEST_SAMPLES);\n'
+                    for out in model_outputs:
+                        newline += indent + f'hls::FIFO<{out.struct_name}> {out.name}_fifo(NUM_TEST_SAMPLES);\n'
 
                 elif '// hls-fpga-machine-learning insert predictions' in line:
                     newline = line

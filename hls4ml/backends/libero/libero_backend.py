@@ -7,6 +7,7 @@ from hls4ml.model.attributes import ChoiceAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import Dense, Layer
 from hls4ml.model.optimizer import layer_optimizer
+from hls4ml.model.types import StructWrapperVariable
 from hls4ml.report import parse_libero_report
 
 
@@ -180,6 +181,10 @@ class LiberoBackend(FPGABackend):
     def init_base_layer(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('reuse_factor', reuse_factor)
+        if layer.name in layer.model.inputs + layer.model.outputs:
+            for out_name, out_var in layer.variables.items():
+                new_out_var = StructWrapperVariable(out_var)
+                layer.set_attr(out_name, new_out_var)
 
     @layer_optimizer(Dense)
     def init_dense(self, layer):

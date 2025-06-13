@@ -26,9 +26,34 @@ class LiberoInplaceArrayVariableDefinition(VariableDefinition):
         return f'auto& {self.name} = {self.input_var.name}'
 
 
+class LiberoStructWrapperVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False, as_struct=False):
+        if as_reference:
+            return f'hls::FIFO<{self.struct_name}> &{self.name}_fifo{name_suffix}'
+        elif as_struct:
+            typedef = ''
+            typedef += 'struct {struct_name} {{\n'
+            typedef += '    {type} data[{shape}];\n'
+            typedef += '}};\n'
+            return typedef.format(
+                type=self.type.name, struct_name=self.struct_name, suffix=name_suffix, shape=self.size_cpp()
+            )
+        else:
+            return '{type} {name}{suffix}[{shape}]'.format(
+                type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp()
+            )
+
+
 class LiberoArrayVariableConverter(ArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Libero', definition_cls=LiberoArrayVariableDefinition)
+
+
+class LiberoStructWrapperVariableConverter(ArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(
+            type_converter=type_converter, prefix='Libero', definition_cls=LiberoStructWrapperVariableDefinition
+        )
 
 
 class LiberoInplaceArrayVariableConverter(ArrayVariableConverter):

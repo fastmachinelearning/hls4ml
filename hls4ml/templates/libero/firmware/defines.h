@@ -14,6 +14,8 @@
 
 // hls-fpga-machine-learning insert layer-precision
 
+// hls-fpga-machine-learning insert struct-definitions
+
 // hls-fpga-machine-learning insert namespace-end
 
 #endif

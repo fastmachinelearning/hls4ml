@@ -13,7 +13,11 @@ void myproject(
 
     // hls-fpga-machine-learning insert load weights
 
+    // hls-fpga-machine-learning read input
+
     // hls-fpga-machine-learning insert layers
+
+    // hls-fpga-machine-learning write output
 }
 
 // hls-fpga-machine-learning insert namespace-end

@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
     int e = 0;
 
     if (fin.is_open() && fpr.is_open()) {
+        // hls-fpga-machine-learning fifo-definitions
         while (std::getline(fin, iline) && std::getline(fpr, pline)) {
             if (e % CHECKPOINT == 0)
                 std::cout << "Processing input " << e << std::endl;
@@ -61,15 +62,21 @@ int main(int argc, char **argv) {
 
             // hls-fpga-machine-learning insert data
 
+            // hls-fpga-machine-learning pack-struct
+
             // hls-fpga-machine-learning insert top-level-function
 
             if (e % CHECKPOINT == 0) {
                 std::cout << "Predictions" << std::endl;
                 // hls-fpga-machine-learning insert predictions
                 std::cout << "Quantized predictions" << std::endl;
+                // hls-fpga-machine-learning unpack-struct
+
                 // hls-fpga-machine-learning insert quantized
             }
             e++;
+
+            // hls-fpga-machine-learning unpack-struct
 
             // hls-fpga-machine-learning insert tb-output
         }
@@ -78,10 +85,19 @@ int main(int argc, char **argv) {
     } else {
         std::cout << "INFO: Unable to open input/predictions file, using default input." << std::endl;
         const unsigned NUM_TEST_SAMPLES = 5;
+        // hls-fpga-machine-learning zero-fifo-definitions
         for (unsigned i = 0; i < NUM_TEST_SAMPLES; i++) {
             // hls-fpga-machine-learning insert zero
 
+            // hls-fpga-machine-learning pack-struct
+        }
+
+        for (unsigned i = 0; i < NUM_TEST_SAMPLES; i++) {
             // hls-fpga-machine-learning insert top-level-function
+        }
+
+        for (unsigned i = 0; i < NUM_TEST_SAMPLES; i++) {
+            // hls-fpga-machine-learning unpack-struct
 
             // hls-fpga-machine-learning insert output
 
