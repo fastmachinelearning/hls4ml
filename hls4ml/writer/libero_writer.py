@@ -250,8 +250,8 @@ class LiberoWriter(Writer):
                         newline += f'    {o.struct_name} {tmp_struct_var_name};\n'
                         newline += f'    for (unsigned i = 0; i < {i.size_cpp()}; i++) {{\n'
                         newline += f'        {tmp_struct_var_name}.data[i] = {o.name}[i];\n'
-                        newline += f'    {o.name}_fifo.write({tmp_struct_var_name});\n'
                         newline += '    }\n'
+                        newline += f'    {o.name}_fifo.write({tmp_struct_var_name});\n'
 
                 elif '// hls-fpga-machine-learning insert layers' in line:
                     newline = line + '\n'
@@ -605,9 +605,9 @@ class LiberoWriter(Writer):
                 elif '// hls-fpga-machine-learning fifo-definitions' in line:
                     newline = line
                     for inp in model_inputs:
-                        newline += indent + f'hls::FIFO<{inp.struct_name}> {inp.name}_fifo(2);\n'
+                        newline += indent + f'hls::FIFO<{inp.struct_name}> {inp.name}_fifo(DEFAULT_FIFO_DEPTH);\n'
                     for out in model_outputs:
-                        newline += indent + f'hls::FIFO<{out.struct_name}> {out.name}_fifo(2);\n'
+                        newline += indent + f'hls::FIFO<{out.struct_name}> {out.name}_fifo(DEFAULT_FIFO_DEPTH);\n'
 
                 elif '// hls-fpga-machine-learning zero-fifo-definitions' in line:
                     newline = line
