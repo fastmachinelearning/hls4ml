@@ -151,7 +151,7 @@ def run_synthesis_test(config, hls_model, baseline_file_name, backend):
     try:
         data = hls_model.build(**build_args.get(backend, {}))
     except Exception as e:
-        pytest.skip(f"hls_model.build failed: {e}")
+        pytest.fail(f"hls_model.build failed: {e}")
 
     # Save synthesis report
     save_report(data, f"synthesis_report_{baseline_file_name}")
@@ -169,7 +169,7 @@ def run_synthesis_test(config, hls_model, baseline_file_name, backend):
         with open(baseline_path) as fp:
             baseline = json.load(fp)
     except FileNotFoundError:
-        pytest.skip(f"Baseline file '{baseline_path}' not found.")
+        pytest.fail(f"Baseline file '{baseline_path}' not found.")
 
     # Compare report against baseline using backend-specific rules
     compare_func = COMPARE_FUNCS.get(backend)
