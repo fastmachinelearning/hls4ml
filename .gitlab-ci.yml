@@ -11,7 +11,7 @@ generator:
   tags:
     - k8s-default
   before_script:
-    - pip install pyyaml pytest
+    - pip install pyyaml
   script:
     - cd test/pytest
     - python generate_ci_yaml.py

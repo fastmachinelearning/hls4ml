@@ -1,6 +1,6 @@
+import ast
 import itertools
 import os
-import subprocess
 from pathlib import Path
 
 import yaml
@@ -31,16 +31,20 @@ LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_
 # Test files to split by individual test cases (stem only, no .py)
 # Value = chunk size per CI job
 SPLIT_BY_TEST_CASE = {
-    'test_keras_api': 20,
+    'test_keras_api': 1,
 }
 
 
-def collect_test_cases(test_file):
-    result = subprocess.run(['pytest', '--collect-only', '-q', str(test_file)], capture_output=True, text=True)
+def collect_test_functions_from_ast(test_file):
+    """Collect all test function names using AST parsing (no imports)."""
+    with open(test_file, encoding='utf-8') as f:
+        tree = ast.parse(f.read(), filename=str(test_file))
 
-    lines = result.stdout.splitlines()
-    test_ids = [line.strip().split('/')[-1] for line in lines if "::" in line]  # get only filename + nodeid
-    return test_ids
+    test_funcs = []
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test"):
+            test_funcs.append(f"{test_file}::{node.name}")
+    return test_funcs
 
 
 def batched(iterable, batch_size):
@@ -94,27 +98,23 @@ def generate_test_yaml(test_root='.'):
         diff_yml = yaml.safe_load(template.format(name, test_file, int(needs_examples)))
         yml.update(diff_yml)
 
-    # Handle split-by-test-case files
     test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in SPLIT_BY_TEST_CASE]
     for path in test_paths:
         stem = path.stem
         name_base = stem.replace('test_', '')
         test_file = str(path.relative_to(test_root))
-        test_ids = collect_test_cases(path)
+        test_ids = collect_test_functions_from_ast(test_file)
         chunk_size = SPLIT_BY_TEST_CASE[stem]
         needs_examples = uses_example_model(path)
 
         for i, batch in enumerate(batched(test_ids, chunk_size)):
             job_name = f"{name_base}_part{i}"
-            batch_ids = " ".join(batch).strip().replace("\n", " ")  # flat single-line string
-            job_key = f"pytest.{job_name}"
-            job_entry = {
-                job_key: {"extends": ".pytest", "variables": {"PYTESTFILE": batch_ids, "EXAMPLEMODEL": int(needs_examples)}}
-            }
+            test_file_args = " ".join(batch).strip().replace("\n", " ")
+            diff_yml = yaml.safe_load(template.format(job_name, test_file_args, int(needs_examples)))
             if yml is None:
-                yml = job_entry
+                yml = diff_yml
             else:
-                yml.update(job_entry)
+                yml.update(diff_yml)
 
     return yml
 
