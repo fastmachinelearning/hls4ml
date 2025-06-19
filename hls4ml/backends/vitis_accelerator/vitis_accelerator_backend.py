@@ -4,9 +4,9 @@ import sys
 
 import numpy as np
 
-from hls4ml.backends import VitisBackend, VivadoBackend
+from hls4ml.backends import VitisBackend, VivadoBackend, VitisAcceleratorConfig
 from hls4ml.model.flow import get_flow, register_flow
-
+import ctypes
 
 class VitisAcceleratorBackend(VitisBackend):
     def __init__(self):
@@ -114,24 +114,67 @@ class VitisAcceleratorBackend(VitisBackend):
         y = np.loadtxt(output_file, dtype=float).reshape(-1, expected_shape)
         return y
 
-    def hardware_predict(self, model, x, target="hw", debug=False, profilingRepeat=-1):
-        command = ""
+    def hardware_predict(self, model, x, target="hw", debug=False, profilingRepeat=-1, method="file"):
+        if method == "file":
+            """Run the hardware prediction using file-based communication."""
+            command = ""
 
-        if debug:
-            command += "DEBUG=1 "
-        if isinstance(profilingRepeat, int) and profilingRepeat > 0:
-            command += "PROFILING_DATA_REPEAT_COUNT=" + profilingRepeat + " "
-        self._validate_target(target)
+            if debug:
+                command += "DEBUG=1 "
+            if isinstance(profilingRepeat, int) and profilingRepeat > 0:
+                command += "PROFILING_DATA_REPEAT_COUNT=" + profilingRepeat + " "
+            self._validate_target(target)
 
-        self.numpy_to_dat(model, x)
+            self.numpy_to_dat(model, x)
 
-        currdir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
-        command += "TARGET=" + target + " make run"
-        os.system(command)
-        os.chdir(currdir)
+            currdir = os.getcwd()
+            os.chdir(model.config.get_output_dir())
+            command += "TARGET=" + target + " make run"
+            os.system(command)
+            os.chdir(currdir)
 
-        return self.dat_to_numpy(model)
+            return self.dat_to_numpy(model)
+        
+        elif method == "lib":
+            """Run the hardware prediction using a shared library."""
+            # Set array to contiguous memory layout
+            X_test = np.ascontiguousarray(x)
+
+            # Create prediction array
+            config = VitisAcceleratorConfig(model.config)
+            batchsize = config.get_batchsize()
+            originalSampleCount = X_test.shape[0]
+            numBatches = int(np.ceil(originalSampleCount / batchsize))
+            sampleOutputSIze = model.get_output_variables()[0].size()
+            predictions_size = numBatches * batchsize * sampleOutputSIze
+            predictions = np.zeros(predictions_size, dtype=np.float64)
+            predictions_size = predictions.shape[0]
+            predictions_ptr = predictions.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
+            # Flatten the input data
+            X_test_flat = X_test.flatten()
+            X_test_size = X_test_flat.shape[0]
+            X_test_flat = X_test_flat.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
+            # Change working directory to the HLS project directory
+            os.chdir('model_va/hls4ml_prj')
+
+            # Load the shared library
+            lib = ctypes.cdll.LoadLibrary('./lib_host.so')
+
+            # Call the predict function
+            lib.predict.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_size_t, ctypes.POINTER(ctypes.c_double), ctypes.c_size_t]
+            lib.predict(X_test_flat, X_test_size, predictions_ptr, predictions_size)
+
+            # Change back to the original directory
+            os.chdir('../..')
+
+            # Reshape the predictions to match the expected output shape
+            y_hls = predictions.reshape(-1, sampleOutputSIze)[:originalSampleCount, :]
+            return y_hls
+
+        else:
+            raise Exception(f"Unsupported method {method} for hardware prediction")
 
     def _register_flows(self):
         validation_passes = [
