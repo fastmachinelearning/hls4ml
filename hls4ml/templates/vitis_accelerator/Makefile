@@ -118,6 +118,10 @@ INCLUDES += -I$(PWD)/libs/ -I$(PWD)/firmware/ -I$(PWD)/firmware/nnet_utils/
 host: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp $(wildcard libs/*.hpp)
 	$(CXX) $(CXXFLAGS) $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp -o $@ $(INCLUDES) $(LDFLAGS)
 
+# Host shared library compilation #################################################
+host_shared: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp $(wildcard libs/*.hpp)
+	$(CXX) -shared -fPIC $(CXXFLAGS) $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp -o lib_host.so $(INCLUDES) $(LDFLAGS)
+
 # Execute program #############################################################
 
 run: ./host $(BUILD_DIR)/$(WRAPPER_NAME).xclbin

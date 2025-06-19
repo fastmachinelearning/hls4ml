@@ -6,10 +6,24 @@
 #include "kernel_wrapper.h"
 #include "xcl2.hpp"
 
-void predict(double *input, uint64_t input_size, double *output, uint64_t output_size) {
-    // TODO : Modify the databatcher so it can take those arrays instead of reading and writing files.
+extern "C" void predict(double *input, uint64_t input_size, double *output, uint64_t output_size) {
 
-    return;
+    int argc = 2;
+    char *argv[] = {const_cast<char *>("host"), const_cast<char *>("myproject.xclbin")};
+
+    Params params(argc, argv);
+
+    FpgaObj<in_buffer_t, out_buffer_t> fpga(params);
+
+    fpga.createWorkers(params.numWorker);
+
+    fpga.loadSharedData(input, input_size);
+
+    fpga.evaluateAll();
+
+    fpga.checkResults(params.referenceFilename);
+
+    fpga.saveResults(params.outputFilename);
 }
 
 int main(int argc, char **argv) {

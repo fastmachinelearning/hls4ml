@@ -143,6 +143,29 @@ template <class T, class U> class FpgaObj {
     }
 
     /**
+     * \brief Loads data from a shared buffer into batches and distribute evenly
+     * amongst Workers.
+     * \param data Pointer to the shared buffer containing input data
+     * \param size Size of the shared buffer in bytes
+     * \param profilingDataRepeat Additional number of times the given data is iterated
+     * over. Profiling is enabled if this is greater than 0.
+     */
+    void loadSharedData(const double* data, uint64_t size, int profilingDataRepeat = 0) {
+        // Set-up containers for each Worker's batches/workload
+        batchedData.reserve(_numCU * _workersPerCU * _numDevice);
+        for (int i = 0; i < _numCU * _workersPerCU * _numDevice; i++) {
+            batchedData.emplace_back();
+        }
+
+        // Batch and distribute data
+        db = new DataBatcher<T, U>(_batchsize, _sampleInputSize, _sampleOutputSize, _numCU * _workersPerCU * _numDevice,
+            profilingDataRepeat);
+        db->readSharedData(data, size);
+        db->createResultBuffers();
+        db->batch(batchedData);
+    }
+
+    /**
      * \brief Workers evaluate all loaded data. Each worker uses a separate thread.
      */
     void evaluateAll() {

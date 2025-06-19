@@ -70,6 +70,34 @@ template <class T, class U> class DataBatcher {
         }
     }
 
+    /**
+     * \brief Read in data from a shared buffer.
+     * \param data Pointer to the shared buffer containing input data
+     * \param size Size of the shared buffer in bytes
+     */
+    void readSharedData(const double* data, uint64_t size)
+    {
+        if (size == 0) {
+            throw std::runtime_error("No data to load");
+        }
+
+        std::cout << "Loading data from memory buffer" << std::endl;
+        originalSampleCount = size / _sampleInputSize;
+        inputData.resize(size);
+        for (uint64_t i = 0; i < size; i++) {
+            inputData[i] = static_cast<T>(data[i]);
+        }
+
+        // Zero-pad
+        numBatches = std::ceil(static_cast<double>(originalSampleCount) / _batchsize);
+        size_t finalSampleCount = numBatches * _batchsize;
+        if (finalSampleCount > originalSampleCount) {
+            std::cout << "Padding with " << (finalSampleCount - originalSampleCount) << " empty samples for a total of "
+                      << numBatches << " batches of " << _batchsize << " samples" << std::endl;
+            inputData.resize(finalSampleCount * _sampleInputSize, (T)0);
+        }
+    }
+
     bool readReference(const std::string &filename) {
 
         std::ifstream fref(filename);
