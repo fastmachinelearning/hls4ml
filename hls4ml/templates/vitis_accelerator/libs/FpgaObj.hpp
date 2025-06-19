@@ -232,6 +232,18 @@ template <class T, class U> class FpgaObj {
         db->closeFile();
     }
 
+    /**
+     * \brief Returns results to a shared buffer.
+     * \param data_out Pointer to the shared buffer where results will be written
+     * \param size Size of the shared buffer in bytes
+     */
+    void returnSharedResults(double* data_out, uint64_t size) {
+        if (db == nullptr) {
+            throw std::runtime_error("No data loaded");
+        }
+        db->returnSharedResults(data_out, size);
+    }
+
   private:
     int _batchsize;
     int _sampleInputSize;

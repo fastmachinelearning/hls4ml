@@ -23,7 +23,7 @@ extern "C" void predict(double *input, uint64_t input_size, double *output, uint
 
     fpga.checkResults(params.referenceFilename);
 
-    fpga.saveResults(params.outputFilename);
+    fpga.returnSharedResults(output, output_size);
 }
 
 int main(int argc, char **argv) {

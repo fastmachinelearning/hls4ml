@@ -251,6 +251,27 @@ template <class T, class U> class DataBatcher {
         profilingResultsDump.clear();
     }
 
+    /**
+     * \brief Returns results to a shared buffer.
+     * \param data_out Pointer to the shared buffer where results will be written
+     * \param size Size of the shared buffer in bytes
+     */
+    void returnSharedResults(double* data_out, uint64_t size) {
+        if (size == 0 || data_out == nullptr) {
+            throw std::runtime_error("No data to return");
+        }
+
+        if (size != storedEvalResults.size()) {
+            throw std::runtime_error("Size mismatch: " + std::to_string(size) + " != " + std::to_string(storedEvalResults.size()));
+        }
+
+        for (uint64_t i = 0; i < size; i++) {
+            data_out[i] = static_cast<double>(storedEvalResults[i]);
+        }
+
+        std::cout << "Returning " << size << " results to memory buffer" << std::endl;
+    }
+
     uint64_t getSampleCount() { return originalSampleCount; }
 
     uint64_t getPaddedSampleCount() { return numBatches * _batchsize; }
