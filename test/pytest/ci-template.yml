@@ -12,12 +12,28 @@
     - git submodule update --init --recursive test/pytest/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
     - pip install .[testing,sr,optimization]
-    - sudo yum install libtinfo.so.6 -y
-    - sudo ln -s /lib64/libtinfo.so.6 /lib64/libtinfo.so.5
-    - sudo ln -s /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx /opt/Xilinx
-    - source /opt/Xilinx/Vivado/2020.1/settings64.sh
+    - sudo yum install -y epel-release
+    - sudo yum install -y apptainer squashfs-tools fuse-overlayfs
+    #- sudo yum install libtinfo.so.6 -y
+    #- sudo ln -s /lib64/libtinfo.so.6 /lib64/libtinfo.so.5
+    #- sudo ln -s /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/opt/Xilinx /opt/Xilinx
+    #- source /opt/Xilinx/Vivado/2020.1/settings64.sh
     - export RUN_SYNTHESIS=true
-    - export PATH=/usr/bin:$PATH
+    #- export PATH=/usr/bin:$PATH
+
+    - export TOOL_VERSION=2020.1
+
+    - mkdir -p cmd_vivado_${TOOL_VERSION}
+    - echo '#!/bin/bash' > cmd_vivado_${TOOL_VERSION}/vivado_hls
+    - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/ vivado_hls \"\$@\"" >> cmd_vivado_${TOOL_VERSION}/vivado_hls
+    - chmod +x cmd_vivado_${TOOL_VERSION}/vivado_hls
+
+    # Add it to PATH
+    - export PATH=$PWD/cmd_vivado_${TOOL_VERSION}:$PATH
+
+    - which vivado_hls
+    - vivado_hls -version || echo "Warning: unable to detect Vivado version"
+
   script:
     - cd test/pytest
     - pytest -s $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
