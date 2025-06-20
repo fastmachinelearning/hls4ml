@@ -43,9 +43,12 @@ rm_cpy = re.compile(r'(?P<name>.+)_cpy\d*')
 
 
 def to_hls4ml_fixed(k, i, f, name, *args):
-    signed, b, I = k != 0, max(int(k + i + f), 1), int(k + i)
+    signed, b, I = k != 0, k + i + f, int(k + i)
     args = [arg.upper() for arg in args]
-    ptype = FixedPrecisionType(b, I, signed, *args)
+    if b >= 1:
+        ptype = FixedPrecisionType(b, I, signed, *args)
+    else:
+        ptype = FixedPrecisionType(1, 32, False, 'TRN', 'WRAP')
     return NamedType(name, ptype)
 
 
