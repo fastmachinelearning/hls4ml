@@ -164,7 +164,7 @@ class VitisAcceleratorBackend(VitisBackend):
             print(f"Sample output size: {sampleOutputSIze}")
             print(f"Predictions size: {predictions_size}")
             print(f"X_test_shape: {X_test.shape}")
-            print(f"X_test_flat_shape: {X_test_flat.shape}")
+            print(f"X_test_flat_shape: {X_test_size}")
 
             # Change working directory to the HLS project directory
             os.chdir(model.config.get_output_dir())
