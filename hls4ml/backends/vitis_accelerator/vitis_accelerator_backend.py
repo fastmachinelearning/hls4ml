@@ -157,7 +157,7 @@ class VitisAcceleratorBackend(VitisBackend):
             X_test_flat = X_test_flat.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
             # Change working directory to the HLS project directory
-            os.chdir('model_va/hls4ml_prj')
+            os.chdir(model.config.get_output_dir())
 
             # Check if the shared library exists
             if not os.path.exists('./lib_host.so'):
