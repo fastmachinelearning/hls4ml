@@ -151,10 +151,20 @@ class VitisAcceleratorBackend(VitisBackend):
             predictions_size = predictions.shape[0]
             predictions_ptr = predictions.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
+
             # Flatten the input data
             X_test_flat = X_test.flatten()
             X_test_size = X_test_flat.shape[0]
             X_test_flat = X_test_flat.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+            
+            # Print debug information
+            print(f"Batch size: {batchsize}")
+            print(f"Original sample count: {originalSampleCount}")
+            print(f"Number of batches: {numBatches}")
+            print(f"Sample output size: {sampleOutputSIze}")
+            print(f"Predictions size: {predictions_size}")
+            print(f"X_test_shape: {X_test.shape}")
+            print(f"X_test_flat_shape: {X_test_flat.shape}")
 
             # Change working directory to the HLS project directory
             os.chdir(model.config.get_output_dir())
