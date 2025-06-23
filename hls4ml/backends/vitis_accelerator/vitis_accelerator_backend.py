@@ -159,6 +159,13 @@ class VitisAcceleratorBackend(VitisBackend):
             # Change working directory to the HLS project directory
             os.chdir('model_va/hls4ml_prj')
 
+            # Check if the shared library exists
+            if not os.path.exists('./lib_host.so'):
+                print("Shared library 'lib_host.so': host code not compiled as a shared library.")
+                print("Compiling host code as a shared library...")
+                os.system('make host_shared')
+                print("Shared library 'lib_host.so' compiled successfully.")
+
             # Load the shared library
             lib = ctypes.cdll.LoadLibrary('./lib_host.so')
 
