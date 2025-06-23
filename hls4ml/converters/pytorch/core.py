@@ -166,7 +166,10 @@ def parse_einsum_layer(operation, layer_name, input_names, input_shapes, node, c
 
     layer = {}
 
-    if len(input_names) != 2:
+    if len(input_names) == 1:
+        input_names += input_names
+        input_shapes += input_shapes
+    elif len(input_names) > 2:
         raise Exception('Only einsum operations with two inputs are supported')
     layer['class_name'] = 'Einsum'
     layer['name'] = layer_name
