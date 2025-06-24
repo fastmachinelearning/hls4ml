@@ -12,8 +12,6 @@
     - git submodule update --init --recursive test/pytest/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
     - pip install .[testing,sr,optimization]
-    - sudo yum install -y epel-release
-    - sudo yum install -y apptainer-suid squashfs-tools fuse-overlayfs
     - export RUN_SYNTHESIS=true
     - export TOOL_VERSION=2020.1
     - mkdir -p cmd_vivado_${TOOL_VERSION}
