@@ -1,4 +1,6 @@
 #include <string>
+#include <cstdio>
+#include <iostream>
 
 #include "FpgaObj.hpp"
 #include "Params.hpp"
@@ -10,6 +12,10 @@ extern "C" void predict(double *input, uint64_t input_size, double *output, uint
 
     int argc = 2;
     char *argv[] = {const_cast<char *>("host"), const_cast<char *>("myproject.xclbin")};
+
+    // Redirect stdout to a file - For debugging purposes
+    freopen("c_log.txt","w",stdout);
+    std::cout << "Entered shared function !" << std::endl;
 
     Params params(argc, argv);
 
