@@ -138,7 +138,7 @@ class VitisAcceleratorBackend(VitisBackend):
         elif method == "lib":
             """Run the hardware prediction using a shared library."""
             # Set array to contiguous memory layout
-            X_test = np.ascontiguousarray(x)
+            X_test = np.ascontiguousarray(x, dtype=np.float64)
 
             # Create prediction array
             config = VitisAcceleratorConfig(model.config)
