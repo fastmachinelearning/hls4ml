@@ -132,7 +132,7 @@ else
 	@echo "Setting XCL_EMULATION_MODE to $(TARGET)"
 	$(eval EMULATION_MODE := XCL_EMULATION_MODE=$(TARGET))
 endif
-	@cd firmware && $(EMULATION_MODE) ../host ../$(BUILD_DIR)/$(WRAPPER_NAME).xclbin $(PROFILING_DATA_REPEAT_COUNT)
+	$(EMULATION_MODE) ./host -x ./$(BUILD_DIR)/$(WRAPPER_NAME).xclbin $(PROFILING_DATA_REPEAT_COUNT)
 
 # Cleanup #####################################################################
 
