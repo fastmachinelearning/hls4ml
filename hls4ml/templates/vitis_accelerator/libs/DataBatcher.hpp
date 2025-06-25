@@ -83,10 +83,7 @@ template <class T, class U> class DataBatcher {
 
         std::cout << "Loading data from memory buffer" << std::endl;
         originalSampleCount = size / _sampleInputSize;
-        inputData.resize(size);
-        for (uint64_t i = 0; i < size; i++) {
-            inputData[i] = static_cast<T>(data[i]);
-        }
+        inputData = std::vector<T>(data, data + size);
 
         // Zero-pad
         numBatches = std::ceil(static_cast<double>(originalSampleCount) / _batchsize);
