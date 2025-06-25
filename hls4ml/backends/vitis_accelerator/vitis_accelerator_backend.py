@@ -167,6 +167,7 @@ class VitisAcceleratorBackend(VitisBackend):
             print(f"X_test_flat_shape: {X_test_size}")
 
             # Change working directory to the HLS project directory
+            currdir = os.getcwd()
             os.chdir(model.config.get_output_dir())
 
             # Check if the shared library exists
@@ -184,7 +185,8 @@ class VitisAcceleratorBackend(VitisBackend):
             lib.predict(X_test_flat, X_test_size, predictions_ptr, predictions_size)
 
             # Change back to the original directory
-            os.chdir('../..')
+            os.chdir(currdir)
+
 
             # Reshape the predictions to match the expected output shape
             y_hls = predictions.reshape(-1, sampleOutputSIze)[:originalSampleCount, :]
