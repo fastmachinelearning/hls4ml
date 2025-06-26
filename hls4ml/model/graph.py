@@ -1464,3 +1464,18 @@ class MultiModelGraph:
                     shutil.copy(hls4ml_logo, logo)
             except Exception as e:
                 print(f'Error copying hls4ml logo to {g.config.get_output_dir()} project: {e}')
+
+
+def to_multi_model_graph(model: ModelGraph, split_before_layers: list[str]):
+    """
+    Create a MultiModelGraph by splitting a base ModelGraph before the specified layer names.
+
+    Args:
+        model (ModelGraph): the original monolithic model graph
+        split_before_layers (list[str]): list of layer names to partition the original model graph.
+        Splitting on a not a cut edge (removing that single edge does not split the whole graph) is not allowed.
+
+    Returns:
+        multi_model_graph (MultiModelGraph): the partitioned multi model graph
+    """
+    return MultiModelGraph.from_model_graph(model, split_before_layers)

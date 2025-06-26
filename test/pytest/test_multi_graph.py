@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Activation, Dense, GlobalAveragePooling1D, I
 from tensorflow.keras.models import Model
 
 import hls4ml
+import hls4ml.model
 
 test_root_path = Path(__file__).parent
 
@@ -46,25 +47,17 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity, default_precision='ap_fixed<32,16>')
     config['Model']['Strategy'] = strategy
 
-    output_dir_mono = str(test_root_path / f"hls4mlprj_mono_{granularity}_{'_'.join(split_layers)}_{io_type}_{strategy}")
-    output_dir_multi = str(test_root_path / f"hls4mlprj_multi_{granularity}_{'_'.join(split_layers)}_{io_type}_{strategy}")
+    output_dir = str(test_root_path / f"hls4mlprj_{granularity}_{'_'.join(split_layers)}_{io_type}_{strategy}")
 
     # --- Monolithic HLS conversion (no split) ---
     hls_model_mono = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=config, output_dir=output_dir_mono, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
     hls_model_mono.compile()
     pred_mono = hls_model_mono.predict(X_input)
 
     # --- Multi-model conversion with split ---
-    hls_model_multi = hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=config,
-        output_dir=output_dir_multi,
-        backend=backend,
-        io_type=io_type,
-        split_before_layers=list(split_layers),
-    )
+    hls_model_multi = hls4ml.model.to_multi_model_graph(hls_model_mono, list(split_layers))
     hls_model_multi.compile()
     pred_multi = hls_model_multi.predict(X_input)
 
@@ -74,20 +67,20 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     for mono_out, multi_out in zip(pred_mono, pred_multi):
         np.testing.assert_allclose(multi_out, mono_out, rtol=0, atol=1e-5)
 
-    # if granularity == 'name':
-    #     # --- Optional: Build the HLS project and run simulation ---
-    #     hls_model_multi.build(
-    #         csim=False,
-    #         cosim=False,
-    #         vsynth=False,
-    #         export=True,
-    #         stitch_design=True,
-    #         sim_stitched_design=True,
-    #         export_stitched_design=True,
-    #     )
+    if granularity == 'name':
+        # --- Optional: Build the HLS project and run simulation ---
+        hls_model_multi.build(
+            csim=False,
+            cosim=False,
+            vsynth=False,
+            export=True,
+            stitch_design=True,
+            sim_stitched_design=True,
+            export_stitched_design=True,
+        )
 
-    #     # test only the first sample, as batch prediction is not supported for stitched RTL simulations
-    #     inp = np.expand_dims(X_input[0], axis=0)
-    #     sim_results = hls_model_multi.predict(inp, sim='rtl')
-    #     for sim_out, pred_out in zip(sim_results, list([pred_multi[0][0], pred_multi[1][0]])):
-    #         np.testing.assert_allclose(sim_out, pred_out, rtol=0, atol=1e-5)
+        # test only the first sample, as batch prediction is not supported for stitched RTL simulations
+        inp = np.expand_dims(X_input[0], axis=0)
+        sim_results = hls_model_multi.predict(inp, sim='rtl')
+        for sim_out, pred_out in zip(sim_results, list([pred_multi[0][0], pred_multi[1][0]])):
+            np.testing.assert_allclose(sim_out, pred_out, rtol=0, atol=1e-5)

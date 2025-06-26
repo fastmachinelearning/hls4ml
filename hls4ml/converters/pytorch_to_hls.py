@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.model import ModelGraph, MultiModelGraph
+from hls4ml.model import ModelGraph
 from hls4ml.utils.dependency import requires
 
 
@@ -423,13 +423,6 @@ def parse_pytorch_model(config, verbose=True):
 
 
 @requires('_torch')
-def pytorch_to_hls(config, split_before_layers=None):
+def pytorch_to_hls(config):
     layer_list, input_layers, output_layers = parse_pytorch_model(config)
-    base_model = ModelGraph.from_layer_list(config, layer_list, inputs=input_layers, outputs=output_layers)
-
-    if split_before_layers:
-        hls_model = MultiModelGraph.from_model_graph(base_model, split_before_layers)
-    else:
-        hls_model = base_model
-
-    return hls_model
+    return ModelGraph.from_layer_list(config, layer_list, inputs=input_layers, outputs=output_layers)

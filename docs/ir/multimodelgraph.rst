@@ -29,10 +29,10 @@ For example, when converting a Keras model, you can specify the layers at which 
        model,
        hls_config=config,
        backend='vitis',
-       split_before_layers = ['layer3', 'layer7']
    )
+   hls_multigraph_model = hls4ml.model.to_multi_model_graph(hls_model, ['layer3', 'layer7'])
 
-Here, the ``hls_model`` is actually a ``MultiModelGraph`` containing three subgraphs. Each subgraph is a ``ModelGraph`` accessible via indexing: ``hls_model[i]``.
+Here, the ``hls_multigraph_model`` is a ``MultiModelGraph`` containing three subgraphs. Each subgraph is a ``ModelGraph`` accessible via indexing: ``hls_multigraph_model[i]``.
 
 
 ----------------------------------
@@ -43,23 +43,6 @@ Key Methods for MultiModelGraph
 * :ref:`predict <mmg-predict-method>`
 * :ref:`build <mmg-build-method>`
 * :ref:`trace <mmg-trace-method>`
-* :ref:`make_multi_graph <make_multi_graph-method>`
-
-----
-
-.. _make_multi_graph-method:
-
-``make_multi_graph`` method
-===========================
-
-The ``make_multi_graph`` method of ``MultiModelGraph`` takes the original ``ModelGraph`` and a list of split layers. It returns a ``MultiModelGraph`` by partitioning the base ``ModelGraph`` at split layers with each one marking the start of each subgraph.
-
-.. code-block:: python
-
-   from my_hls4ml_lib.modelgraph import ModelGraph
-   multi_graph = MultiModelGraph.make_multi_graph(base_model, split_before_layers=['fc2', 'fc3'])
-
-This allows modular design flows and easier debugging of large models.
 
 ----
 
@@ -72,7 +55,7 @@ Compiles all the individual ``ModelGraph`` subgraphs within the ``MultiModelGrap
 
 .. code-block:: python
 
-   multi_graph.compile()
+   hls_multigraph_model.compile()
 
 ----
 
@@ -85,7 +68,7 @@ Builds all subgraphs in parallel, each as if they were standalone ``ModelGraph``
 
 .. code-block:: python
 
-   report = multi_graph.build(.., export=True, stitch_design=True, sim_stitched_design=True, export_stitched_design=True))
+   report = hls_multigraph_model.build(.., export=True, stitch_design=True, sim_stitched_design=True, export_stitched_design=True)
 
 The returned ``report`` contains results from each subgraph's build and, if stitching was performed, a combined report of the stitched design. Reports for individual ``ModelGraph`` instances are always accessible via
 ``MultiModelGraph.graph_reports``.
@@ -103,21 +86,11 @@ Performs a forward pass through the chained bridge file using the C-simulation (
 .. code-block:: python
 
    # Perform prediction using C-simulation (default)
-   y_csim = hls_model.predict(X, sim='csim')
+   y_csim = hls_multigraph_model.predict(X, sim='csim')
 
    # Perform prediction using RTL simulation (behavioral)
-   y_rtl = hls_model.predict(X, sim='rtl')
+   y_rtl = hls_multigraph_model.predict(X, sim='rtl')
 
-
-.. _mmg-trace-method:
-
-``trace`` method [TODO]
-================
-
-
-.. code-block:: python
-
-   final_output, trace_outputs = hls_model.trace(X)
 
 
 --------------------------

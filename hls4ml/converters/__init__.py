@@ -294,10 +294,7 @@ def convert_from_pytorch_model(
     config['InputShape'] = hls_config.get('InputShape')
     _check_hls_config(config, hls_config)
 
-    # Split model into subgraphs if layers are specified
-    split_before_layers = kwargs.get('split_before_layers', [])
-
-    return pytorch_to_hls(config, split_before_layers=split_before_layers)
+    return pytorch_to_hls(config)
 
 
 @requires('onnx')
