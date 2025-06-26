@@ -1,4 +1,4 @@
-from hls4ml.converters.keras_to_hls import (
+from hls4ml.converters.keras_v2_to_hls import (
     KerasFileReader,
     KerasModelReader,
     KerasNestedFileReader,

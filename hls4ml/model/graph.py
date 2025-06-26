@@ -888,10 +888,9 @@ class ModelGraph(Serializable):
                 inp = [np.asarray(x[i])]
             else:
                 inp = [np.asarray(xj[i]) for xj in x]
-            argtuple = inp
-            argtuple += predictions
-            argtuple = tuple(argtuple)
-            top_function(*argtuple)
+            inp = [np.ascontiguousarray(_inp) for _inp in inp]
+
+            top_function(*inp, *predictions)
             output.append(predictions)
 
         # Convert to list of numpy arrays (one for each output)

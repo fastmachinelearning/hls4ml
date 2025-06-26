@@ -2,9 +2,7 @@ import json
 
 import h5py
 
-from hls4ml.model import ModelGraph, MultiModelGraph
-
-MAXMULT = 4096
+from hls4ml.model import ModelGraph
 
 
 class KerasReader:
@@ -356,14 +354,7 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config, split_before_layers=None):
+def keras_v2_to_hls(config):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
-    base_model = ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
-
-    if split_before_layers:
-        hls_model = MultiModelGraph.from_model_graph(base_model, split_before_layers)
-    else:
-        hls_model = base_model
-
-    return hls_model
+    return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
