@@ -84,6 +84,14 @@ hls4ml.utils.serialization module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.simulation\_utils module
+-------------------------------------
+
+.. automodule:: hls4ml.utils.simulation_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.utils.string\_utils module
 ---------------------------------
 

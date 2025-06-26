@@ -489,6 +489,20 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph.write"><code class="docutils literal notranslate"><span class="pre">ModelGraph.write()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.build"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.compile"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.compile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.from_model_graph"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.from_model_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.get_input_variables"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.get_input_variables()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.get_layers"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.get_layers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.parse_nn_config"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.parse_nn_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.predict"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.predict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.trace"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.trace()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.write"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.write()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.write_tb_inputs"><code class="docutils literal notranslate"><span class="pre">MultiModelGraph.write_tb_inputs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.to_multi_model_graph"><code class="docutils literal notranslate"><span class="pre">to_multi_model_graph()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.model.html#module-hls4ml.model.layers">hls4ml.model.layers module</a><ul>
@@ -878,6 +892,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.vivado_report">hls4ml.report.vivado_report module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.vivado_report.aggregate_graph_reports"><code class="docutils literal notranslate"><span class="pre">aggregate_graph_reports()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.vivado_report.parse_vivado_report"><code class="docutils literal notranslate"><span class="pre">parse_vivado_report()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.vivado_report.print_vivado_report"><code class="docutils literal notranslate"><span class="pre">print_vivado_report()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.vivado_report.read_vivado_report"><code class="docutils literal notranslate"><span class="pre">read_vivado_report()</span></code></a></li>
@@ -957,6 +972,15 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#module-hls4ml.utils.serialization">hls4ml.utils.serialization module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.serialization.deserialize_model"><code class="docutils literal notranslate"><span class="pre">deserialize_model()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.serialization.serialize_model"><code class="docutils literal notranslate"><span class="pre">serialize_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#module-hls4ml.utils.simulation_utils">hls4ml.utils.simulation_utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.simulation_utils.annotate_axis_stream_widths"><code class="docutils literal notranslate"><span class="pre">annotate_axis_stream_widths()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.simulation_utils.parse_component_xml"><code class="docutils literal notranslate"><span class="pre">parse_component_xml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.simulation_utils.prepare_tb_inputs"><code class="docutils literal notranslate"><span class="pre">prepare_tb_inputs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.simulation_utils.prepare_zero_inputs"><code class="docutils literal notranslate"><span class="pre">prepare_zero_inputs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.simulation_utils.read_testbench_log"><code class="docutils literal notranslate"><span class="pre">read_testbench_log()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.utils.html#hls4ml.utils.simulation_utils.write_verilog_testbench"><code class="docutils literal notranslate"><span class="pre">write_verilog_testbench()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.utils.html#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils module</a><ul>
@@ -1084,10 +1108,13 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter"><code class="docutils literal notranslate"><span class="pre">VivadoWriter</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.print_array_to_cpp"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.print_array_to_cpp()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_bridge"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_bridge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_bridge_multigraph"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_bridge_multigraph()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_build_script"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_build_script()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_build_script_multigraph"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_build_script_multigraph()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_defines"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_defines()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_generated_code"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_generated_code()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_hls"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_hls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_multigraph_weights"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_multigraph_weights()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_nnet_utils"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_nnet_utils()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_parameters"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_parameters()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_project_cpp"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_project_cpp()</span></code></a></li>

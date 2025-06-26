@@ -112,6 +112,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.plot">hls4ml.utils.plot module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-profiling-utils-module">hls4ml.utils.profiling_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.serialization">hls4ml.utils.serialization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.simulation_utils">hls4ml.utils.simulation_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.symbolic_utils">hls4ml.utils.symbolic_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-torch-module">hls4ml.utils.torch module</a></li>
@@ -726,6 +727,53 @@ that input/output testbench data files are included if specified in
 the model configuration.</p></li>
 <li><p>Existing files at the specified path will be overwritten.</p></li>
 </ul>
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.utils.simulation_utils">
+<span id="hls4ml-utils-simulation-utils-module"></span><h2>hls4ml.utils.simulation_utils module<a class="headerlink" href="#module-hls4ml.utils.simulation_utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.simulation_utils.annotate_axis_stream_widths">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.simulation_utils.</span></span><span class="sig-name descname"><span class="pre">annotate_axis_stream_widths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nn_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vivado_project_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.simulation_utils.annotate_axis_stream_widths" title="Link to this definition"></a></dt>
+<dd><p>Annotate nn_config with Vivado IP AXIS bus and per-element widths.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.simulation_utils.parse_component_xml">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.simulation_utils.</span></span><span class="sig-name descname"><span class="pre">parse_component_xml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component_xml_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.simulation_utils.parse_component_xml" title="Link to this definition"></a></dt>
+<dd><p>Parse the component.xml from the generated Vivado IP and return a dict of the port metadata.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.simulation_utils.prepare_tb_inputs">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.simulation_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_tb_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_input_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_layers</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.simulation_utils.prepare_tb_inputs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.simulation_utils.prepare_zero_inputs">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.simulation_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_zero_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_layers</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.simulation_utils.prepare_zero_inputs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.simulation_utils.read_testbench_log">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.simulation_utils.</span></span><span class="sig-name descname"><span class="pre">read_testbench_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">testbench_log_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.simulation_utils.read_testbench_log" title="Link to this definition"></a></dt>
+<dd><p>Reads the testbench log file and returns a dictionary</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.simulation_utils.write_verilog_testbench">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.simulation_utils.</span></span><span class="sig-name descname"><span class="pre">write_verilog_testbench</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nn_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testbench_output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.simulation_utils.write_verilog_testbench" title="Link to this definition"></a></dt>
+<dd><p>Generate a Verilog testbench for a given neural network configuration.
+The testbench includes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Clock and reset logic</p></li>
+<li><p>DUT instantiation and AXI4-Stream/Partition interfaces</p></li>
+<li><p>Stimulus generation for inputs</p></li>
+<li><p>Data capture and logging for outputs</p></li>
+<li><p>Latency measurement</p></li>
+</ul>
+</div></blockquote>
 </dd></dl>
 
 </section>

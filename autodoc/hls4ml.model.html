@@ -500,7 +500,7 @@ when defining the expected attributes of layer classes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.graph.ModelGraph">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.graph.</span></span><span class="sig-name descname"><span class="pre">ModelGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.graph.</span></span><span class="sig-name descname"><span class="pre">ModelGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.Serializable" title="hls4ml.model.types.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>The ModelGraph represents the network that is being processed by hls4ml.</p>
 <dl class="field-list simple">
@@ -553,7 +553,7 @@ Defaults to ‘single’.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.graph.ModelGraph.from_layer_list">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_layer_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph.from_layer_list" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_layer_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph.from_layer_list" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -735,6 +735,104 @@ input/output tensors, an exception is raised.</p>
 directory specified in the <cite>config</cite>.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.graph.</span></span><span class="sig-name descname"><span class="pre">MultiModelGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graphs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stitch_design</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_stitched_design</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_stitched_design</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.build" title="Link to this definition"></a></dt>
+<dd><p>Builds all ModelGraph instances in parallel, with optional stitching, simulation and export.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>export</strong> (<em>bool</em>) – If True, export each subgraph as an IP (must be true for stiching design).</p></li>
+<li><p><strong>stitch_design</strong> (<em>bool</em>) – If True, create a Vivado stitched design project.</p></li>
+<li><p><strong>sim_stitched_design</strong> (<em>bool</em>) – If True, simulate the stitched design using Verilog in RTL level.</p></li>
+<li><p><strong>export_stitched_design</strong> (<em>bool</em>) – If True, export stitched design as a single IP.</p></li>
+<li><p><strong>max_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of threads to use for parallel subgraph synthesis.</p></li>
+<li><p><strong>**kwargs</strong> – Additional arguments passed to each subgraph’s ‘.build()’ method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Report from each subgraph’s build and, if stitching was performed, a combined report of the stitched design.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.compile" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.from_model_graph">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_model_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_before_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.from_model_graph" title="Link to this definition"></a></dt>
+<dd><p>Create a MultiModelGraph by splitting a base ModelGraph at specified layer names,
+each initiating a subgraph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.get_input_variables">
+<span class="sig-name descname"><span class="pre">get_input_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.get_input_variables" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.get_layers">
+<span class="sig-name descname"><span class="pre">get_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.get_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.parse_nn_config">
+<span class="sig-name descname"><span class="pre">parse_nn_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.parse_nn_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'csim'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.predict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.trace">
+<span class="sig-name descname"><span class="pre">trace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.trace" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.write" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.graph.MultiModelGraph.write_tb_inputs">
+<span class="sig-name descname"><span class="pre">write_tb_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.MultiModelGraph.write_tb_inputs" title="Link to this definition"></a></dt>
+<dd><p>Dump inputs (for Verilog testbench) via the C++ bridge functions:
+dump_tb_inputs_float
+dump_tb_inputs_double</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.graph.to_multi_model_graph">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.graph.</span></span><span class="sig-name descname"><span class="pre">to_multi_model_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_before_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.to_multi_model_graph" title="Link to this definition"></a></dt>
+<dd><p>Create a MultiModelGraph by splitting a base ModelGraph before the specified layer names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the original monolithic model graph</p></li>
+<li><p><strong>split_before_layers</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of layer names to partition the original model graph.</p></li>
+<li><p><strong>edge</strong> (<em>Splitting on a not a cut</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the partitioned multi model graph</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>multi_model_graph (<a class="reference internal" href="#hls4ml.model.graph.MultiModelGraph" title="hls4ml.model.graph.MultiModelGraph">MultiModelGraph</a>)</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

@@ -1,0 +1,265 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MultiModelGraph Class &mdash; hls4ml 1.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=fc837d61"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">MultiModelGraph Class</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/ir/multimodelgraph.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="multimodelgraph-class">
+<h1>MultiModelGraph Class<a class="headerlink" href="#multimodelgraph-class" title="Link to this heading"></a></h1>
+<p>This page documents the <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code> class, which enables handling multiple subgraphs (each represented as a <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code>) derived from a single original model.
+The central concept here is the division of a larger model into multiple smaller subgraphs at given layers which can be useful for:</p>
+<ul class="simple">
+<li><p>Very large models</p></li>
+<li><p>Step-wise optimization</p></li>
+<li><p>Modular design flows</p></li>
+</ul>
+<p>A <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code> manages these subgraphs, facilitating:</p>
+<ul class="simple">
+<li><p>Parallel building and synthesis</p></li>
+<li><p>Stitched designs (merging the subgraphs in HW after synthesis)</p></li>
+<li><p>Simulation and performance estimation of the stitched design</p></li>
+</ul>
+<section id="keras-example">
+<h2>Keras Example<a class="headerlink" href="#keras-example" title="Link to this heading"></a></h2>
+<p>For example, when converting a Keras model, you can specify the layers at which to split the model directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;vitis&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">hls_multigraph_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to_multi_model_graph</span><span class="p">(</span><span class="n">hls_model</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;layer3&#39;</span><span class="p">,</span> <span class="s1">&#39;layer7&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">hls_multigraph_model</span></code> is a <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code> containing three subgraphs. Each subgraph is a <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> accessible via indexing: <code class="docutils literal notranslate"><span class="pre">hls_multigraph_model[i]</span></code>.</p>
+</section>
+<section id="key-methods-for-multimodelgraph">
+<h2>Key Methods for MultiModelGraph<a class="headerlink" href="#key-methods-for-multimodelgraph" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#mmg-compile-method"><span class="std std-ref">compile</span></a></p></li>
+<li><p><a class="reference internal" href="#mmg-predict-method"><span class="std std-ref">predict</span></a></p></li>
+<li><p><a class="reference internal" href="#mmg-build-method"><span class="std std-ref">build</span></a></p></li>
+<li><p><span class="xref std std-ref">trace</span></p></li>
+</ul>
+<hr class="docutils" />
+<section id="compile-method">
+<span id="mmg-compile-method"></span><h3><code class="docutils literal notranslate"><span class="pre">compile</span></code> method<a class="headerlink" href="#compile-method" title="Link to this heading"></a></h3>
+<p>Compiles all the individual <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> subgraphs within the <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code>. Also, compiles a chained bridge file with all the subgraphs linked together that can be used for the predict function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</pre></div>
+</div>
+<hr class="docutils" />
+</section>
+<section id="build-method">
+<span id="mmg-build-method"></span><h3><code class="docutils literal notranslate"><span class="pre">build</span></code> method<a class="headerlink" href="#build-method" title="Link to this heading"></a></h3>
+<p>Builds all subgraphs in parallel, each as if they were standalone <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> projects. Returns reports for each subgraph. If configured, it then runs the stitching flow in Vivado, connecting the individual exported IPs and allowing you to simulate the stitched design at the RTL level.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">..</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stitch_design</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sim_stitched_design</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">export_stitched_design</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">report</span></code> contains results from each subgraph’s build and, if stitching was performed, a combined report of the stitched design. Reports for individual <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> instances are always accessible via
+<code class="docutils literal notranslate"><span class="pre">MultiModelGraph.graph_reports</span></code>.</p>
+<hr class="docutils" />
+</section>
+<section id="predict-method">
+<span id="mmg-predict-method"></span><h3><code class="docutils literal notranslate"><span class="pre">predict</span></code> method<a class="headerlink" href="#predict-method" title="Link to this heading"></a></h3>
+<p>Performs a forward pass through the chained bridge file using the C-simulation (<code class="docutils literal notranslate"><span class="pre">sim='csim'</span></code>), providing 1-to-1 output with the original model. You can also leverage RTL simulation (<code class="docutils literal notranslate"><span class="pre">sim='rtl'</span></code>) to perform the forward pass at the register-transfer level. In this case, a Verilog testbench is dynamically generated and executed against the stitched IP design, providing behavioral simulation to accurately verify latency and output at the hardware level. Note that the input data for the RTL simulation must have a single batch dimension.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Perform prediction using C-simulation (default)</span>
+<span class="n">y_csim</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">sim</span><span class="o">=</span><span class="s1">&#39;csim&#39;</span><span class="p">)</span>
+
+<span class="c1"># Perform prediction using RTL simulation (behavioral)</span>
+<span class="n">y_rtl</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">sim</span><span class="o">=</span><span class="s1">&#39;rtl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code> class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility, parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.</p>
+<section id="notes-and-known-issues">
+<h3>Notes and Known Issues<a class="headerlink" href="#notes-and-known-issues" title="Link to this heading"></a></h3>
+<section id="graph-splitting">
+<h4>Graph Splitting<a class="headerlink" href="#graph-splitting" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>Splitting in the middle of a branched architecture (e.g., ResNet skip connections) is currently unsupported.</p></li>
+<li><p>Each split subgraph must have exactly one input.</p></li>
+</ul>
+</section>
+<section id="multiple-inputs-outputs">
+<h4>Multiple Inputs &amp; Outputs<a class="headerlink" href="#multiple-inputs-outputs" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>The final NN output can support multiple output layers.</p></li>
+<li><p>For networks with multiple input layers (a relatively uncommon case), proper synchronization is required in the testbench to drive inputs—especially for io_stream interfaces.</p></li>
+</ul>
+</section>
+<section id="simulation-discrepancies">
+<h4>Simulation Discrepancies<a class="headerlink" href="#simulation-discrepancies" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>Users should carefully verify functional equivalence (particularly for models that use <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> interface)</p></li>
+<li><p>These discrepancies are more noticeable with raw output logits; applying a softmax layer at the model output can often help mask these differences, but this should be used with caution.</p></li>
+</ul>
+</section>
+<section id="todos">
+<h4>TODOs<a class="headerlink" href="#todos" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>Currently tested with Vitis 2024.1. Investigate compatibility with other versions.</p></li>
+<li><p>Add support for Verilator-based simulation to enable faster RTL simulation.</p></li>
+<li><p>Investigate <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> interface (output discrepancies, fifo optimization)</p></li>
+<li><p>Investigate differences in resource utilization for the <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> interface.</p></li>
+</ul>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
