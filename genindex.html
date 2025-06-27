@@ -678,6 +678,14 @@
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.create_layer_class">(hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Cropping1D">Cropping1D (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Cropping2D">Cropping2D (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.CroppingConfigTemplate">CroppingConfigTemplate (class in hls4ml.backends.vivado.passes.reshaping_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.CroppingFunctionTemplate">CroppingFunctionTemplate (class in hls4ml.backends.vivado.passes.reshaping_templates)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1348,6 +1356,10 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.CroppingConfigTemplate.format">(hls4ml.backends.vivado.passes.reshaping_templates.CroppingConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.CroppingFunctionTemplate.format">(hls4ml.backends.vivado.passes.reshaping_templates.CroppingFunctionTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate.format">(hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate method)</a>
 </li>
@@ -3533,6 +3545,10 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2DBatchnorm.initialize">(hls4ml.model.layers.Conv2DBatchnorm method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Cropping1D.initialize">(hls4ml.model.layers.Cropping1D method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Cropping2D.initialize">(hls4ml.model.layers.Cropping2D method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Dense.initialize">(hls4ml.model.layers.Dense method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.DepthwiseConv1D.initialize">(hls4ml.model.layers.DepthwiseConv1D method)</a>
@@ -4603,6 +4619,10 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.convolution.parse_conv_layer">parse_conv_layer() (in module hls4ml.converters.onnx.convolution)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshaping.parse_cropping1d_layer">parse_cropping1d_layer() (in module hls4ml.converters.keras.reshaping)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshaping.parse_cropping2d_layer">parse_cropping2d_layer() (in module hls4ml.converters.keras.reshaping)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.parse_data_format">parse_data_format() (in module hls4ml.converters.utils)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.parse_default_keras_layer">parse_default_keras_layer() (in module hls4ml.converters.keras_v2_to_hls)</a>
@@ -4709,10 +4729,10 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_squeeze_layer">parse_squeeze_layer() (in module hls4ml.converters.pytorch.reshape)</a>
 </li>
-      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_time_distributed_layer">parse_time_distributed_layer() (in module hls4ml.converters.keras.recurrent)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_time_distributed_layer">parse_time_distributed_layer() (in module hls4ml.converters.keras.recurrent)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_transpose_layer">parse_transpose_layer() (in module hls4ml.converters.onnx.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_unsqueeze_layer">parse_unsqueeze_layer() (in module hls4ml.converters.pytorch.reshape)</a>
