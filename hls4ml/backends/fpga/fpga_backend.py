@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import numpy as np
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
+from hls4ml.model.attributes import Attribute, ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.layers import (
     GRU,
     LSTM,
@@ -109,32 +109,37 @@ class FPGABackend(Backend):
         act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
         self.attribute_map[Activation] = act_attrs
 
-        softmax_attrs = self.attribute_map.get(Softmax, [])
-        softmax_attrs.append(
+        softmax_attrs = [
+            Attribute('n_in'),
+            Attribute('activation', value_type=str),
+            Attribute('n_outer', value_type=int, default=1),
+            Attribute('n_inner', value_type=int, default=1),
             ChoiceAttribute(
                 'implementation',
                 ['latency', 'stable', 'argmax', 'legacy'],
                 default='stable',
                 description=descriptions.softmax_implementation,
-            )
-        )
-        softmax_attrs.append(
-            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip)
-        )
-        softmax_attrs.append(
+            ),
+            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip),
             TypeAttribute(
                 'exp_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
                 description=descriptions.table_type,
-            )
-        )
-        softmax_attrs.append(
+            ),
             TypeAttribute(
                 'inv_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
                 description=descriptions.table_type,
-            )
-        )
+            ),
+            TypeAttribute(
+                'inv_inp',
+                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+            ),
+            TypeAttribute(
+                'accum',
+                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+            ),
+        ]
         self.attribute_map[Softmax] = softmax_attrs
 
     def create_layer_class(self, layer_class):

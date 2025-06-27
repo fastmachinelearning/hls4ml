@@ -14,7 +14,7 @@ void depthwise_conv_1d_buffer_cl(hls::stream<data_T> &data, hls::stream<res_T> &
                                  typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
     ReadInputWidth:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
@@ -48,7 +48,7 @@ void pointwise_conv_1d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
     #pragma HLS ARRAY_PARTITION variable=weights complete
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
     ReadInputWidth:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
