@@ -1,10 +1,10 @@
 import typing
+from collections.abc import Sequence
 from math import prod
-from typing import Sequence
 
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
-from ._base import SQLayerHandler, register
+from ._base import QLayerHandler, register
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -40,7 +40,7 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False):
 
 
 @register
-class SQSoftmaxHandler(SQLayerHandler):
+class QSoftmaxHandler(QLayerHandler):
     handles = ('hgq.layers.softmax.QSoftmax',)
 
     def handle(

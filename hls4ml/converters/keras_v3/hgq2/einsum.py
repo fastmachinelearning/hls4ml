@@ -1,8 +1,8 @@
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from ..einsum_dense import strip_batch_dim
-from ._base import SQLayerHandler, register
+from ._base import QLayerHandler, register
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -10,7 +10,7 @@ if typing.TYPE_CHECKING:
 
 
 @register
-class SQEinsumHandler(SQLayerHandler):
+class QEinsumHandler(QLayerHandler):
     handles = ('hgq.layers.ops.einsum.QEinsum',)
 
     def handle(

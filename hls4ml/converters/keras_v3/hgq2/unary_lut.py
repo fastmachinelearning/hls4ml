@@ -1,12 +1,12 @@
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from quantizers import float_quantize, get_fixed_quantizer_np
 
 from hls4ml.model.types import FixedPrecisionType
 
-from ._base import KerasV3LayerHandler, SQLayerHandler, register
+from ._base import KerasV3LayerHandler, QLayerHandler, register
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -18,7 +18,7 @@ from hls4ml.utils.qinterval import minimal_kif
 
 
 @register
-class SQUnaryLUTHandler(SQLayerHandler, KerasV3LayerHandler):
+class QUnaryLUTHandler(QLayerHandler, KerasV3LayerHandler):
     handles = ('hgq.layers.activation.QUnaryFunctionLUT',)
 
     def handle(

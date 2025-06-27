@@ -1,12 +1,12 @@
 import typing
+from collections.abc import Sequence
 from inspect import Signature
-from typing import Sequence
 
 import numpy as np
 
-from ._base import SQEinsumDenseHandler, SQLayerHandler, register
-from .einsum import SQEinsumHandler
-from .softmax import SQSoftmaxHandler
+from ._base import QEinsumDenseHandler, QLayerHandler, register
+from .einsum import QEinsumHandler
+from .softmax import QSoftmaxHandler
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
 
 
 @register
-class SQMultiHeadAttentionHandler(SQLayerHandler):
+class QMultiHeadAttentionHandler(QLayerHandler):
     handles = ('hgq.layers.multi_head_attention.QMultiHeadAttention',)
 
     def handle(
@@ -99,9 +99,9 @@ class SQMultiHeadAttentionHandler(SQLayerHandler):
         tensor_pre_score = KerasTensor(name=f'{unique_name}_pre_score', shape=score_batch_shape)
         tensor_score = KerasTensor(name=f'{unique_name}_score', shape=score_batch_shape)
 
-        einsum_handler = SQEinsumHandler()
-        einsum_dense_handler = SQEinsumDenseHandler()
-        softmax_handler = SQSoftmaxHandler()
+        einsum_handler = QEinsumHandler()
+        einsum_dense_handler = QEinsumDenseHandler()
+        softmax_handler = QSoftmaxHandler()
 
         config_to_Q = einsum_dense_handler(to_Q, [tensor_q], [tensor_Q])
         config_to_K = einsum_dense_handler(to_K, [tensor_k], [tensor_K])

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> dict[str, Any]:
     from hgq.quantizer.internal.fixed_point_quantizer import FixedPointQuantizerKBI, FixedPointQuantizerKIF
-    from keras.ops import convert_to_numpy
+    from keras import ops
 
     internal_q: FixedPointQuantizerKIF | FixedPointQuantizerKBI = q.quantizer
 
@@ -26,7 +26,7 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
         raise ValueError(f"Tensor {tensor.name} has at least one dimension with no fixed size")
     k, i, f = internal_q.kif
     k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
-    k, B, I = convert_to_numpy(k), convert_to_numpy(B), convert_to_numpy(I)  # noqa: E741
+    k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
     I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
 
     k = np.broadcast_to(k.astype(np.int8), (1,) + shape)  # type: ignore
@@ -61,7 +61,7 @@ def override_io_tensor_confs(confs: tuple[dict[str, Any], ...], overrides: dict[
 
 
 @register
-class SQLayerHandler(KerasV3LayerHandler):
+class QLayerHandler(KerasV3LayerHandler):
     def __call__(
         self,
         layer: 'hgq.layers.QLayerBase',
@@ -101,15 +101,15 @@ class SQLayerHandler(KerasV3LayerHandler):
         return *iq_confs, *ret, *oq_confs
 
     def load_weight(self, layer: 'Layer', key: str):
-        from keras.ops import convert_to_numpy
+        from keras import ops
 
         if hasattr(layer, f'q{key}'):
-            return convert_to_numpy(getattr(layer, f'q{key}'))
+            return ops.convert_to_numpy(getattr(layer, f'q{key}'))
         return super().load_weight(layer, key)
 
 
 @register
-class SQEinsumDenseHandler(SQLayerHandler, EinsumDenseHandler):
+class QEinsumDenseHandler(QLayerHandler, EinsumDenseHandler):
     handles = (
         'hgq.layers.core.einsum_dense.QEinsumDense',
         'hgq.layers.einsum_dense_batchnorm.QEinsumDenseBatchnorm',
@@ -117,7 +117,7 @@ class SQEinsumDenseHandler(SQLayerHandler, EinsumDenseHandler):
 
 
 @register
-class SQStandaloneQuantizerHandler(KerasV3LayerHandler):
+class QStandaloneQuantizerHandler(KerasV3LayerHandler):
     handles = ('hgq.quantizer.quantizer.Quantizer',)
 
     def handle(
@@ -132,7 +132,7 @@ class SQStandaloneQuantizerHandler(KerasV3LayerHandler):
 
 
 @register
-class SQConvHandler(SQLayerHandler, ConvHandler):
+class QConvHandler(QLayerHandler, ConvHandler):
     handles = (
         'hgq.layers.conv.QConv1D',
         'hgq.layers.conv.QConv2D',
@@ -158,7 +158,7 @@ class SQConvHandler(SQLayerHandler, ConvHandler):
 
 
 @register
-class SQDenseHandler(SQLayerHandler, DenseHandler):
+class QDenseHandler(QLayerHandler, DenseHandler):
     handles = ('hgq.layers.core.dense.QDense', 'hgq.layers.core.dense.QBatchNormDense')
 
     def handle(
@@ -177,12 +177,12 @@ class SQDenseHandler(SQLayerHandler, DenseHandler):
 
 
 @register
-class SQActivationHandler(SQLayerHandler, ActivationHandler):
+class QActivationHandler(QLayerHandler, ActivationHandler):
     handles = ('hgq.layers.activation.QActivation',)
 
 
 @register
-class SQBatchNormalizationHandler(SQLayerHandler):
+class QBatchNormalizationHandler(QLayerHandler):
     handles = ('hgq.layers.batch_normalization.QBatchNormalization',)
 
     def handle(
@@ -208,7 +208,7 @@ class SQBatchNormalizationHandler(SQLayerHandler):
 
 
 @register
-class SQMergeHandler(SQLayerHandler, MergeHandler):
+class QMergeHandler(QLayerHandler, MergeHandler):
     handles = (
         'hgq.layers.ops.merge.QAdd',
         'hgq.layers.ops.merge.QSubtract',
