@@ -96,3 +96,99 @@ def parse_zeropadding2d_layer(keras_layer, input_names, input_shapes, data_reade
         layer['in_width'] = input_shapes[0][2]
 
     return layer, output_shape
+
+
+@keras_handler('Cropping1D')
+def parse_cropping1d_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert keras_layer['class_name'] == 'Cropping1D'
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+
+    cropping = keras_layer['config']['cropping']
+    if isinstance(cropping, int):
+        layer['crop_left'] = cropping
+        layer['crop_right'] = cropping
+    elif isinstance(cropping, collections.abc.Sequence):
+        layer['crop_left'] = cropping[0]
+        layer['crop_right'] = cropping[1]
+
+    # No data_format attribute for Cropping1D (always cl), but keeping it consistent with Cropping2D
+    if layer['data_format'] == 'channels_first':
+        output_shape = [
+            input_shapes[0][0],  # Batch
+            input_shapes[0][1],  # Channels
+            input_shapes[0][2] - layer['crop_left'] - layer['crop_right'],  # Width
+        ]
+        layer['out_width'] = output_shape[2]
+        layer['n_chan'] = output_shape[1]
+
+        layer['in_width'] = input_shapes[0][2]
+    else:
+        output_shape = [
+            input_shapes[0][0],  # Batch
+            input_shapes[0][1] - layer['crop_left'] - layer['crop_right'],  # Width
+            input_shapes[0][2],  # Channels
+        ]
+        layer['out_width'] = output_shape[1]
+        layer['n_chan'] = output_shape[2]
+
+        layer['in_width'] = input_shapes[0][1]
+
+    return layer, output_shape
+
+
+@keras_handler('Cropping2D')
+def parse_cropping2d_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert keras_layer['class_name'] == 'Cropping2D'
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+
+    cropping = keras_layer['config']['cropping']
+    if isinstance(cropping, int):
+        layer['crop_top'] = cropping
+        layer['crop_bottom'] = cropping
+        layer['crop_left'] = cropping
+        layer['crop_right'] = cropping
+    elif isinstance(cropping, collections.abc.Sequence):
+        height_crop, width_crop = cropping
+        if isinstance(height_crop, collections.abc.Sequence):
+            layer['crop_top'] = height_crop[0]
+            layer['crop_bottom'] = height_crop[1]
+        else:
+            layer['crop_top'] = height_crop
+            layer['crop_bottom'] = height_crop
+        if isinstance(width_crop, collections.abc.Sequence):
+            layer['crop_left'] = width_crop[0]
+            layer['crop_right'] = width_crop[1]
+        else:
+            layer['crop_left'] = width_crop
+            layer['crop_right'] = width_crop
+
+    if layer['data_format'] == 'channels_first':
+        output_shape = [
+            input_shapes[0][0],  # Batch
+            input_shapes[0][1],  # Channels
+            input_shapes[0][2] - layer['crop_top'] - layer['crop_bottom'],  # Height
+            input_shapes[0][3] - layer['crop_left'] - layer['crop_right'],  # Width
+        ]
+        layer['out_height'] = output_shape[2]
+        layer['out_width'] = output_shape[3]
+        layer['n_chan'] = output_shape[1]
+
+        layer['in_height'] = input_shapes[0][2]
+        layer['in_width'] = input_shapes[0][3]
+    else:
+        output_shape = [
+            input_shapes[0][0],  # Batch
+            input_shapes[0][1] - layer['crop_top'] - layer['crop_bottom'],  # Height
+            input_shapes[0][2] - layer['crop_left'] - layer['crop_right'],  # Width
+            input_shapes[0][3],  # Channels
+        ]
+        layer['out_height'] = output_shape[1]
+        layer['out_width'] = output_shape[2]
+        layer['n_chan'] = output_shape[3]
+
+        layer['in_height'] = input_shapes[0][1]
+        layer['in_width'] = input_shapes[0][2]
+
+    return layer, output_shape
