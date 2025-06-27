@@ -542,6 +542,17 @@ class InplaceTensorVariable(TensorVariable):
         return cls(tv, input_var)
 
 
+class StructWrapperVariable(TensorVariable):
+    def __init__(self, tv):
+        self.__dict__.update(tv.__dict__)
+        self.struct_name = tv.type.name[:-1] + 'array_t'
+
+    @classmethod
+    def deserialize(cls, state):
+        tv = TensorVariable.deserialize(state)
+        return cls(tv)
+
+
 class WeightVariable(Variable):
     """Class representing a tensor containing the weights of a layer.
 
