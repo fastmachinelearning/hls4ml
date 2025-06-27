@@ -291,6 +291,126 @@ class ExponentPrecisionType(PrecisionType):
         return typestring
 
 
+class FloatPrecisionType(PrecisionType):
+    """
+    Class representing a floating-point precision type.
+
+    This type is equivalent to ac_float HLS types. If the use of C++ equivalent types is required, see
+    ``StandardFloatPrecisionType``.
+
+    Args:
+        width (int, optional): Total number of bits used. Defaults to 33.
+        integer (int, optional): Number of bits used for the integer part. Defaults to 2.
+        exponent (int, optional): Number of bits used for the exponent. Defaults to 8.
+    """
+
+    def __init__(self, width=33, integer=2, exponent=8, rounding_mode=None):
+        super().__init__(width=width, signed=True)
+        self.exponent = exponent
+        self.integer = integer  # If None, will be set to width - exponent - 1
+        self.rounding_mode = rounding_mode
+
+    @property
+    def rounding_mode(self):
+        return self._rounding_mode
+
+    @rounding_mode.setter
+    def rounding_mode(self, mode):
+        if mode is None:
+            self._rounding_mode = RoundingMode.TRN
+        elif isinstance(mode, str):
+            self._rounding_mode = RoundingMode.from_string(mode)
+        else:
+            self._rounding_mode = mode
+
+    def __str__(self):
+        args = [self.width - self.exponent, self.integer, self.exponent, self.rounding_mode]
+        args = ','.join([str(arg) for arg in args])
+        typestring = f'float<{args}>'
+        return typestring
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, FloatPrecisionType):
+            eq = super().__eq__(other)
+            eq = eq and self.integer == other.integer
+            eq = eq and self.exponent == other.exponent
+            eq = eq and self.rounding_mode == other.rounding_mode
+            return eq
+
+        return False
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash((self.integer, self.exponent, self.rounding_mode))
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'integer': self.integer,
+                'exponent': self.exponent,
+                'rounding_mode': str(self.rounding_mode),
+            }
+        )
+        return state
+
+
+class StandardFloatPrecisionType(PrecisionType):
+    """
+    Class representing a floating-point precision type.
+
+    This type is equivalent to ap_float and ac_std_float HLS types. <32,8> corresponds to a 'float' type in C/C++. <64,11>
+    corresponds to a 'double' type in C/C++. <16,5> corresponds to a 'half' type in C/C++. <16,8> corresponds to a
+    'bfloat16' type in C/C++.
+
+    Args:
+        width (int, optional): Total number of bits used. Defaults to 32.
+        exponent (int, optional): Number of bits used for the exponent. Defaults to 8.
+        use_cpp_type (bool, optional): Use C++ equivalent types if available. Defaults to ``True``.
+    """
+
+    def __init__(self, width=32, exponent=8, use_cpp_type=True):
+        super().__init__(width=width, signed=True)
+        self.exponent = exponent
+        self.use_cpp_type = use_cpp_type
+
+    def __str__(self):
+        if self._check_cpp_type(32, 8):
+            typestring = 'float'
+        elif self._check_cpp_type(64, 11):
+            typestring = 'double'
+        elif self._check_cpp_type(16, 5):
+            typestring = 'half'
+        elif self._check_cpp_type(16, 8):
+            typestring = 'bfloat16'
+        else:
+            typestring = f'std_float<{self.width},{self.exponent}>'
+        return typestring
+
+    def _check_cpp_type(self, width, exponent):
+        return self.use_cpp_type and self.width == width and self.exponent == exponent
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, FloatPrecisionType):
+            eq = super().__eq__(other)
+            eq = eq and self.exponent == other.exponent
+            return eq
+
+        return False
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash(self.exponent)
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'exponent': self.exponent,
+                'use_cpp_type': self.use_cpp_type,
+            }
+        )
+        return state
+
+
 class UnspecifiedPrecisionType(PrecisionType):
     """
     Class representing an unspecified precision type.
@@ -592,7 +712,8 @@ class WeightVariable(Variable):
         elif isinstance(new_precision, FixedPrecisionType):
             decimal_spaces = max(0, new_precision.fractional)
             self.precision_fmt = f'{{:.{decimal_spaces}f}}'
-
+        elif isinstance(new_precision, (FloatPrecisionType, StandardFloatPrecisionType)):
+            self.precision_fmt = '{:.16f}'  # Not ideal, but should be enough for most cases
         else:
             raise RuntimeError(f"Unexpected new precision type: {new_precision}")
 

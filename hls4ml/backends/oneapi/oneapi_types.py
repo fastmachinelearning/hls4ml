@@ -6,11 +6,15 @@ import numpy as np
 
 from hls4ml.backends.fpga.fpga_types import (
     ACFixedPrecisionDefinition,
+    ACFloatPrecisionDefinition,
     ACIntegerPrecisionDefinition,
-    FixedPrecisionConverter,
+    ACStandardFloatPrecisionDefinition,
+    FloatPrecisionType,
+    FPGAPrecisionConverter,
     HLSTypeConverter,
     NamedTypeConverter,
     PrecisionDefinition,
+    StandardFloatPrecisionType,
     TypeDefinition,
     TypePrecisionConverter,
     VariableDefinition,
@@ -35,12 +39,14 @@ class ACExponentPrecisionDefinition(PrecisionDefinition):
         return typestring
 
 
-class OneAPIACTypeConverter(FixedPrecisionConverter):
+class OneAPIACTypeConverter(FPGAPrecisionConverter):
     def __init__(self):
         super().__init__(
             type_map={
                 FixedPrecisionType: ACFixedPrecisionDefinition,
                 IntegerPrecisionType: ACIntegerPrecisionDefinition,
+                FloatPrecisionType: ACFloatPrecisionDefinition,
+                StandardFloatPrecisionType: ACStandardFloatPrecisionDefinition,
                 ExponentPrecisionType: ACExponentPrecisionDefinition,
                 XnorPrecisionType: ACIntegerPrecisionDefinition,
             },
