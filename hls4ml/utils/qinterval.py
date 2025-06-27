@@ -1,5 +1,6 @@
 from functools import singledispatchmethod
-from typing import Any, Sequence, overload
+from typing import Any, overload
+from collections.abc import Sequence
 from warnings import warn
 
 import numpy as np
