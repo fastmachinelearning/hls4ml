@@ -4,8 +4,6 @@ import h5py
 
 from hls4ml.model import ModelGraph
 
-MAXMULT = 4096
-
 
 class KerasReader:
     def get_weights_data(self, layer_name, var_name):
@@ -64,6 +62,23 @@ class KerasNestedFileReader(KerasFileReader):
             return None
 
 
+class KerasWrappedLayerFileReader(KerasFileReader):
+    def __init__(self, data_reader, layer_path):
+        super().__init__(data_reader.config)
+        self.layer_path = f'model_weights/{layer_path}'
+
+    def _find_data(self, layer_name, var_name):
+        def h5_visitor_func(name):
+            if var_name in name:
+                return name
+
+        data_path = self.h5file[self.layer_path].visit(h5_visitor_func)
+        if data_path:
+            return self.h5file[f'/{self.layer_path}/{data_path}']
+        else:
+            return None
+
+
 class KerasModelReader(KerasReader):
     def __init__(self, keras_model):
         self.model = keras_model
@@ -76,6 +91,19 @@ class KerasModelReader(KerasReader):
                     return w.numpy()  # TF 2.x
                 except Exception:
                     return layer.get_weights()[i]  # TF 1.x
+
+        return None
+
+
+class KerasWrappedLayerReader(KerasReader):
+    def __init__(self, layer):
+        self.layer = layer
+
+    def get_weights_data(self, layer_name, var_name):
+        assert self.layer.name == layer_name
+        for _, w in enumerate(self.layer.weights):
+            if var_name in w.name:
+                return w.numpy()
 
         return None
 
@@ -93,6 +121,10 @@ def get_weights_data(data_reader, layer_name, var_name):
 
 
 layer_handlers = {}
+
+
+def get_layer_handlers():
+    return layer_handlers
 
 
 def register_keras_layer_handler(layer_cname, handler_func):
@@ -322,9 +354,7 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config):
+def keras_v2_to_hls(config):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
-    print('Creating HLS model')
-    hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
-    return hls_model
+    return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)

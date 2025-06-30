@@ -65,7 +65,7 @@ void average(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem],
     #pragma HLS PIPELINE
 
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = (data1[ii] + data2[ii]) / (res_T)2;
+        res[ii] = (data1[ii] + data2[ii]) * ap_ufixed<1, 0>(0.5);
     }
 }
 
@@ -74,7 +74,7 @@ void maximum(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem],
     #pragma HLS PIPELINE
 
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = (data1[ii] > data2[ii]) ? data1[ii] : data2[ii];
+        res[ii] = (data1[ii] > data2[ii]) ? static_cast<res_T>(data1[ii]) : static_cast<res_T>(data2[ii]);
     }
 }
 
@@ -83,7 +83,7 @@ void minimum(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem],
     #pragma HLS PIPELINE
 
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = (data1[ii] < data2[ii]) ? data1[ii] : data2[ii];
+        res[ii] = (data1[ii] < data2[ii]) ? static_cast<res_T>(data1[ii]) : static_cast<res_T>(data2[ii]);
     }
 }
 
@@ -226,7 +226,7 @@ void concatenate3d_2(input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * 
                 int data_idx = ii * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + jj * CONFIG_T::n_elem1_2 + kk;
                 res[res_idx] = data1[data_idx];
             }
-            for (int kk = 0; kk < CONFIG_T::n_elem1_2; kk++) {
+            for (int kk = 0; kk < CONFIG_T::n_elem2_2; kk++) {
                 int res_idx = ii * CONFIG_T::n_elem1_1 * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2) +
                               jj * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2) + kk + CONFIG_T::n_elem1_2;
                 int data_idx = ii * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2 + jj * CONFIG_T::n_elem2_2 + kk;

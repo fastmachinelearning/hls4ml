@@ -1,0 +1,10 @@
+{"name":"loop_attributes", "id":312, "nodes":[1, 3, 2]}
+{"name":"Myproject", "id":1, "clk":"No", "fmax":"480.00", "type":"kernel", "children":[4, 5]}
+{"name":"Myproject.B0", "id":4, "af":"480.00", "br":"0", "ci":"0", "fo":"Disabled", "ii":"1", "ll":"1", "lllt":"17.000000", "lt":"17.000000", "mi":"n/a", "pl":"Yes", "tc":"0", "tn":"1", "type":"bb"}
+{"name":"Myproject.B1", "id":5, "af":"480.00", "br":"0", "ci":"0", "fo":"Enabled", "ii":"1", "ll":"1", "lllt":"176.000000", "lt":"176.000000", "mi":"1", "pl":"Yes", "tc":"0", "tn":"1", "details":[{"type":"text", "text":"Hyper-Optimized loop structure: enabled."}], "type":"loop"}
+{"name":"relu_config3>()", "id":3, "clk":"No", "fmax":"480.00", "debug":[[{"filename":"/home/enlupi/Work/code/hls4mlprj_report_oneAPI/src/firmware/nnet_utils/nnet_activation_stream.h", "line":32}]], "type":"kernel", "children":[8, 9]}
+{"name":"relu_config3>().B0", "id":8, "af":"480.00", "br":"0", "ci":"0", "fo":"Disabled", "ii":"1", "ll":"1", "lllt":"17.000000", "lt":"17.000000", "mi":"n/a", "pl":"Yes", "tc":"0", "tn":"1", "type":"bb"}
+{"name":"relu_config3>().B1", "id":9, "af":"480.00", "br":"0", "ci":"0", "fo":"Enabled", "ii":"1", "ll":"1", "lllt":"159.000000", "lt":"159.000000", "mi":"1", "pl":"Yes", "tc":"0", "tn":"1", "details":[{"type":"text", "text":"Hyper-Optimized loop structure: enabled."}], "type":"loop"}
+{"name":"bias_t)", "id":2, "clk":"No", "fmax":"480.00", "debug":[[{"filename":"/home/enlupi/Work/code/hls4mlprj_report_oneAPI/src/firmware/nnet_utils/nnet_dense_stream.h", "line":12}]], "type":"kernel", "children":[6, 7]}
+{"name":"bias_t).B0", "id":6, "af":"480.00", "br":"0", "ci":"0", "fo":"Disabled", "ii":"1", "ll":"1", "lllt":"17.000000", "lt":"17.000000", "mi":"n/a", "pl":"Yes", "tc":"0", "tn":"1", "type":"bb"}
+{"name":"bias_t).B1", "id":7, "af":"480.00", "br":"0", "ci":"0", "fo":"Enabled", "ii":"1", "ll":"1", "lllt":"200.000000", "lt":"200.000000", "mi":"1", "pl":"Yes", "tc":"0", "tn":"1", "details":[{"type":"text", "text":"Hyper-Optimized loop structure: enabled."}], "type":"loop"}

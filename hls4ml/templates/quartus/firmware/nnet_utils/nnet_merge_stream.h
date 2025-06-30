@@ -84,8 +84,7 @@ AvgLoop:
     AvgPack:
         #pragma unroll
         for (int j = 0; j < res_T::size; j++) {
-            out_data[j] =
-                static_cast<typename res_T::value_type>((in_data1[j] + in_data2[j]) / (typename res_T::value_type)2);
+            out_data[j] = static_cast<typename res_T::value_type>((in_data1[j] + in_data2[j]) * ac_fixed<1, 0, false>(0.5));
         }
 
         res.write(out_data);
@@ -107,8 +106,8 @@ MaxLoop:
     MaxPack:
         #pragma unroll
         for (int j = 0; j < res_T::size; j++) {
-            out_data[j] = static_cast<typename res_T::value_type>(out_data[j] = (in_data1[j] > in_data2[j]) ? in_data1[j]
-                                                                                                            : in_data2[j]);
+            out_data[j] = (in_data1[j] > in_data2[j]) ? static_cast<typename res_T::value_type>(in_data1[j])
+                                                      : static_cast<typename res_T::value_type>(in_data2[j]);
         }
 
         res.write(out_data);
@@ -130,8 +129,8 @@ MinLoop:
     MinPack:
         #pragma unroll
         for (int j = 0; j < res_T::size; j++) {
-            out_data[j] = static_cast<typename res_T::value_type>(out_data[j] = (in_data1[j] < in_data2[j]) ? in_data1[j]
-                                                                                                            : in_data2[j]);
+            out_data[j] = (in_data1[j] < in_data2[j]) ? static_cast<typename res_T::value_type>(in_data1[j])
+                                                      : static_cast<typename res_T::value_type>(in_data2[j]);
         }
 
         res.write(out_data);
