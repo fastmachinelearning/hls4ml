@@ -759,7 +759,8 @@ def _(node: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
     if pool_op != 'Average':
         return
     px_shape = _get_px_shape(node)
-    i_add = int(log2(prod(px_shape)))
+    # Used before division, also more int bits
+    i_add = ceil(log2(prod(px_shape)))
     node.attributes['accum_t'].precision.width += i_add
     node.attributes['accum_t'].precision.integer += i_add
 
@@ -804,7 +805,7 @@ class BitExact(ModelOptimizerPass):
             if node.attributes.get('_request_kif'):
                 del node.attributes['_request_kif']
 
-        return False
+        return True
 
 
 class FixInputPrecision(OptimizerPass):
@@ -859,7 +860,5 @@ class FixInputPrecision(OptimizerPass):
         else:
             new_type.precision.saturation_mode = 'SAT'
         node.get_output_variable().type = new_type
-        node.model.config.layer_name_precision[node.name] = str(new_type)
-        return False
         node.model.config.layer_name_precision[node.name] = str(new_type)
         return False
