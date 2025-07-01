@@ -17,8 +17,8 @@ test_root_path = Path(__file__).parent
 def test_merge(merge_layer, io_type, backend, swap_inputs):
     input_shape = (10, 10, 3)
 
-    in1 = Input(shape=input_shape)
-    in2 = Input(shape=input_shape)
+    in1 = Input(shape=input_shape, name='inp1')
+    in2 = Input(shape=input_shape, name='inp2')
     if swap_inputs:
         out = merge_layer()([in2, in1])
     else:
@@ -27,11 +27,13 @@ def test_merge(merge_layer, io_type, backend, swap_inputs):
     model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
     output_dir = str(
         test_root_path
         / f'hls4mlprj_merge_{"swap_inputs_" if swap_inputs else ""}{merge_layer.__name__.lower()}_{backend}_{io_type}'
     )
+
+    config = {'Model': {'Precision': 'fixed<32,16>', 'ReuseFactor': 1}, 'LayerName': {'inp2': {'Precision': 'fixed<32,15>'}}}
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
@@ -79,10 +81,11 @@ def test_dot(axes, io_type, backend):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 def test_concatenate1d(io_type, backend):
-    input_shape = (10,)
+    input_shape1 = (10,)
+    input_shape2 = (8,)
 
-    in1 = Input(shape=input_shape)
-    in2 = Input(shape=input_shape)
+    in1 = Input(shape=input_shape1)
+    in2 = Input(shape=input_shape2)
     out = Concatenate()([in1, in2])
 
     model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
@@ -95,8 +98,8 @@ def test_concatenate1d(io_type, backend):
     )
     hls_model.compile()
 
-    X_input1 = np.random.rand(100, *input_shape)
-    X_input2 = np.random.rand(100, *input_shape)
+    X_input1 = np.random.rand(100, *input_shape1)
+    X_input2 = np.random.rand(100, *input_shape2)
 
     keras_prediction = model.predict([X_input1, X_input2])
     hls_prediction = hls_model.predict([X_input1, X_input2]).reshape(keras_prediction.shape)
@@ -108,10 +111,14 @@ def test_concatenate1d(io_type, backend):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 def test_concatenate2d(axis, io_type, backend):
-    input_shape = (10, 3)
+    input_shape1 = [10, 3]
+    input_shape2 = [10, 4]
 
-    in1 = Input(shape=input_shape)
-    in2 = Input(shape=input_shape)
+    input_shape1.insert(axis - 1, input_shape1.pop(1))
+    input_shape2.insert(axis - 1, input_shape2.pop(1))
+
+    in1 = Input(shape=input_shape1)
+    in2 = Input(shape=input_shape2)
     out = Concatenate(axis=axis)([in1, in2])
 
     model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
@@ -124,8 +131,8 @@ def test_concatenate2d(axis, io_type, backend):
     )
     hls_model.compile()
 
-    X_input1 = np.random.rand(100, *input_shape)
-    X_input2 = np.random.rand(100, *input_shape)
+    X_input1 = np.random.rand(100, *input_shape1)
+    X_input2 = np.random.rand(100, *input_shape2)
 
     keras_prediction = model.predict([X_input1, X_input2])
     hls_prediction = hls_model.predict([X_input1, X_input2]).reshape(keras_prediction.shape)
@@ -137,10 +144,14 @@ def test_concatenate2d(axis, io_type, backend):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 def test_concatenate3d(axis, io_type, backend):
-    input_shape = (10, 10, 3)
+    input_shape1 = [10, 10, 3]
+    input_shape2 = [10, 10, 4]
 
-    in1 = Input(shape=input_shape)
-    in2 = Input(shape=input_shape)
+    input_shape1.insert(axis - 1, input_shape1.pop(2))
+    input_shape2.insert(axis - 1, input_shape2.pop(2))
+
+    in1 = Input(shape=input_shape1)
+    in2 = Input(shape=input_shape2)
     out = Concatenate(axis=axis)([in1, in2])
 
     model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
@@ -153,8 +164,8 @@ def test_concatenate3d(axis, io_type, backend):
     )
     hls_model.compile()
 
-    X_input1 = np.random.rand(100, *input_shape)
-    X_input2 = np.random.rand(100, *input_shape)
+    X_input1 = np.random.rand(100, *input_shape1)
+    X_input2 = np.random.rand(100, *input_shape2)
 
     keras_prediction = model.predict([X_input1, X_input2])
     hls_prediction = hls_model.predict([X_input1, X_input2]).reshape(keras_prediction.shape)
