@@ -194,10 +194,10 @@ def parse_layernorm_layer(operation, layer_name, input_names, input_shapes, node
     layer['epsilon_power_of_10'] = -round(math.log10(class_object.eps))
     if layer['epsilon_power_of_10'] <= 0:
         raise Exception('epsilon must be less than 1e-1')
-        
-    return layer, [shape for shape in input_shapes[0]]        
 
-  
+    return layer, [shape for shape in input_shapes[0]]
+
+
 @pytorch_handler('einsum')
 def parse_einsum_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert 'einsum' in operation
