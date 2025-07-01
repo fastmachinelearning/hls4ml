@@ -352,7 +352,10 @@ def parse_pytorch_model(config, verbose=True):
             if '.' not in node.target:
                 obj = getattr(model, node.name)
             else:
-                obj = getattr(children[node.target.split('.')[0], node.name])
+                if '_' not in node.name:
+                    obj = getattr(children[node.target.split('.')[0]], node.name)
+                else:
+                    obj = getattr(children[node.target.split('.')[0]], node.name.split('_')[1])
 
             input_layer = {}
             input_layer['name'] = node.name
