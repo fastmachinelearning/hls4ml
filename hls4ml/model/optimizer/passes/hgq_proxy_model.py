@@ -45,7 +45,6 @@ class UnaryLUT(Layer):
         self.set_attr('n_in', inp.size())
         self.table = self.attributes['table_data']
         self.attributes['table_size'] = len(self.table)
-        self.table_size = len(self.table)
 
         self.add_weights_variable(name='table')
 
@@ -89,14 +88,14 @@ class FuseFixedPointQuantizer(OptimizerPass):
     def propagate(self, node: Layer, precision: FixedPrecisionType):
         from hls4ml.model.optimizer.passes.bit_exact import get_input_layers, get_output_layers
 
-        if node.attributes.get('result_t_propagated', False):
+        if node.attributes.get('_result_t_propagated', False):
             msg = f'result_t for {node.name} propagated multiple times. \
-                Bit-exactness may be compromised. Consider void using consecutive quantizers in your model.'
+                Bit-exactness may be compromised. Avoid using consecutive quantizers in your model.'
             warn(msg, stacklevel=1)
 
         node.get_output_variable().type.precision = precision
         node.attributes['result_t'].precision = precision
-        node.attributes['result_t_propagated'] = True
+        node.attributes['_result_t_propagated'] = True
 
         if not isinstance(node, Reshape):
             return node
@@ -145,17 +144,6 @@ class EnforceProxyModelEmbeddedConfig(OptimizerPass):
         if 'layers' not in node.overrides:
             return False
 
-        def to_hls4ml_fixed(fixed: str):
-            matched = re_parse_fixed.match(re_purge_prefix.sub('', fixed))
-            assert matched is not None, f'Cannot parse {fixed}'
-            signed = matched.group(1) != 'u'
-            b, i, *args = matched.group(2).split(',')
-            b, i = int(b), int(i)
-            args = [arg.upper() for arg in args]
-            new_type = FixedPrecisionType(b, i, signed, *args)
-            # For some reason, __class__ is overwritten in hls4ml
-            return new_type
-
         graph_changed = False
         layers = node.overrides['layers']
         for name, conf in layers.items():
@@ -181,7 +169,7 @@ class EnforceProxyModelEmbeddedConfig(OptimizerPass):
 
                 if k.endswith('_t'):
                     continue  # Handled in bit-exact flow.
-                elif k in target_node.attributes.attributes:
+                elif k in target_node.attributes:
                     target_node.set_attr(k, v)
                 elif k == 'parallelization_factor':
                     target_node.set_attr(k, int(v))

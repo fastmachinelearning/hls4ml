@@ -6,22 +6,6 @@
 
 namespace nnet {
 
-// template <class data_T, class res_T, typename CONFIG_T>
-// typename std::enable_if<CONFIG_T::strategy == nnet::distributed_arithmetic, void>::type
-// dense(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream) {
-//     #pragma HLS INLINE recursive
-
-//     typename data_T::value_type data[CONFIG_T::n_in];
-//     #pragma HLS ARRAY_PARTITION variable=data complete
-
-//     typename res_T::value_type res[CONFIG_T::n_out];
-//     #pragma HLS ARRAY_PARTITION variable=res complete
-
-//     data_prepare<data_T, CONFIG_T>(data_stream, data);
-//     CONFIG_T::dense_da(data, res);
-//     res_write<res_T, CONFIG_T>(res, res_stream);
-// }
-
 template <class data_T, class res_T, typename CONFIG_T>
 typename std::enable_if<CONFIG_T::strategy == nnet::distributed_arithmetic, void>::type
 dense(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream) {
@@ -64,7 +48,7 @@ ResWrite:
 
 template <typename CONFIG_T, class data_T, class res_T>
 typename std::enable_if<CONFIG_T::strategy == nnet::distributed_arithmetic, void>::type
-conv1d_da_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt]) {
+conv1d_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt]) {
     constexpr unsigned mult_n_in = CONFIG_T::n_chan * CONFIG_T::filt_width;
     constexpr unsigned mult_n_out = CONFIG_T::n_filt;
 
@@ -98,8 +82,8 @@ PartitionLoop:
 
 template <typename CONFIG_T, class data_T, class res_T>
 typename std::enable_if<CONFIG_T::strategy == nnet::distributed_arithmetic, void>::type
-conv2d_da_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
-             res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]) {
+conv2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+          res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]) {
     constexpr unsigned mult_n_in = CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan;
     constexpr unsigned mult_n_out = CONFIG_T::n_filt;
 

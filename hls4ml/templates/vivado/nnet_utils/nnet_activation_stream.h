@@ -228,7 +228,7 @@ SoftmaxArrayLoop:
         Op_add<typename CONFIG_T::accum_t> op_add;
         exp_sum = reduce<typename CONFIG_T::accum_t, data_T::size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
-        typename CONFIG_T::accum_t inv_exp_sum =
+        typename CONFIG_T::inv_table_t inv_exp_sum =
             invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
 
         res_T out_pack;

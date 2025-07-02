@@ -1078,17 +1078,23 @@ class VivadoWriter(Writer):
             with tarfile.open(tar_path, mode='w:gz') as archive:
                 archive.add(model.config.get_output_dir(), recursive=True, arcname='')
 
-    def write_hls(self, model):
-        self.write_project_dir(model)
-        self.write_project_cpp(model)
-        self.write_project_header(model)
-        self.write_weights(model)
-        self.write_defines(model)
-        self.write_parameters(model)
-        self.write_test_bench(model)
-        self.write_bridge(model)
-        self.write_build_script(model)
-        self.write_nnet_utils(model)
-        self.write_generated_code(model)
-        self.write_yml(model)
-        self.write_tar(model)
+    def write_hls(self, model, is_multigraph=False):
+        if not is_multigraph:
+            self.write_project_dir(model)
+            self.write_project_cpp(model)
+            self.write_project_header(model)
+            self.write_weights(model)
+            self.write_defines(model)
+            self.write_parameters(model)
+            self.write_test_bench(model)
+            self.write_bridge(model)
+            self.write_build_script(model)
+            self.write_nnet_utils(model)
+            self.write_generated_code(model)
+            self.write_yml(model)
+            self.write_tar(model)
+        else:
+            self.write_project_dir(model)
+            self.write_build_script_multigraph(model)
+            self.write_bridge_multigraph(model)
+            self.write_multigraph_weights(model)

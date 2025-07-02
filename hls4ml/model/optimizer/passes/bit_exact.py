@@ -1,3 +1,6 @@
+# k, i, f = keep_negative, integers (excluding sign), fractionals
+# b, B, I = width (no sign), width (including sign), integers (including sign)
+
 import re
 import typing
 from collections.abc import Sequence
@@ -43,10 +46,10 @@ rm_cpy = re.compile(r'(?P<name>.+)_cpy\d*')
 
 
 def to_hls4ml_fixed(k, i, f, name, *args):
-    signed, b, I = k != 0, k + i + f, int(k + i)
+    signed, B, I = k != 0, k + i + f, int(k + i)
     args = [arg.upper() for arg in args]
-    if b >= 1:
-        ptype = FixedPrecisionType(b, I, signed, *args)
+    if B >= 1:
+        ptype = FixedPrecisionType(B, I, signed, *args)
     else:
         ptype = FixedPrecisionType(1, 32, False, 'TRN', 'WRAP')
     return NamedType(name, ptype)
@@ -94,8 +97,8 @@ def _request_kif(layer: Layer) -> tuple[KIF_t, ...]:
 @_request_kif.register
 def _(layer: FixedPointQuantizer):
     assert layer.mask_kbi is not None
-    k, b, I = layer.mask_kbi
-    k, i, f = k, I - k, b - I
+    k, B, I = layer.mask_kbi
+    k, i, f = k, I - k, B - I
 
     if k.ndim > 0:
         k, i, f = k[0], i[0], f[0]
@@ -129,7 +132,7 @@ def _(layer: Reshape):
 
 @_request_kif.register
 def _(layer: Activation):
-    fn_name = layer.attributes.attributes.get('activation')
+    fn_name = layer.attributes.get('activation')
     if fn_name == 'linear':
         return (requested_kif(layer),)
     if fn_name == 'relu':
@@ -206,9 +209,9 @@ def get_input_kifs(layer: Layer):
 def _(layer: FixedPointQuantizer):
     assert layer.mask_kbi is not None
 
-    _k, _b, _I = layer.mask_kbi
+    _k, _B, _I = layer.mask_kbi
     shape0 = _k.shape[1:]
-    k, i, f = _k, _I - _k, _b - _I
+    k, i, f = _k, _I - _k, _B - _I
     last_layer = get_input_layers(layer)[0]
     lk, li, lf = produce_kif(last_layer)
 
@@ -251,16 +254,16 @@ def _(layer: FixedPointQuantizer):
         contract_axis = np.arange(k.ndim)
 
     _k = k
-    _b = k + i + f
+    _B = k + i + f
     _I = k + i
 
     for ax in contract_axis:
         _k = np.max(_k, axis=ax, keepdims=True)
-        _b = np.max(_b, axis=ax, keepdims=True)
+        _B = np.max(_B, axis=ax, keepdims=True)
         _I = np.max(_I, axis=ax, keepdims=True)
 
-    _k, _b, _I = _k[None], _b[None], _I[None]
-    layer.mask_kbi = (_k, _b, _I)
+    _k, _B, _I = _k[None], _B[None], _I[None]
+    layer.mask_kbi = (_k, _B, _I)
     return k, i, f
 
 
@@ -273,7 +276,7 @@ def _(layer: Reshape):
 
 @_produce_kif.register
 def _(layer: Merge):
-    op = layer.attributes.attributes['op'].lower()
+    op = layer.attributes['op'].lower()
     kif_ins = get_input_kifs(layer)
     match op:
         case 'add':
@@ -283,7 +286,7 @@ def _(layer: Merge):
             qint_in0, qint_in1 = (QIntervalArray.from_kif(*kif) for kif in kif_ins)
             k, i, f = (qint_in0 - qint_in1).to_kif()
         case 'concatename':
-            axis = layer.attributes.attributes['axis']
+            axis = layer.attributes['axis']
             _ks, _is, _fs = zip(*[kif for kif in kif_ins])
             k = np.concatenate(_ks, axis=axis)
             i = np.concatenate(_is, axis=axis)
@@ -318,9 +321,9 @@ def _(layer: Merge):
 
 @_produce_kif.register
 def _(layer: EinsumDense):
-    kernel = layer.attributes.attributes['weight'].data
-    _bias = layer.attributes.attributes['bias']
-    eq = layer.attributes.attributes['equation']
+    kernel = layer.attributes['weight'].data
+    _bias = layer.attributes['bias']
+    eq = layer.attributes['equation']
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
     qint_out = einsum(eq, qint_in, kernel)
@@ -335,7 +338,7 @@ def _(layer: Einsum):
     kif_in1, kif_in2 = get_input_kifs(layer)
     qint_in1 = QIntervalArray.from_kif(*kif_in1)
     qint_in2 = QIntervalArray.from_kif(*kif_in2)
-    eq = layer.attributes.attributes['equation']
+    eq = layer.attributes['equation']
     qint_out = einsum(eq, qint_in1, qint_in2)
     k, i, f = qint_out.to_kif()
     return k.astype(np.int8), i, f
@@ -343,8 +346,8 @@ def _(layer: Einsum):
 
 @_produce_kif.register
 def _(layer: Dense):
-    kernel = layer.attributes.attributes['weight'].data
-    _bias = layer.attributes.attributes['bias']
+    kernel = layer.attributes['weight'].data
+    _bias = layer.attributes['bias']
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
     qint_out = qint_in @ kernel
@@ -389,18 +392,12 @@ def _im2col(kernel_size: Sequence[int], arr: np.ndarray):
 def im2col(kernel_size: Sequence[int], *arrs: np.ndarray):
     """im2col for multidimensional arrays. Assumes Channel Last format.
 
-    Parameters
-    ----------
-    kernel_size : Sequence[int]
-        The size of the kernel, in the form (*kernel_shape, ch_in, ch_out)
+    Args:
+        kernel_size (Sequence[int]): The size of the kernel, in the form (*kernel_shape, ch_in, ch_out).
+        *arrs (np.ndarray): The input arrays to be transformed.
 
-    *arrs : np.ndarray
-        The input arrays to be transformed
-
-    Returns
-    -------
-    list[np.ndarray]
-        The transformed arrays
+    Returns:
+        list[np.ndarray]: The transformed arrays.
     """
     return [_im2col(kernel_size, arr) for arr in arrs]
 
@@ -408,16 +405,16 @@ def im2col(kernel_size: Sequence[int], *arrs: np.ndarray):
 def pad_arrs(node: Layer, pad_val: float = 0, *arrs: np.ndarray):
     out_arrs = []
     if node.class_name.endswith('2D'):
-        pad_top = node.attributes.attributes['pad_top']
-        pad_bottom = node.attributes.attributes['pad_bottom']
-        pad_left = node.attributes.attributes['pad_left']
-        pad_right = node.attributes.attributes['pad_right']
+        pad_top = node.attributes['pad_top']
+        pad_bottom = node.attributes['pad_bottom']
+        pad_left = node.attributes['pad_left']
+        pad_right = node.attributes['pad_right']
         for arr in arrs:
             r = np.pad(arr, ((pad_top, pad_bottom), (pad_left, pad_right), (0, 0)), constant_values=pad_val)
             out_arrs.append(r)
     elif node.class_name.endswith('1D'):
-        pad_left = node.attributes.attributes['pad_left']
-        pad_right = node.attributes.attributes['pad_right']
+        pad_left = node.attributes['pad_left']
+        pad_right = node.attributes['pad_right']
         for arr in arrs:
             r = np.pad(arr, ((pad_left, pad_right), (0, 0)), constant_values=pad_val)
             out_arrs.append(r)
@@ -428,11 +425,11 @@ def pad_arrs(node: Layer, pad_val: float = 0, *arrs: np.ndarray):
 
 def stride_arrs(node: Layer, *arrs: np.ndarray):
     if node.class_name.endswith('2D'):
-        st_h = node.attributes.attributes['stride_height']
-        st_w = node.attributes.attributes['stride_width']
+        st_h = node.attributes['stride_height']
+        st_w = node.attributes['stride_width']
         return tuple(arr[::st_h, ::st_w] for arr in arrs)
     if node.class_name.endswith('1D'):
-        st_w = node.attributes.attributes['stride_width']
+        st_w = node.attributes['stride_width']
         return tuple(arr[::st_w] for arr in arrs)
     raise ValueError(f'Layer {node.class_name} is not supported for stride_arrs')
 
@@ -440,9 +437,9 @@ def stride_arrs(node: Layer, *arrs: np.ndarray):
 @_produce_kif.register(Conv1D)
 @_produce_kif.register(Conv2D)
 def _(layer: Conv1D | Conv2D):
-    assert layer.attributes.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
-    kernel = layer.attributes.attributes['weight'].data
-    _bias = layer.attributes.attributes['bias']
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
+    kernel = layer.attributes['weight'].data
+    _bias = layer.attributes['bias']
     bias = _bias.data if _bias is not None else 0
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
@@ -490,9 +487,9 @@ def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
 def _(layer: BatchNormalization):
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
-    scale = layer.attributes.attributes['scale'].data
+    scale = layer.attributes['scale'].data
 
-    _bias = layer.attributes.attributes['bias']
+    _bias = layer.attributes['bias']
     bias = _bias.data if _bias is not None else 0
 
     qint_out = qint_in * scale + bias
@@ -524,7 +521,7 @@ def _(layer: Softmax):
 def _(layer: Concatenate):
     kifs_in = get_input_kifs(layer)
     ks, is_, fs = zip(*kifs_in)
-    ax = layer.attributes.attributes['axis']
+    ax = layer.attributes['axis']
     k = np.concatenate(ks, axis=ax)
     i = np.concatenate(is_, axis=ax)
     f = np.concatenate(fs, axis=ax)
@@ -533,7 +530,7 @@ def _(layer: Concatenate):
 
 @_produce_kif.register
 def _(layer: Activation):
-    fn_name = layer.attributes.attributes['activation'].lower()
+    fn_name = layer.attributes['activation'].lower()
     k, i, f = get_input_kifs(layer)[0]
 
     match fn_name:
@@ -589,7 +586,14 @@ def request_kif(layer: Layer) -> tuple[KIF_t, ...]:
 
 
 def requested_by_quantizer(layer: Layer) -> bool:
-    """Check if the current requested kif is from a quantizer"""
+    """Check if the current requested kif is from a quantizer.
+
+    Args:
+        layer (Layer): The layer to check.
+
+    Returns:
+        bool: True if requested by a quantizer, False otherwise.
+    """
     for n in get_output_layers(layer):
         if isinstance(n, FixedPointQuantizer):
             return True
@@ -611,27 +615,27 @@ def default_register_precision(layer: Layer):
     ok, oi, of = kif_arrs_to_ints((_ok, _oi, _of))
 
     result_t = to_hls4ml_fixed(ok, oi, of, f'{layer.name}_t')
-    layer.attributes.attributes['result_t'] = result_t
+    layer.attributes['result_t'] = result_t
     layer.get_output_variable().type = result_t
 
     overrides = {}
 
     # Set accum_t, if exists ONLY for layers with accum_t directly at output (in general, linear DSP operations)
-    if 'accum_t' in layer.attributes.attributes:
+    if 'accum_t' in layer.attributes:
         accum_kif = kif_arrs_to_ints((_pk, _pi, _pf))
         accum_t = to_hls4ml_fixed(*accum_kif, f'{layer.name}_accum_t')
         overrides['accum_t'] = accum_t
 
     # Set precision for fixed array (weight_t, bias_t, table_t, etc.)
-    for w_name_t, v in layer.attributes.attributes.items():
+    for w_name_t, v in layer.attributes.items():
         if not isinstance(v, NamedType) or not w_name_t.endswith('_t'):
             continue  # Not a precision, skip
 
         w_name = w_name_t[:-2]
-        if w_name not in layer.attributes.attributes:
+        if w_name not in layer.attributes:
             continue  # No matching data found, skip
 
-        weight_var: WeightVariable = layer.attributes.attributes[w_name]
+        weight_var: WeightVariable = layer.attributes[w_name]
         if weight_var is None:  # Corresponding weight not exist, precision to be used nowhere. Put dummy.
             precision = to_hls4ml_fixed(0, 0, 1, f'{layer.name}_{w_name_t}')
         else:
@@ -644,10 +648,10 @@ def default_register_precision(layer: Layer):
 
     # Apply overrides
     for w_name_t, v in overrides.items():
-        layer.attributes.attributes[w_name_t] = v
-        if w_name_t[:-2] in layer.attributes.attributes:
+        layer.attributes[w_name_t] = v
+        if w_name_t[:-2] in layer.attributes:
             # weight variables need extra steps to update precision
-            weight_var: WeightVariable = layer.attributes.attributes[w_name_t[:-2]]
+            weight_var: WeightVariable = layer.attributes[w_name_t[:-2]]
             weight_var.type = v
             weight_var.update_precision(v.precision)
             layer.model.config.layer_name_precision[f'{layer.name}_{w_name_t[:-2]}'] = str(v.precision)
@@ -708,18 +712,18 @@ def _(node: Softmax):
     match impl:
         case 'latency':
             k, i, f = get_input_kifs(node)[0]
-            b = np.max(k) + np.max(i) + np.max(f)
+            B = np.max(k) + np.max(i) + np.max(f)
         case 'stable':
             inp_norm_t: FixedPrecisionType = node.attributes['inp_norm_t'].precision
-            b = inp_norm_t.width
+            B = inp_norm_t.width
         case 'lagency':
             raise ValueError('lagency softmax is not supported')
         case 'argmax':
-            b = 0
+            B = 0
         case _:
             raise ValueError(f'Unknown softmax implementation {impl}')
 
-    exp_table_size = 2 ** int(b)
+    exp_table_size = 2 ** int(B)
     node.attributes['exp_table_size'] = exp_table_size
     node.attributes['accum_t'] = NamedType(f'{node.name}_accum_t', accum_t)
 
@@ -766,6 +770,18 @@ def _(node: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
 
 
 class BitExact(ModelOptimizerPass):
+    """Model-wide bitwidth flow to ensure bit-exactness. Triggered by the presence of FixedPointQuantizer for now.
+    On the high level:
+    1. (forward flow) Starting from the model input, forward flow down the required bitwidth and shrink
+    FixedQuantizer bits when possible. Register the generated bw by each layer as "produced_kif"
+    2. (backward flow) For each layer, find the maximum bitwidth it can handle (till which point more bits makes no sense)
+    For example, a ap_fixed<8,4> in the downstream has won't take advantage of >4 fractional bits on the input.
+    3. (combine) Use the "minimal" of the produced and requested bitwidths on each layer
+
+    In all cases, the process is (supposed to be) bit-exact. Both forward and backward flows use quantized
+    interval arithmetic to determine the bitwidths semi-symbolically. BW>=128 are unhandled.
+    """
+
     def __init__(self):
         pass
 
@@ -827,10 +843,6 @@ class FixInputPrecision(OptimizerPass):
             new_type = to_hls4ml_fixed(0, 0, 1, f'{node.name}_t')
             node.get_output_variable().type = new_type
             node.model.config.layer_name_precision[node.name] = str(new_type)
-            return False
-
-        if not all(isinstance(l, FixedPointQuantizer) for l in out_layers):
-            warn(f'Input {node.name} has unhandled high precision. Consider setting it manually before synthesising.')
             return False
 
         sat_modes = [l.SAT for l in out_layers]

@@ -33,8 +33,10 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
     B = np.broadcast_to(B.astype(np.int8), (1,) + shape)  # type: ignore
     I = np.broadcast_to(I.astype(np.int8), (1,) + shape)  # noqa: E741
 
-    overflow_mode = internal_q.overflow_mode
-    round_mode = internal_q.round_mode
+    overflow_mode: str = internal_q.overflow_mode
+    round_mode: str = internal_q.round_mode
+    if round_mode.startswith('S_'):
+        round_mode = round_mode[2:]
     fusible = np.unique(k).size == 1 and np.unique(B).size == 1 and np.unique(I).size == 1
 
     input_keras_tensor_names = tensor.name if is_input else f'{tensor.name}_q'

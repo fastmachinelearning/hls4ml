@@ -8,9 +8,9 @@ from hls4ml.converters import convert_from_keras_model
 
 try:
     from hgq.layers import QEinsum
-    from hgq.utils import trace_mode
+    from hgq.utils import trace_minmax
 except ImportError:
-    pytest.skip('s-quark is not installed', allow_module_level=True)
+    pytest.skip('HGQ2 is not installed', allow_module_level=True)
 
 from keras.layers import Input
 
@@ -42,8 +42,7 @@ def test_einsum_dense(backend, io_type, strategy, operation):
     output_dir = str(test_root_path / f'hls4mlprj_einsum_{eq_name}_{backend}_{io_type}_{strategy}')
     hls_config = {'Model': {'Precision': 'ap_fixed<1,0>', 'ReuseFactor': 1}, 'Strategy': strategy}
 
-    with trace_mode(model):
-        r_keras = model.predict(data, verbose=0, batch_size=1000)  # type: ignore
+    r_keras = trace_minmax(model, data, batch_size=8192, verbose=0, return_results=True)  # type: ignore
 
     model_hls = convert_from_keras_model(
         model, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type

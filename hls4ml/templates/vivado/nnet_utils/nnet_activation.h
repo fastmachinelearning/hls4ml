@@ -152,6 +152,8 @@ void init_exp_table(typename CONFIG_T::exp_table_t table_out[CONFIG_T::exp_table
         // Slicing bits for address is going to round towards 0, so take the central value
         float x = softmax_real_val_from_idx<data_T, CONFIG_T::exp_table_size>(i) * CONFIG_T::exp_scale;
         if (negative) {
+            // for normalized inputs, we keep the normalization values positive (x_bar = x_max - x)
+            // so we need to negate the input (exp(-x_bar) = exp(x - x_max))
             x = -x;
         }
         typename CONFIG_T::exp_table_t exp_x = exp_fcn_float(x);

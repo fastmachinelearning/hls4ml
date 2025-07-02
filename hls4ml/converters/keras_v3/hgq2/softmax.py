@@ -63,7 +63,7 @@ class QSoftmaxHandler(QLayerHandler):
             assert all(ax1 - ax0 == 1 for ax0, ax1 in zip(axs[:-1], axs[1:])), 'Softmax must act on adjacent axes'
             n_outer: int = prod(in_tensors[0].shape[1 : axs[0]])  # type: ignore
             n_inner: int = prod(in_tensors[0].shape[axs[-1] + 1 :])  # type: ignore
-            ax = -1  # if n_inner == 1 else 999  # 999 as placeholder
+            ax = -1
         n_in: int = prod(in_tensors[0].shape[1:])  # type: ignore
 
         from hgq.quantizer.internal import FixedPointQuantizerBase
@@ -124,8 +124,6 @@ class QSoftmaxHandler(QLayerHandler):
 
         if layer.stable:
             inp_norm_t = fixed_quantizer_to_hls4ml_t(layer.exp_table.iq.quantizer)
-            # inp_norm_t.saturation_mode = SaturationMode.WRAP
-            # inp_norm_t.rounding_mode = RoundingMode.TRN
             config['inp_norm_t'] = inp_norm_t
 
         return (config,)

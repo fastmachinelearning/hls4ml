@@ -2,7 +2,7 @@ import typing
 from collections.abc import Sequence
 
 import numpy as np
-from quantizers import float_quantize, get_fixed_quantizer_np
+from quantizers import get_fixed_quantizer_np
 
 from hls4ml.model.types import FixedPrecisionType
 
@@ -13,8 +13,6 @@ if typing.TYPE_CHECKING:
     from keras import KerasTensor
 
 from decimal import Decimal
-
-from hls4ml.utils.qinterval import minimal_kif
 
 
 @register
@@ -78,12 +76,8 @@ class QUnaryLUTHandler(QLayerHandler, KerasV3LayerHandler):
             table_t = FixedPrecisionType(b, I, k)
         else:
             assert isinstance(oq, FloatPointQuantizer)
-            m, e, e0 = (ops.convert_to_numpy(x).ravel().item() for x in (oq.m, oq.e, oq.e0))
-            table = float_quantize(table, m, e, e0)
-            k, i, f = (int(np.min(x)) for x in minimal_kif(table))
-
             raise NotImplementedError('FloatPointQuantizer is not supported yet')
-            table_t = FixedPrecisionType(k + i + f, k + i, bool(k))
+
         table = ops.convert_to_numpy(table)
 
         config.update(

@@ -21,8 +21,8 @@ T_kv3_handler = Callable[
 
 def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None):
     """Given a keras layer, return a list of tuples of input and output
-    tensors. If the layer is called only once (i.e., no shared layers),
-    the list will contain only one tuple.
+    tensors. If the layer is called only once (i.e., layer is not used
+    multiple times in the same model), the list will contain only one tuple.
 
     The layer must have been built before calling this function.
 

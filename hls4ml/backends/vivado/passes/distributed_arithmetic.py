@@ -11,7 +11,6 @@ from hls4ml.model.optimizer.passes.bit_exact import get_input_layers, get_output
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
 from hls4ml.model.types import FixedPrecisionType, Source
 from hls4ml.utils.dependency import requires
-from hls4ml.utils.einsum_utils import parse_einsum  # noqa: F401
 
 if typing.TYPE_CHECKING:
     from hls4ml.model import ModelGraph
@@ -66,8 +65,8 @@ def _(node: Dense):
 @get_kernel_inp_kif.register(Conv1D)
 @get_kernel_inp_kif.register(Conv2D)
 def _(layer: Conv1D | Conv2D):
-    assert layer.attributes.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
-    kernel = layer.attributes.attributes['weight'].data
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
+    kernel = layer.attributes['weight'].data
     k_in, i_in, f_in = _get_input_kif(layer)
     k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
     k_in, i_in, f_in = im2col(kernel.shape, k_in, i_in, f_in)
@@ -149,16 +148,10 @@ class DistributedArithmeticCodegen(OptimizerPass):
         node.set_attr('da_codegen', Source(fn_str))
 
 
-dense_da_stream_template = '''struct config{index} {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned io_type = nnet::io_stream;
-    static const unsigned strategy = nnet::distributed_arithmetic;
-    constexpr static auto dense_da = nnet::dense_da_{index}<typename {inp_t}::value_type, typename {out_t}::value_type>;
-}};\n'''
-
-
 class FuseQuantizerIntoDALayers(OptimizerPass):
+    """Heterogeneous quantizer can be fused into the DA CMVM kernel in some cases.
+    This would allow heterogeenous quantizarion for io stream in some cases."""
+
     def match(self, node: Layer):
         if not isinstance(node, FixedPointQuantizer):
             return False
@@ -203,9 +196,18 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
         return True
 
 
+dense_da_stream_template = '''struct config{index} {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned io_type = nnet::io_stream;
+    static const unsigned strategy = nnet::distributed_arithmetic;
+    constexpr static auto dense_da = nnet::dense_da_{index}<typename {inp_t}::value_type, typename {out_t}::value_type>;
+}};\n'''
+
+
 class DALatencyDenseTemplate(OptimizerPass):
-    # For Dense, distributed arithmetic do not call the original, regardless of the io_type
-    # FOr io_stream, a minimal config will still be generated
+    # For Dense, distributed arithmetic do not call the original impl, regardless of the io_type
+    # For io_stream, a minimal config will still be generated
     def match(self, node: Layer):
         if node.class_name != 'Dense':
             return False
@@ -225,10 +227,10 @@ class DALatencyDenseTemplate(OptimizerPass):
         if io_type == 'io_parallel':
             fn_name = f'dense_da_{node.index}<{inp_t}, {out_t}>'
             function_cpp = f'{namespace}::{fn_name}({inp_name}, {out_name});'
-            node.attributes.attributes['function_cpp'] = function_cpp
+            node.attributes['function_cpp'] = function_cpp
         else:
             assert io_type == 'io_stream'
-            config_cpp = dense_da_stream_template.format(inp_t=inp_t, out_t=out_t, **node.attributes.attributes)
+            config_cpp = dense_da_stream_template.format(inp_t=inp_t, out_t=out_t, **node.attributes)
             function_cpp = f'nnet::dense<{inp_t}, {out_t}, config{node.index}>({inp_name}, {out_name});'
             node.attributes['config_cpp'] = config_cpp
             node.attributes['function_cpp'] = function_cpp
@@ -300,8 +302,8 @@ class DALatencyConvTemplate(OptimizerPass):
             class_name = class_name[9:]
 
         ndim = len(ker_shape) - 2
-        function_cpp = f'nnet::conv{ndim}d_da_cl<config{node.index}, {inp_t}, {out_t}>({inp_name}, {out_name});'
-        node.attributes.attributes['function_cpp'] = function_cpp
+        function_cpp = f'nnet::conv{ndim}d_cl<config{node.index}, {inp_t}, {out_t}>({inp_name}, {out_name});'
+        node.attributes['function_cpp'] = function_cpp
 
         # config generation
         params = node.attributes.attributes.copy()
@@ -314,7 +316,7 @@ class DALatencyConvTemplate(OptimizerPass):
         params.setdefault('stride_height', -1 if ndim == 1 else 1)
 
         config_cpp = conv_da_parallel_template.format(inp_t=inp_t, out_t=out_t, n_pixels=n_pixels, **params)
-        node.attributes.attributes['config_cpp'] = config_cpp
+        node.attributes['config_cpp'] = config_cpp
 
         # Only unrolled header is required for io_parallel
         include_headers = [
@@ -322,7 +324,7 @@ class DALatencyConvTemplate(OptimizerPass):
             f'nnet_utils/nnet_{class_name.lower()}.h',
             'nnet_utils/nnet_conv_stream.h',  # some properties defined in config need this
         ]
-        node.attributes.attributes['include_header'] = include_headers
+        node.attributes['include_header'] = include_headers
 
         # avoid output weights and bias; alternatie entry point does not use them
         del node.attributes['weight_data']
@@ -331,6 +333,18 @@ class DALatencyConvTemplate(OptimizerPass):
         del node.attributes['bias']
         del node.attributes['weight_t']
         del node.attributes['bias_t']
+
+
+kernel_fn_template = '''
+template <typename inp_t, typename out_t>
+void einsum_dense{index}_da_kernel(
+    inp_t inp_tpose[{inp_tpose}],
+    out_t out_tpose[{out_tpose}],
+    int l0
+) {{
+    {fn_call_str}
+}}
+'''
 
 
 class DistributedArithmeticEinsumCodegen(OptimizerPass):
@@ -373,16 +387,13 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
             fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'
             fn_calls.append(fn_call)
 
-        kernel_fn = f'''
-template <typename inp_t, typename out_t>
-void einsum_dense{node.index}_da_kernel(
-    inp_t inp_tpose[{L_data * C * I}],
-    out_t out_tpose[{L_data * L_ker * I}],
-    int l0
-) {{
-    {"    ".join(fn_calls)}
-}}
-'''
+        kernel_fn = kernel_fn_template.format(
+            index=node.index,
+            inp_tpose=L_data * C * I,
+            out_tpose=L_data * L_ker * I,
+            fn_call_str='    \n'.join(fn_calls),
+        )
+
         code_gen = '\n\n'.join(fn_strs) + '\n\n' + kernel_fn
         node.attributes['da_codegen'] = Source(code_gen)
         del node.attributes['weight_data']

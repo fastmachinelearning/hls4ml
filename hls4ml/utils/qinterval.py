@@ -1,6 +1,6 @@
+from collections.abc import Sequence
 from functools import singledispatchmethod
 from typing import Any, overload
-from collections.abc import Sequence
 from warnings import warn
 
 import numpy as np
@@ -20,17 +20,15 @@ def _minimal_f(array: np.ndarray):
 
 
 def minimal_kif(array: np.ndarray):
-    """Given a constant array, determine the minimal k, i, f values that can contain it with no loss of precision.
+    """Given a constant array, determine the minimal k, i, f values
+    that can contain it with no loss of precision.
 
-    Parameters
-    ----------
-    array : np.ndarray
-        The constant array to be represented.
+    Args:
+        array (np.ndarray): The constant array to be represented.
 
-    Returns
-    -------
-    tuple[np.ndarray, np.ndarray, np.ndarray]
-        The minimal k, i, f values that can contain the array with no loss of precision.
+    Returns:
+        tuple[np.ndarray, np.ndarray, np.ndarray]: The minimal k, i, f
+        values that can contain the array with no loss of precision.
     """
     f = _minimal_f(array)
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -42,6 +40,7 @@ def minimal_kif(array: np.ndarray):
 
 
 class _QIntervalArray:
+    # For single dispatch purpose, as one cannot dispatch against itself'
     def __init__(self, min: np.ndarray, max: np.ndarray, delta: np.ndarray):
         self.min = min.astype(np.float64)
         self.max = max.astype(np.float64)
@@ -65,20 +64,16 @@ class QIntervalArray(_QIntervalArray):
     """Symbolic array for quantized interval arithmetic.
 
     Available operations are:
-    - Addition
-    - Subtraction
-    - Multiplication
-    - Division (not recommended)
-    - Matrix multiplication
+        - Addition
+        - Subtraction
+        - Multiplication
+        - Division (not recommended)
+        - Matrix multiplication
 
-    Parameters
-    ----------
-    min : np.ndarray
-        The minimum value of the interval.
-    max : np.ndarray
-        The maximum value of the interval.
-    delta : np.ndarray
-        The quantization step of the interval.
+    Args:
+        min (np.ndarray): The minimum value of the interval.
+        max (np.ndarray): The maximum value of the interval.
+        delta (np.ndarray): The quantization step of the interval.
     """
 
     @singledispatchmethod
@@ -203,15 +198,11 @@ class QIntervalArray(_QIntervalArray):
         """Right matrix multiplication (other @ self), with __rmatmul__ implemented in QIntervalArray.
         This is to avoid using the @ operator defined in np.ndarray.
 
-        Parameters
-        ----------
-        other : np.ndarray
-            The operand matrix multiplied from the left.
+        Args:
+            other (np.ndarray): The operand matrix multiplied from the left.
 
-        Returns
-        -------
-        QIntervalArray
-            The result
+        Returns:
+            QIntervalArray: The result.
         """
         return self.__rmatmul__(other)
 
@@ -219,19 +210,13 @@ class QIntervalArray(_QIntervalArray):
     def from_kif(cls, k: np.ndarray | int | bool, i: np.ndarray | int, f: np.ndarray | int):
         """Create a QIntervalArray from k, i, f values.
 
-        Parameters
-        ----------
-        k : np.ndarray | int | bool
-            keep_negative
-        i : np.ndarray | int
-            integer_bits, excluding sign bit
-        f : np.ndarray | int
-            fractional_bits
+        Args:
+            k (np.ndarray | int | bool): keep_negative
+            i (np.ndarray | int): integer_bits, excluding sign bit
+            f (np.ndarray | int): fractional_bits
 
-        Returns
-        -------
-        QIntervalArray
-            The created QIntervalArray.
+        Returns:
+            QIntervalArray: The created QIntervalArray.
         """
 
         _min = np.asarray(-(2.0**i) * k)
@@ -260,21 +245,15 @@ class QIntervalArray(_QIntervalArray):
 
 
 def _exec_einsum(recipe: EinsumRecipe, input0: np.ndarray | QIntervalArray, input1: np.ndarray | QIntervalArray, operator):
-    """Execute einsum operation on two input arrays
+    """Execute einsum operation on two input arrays.
 
-    Parameters
-    ----------
-    recipe : EinsumRecipe
-        einsum recipe
-    input0 : np.ndarray
-        input0, the first input array
-    input1 : np.ndarray
-        input1, the second input array
+    Args:
+        recipe (EinsumRecipe): einsum recipe.
+        input0 (np.ndarray): input0, the first input array.
+        input1 (np.ndarray): input1, the second input array.
 
-    Returns
-    -------
-    np.ndarray
-        output array
+    Returns:
+        np.ndarray: output array.
     """
     input0 = input0.transpose(recipe['in_transpose_idxs'][0]).ravel()
     input1 = input1.transpose(recipe['in_transpose_idxs'][1]).ravel()
@@ -310,23 +289,17 @@ def einsum(fn: str, input0: np.ndarray, input1: np.ndarray, operator=None) -> np
 
 
 def einsum(fn: str, input0: np.ndarray | QIntervalArray, input1: np.ndarray | QIntervalArray) -> Any:  # type: ignore
-    """Execute einsum operation on two input arrays
+    """Execute einsum operation on two input arrays.
 
-    WARNING: Order of multiplication is reversed -- watchout if you are using non-commutative operators
+    WARNING: Order of multiplication is reversed -- watch out if you are using non-commutative operators.
 
-    Parameters
-    ----------
-    fn : str
-        einsum string, e.g. 'ij,jk->ik'
-    input : np.ndarray
-        input0, the first input array
-    input1 : np.ndarray
-        input1, the second input array
+    Args:
+        fn (str): einsum string, e.g. 'ij,jk->ik'.
+        input0 (np.ndarray): input0, the first input array.
+        input1 (np.ndarray): input1, the second input array.
 
-    Returns
-    -------
-    np.ndarray
-        output array
+    Returns:
+        np.ndarray: output array.
     """
 
     def operator(A, B):
