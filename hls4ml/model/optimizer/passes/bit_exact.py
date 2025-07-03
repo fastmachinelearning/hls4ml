@@ -585,20 +585,20 @@ def request_kif(layer: Layer) -> tuple[KIF_t, ...]:
     return kif
 
 
-def requested_by_quantizer(layer: Layer) -> bool:
+def requested_by_non_saturating_quantizer(layer: Layer) -> bool:
     """Check if the current requested kif is from a quantizer.
 
     Args:
         layer (Layer): The layer to check.
 
     Returns:
-        bool: True if requested by a quantizer, False otherwise.
+        bool: True if requested by a non-saturating quantizer, False otherwise.
     """
     for n in get_output_layers(layer):
-        if isinstance(n, FixedPointQuantizer):
+        if isinstance(n, FixedPointQuantizer) and n.SAT not in ('SAT', 'SAT_SYM'):
             return True
         if isinstance(n, Reshape):
-            return requested_by_quantizer(n)
+            return requested_by_non_saturating_quantizer(n)
     return False
 
 
@@ -607,7 +607,7 @@ def default_register_precision(layer: Layer):
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
     _oi, _of = np.minimum(_pi, _ri), np.minimum(_pf, _rf)
 
-    if requested_by_quantizer(layer):
+    if requested_by_non_saturating_quantizer(layer):
         _ok = _rk
     else:
         _ok = np.minimum(_pk, _rk)
