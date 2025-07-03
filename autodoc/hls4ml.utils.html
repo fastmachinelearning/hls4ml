@@ -111,6 +111,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.link">hls4ml.utils.link module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.plot">hls4ml.utils.plot module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-profiling-utils-module">hls4ml.utils.profiling_utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.qinterval">hls4ml.utils.qinterval module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.serialization">hls4ml.utils.serialization module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.simulation_utils">hls4ml.utils.simulation_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.string_utils">hls4ml.utils.string_utils module</a></li>
@@ -658,6 +659,156 @@ This enables in-line display of the model plots in notebooks.</p>
 </section>
 <section id="hls4ml-utils-profiling-utils-module">
 <h2>hls4ml.utils.profiling_utils module<a class="headerlink" href="#hls4ml-utils-profiling-utils-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.utils.qinterval">
+<span id="hls4ml-utils-qinterval-module"></span><h2>hls4ml.utils.qinterval module<a class="headerlink" href="#module-hls4ml.utils.qinterval" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.utils.qinterval.</span></span><span class="sig-name descname"><span class="pre">QIntervalArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_QIntervalArray</span></code></p>
+<p>Symbolic array for quantized interval arithmetic.</p>
+<dl class="simple">
+<dt>Available operations are:</dt><dd><ul class="simple">
+<li><p>Addition</p></li>
+<li><p>Subtraction</p></li>
+<li><p>Multiplication</p></li>
+<li><p>Division (not recommended)</p></li>
+<li><p>Matrix multiplication</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min</strong> (<em>np.ndarray</em>) – The minimum value of the interval.</p></li>
+<li><p><strong>max</strong> (<em>np.ndarray</em>) – The maximum value of the interval.</p></li>
+<li><p><strong>delta</strong> (<em>np.ndarray</em>) – The quantization step of the interval.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.dtype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.dtype" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.from_kif">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_kif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.from_kif" title="Link to this definition"></a></dt>
+<dd><p>Create a QIntervalArray from k, i, f values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<em>np.ndarray</em><em> | </em><em>int</em><em> | </em><em>bool</em>) – keep_negative</p></li>
+<li><p><strong>i</strong> (<em>np.ndarray</em><em> | </em><em>int</em>) – integer_bits, excluding sign bit</p></li>
+<li><p><strong>f</strong> (<em>np.ndarray</em><em> | </em><em>int</em>) – fractional_bits</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The created QIntervalArray.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray">QIntervalArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.ravel">
+<span class="sig-name descname"><span class="pre">ravel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.ravel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.reshape">
+<span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.reshape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.rmatmul">
+<span class="sig-name descname"><span class="pre">rmatmul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.rmatmul" title="Link to this definition"></a></dt>
+<dd><p>Right matrix multiplication (other &#64; self), with __rmatmul__ implemented in QIntervalArray.
+This is to avoid using the &#64; operator defined in np.ndarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>np.ndarray</em>) – The operand matrix multiplied from the left.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray">QIntervalArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.sample" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.to_kif">
+<span class="sig-name descname"><span class="pre">to_kif</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.to_kif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.QIntervalArray.transpose">
+<span class="sig-name descname"><span class="pre">transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.QIntervalArray.transpose" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.einsum">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.qinterval.</span></span><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray"><span class="pre">QIntervalArray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray"><span class="pre">QIntervalArray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray"><span class="pre">QIntervalArray</span></a></span></span><a class="headerlink" href="#hls4ml.utils.qinterval.einsum" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.qinterval.</span></span><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray"><span class="pre">QIntervalArray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray"><span class="pre">QIntervalArray</span></a></span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.qinterval.</span></span><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray"><span class="pre">QIntervalArray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.utils.qinterval.QIntervalArray" title="hls4ml.utils.qinterval.QIntervalArray"><span class="pre">QIntervalArray</span></a></span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.qinterval.</span></span><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span></dt>
+<dd><p>Execute einsum operation on two input arrays.</p>
+<p>WARNING: Order of multiplication is reversed – watch out if you are using non-commutative operators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>str</em>) – einsum string, e.g. ‘ij,jk-&gt;ik’.</p></li>
+<li><p><strong>input0</strong> (<em>np.ndarray</em>) – input0, the first input array.</p></li>
+<li><p><strong>input1</strong> (<em>np.ndarray</em>) – input1, the second input array.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>output array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.utils.qinterval.minimal_kif">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.qinterval.</span></span><span class="sig-name descname"><span class="pre">minimal_kif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.qinterval.minimal_kif" title="Link to this definition"></a></dt>
+<dd><p>Given a constant array, determine the minimal k, i, f values
+that can contain it with no loss of precision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>array</strong> (<em>np.ndarray</em>) – The constant array to be represented.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The minimal k, i, f
+values that can contain the array with no loss of precision.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[np.ndarray, np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-hls4ml.utils.serialization">
 <span id="hls4ml-utils-serialization-module"></span><h2>hls4ml.utils.serialization module<a class="headerlink" href="#module-hls4ml.utils.serialization" title="Link to this heading"></a></h2>

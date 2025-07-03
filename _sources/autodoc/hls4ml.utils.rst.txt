@@ -76,6 +76,14 @@ hls4ml.utils.profiling\_utils module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.qinterval module
+-----------------------------
+
+.. automodule:: hls4ml.utils.qinterval
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.utils.serialization module
 ---------------------------------
 

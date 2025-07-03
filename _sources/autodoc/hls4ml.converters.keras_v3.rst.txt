@@ -1,6 +1,14 @@
 hls4ml.converters.keras\_v3 package
 ===================================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hls4ml.converters.keras_v3.hgq2
+
 Submodules
 ----------
 

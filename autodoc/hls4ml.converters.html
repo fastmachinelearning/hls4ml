@@ -218,6 +218,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.keras_v3.html">hls4ml.converters.keras_v3 package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras_v3.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.hgq2.html">hls4ml.converters.keras_v3.hgq2 package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.hgq2.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.hgq2.html#module-hls4ml.converters.keras_v3.hgq2.einsum">hls4ml.converters.keras_v3.hgq2.einsum module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.hgq2.html#module-hls4ml.converters.keras_v3.hgq2.multi_head_attention">hls4ml.converters.keras_v3.hgq2.multi_head_attention module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.hgq2.html#module-hls4ml.converters.keras_v3.hgq2.softmax">hls4ml.converters.keras_v3.hgq2.softmax module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.hgq2.html#module-hls4ml.converters.keras_v3.hgq2.unary_lut">hls4ml.converters.keras_v3.hgq2.unary_lut module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.hgq2.html#module-hls4ml.converters.keras_v3.hgq2">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras_v3.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.conv">hls4ml.converters.keras_v3.conv module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvHandler"><code class="docutils literal notranslate"><span class="pre">ConvHandler</span></code></a><ul>
@@ -247,6 +259,11 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.InputHandler"><code class="docutils literal notranslate"><span class="pre">InputHandler</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.InputHandler.handle"><code class="docutils literal notranslate"><span class="pre">InputHandler.handle()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.InputHandler.handles"><code class="docutils literal notranslate"><span class="pre">InputHandler.handles</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.NoOp"><code class="docutils literal notranslate"><span class="pre">NoOp</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.NoOp.handle"><code class="docutils literal notranslate"><span class="pre">NoOp.handle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.NoOp.handles"><code class="docutils literal notranslate"><span class="pre">NoOp.handles</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.PermuteHandler"><code class="docutils literal notranslate"><span class="pre">PermuteHandler</span></code></a><ul>
@@ -547,8 +564,8 @@ computation of these layers may vary across hls4ml backends and conversion confi
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3_to_hls.get_io_tensors">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_io_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.Layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_whitelist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_v3_to_hls.get_io_tensors" title="Link to this definition"></a></dt>
 <dd><p>Given a keras layer, return a list of tuples of input and output
-tensors. If the layer is called only once (i.e., a layer is not used multiple times in the same model),
-the list will contain only one tuple.</p>
+tensors. If the layer is called only once (i.e., layer is not used
+multiple times in the same model), the list will contain only one tuple.</p>
 <p>The layer must have been built before calling this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

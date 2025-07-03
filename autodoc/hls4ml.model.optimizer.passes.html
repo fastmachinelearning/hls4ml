@@ -270,6 +270,202 @@ values or if a bias can go from zeros to other values.</p>
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.model.optimizer.passes.bit_exact">
+<span id="hls4ml-model-optimizer-passes-bit-exact-module"></span><h2>hls4ml.model.optimizer.passes.bit_exact module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.bit_exact" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.BitExact">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">BitExact</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.BitExact" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOptimizerPass</span></code></a></p>
+<p>Model-wide bitwidth flow to ensure bit-exactness. Triggered by the presence of FixedPointQuantizer for now.
+On the high level:
+1. (forward flow) Starting from the model input, forward flow down the required bitwidth and shrink
+FixedQuantizer bits when possible. Register the generated bw by each layer as “produced_kif”
+2. (backward flow) For each layer, find the maximum bitwidth it can handle (till which point more bits makes no sense)
+For example, a ap_fixed&lt;8,4&gt; in the downstream has won’t take advantage of &gt;4 fractional bits on the input.
+3. (combine) Use the “minimal” of the produced and requested bitwidths on each layer</p>
+<p>In all cases, the process is (supposed to be) bit-exact. Both forward and backward flows use quantized
+interval arithmetic to determine the bitwidths semi-symbolically. BW&gt;=128 are unhandled.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.BitExact.has_fixed_quantizer">
+<span class="sig-name descname"><span class="pre">has_fixed_quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.BitExact.has_fixed_quantizer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.BitExact.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.BitExact.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">FixInputPrecision</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.default_register_precision">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">default_register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.default_register_precision" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.get_input_kifs">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">get_input_kifs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.get_input_kifs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.get_input_layers">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">get_input_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.get_input_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.get_input_shapes">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">get_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.get_input_shapes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.get_output_layers">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">get_output_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.get_output_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.get_output_shape">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">get_output_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.get_output_shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.im2col">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">im2col</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arrs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.im2col" title="Link to this definition"></a></dt>
+<dd><p>im2col for multidimensional arrays. Assumes Channel Last format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel_size</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>) – The size of the kernel, in the form (<a href="#id1"><span class="problematic" id="id2">*</span></a>kernel_shape, ch_in, ch_out).</p></li>
+<li><p><strong>*arrs</strong> (<em>np.ndarray</em>) – The input arrays to be transformed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The transformed arrays.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.kif_arrs_to_ints">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">kif_arrs_to_ints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.kif_arrs_to_ints" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.pad_arrs">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">pad_arrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arrs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.pad_arrs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.produce_kif">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">produce_kif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.produce_kif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.r_im2col">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">r_im2col</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.r_im2col" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.register_precision">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.register_precision" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Activation" title="hls4ml.model.layers.Activation"><span class="pre">Activation</span></a></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Softmax" title="hls4ml.model.layers.Softmax"><span class="pre">Softmax</span></a></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.UnaryLUT" title="hls4ml.model.optimizer.passes.hgq_proxy_model.UnaryLUT"><span class="pre">UnaryLUT</span></a></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling1D" title="hls4ml.model.layers.Pooling1D"><span class="pre">Pooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling2D" title="hls4ml.model.layers.Pooling2D"><span class="pre">Pooling2D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling1D" title="hls4ml.model.layers.GlobalPooling1D"><span class="pre">GlobalPooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling2D" title="hls4ml.model.layers.GlobalPooling2D"><span class="pre">GlobalPooling2D</span></a></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling1D" title="hls4ml.model.layers.Pooling1D"><span class="pre">Pooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling2D" title="hls4ml.model.layers.Pooling2D"><span class="pre">Pooling2D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling1D" title="hls4ml.model.layers.GlobalPooling1D"><span class="pre">GlobalPooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling2D" title="hls4ml.model.layers.GlobalPooling2D"><span class="pre">GlobalPooling2D</span></a></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling1D" title="hls4ml.model.layers.Pooling1D"><span class="pre">Pooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling2D" title="hls4ml.model.layers.Pooling2D"><span class="pre">Pooling2D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling1D" title="hls4ml.model.layers.GlobalPooling1D"><span class="pre">GlobalPooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling2D" title="hls4ml.model.layers.GlobalPooling2D"><span class="pre">GlobalPooling2D</span></a></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">register_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling1D" title="hls4ml.model.layers.Pooling1D"><span class="pre">Pooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Pooling2D" title="hls4ml.model.layers.Pooling2D"><span class="pre">Pooling2D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling1D" title="hls4ml.model.layers.GlobalPooling1D"><span class="pre">GlobalPooling1D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.GlobalPooling2D" title="hls4ml.model.layers.GlobalPooling2D"><span class="pre">GlobalPooling2D</span></a></span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.request_kif">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">request_kif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.request_kif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.requested_by_non_saturating_quantizer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">requested_by_non_saturating_quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.requested_by_non_saturating_quantizer" title="Link to this definition"></a></dt>
+<dd><p>Check if the current requested kif is from a quantizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>layer</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The layer to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if requested by a non-saturating quantizer, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.requested_kif">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">requested_kif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int8</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.requested_kif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.stride_arrs">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">stride_arrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arrs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.stride_arrs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bit_exact.to_hls4ml_fixed">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bit_exact.</span></span><span class="sig-name descname"><span class="pre">to_hls4ml_fixed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bit_exact.to_hls4ml_fixed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
 <section id="module-hls4ml.model.optimizer.passes.bn_fuse">
 <span id="hls4ml-model-optimizer-passes-bn-fuse-module"></span><h2>hls4ml.model.optimizer.passes.bn_fuse module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.bn_fuse" title="Link to this heading"></a></h2>
 <dl class="py class">
@@ -592,6 +788,43 @@ to undo this after all optimizers have been applied on the wrapped layers.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">FuseFixedPointQuantizer</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer.propagate">
+<span class="sig-name descname"><span class="pre">propagate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.FixedPrecisionType" title="hls4ml.model.types.FixedPrecisionType"><span class="pre">FixedPrecisionType</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer.propagate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.FixedPointQuantizer" title="hls4ml.model.optimizer.passes.hgq_proxy_model.FixedPointQuantizer"><span class="pre">FixedPointQuantizer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.hgq_proxy_model.UnaryLUT">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">UnaryLUT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.UnaryLUT" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
@@ -605,11 +838,6 @@ to undo this after all optimizers have been applied on the wrapped layers.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.hgq_proxy_model.register_hgq_proxy_model">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">register_hgq_proxy_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.register_hgq_proxy_model" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.hgq_proxy_model.to_hls4ml_fixed">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">to_hls4ml_fixed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fixed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.hgq_proxy_model.to_hls4ml_fixed" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">

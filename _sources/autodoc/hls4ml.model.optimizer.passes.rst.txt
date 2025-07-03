@@ -12,6 +12,14 @@ hls4ml.model.optimizer.passes.batchnorm\_opt module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.bit\_exact module
+-----------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.bit_exact
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.bn\_fuse module
 ---------------------------------------------
 

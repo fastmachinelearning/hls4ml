@@ -1,0 +1,45 @@
+hls4ml.converters.keras\_v3.hgq2 package
+========================================
+
+Submodules
+----------
+
+hls4ml.converters.keras\_v3.hgq2.einsum module
+----------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.hgq2.einsum
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.keras\_v3.hgq2.multi\_head\_attention module
+--------------------------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.hgq2.multi_head_attention
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.keras\_v3.hgq2.softmax module
+-----------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.hgq2.softmax
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.keras\_v3.hgq2.unary\_lut module
+--------------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.hgq2.unary_lut
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.converters.keras_v3.hgq2
+   :members:
+   :undoc-members:
+   :show-inheritance:

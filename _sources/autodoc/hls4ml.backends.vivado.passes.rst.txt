@@ -52,6 +52,14 @@ hls4ml.backends.vivado.passes.core\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.vivado.passes.distributed\_arithmetic module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.distributed_arithmetic
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.vivado.passes.einsum module
 -------------------------------------------
 
