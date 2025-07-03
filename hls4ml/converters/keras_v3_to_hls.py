@@ -20,9 +20,9 @@ T_kv3_handler = Callable[
 
 
 def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None):
-    '''Given a keras layer, return a list of tuples of input and output
-    tensors. If the layer is called only once (i.e., a layer is not used multiple times in the same model),
-    the list will contain only one tuple.
+    """Given a keras layer, return a list of tuples of input and output
+    tensors. If the layer is called only once (i.e., layer is not used
+    multiple times in the same model), the list will contain only one tuple.
 
     The layer must have been built before calling this function.
 
@@ -37,7 +37,7 @@ def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None)
         A list of tuples of input and output tensors. Each inner tuple
         contains two tuples: the first with input KerasTensors and the
         second with output KerasTensors.
-    '''
+    """
 
     in_nodes = layer._inbound_nodes
     if node_whitelist is not None:
@@ -285,6 +285,7 @@ def parse_keras_v3_model(model: 'keras.Model'):
     input_layer_names = [provides[tname] for tname in model_inputs]
     output_layer_names = [provides[tname] for tname in model_outputs]
     batch_output_shapes = [list(tensors[tname].shape) for tname in model_outputs]
+    batch_output_shapes = [shape if shape != [None] else [1] for shape in batch_output_shapes]
 
     return layer_list, input_layer_names, output_layer_names, batch_output_shapes
 

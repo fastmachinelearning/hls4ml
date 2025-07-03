@@ -154,10 +154,20 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
                         mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin'
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             mult_params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'distributed_arithmetic':
+            mult_params['dense_function'] = f'{namespace}::dense_da_wrapper_{node.index}'
 
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class Conv1DFunctionTemplate(FunctionCallTemplate):
@@ -172,6 +182,14 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
@@ -299,10 +317,20 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
                         mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin'
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             mult_params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'distributed_arithmetic':
+            mult_params['dense_function'] = f'{namespace}::dense_da_wrapper_{node.index}'
 
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class Conv2DFunctionTemplate(FunctionCallTemplate):
@@ -317,6 +345,14 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value("IOType")
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):
