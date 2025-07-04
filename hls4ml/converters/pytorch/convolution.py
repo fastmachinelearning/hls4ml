@@ -44,6 +44,10 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
 
     output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]  # Channel first as default
 
+    # Quantization parameter for PQuant integration
+    if hasattr(class_object, "quantization_parameters"):
+        layer['quantization_parameters'] = class_object.quantization_parameters
+
     return layer, output_shape
 
 
@@ -93,5 +97,9 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     )
 
     output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
+
+    # Quantization parameter for PQuant integration
+    if hasattr(class_object, "quantization_parameters"):
+        layer['quantization_parameters'] = class_object.quantization_parameters
 
     return layer, output_shape

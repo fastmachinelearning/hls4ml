@@ -52,6 +52,10 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     output_shape = input_shapes[0][:]
     output_shape[-1] = layer['n_out']
 
+    # Quantization parameter for PQuant integration
+    if hasattr(class_object, "quantization_parameters"):
+        layer['quantization_parameters'] = class_object.quantization_parameters
+
     return layer, output_shape
 
 

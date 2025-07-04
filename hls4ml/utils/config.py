@@ -1,6 +1,7 @@
 import json
 
 import hls4ml
+from hls4ml.model.types import FixedPrecisionType
 
 
 def create_config(output_dir='my-hls-test', project_name='myproject', backend='Vivado', version='1.0.0', **kwargs):
@@ -109,6 +110,44 @@ def _get_precision_from_quantizer(quantizer):
         )
     else:
         return hls4ml.model.types.IntegerPrecisionType(width=integer, signed=signed)
+
+
+def _get_precision_from_pquant(qconfig, take_max=False):
+
+    precisions = {}
+    variables = ['weight', 'bias', 'act']
+    overflow = qconfig['overflow']
+    round_mode = 'RND'
+    for var in variables:
+        if f'k_{var}' not in qconfig:
+            # print(f"var {var} not found")
+            continue
+
+        k = qconfig[f'k_{var}']
+        i = qconfig[f'i_{var}']
+        f = qconfig[f'f_{var}']
+
+        if qconfig["use_high_granularity_quantization"]:
+            if not take_max:
+                assert k.size == 1 and i.size == 1 and f.size == 1, 'Only homogeneous quantizer is supported'
+                k = bool(k.ravel().item())
+                i = int(i.ravel().item())
+                f = int(f.ravel().item())
+            else:
+                k = bool(k.max())
+                i = int(i.max())
+                f = int(f.max())
+        else:
+            k = bool(k)
+            i = int(i)
+            f = int(f)
+
+        k, b, I = k, k + i + f, k + i  # noqa: E741
+        b = max(1, b)
+        pname = var if var != 'act' else 'result'
+        precisions[pname] = FixedPrecisionType(b, I, k, rounding_mode=round_mode, saturation_mode=overflow)
+
+    return precisions
 
 
 def config_from_keras_model(
@@ -408,6 +447,11 @@ def config_from_pytorch_model(
             else:
                 if attr.default is not None:
                     layer_config[attr.config_name] = attr.default
+
+        if layer.get('quantization_parameters'):
+            precisions = _get_precision_from_pquant(layer['quantization_parameters'])
+            for pname, precision in precisions.items():
+                layer_config['Precision'][pname] = str(precision)
 
         if layer['class_name'] == 'Input':
             dtype = layer['config']['dtype']
