@@ -993,6 +993,20 @@ class PReLU(Activation):
         self.add_weights_variable(name='param', var_name='a{index}')
 
 
+class MultiplierReLU(Activation):
+    _expected_attributes = [
+        Attribute('n_in'),
+        WeightAttribute('param'),
+        TypeAttribute('param'),
+    ]
+
+    def initialize(self):
+        super().initialize()
+        self.add_weights_variable(
+            name='param', var_name='m{index}', precision=FixedPrecisionType(width=4, integer=4, signed=True)
+        )
+
+
 class Softmax(Activation):
     def initialize(self):
         super().initialize()
@@ -1718,6 +1732,7 @@ layer_map = {
     'ThresholdedReLU': ParametrizedActivation,
     'ELU': ParametrizedActivation,
     'PReLU': PReLU,
+    'MultiplierReLU': MultiplierReLU,
     'Softmax': Softmax,
     'TernaryTanh': TernaryTanh,
     'HardActivation': HardActivation,

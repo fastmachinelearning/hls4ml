@@ -761,6 +761,27 @@ void prelu(data_T data[CONFIG_T::n_in], param_T alpha[CONFIG_T::n_in], res_T res
 }
 
 // *************************************************
+//       MultiplierReLU Activation
+// *************************************************
+template <class data_T, class multiplier_T, class res_T, typename CONFIG_T>
+void multiplier_relu(data_T data[CONFIG_T::n_in], multiplier_T mul[1], res_T res[CONFIG_T::n_in]) {
+    #pragma HLS PIPELINE
+
+    data_T datareg;
+    for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        datareg = data[ii];
+        if (datareg > 0) {
+
+            if (mul[0] >= 0)
+                res[ii] = datareg << mul[0];
+            else
+                res[ii] = datareg >> (-mul[0]);
+        } else
+            res[ii] = 0;
+    }
+}
+
+// *************************************************
 //       Binary TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
