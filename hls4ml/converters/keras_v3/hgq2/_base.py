@@ -12,7 +12,8 @@ from hls4ml.converters.keras_v3.merge import MergeHandler
 
 if TYPE_CHECKING:
     import hgq
-    from keras import KerasTensor, Layer
+    from keras import KerasTensor
+    from keras.src.layers.layer import Layer as Layer
 
 
 def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> dict[str, Any]:
@@ -108,6 +109,12 @@ class QLayerHandler(KerasV3LayerHandler):
         if hasattr(layer, f'q{key}'):
             return ops.convert_to_numpy(getattr(layer, f'q{key}'))
         return super().load_weight(layer, key)
+
+    def default_class_name(self, layer: 'Layer') -> str:
+        class_name = layer.__class__.__name__
+        if class_name.startswith('Q'):
+            class_name = class_name[1:]
+        return class_name
 
 
 @register
