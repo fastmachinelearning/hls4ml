@@ -12,7 +12,8 @@ from hls4ml.converters.keras_v3.merge import MergeHandler
 
 if TYPE_CHECKING:
     import hgq
-    from keras import KerasTensor, Layer
+    from keras import KerasTensor
+    from keras.src.layers.layer import Layer as Layer
 
 
 def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> dict[str, Any]:
@@ -109,6 +110,12 @@ class QLayerHandler(KerasV3LayerHandler):
             return ops.convert_to_numpy(getattr(layer, f'q{key}'))
         return super().load_weight(layer, key)
 
+    def default_class_name(self, layer: 'Layer') -> str:
+        class_name = layer.__class__.__name__
+        if class_name.startswith('Q'):
+            class_name = class_name[1:]
+        return class_name
+
 
 @register
 class QEinsumDenseHandler(QLayerHandler, EinsumDenseHandler):
@@ -170,7 +177,6 @@ class QDenseHandler(QLayerHandler, DenseHandler):
         out_tensors: Sequence['KerasTensor'],
     ):
         conf = super().handle(layer, in_tensors, out_tensors)
-        conf['class_name'] = 'Dense'
         in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
         if len(in_shape) > 1:
             pf = layer.parallelization_factor
