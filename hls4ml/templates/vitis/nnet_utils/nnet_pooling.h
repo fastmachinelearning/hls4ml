@@ -91,7 +91,8 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
 
     // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::n_in + CONFIG_T::pad_left + CONFIG_T::pad_right;
-    static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
+    static constexpr int restricted_padded_width =
+        (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
 
     for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
         // Loop over input image x in steps of stride
@@ -181,8 +182,10 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
     static constexpr int full_padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
-    static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
-    static constexpr int restricted_padded_height = full_padded_height / CONFIG_T::stride_height * CONFIG_T::stride_height;
+    static constexpr int restricted_padded_width =
+        (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
+    static constexpr int restricted_padded_height =
+        (full_padded_height - CONFIG_T::pool_height) / CONFIG_T::stride_height * CONFIG_T::stride_height + 1;
 
     for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
         // Loop over input image y in steps of stride
@@ -195,9 +198,9 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                 unsigned overlap_pixel = 0;
 
                 // Loop over pool window y
-                for (int kk = 0; kk < CONFIG_T::stride_height; kk++) {
+                for (int kk = 0; kk < CONFIG_T::pool_height; kk++) {
                     // Loop over pool window x
-                    for (int ll = 0; ll < CONFIG_T::stride_width; ll++) {
+                    for (int ll = 0; ll < CONFIG_T::pool_width; ll++) {
                         bool cond1 = ii + kk >= CONFIG_T::pad_top && ii + kk < CONFIG_T::in_height + CONFIG_T::pad_top;
                         bool cond2 = jj + ll >= CONFIG_T::pad_left && jj + ll < CONFIG_T::in_width + CONFIG_T::pad_left;
                         if (cond1 && cond2) {
@@ -205,14 +208,14 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                                 ((ii + kk - CONFIG_T::pad_top) * CONFIG_T::in_width + (jj + ll - CONFIG_T::pad_left)) *
                                     CONFIG_T::n_filt +
                                 ff;
-                            pool[kk * CONFIG_T::stride_width + ll] = data[data_idx];
+                            pool[kk * CONFIG_T::pool_width + ll] = data[data_idx];
                             overlap_pixel++;
                         } else
-                            pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
+                            pool[kk * CONFIG_T::pool_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
                     }
                 }
 
-                int patch_size = CONFIG_T::count_pad ? CONFIG_T::stride_width * CONFIG_T::stride_height : overlap_pixel;
+                int patch_size = CONFIG_T::count_pad ? CONFIG_T::pool_width * CONFIG_T::pool_height : overlap_pixel;
 
                 res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                     (jj / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] =
