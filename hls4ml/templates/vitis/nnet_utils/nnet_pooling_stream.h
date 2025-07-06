@@ -31,6 +31,7 @@ void compute_pool_buffer_2d(const data_T &in_elem,
                             ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width>
                                 line_buffer[MAX(CONFIG_T::pool_height - 1, 1)][CONFIG_T::n_filt],
                             hls::stream<res_T> &res) {
+    // TODO: this may crash when strides are non-trivial (!= pool_size). Cause not identified.
     #pragma HLS INLINE
     const static int lShiftX = CONFIG_T::pool_width - 1;
     const static int lShiftY = CONFIG_T::pool_height - 1;
