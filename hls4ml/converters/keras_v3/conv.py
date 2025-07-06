@@ -1,5 +1,6 @@
 import typing
 from collections.abc import Sequence
+from math import ceil
 from typing import Any
 
 from ._base import KerasV3LayerHandler, register
@@ -28,7 +29,7 @@ def gen_conv_config(
         px_out_shape = [1] * len(px_in_shape)
 
     if padding == 'same':
-        n_padding = [N % s + n - s for N, n, s in zip(px_in_shape, ker_px_shape, strides)]
+        n_padding = [max(ceil(N / s) * s - N + n - s, 0) for N, n, s in zip(px_in_shape, ker_px_shape, strides)]
         n_padding0 = [p // 2 for p in n_padding]
         n_padding1 = [p - p0 for p, p0 in zip(n_padding, n_padding0)]
     elif padding == 'valid':
