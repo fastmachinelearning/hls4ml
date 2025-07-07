@@ -162,6 +162,7 @@ def handle_upsample(operation, layer_name, input_names, input_shapes, node, clas
 
     return layer, output_shape
 
+
 @pytorch_handler('ConstantPad2d')
 def parse_constantpad2d_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert operation == 'ConstantPad2d'
