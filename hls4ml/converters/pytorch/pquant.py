@@ -1,10 +1,11 @@
 from hls4ml.converters.pytorch.core import parse_activation_layer
+from hls4ml.converters.pytorch.pooling import parse_pooling_layer
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 from hls4ml.model.types import FixedPrecisionType
 
 
 @pytorch_handler('QuantizedActivationTorchWrapper')
-def parse_qactivation_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+def parse_pquant_activation_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
 
     layer, output_shape = parse_activation_layer(
         class_object.activation.__class__.__name__,
@@ -46,5 +47,23 @@ def parse_qactivation_layer(operation, layer_name, input_names, input_shapes, no
             'quantizedtanh': 'tanh',
         }
         layer['activation'] = activation_map.get(layer['activation'], layer['activation'])
+
+    return layer, output_shape
+
+
+@pytorch_handler('QuantizedPooling')
+def parse_pquant_pooling_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+
+    layer, output_shape = parse_pooling_layer(
+        class_object.pooling.__class__.__name__,
+        layer_name,
+        input_names,
+        input_shapes,
+        node,
+        class_object.pooling,
+        data_reader,
+        config,
+    )
+    layer['quantization_parameters'] = class_object.quantization_parameters
 
     return layer, output_shape

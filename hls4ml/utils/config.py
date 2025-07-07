@@ -115,7 +115,7 @@ def _get_precision_from_quantizer(quantizer):
 def _get_precision_from_pquant(qconfig, take_max=False):
 
     precisions = {}
-    variables = ['weight', 'bias', 'act']
+    variables = ['weight', 'bias', 'act', 'pool']
     overflow = qconfig['overflow']
     round_mode = 'RND'
     for var in variables:
@@ -144,7 +144,7 @@ def _get_precision_from_pquant(qconfig, take_max=False):
 
         k, b, I = k, k + i + f, k + i  # noqa: E741
         b = max(1, b)
-        pname = var if var != 'act' else 'result'
+        pname = var if var == 'weight' or var == 'bias' else 'result'
         precisions[pname] = FixedPrecisionType(b, I, k, rounding_mode=round_mode, saturation_mode=overflow)
 
     return precisions
