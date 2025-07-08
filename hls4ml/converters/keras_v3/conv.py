@@ -141,4 +141,7 @@ class ConvHandler(KerasV3LayerHandler):
         elif isinstance(layer, BaseConv):
             config['weight_data'] = kernel
 
+        if hasattr(layer, 'quantization_parameters'):
+            config['quantization_parameters'] = layer.quantization_parameters
+
         return config

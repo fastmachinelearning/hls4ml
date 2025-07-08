@@ -33,6 +33,10 @@ class DenseHandler(KerasV3LayerHandler):
             'n_out': n_out,
             'n_in': n_in,
         }
+
+        if hasattr(layer, 'quantization_parameters'):
+            config['quantization_parameters'] = layer.quantization_parameters
+
         return config
 
 

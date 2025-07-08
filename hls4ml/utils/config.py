@@ -241,17 +241,25 @@ def config_from_keras_model(
                 if attr.default is not None:
                     layer_config[attr.config_name] = attr.default
 
-        quantizers = {qname: qclass for qname, qclass in layer.items() if 'quantizer' in qname and qclass is not None}
-        for qname, qclass in quantizers.items():
-            pname = qname.lower().split('_quantizer')[0]
-            if pname == 'activation':
-                pname = 'result'
-            if isinstance(qclass, dict):
-                precision = _get_precision_from_quantizer(qclass)
-            else:
-                precision = qclass.hls_type
-            # TODO In the next version of this function, these should not be exposed to user to tweak
-            layer_config['Precision'][pname] = str(precision)
+        # PQuant quantization
+        if 'quantization_parameters' in layer:
+            precisions = _get_precision_from_pquant(layer['quantization_parameters'])
+            for pname, precision in precisions.items():
+                layer_config['Precision'][pname] = str(precision)
+
+        # QKeras quantization
+        else:
+            quantizers = {qname: qclass for qname, qclass in layer.items() if 'quantizer' in qname and qclass is not None}
+            for qname, qclass in quantizers.items():
+                pname = qname.lower().split('_quantizer')[0]
+                if pname == 'activation':
+                    pname = 'result'
+                if isinstance(qclass, dict):
+                    precision = _get_precision_from_quantizer(qclass)
+                else:
+                    precision = qclass.hls_type
+                # TODO In the next version of this function, these should not be exposed to user to tweak
+                layer_config['Precision'][pname] = str(precision)
 
         if layer['class_name'] in ['GarNet', 'GarNetStack']:
             # Define default precisions for various internal arrays (can be overridden from the config file)
@@ -448,7 +456,7 @@ def config_from_pytorch_model(
                 if attr.default is not None:
                     layer_config[attr.config_name] = attr.default
 
-        if layer.get('quantization_parameters'):
+        if 'quantization_parameters' in layer:
             precisions = _get_precision_from_pquant(layer['quantization_parameters'])
             for pname, precision in precisions.items():
                 layer_config['Precision'][pname] = str(precision)
