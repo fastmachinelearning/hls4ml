@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
@@ -97,6 +98,51 @@ class VitisBackend(VivadoBackend):
 
         return config
 
+    def _prepare_vitis_hls_build_command(
+        self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False
+    ):
+
+        build_command = (
+            f'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
+            f'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
+        )
+
+        return build_command
+
+    def _prepare_vitis_run_build_command(
+        self,
+        model,
+        reset=False,
+        csim=True,
+        synth=True,
+        cosim=False,
+        validation=False,
+        export=False,
+        vsynth=False,
+        fifo_opt=False,
+    ):
+
+        build_opts = (
+            'array set opt {\n'
+            f'    reset      {int(reset)}\n'
+            f'    csim       {int(csim)}\n'
+            f'    synth      {int(synth)}\n'
+            f'    cosim      {int(cosim)}\n'
+            f'    validation {int(validation)}\n'
+            f'    export     {int(export)}\n'
+            f'    vsynth     {int(vsynth)}\n'
+            f'    fifo_opt   {int(fifo_opt)}\n'
+            '}\n'
+        )
+
+        tcl_path = Path(model.config.get_output_dir()) / 'build_opt.tcl'
+        with open(tcl_path, 'w') as file:
+            file.write(build_opts)
+
+        build_command = 'vitis-run --tcl build_prj.tcl'
+
+        return build_command
+
     def build(
         self,
         model,
@@ -111,23 +157,34 @@ class VitisBackend(VivadoBackend):
         log_to_stdout=True,
     ):
         if 'linux' in sys.platform:
-            found = os.system('command -v vitis_hls > /dev/null')
-            if found != 0:
-                raise Exception('Vitis HLS installation not found. Make sure "vitis_hls" is on PATH.')
+            found_vhls = os.system('command -v vitis_hls > /dev/null') == 0
+            found_vrun = os.system('command -v vitis-run > /dev/null') == 0
+            if not any([found_vhls, found_vrun]):
+                raise Exception('Vitis HLS installation not found. Make sure "vitis_hls" or "vitis-run" is on PATH.')
 
-        build_command = (
-            'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-            'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
-        ).format(
-            reset=reset,
-            csim=csim,
-            synth=synth,
-            cosim=cosim,
-            validation=validation,
-            export=export,
-            vsynth=vsynth,
-            fifo_opt=fifo_opt,
-        )
+        if found_vhls:
+            build_command = self._prepare_vitis_hls_build_command(
+                reset=reset,
+                csim=csim,
+                synth=synth,
+                cosim=cosim,
+                validation=validation,
+                export=export,
+                vsynth=vsynth,
+                fifo_opt=fifo_opt,
+            )
+        else:
+            build_command = self._prepare_vitis_run_build_command(
+                model,
+                reset=reset,
+                csim=csim,
+                synth=synth,
+                cosim=cosim,
+                validation=validation,
+                export=export,
+                vsynth=vsynth,
+                fifo_opt=fifo_opt,
+            )
 
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
