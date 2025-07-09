@@ -21,8 +21,7 @@ class FixedPointQuantizer(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape)
         self.set_attr('n_in', self.get_input_variable().size())
         self.overrides = self.attributes['overrides']
         self.fusible = self.attributes['fusible']
@@ -40,8 +39,7 @@ class UnaryLUT(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape)
         self.set_attr('n_in', inp.size())
         self.table = self.attributes['table_data']
         self.attributes['table_size'] = len(self.table)
