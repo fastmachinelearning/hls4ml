@@ -256,7 +256,6 @@ def parse_keras_model(model_arch, reader):
 
     layer_config = None
     if model_arch['class_name'] == 'Sequential':
-        print('Interpreting Sequential')
         layer_config = model_arch['config']
         if 'layers' in layer_config:  # Newer Keras versions have 'layers' in 'config' key
             layer_config = layer_config['layers']
@@ -267,9 +266,7 @@ def parse_keras_model(model_arch, reader):
             input_layer['class_name'] = 'InputLayer'
             input_layer['input_shape'] = layer_config[0]['config']['batch_input_shape'][1:]
             layer_list.append(input_layer)
-            print('Input shape:', input_layer['input_shape'])
     elif model_arch['class_name'] in ['Model', 'Functional']:  # TF >= 2.3 calls it 'Functional' API
-        print('Interpreting Model')
         layer_config = model_arch['config']['layers']
         input_layers = [inp[0] for inp in model_arch['config']['input_layers']]
         output_layers = [out[0] for out in model_arch['config']['output_layers']]
@@ -282,7 +279,6 @@ def parse_keras_model(model_arch, reader):
     output_shapes = {}
     output_shape = None
 
-    print('Topology:')
     for keras_layer in layer_config:
         if 'batch_input_shape' in keras_layer['config']:
             if 'inbound_nodes' in keras_layer and len(keras_layer['inbound_nodes']) > 0:
@@ -321,11 +317,6 @@ def parse_keras_model(model_arch, reader):
 
         layer, output_shape = layer_handlers[keras_class](keras_layer, input_names, input_shapes, reader)
 
-        print(
-            'Layer name: {}, layer type: {}, input shapes: {}, output shape: {}'.format(
-                layer['name'], layer['class_name'], input_shapes, output_shape
-            )
-        )
         layer_list.append(layer)
         if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers:  # + qkeras_layers:
             act_layer = {}
@@ -357,6 +348,4 @@ def parse_keras_model(model_arch, reader):
 def keras_v2_to_hls(config):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
-    print('Creating HLS model')
-    hls_model = ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
-    return hls_model
+    return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
