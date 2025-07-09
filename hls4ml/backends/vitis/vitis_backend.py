@@ -98,18 +98,7 @@ class VitisBackend(VivadoBackend):
 
         return config
 
-    def _prepare_vitis_hls_build_command(
-        self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False
-    ):
-
-        build_command = (
-            f'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-            f'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
-        )
-
-        return build_command
-
-    def _prepare_vitis_run_build_command(
+    def build(
         self,
         model,
         reset=False,
@@ -120,7 +109,12 @@ class VitisBackend(VivadoBackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
+        log_to_stdout=True,
     ):
+        if 'linux' in sys.platform:
+            found_vrun = os.system('command -v vitis-run > /dev/null') == 0
+            if not found_vrun:
+                raise Exception('Vitis installation not found. Make sure "vitis-run" is on PATH.')
 
         build_opts = (
             'array set opt {\n'
@@ -140,51 +134,6 @@ class VitisBackend(VivadoBackend):
             file.write(build_opts)
 
         build_command = 'vitis-run --tcl build_prj.tcl'
-
-        return build_command
-
-    def build(
-        self,
-        model,
-        reset=False,
-        csim=True,
-        synth=True,
-        cosim=False,
-        validation=False,
-        export=False,
-        vsynth=False,
-        fifo_opt=False,
-        log_to_stdout=True,
-    ):
-        if 'linux' in sys.platform:
-            found_vhls = os.system('command -v vitis_hls > /dev/null') == 0
-            found_vrun = os.system('command -v vitis-run > /dev/null') == 0
-            if not any([found_vhls, found_vrun]):
-                raise Exception('Vitis HLS installation not found. Make sure "vitis_hls" or "vitis-run" is on PATH.')
-
-        if found_vhls:
-            build_command = self._prepare_vitis_hls_build_command(
-                reset=reset,
-                csim=csim,
-                synth=synth,
-                cosim=cosim,
-                validation=validation,
-                export=export,
-                vsynth=vsynth,
-                fifo_opt=fifo_opt,
-            )
-        else:
-            build_command = self._prepare_vitis_run_build_command(
-                model,
-                reset=reset,
-                csim=csim,
-                synth=synth,
-                cosim=cosim,
-                validation=validation,
-                export=export,
-                vsynth=vsynth,
-                fifo_opt=fifo_opt,
-            )
 
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
