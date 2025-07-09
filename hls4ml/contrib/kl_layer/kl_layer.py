@@ -63,7 +63,7 @@ class HKLLoss(hls4ml.model.layers.Layer):
     ]
 
     def initialize(self):
-        self.add_output_variable(shape=[1], dim_names=[f'KL_LOSS_{self.index}'])
+        self.add_output_variable(shape=[1])
 
 
 # Templates

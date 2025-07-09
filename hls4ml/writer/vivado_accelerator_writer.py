@@ -1,6 +1,5 @@
 import os
-from distutils.dir_util import copy_tree
-from shutil import copyfile
+from shutil import copyfile, copytree
 
 from hls4ml.writer.vivado_writer import VivadoWriter
 
@@ -376,7 +375,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         if self.vivado_accelerator_config.get_board().startswith('alveo'):
             src_dir = os.path.join(filedir, self.vivado_accelerator_config.get_krnl_rtl_src_dir())
             dst_dir = os.path.abspath(model.config.get_output_dir()) + '/src'
-            copy_tree(src_dir, dst_dir)
+            copytree(src_dir, dst_dir, dirs_exist_ok=True)
 
         ###################
         # project.tcl
