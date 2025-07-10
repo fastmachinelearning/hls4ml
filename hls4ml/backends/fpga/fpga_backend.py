@@ -14,6 +14,7 @@ from hls4ml.model.layers import (
     Activation,
     BatchNormalization,
     BatchNormOnnx,
+    Bidirectional,
     Conv,
     Conv1D,
     Conv2D,
@@ -68,6 +69,7 @@ class FPGABackend(Backend):
             SimpleRNN,
             LSTM,
             GRU,
+            Bidirectional,
             Dot,
             Conv,
             MatMul,
@@ -232,6 +234,16 @@ class FPGABackend(Backend):
             n_out_recr = n_out
             return n_in, n_out, n_in_recr, n_out_recr
 
+        if 'Bidirectional' in layer.class_name:
+            result = []
+            for d in ['forward', 'backward']:
+                n_in = layer.get_attr('n_in')
+                n_out = layer.get_attr(f'{d}_n_states') * 3
+                n_in_recr = layer.get_attr(f'{d}_n_states')
+                n_out_recr = n_out
+                result.append((n_in, n_out, n_in_recr, n_out_recr))
+            return result
+
         raise Exception(f'Cannot get mult size for layer {layer.name} ({layer.class_name})')
 
     def get_valid_reuse_factors(self, n_in, n_out):
@@ -282,6 +294,7 @@ class FPGABackend(Backend):
         if not include_max_rf:
             valid_rf.pop()
         chosen_rf = layer.get_attr(attribute)
+        print("\n\nREuse factor:", chosen_rf, "\n\n")
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
             valid_rf_str = ','.join(map(str, valid_rf))
