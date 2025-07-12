@@ -1,0 +1,14 @@
+{
+  "pynq-z2": {
+    "part": "xc7z020clg400-1",
+    "tcl_scripts": {"axi_lite": "axi_lite_design.tcl", "axi_stream":  "axi_stream_design.tcl"},
+    "python_drivers": {"axi_stream":  "axi_stream_driver.py"},
+    "c_drivers": {}
+  },
+  "zcu102": {
+    "part": "xczu9eg-ffvb1156-2-e",
+    "tcl_scripts": { "axi_stream": "axi_stream_design.tcl"},
+    "python_drivers": {"axi_stream":  "axi_stream_driver.py"},
+    "c_drivers": {}
+  }
+}
