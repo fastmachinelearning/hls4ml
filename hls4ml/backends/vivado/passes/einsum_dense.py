@@ -29,10 +29,11 @@ einsum_dense_config_template = '''
 struct config{index} {{
     typedef config{index}_tpose_inp tpose_inp_conf;
     typedef config{index}_tpose_out tpose_out_conf;
-    {kernel_config};
 
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
+
+    {kernel_config};
 
     // Layer Sizes
     static const unsigned n_free_data = {n_free_data};
@@ -99,9 +100,8 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         else:
             assert strategy.lower() == 'distributed_arithmetic', 'EinsumDense layer only supports Latency strategy for now'
             inp_t = node.get_input_variable().type.name
-            result_t = node.get_output_variable().type.name
             index = node.index
-            conf = f'constexpr static auto da_kernel = nnet::einsum_dense{index}_da_kernel<{inp_t}, {result_t}>'
+            conf = f'constexpr static auto da_kernel = nnet::einsum_dense{index}_da_kernel<{inp_t}, accum_t>'
             params['kernel_config'] = conf
         pf = node.attributes['parallelization_factor']
         if pf < 0:
