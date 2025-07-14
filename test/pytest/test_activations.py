@@ -2,7 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from tensorflow.keras.layers import ELU, Activation, Input, LeakyReLU, ReLU, ThresholdedReLU
+import tensorflow as tf
+from tensorflow.keras.layers import ELU, Activation, Input, LeakyReLU, PReLU, ReLU, ThresholdedReLU
 from tensorflow.keras.models import Model
 
 import hls4ml
@@ -24,8 +25,7 @@ test_root_path = Path(__file__).parent
         (ELU(alpha=1.25), 'elu'),
         (Activation('selu'), 'selu'),
         # Tensorflow exception of multi-dimensional PReLU (8, 8, 3)
-        # (PReLU(alpha_initializer='zeros'), 'prelu'),
-        (Activation('softplus'), 'softplus'),
+        (PReLU(alpha_initializer=tf.initializers.constant(0.25)), 'prelu')(Activation('softplus'), 'softplus'),
         (Activation('softsign'), 'softsign'),
         (Activation(activation='tanh'), 'tanh'),
         (Activation('sigmoid'), 'sigmoid'),
@@ -35,6 +35,9 @@ test_root_path = Path(__file__).parent
     ],
 )
 def test_activations(backend, activation, name, shape, io_type):
+
+    if name == "prelu" and shape == (8, 8, 3):
+        return
     # Subtract 0.5 to include negative values
     X = np.random.rand(1000, *shape) - 0.5
 
