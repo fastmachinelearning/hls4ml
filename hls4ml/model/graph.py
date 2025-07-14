@@ -14,9 +14,9 @@ import numpy.ctypeslib as npc
 
 from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
-from hls4ml.model.layers import layer_map
+from hls4ml.model.layers import Layer, layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
-from hls4ml.model.types import Serializable
+from hls4ml.model.types import Serializable, TensorVariable
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 
@@ -1069,8 +1069,8 @@ class MultiModelGraph:
             cfg_copy.config['ProjectName'] = f'{base_model.config.get_project_name()}_graph{idx + 1}'
             cfg_copy.config['OutputDir'] = os.path.join(base_model.config.get_output_dir(), f'graph{idx + 1}')
 
-            subgraph = base_model.__class__(cfg_copy, inputs=[], outputs=[])
-            graph_dict = OrderedDict()
+            subgraph = ModelGraph(cfg_copy, inputs=[], outputs=[])
+            graph_dict: OrderedDict[str, Layer] = OrderedDict()
 
             if idx > 0:
                 next_index += 1
@@ -1090,6 +1090,11 @@ class MultiModelGraph:
             subgraph.inputs = input_layer.outputs if idx > 0 else base_model.inputs
             subgraph.outputs = slice_[-1].outputs if idx < len(node_slices) - 1 else base_model.outputs
             subgraph._applied_flows = base_model._applied_flows
+
+            for node in subgraph.graph.values():
+                # Prevent name conflict in different subgraphs
+                variable: TensorVariable = node.get_output_variable()
+                variable.dim_names = [f'G{idx}_{name}' for name in variable.dim_names]
 
             # NOTE might need to examine other subgraph-related flows (i.e., fifo_optimizer)
             subgraph.apply_flow('vivado:specific_types')
