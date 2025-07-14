@@ -25,7 +25,8 @@ test_root_path = Path(__file__).parent
         (ELU(alpha=1.25), 'elu'),
         (Activation('selu'), 'selu'),
         # Tensorflow exception of multi-dimensional PReLU (8, 8, 3)
-        (PReLU(alpha_initializer=tf.initializers.constant(0.25)), 'prelu')(Activation('softplus'), 'softplus'),
+        (PReLU(alpha_initializer=tf.initializers.constant(0.25)), 'prelu'),
+        (Activation('softplus'), 'softplus'),
         (Activation('softsign'), 'softsign'),
         (Activation(activation='tanh'), 'tanh'),
         (Activation('sigmoid'), 'sigmoid'),
