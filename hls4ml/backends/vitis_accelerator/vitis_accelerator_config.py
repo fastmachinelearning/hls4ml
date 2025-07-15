@@ -38,10 +38,10 @@ class VitisAcceleratorConfig:
             else:
                 print(
                     "WARNING: You didn't set a Platform."
-                    "Using " + platforms[0] + " platform instead"
+                    "Using " + platforms[0] + " platform"
                 )
                 self.platform = platforms[0]
-                
+
             self.memory_type = board_info["memory"]["type"]
             self.memory_channel_count = board_info["memory"]["channels"]
         else:
