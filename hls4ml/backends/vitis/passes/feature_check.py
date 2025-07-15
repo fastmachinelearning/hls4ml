@@ -71,24 +71,6 @@ class ValidateBidirectionalMergeMode(OptimizerPass):
         node.set_attr('merge_mode', 'concat')
 
 
-class ValidateBidirectionalLayerOrder(OptimizerPass):
-    _unrolled_layer_cls = ['Bidirectional']
-
-    def match(self, node):
-        is_bidirectional_rnn_layer = (
-            len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
-        )
-        is_layer_order_swapped = node.get_attr('swapped_order', False)
-
-        return is_bidirectional_rnn_layer and is_layer_order_swapped
-
-    def transform(self, model, node):
-        print(
-            f'WARNING: The selected order for forward and backward layers in "{node.name}" ({node.class_name}) is not '
-            'supported in Vitis backend. Switching to forward layer first, backward layer last.'
-        )
-
-
 class ValidateBidirectionalIoType(OptimizerPass):
     _unrolled_layer_cls = ['Bidirectional']
 

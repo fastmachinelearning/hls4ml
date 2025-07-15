@@ -11,7 +11,6 @@ from hls4ml.converters.keras_v2_to_hls import (
 )
 
 rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
-merge_modes = ['sum', 'mul', 'concat', 'ave']
 
 
 @keras_handler(*rnn_layers)
@@ -125,6 +124,10 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             rnn_forward_layer = rnn_backward_layer.copy()
             rnn_backward_layer = temp_layer
             swapped_order = True
+            print(
+                f'WARNING: The selected order for forward and backward layers in "{keras_layer['config']['name']}" '
+                f'({keras_layer['class_name']}) is not supported in Vitis backend. Switching to forward layer first, backward layer last.'
+            )
     else:
         rnn_backward_layer = rnn_forward_layer
 
@@ -139,7 +142,6 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
         layer['inputs'] = input_names
 
     layer['direction'] = 'bidirectional'
-    layer['swapped_order'] = swapped_order
     layer['return_sequences'] = rnn_forward_layer['config']['return_sequences']
     layer['return_state'] = rnn_forward_layer['config']['return_state']
     layer['time_major'] = rnn_forward_layer['config']['time_major'] if 'time_major' in rnn_forward_layer['config'] else False
@@ -148,7 +150,6 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
         raise Exception('Time-major format is not supported by hls4ml')
     layer['n_timesteps'] = input_shapes[0][1]
     layer['n_in'] = input_shapes[0][2]
-    assert keras_layer['config']['merge_mode'] in merge_modes
     layer['merge_mode'] = keras_layer['config']['merge_mode']
 
     for direction, rnn_layer in [('forward', rnn_forward_layer), ('backward', rnn_backward_layer)]:
