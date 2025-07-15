@@ -192,33 +192,6 @@ void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate
     }
 }
 
-/* Alternative lstm_static beginning
-template <class data_T, class res_T, typename CONFIG_T, bool bidirectional=false>
-void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
-                 res_T s_newstate[CONFIG_T::n_state],
-                 typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                 typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
-                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
-                 typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4],
-                 bool backward_selector=false) {
-    // Initialize the state variable -- will maintain state between function calls
-
-    static res_T h_state_forward[CONFIG_T::n_state];
-    static res_T s_state_forward[CONFIG_T::n_state];
-    res_T *h_state;
-    res_T *s_state;
-    if constexpr (bidirectional) {
-        static res_T h_state_backward[CONFIG_T::n_state];
-        static res_T s_state_backward[CONFIG_T::n_state];
-        h_state = backward_selector ? h_state_backward : h_state_forward;
-        s_state = backward_selector ? s_state_backward : s_state_forward;
-    }
-    else {
-        h_state = h_state_forward;
-        s_state = s_state_forward;
-    }
-*/
-
 template <class data_T, class res_T, typename CONFIG_T, bool backward = false> class lstm_class {
   public:
     static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_total[2 * CONFIG_T::n_state],
@@ -346,10 +319,6 @@ void lstm_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream
 
     typename data_T::value_type data_in[CONFIG_T::n_in];
     bool reset_state = true;
-
-    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
-    std::cout << "Data_t size: " << data_T::size << std::endl;
-    std::cout << std::endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
 
 DataPropagation:
     for (int i_in = 0; i_in < CONFIG_T::n_sequence * CONFIG_T::n_in / data_T::size; i_in++) {
@@ -578,27 +547,6 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
         h_newstate[iacc] = h_state[iacc];
     }
 }
-
-/* Alternative gru_static beginning
-template <class data_T, class res_T, typename CONFIG_T, bool bidirectional=false>
-void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
-                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-                typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
-                typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
-                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3],
-                bool backward_selector=false) {
-    // Initialize the state variable -- will maintain state between function calls
-
-    static res_T h_state_forward[CONFIG_T::n_state];
-    res_T *h_state;
-    if constexpr (bidirectional) {
-        static res_T h_state_backward[CONFIG_T::n_state];
-        h_state = backward_selector ? h_state_backward : h_state_forward;
-    }
-    else {
-        h_state = h_state_forward;
-    }
-*/
 
 template <class data_T, class res_T, typename CONFIG_T, bool backward = false> struct gru_class {
     static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],

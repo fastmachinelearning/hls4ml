@@ -435,15 +435,7 @@ class BidirectionalFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
 
-        # TO DO: Add initial states functions
-        '''
-        if params['pass_initial_states'] == 'true':
-            params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
-            params['input2'] = node.get_input_variable(node.inputs[1]).name
-            if node.class_name == 'BLSTM':
-                params['input3'] = node.get_input_variable(node.inputs[2]).name
-                params['input3_t'] = node.get_input_variable(node.inputs[2]).type.name
-        '''
+        # TO DO: Add initial states functions for pytorch settings
 
         params['w'] = node.get_weights('forward_weight').name
         params['b'] = node.get_weights('forward_bias').name
