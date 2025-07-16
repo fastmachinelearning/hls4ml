@@ -166,7 +166,8 @@ class XLSWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
 
             elif '// hls-fpga-machine-learning xls layer documentation' in line:
-                newline = line
+                print("================= HERE\n")
+                newline = line + "TESTEST"
                 for layer in xls_layers:
                     newline += layer.to_string()
                     newline += '\n\n'
@@ -343,4 +344,4 @@ class XLSWriter(Writer):
         self.write_project_dir(model)
         self.write_project_dslx(model, xls_layers)
         self.write_nnet_utils(model)
-        print('Done')
+        print('Done writing')
