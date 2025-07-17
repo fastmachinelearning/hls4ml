@@ -377,6 +377,16 @@ class VivadoWriter(Writer):
                 if namespace is not None:
                     newline += '}\n'
 
+            elif '// hls-fpga-machine-learning insert emulator-defines' in line:
+                newline = line
+
+                if model.config.get_writer_config().get('WriteEmulationConstants', False):
+                    input_types = [f'std::array<{v.type.name}, {v.size_cpp()}>' for v in model.get_input_variables()]
+                    output_types = [f'std::array<{v.type.name}, {v.size_cpp()}>' for v in model.get_output_variables()]
+                    input_types_str = ', '.join(input_types)
+                    output_types_str = ', '.join(output_types)
+                    newline += '\n' + f'using inputs_t = std::tuple<{input_types_str}>;'
+                    newline += '\n' + f'using outputs_t = std::tuple<{output_types_str}>;\n'
             else:
                 newline = line
             fout.write(newline)
