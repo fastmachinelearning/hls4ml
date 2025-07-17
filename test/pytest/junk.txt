@@ -1,11 +1,11 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.10.16, pytest-8.4.0, pluggy-1.6.0
-pytest-randomly: reseed with 3292553549
-Using --randomly-seed=3292553549
+pytest-randomly: reseed with 844314803
+Using --randomly-seed=844314803
 rootdir: /home/girji/workspace/forks/hls4ml
 configfile: pyproject.toml
 plugins: randomly-3.16.0, cov-6.2.1, anyio-4.9.0
-pytest-randomly: reseed with 3292553549
+pytest-randomly: reseed with 844314803
 collected 1 item
 
 test_keras_api.py F                                                      [100%]
@@ -58,8 +58,8 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     lib_name = self.config.backend.compile(self)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <hls4ml.backends.xls.xls_backend.XLSBackend object at 0x76fc05022200>
-model = <hls4ml.model.graph.ModelGraph object at 0x76fbfc5145e0>
+self = <hls4ml.backends.xls.xls_backend.XLSBackend object at 0x72fdd7bda260>
+model = <hls4ml.model.graph.ModelGraph object at 0x72fdd40e0670>
 
     def compile(self, model):
         """Compile the generated project that can be linked into Python runtime.
@@ -90,10 +90,10 @@ E           Exception: Failed to compile project "myproject"
 
 ../../../../repos/hls4ml/hls4ml/backends/fpga/fpga_backend.py:178: Exception
 ---------------------------- Captured stdout setup -----------------------------
-pytest-randomly: reseed with 3292553548
+pytest-randomly: reseed with 844314802
 ----------------------------- Captured stdout call -----------------------------
-pytest-randomly: reseed with 3292553549
-1/4 [======>.......................] - ETA: 0s4/4 [==============================] - 0s 595us/step
+pytest-randomly: reseed with 844314803
+1/4 [======>.......................] - ETA: 0s4/4 [==============================] - 0s 1ms/step
 Interpreting Sequential
 Topology:
 Layer name: Dense_input, layer type: InputLayer, input shapes: [[None, 1]], output shape: [None, 1]
@@ -110,7 +110,7 @@ Done
 /bin/sh: 1: ./build_lib.sh: not found
 
 --------------------------- Captured stdout teardown ---------------------------
-pytest-randomly: reseed with 3292553550
+pytest-randomly: reseed with 844314804
 =============================== warnings summary ===============================
 ../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
   /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:reshape_stream" is not part of any flow and will not be executed.
@@ -163,4 +163,4 @@ pytest-randomly: reseed with 3292553550
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ============================
 FAILED test_keras_api.py::test_dense[io_parallel-XLS] - Exception: Failed to ...
-======================== 1 failed, 12 warnings in 1.81s ========================
+======================== 1 failed, 12 warnings in 1.78s ========================

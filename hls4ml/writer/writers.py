@@ -2,7 +2,7 @@ class Writer:
     def __init__(self):
         pass
 
-    def write_hls(self, model):
+    def write_hls(self, model) -> None:
         raise NotImplementedError
 
 

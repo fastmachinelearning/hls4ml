@@ -1,3 +1,11 @@
+
+# Typing imports
+from __future__ import annotations # makes all annotations into strings
+from typing import List, Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from hls4ml.model.graph import ModelGraph
+
+
 import glob
 import os
 import numpy as np
@@ -5,15 +13,14 @@ from fxpmath import Fxp
 from shutil import copyfile, copytree, rmtree
 from collections import OrderedDict
 from dataclasses import dataclass, asdict
-from typing import List
-
 from hls4ml.writer.writers import Writer
+
 
 config_filename = 'hls4ml_config.yml'
 
 @dataclass(frozen=True)
 class XLSLayerConfig:
-    name:        str
+    class_name:        str
     in_dim_key:  str
     in_dim_val:  int
     out_dim_key: str
@@ -35,16 +42,16 @@ class XLSLayerConfig:
         return "\n".join(lines)
     
     def is_activation(self) -> bool:
-        return self.name in ['Activation', 'Softmax']
+        return self.class_name in ['Activation', 'Softmax']
 
 class XLSLayerConfigBuilder:
     def __init__(self):
-        self._kw = {
+        self._kw: dict[str, Any] = {
             "fxp_weights": np.array([]),
             "fxp_bias":    np.array([]),
         }
-    def name(self, v: int):
-        self._kw["name"] = v; 
+    def class_name(self, v: int):
+        self._kw["class_name"] = v; 
         return self
     def in_dim_key(self, v: str):
         self._kw["in_dim_key"] = v; 
@@ -101,10 +108,9 @@ class XLSLayerConfigBuilder:
             self._kw["in_type"] = ''
         return self
     def out_nb(self, layer_precision):
-        if layer_precision:
-            for _, type_var in layer_precision.items():
-                self._kw["out_nb"] = f'u32:{type_var.precision.width}'; 
-                return self
+        for _, type_var in layer_precision.items():
+            self._kw["out_nb"] = f'u32:{type_var.precision.width}'; 
+            return self
         else:
             self._kw["out_nb"] = ''
         return self
@@ -112,18 +118,16 @@ class XLSLayerConfigBuilder:
         self._kw["out_en"] = 'u32:1'
         return self
     def out_bu(self, layer_precision):
-        if layer_precision:
-            for _, type_var in layer_precision.items():
-                self._kw["out_bu"] = f'u32:{type_var.precision.width - type_var.precision.integer}'; 
-                return self
+        for _, type_var in layer_precision.items():
+            self._kw["out_bu"] = f'u32:{type_var.precision.width - type_var.precision.integer}'; 
+            return self
         else:
             self._kw["out_bu"] = ''
         return self
     def out_type(self, layer_precision):
-        if layer_precision:
-            for _, type_var in layer_precision.items():
-                self._kw["out_type"] = f'sN[u32:{type_var.precision.width}]'; 
-                return self
+        for _, type_var in layer_precision.items():
+            self._kw["out_type"] = f'sN[u32:{type_var.precision.width}]'; 
+            return self
         else:
             self._kw["out_type"] = ''
         return self
@@ -133,7 +137,7 @@ class XLSLayerConfigBuilder:
 
 class XLSWriter(Writer):
     
-    def write_project_dir(self, model):
+    def write_project_dir(self, model: ModelGraph) -> None:
         """Write the base project directory
 
         Args:
@@ -142,7 +146,7 @@ class XLSWriter(Writer):
         if not os.path.isdir(f"{model.config.get_output_dir()}/firmware"):
             os.makedirs(f"{model.config.get_output_dir()}/firmware")
 
-    def write_project_dslx(self, model, xls_layers: list[XLSLayerConfig]):
+    def write_project_dslx(self, model: ModelGraph, xls_layers: list[XLSLayerConfig]):
         """Write the main architecture source file (myproject.x)
 
         Args:
@@ -154,23 +158,19 @@ class XLSWriter(Writer):
         f = open(os.path.join(filedir, '../templates/xls/firmware/myproject.x'))
         fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}.x', 'w')
 
-        model_inputs = model.get_input_variables()
-        model_outputs = model.get_output_variables()
-        # model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
-
         indent = '    '
-
+        last_layer_dim_key = ''
         for line in f.readlines():
             # Add headers to weights and biases
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
 
-            elif '// hls-fpga-machine-learning xls layer documentation' in line:
-                print("================= HERE\n")
-                newline = line + "TESTEST"
-                for layer in xls_layers:
-                    newline += layer.to_string()
-                    newline += '\n\n'
+            # elif '// hls-fpga-machine-learning debugging' in line:
+            #     print("================= HERE\n")
+            #     newline = line
+            #     for layer in xls_layers:
+            #         newline += layer.to_string()
+            #         newline += '\n\n'
 
             elif '// hls-fpga-machine-learning insert dimensions' in line:
                 newline = line
@@ -178,76 +178,90 @@ class XLSWriter(Writer):
                     if layer.is_activation() == False:
                         newline += f'const {layer.out_dim_key} = {layer.out_dim_val};\n'
 
-            elif '// hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
-                outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
-                # brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
+            # elif '// hls-fpga-machine-learning architecture type inference' in line:
+            #     newline = indent + 'IN_L0: u32, OUT_L0: u32,\n'
+            #     for i, layer in enumerate(xls_layers):
+            #         if i > 0 and layer.is_activation() == False:
+            #             newline += indent + f'IN_L{i}: u32 = {{OUT_L{i-1}}}, OUT_L{i}: u32,\n'
+            #             last_layer_dim_key = f'OUT_L{i}'
 
+            elif '// hls-fpga-machine-learning architecture arguments' in line:
                 newline = ''
-                newline += indent + inputs_str + ',\n'
-                newline += indent + outputs_str
-                # if len(model_brams) > 0:
-                #     newline += ',\n' + brams_str
-                newline += '\n'
+                for i, layer in enumerate(xls_layers):
+                    if layer.class_name == 'Input':
+                        newline += indent + f'x: {layer.out_type}[{layer.out_dim_key}],\n'
+                    elif layer.is_activation() == False:
+                        newline += indent + f'w{i}: {layer.out_type}[{layer.in_dim_key}][{layer.out_dim_key}],\n'
+                        newline += indent + f'b{i}: {layer.out_type}[{layer.out_dim_key}]'
+                        if i < len([layer for layer in xls_layers if layer.is_activation() == False]) - 1:
+                            newline += ',\n'
+                        else:
+                            newline += '\n'
 
-            elif '// hls-fpga-machine-learning insert load weights' in line:
-                newline = line
-                if model.config.get_writer_config()['WriteWeightsTxt']:
-
-                    newline += '#ifndef __SYNTHESIS__\n'
-                    newline += '    static bool loaded_weights = false;\n'
-                    newline += '    if (!loaded_weights) {\n'
-
-                    for layer in model.get_layers():
-                        for w in layer.get_weights():
-                            if w.weight_class == 'CompressedWeightVariable':
-                                newline += (
-                                    indent
-                                    + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
-                                        w.type.name, w.nonzeros, w.name, w.name
-                                    )
-                                )
-                            elif w.weight_class == 'ExponentWeightVariable':
-                                newline += (
-                                    indent
-                                    + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
-                                        w.type.name, w.data_length, w.name, w.name
-                                    )
-                                )
-                            else:
-                                newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
-                                    w.type.name, w.data_length, w.name, w.name
-                                )
-
-                    newline += '        loaded_weights = true;'
-                    newline += '    }\n'
-                    newline += '#endif'
-
-            # Add input/output type
-            elif '// hls-fpga-machine-learning insert IO' in line:
-                pass
-
-            elif '// hls-fpga-machine-learning architecture type inference' in line:
-                indent = '    '
-                newline = indent + 'IN_L0: u32, OUT_L0: u32,\n'
-                for i, layer in enumerate(model.get_layers()):
-                    if i > 0:
-                        newline += indent + f'IN_L{i}: u32 = {{OUT_L{i-1}}}, OUT_L{i}: u32,\n'
-
-            # TODO: infer actual defintion of 'Output_T'
             elif '// hls-fpga-machine-learning output ' in line:
                 indent = '    '
-                newline = indent + f'Output_T[OUT_L{len(model.get_layers())-1}],\n'
+                last_layer_type = xls_layers[-1].out_type
+                last_layer_dim_key = xls_layers[-1].out_dim_key
+                newline = indent + f'{last_layer_type}[{last_layer_dim_key}]\n'
 
             elif '// hls-fpga-machine-learning insert layers' in line:
-                newline = line + '\n'
-                for i, layer in enumerate(model.get_layers()):
-                    vars = layer.get_variables()
-                    for var in vars:
-                        if var not in model_inputs and var not in model_outputs:
-                            #TODO: might fail for non fixed point types 
-                            newline += f'    let z{i+1} = ' + f'multi_dense_fxd::{var.type.name}<{var.type.precision.width}, 1, {var.type.precision.integer}>' + f'(z{i}, w{i}, b{i});\n'
-                newline += f'    z{len(model.get_layers()) - 1}\n'
+                newline = line
+                prev_var = ''
+                for i, layer in enumerate(xls_layers):
+                    next_layer = xls_layers[i + 1] if i < len(xls_layers) - 1 else None
+                    if layer.class_name == 'Dense' and next_layer.class_name == 'Activation':
+                        if prev_var is '':
+                            newline += indent + f'let z{i} = multi_dense_fxd::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>(x, w{i}, b{i});\n'
+                            prev_var = f'z{i}'
+                        else:
+                            newline += indent + f'let z{i} = multi_dense_fxd::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
+                            prev_var = f'z{i}'
+                    if layer.class_name == 'Dense' and next_layer.class_name == 'Softmax':
+                        if prev_var is '':
+                            newline += indent + f'let y{i} = multi_dense_fxd::dense<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>(x, w{i}, b{i});\n'
+                            prev_var = f'y{i}'
+                        else:
+                            newline += indent + f'let y{i} = multi_dense_fxd::dense<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
+                            prev_var = f'y{i}'
+                    if layer.class_name == 'Softmax':
+                        newline += indent + f'let z{i} = multi_dense_fxd::argmax<{layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var});\n'
+                        prev_var = f'z{i}'
+
+                newline += indent + prev_var + '\n'
+
+            elif '// hls-fpga-machine-learning top function input' in line:
+                newline = indent + f'x: {xls_layers[0].out_type}[{xls_layers[0].out_dim_key}]\n'
+
+            elif '// hls-fpga-machine-learning top function output' in line:
+                newline = indent + f'{xls_layers[-1].out_type}[{xls_layers[-1].out_dim_key}]\n'
+
+            elif '// hls-fpga-machine-learning load weights' in line:
+                newline = line
+                for i, layer in enumerate(xls_layers):
+                    if layer.class_name == 'Dense':
+                        # Weights
+                        newline += indent + f'let w{i} = {layer.out_type}[{layer.in_dim_key}][{layer.out_dim_key}]:[\n'
+                        for idx_row, row in enumerate(layer.fxp_weights):
+                            newline += indent + indent + '['
+                            for idx_col, w in enumerate(row):
+                                newline += f'{layer.out_type}:{w}'
+                                if idx_col < len(row) - 1:
+                                    newline += ','
+                            newline += ']'
+                            if idx_row < len(layer.fxp_weights) - 1:
+                                    newline += ',\n'
+                            else:
+                                newline += '\n'
+                        newline += indent + '];\n'
+                        # Bias
+                        newline += indent + f'let b{i} = {layer.out_type}[{layer.out_dim_key}]:[\n'
+                        newline += indent + indent
+                        for idx_b, b in enumerate(layer.fxp_bias):
+                            newline += f'{layer.out_type}:{b}'
+                            if idx_b < len(layer.fxp_bias) - 1:
+                                newline += ','
+                        newline += '\n' + indent + '];\n'
+
 
             # Just copy line
             else:
@@ -258,7 +272,7 @@ class XLSWriter(Writer):
         f.close()
         fout.close()
 
-    def write_nnet_utils(self, model):
+    def write_nnet_utils(self, model: ModelGraph) -> None:
         """Copy the nnet_utils, AP types headers to the project output directory
 
         Args:
@@ -298,8 +312,8 @@ class XLSWriter(Writer):
 
 
 
-    def write_hls(self, model):
-        xls_layers = []
+    def write_hls(self, model: ModelGraph) -> None:
+        xls_layers: list[XLSLayerConfig] = []
         builder = XLSLayerConfigBuilder()
 
         prev_out_dim_key = ''
@@ -317,7 +331,7 @@ class XLSWriter(Writer):
             cur_out_dim_val = list(layer.get_output_variable().get_shape())[0][1]
             new_layer = (
                 builder
-                .name(layer.class_name)
+                .class_name(layer.class_name)
                 .in_dim_key(prev_out_dim_key)
                 .in_dim_val(prev_out_dim_val)
                 .out_dim_key(cur_out_dim_key) # TODO: investigate if this is always good

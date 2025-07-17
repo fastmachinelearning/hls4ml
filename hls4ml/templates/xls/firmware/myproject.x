@@ -1,6 +1,6 @@
 import nnet_utils.multi_dense_fxd;
 
-// hls-fpga-machine-learning xls layer documentation
+// hls-fpga-machine-learning debugging
 
 
 // hls-fpga-machine-learning insert dimensions
@@ -9,9 +9,7 @@ import nnet_utils.multi_dense_fxd;
 // ****************************************
 // NETWORK INSTANTIATION
 // ****************************************
-pub fn myproject_architecture<
-    // hls-fpga-machine-learning architecture type inference
-    >(
+pub fn myproject_architecture(
     // hls-fpga-machine-learning architecture arguments
     ) ->
     // hls-fpga-machine-learning output 
@@ -21,9 +19,15 @@ pub fn myproject_architecture<
 }
 
 
-pub fn myproject
-    ()
-    -> {
+pub fn myproject(
+    // hls-fpga-machine-learning top function input
+    )-> 
+    // hls-fpga-machine-learning top function output
+    {
 
-    // hls-fpga-machine-learning insert load weights
+    // hls-fpga-machine-learning load weights
+    
+    myproject_architecture(
+        // hls-fpga-machine-learning call inlined weights
+    )
 }
