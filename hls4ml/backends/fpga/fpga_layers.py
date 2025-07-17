@@ -21,11 +21,10 @@ class BatchNormalizationQuantizedTanh(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         shape = inp.shape
-        dims = inp.dim_names
         if self.get_attr('quantize') == 2:
-            self.add_output_variable(shape, dims, precision=XnorPrecisionType())
+            self.add_output_variable(shape, precision=XnorPrecisionType())
         elif self.get_attr('quantize') == 3:
-            self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
+            self.add_output_variable(shape, precision=IntegerPrecisionType(width=2))
         else:
             raise Exception(
                 'Unsupported quantize attribute for BatchNormalizationQuantizedTanh: {}'.format(self.get_attr('quantize'))
@@ -34,12 +33,11 @@ class BatchNormalizationQuantizedTanh(Layer):
     def set_thresholds(self, scale, bias, ternary_threshold=0.5):
         inp = self.get_input_variable()
         shape = inp.shape
-        dims = inp.dim_names
         precision = self.model.config.backend.convert_precision_string(inp.type.precision)
         F = precision.fractional
         threshold = -bias / scale
         if self.get_attr('quantize') == 2:
-            self.add_output_variable(shape, dims, precision=XnorPrecisionType())
+            self.add_output_variable(shape, precision=XnorPrecisionType())
             threshold = np.floor(threshold * 2**F) / 2**F
             self.add_weights_variable(
                 name='threshold',
@@ -49,7 +47,7 @@ class BatchNormalizationQuantizedTanh(Layer):
                 precision=inp.type.precision,
             )
         elif self.get_attr('quantize') == 3:
-            self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
+            self.add_output_variable(shape, precision=IntegerPrecisionType(width=2))
             threshold_hi = ternary_threshold / scale + threshold
             threshold_lo = -ternary_threshold / scale + threshold
             threshold_hi = np.floor(threshold_hi * 2**F) / 2**F

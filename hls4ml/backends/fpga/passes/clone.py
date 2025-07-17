@@ -11,7 +11,7 @@ class Clone(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         for i, out_name in enumerate(self.outputs):
-            self.add_output_variable(inp.shape, inp.dim_names, out_name=out_name, var_name='layer{index}_cpy' + str(i + 1))
+            self.add_output_variable(inp.shape, out_name=out_name, var_name='layer{index}_cpy' + str(i + 1))
 
 
 clone_include_list = ['nnet_utils/nnet_stream.h']

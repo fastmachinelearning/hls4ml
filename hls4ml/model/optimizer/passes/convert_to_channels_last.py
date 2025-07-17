@@ -42,8 +42,6 @@ class ChannelsLastConverter(OptimizerPass):
                 input_shape = node.get_output_variable().shape
                 input_shape.append(input_shape.pop(0))
                 node.get_output_variable().shape = input_shape
-                dim_names = [f'N_INPUT_{i}_{node.index}' for i in range(1, len(input_shape) + 1)]
-                node.get_output_variable().dim_names = dim_names
         else:
             # Transpose weight tensors
             tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
@@ -82,15 +80,12 @@ class ChannelsLastConverter(OptimizerPass):
                         node.set_attr('axis', 3)
 
             # Adjust output shape
-            outdims = node.get_output_variable().dim_names
             if len(outshape) == 2:
                 shape = [outshape[1], outshape[0]]
-                dims = [outdims[1], outdims[0]]
-                node.add_output_variable(shape, dims)
+                node.add_output_variable(shape)
             elif len(outshape) == 3:
                 shape = [outshape[1], outshape[2], outshape[0]]
-                dims = [outdims[1], outdims[2], outdims[0]]
-                node.add_output_variable(shape, dims)
+                node.add_output_variable(shape)
 
             # Have to transpose back before flattening to get correct order of elements in the flattened tensor
             if (
