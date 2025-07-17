@@ -927,6 +927,33 @@ class OneAPIWriter(Writer):
         self.__write_exp_table_legacy(model, dstpath)
         self.__write_invert_table_legacy(model, dstpath)
 
+    def write_generated_code(self, model):
+        """Write the generated code (nnet_code_gen.h)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        path = f'{model.config.get_output_dir()}/src/firmware/nnet_utils/nnet_code_gen.h'
+        f = open(path)
+        contents = f.readlines()
+        f.close()
+        f = open(path, 'w')
+        namespace = model.config.get_writer_config().get('Namespace', None)
+
+        for line in contents:
+            if '// hls4ml insert code' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for generated_code in layer.code.values():
+                        newline += str(generated_code)
+            else:
+                newline = line
+            if namespace is not None:
+                if 'namespace nnet' in newline:
+                    newline = newline.replace('namespace nnet', f'namespace {namespace}')
+            f.write(newline)
+        f.close()
+
     def write_yml(self, model):
         """Write the config to the YAML file
 
@@ -975,5 +1002,6 @@ class OneAPIWriter(Writer):
         self.write_build_script(model)
         self.write_nnet_utils(model)
         self.write_activation_tables(model)
+        self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
