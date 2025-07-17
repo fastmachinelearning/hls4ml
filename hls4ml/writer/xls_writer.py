@@ -7,7 +7,8 @@ if TYPE_CHECKING:
 
 
 import glob
-import os
+import sys, os
+import subprocess
 import numpy as np
 from fxpmath import Fxp
 from shutil import copyfile, copytree, rmtree
@@ -43,6 +44,9 @@ class XLSLayerConfig:
     
     def is_activation(self) -> bool:
         return self.class_name in ['Activation', 'Softmax']
+
+    def has_weights(self) -> bool:
+        return self.class_name in ['Dense']
 
 class XLSLayerConfigBuilder:
     def __init__(self):
@@ -176,7 +180,7 @@ class XLSWriter(Writer):
                 newline = line
                 for layer in xls_layers:
                     if layer.is_activation() == False:
-                        newline += f'const {layer.out_dim_key} = {layer.out_dim_val};\n'
+                        newline += f'const {layer.out_dim_key} = u32:{layer.out_dim_val};\n'
 
             # elif '// hls-fpga-machine-learning architecture type inference' in line:
             #     newline = indent + 'IN_L0: u32, OUT_L0: u32,\n'
@@ -238,7 +242,7 @@ class XLSWriter(Writer):
             elif '// hls-fpga-machine-learning load weights' in line:
                 newline = line
                 for i, layer in enumerate(xls_layers):
-                    if layer.class_name == 'Dense':
+                    if layer.has_weights():
                         # Weights
                         newline += indent + f'let w{i} = {layer.out_type}[{layer.in_dim_key}][{layer.out_dim_key}]:[\n'
                         for idx_row, row in enumerate(layer.fxp_weights):
@@ -261,6 +265,20 @@ class XLSWriter(Writer):
                             if idx_b < len(layer.fxp_bias) - 1:
                                 newline += ','
                         newline += '\n' + indent + '];\n'
+
+            elif '// hls-fpga-machine-learning call inlined weights' in line:
+                newline = indent + indent
+                for i, layer in enumerate(xls_layers):
+                    if layer.class_name == 'Input':
+                        newline += 'x,'
+                    elif layer.has_weights():
+                        newline += f'w{i}, b{i}'
+                        if i < len(xls_layers) - 1:
+                            print(', ')
+                newline += '\n'
+
+
+
 
 
             # Just copy line
@@ -300,17 +318,45 @@ class XLSWriter(Writer):
             rmtree(dstpath)
 
         copytree(srcpath, dstpath)
+        
 
-        # TODO: check if you need this
-        # # custom source
-        # filedir = os.path.dirname(os.path.abspath(__file__))
+    def gen_interpretable_ir(self, model: ModelGraph):
+        XLS_BAZEL_BIN_PATH = '$HOME/xls/bazel-bin'
 
-        # custom_source = model.config.backend.get_custom_source()
-        # for dst, srcpath in custom_source.items():
-        #     dstpath = f'{model.config.get_output_dir()}/firmware/{dst}'
-        #     copyfile(srcpath, dstpath)
+        if 'linux' in sys.platform:
+            path = os.path.expandvars(XLS_BAZEL_BIN_PATH)
+            if os.path.isdir(path) == 0:
+                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
 
+        curr_dir = os.getcwd()
+        os.chdir(f'{model.config.get_output_dir()}/firmware')
+        kernel_name = model.config.get_project_name()
 
+        ## Run interpreter
+        interpreter_cmd = [ 
+            f'{path}/xls/dslx/interpreter_main',
+            f'{kernel_name}.x'
+        ]
+        subprocess.run(interpreter_cmd, check=True)
+
+        ## Generate IR
+        with open(f'{kernel_name}.ir', 'w') as ir_file:
+            gen_cmd = [ 
+                f'{path}/xls/dslx/ir_convert/ir_converter_main',
+                f'--top={kernel_name}',
+                f'{kernel_name}.x'
+            ]
+            subprocess.run(gen_cmd, check=True, stdout=ir_file)
+
+        ## Optimize IR
+        with open(f'{kernel_name}.opt.ir', 'w') as opt_file:
+            opt_cmd = [ 
+                f'{path}/xls/tools/opt_main',
+                f'{kernel_name}.ir'
+            ]
+            subprocess.run(opt_cmd, check=True, stdout=opt_file)
+
+        os.chdir(curr_dir)
 
     def write_hls(self, model: ModelGraph) -> None:
         xls_layers: list[XLSLayerConfig] = []
@@ -320,13 +366,6 @@ class XLSWriter(Writer):
         prev_out_dim_val = -1
         prev_layer_precision = None
         for layer in model.get_layers():
-            # print('\n========== Layer: ')
-            # for name, val in layer.__dict__.items():
-            #     print(f"{name}: {val!r}")
-            # print('\nMODEL: ')
-            # for name, val in layer.model.__dict__.items():
-            #     print(f"{name}: {val!r}")
-            # print()
             cur_out_dim_key = list(layer.get_output_variable().get_shape())[0][0]
             cur_out_dim_val = list(layer.get_output_variable().get_shape())[0][1]
             new_layer = (
@@ -358,4 +397,5 @@ class XLSWriter(Writer):
         self.write_project_dir(model)
         self.write_project_dslx(model, xls_layers)
         self.write_nnet_utils(model)
+        self.gen_interpretable_ir(model)
         print('Done writing')
