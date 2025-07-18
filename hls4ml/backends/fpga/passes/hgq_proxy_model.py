@@ -37,7 +37,7 @@ def generate_mask_fn(
         masks.append(f'    {fn}')
     body = "\n".join(masks)
     arguments = (
-        'input_t *inp, output_t *out' if backend.lower() not in ['oneapi', 'quartus'] else 'input_t inp, output_t out'
+        'input_t *inp, output_t *out' if backend.lower() not in ['oneapi', 'quartus'] else 'input_t &inp, output_t &out'
     )
     mask_fn = f'''
 template<typename input_t, typename output_t>
