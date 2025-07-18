@@ -61,6 +61,7 @@ class VitisBackend(VivadoBackend):
         namespace=None,
         write_weights_txt=True,
         write_tar=False,
+        write_emulation_constants=False,
         tb_output_stream='both',
         **_,
     ):
@@ -76,6 +77,8 @@ class VitisBackend(VivadoBackend):
             write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
                 Defaults to True.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+            write_emulation_constants (bool, optional): If True, write constants to define.h useful for emulation.
+                Defaults to False.
             tb_output_stream (str, optional): Controls where to write the output. Options are 'stdout', 'file' and 'both'.
                 Defaults to 'both'.
 
@@ -94,6 +97,7 @@ class VitisBackend(VivadoBackend):
             'WriteWeightsTxt': write_weights_txt,
             'WriteTar': write_tar,
             'TBOutputStream': tb_output_stream,
+            'WriteEmulationConstants': write_emulation_constants,
         }
 
         return config
