@@ -1,166 +1,66 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.10.16, pytest-8.4.0, pluggy-1.6.0
-pytest-randomly: reseed with 844314803
-Using --randomly-seed=844314803
+pytest-randomly: reseed with 2358155611
+Using --randomly-seed=2358155611
 rootdir: /home/girji/workspace/forks/hls4ml
 configfile: pyproject.toml
 plugins: randomly-3.16.0, cov-6.2.1, anyio-4.9.0
-pytest-randomly: reseed with 844314803
-collected 1 item
+pytest-randomly: reseed with 2358155611
+collected 2 items
 
-test_keras_api.py F                                                      [100%]
+test_keras_api.py 
 
-=================================== FAILURES ===================================
-_________________________ test_dense[io_parallel-XLS] __________________________
-
-backend = 'XLS', io_type = 'io_parallel'
-
-    @pytest.mark.parametrize('backend', ['XLS'])
-    @pytest.mark.parametrize('io_type', ['io_parallel'])
-    def test_dense(backend, io_type):
-        model = tf.keras.models.Sequential()
-        model.add(
-            Dense(
-                2,
-                input_shape=(1,),
-                name='Dense',
-                use_bias=True,
-                kernel_initializer=tf.keras.initializers.RandomUniform(minval=1, maxval=10),
-                bias_initializer='zeros',
-                kernel_regularizer=None,
-                bias_regularizer=None,
-                activity_regularizer=None,
-                kernel_constraint=None,
-                bias_constraint=None,
-            )
-        )
-        model.add(Activation(activation='relu', name='Activation'))
-        model.compile(optimizer='adam', loss='mse')
-    
-        X_input = np.random.rand(100, 1)
-    
-        keras_prediction = model.predict(X_input)
-    
-        config = hls4ml.utils.config_from_keras_model(model)
-        output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
-    
-        hls_model = hls4ml.converters.convert_from_keras_model(
-            model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-        )
-    
->       hls_model.compile()
-
-test_keras_api.py:63: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-../../../../repos/hls4ml/hls4ml/model/graph.py:795: in compile
-    self._compile()
-../../../../repos/hls4ml/hls4ml/model/graph.py:798: in _compile
-    lib_name = self.config.backend.compile(self)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-self = <hls4ml.backends.xls.xls_backend.XLSBackend object at 0x72fdd7bda260>
-model = <hls4ml.model.graph.ModelGraph object at 0x72fdd40e0670>
-
-    def compile(self, model):
-        """Compile the generated project that can be linked into Python runtime.
-    
-        Args:
-            model (ModelGraph): Model to compile.
-    
-        Raises:
-            Exception: If the project failed to compile
-    
-        Returns:
-            string: Returns the name of the compiled library.
-        """
-    
-        lib_name = None
-        ret_val = subprocess.run(
-            ['./build_lib.sh'],
-            shell=True,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            cwd=model.config.get_output_dir(),
-        )
-        if ret_val.returncode != 0:
-            print(ret_val.stdout)
->           raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
-E           Exception: Failed to compile project "myproject"
-
-../../../../repos/hls4ml/hls4ml/backends/fpga/fpga_backend.py:178: Exception
----------------------------- Captured stdout setup -----------------------------
-pytest-randomly: reseed with 844314802
------------------------------ Captured stdout call -----------------------------
-pytest-randomly: reseed with 844314803
-1/4 [======>.......................] - ETA: 0s4/4 [==============================] - 0s 1ms/step
-Interpreting Sequential
-Topology:
-Layer name: Dense_input, layer type: InputLayer, input shapes: [[None, 1]], output shape: [None, 1]
-Layer name: Dense, layer type: Dense, input shapes: [[None, 1]], output shape: [None, 2]
-Layer name: Activation, layer type: Activation, input shapes: [[None, 2]], output shape: [None, 2]
-Interpreting Sequential
-Topology:
-Layer name: Dense_input, layer type: InputLayer, input shapes: [[None, 1]], output shape: [None, 1]
-Layer name: Dense, layer type: Dense, input shapes: [[None, 1]], output shape: [None, 2]
-Layer name: Activation, layer type: Activation, input shapes: [[None, 2]], output shape: [None, 2]
-Creating HLS model
-Writing HLS project
-Done
-/bin/sh: 1: ./build_lib.sh: not found
-
---------------------------- Captured stdout teardown ---------------------------
-pytest-randomly: reseed with 844314804
 =============================== warnings summary ===============================
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:reshape_stream" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:reshape_stream" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:process_fixed_point_quantizer_layer" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:process_fixed_point_quantizer_layer" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:clone_output" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:clone_output" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:remove_final_reshape" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:remove_final_reshape" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:register_bram_weights" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:register_bram_weights" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:xnor_pooling" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:xnor_pooling" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:generate_conv_im2col" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:generate_conv_im2col" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:skip_softmax" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:skip_softmax" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:fix_softmax_table_size" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:fix_softmax_table_size" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:inplace_parallel_reshape" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:inplace_parallel_reshape" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:inplace_stream_flatten" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:inplace_stream_flatten" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../../../repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61
-  /home/girji/workspace/repos/hls4ml/hls4ml/backends/xls/xls_backend.py:61: UserWarning: WARNING: Optimizer "xls:transform_types" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:70
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:70: UserWarning: WARNING: Optimizer "xls:transform_types" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ============================
-FAILED test_keras_api.py::test_dense[io_parallel-XLS] - Exception: Failed to ...
-======================== 1 failed, 12 warnings in 1.78s ========================
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/home/girji/miniconda3/envs/hls4ml/lib/python3.10/site-packages/fxpmath/objects.py:976: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+============================= 12 warnings in 3.07s =============================

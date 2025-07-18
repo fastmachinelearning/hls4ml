@@ -1,4 +1,3 @@
-
 # Typing imports
 from __future__ import annotations # makes all annotations into strings
 from typing import List, Any, TYPE_CHECKING
@@ -21,7 +20,7 @@ config_filename = 'hls4ml_config.yml'
 
 @dataclass(frozen=True)
 class XLSLayerConfig:
-    class_name:        str
+    class_name:  str
     in_dim_key:  str
     in_dim_val:  int
     out_dim_key: str
@@ -69,8 +68,8 @@ class XLSLayerConfigBuilder:
     def out_dim_val(self, v: int):
         self._kw["out_dim_val"] = v; 
         return self
-    def fxp_weights(self, fxp_weights, out_dim, in_dim):
-        for w in fxp_weights:
+    def fxp_weights(self, weights, out_dim, in_dim):
+        for w in weights:
             if (len(list(w)) == out_dim*in_dim):
                 mat = np.array(list(w)).reshape(in_dim, out_dim)
                 mat_T = mat.T   # in Keras the weights are transposed
@@ -78,8 +77,8 @@ class XLSLayerConfigBuilder:
                 self._kw["fxp_weights"] = fxp_w 
                 return self
         return self
-    def fxp_bias(self, fxp_weights, out_dim):
-        for w in fxp_weights:
+    def fxp_bias(self, weights, out_dim):
+        for w in weights:
             if (len(list(w)) == out_dim):
                 fxp_b = Fxp(list(w), signed=True, n_word=16, n_frac=10).raw()
                 self._kw["fxp_bias"] = fxp_b
@@ -139,6 +138,42 @@ class XLSLayerConfigBuilder:
     def build(self) -> XLSLayerConfig:
         return XLSLayerConfig(**self._kw)
 
+    def build_xls_layers(self, model: ModelGraph) -> list[XLSLayerConfig]:
+        xls_layers: list[XLSLayerConfig] = []
+        
+        prev_out_dim_key = ''
+        prev_out_dim_val = -1
+        prev_layer_precision = None
+        for layer in model.get_layers():
+            cur_out_dim_key = list(layer.get_output_variable().get_shape())[0][0]
+            cur_out_dim_val = list(layer.get_output_variable().get_shape())[0][1]
+            new_layer = (
+                self
+                .class_name(layer.class_name)
+                .in_dim_key(prev_out_dim_key)
+                .in_dim_val(prev_out_dim_val)
+                .out_dim_key(cur_out_dim_key) # TODO: investigate if this is always good
+                .out_dim_val(cur_out_dim_val)
+                .in_nb(prev_layer_precision)
+                .in_en()
+                .in_bu(prev_layer_precision)
+                .in_type(prev_layer_precision)
+                .out_type(layer.get_layer_precision())
+                .out_nb(layer.get_layer_precision())
+                .out_en()
+                .out_bu(layer.get_layer_precision())
+                .fxp_weights(layer.get_weights(), out_dim=cur_out_dim_val, in_dim=prev_out_dim_val)
+                .fxp_bias(layer.get_weights(), out_dim=cur_out_dim_val)
+                .build()
+            )
+            xls_layers.append(new_layer)
+
+            prev_out_dim_key = new_layer.out_dim_key
+            prev_out_dim_val = new_layer.out_dim_val
+            prev_layer_precision = layer.get_layer_precision()
+
+        return xls_layers
+
 class XLSWriter(Writer):
     
     def write_project_dir(self, model: ModelGraph) -> None:
@@ -150,7 +185,10 @@ class XLSWriter(Writer):
         if not os.path.isdir(f"{model.config.get_output_dir()}/firmware"):
             os.makedirs(f"{model.config.get_output_dir()}/firmware")
 
-    def write_project_dslx(self, model: ModelGraph, xls_layers: list[XLSLayerConfig]):
+        if not os.path.isdir(f"{model.config.get_output_dir()}/predictions"):
+            os.makedirs(f"{model.config.get_output_dir()}/predictions")
+
+    def write_project_dslx(self, model: ModelGraph, xls_layers: list[XLSLayerConfig]) -> None:
         """Write the main architecture source file (myproject.x)
 
         Args:
@@ -213,14 +251,14 @@ class XLSWriter(Writer):
                 prev_var = ''
                 for i, layer in enumerate(xls_layers):
                     next_layer = xls_layers[i + 1] if i < len(xls_layers) - 1 else None
-                    if layer.class_name == 'Dense' and next_layer.class_name == 'Activation':
+                    if layer.class_name == 'Dense' and (next_layer is not None and next_layer.class_name == 'Activation'):
                         if prev_var is '':
                             newline += indent + f'let z{i} = multi_dense_fxd::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>(x, w{i}, b{i});\n'
                             prev_var = f'z{i}'
                         else:
                             newline += indent + f'let z{i} = multi_dense_fxd::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
                             prev_var = f'z{i}'
-                    if layer.class_name == 'Dense' and next_layer.class_name == 'Softmax':
+                    if layer.class_name == 'Dense' and (next_layer is not None and next_layer.class_name == 'Softmax'):
                         if prev_var is '':
                             newline += indent + f'let y{i} = multi_dense_fxd::dense<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>(x, w{i}, b{i});\n'
                             prev_var = f'y{i}'
@@ -277,10 +315,6 @@ class XLSWriter(Writer):
                             print(', ')
                 newline += '\n'
 
-
-
-
-
             # Just copy line
             else:
                 newline = line
@@ -318,13 +352,12 @@ class XLSWriter(Writer):
             rmtree(dstpath)
 
         copytree(srcpath, dstpath)
-        
+
 
     def gen_interpretable_ir(self, model: ModelGraph):
-        XLS_BAZEL_BIN_PATH = '$HOME/xls/bazel-bin'
 
         if 'linux' in sys.platform:
-            path = os.path.expandvars(XLS_BAZEL_BIN_PATH)
+            path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
             if os.path.isdir(path) == 0:
                 raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
 
@@ -332,12 +365,12 @@ class XLSWriter(Writer):
         os.chdir(f'{model.config.get_output_dir()}/firmware')
         kernel_name = model.config.get_project_name()
 
-        ## Run interpreter
-        interpreter_cmd = [ 
-            f'{path}/xls/dslx/interpreter_main',
-            f'{kernel_name}.x'
-        ]
-        subprocess.run(interpreter_cmd, check=True)
+        # ## Run interpreter
+        # interpreter_cmd = [ 
+        #     f'{path}/xls/dslx/interpreter_main',
+        #     f'{kernel_name}.x'
+        # ]
+        # subprocess.run(interpreter_cmd, check=True)
 
         ## Generate IR
         with open(f'{kernel_name}.ir', 'w') as ir_file:
@@ -358,44 +391,14 @@ class XLSWriter(Writer):
 
         os.chdir(curr_dir)
 
+
     def write_hls(self, model: ModelGraph) -> None:
-        xls_layers: list[XLSLayerConfig] = []
         builder = XLSLayerConfigBuilder()
-
-        prev_out_dim_key = ''
-        prev_out_dim_val = -1
-        prev_layer_precision = None
-        for layer in model.get_layers():
-            cur_out_dim_key = list(layer.get_output_variable().get_shape())[0][0]
-            cur_out_dim_val = list(layer.get_output_variable().get_shape())[0][1]
-            new_layer = (
-                builder
-                .class_name(layer.class_name)
-                .in_dim_key(prev_out_dim_key)
-                .in_dim_val(prev_out_dim_val)
-                .out_dim_key(cur_out_dim_key) # TODO: investigate if this is always good
-                .out_dim_val(cur_out_dim_val)
-                .in_nb(prev_layer_precision)
-                .in_en()
-                .in_bu(prev_layer_precision)
-                .in_type(prev_layer_precision)
-                .out_type(layer.get_layer_precision())
-                .out_nb(layer.get_layer_precision())
-                .out_en()
-                .out_bu(layer.get_layer_precision())
-                .fxp_weights(layer.get_weights(), out_dim=cur_out_dim_val, in_dim=prev_out_dim_val)
-                .fxp_bias(layer.get_weights(), out_dim=cur_out_dim_val)
-                .build()
-            )
-            xls_layers.append(new_layer)
-
-            prev_out_dim_key = new_layer.out_dim_key
-            prev_out_dim_val = new_layer.out_dim_val
-            prev_layer_precision = layer.get_layer_precision()
+        xls_layers: list[XLSLayerConfig] = builder.build_xls_layers(model)
 
         print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_dslx(model, xls_layers)
         self.write_nnet_utils(model)
-        self.gen_interpretable_ir(model)
+
         print('Done writing')

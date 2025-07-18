@@ -1,9 +1,15 @@
-import os
-import sys
-import subprocess, shlex
-from warnings import warn
+# Typing imports
+from __future__ import annotations # makes all annotations into strings
+from typing import List, Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from hls4ml.model.graph import ModelGraph
 
+import os, sys
+import re
+import subprocess, shlex
 import numpy as np
+from warnings import warn
+from fxpmath import Fxp
 
 from hls4ml.backends import FPGABackend
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
@@ -15,8 +21,11 @@ from hls4ml.model.layers import (
 from hls4ml.model.types import IntegerPrecisionType, NamedType
 
 class XLSBackend(FPGABackend):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('XLS')
+        self._writer_flow = ''
+        self._default_flow = ''
+
         self._register_layer_attributes()
         self._register_flows()
 
@@ -24,19 +33,19 @@ class XLSBackend(FPGABackend):
         # TODO: implement this
         pass
 
-    def _register_flows(self):
+    def _register_flows(self) -> None:
         initializers = self._get_layer_initializers()
-        init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
+        init_flow: str = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         optimization_passes = [
             'infer_precision_types',
         ]
-        optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
+        optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         vivado_types = [
             'xls:transform_types',
         ]
-        vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
+        vivado_types_flow: str = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
@@ -70,10 +79,10 @@ class XLSBackend(FPGABackend):
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
-    def get_default_flow(self):
+    def get_default_flow(self) -> str:
         return self._default_flow
 
-    def get_writer_flow(self):
+    def get_writer_flow(self) -> str:
         return self._writer_flow
     
     def create_initial_config(
@@ -87,7 +96,7 @@ class XLSBackend(FPGABackend):
         write_tar=False,
         tb_output_stream='both',
         **_,
-    ):
+    ) -> dict[str, Any]:
         """Create initial configuration of the Vivado backend.
 
         Args:
@@ -119,9 +128,140 @@ class XLSBackend(FPGABackend):
             'WriteTar': write_tar,
             'TBOutputStream': tb_output_stream,
         }
+        #TODO: update to a better way to access the bazel-vin project
+        config['xls_bazel_bin_path'] = '$HOME/xls/bazel-bin'
 
         return config
     
+    #TODO: this return value conflicts with the expected return value in ModelGraph of compile()
+    def compile(self, model: ModelGraph):
+
+        if 'linux' in sys.platform:
+            path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
+            if os.path.isdir(path) == 0:
+                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
+
+        curr_dir = os.getcwd()
+        os.chdir(f'{model.config.get_output_dir()}/firmware')
+        kernel_name = model.config.get_project_name()
+
+        # ## Run interpreter
+        # interpreter_cmd = [ 
+        #     f'{path}/xls/dslx/interpreter_main',
+        #     f'{kernel_name}.x'
+        # ]
+        # subprocess.run(interpreter_cmd, check=True)
+
+        ## Generate IR
+        with open(f'{kernel_name}.ir', 'w') as ir_file:
+            gen_cmd = [ 
+                f'{path}/xls/dslx/ir_convert/ir_converter_main',
+                f'--top={kernel_name}',
+                f'{kernel_name}.x'
+            ]
+            subprocess.run(gen_cmd, check=True, stdout=ir_file)
+
+        ## Optimize IR
+        with open(f'{kernel_name}.opt.ir', 'w') as opt_file:
+            opt_cmd = [ 
+                f'{path}/xls/tools/opt_main',
+                f'{kernel_name}.ir'
+            ]
+            subprocess.run(opt_cmd, check=True, stdout=opt_file)
+
+        os.chdir(curr_dir)
+
+    def predict(self, model: ModelGraph, x):
+
+        if 'linux' in sys.platform:
+            path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
+            if os.path.isdir(path) == 0:
+                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
+        
+        n_samples = model._compute_n_samples(x)
+        n_inputs = len(model.get_input_variables())
+        n_outputs = len(model.get_output_variables())
+
+        # extract type info
+        if n_inputs == 1:
+            input_type = x.dtype
+        else:
+            input_type = x[0].dtype
+        
+        output = []
+        if n_samples == 1 and n_inputs == 1:
+            x = [x]
+
+        curr_dir = os.getcwd()
+        os.chdir(f'{model.config.get_output_dir()}/predictions')
+        # write input file
+        scale = 2 ** 10
+        with open(f'input.txt', 'w') as input_file:
+            newline = ''
+            for i in range(n_samples):
+                newline += '['
+                # predictions: list[ndarray[tuple[int], dtype[float64]]] = [np.zeros(yj.size()) for yj in model.get_output_variables()]
+                fxp_x = Fxp(x[i], signed=True, n_word=16, n_frac=10).raw() 
+                if n_inputs == 1:
+                    #TODO: not always 16 bits
+                    newline += f'bits[16]:{fxp_x[0]}'
+                else:
+                    for i, inp in enumerate(fxp_x[i]):
+                        newline += f'bits[16]:{inp}'
+                    if i < len(fxp_x[i]) - 1:
+                        newline += ','
+                newline += ']\n'
+            input_file.write(newline)
+
+        # predict to output
+        interpret_cmd = [ 
+            f'{path}/xls/tools/eval_ir_main',
+            f'../firmware/{model.config.get_project_name()}.opt.ir',
+            f'--input_file=input.txt'
+        ]
+        result = subprocess.run(interpret_cmd, check=True, stdout=subprocess.PIPE, text=True)
+        
+
+        # extract from output file
+        hex_pat = re.compile(r"0x([0-9A-Fa-f]+)")
+        output_type_pat = re.compile(r"bits\[(\d+)\]")
+
+        # process output
+        rows = []
+        for line in result.stdout.splitlines():
+            raw_outputs = hex_pat.findall(line)
+            m = output_type_pat.search(line)
+            output_width = int(m.group(1))
+            if not raw_outputs:
+                continue
+            int_outputs = [int(o, 16) for o in raw_outputs]
+
+            # signed interpretation w/ 2's complement
+            sign_bit = 1 << (output_width - 1)
+            full_mask = 1 << output_width
+            sint_output = [(v - full_mask) if (v & sign_bit) else v for v in int_outputs]
+
+            rows.append([sint_output])
+
+        # scale back from fixed point
+        output = np.array(rows, dtype=np.int32)
+        output = output.astype(input_type) / scale
+        output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
+
+        if n_samples == 1 and n_outputs == 1:
+            print('A')
+            return output[0][0]
+        elif n_outputs == 1:
+            print(output[0].shape)
+            print('B', output)
+            return output[0]
+        elif n_samples == 1:
+            print('C')
+            return [output_i[0] for output_i in output]
+        else:
+            print('D')
+            return output
+
 
     def build(
         self,

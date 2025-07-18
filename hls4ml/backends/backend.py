@@ -1,3 +1,10 @@
+# Typing imports
+from __future__ import annotations # makes all annotations into strings
+from typing import List, Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    pass # Add typing classes here
+
+from numpy.lib._iotools import str2bool
 import inspect
 import os
 from pathlib import Path
@@ -56,7 +63,7 @@ class Backend:
     def _get_layer_templates(self):
         return [name for name in get_backend_passes(self.name) if isinstance(get_optimizer(name), Template)]
 
-    def create_initial_config(self, **kwargs):
+    def create_initial_config(self, **kwargs) -> dict[str, Any]:
         """Create the minimal conversion config for the backend.
 
         Subclasses should implement this method to provide the initial configuration for the conversion.
@@ -82,7 +89,7 @@ class Backend:
         """
         return get_backend_flows(self.name)
 
-    def get_default_flow(self):
+    def get_default_flow(self) -> str:
         """The name of the default flow of the backend.
 
         Default flow is used as the conversion target if the target flow has not been specified.
@@ -151,7 +158,6 @@ class Backend:
 
 
 backend_map = {}
-
 
 def register_backend(name, backend_cls):
     """Create the backend instance and add it to the registry.

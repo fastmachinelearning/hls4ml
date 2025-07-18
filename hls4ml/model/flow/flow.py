@@ -78,7 +78,7 @@ def _get_backend_name_prefix(name, backend):
     return name
 
 
-def register_flow(name, optimizers, requires=None, backend=None):
+def register_flow(name, optimizers, requires=None, backend=None) -> str:
     """Create a flow and add it to the registry.
 
     Args:
