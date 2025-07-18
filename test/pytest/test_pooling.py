@@ -138,8 +138,8 @@ def keras_model_2d(request):
         {'model_type': 'max', 'padding': 'same', 'strides': None},
         {'model_type': 'avg', 'padding': 'valid', 'strides': None},
         {'model_type': 'avg', 'padding': 'same', 'strides': None},
-        {'model_type': 'max', 'padding': 'same', 'strides': 4},
-        {'model_type': 'avg', 'padding': 'valid', 'strides': 1},
+        {'model_type': 'max', 'padding': 'same', 'strides': (4, 2)},
+        {'model_type': 'avg', 'padding': 'valid', 'strides': (1, 3)},
     ],
     ids=[
         'model_type-max-padding-valid',
