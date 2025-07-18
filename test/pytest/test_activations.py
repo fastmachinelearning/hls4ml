@@ -37,7 +37,7 @@ test_root_path = Path(__file__).parent
 )
 def test_activations(backend, activation, name, shape, io_type):
 
-    if name == "prelu" and shape == (8, 8, 3):
+    if name == 'prelu' and shape == (8, 8, 3):
         return
     # Subtract 0.5 to include negative values
     X = np.random.rand(1000, *shape) - 0.5
