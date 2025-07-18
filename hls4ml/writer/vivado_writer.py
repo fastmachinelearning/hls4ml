@@ -322,6 +322,30 @@ class VivadoWriter(Writer):
                 if namespace is not None:
                     newline += '}\n'
 
+            elif '// hls-fpga-machine-learning insert emulator-defines' in line:
+                newline = line
+
+                if model.config.get_writer_config().get('WriteEmulationConstants', False):
+                    brams_def_str = ', '.join([b.definition_cpp(as_reference=False) for b in model_brams])
+                    brams_call_str = ', '.join([b.name for b in model_brams])
+
+                    input_call_str = ', '.join([f'std::get<{n}>(inputs).data()' for n in range(len(model_inputs))])
+                    output_call_str = ', '.join([f'std::get<{n}>(outputs).data()' for n in range(len(model_outputs))])
+
+                    newline += (
+                        f'\ninline void {model.config.get_project_name()}_emulator('
+                        'inputs_t& inputs, outputs_t& outputs'  # the inputs_t should ideally be const
+                    )
+                    if len(model_brams) > 0:
+                        newline += ',\n' + brams_def_str
+                    newline += ') {\n'
+                    newline += indent + model.config.get_project_name() + '(\n'
+                    newline += indent + indent + input_call_str + ',\n'
+                    newline += indent + indent + output_call_str
+                    if len(model_brams) > 0:
+                        newline += ',\n' + indent + indent + brams_call_str
+                    newline += '\n' + indent + ');\n}\n'
+
             else:
                 newline = line
             fout.write(newline)
