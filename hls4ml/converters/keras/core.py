@@ -76,6 +76,8 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
     elif layer['class_name'] == 'ReLU':
         layer['class_name'] = 'Activation'
     elif layer['class_name'] == 'PReLU':
+        if not keras_layer['config'].get('shared_axes') is None:
+            raise Exception('PReLU with shared_axes other than None is not supported in hsl4ml')
         layer['param_data'] = get_weights_data(data_reader, layer['name'], 'alpha')
 
     if layer['class_name'] == 'Activation' and layer['activation'] == 'softmax':

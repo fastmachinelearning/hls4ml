@@ -87,6 +87,8 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['ParametrizedActivation']:
             return self._infer_par_act_precision(node, types_to_infer)
 
+        if node_class in ['PReLU']:
+            return self._infer_prelu_act_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -567,9 +569,24 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         # For threshold relu, set the parameter precision to be the input precision by default;
         # for other parametrized activations, just allow the default precision to be used.
         # Can override these values in the configuration by explicitly setting them.
-        if 'param_t' in inferred_types and self.get_attr('activation').lower() == 'thresholdedrelu':
+        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'thresholdedrelu':
             in_type = node.get_input_variable().type.precision
-            node.attributes['param_t'].type = in_type
+            node.attributes['param_t'].precision = in_type
+            inferred_types.append('param_t')
+
+        return inferred_types
+
+    def _infer_prelu_act_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        # For PReLU, set the parameter precision to be the input precision by default;
+        # As the parameters are stored as a weight tensor, need to update that precision as well.
+        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'prelu':
+
+            in_type = node.get_input_variable().type.precision
+            node.attributes['param_t'].precision = in_type
+            node.weights['param'].update_precision(node.types['param_t'].precision)
+
             inferred_types.append('param_t')
 
         return inferred_types
