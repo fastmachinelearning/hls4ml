@@ -109,7 +109,8 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
     #pragma HLS ALLOCATION function instances=CONFIG_T::pool_op limit=limit
     // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::n_in + CONFIG_T::pad_left + CONFIG_T::pad_right;
-    static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
+    static constexpr int restricted_padded_width =
+        (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
 
     for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
         // Loop over input image x in steps of stride
@@ -119,7 +120,7 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
             // Keep track of number of pixels in image vs padding region
             unsigned img_overlap = 0;
             // Loop over pool window x
-            for (int jj = 0; jj < CONFIG_T::stride_width; jj++) {
+            for (int jj = 0; jj < CONFIG_T::pool_width; jj++) {
                 if (ii + jj < CONFIG_T::pad_left || ii + jj >= (full_padded_width - CONFIG_T::pad_right)) {
                     // Add padding
                     pool[jj] = pad_val<data_T, CONFIG_T::pool_op>();
@@ -212,8 +213,10 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
     static constexpr int full_padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
-    static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
-    static constexpr int restricted_padded_height = full_padded_height / CONFIG_T::stride_height * CONFIG_T::stride_height;
+    static constexpr int restricted_padded_width =
+        (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
+    static constexpr int restricted_padded_height =
+        (full_padded_height - CONFIG_T::pool_height) / CONFIG_T::stride_height * CONFIG_T::stride_height + 1;
 
     for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
         // Loop over input image y in steps of stride
@@ -225,18 +228,18 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                 // Keep track of number of pixels in image vs padding region
                 unsigned img_overlap = 0;
                 // Loop over pool window y
-                for (int kk = 0; kk < CONFIG_T::stride_height; kk++) {
+                for (int kk = 0; kk < CONFIG_T::pool_height; kk++) {
                     // Loop over pool window x
-                    for (int ll = 0; ll < CONFIG_T::stride_width; ll++) {
+                    for (int ll = 0; ll < CONFIG_T::pool_width; ll++) {
                         if (ii + kk < CONFIG_T::pad_top || ii + kk >= (full_padded_height - CONFIG_T::pad_bottom) ||
                             jj + ll < CONFIG_T::pad_left || jj + ll >= (full_padded_width - CONFIG_T::pad_right)) {
                             // Add padding
-                            pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
+                            pool[kk * CONFIG_T::pool_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
                             if (CONFIG_T::count_pad) {
                                 img_overlap++;
                             }
                         } else {
-                            pool[kk * CONFIG_T::stride_width + ll] =
+                            pool[kk * CONFIG_T::pool_width + ll] =
                                 data[(ii + kk - CONFIG_T::pad_top) * CONFIG_T::in_width * CONFIG_T::n_filt +
                                      (jj + ll - CONFIG_T::pad_left) * CONFIG_T::n_filt + ff];
                             img_overlap++;
@@ -274,8 +277,10 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
     static constexpr int full_padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
-    static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
-    static constexpr int restricted_padded_height = full_padded_height / CONFIG_T::stride_height * CONFIG_T::stride_height;
+    static constexpr int restricted_padded_width =
+        (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
+    static constexpr int restricted_padded_height =
+        (full_padded_height - CONFIG_T::pool_height) / CONFIG_T::stride_height * CONFIG_T::stride_height + 1;
 
     for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
         // Loop over input image y in steps of stride
@@ -287,18 +292,18 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                 // Keep track of number of pixels in image vs padding region
                 unsigned img_overlap = 0;
                 // Loop over pool window y
-                for (int kk = 0; kk < CONFIG_T::stride_height; kk++) {
+                for (int kk = 0; kk < CONFIG_T::pool_height; kk++) {
                     // Loop over pool window x
-                    for (int ll = 0; ll < CONFIG_T::stride_width; ll++) {
+                    for (int ll = 0; ll < CONFIG_T::pool_width; ll++) {
                         if (ii + kk < CONFIG_T::pad_top || ii + kk >= (full_padded_height - CONFIG_T::pad_bottom) ||
                             jj + ll < CONFIG_T::pad_left || jj + ll >= (full_padded_width - CONFIG_T::pad_right)) {
                             // Add padding
-                            pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
+                            pool[kk * CONFIG_T::pool_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
                             if (CONFIG_T::count_pad) {
                                 img_overlap++;
                             }
                         } else {
-                            pool[kk * CONFIG_T::stride_width + ll] =
+                            pool[kk * CONFIG_T::pool_width + ll] =
                                 data[(ii + kk - CONFIG_T::pad_top) * CONFIG_T::in_width +
                                      ff * CONFIG_T::in_width * CONFIG_T::in_height + ll + jj - CONFIG_T::pad_left];
                             img_overlap++;

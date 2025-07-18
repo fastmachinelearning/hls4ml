@@ -124,8 +124,8 @@ template <class data_T, class res_T, typename CONFIG_T>
 void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONFIG_T::n_out * CONFIG_T::n_filt]) {
     // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::n_in + CONFIG_T::pad_left + CONFIG_T::pad_right;
-    static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
-
+    static constexpr int restricted_padded_width =
+        (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
 FiltLoop:
     #pragma unroll
     #pragma disable_loop_pipelining
@@ -142,7 +142,7 @@ FiltLoop:
         PoolWidthLoop:
             #pragma unroll
             #pragma disable_loop_pipelining
-            for (int pool_col = 0; pool_col < CONFIG_T::stride_width; pool_col++) {
+            for (int pool_col = 0; pool_col < CONFIG_T::pool_width; pool_col++) {
                 if (inp_col + pool_col < CONFIG_T::pad_left ||
                     inp_col + pool_col >= (full_padded_width - CONFIG_T::pad_right)) {
                     // Add padding
@@ -222,9 +222,10 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     // Add padding and reduce input width to area covered by pooling function
     static constexpr int full_padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
     static constexpr int full_padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
-    static constexpr int restricted_padded_width = full_padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width;
-    static constexpr int restricted_padded_height = full_padded_height / CONFIG_T::stride_height * CONFIG_T::stride_height;
-
+    static constexpr int restricted_padded_width =
+        (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
+    static constexpr int restricted_padded_height =
+        (full_padded_height - CONFIG_T::pool_height) / CONFIG_T::stride_height * CONFIG_T::stride_height + 1;
 FiltLoop:
     #pragma unroll
     #pragma disable_loop_pipelining
@@ -245,22 +246,22 @@ FiltLoop:
             PoolHeightLoop:
                 #pragma unroll
                 #pragma disable_loop_pipelining
-                for (int pool_col = 0; pool_col < CONFIG_T::stride_height; pool_col++) {
+                for (int pool_col = 0; pool_col < CONFIG_T::pool_height; pool_col++) {
                 PoolWidthLoop:
                     #pragma unroll
                     #pragma disable_loop_pipelining
-                    for (int pool_row = 0; pool_row < CONFIG_T::stride_width; pool_row++) {
+                    for (int pool_row = 0; pool_row < CONFIG_T::pool_width; pool_row++) {
                         if (inp_col + pool_col < CONFIG_T::pad_top ||
                             inp_col + pool_col >= (full_padded_height - CONFIG_T::pad_bottom) ||
                             inp_width + pool_row < CONFIG_T::pad_left ||
                             inp_width + pool_row >= (full_padded_width - CONFIG_T::pad_right)) {
                             // Add padding
-                            pool[pool_col * CONFIG_T::stride_width + pool_row] = pad_val<data_T, CONFIG_T::pool_op>();
+                            pool[pool_col * CONFIG_T::pool_width + pool_row] = pad_val<data_T, CONFIG_T::pool_op>();
                             if (CONFIG_T::count_pad)
                                 img_overlap++;
                         } else {
                             // Current element is from input image
-                            pool[pool_col * CONFIG_T::stride_width + pool_row] =
+                            pool[pool_col * CONFIG_T::pool_width + pool_row] =
                                 data[(inp_col + pool_col - CONFIG_T::pad_top) * CONFIG_T::in_width * CONFIG_T::n_filt +
                                      (inp_width + pool_row - CONFIG_T::pad_left) * CONFIG_T::n_filt + filt];
                             img_overlap++;
