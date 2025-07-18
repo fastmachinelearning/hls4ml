@@ -15,6 +15,9 @@ def to_apfixed(k, b, i, RND, SAT):
 
 def to_acfixed(k, b, i, RND, SAT):
     k = 'false' if k == 0 else 'true'
+    if b == 1:
+        # ac_fixed requires at least two bits
+        b = 2
     return f'ac_fixed<{b},{i},{k},AC_{RND},AC_{SAT}>'
 
 
