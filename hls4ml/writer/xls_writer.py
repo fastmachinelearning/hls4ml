@@ -229,14 +229,16 @@ class XLSWriter(Writer):
 
             elif '// hls-fpga-machine-learning architecture arguments' in line:
                 newline = ''
+                weighted_layers_count = 0
                 for i, layer in enumerate(xls_layers):
                     if layer.class_name == 'Input':
                         newline += indent + f'x: {layer.out_type}[{layer.out_dim_key}],\n'
                     elif layer.is_activation() == False:
                         newline += indent + f'w{i}: {layer.out_type}[{layer.in_dim_key}][{layer.out_dim_key}],\n'
                         newline += indent + f'b{i}: {layer.out_type}[{layer.out_dim_key}]'
-                        if i < len([layer for layer in xls_layers if layer.is_activation() == False]) - 1:
+                        if weighted_layers_count < len([layer for layer in xls_layers if layer.has_weights()]) - 1:
                             newline += ',\n'
+                            weighted_layers_count += 1
                         else:
                             newline += '\n'
 
@@ -306,13 +308,15 @@ class XLSWriter(Writer):
 
             elif '// hls-fpga-machine-learning call inlined weights' in line:
                 newline = indent + indent
+                weighted_layers_count = 0
                 for i, layer in enumerate(xls_layers):
                     if layer.class_name == 'Input':
                         newline += 'x,'
                     elif layer.has_weights():
                         newline += f'w{i}, b{i}'
-                        if i < len(xls_layers) - 1:
-                            print(', ')
+                        if weighted_layers_count < len([layer for layer in xls_layers if layer.has_weights()]) - 1:
+                            newline += ', '
+                            weighted_layers_count += 1
                 newline += '\n'
 
             # Just copy line

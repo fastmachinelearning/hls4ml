@@ -179,7 +179,7 @@ class XLSBackend(FPGABackend):
                 raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
         
         n_samples = model._compute_n_samples(x)
-        n_inputs = len(model.get_input_variables())
+        n_inputs = list(list(model.get_layers())[0].get_output_variable().get_shape())[0][1] # Get input dimensions
         n_outputs = len(model.get_output_variables())
 
         # extract type info
@@ -199,17 +199,21 @@ class XLSBackend(FPGABackend):
         with open(f'input.txt', 'w') as input_file:
             newline = ''
             for i in range(n_samples):
+                if n_inputs == 1:
+                    inp = [np.asarray(x[i])]
+                else:
+                    inp = [np.asarray(xj) for xj in x[i]]
                 newline += '['
                 # predictions: list[ndarray[tuple[int], dtype[float64]]] = [np.zeros(yj.size()) for yj in model.get_output_variables()]
-                fxp_x = Fxp(x[i], signed=True, n_word=16, n_frac=10).raw() 
+                fxp_x = Fxp(inp, signed=True, n_word=16, n_frac=10).raw() 
                 if n_inputs == 1:
                     #TODO: not always 16 bits
-                    newline += f'bits[16]:{fxp_x[0]}'
+                    newline += f'bits[16]:{fxp_x[0][0]}'
                 else:
-                    for i, inp in enumerate(fxp_x[i]):
+                    for i, inp in enumerate(fxp_x):
                         newline += f'bits[16]:{inp}'
-                    if i < len(fxp_x[i]) - 1:
-                        newline += ','
+                        if i < len(fxp_x) - 1:
+                            newline += ','
                 newline += ']\n'
             input_file.write(newline)
 
@@ -248,6 +252,7 @@ class XLSBackend(FPGABackend):
         output = output.astype(input_type) / scale
         output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
 
+        os.chdir(curr_dir)
         if n_samples == 1 and n_outputs == 1:
             print('A')
             return output[0][0]

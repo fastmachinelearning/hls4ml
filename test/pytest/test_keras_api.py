@@ -34,7 +34,7 @@ def test_dense(backend, io_type):
     model.add(
         Dense(
             2,
-            input_shape=(1,),
+            input_shape=(2,),
             name='Dense',
             use_bias=True,
             kernel_initializer=tf.keras.initializers.RandomUniform(minval=1, maxval=10),
@@ -49,7 +49,7 @@ def test_dense(backend, io_type):
     model.add(Activation(activation='relu', name='Activation'))
     model.compile(optimizer='adam', loss='mse')
 
-    X_input = np.random.rand(100, 1)
+    X_input = np.random.rand(100, 2)
 
     keras_prediction = model.predict(X_input)
 
