@@ -36,16 +36,14 @@ template <typename T, unsigned N> struct array {
 
         for (unsigned i = 0; i < N; i++) {
             if (data[i] != other[i]) {
-              return false;
+                return false;
             }
         }
-        
+
         return true;
     }
 
-    bool operator!=(const array &other) const {
-      return !(*this == other);
-    }
+    bool operator!=(const array &other) const { return !(*this == other); }
 };
 
 // Generic lookup-table implementation, for use in approximations of math functions
