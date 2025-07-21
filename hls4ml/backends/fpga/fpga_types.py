@@ -76,7 +76,8 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self.saturation_bits,
         ]
         if args[0] == 1:
-            # ac_fixed requires at least two bits
+            # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
+            # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
             args[0] = 2
         if args[3] == 'AC_TRN' and args[4] == 'AC_WRAP':
             # This is the default, so we won't write the full definition for brevity

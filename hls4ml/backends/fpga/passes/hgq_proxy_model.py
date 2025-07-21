@@ -16,7 +16,8 @@ def to_apfixed(k, b, i, RND, SAT):
 def to_acfixed(k, b, i, RND, SAT):
     k = 'false' if k == 0 else 'true'
     if b == 1:
-        # ac_fixed requires at least two bits
+        # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
+        # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
         b = 2
     return f'ac_fixed<{b},{i},{k},AC_{RND},AC_{SAT}>'
 
