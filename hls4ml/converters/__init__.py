@@ -165,6 +165,7 @@ def convert_from_keras_model(
     output_data_tb=None,
     backend='Vivado',
     hls_config=None,
+    bit_exact=None,
     **kwargs,
 ):
     """Convert Keras model to hls4ml model based on the provided configuration.
@@ -214,6 +215,7 @@ def convert_from_keras_model(
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
+    config['HLSConfig']['Model']['BitExact'] = bit_exact
 
     _check_hls_config(config, hls_config)
     if 'KerasModel' in config:
