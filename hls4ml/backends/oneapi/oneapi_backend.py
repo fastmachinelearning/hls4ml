@@ -68,7 +68,6 @@ class OneAPIBackend(FPGABackend):
             'oneapi:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
             'oneapi:xnor_pooling',
-            'oneapi:generate_conv_im2col',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
