@@ -59,10 +59,10 @@ class BidirectionalHandler(KerasV3LayerHandler):
             config[f'{direction}_class_name'] = rnn_layer.__class__.__name__
             if hasattr(rnn_layer, 'activation'):
                 config[f'{direction}_activation'] = rnn_layer.activation.__name__
-            if 'SimpleRNN' not in rnn_layer['class_name']:
-                layer[f'{direction}_recurrent_activation'] = rnn_layer['config']['recurrent_activation']
+            if 'SimpleRNN' not in rnn_layer.__class__.__name__:
+                config[f'{direction}_recurrent_activation'] = rnn_layer.recurrent_activation.__name__
 
-            layer[f'{direction}_data_format'] = rnn_layer['config'].get('data_format', 'channels_last')
+            config[f'{direction}_data_format'] = getattr(rnn_layer, 'data_format', 'channels_last')
             if hasattr(rnn_layer, 'epsilon'):
                 config[f'{direction}_epsilon'] = rnn_layer.epsilon
             if hasattr(rnn_layer, 'use_bias'):
