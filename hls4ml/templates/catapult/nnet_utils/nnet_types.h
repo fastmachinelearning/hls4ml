@@ -32,7 +32,9 @@ template <typename T, unsigned N> struct array {
     }
 
     bool operator==(const array &other) const {
-        assert(N == other.size && "Array sizes must match.");
+        if (N != other.size) {
+            return false;
+        }
 
         for (unsigned i = 0; i < N; i++) {
             if (data[i] != other[i]) {
