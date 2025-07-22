@@ -114,13 +114,21 @@ class VitisAcceleratorBackend(VitisBackend):
         y = np.loadtxt(output_file, dtype=float).reshape(-1, expected_shape)
         return y
 
-    def hardware_predict(self, model, x, target="hw", debug=False, profilingRepeat=-1, method="file"):
+    def hardware_predict(self, model, x, target="hw", debug=False, profilingRepeat=-1, method="lib"):
         if method == "file":
             """Run the hardware prediction using file-based communication."""
+            
             command = ""
 
             if debug:
                 command += "DEBUG=1 "
+                xclbin_path = model.config.get_output_dir() + "/build_hw_deb/kernel_wrapper.xclbin"
+            else:
+                xclbin_path = model.config.get_output_dir() + "/build_hw_rel/kernel_wrapper.xclbin"
+
+            if not os.path.exists(xclbin_path):
+                raise Exception(f"XCLBIN file {xclbin_path} does not exist. Please run build first.")
+
             if isinstance(profilingRepeat, int) and profilingRepeat > 0:
                 command += "PROFILING_DATA_REPEAT_COUNT=" + profilingRepeat + " "
             self._validate_target(target)

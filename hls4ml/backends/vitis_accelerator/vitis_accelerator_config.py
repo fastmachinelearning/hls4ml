@@ -32,7 +32,7 @@ class VitisAcceleratorConfig:
                 else:
                     print(
                         "WARNING: You set an unrecognized Platform."
-                        "Using " + platforms[0] + " platform instead"
+                        "Using " + platforms[0] + " platform instead."
                     )
                     self.platform = platforms[0]
             else:

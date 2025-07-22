@@ -124,7 +124,7 @@ host_shared: $(KERNEL_NAME)_host_cl.cpp libs/xcl2.cpp $(wildcard libs/*.hpp)
 
 # Execute program #############################################################
 
-run: ./host $(BUILD_DIR)/$(WRAPPER_NAME).xclbin
+run: ./host #$(BUILD_DIR)/$(WRAPPER_NAME).xclbin
 ifeq ($(TARGET), hw)
 	@echo "TARGET is hw, not setting XCL_EMULATION_MODE"
 	$(eval EMULATION_MODE :=)
