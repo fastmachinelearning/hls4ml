@@ -125,8 +125,8 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             rnn_backward_layer = temp_layer
             swapped_order = True
             print(
-                f'WARNING: The selected order for forward and backward layers in "{keras_layer['config']['name']}" '
-                f'({keras_layer['class_name']}) is not supported in Vitis backend. Switching to forward layer first, backward layer last.'
+                f'WARNING: The selected order for forward and backward layers in \"{keras_layer["config"]["name"]}\" '
+                f'({keras_layer["class_name"]}) is not supported. Switching to forward layer first, backward layer last.'
             )
     else:
         rnn_backward_layer = rnn_forward_layer
@@ -135,11 +135,7 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
         rnn_backward_layer['class_name'] in rnn_layers or rnn_backward_layer['class_name'][1:] in rnn_layers
     )
 
-    layer = {}
-    layer['name'] = keras_layer['config']['name']
-    layer['class_name'] = keras_layer['class_name']
-    if input_names is not None:
-        layer['inputs'] = input_names
+    layer = parse_default_keras_layer(keras_layer, input_names)
 
     layer['direction'] = 'bidirectional'
     layer['return_sequences'] = rnn_forward_layer['config']['return_sequences']
@@ -156,18 +152,16 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
 
         layer[f'{direction}_name'] = rnn_layer['config']['name']
         layer[f'{direction}_class_name'] = rnn_layer['class_name']
-
-        layer[f'{direction}_data_format'] = rnn_layer['config'].get('data_format', 'channels_last')
-
         if 'activation' in rnn_layer['config']:
             layer[f'{direction}_activation'] = rnn_layer['config']['activation']
+        if 'SimpleRNN' not in rnn_layer['class_name']:
+            layer[f'{direction}_recurrent_activation'] = rnn_layer['config']['recurrent_activation']
+
+        layer[f'{direction}_data_format'] = rnn_layer['config'].get('data_format', 'channels_last')
         if 'epsilon' in rnn_layer['config']:
             layer[f'{direction}_epsilon'] = rnn_layer['config']['epsilon']
         if 'use_bias' in rnn_layer['config']:
             layer[f'{direction}_use_bias'] = rnn_layer['config']['use_bias']
-
-        if 'SimpleRNN' not in rnn_layer['class_name']:
-            layer[f'{direction}_recurrent_activation'] = rnn_layer['config']['recurrent_activation']
 
         rnn_layer_name = rnn_layer['config']['name']
         if 'SimpleRNN' in layer['class_name']:
