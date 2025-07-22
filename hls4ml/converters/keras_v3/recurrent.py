@@ -1,11 +1,10 @@
 import typing
 from collections.abc import Sequence
 
-import keras
-
 from ._base import KerasV3LayerHandler, register
 
 if typing.TYPE_CHECKING:
+    import keras
     from keras import KerasTensor
 
 rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
@@ -22,6 +21,8 @@ class BidirectionalHandler(KerasV3LayerHandler):
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
+        import keras
+
         if layer.forward_layer.go_backwards:
             rnn_forward_layer = layer.backward_layer
             rnn_backward_layer = layer.forward_layer
