@@ -132,7 +132,8 @@ class VitisAcceleratorBackend(VitisBackend):
             if isinstance(profilingRepeat, int) and profilingRepeat > 0:
                 command += "PROFILING_DATA_REPEAT_COUNT=" + profilingRepeat + " "
             self._validate_target(target)
-
+            
+            x = np.array(x)
             self.numpy_to_dat(model, x)
 
             currdir = os.getcwd()
