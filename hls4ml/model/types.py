@@ -479,19 +479,17 @@ class TensorVariable(Variable):
 
     Args:
         shape (list, tuple): Shape of the tensor.
-        dim_names (list, tuple): Names given to the dimensions of the tensor.
         var_name (str, optional): Name of the variable in the generated C++/HLS. Defaults to ``layer{index}``.
         type_name (str, optional): Name of the data type used (in NamedType). Defaults to ``layer{index}_t``.
         precision (PrecisionType, optional): Precision data type. Defaults to ``None``.
     """
 
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
+    def __init__(self, shape, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
         super().__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
-        self.shape = shape
-        self.dim_names = dim_names
-
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
+        if isinstance(shape, (list, tuple)):
+            self.shape = list(map(int, shape))  # Ensure shape is a list of integers
+        else:
+            self.shape = [int(shape)]
 
     def size(self):
         nelem = 1
@@ -500,28 +498,21 @@ class TensorVariable(Variable):
         return nelem
 
     def size_cpp(self):
-        # TODO get rid of size_cpp() (and dim_names)
-        return '*'.join([str(k) for k in self.dim_names])
+        return '*'.join([str(k) for k in self.shape])
 
     def serialize_state(self):
         state = super().serialize_state()
-        state.update(
-            {
-                'shape': [int(dim) for dim in self.shape],  # In case shape was handled by numpy
-                'dim_names': self.dim_names,
-            }
-        )
+        state['shape'] = self.shape
         return state
 
     @classmethod
     def deserialize(cls, state):
         shape = state['shape']
-        dim_names = state['dim_names']
         var_name = state['name']
         type_name = state['type'].name
         precision = state['type'].precision
 
-        return cls(shape, dim_names, var_name, type_name, precision)
+        return cls(shape, var_name, type_name, precision)
 
 
 class InplaceTensorVariable(TensorVariable):

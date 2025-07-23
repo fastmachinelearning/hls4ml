@@ -113,11 +113,12 @@ def data_2d():
 def keras_model_2d(request):
     model_type = request.param['model_type']
     pads = request.param['padding']
+    strides = request.param.get('strides', None)
     model = Sequential()
     if model_type == 'avg':
-        model.add(AveragePooling2D(input_shape=(in_shape, in_shape, in_filt), padding=pads))
+        model.add(AveragePooling2D(input_shape=(in_shape, in_shape, in_filt), padding=pads, strides=strides))
     elif model_type == 'max':
-        model.add(MaxPooling2D(input_shape=(in_shape, in_shape, in_filt), padding=pads))
+        model.add(MaxPooling2D(input_shape=(in_shape, in_shape, in_filt), padding=pads, strides=strides))
     model.compile()
     return model, model_type, pads
 
@@ -126,10 +127,10 @@ def keras_model_2d(request):
 @pytest.mark.parametrize(
     'keras_model_2d',
     [
-        {'model_type': 'max', 'padding': 'valid'},
-        {'model_type': 'max', 'padding': 'same'},
-        {'model_type': 'avg', 'padding': 'valid'},
-        {'model_type': 'avg', 'padding': 'same'},
+        {'model_type': 'max', 'padding': 'valid', 'strides': 3},
+        {'model_type': 'max', 'padding': 'same', 'strides': 3},
+        {'model_type': 'avg', 'padding': 'valid', 'strides': 3},
+        {'model_type': 'avg', 'padding': 'same', 'strides': 3},
     ],
     ids=[
         'model_type-max-padding-valid',

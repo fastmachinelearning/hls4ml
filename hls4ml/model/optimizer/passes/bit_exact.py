@@ -463,20 +463,22 @@ def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
 
     im2col_shape = *px_shape, ch_in, ch_out  # conv kernel shape
     k_in, i_in, f_in = get_input_kifs(layer)[0]
+    count = np.ones_like(k_in, dtype=np.uint32)
     if isinstance(layer, (Pooling1D, Pooling2D)):
-        k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
-    k_in, i_in, f_in = im2col(im2col_shape, k_in, i_in, f_in)
+        k_in, i_in, f_in, count = pad_arrs(layer, 0, k_in, i_in, f_in, count)
+    k_in, i_in, f_in, count = im2col(im2col_shape, k_in, i_in, f_in, count)
     if isinstance(layer, (Pooling1D, Pooling2D)):
-        k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
+        k_in, i_in, f_in, count = stride_arrs(layer, k_in, i_in, f_in, count)
 
     k_out = k_in.reshape(*k_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
     i_out = i_in.reshape(*i_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
     f_out = f_in.reshape(*f_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
+    count = count.reshape(*count.shape[:-1], -1, ch_in).sum(axis=-2)
 
     pool_op = layer.attributes['pool_op']
     if pool_op == 'Average':
-        f_add = minimal_kif(np.array(1 / prod(px_shape)))[2]
-        f_out += int(f_add)
+        f_add = minimal_kif(1 / count)[2]
+        f_out += f_add
 
     if isinstance(layer, (GlobalPooling1D, GlobalPooling2D)):
         k_out, i_out, f_out = k_out[0], i_out[0], f_out[0]

@@ -340,17 +340,7 @@ class VivadoWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-            # Insert numbers
-            if '// hls-fpga-machine-learning insert numbers' in line:
-                newline = line
-
-                defines = set()
-                for layer in model.get_layers():
-                    for k, v in layer.get_output_variable().get_shape():
-                        defines.add(f'constexpr size_t {k} = {v};')
-                newline += '\n'.join(defines) + '\n'
-
-            elif '// hls-fpga-machine-learning insert layer-precision' in line:
+            if '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
                 all_precision = OrderedDict()
                 for layer in model.get_layers():
@@ -861,11 +851,11 @@ class VivadoWriter(Writer):
 
                     for inp in model_inputs:
                         decl = inp.definition_cpp(name_suffix='_ap').strip()
-                        dims = inp.shape
+                        shape = inp.shape
 
                         if decl.startswith("hls::stream"):
-                            if len(dims) == 1:
-                                N = dims[0]
+                            if len(shape) == 1:
+                                N = shape[0]
                                 newline += f'    for(int i = 0; i < {N}; i++) {{\n'
                                 newline += f'        auto temp = {inp.name}_ap.read();\n'
                                 newline += (
