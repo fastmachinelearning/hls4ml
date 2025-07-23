@@ -200,11 +200,8 @@ class OneAPIBackend(FPGABackend):
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
         if run:
-            assert build_type in (
-                'fpga_emu',
-                'fpga_sim',
-                'fpga',
-            ), 'Running is only supported for fpga_emu, fpga_sim, or fpga builds'
+            if build_type not in ('fpga_emu', 'fpga_sim', 'fpga'):
+                raise ValueError('Running is only supported for fpga_emu, fpga_sim, or fpga builds')
             executable = builddir / f'{model.config.get_project_name()}.{build_type}'
             subprocess.run(f'{str(executable)}', shell=True, cwd=builddir, check=True)
 
