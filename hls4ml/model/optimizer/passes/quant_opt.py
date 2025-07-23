@@ -130,7 +130,7 @@ class QuantToActivation(OptimizerPass):
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
 
-        attributes = {'activation': 'linear', 'quantizer': quantizer, 'trusted': True}
+        attributes = {'activation': 'linear', 'quantizer': quantizer}
 
         # update the configuration
         config = model.config.get_layer_config(node)

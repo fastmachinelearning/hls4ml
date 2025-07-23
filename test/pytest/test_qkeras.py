@@ -151,8 +151,8 @@ def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend, io_ty
                 kernel_quantizer=quantized_bits(bits, 0, alpha=alpha),
                 bias_quantizer=quantized_bits(bits, 0, alpha=1),
                 kernel_initializer='lecun_uniform',
-                activation=quantized_relu(bits, 0),
             ),
+            QActivation(activation=quantized_relu(bits, 0), name='relu1'),
         ]
     )
     model.compile()

@@ -366,7 +366,6 @@ def convert_from_onnx_model(
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-    config['HLSConfig']['Model']['BitExact'] = bit_exact
 
     _check_hls_config(config, hls_config)
 
