@@ -3,6 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from keras.layers import BatchNormalization, Input
+from keras.models import Model, Sequential, model_from_json
+from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
 from qkeras.qconvolutional import QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
@@ -20,9 +23,6 @@ from qkeras.utils import _add_supported_quantized_objects
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from tensorflow.keras.layers import BatchNormalization, Input
-from tensorflow.keras.models import Model, Sequential, model_from_json
-from tensorflow.keras.utils import to_categorical
 
 import hls4ml
 
@@ -142,33 +142,39 @@ def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend, io_ty
     bit exactness with number of bits parameter
     '''
     X = randX_100_16
-    model = Sequential()
-    model.add(
-        QDense(
-            16,
-            input_shape=(16,),
-            name='fc1',
-            kernel_quantizer=quantized_bits(bits, 0, alpha=alpha),
-            bias_quantizer=quantized_bits(bits, 0, alpha=1),
-            kernel_initializer='lecun_uniform',
-        )
+    model = Sequential(
+        [
+            QActivation(activation=quantized_bits(bits, 0, alpha=1), input_shape=(16,), name='inp_quant'),
+            QDense(
+                16,
+                name='fc1',
+                kernel_quantizer=quantized_bits(bits, 0, alpha=alpha),
+                bias_quantizer=quantized_bits(bits, 0, alpha=1),
+                kernel_initializer='lecun_uniform',
+                activation=quantized_relu(bits, 0),
+            ),
+        ]
     )
-    model.add(QActivation(activation=quantized_relu(bits, 0), name='relu1'))
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     output_dir = str(test_root_path / f'hls4mlprj_qkeras_single_dense_activation_exact_{bits}_{alpha}_{backend}_{io_type}')
+
+    bit_exact = alpha == 1
+    # alpha!=po2 case uses non-fixed-point data types, unsupported by the precision propagation flow
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type, bit_exact=bit_exact
     )
     hls_model.compile()
 
     y_qkeras = model.predict(X)
     y_hls4ml = hls_model.predict(X)
-    # Goal is to get it passing with all equal
-    # np.testing.assert_array_equal(y_qkeras, y_hls4ml)
-    # For now allow matching within 1 bit
-    np.testing.assert_allclose(y_qkeras.ravel(), y_hls4ml.ravel(), atol=2**-bits, rtol=1.0)
+
+    # alpha!=1 case for weights can be supported if weight conversion is done before writing
+    if bit_exact:
+        np.testing.assert_array_equal(y_qkeras, y_hls4ml)
+    else:
+        np.testing.assert_allclose(y_qkeras.ravel(), y_hls4ml.ravel(), atol=2**-bits, rtol=1.0)
 
 
 @pytest.fixture
