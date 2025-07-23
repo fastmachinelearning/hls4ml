@@ -81,7 +81,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Embedding']:
             return self._infer_embedding_precision(node, types_to_infer)
 
-        if node_class in ['SimpleRNN', 'LSTM', 'GRU']:
+        if node_class in ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional']:
             return self._infer_rnn_precision(node, types_to_infer)
 
         if node_class in ['ParametrizedActivation']:
@@ -555,7 +555,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         inferred_types = []
 
         # for now just do the weights and leave the rest for the default catch
-        for weightvar in ('weight', 'bias', 'recurrent_weight', 'recurrent_bias'):
+        rnn_weights = ('weight', 'bias', 'recurrent_weight', 'recurrent_bias')
+        if node.class_name == 'Bidirectional':
+            rnn_weights = [direction + '_' + weight for direction in ['forward', 'backward'] for weight in rnn_weights]
+
+        for weightvar in rnn_weights:
             if f'{weightvar}_t' in types_to_infer:
                 self._infer_default_type(node, f'{weightvar}_t')
                 node.weights[weightvar].update_precision(node.types[f'{weightvar}_t'].precision)
