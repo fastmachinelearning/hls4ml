@@ -52,6 +52,14 @@ hls4ml.converters.keras\_v3.pooling module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.converters.keras\_v3.recurrent module
+--------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.recurrent
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

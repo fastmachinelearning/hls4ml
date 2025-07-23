@@ -346,11 +346,19 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.BatchNormOnnxConstantParameters">BatchNormOnnxConstantParameters (class in hls4ml.model.optimizer.passes.batchnorm_opt)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BiasAdd">BiasAdd (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd">BiasDownAdd (class in hls4ml.model.optimizer.passes.move_scales)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Bidirectional">Bidirectional (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate">BidirectionalConfigTemplate (class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate">BidirectionalFunctionTemplate (class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler">BidirectionalHandler (class in hls4ml.converters.keras_v3.recurrent)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer">BinaryQuantizer (class in hls4ml.model.quantizers)</a>
 </li>
@@ -1377,6 +1385,10 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaFunctionTemplate.format">(hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaFunctionTemplate method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate method)</a>
@@ -1835,6 +1847,8 @@
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.pooling.PoolingHandler.handle">(hls4ml.converters.keras_v3.pooling.PoolingHandler method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handle">(hls4ml.converters.keras_v3.recurrent.BidirectionalHandler method)</a>
+</li>
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.handle_upsample">handle_upsample() (in module hls4ml.converters.pytorch.reshape)</a>
 </li>
@@ -1872,6 +1886,8 @@
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.merge.MergeHandler.handles">(hls4ml.converters.keras_v3.merge.MergeHandler attribute)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.pooling.PoolingHandler.handles">(hls4ml.converters.keras_v3.pooling.PoolingHandler attribute)</a>
+</li>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handles">(hls4ml.converters.keras_v3.recurrent.BidirectionalHandler attribute)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.HardActivation">HardActivation (class in hls4ml.model.layers)</a>
@@ -2906,6 +2922,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.converters.keras_v3.recurrent
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.recurrent">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.converters.keras_v3_to_hls
 
       <ul>
@@ -3513,6 +3536,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_base_layer">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_bidirectional">init_bidirectional() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.catapult.html#hls4ml.backends.catapult.catapult_backend.CatapultBackend.init_conv1d">init_conv1d() (hls4ml.backends.catapult.catapult_backend.CatapultBackend method)</a>
 
       <ul>
@@ -3667,6 +3692,8 @@
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BatchNormOnnx.initialize">(hls4ml.model.layers.BatchNormOnnx method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BiasAdd.initialize">(hls4ml.model.layers.BiasAdd method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Bidirectional.initialize">(hls4ml.model.layers.Bidirectional method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Concatenate.initialize">(hls4ml.model.layers.Concatenate method)</a>
 </li>
@@ -3947,6 +3974,10 @@
         <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable.match">(hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.match">(hls4ml.backends.template.Template method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalIoType.match">(hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalIoType method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalMergeMode.match">(hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalMergeMode method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation.match">(hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation method)</a>
 </li>
@@ -4445,6 +4476,8 @@
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.pooling">hls4ml.converters.keras_v3.pooling</a>
 </li>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.recurrent">hls4ml.converters.keras_v3.recurrent</a>
+</li>
         <li><a href="autodoc/hls4ml.converters.html#module-hls4ml.converters.keras_v3_to_hls">hls4ml.converters.keras_v3_to_hls</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.onnx.html#module-hls4ml.converters.onnx">hls4ml.converters.onnx</a>
@@ -4790,6 +4823,8 @@
         <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.core.parse_batchnorm_layer">(in module hls4ml.converters.pytorch.core)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_bidirectional_layer">parse_bidirectional_layer() (in module hls4ml.converters.keras.recurrent)</a>
+</li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.catapult_report.parse_catapult_report">parse_catapult_report() (in module hls4ml.report.catapult_report)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.simulation_utils.parse_component_xml">parse_component_xml() (in module hls4ml.utils.simulation_utils)</a>
@@ -5735,6 +5770,10 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.transform">(hls4ml.backends.template.Template method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalIoType.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalIoType method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalMergeMode.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalMergeMode method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy method)</a>
@@ -5968,6 +6007,10 @@
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.ChoiceAttribute.validate_value">(hls4ml.model.attributes.ChoiceAttribute method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalIoType">ValidateBidirectionalIoType (class in hls4ml.backends.vitis.passes.feature_check)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateBidirectionalMergeMode">ValidateBidirectionalMergeMode (class in hls4ml.backends.vitis.passes.feature_check)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation">ValidateConvImplementation (class in hls4ml.backends.vitis.passes.feature_check)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy">ValidateResourceStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
@@ -5984,10 +6027,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend">VitisBackend (class in hls4ml.backends.vitis.vitis_backend)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter">VitisWriter (class in hls4ml.writer.vitis_writer)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter">VitisWriter (class in hls4ml.writer.vitis_writer)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend">VivadoAcceleratorBackend (class in hls4ml.backends.vivado_accelerator.vivado_accelerator_backend)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig">VivadoAcceleratorConfig (class in hls4ml.backends.vivado_accelerator.vivado_accelerator_config)</a>
