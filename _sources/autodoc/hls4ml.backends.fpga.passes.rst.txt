@@ -52,14 +52,6 @@ hls4ml.backends.fpga.passes.hgq\_proxy\_model module
    :undoc-members:
    :show-inheritance:
 
-hls4ml.backends.fpga.passes.im2col\_codegen module
---------------------------------------------------
-
-.. automodule:: hls4ml.backends.fpga.passes.im2col_codegen
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 hls4ml.backends.fpga.passes.inplace\_parallel\_reshape module
 -------------------------------------------------------------
 

@@ -76,6 +76,14 @@ hls4ml.backends.catapult.passes.garnet\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.catapult.passes.im2col\_codegen module
+------------------------------------------------------
+
+.. automodule:: hls4ml.backends.catapult.passes.im2col_codegen
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.catapult.passes.merge\_templates module
 -------------------------------------------------------
 

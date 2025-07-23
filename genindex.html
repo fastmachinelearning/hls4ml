@@ -1494,8 +1494,12 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise_codegen.generate_pointwise_conv1d_fn">generate_pointwise_conv1d_fn() (in module hls4ml.backends.vivado.passes.pointwise_codegen)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.im2col_codegen.GenerateConvIm2col">GenerateConvIm2col (class in hls4ml.backends.fpga.passes.im2col_codegen)</a>
+      <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.im2col_codegen.GenerateConvIm2col">GenerateConvIm2col (class in hls4ml.backends.catapult.passes.im2col_codegen)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col">(class in hls4ml.backends.vivado.passes.im2col_codegen)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_stream.GenerateConvStreamingInstructions">GenerateConvStreamingInstructions (class in hls4ml.backends.catapult.passes.conv_stream)</a>
 
       <ul>
@@ -1614,10 +1618,10 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.get_layer_config">get_layer_config() (hls4ml.model.graph.HLSConfig method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.get_layer_config_value">get_layer_config_value() (hls4ml.model.graph.HLSConfig method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.get_layer_config_value">get_layer_config_value() (hls4ml.model.graph.HLSConfig method)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_v2_to_hls.get_layer_handlers">get_layer_handlers() (in module hls4ml.converters.keras_v2_to_hls)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_layer_mult_size">get_layer_mult_size() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
@@ -1997,6 +2001,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.catapult.passes.im2col_codegen
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.im2col_codegen">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.catapult.passes.merge_templates
 
       <ul>
@@ -2127,13 +2138,6 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.hgq_proxy_model">module</a>
-</li>
-      </ul></li>
-      <li>
-    hls4ml.backends.fpga.passes.im2col_codegen
-
-      <ul>
-        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.im2col_codegen">module</a>
 </li>
       </ul></li>
       <li>
@@ -2575,6 +2579,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.garnet_templates">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.vivado.passes.im2col_codegen
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.im2col_codegen">module</a>
 </li>
       </ul></li>
       <li>
@@ -3887,6 +3898,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_winograd.ApplyWinogradKernelTransformation.match">(hls4ml.backends.catapult.passes.convolution_winograd.ApplyWinogradKernelTransformation method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.im2col_codegen.GenerateConvIm2col.match">(hls4ml.backends.catapult.passes.im2col_codegen.GenerateConvIm2col method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.OptimizePointwiseConv.match">(hls4ml.backends.catapult.passes.pointwise.OptimizePointwiseConv method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.resource_strategy.ApplyResourceStrategy.match">(hls4ml.backends.catapult.passes.resource_strategy.ApplyResourceStrategy method)</a>
@@ -3900,8 +3913,6 @@
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize.match">(hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer.match">(hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.im2col_codegen.GenerateConvIm2col.match">(hls4ml.backends.fpga.passes.im2col_codegen.GenerateConvIm2col method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.match">(hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape method)</a>
 </li>
@@ -3976,6 +3987,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen.match">(hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers.match">(hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col.match">(hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.match">(hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv method)</a>
 </li>
@@ -4174,6 +4187,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.garnet_templates">hls4ml.backends.catapult.passes.garnet_templates</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.im2col_codegen">hls4ml.backends.catapult.passes.im2col_codegen</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.merge_templates">hls4ml.backends.catapult.passes.merge_templates</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#module-hls4ml.backends.catapult.passes.pointwise">hls4ml.backends.catapult.passes.pointwise</a>
@@ -4211,8 +4226,6 @@
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.fix_softmax_table_size">hls4ml.backends.fpga.passes.fix_softmax_table_size</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.hgq_proxy_model">hls4ml.backends.fpga.passes.hgq_proxy_model</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.im2col_codegen">hls4ml.backends.fpga.passes.im2col_codegen</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.inplace_parallel_reshape">hls4ml.backends.fpga.passes.inplace_parallel_reshape</a>
 </li>
@@ -4339,6 +4352,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.fifo_depth_optimization">hls4ml.backends.vivado.passes.fifo_depth_optimization</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.garnet_templates">hls4ml.backends.vivado.passes.garnet_templates</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.im2col_codegen">hls4ml.backends.vivado.passes.im2col_codegen</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.merge_templates">hls4ml.backends.vivado.passes.merge_templates</a>
 </li>
@@ -5658,6 +5673,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.fifo_depth_optimization.FifoDepthOptimization.transform">(hls4ml.backends.catapult.passes.fifo_depth_optimization.FifoDepthOptimization method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.im2col_codegen.GenerateConvIm2col.transform">(hls4ml.backends.catapult.passes.im2col_codegen.GenerateConvIm2col method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.pointwise.OptimizePointwiseConv.transform">(hls4ml.backends.catapult.passes.pointwise.OptimizePointwiseConv method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.resource_strategy.ApplyResourceStrategy.transform">(hls4ml.backends.catapult.passes.resource_strategy.ApplyResourceStrategy method)</a>
@@ -5673,8 +5690,6 @@
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize.transform">(hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer.transform">(hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.im2col_codegen.GenerateConvIm2col.transform">(hls4ml.backends.fpga.passes.im2col_codegen.GenerateConvIm2col method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.transform">(hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape method)</a>
 </li>
@@ -5751,6 +5766,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers.transform">(hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization.transform">(hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col.transform">(hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle.transform">(hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle method)</a>
 </li>
@@ -6076,6 +6093,8 @@
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_generated_code">write_generated_code() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_generated_code">(hls4ml.writer.oneapi_writer.OneAPIWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_generated_code">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>
