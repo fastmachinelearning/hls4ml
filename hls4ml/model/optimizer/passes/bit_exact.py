@@ -51,7 +51,7 @@ def to_hls4ml_fixed(k, i, f, name, *args):
     if B >= 1:
         ptype = FixedPrecisionType(B, I, signed, *args)
     else:
-        ptype = FixedPrecisionType(1, 32, False, 'TRN', 'WRAP')
+        ptype = FixedPrecisionType(2, 32, False, 'TRN', 'WRAP')
     return NamedType(name, ptype)
 
 
