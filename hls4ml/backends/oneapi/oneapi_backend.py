@@ -68,7 +68,6 @@ class OneAPIBackend(FPGABackend):
             'oneapi:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
             'oneapi:xnor_pooling',
-            'oneapi:generate_conv_im2col',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -79,6 +78,7 @@ class OneAPIBackend(FPGABackend):
             'oneapi:skip_softmax',
             'oneapi:fix_softmax_table_size',
             'infer_precision_types',
+            'oneapi:process_fixed_point_quantizer_layer',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -104,7 +104,6 @@ class OneAPIBackend(FPGABackend):
             + optimization_passes
             + writer_passes
             + ['oneapi:inplace_stream_flatten', 'oneapi:reshape_stream']  # not needed
-            + ['oneapi:process_fixed_point_quantizer_layer']  # not yet supported
         ]
 
         if len(extras) > 0:

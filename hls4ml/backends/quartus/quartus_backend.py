@@ -61,7 +61,6 @@ class QuartusBackend(FPGABackend):
             'quartus:transform_types',
             'quartus:register_bram_weights',
             'quartus:apply_resource_strategy',
-            'quartus:generate_conv_im2col',
             'quartus:apply_winograd_kernel_transformation',
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)

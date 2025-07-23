@@ -29,7 +29,7 @@ template <class T, size_t SIZE> void load_weights_from_txt(T *w, const char *fna
     std::ifstream infile(full_path.c_str(), std::ios::binary);
 
     if (infile.fail()) {
-        std::cerr << "ERROR: file " << std::string(fname) << " does not exist" << std::endl;
+        std::cerr << "ERROR: file " << std::string(full_path) << " does not exist" << std::endl;
         exit(1);
     }
 
