@@ -173,17 +173,9 @@ class OneAPIBackend(FPGABackend):
             Path: Returns the name of the compiled library.
         """
         outdir = Path(Path.cwd(), model.config.get_output_dir())
-        builddir = outdir / 'build'
-        builddir.mkdir(exist_ok=True)
-        try:
-            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
-        except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
-        subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
-        subprocess.run('make lib', shell=True, cwd=builddir, check=True)
+        self.build(model, build_type='lib', run=False)
 
-        lib_name = builddir / f'lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
-        return lib_name
+        return outdir / f'build/lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
@@ -207,7 +199,9 @@ class OneAPIBackend(FPGABackend):
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
-        if run and build_type in ('fpga_emu', 'fpga_sim', 'fpga'):
+        if run:
+            if build_type not in ('fpga_emu', 'fpga_sim', 'fpga'):
+                raise ValueError('Running is only supported for fpga_emu, fpga_sim, or fpga builds')
             executable = builddir / f'{model.config.get_project_name()}.{build_type}'
             subprocess.run(f'{str(executable)}', shell=True, cwd=builddir, check=True)
 
