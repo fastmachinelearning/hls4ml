@@ -80,6 +80,7 @@ def test_activations(activation_function, backend, io_type):
     model.eval()
 
     X_input = np.random.rand(1)
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
@@ -876,3 +877,120 @@ def test_view(backend, io_type):
     rtol = 0
     atol = 5.0e-2
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=rtol, atol=atol)
+
+
+class EinsumOuterProduct(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, y):
+        return torch.einsum('bi,bj->bij', x, y)
+
+
+class EinsumBatchMatMul(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, y):
+        return torch.einsum('bij,bjk->bik', x, y)
+
+
+class EinsumSingleInput(nn.Module):
+    def __init__(self, input_dim=8):
+        super().__init__()
+        self.input_dim = input_dim
+        self.linear = nn.Linear(self.input_dim, self.input_dim)
+
+    def forward(self, x):
+        """using torch einsum to get the dot product"""
+        out = self.linear(x)
+        return torch.einsum("ij,ij->i", out, out)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_einsum_outer_product(backend, io_type):
+
+    model = EinsumOuterProduct()
+    model.eval()
+
+    X_input = np.random.rand(3, 4)
+    Y_input = np.random.rand(3, 5)
+
+    pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(Y_input)).detach().numpy()
+
+    config = config_from_pytorch_model(
+        model,
+        [(None, 4), (None, 5)],
+        default_precision='ap_fixed<16,6>',
+        channels_last_conversion="internal",
+        transpose_outputs=False,
+    )
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_einsum_outer_product_{backend}_{io_type}')
+
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict([X_input, Y_input]), pytorch_prediction.shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_einsum_batch_matmul(backend, io_type):
+
+    model = EinsumBatchMatMul()
+    model.eval()
+
+    X_input = np.random.rand(3, 2, 5)
+    Y_input = np.random.rand(3, 5, 4)
+
+    pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(Y_input)).detach().numpy()
+
+    config = config_from_pytorch_model(
+        model,
+        [(None, 2, 5), (None, 5, 4)],
+        default_precision='ap_fixed<16,6>',
+        channels_last_conversion="internal",
+        transpose_outputs=False,
+    )
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_einsum_batch_matmul_{backend}_{io_type}')
+
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict([X_input, Y_input]), pytorch_prediction.shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_einsum_single_input(backend, io_type):
+
+    model = EinsumSingleInput()
+    model.eval()
+
+    X_input = np.random.rand(3, 8)
+
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(
+        model,
+        [(None, 8)],
+        default_precision='ap_fixed<16,6>',
+        channels_last_conversion="internal",
+        transpose_outputs=False,
+    )
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_einsum_single_input_{backend}_{io_type}')
+
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)

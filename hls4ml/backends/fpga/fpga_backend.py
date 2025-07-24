@@ -7,13 +7,14 @@ from collections.abc import Iterable
 import numpy as np
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
+from hls4ml.model.attributes import Attribute, ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.layers import (
     GRU,
     LSTM,
     Activation,
     BatchNormalization,
     BatchNormOnnx,
+    Bidirectional,
     Conv,
     Conv1D,
     Conv2D,
@@ -68,6 +69,7 @@ class FPGABackend(Backend):
             SimpleRNN,
             LSTM,
             GRU,
+            Bidirectional,
             Dot,
             Conv,
             MatMul,
@@ -109,32 +111,37 @@ class FPGABackend(Backend):
         act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
         self.attribute_map[Activation] = act_attrs
 
-        softmax_attrs = self.attribute_map.get(Softmax, [])
-        softmax_attrs.append(
+        softmax_attrs = [
+            Attribute('n_in'),
+            Attribute('activation', value_type=str),
+            Attribute('n_outer', value_type=int, default=1),
+            Attribute('n_inner', value_type=int, default=1),
             ChoiceAttribute(
                 'implementation',
                 ['latency', 'stable', 'argmax', 'legacy'],
                 default='stable',
                 description=descriptions.softmax_implementation,
-            )
-        )
-        softmax_attrs.append(
-            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip)
-        )
-        softmax_attrs.append(
+            ),
+            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip),
             TypeAttribute(
                 'exp_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
                 description=descriptions.table_type,
-            )
-        )
-        softmax_attrs.append(
+            ),
             TypeAttribute(
                 'inv_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
                 description=descriptions.table_type,
-            )
-        )
+            ),
+            TypeAttribute(
+                'inv_inp',
+                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+            ),
+            TypeAttribute(
+                'accum',
+                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+            ),
+        ]
         self.attribute_map[Softmax] = softmax_attrs
 
     def create_layer_class(self, layer_class):
@@ -143,8 +150,12 @@ class FPGABackend(Backend):
             if issubclass(layer_class, cls):
                 new_attrubutes.extend(attributes)
 
+        layer_cls_fqn = layer_class.__module__ + '.' + layer_class.__qualname__
+
         return type(
-            self.name + layer_class.__name__, (layer_class,), {'_expected_attributes': new_attrubutes, '_wrapped': True}
+            self.name + layer_class.__name__,
+            (layer_class,),
+            {'_expected_attributes': new_attrubutes, '_wrapped': layer_cls_fqn},
         )
 
     def compile(self, model):
@@ -223,6 +234,16 @@ class FPGABackend(Backend):
             n_out_recr = n_out
             return n_in, n_out, n_in_recr, n_out_recr
 
+        if 'Bidirectional' in layer.class_name:
+            result = []
+            for d in ['forward', 'backward']:
+                n_in = layer.get_attr('n_in')
+                n_out = layer.get_attr(f'{d}_n_states') * 3
+                n_in_recr = layer.get_attr(f'{d}_n_states')
+                n_out_recr = n_out
+                result.append((n_in, n_out, n_in_recr, n_out_recr))
+            return result
+
         raise Exception(f'Cannot get mult size for layer {layer.name} ({layer.class_name})')
 
     def get_valid_reuse_factors(self, n_in, n_out):
@@ -273,6 +294,7 @@ class FPGABackend(Backend):
         if not include_max_rf:
             valid_rf.pop()
         chosen_rf = layer.get_attr(attribute)
+        print("\n\nREuse factor:", chosen_rf, "\n\n")
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
             valid_rf_str = ','.join(map(str, valid_rf))
@@ -755,7 +777,7 @@ class FPGABackend(Backend):
 
         generated_code = (
             "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public FillConv1DBuffer<data_T, CONFIG_T> {{\n"
+            "class fill_buffer_{index} : public nnet::FillConv1DBuffer<data_T, CONFIG_T> {{\n"
             "    public:\n"
             "    static void fill_buffer(\n"
             "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
@@ -885,7 +907,7 @@ class FPGABackend(Backend):
 
         generated_code = (
             "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public FillConv2DBuffer<data_T, CONFIG_T> {{\n"
+            "class fill_buffer_{index} : public nnet::FillConv2DBuffer<data_T, CONFIG_T> {{\n"
             "    public:\n"
             "    static void fill_buffer(\n"
             "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"

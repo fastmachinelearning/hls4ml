@@ -75,6 +75,10 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self._saturation_mode_cpp(self.saturation_mode),
             self.saturation_bits,
         ]
+        if args[0] == 1:
+            # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
+            # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
+            args[0] = 2
         if args[3] == 'AC_TRN' and args[4] == 'AC_WRAP':
             # This is the default, so we won't write the full definition for brevity
             args[3] = args[4] = None
@@ -103,6 +107,7 @@ class FixedPrecisionConverter(PrecisionConverter):
     def convert(self, precision_type):
         type_cls = type(precision_type)
         type_cls_name = type_cls.__name__
+        type_cls_fqn = type_cls.__module__ + '.' + type_cls.__qualname__
 
         # If the type is already converted, do nothing
         if type_cls_name.startswith(self.prefix):
@@ -111,7 +116,9 @@ class FixedPrecisionConverter(PrecisionConverter):
         definition_cls = self.type_map.get(type_cls, None)
 
         if definition_cls is not None:
-            precision_type.__class__ = type(self.prefix + type_cls_name, (type_cls, definition_cls), {})
+            precision_type.__class__ = type(
+                self.prefix + type_cls_name, (type_cls, definition_cls), {'_wrapped': type_cls_fqn}
+            )
             return precision_type
         else:
             raise Exception(f'Cannot convert precision type to {self.prefix}: {precision_type.__class__.__name__}')
@@ -206,6 +213,7 @@ class HLSTypeConverter:
     def convert(self, atype):
         type_cls = type(atype)
         type_cls_name = type_cls.__name__
+        type_cls_fqn = type_cls.__module__ + '.' + type_cls.__qualname__
 
         # If the type is already converted, do nothing
         if type_cls_name.startswith('HLS'):
@@ -214,7 +222,7 @@ class HLSTypeConverter:
         conversion_cls = self.type_map.get(type_cls, None)
 
         if conversion_cls is not None:
-            atype.__class__ = type('HLS' + type_cls_name, (type_cls, conversion_cls), {})
+            atype.__class__ = type('HLS' + type_cls_name, (type_cls, conversion_cls), {'_wrapped': type_cls_fqn})
             atype.convert_precision(self.precision_converter)
             return atype
         else:
@@ -246,8 +254,11 @@ class ArrayVariableConverter:
 
         tensor_var.pragma = pragma
         tensor_var.type = self.type_converter.convert(tensor_var.type)
+        tensor_cls_fqn = tensor_var.__class__.__module__ + '.' + tensor_var.__class__.__qualname__
 
-        tensor_var.__class__ = type(self.prefix + 'ArrayVariable', (type(tensor_var), self.definition_cls), {})
+        tensor_var.__class__ = type(
+            self.prefix + 'ArrayVariable', (type(tensor_var), self.definition_cls), {'_wrapped': tensor_cls_fqn}
+        )
         return tensor_var
 
 
@@ -273,8 +284,11 @@ class StructMemberVariableConverter:
         tensor_var.struct_name = str(struct_name)
         tensor_var.member_name = tensor_var.name
         tensor_var.name = tensor_var.struct_name + '.' + tensor_var.member_name
+        type_cls_fqn = tensor_var.__class__.__module__ + '.' + tensor_var.__class__.__qualname__
 
-        tensor_var.__class__ = type(self.prefix + 'StructMemberVariable', (type(tensor_var), self.definition_cls), {})
+        tensor_var.__class__ = type(
+            self.prefix + 'StructMemberVariable', (type(tensor_var), self.definition_cls), {'_wrapped': type_cls_fqn}
+        )
         return tensor_var
 
 
@@ -299,8 +313,11 @@ class StreamVariableConverter:
         tensor_var.type = self.type_converter.convert(
             PackedType(tensor_var.type.name, tensor_var.type.precision, tensor_var.shape[-1], n_pack)
         )
+        tensor_cls_fqn = tensor_var.__class__.__module__ + '.' + tensor_var.__class__.__qualname__
 
-        tensor_var.__class__ = type(self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {})
+        tensor_var.__class__ = type(
+            self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {'_wrapped': tensor_cls_fqn}
+        )
         return tensor_var
 
 
@@ -318,8 +335,11 @@ class InplaceStreamVariableConverter(StreamVariableConverter):
         tensor_var.type = self.type_converter.convert(
             PackedType(tensor_var.type.name, tensor_var.type.precision, tensor_var.input_var.shape[-1], n_pack)
         )
+        tensor_cls_fqn = tensor_var.__class__.__module__ + '.' + tensor_var.__class__.__qualname__
 
-        tensor_var.__class__ = type(self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {})
+        tensor_var.__class__ = type(
+            self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {'_wrapped': tensor_cls_fqn}
+        )
         return tensor_var
 
 
@@ -344,8 +364,11 @@ class StaticWeightVariableConverter:
         weight_var.weight_class = weight_var.__class__.__name__
         weight_var.storage = 'register'
         weight_var.type = self.type_converter.convert(weight_var.type)
+        tensor_cls_fqn = weight_var.__class__.__module__ + '.' + weight_var.__class__.__qualname__
 
-        weight_var.__class__ = type('StaticWeightVariable', (type(weight_var), StaticWeightVariableDefinition), {})
+        weight_var.__class__ = type(
+            'StaticWeightVariable', (type(weight_var), StaticWeightVariableDefinition), {'_wrapped': tensor_cls_fqn}
+        )
         return weight_var
 
 

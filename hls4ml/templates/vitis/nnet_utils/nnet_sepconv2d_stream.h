@@ -20,7 +20,7 @@ void depthwise_conv_2d_buffer_cl(
                                                                                     [CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
     ReadInputHeight:
         for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
         ReadInputWidth:
@@ -62,7 +62,7 @@ void pointwise_conv_2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
     #pragma HLS ARRAY_PARTITION variable=weights complete
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    if (CONFIG_T::strategy == nnet::latency) {
+    if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
     ReadInputHeight:
         for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
         ReadInputWidth:
@@ -120,7 +120,7 @@ void separable_conv_2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
     #pragma HLS DATAFLOW
 
     hls::stream<dw_res_T> depthwise_res;
-    unsigned res_depth = CONFIG_T::depthwise_config::out_height * CONFIG_T::depthwise_config::out_width;
+    constexpr unsigned res_depth = CONFIG_T::depthwise_config::out_height * CONFIG_T::depthwise_config::out_width;
     #pragma HLS STREAM variable=depthwise_res depth=res_depth
 
     depthwise_conv_2d_buffer_cl<data_T, dw_res_T, typename CONFIG_T::depthwise_config>(data, depthwise_res,

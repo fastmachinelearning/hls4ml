@@ -61,7 +61,6 @@ class QuartusBackend(FPGABackend):
             'quartus:transform_types',
             'quartus:register_bram_weights',
             'quartus:apply_resource_strategy',
-            'quartus:generate_conv_im2col',
             'quartus:apply_winograd_kernel_transformation',
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
@@ -131,13 +130,16 @@ class QuartusBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', **_):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, **_):
         config = {}
 
         config['Part'] = part if part is not None else 'Arria10'
         config['ClockPeriod'] = clock_period if clock_period is not None else 5
         config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
+        config['WriterConfig'] = {
+            'WriteTar': write_tar,
+        }
 
         return config
 

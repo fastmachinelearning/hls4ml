@@ -1,6 +1,5 @@
 import math
-import struct
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -82,12 +81,14 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Embedding']:
             return self._infer_embedding_precision(node, types_to_infer)
 
-        if node_class in ['SimpleRNN', 'LSTM', 'GRU']:
+        if node_class in ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional']:
             return self._infer_rnn_precision(node, types_to_infer)
 
         if node_class in ['ParametrizedActivation']:
             return self._infer_par_act_precision(node, types_to_infer)
 
+        if node_class in ['PReLU']:
+            return self._infer_prelu_act_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -554,7 +555,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         inferred_types = []
 
         # for now just do the weights and leave the rest for the default catch
-        for weightvar in ('weight', 'bias', 'recurrent_weight', 'recurrent_bias'):
+        rnn_weights = ('weight', 'bias', 'recurrent_weight', 'recurrent_bias')
+        if node.class_name == 'Bidirectional':
+            rnn_weights = [direction + '_' + weight for direction in ['forward', 'backward'] for weight in rnn_weights]
+
+        for weightvar in rnn_weights:
             if f'{weightvar}_t' in types_to_infer:
                 self._infer_default_type(node, f'{weightvar}_t')
                 node.weights[weightvar].update_precision(node.types[f'{weightvar}_t'].precision)
@@ -562,34 +567,63 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         return inferred_types
 
-    def _infer_const_precision(self, node, type_to_infer, attr_name):
-        inferred_types = []
+    # def _infer_const_precision(self, node, type_to_infer, attr_name):
+    #     inferred_types = []
 
-        def get_man_exp(f):
-            f = np.abs(f)
-            s = struct.pack('>f', f)
-            l_float = struct.unpack('>l', s)[0]
-            bits = f'{l_float:032b}'
-            m = bits[-23:]
-            e = bits[-23 - 8 : -23]
-            return m, e
+    #     def get_man_exp(f):
+    #         f = np.abs(f)
+    #         s = struct.pack('>f', f)
+    #         l_float = struct.unpack('>l', s)[0]
+    #         bits = f'{l_float:032b}'
+    #         m = bits[-23:]
+    #         e = bits[-23 - 8 : -23]
+    #         return m, e
 
-        param = node.get_attr(attr_name)
-        m, e = get_man_exp(param)
-        I_pos = int(e, 2) - 127 + 1  # -127 is the bias of the exponent
-        try:
-            W_bits = m.rindex('1') + 2  # + 1 for accounting the index starting from 0, +1 for the leading 1 of the exponent
-        except Exception:
-            W_bits = 1  # the value is a power of 2, 1 bit is needed, I_pos will offset the bit in the proper place
-        if param < 0 and W_bits > 1:  # for po2 values the increment is not needed
-            I_pos += 1
-            W_bits += 1
-        node.attributes[type_to_infer].precision = FixedPrecisionType(W_bits, I_pos, True if param < 0 else False)
-        inferred_types.append(type_to_infer)
-        return inferred_types
+    #     param = node.get_attr(attr_name)
+    #     m, e = get_man_exp(param)
+    #     I_pos = int(e, 2) - 127 + 1  # -127 is the bias of the exponent
+    #     try:
+    #         # + 1 for accounting the index starting from 0, +1 for the leading 1 of the exponent
+    #         W_bits = m.rindex('1') + 2
+    #     except Exception:
+    #         W_bits = 1  # the value is a power of 2, 1 bit is needed, I_pos will offset the bit in the proper place
+    #     if param < 0 and W_bits > 1:  # for po2 values the increment is not needed
+    #         I_pos += 1
+    #         W_bits += 1
+    #     node.attributes[type_to_infer].precision = FixedPrecisionType(W_bits, I_pos, True if param < 0 else False)
+    #     inferred_types.append(type_to_infer)
+    #     return inferred_types
+
+    # def _infer_par_act_precision(self, node, types_to_infer):
+    #     inferred_types = []
+    #     if 'param_t' in types_to_infer:
+    #         inferred_types.extend(self._infer_const_precision(node, 'param_t', 'activ_param'))
+    #     return inferred_types
 
     def _infer_par_act_precision(self, node, types_to_infer):
         inferred_types = []
-        if 'param_t' in types_to_infer:
-            inferred_types.extend(self._infer_const_precision(node, 'param_t', 'activ_param'))
+
+        # For threshold relu, set the parameter precision to be the input precision by default;
+        # for other parametrized activations, just allow the default precision to be used.
+        # Can override these values in the configuration by explicitly setting them.
+        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'thresholdedrelu':
+            in_type = node.get_input_variable().type.precision
+            node.attributes['param_t'].precision = in_type
+            inferred_types.append('param_t')
+
+        return inferred_types
+
+    def _infer_prelu_act_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        # For PReLU, set the parameter precision to be the input precision by default;
+        # As the parameters are stored as a weight tensor, need to update that precision as well.
+        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'prelu':
+
+            in_type = node.get_input_variable().type.precision
+            node.attributes['param_t'].precision = in_type
+            node.weights['param'].update_precision(node.types['param_t'].precision)
+
+            inferred_types.append('param_t')
+
         return inferred_types

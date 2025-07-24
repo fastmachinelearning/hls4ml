@@ -4,8 +4,6 @@ import h5py
 
 from hls4ml.model import ModelGraph
 
-MAXMULT = 4096
-
 
 class KerasReader:
     def get_weights_data(self, layer_name, var_name):
@@ -64,6 +62,23 @@ class KerasNestedFileReader(KerasFileReader):
             return None
 
 
+class KerasWrappedLayerFileReader(KerasFileReader):
+    def __init__(self, data_reader, layer_path):
+        super().__init__(data_reader.config)
+        self.layer_path = f'model_weights/{layer_path}'
+
+    def _find_data(self, layer_name, var_name):
+        def h5_visitor_func(name):
+            if var_name in name:
+                return name
+
+        data_path = self.h5file[self.layer_path].visit(h5_visitor_func)
+        if data_path:
+            return self.h5file[f'/{self.layer_path}/{data_path}']
+        else:
+            return None
+
+
 class KerasModelReader(KerasReader):
     def __init__(self, keras_model):
         self.model = keras_model
@@ -76,6 +91,19 @@ class KerasModelReader(KerasReader):
                     return w.numpy()  # TF 2.x
                 except Exception:
                     return layer.get_weights()[i]  # TF 1.x
+
+        return None
+
+
+class KerasWrappedLayerReader(KerasReader):
+    def __init__(self, layer):
+        self.layer = layer
+
+    def get_weights_data(self, layer_name, var_name):
+        assert self.layer.name == layer_name
+        for _, w in enumerate(self.layer.weights):
+            if var_name in w.name:
+                return w.numpy()
 
         return None
 
@@ -93,6 +121,10 @@ def get_weights_data(data_reader, layer_name, var_name):
 
 
 layer_handlers = {}
+
+
+def get_layer_handlers():
+    return layer_handlers
 
 
 def register_keras_layer_handler(layer_cname, handler_func):
@@ -160,9 +192,9 @@ def get_model_arch(config):
         # Model instance passed in config from API
         keras_model = config['KerasModel']
         if isinstance(keras_model, str):
-            from tensorflow.keras.models import load_model
+            import keras
 
-            keras_model = load_model(keras_model)
+            keras_model = keras.models.load_model(keras_model)
         model_arch = json.loads(keras_model.to_json())
         reader = KerasModelReader(keras_model)
     elif 'KerasJson' in config:
@@ -209,7 +241,7 @@ def parse_keras_model(model_arch, reader):
         'HGQ>UnaryLUT',
     ]
     # Recurrent layers
-    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
+    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU', 'Bidirectional']
     # All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -224,7 +256,6 @@ def parse_keras_model(model_arch, reader):
 
     layer_config = None
     if model_arch['class_name'] == 'Sequential':
-        print('Interpreting Sequential')
         layer_config = model_arch['config']
         if 'layers' in layer_config:  # Newer Keras versions have 'layers' in 'config' key
             layer_config = layer_config['layers']
@@ -235,9 +266,7 @@ def parse_keras_model(model_arch, reader):
             input_layer['class_name'] = 'InputLayer'
             input_layer['input_shape'] = layer_config[0]['config']['batch_input_shape'][1:]
             layer_list.append(input_layer)
-            print('Input shape:', input_layer['input_shape'])
     elif model_arch['class_name'] in ['Model', 'Functional']:  # TF >= 2.3 calls it 'Functional' API
-        print('Interpreting Model')
         layer_config = model_arch['config']['layers']
         input_layers = [inp[0] for inp in model_arch['config']['input_layers']]
         output_layers = [out[0] for out in model_arch['config']['output_layers']]
@@ -250,7 +279,6 @@ def parse_keras_model(model_arch, reader):
     output_shapes = {}
     output_shape = None
 
-    print('Topology:')
     for keras_layer in layer_config:
         if 'batch_input_shape' in keras_layer['config']:
             if 'inbound_nodes' in keras_layer and len(keras_layer['inbound_nodes']) > 0:
@@ -289,11 +317,6 @@ def parse_keras_model(model_arch, reader):
 
         layer, output_shape = layer_handlers[keras_class](keras_layer, input_names, input_shapes, reader)
 
-        print(
-            'Layer name: {}, layer type: {}, input shapes: {}, output shape: {}'.format(
-                layer['name'], layer['class_name'], input_shapes, output_shape
-            )
-        )
         layer_list.append(layer)
         if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers:  # + qkeras_layers:
             act_layer = {}
@@ -322,9 +345,7 @@ def parse_keras_model(model_arch, reader):
     return layer_list, input_layers, output_layers, output_shapes
 
 
-def keras_to_hls(config):
+def keras_v2_to_hls(config):
     model_arch, reader = get_model_arch(config)
     layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
-    print('Creating HLS model')
-    hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
-    return hls_model
+    return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)

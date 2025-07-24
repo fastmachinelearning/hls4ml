@@ -1,5 +1,4 @@
-""" Test that nested models in Keras is properly parsed and expanded by the optimizers.
-"""
+"""Test that nested models in Keras is properly parsed and expanded by the optimizers."""
 
 from pathlib import Path
 

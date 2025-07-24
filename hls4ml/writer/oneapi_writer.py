@@ -102,9 +102,10 @@ class OneAPIWriter(Writer):
         project_name = model.config.get_project_name()
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(filedir, '../templates/oneapi/firmware/myproject.cpp')) as f, open(
-            f'{model.config.get_output_dir()}/src/firmware/{project_name}.cpp', 'w'
-        ) as fout:
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/firmware/myproject.cpp')) as f,
+            open(f'{model.config.get_output_dir()}/src/firmware/{project_name}.cpp', 'w') as fout,
+        ):
             model_inputs = model.get_input_variables()
             model_outputs = model.get_output_variables()
             model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
@@ -207,9 +208,10 @@ class OneAPIWriter(Writer):
         project_name = model.config.get_project_name()
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(filedir, '../templates/oneapi/firmware/myproject.h')) as f, open(
-            f'{model.config.get_output_dir()}/src/firmware/{project_name}.h', 'w'
-        ) as fout:
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/firmware/myproject.h')) as f,
+            open(f'{model.config.get_output_dir()}/src/firmware/{project_name}.h', 'w') as fout,
+        ):
             model_inputs = model.get_input_variables()
             model_outputs = model.get_output_variables()
             # model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
@@ -254,25 +256,20 @@ class OneAPIWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         filedir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(filedir, '../templates/oneapi/firmware/defines.h')) as f, open(
-            f'{model.config.get_output_dir()}/src/firmware/defines.h', 'w'
-        ) as fout:
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/firmware/defines.h')) as f,
+            open(f'{model.config.get_output_dir()}/src/firmware/defines.h', 'w') as fout,
+        ):
             for line in f.readlines():
                 # Insert numbers
                 if '// hls-fpga-machine-learning insert numbers' in line:
                     newline = line
 
-                    defines_list = []
+                    defines = set()
                     for layer in model.get_layers():
-                        defines = ''
-                        # Note: this assumes all the layers have one ouput
-                        # (or in clones, one type of output)
                         for k, v in layer.get_output_variable().get_shape():
-                            defines += f'#define {k} {v}\n'
-
-                        defines_list.append(defines)
-
-                    newline += ''.join(defines_list)
+                            defines.add(f'constexpr size_t {k} = {v};')
+                    newline += '\n'.join(defines) + '\n'
 
                 elif '// hls-fpga-machine-learning insert layer-precision' in line:
                     newline = line
@@ -298,9 +295,10 @@ class OneAPIWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         filedir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(filedir, '../templates/oneapi/firmware/parameters.h')) as f, open(
-            f'{model.config.get_output_dir()}/src/firmware/parameters.h', 'w'
-        ) as fout:
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/firmware/parameters.h')) as f,
+            open(f'{model.config.get_output_dir()}/src/firmware/parameters.h', 'w') as fout,
+        ):
             for line in f.readlines():
                 if '// hls-fpga-machine-learning insert includes' in line:
                     newline = line
@@ -376,9 +374,10 @@ class OneAPIWriter(Writer):
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
 
-        with open(os.path.join(filedir, '../templates/oneapi/myproject_test.cpp')) as f, open(
-            f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w'
-        ) as fout:
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/myproject_test.cpp')) as f,
+            open(f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w') as fout,
+        ):
             for line in f.readlines():
                 indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
@@ -434,9 +433,10 @@ class OneAPIWriter(Writer):
         indent = '    '
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(filedir, '../templates/oneapi/myproject_bridge.cpp')) as f, open(
-            f'{model.config.get_output_dir()}/src/{project_name}_bridge.cpp', 'w'
-        ) as fout:
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/myproject_bridge.cpp')) as f,
+            open(f'{model.config.get_output_dir()}/src/{project_name}_bridge.cpp', 'w') as fout,
+        ):
             for line in f.readlines():
                 if 'MYPROJECT' in line:
                     newline = line.replace('MYPROJECT', format(project_name.upper()))
@@ -511,15 +511,23 @@ class OneAPIWriter(Writer):
         # Makefile
         filedir = os.path.dirname(os.path.abspath(__file__))
         device = model.config.get_config_value('Part')
-        with open(os.path.join(filedir, '../templates/oneapi/CMakeLists.txt')) as f, open(
-            f'{model.config.get_output_dir()}/CMakeLists.txt', 'w'
-        ) as fout:
+        period = model.config.get_config_value('ClockPeriod')
+        hyper = model.config.get_config_value('HyperoptHandshake')
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/CMakeLists.txt')) as f,
+            open(f'{model.config.get_output_dir()}/CMakeLists.txt', 'w') as fout,
+        ):
             for line in f.readlines():
                 line = line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
                 if 'set(FPGA_DEVICE' in line:
                     line = f'    set(FPGA_DEVICE "{device}")\n'
+
+                if 'set(USER_FPGA_FLAGS' in line:
+                    line += f'set(USER_FPGA_FLAGS -Xsclock={period}ns; ${{USER_FPGA_FLAGS}})\n'
+                    if not hyper:
+                        line += 'set(USER_FPGA_FLAGS -Xsoptimize=latency; ${USER_FPGA_FLAGS})\n'
 
                 fout.write(line)
 
@@ -919,6 +927,33 @@ class OneAPIWriter(Writer):
         self.__write_exp_table_legacy(model, dstpath)
         self.__write_invert_table_legacy(model, dstpath)
 
+    def write_generated_code(self, model):
+        """Write the generated code (nnet_code_gen.h)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        path = f'{model.config.get_output_dir()}/src/firmware/nnet_utils/nnet_code_gen.h'
+        f = open(path)
+        contents = f.readlines()
+        f.close()
+        f = open(path, 'w')
+        namespace = model.config.get_writer_config().get('Namespace', None)
+
+        for line in contents:
+            if '// hls4ml insert code' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for generated_code in layer.code.values():
+                        newline += str(generated_code)
+            else:
+                newline = line
+            if namespace is not None:
+                if 'namespace nnet' in newline:
+                    newline = newline.replace('namespace nnet', f'namespace {namespace}')
+            f.write(newline)
+        f.close()
+
     def write_yml(self, model):
         """Write the config to the YAML file
 
@@ -948,11 +983,14 @@ class OneAPIWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
 
-        with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
-            archive.add(model.config.get_output_dir(), recursive=True)
+        if model.config.get_writer_config().get('WriteTar', False):
+            tar_path = model.config.get_output_dir() + '.tar.gz'
+            if os.path.exists(tar_path):
+                os.remove(tar_path)
+            with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
+                archive.add(model.config.get_output_dir(), recursive=True)
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -964,6 +1002,6 @@ class OneAPIWriter(Writer):
         self.write_build_script(model)
         self.write_nnet_utils(model)
         self.write_activation_tables(model)
+        self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')

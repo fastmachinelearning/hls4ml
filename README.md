@@ -45,7 +45,7 @@ config = hls4ml.utils.fetch_example_model('KERAS_3layer.json')
 print(config)
 
 # Convert it to a hls project
-hls_model = hls4ml.converters.keras_to_hls(config)
+hls_model = hls4ml.converters.keras_v2_to_hls(config)
 
 # Print full list of example models if you want to explore more
 hls4ml.utils.fetch_example_list()
@@ -65,7 +65,7 @@ hls4ml.report.read_vivado_report('my-hls-test')
 
 # FAQ
 
-List of frequently asked questions and common HLS synthesis can be found [here](https://fastmachinelearning.org/hls4ml/faq.html)
+List of frequently asked questions and common HLS synthesis can be found [here](https://fastmachinelearning.org/hls4ml/intro/faq.html)
 
 # Citation
 If you use this software in a publication, please cite the software
@@ -73,9 +73,9 @@ If you use this software in a publication, please cite the software
 @software{fastml_hls4ml,
   author       = {{FastML Team}},
   title        = {fastmachinelearning/hls4ml},
-  year         = 2024,
+  year         = 2025,
   publisher    = {Zenodo},
-  version      = {v1.0.0},
+  version      = {v1.1.0},
   doi          = {10.5281/zenodo.1201549},
   url          = {https://github.com/fastmachinelearning/hls4ml}
 }

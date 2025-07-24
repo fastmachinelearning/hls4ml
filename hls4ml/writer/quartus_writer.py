@@ -415,15 +415,11 @@ class QuartusWriter(Writer):
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
 
-                defines_list = []
+                defines = set()
                 for layer in model.get_layers():
-                    defines = ''
                     for k, v in layer.get_output_variable().get_shape():
-                        defines += f'#define {k} {v}\n'
-
-                    defines_list.append(defines)
-
-                newline += ''.join(defines_list)
+                        defines.add(f'constexpr size_t {k} = {v};')
+                newline += '\n'.join(defines) + '\n'
 
             elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
@@ -1327,7 +1323,9 @@ class QuartusWriter(Writer):
             return dumper.represent_scalar('!keras_model', model_path)
 
         try:
-            from tensorflow.keras import Model as KerasModel
+            import keras
+
+            KerasModel = keras.models.Model
 
             yaml.add_multi_representer(KerasModel, keras_model_representer)
         except Exception:
@@ -1343,11 +1341,14 @@ class QuartusWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
 
-        with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
-            archive.add(model.config.get_output_dir(), recursive=True)
+        if model.config.get_writer_config().get('WriteTar', False):
+            tar_path = model.config.get_output_dir() + '.tar.gz'
+            if os.path.exists(tar_path):
+                os.remove(tar_path)
+            with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
+                archive.add(model.config.get_output_dir(), recursive=True)
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -1361,4 +1362,3 @@ class QuartusWriter(Writer):
         self.write_activation_tables(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')

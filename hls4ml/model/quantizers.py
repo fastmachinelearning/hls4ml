@@ -5,8 +5,6 @@ behave like simple wrappers.
 """
 
 import numpy as np
-import tensorflow as tf
-from qkeras.quantizers import get_quantizer
 
 from hls4ml.model.types import (
     ExponentPrecisionType,
@@ -14,11 +12,12 @@ from hls4ml.model.types import (
     IntegerPrecisionType,
     RoundingMode,
     SaturationMode,
+    Serializable,
     XnorPrecisionType,
 )
 
 
-class Quantizer:
+class Quantizer(Serializable):
     """
     Base class for representing quantizers in hls4ml.
 
@@ -35,6 +34,13 @@ class Quantizer:
 
     def __call__(self, data):
         raise NotImplementedError
+
+    def serialize_state(self):
+        state = {
+            'bits': self.bits,
+            'hls_type': self.hls_type.serialize(),
+        }
+        return state
 
 
 class BinaryQuantizer(Quantizer):
@@ -66,6 +72,12 @@ class BinaryQuantizer(Quantizer):
             quant_data = np.where(data > 0, ones, -ones)
         return quant_data
 
+    def serialize_state(self):
+        state = {
+            'bits': self.bits,
+        }
+        return state
+
 
 class TernaryQuantizer(Quantizer):
     """Quantizer that quantizes to -1, 0 and 1."""
@@ -78,6 +90,10 @@ class TernaryQuantizer(Quantizer):
         ones = np.ones_like(data)
         return np.where(data > 0.5, ones, np.where(data <= -0.5, -ones, zeros))
 
+    def serialize_state(self):
+        state = {}
+        return state
+
 
 class QKerasQuantizer(Quantizer):
     """Wrapper around QKeras quantizers.
@@ -87,6 +103,9 @@ class QKerasQuantizer(Quantizer):
     """
 
     def __init__(self, config):
+        from qkeras.quantizers import get_quantizer
+
+        self.qkeras_config = config
         self.quantizer_fn = get_quantizer(config)
         self.alpha = config['config'].get('alpha', None)
         if config['class_name'] == 'quantized_bits':
@@ -106,8 +125,8 @@ class QKerasQuantizer(Quantizer):
             self.hls_type = FixedPrecisionType(width=16, integer=6, signed=True)
 
     def __call__(self, data):
-        tf_data = tf.convert_to_tensor(data)
-        return self.quantizer_fn(tf_data).numpy()
+        data = np.array(data, dtype='float32')
+        return self.quantizer_fn(data).numpy()
         # return self.quantizer_fn(data)
 
     def _get_type(self, quantizer_config):
@@ -123,6 +142,12 @@ class QKerasQuantizer(Quantizer):
         else:
             return FixedPrecisionType(width=width, integer=integer + 1, signed=True)
 
+    def serialize_state(self):
+        state = {
+            'config': self.qkeras_config,
+        }
+        return state
+
 
 class QKerasBinaryQuantizer(Quantizer):
     """Wrapper around QKeras binary quantizer.
@@ -132,6 +157,9 @@ class QKerasBinaryQuantizer(Quantizer):
     """
 
     def __init__(self, config, xnor=False):
+        from qkeras.quantizers import get_quantizer
+
+        self.qkeras_config = config
         self.bits = 1 if xnor else 2
         self.hls_type = XnorPrecisionType() if xnor else IntegerPrecisionType(width=2, signed=True)
         self.alpha = config['config']['alpha']
@@ -141,9 +169,13 @@ class QKerasBinaryQuantizer(Quantizer):
         self.binary_quantizer = BinaryQuantizer(1) if xnor else BinaryQuantizer(2)
 
     def __call__(self, data):
-        x = tf.convert_to_tensor(data)
-        y = self.quantizer_fn(x).numpy()
+        data = np.array(data, dtype='float32')
+        y = self.quantizer_fn(data).numpy()
         return self.binary_quantizer(y)
+
+    def serialize_state(self):
+        state = {'config': self.qkeras_config, 'xnor': True if self.bits == 1 else False}
+        return state
 
 
 class QKerasPO2Quantizer(Quantizer):
@@ -154,17 +186,26 @@ class QKerasPO2Quantizer(Quantizer):
     """
 
     def __init__(self, config):
+        from qkeras.quantizers import get_quantizer
+
+        self.qkeras_config = config
         self.bits = config['config']['bits']
         self.quantizer_fn = get_quantizer(config)
         self.hls_type = ExponentPrecisionType(width=self.bits, signed=True)
 
     def __call__(self, data):
         # Weights are quantized to nearest power of two
-        x = tf.convert_to_tensor(data)
-        y = self.quantizer_fn(x)
+        data = np.array(data, dtype='float32')
+        y = self.quantizer_fn(data)
         if hasattr(y, 'numpy'):
             y = y.numpy()
         return y
+
+    def serialize_state(self):
+        state = {
+            'config': self.qkeras_config,
+        }
+        return state
 
 
 class QuantNodeQuantizer(Quantizer):
@@ -260,3 +301,9 @@ class QuantNodeQuantizer(Quantizer):
             return np.floor
         else:
             raise ValueError(f'Rounding mode {mode} not supported.')
+
+    def serialize_state(self):
+        state = {
+            'precision': self.hls_type.serialize(),
+        }
+        return state

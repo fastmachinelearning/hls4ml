@@ -1,7 +1,5 @@
 import json
 
-import qkeras
-
 import hls4ml
 
 
@@ -48,6 +46,8 @@ def create_config(output_dir='my-hls-test', project_name='myproject', backend='V
 
 def _get_precision_from_quantizer(quantizer):
     if isinstance(quantizer, str):
+        import qkeras
+
         quantizer_obj = qkeras.get_quantizer(quantizer)
         quantizer = {}
         # Some activations are classes with get_config method
@@ -156,13 +156,21 @@ def config_from_keras_model(
     layer_list = []
 
     if isinstance(model, dict):
+        # keras v2 only
         model_arch = model
+        reader = hls4ml.converters.KerasModelReader(model)
+        layer_list, _, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
     else:
-        model_arch = json.loads(model.to_json())
+        import keras
 
-    reader = hls4ml.converters.KerasModelReader(model)
+        # model is keras.Model here
 
-    layer_list, _, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
+        if keras.__version__ > '3.0':
+            layer_list, *_ = hls4ml.converters.parse_keras_v3_model(model)
+        else:
+            model_arch = json.loads(model.to_json())
+            reader = hls4ml.converters.KerasModelReader(model)
+            layer_list, *_ = hls4ml.converters.parse_keras_model(model_arch, reader)
 
     def make_layer_config(layer):
         cls_name = layer['class_name']
@@ -367,6 +375,7 @@ def config_from_pytorch_model(
 
     (
         layer_list,
+        _,
         _,
     ) = parse_pytorch_model(config, verbose=False)
 

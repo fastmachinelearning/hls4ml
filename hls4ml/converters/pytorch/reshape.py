@@ -38,6 +38,7 @@ def parse_squeeze_layer(operation, layer_name, input_names, input_shapes, node, 
     layer = {}
     layer['class_name'] = 'Reshape'
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     if len(node.args) > 1 or len(node.kwargs) > 0:  # 'dim' argument is specified
         output_shape = [i for i in input_shapes[0]]
@@ -152,11 +153,94 @@ def handle_upsample(operation, layer_name, input_names, input_shapes, node, clas
         layer['out_height'] = int(layer['in_height'] * scale_height)
         layer['out_width'] = int(layer['in_width'] * scale_width)
 
-        output_shape = [layer['n_chan'], layer['out_height'], layer['out_width']]
+        output_shape = [input_shapes[0][0], layer['n_chan'], layer['out_height'], layer['out_width']]
     else:
         raise Exception(f'Parsing "Upsample" with {len(input_shape)}-dimensional tensors is not yet supported.')
 
     layer['algorithm'] = class_object.mode
     layer['align_corners'] = bool(class_object.align_corners)
+
+    return layer, output_shape
+
+
+@pytorch_handler('ConstantPad2d')
+def parse_constantpad2d_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'ConstantPad2d'
+
+    layer = {}
+    layer['class_name'] = 'ZeroPadding2D'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+
+    # PyTorch padding is (left, right, top, bottom)
+    padding = class_object.padding
+    if isinstance(padding, int):
+        pad_left = pad_right = pad_top = pad_bottom = padding
+    elif isinstance(padding, (tuple, list)) and len(padding) == 4:
+        pad_left, pad_right, pad_top, pad_bottom = padding
+    else:
+        raise Exception(f'Unsupported padding format: {padding}')
+
+    layer['pad_left'] = pad_left
+    layer['pad_right'] = pad_right
+    layer['pad_top'] = pad_top
+    layer['pad_bottom'] = pad_bottom
+
+    # Only support zero padding for now
+    pad_value = getattr(class_object, 'value', 0)
+    if pad_value != 0:
+        raise Exception('Only zero padding is supported for ConstantPad2d in hls4ml')
+
+    # Compute output shape
+    batch, channels, height, width = input_shapes[0]
+    out_height = height + pad_top + pad_bottom
+    out_width = width + pad_left + pad_right
+    output_shape = [batch, channels, out_height, out_width]
+
+    # Add required attributes for hls4ml
+    layer['n_chan'] = channels
+    layer['in_height'] = height
+    layer['in_width'] = width
+    layer['out_height'] = out_height
+    layer['out_width'] = out_width
+
+    return layer, output_shape
+
+
+@pytorch_handler('ConstantPad1d')
+def parse_constantpad1d_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'ConstantPad1d'
+
+    layer = {}
+    layer['class_name'] = 'ZeroPadding1D'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+
+    # PyTorch padding is (left, right)
+    padding = class_object.padding
+    if isinstance(padding, int):
+        pad_left = pad_right = padding
+    elif isinstance(padding, (tuple, list)) and len(padding) == 2:
+        pad_left, pad_right = padding
+    else:
+        raise Exception(f'Unsupported padding format: {padding}')
+
+    layer['pad_left'] = pad_left
+    layer['pad_right'] = pad_right
+
+    # Only support zero padding for now
+    pad_value = getattr(class_object, 'value', 0)
+    if pad_value != 0:
+        raise Exception('Only zero padding is supported for ConstantPad1d in hls4ml')
+
+    # Compute output shape
+    batch, channels, width = input_shapes[0]
+    out_width = width + pad_left + pad_right
+    output_shape = [batch, channels, out_width]
+
+    # Add required attributes for hls4ml
+    layer['n_chan'] = channels
+    layer['in_width'] = width
+    layer['out_width'] = out_width
 
     return layer, output_shape

@@ -1,10 +1,10 @@
 """
-    Usage example for a custom KL loss layer
-    Takes as an input two arrays: z_mean and z_log_var
-    and computes KL "distance" between normal distribution
-    and Gaussian with mu=z_mean and sigma=z_log_var
+Usage example for a custom KL loss layer
+Takes as an input two arrays: z_mean and z_log_var
+and computes KL "distance" between normal distribution
+and Gaussian with mu=z_mean and sigma=z_log_var
 
-    The HLS part is in contrib/kl_layer/kl_layer.h
+The HLS part is in contrib/kl_layer/kl_layer.h
 """
 
 from pathlib import Path
@@ -21,7 +21,7 @@ from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import math_ops
 
 import hls4ml
-from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_v2_to_hls import parse_default_keras_layer
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 

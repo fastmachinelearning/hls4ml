@@ -1,6 +1,7 @@
 import glob
 import os
-from shutil import copy
+from pathlib import Path
+from shutil import copy, copyfile
 
 from hls4ml.writer.vivado_writer import VivadoWriter
 
@@ -24,10 +25,52 @@ class VitisWriter(VivadoWriter):
         for h in headers:
             copy(srcpath + h, dstpath + h)
 
+    def write_board_script_override(self, model):
+        '''
+        Write the tcl scripts and kernel sources to create a Vitis IPI
+        '''
+
+        ###################
+        # project.tcl
+        ###################
+
+        prj_tcl_file = Path(f'{model.config.get_output_dir()}/project.tcl')
+        with open(prj_tcl_file) as f:
+            prj_tcl_contents = f.readlines()
+            for line_num, line in enumerate(prj_tcl_contents):
+                if 'set backend' in line:
+                    prj_tcl_contents[line_num] = 'set backend "vitis"\n'
+                if 'set clock_uncertainty' in line:
+                    prj_tcl_contents[line_num] = 'set clock_uncertainty {}\n'.format(
+                        model.config.get_config_value('ClockUncertainty', '27%')
+                    )
+
+        with open(prj_tcl_file, 'w') as f:
+            f.writelines(prj_tcl_contents)
+
+    def write_build_opts(self, model):
+        filedir = Path(__file__).parent
+
+        # build_opt.tcl
+        srcpath = (filedir / '../templates/vitis/build_opt.tcl').resolve()
+        dstpath = f'{model.config.get_output_dir()}/build_opt.tcl'
+        copyfile(srcpath, dstpath)
+
+    def write_build_prj_override(self, model):
+        filedir = Path(__file__).parent
+
+        # build_prj.tcl
+        srcpath = (filedir / '../templates/vitis/build_prj.tcl').resolve()
+        dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
+        copyfile(srcpath, dstpath)
+
     def write_hls(self, model):
         """
         Write the HLS project. Calls the steps from VivadoWriter, adapted for Vitis
         """
         super().write_hls(model)
         self.write_nnet_utils_overrides(model)
+        self.write_board_script_override(model)
+        self.write_build_prj_override(model)
+        self.write_build_opts(model)
         self.write_tar(model)
