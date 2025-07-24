@@ -34,8 +34,8 @@ pub type CommonFxdPoint = FixedPoint<NB_COMMON, EN_COMMON, BU_COMMON>;
 // let w3 = fixed_point::to_common_type<u32:16, u32:10>(w2);
 
 
-// ================================================================
-// ----------------------- Fixed Point Lib ------------------------
+// =============================================================================
+// ----------------------- Required Fixed Point Changes ------------------------
 
 // Returns a FixedPoint that uses a common num bits and binary exponent.
 //

@@ -1,8 +1,11 @@
 # Typing imports
 from __future__ import annotations # makes all annotations into strings
 from typing import List, Any, TYPE_CHECKING
+from numpy.typing import NDArray
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
+    from hls4ml.model.layers import Layer
+    from subprocess import CompletedProcess
 
 import os, sys
 import re
@@ -42,10 +45,10 @@ class XLSBackend(FPGABackend):
         ]
         optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
-        vivado_types = [
-            'xls:transform_types',
-        ]
-        vivado_types_flow: str = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
+        # vivado_types = [
+        #     'xls:transform_types',
+        # ]
+        # vivado_types_flow: str = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
@@ -73,7 +76,6 @@ class XLSBackend(FPGABackend):
             'optimize',
             init_flow,
             optimization_flow,
-            vivado_types_flow,
             template_flow,
         ]
 
@@ -133,13 +135,17 @@ class XLSBackend(FPGABackend):
 
         return config
     
+    def _get_backend_exec_path(self, model: ModelGraph) -> str:
+        if 'linux' in sys.platform:
+            path: str = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
+            if os.path.isdir(path) == 0:
+                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
+        return path
+
     #TODO: this return value conflicts with the expected return value in ModelGraph of compile()
     def compile(self, model: ModelGraph):
 
-        if 'linux' in sys.platform:
-            path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
-            if os.path.isdir(path) == 0:
-                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
+        path = self._get_backend_exec_path(model)
 
         curr_dir = os.getcwd()
         os.chdir(f'{model.config.get_output_dir()}/firmware')
@@ -160,7 +166,6 @@ class XLSBackend(FPGABackend):
                 f'{kernel_name}.x'
             ]
             subprocess.run(gen_cmd, check=True, stdout=ir_file)
-
         ## Optimize IR
         with open(f'{kernel_name}.opt.ir', 'w') as opt_file:
             opt_cmd = [ 
@@ -171,103 +176,134 @@ class XLSBackend(FPGABackend):
 
         os.chdir(curr_dir)
 
-    def predict(self, model: ModelGraph, x):
+    def predict(self, model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]):
 
-        if 'linux' in sys.platform:
-            path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
-            if os.path.isdir(path) == 0:
-                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
-        
-        n_samples = model._compute_n_samples(x)
-        n_inputs = list(list(model.get_layers())[0].get_output_variable().get_shape())[0][1] # Get input dimensions
-        n_outputs = len(model.get_output_variables())
-
-        # extract type info
-        if n_inputs == 1:
-            input_type = x.dtype
-        else:
-            input_type = x[0].dtype
-        
-        output = []
-        if n_samples == 1 and n_inputs == 1:
-            x = [x]
-
-        curr_dir = os.getcwd()
-        os.chdir(f'{model.config.get_output_dir()}/predictions')
-        # write input file
-        scale = 2 ** 10
-        with open(f'input.txt', 'w') as input_file:
+        def _interpret_input(model: ModelGraph, 
+                             path: str, 
+                             x_list: NDArray[np.floating], 
+                             n_samples: int, 
+                             n_inputs: int, 
+                             input_width: int, 
+                             input_frac: int) -> CompletedProcess[str]:
             newline = ''
             for i in range(n_samples):
                 if n_inputs == 1:
-                    inp = [np.asarray(x[i])]
+                    inp = [np.asarray(x_list[i])]
                 else:
-                    inp = [np.asarray(xj) for xj in x[i]]
+                    inp = [np.asarray(xj) for xj in x_list[i]]
                 newline += '['
-                # predictions: list[ndarray[tuple[int], dtype[float64]]] = [np.zeros(yj.size()) for yj in model.get_output_variables()]
-                fxp_x = Fxp(inp, signed=True, n_word=16, n_frac=10).raw() 
+                fxp_x: list = Fxp(inp, signed=True, n_word=input_width, n_frac=input_frac).raw() 
                 if n_inputs == 1:
-                    #TODO: not always 16 bits
-                    newline += f'bits[16]:{fxp_x[0][0]}'
+                    newline += f'bits[{input_width}]:{fxp_x[0][0]}'
                 else:
                     for i, inp in enumerate(fxp_x):
-                        newline += f'bits[16]:{inp}'
+                        newline += f'bits[{input_width}]:{inp}'
                         if i < len(fxp_x) - 1:
                             newline += ','
                 newline += ']\n'
-            input_file.write(newline)
 
-        # predict to output
-        interpret_cmd = [ 
-            f'{path}/xls/tools/eval_ir_main',
-            f'../firmware/{model.config.get_project_name()}.opt.ir',
-            f'--input_file=input.txt'
-        ]
-        result = subprocess.run(interpret_cmd, check=True, stdout=subprocess.PIPE, text=True)
-        
+            # run command
+            interpret_cmd = [ 
+                f'{path}/xls/tools/eval_ir_main',
+                f'../firmware/{model.config.get_project_name()}.opt.ir',
+                f'--input_file=-'
+            ]
+            result = subprocess.run(
+                interpret_cmd,
+                input=newline,        
+                text=True,             
+                check=True,
+                stdout=subprocess.PIPE,
+            )
+            return result
 
-        # extract from output file
-        hex_pat = re.compile(r"0x([0-9A-Fa-f]+)")
-        output_type_pat = re.compile(r"bits\[(\d+)\]")
+        def _format_output(result: CompletedProcess[str]) -> list:
+            hex_pat = re.compile(r"0x([0-9A-Fa-f]+)")
+            output_type_pat = re.compile(r"bits\[(\d+)\]")
 
-        # process output
-        rows = []
-        for line in result.stdout.splitlines():
-            raw_outputs = hex_pat.findall(line)
-            m = output_type_pat.search(line)
-            output_width = int(m.group(1))
-            if not raw_outputs:
-                continue
-            int_outputs = [int(o, 16) for o in raw_outputs]
+            # process output
+            rows = []
+            for line in result.stdout.splitlines():
+                raw_outputs = hex_pat.findall(line)
+                m = output_type_pat.search(line)
+                output_width = int(m.group(1))
+                if not raw_outputs:
+                    continue
+                int_outputs = [int(o, output_width) for o in raw_outputs]
 
-            # signed interpretation w/ 2's complement
-            sign_bit = 1 << (output_width - 1)
-            full_mask = 1 << output_width
-            sint_output = [(v - full_mask) if (v & sign_bit) else v for v in int_outputs]
+                # signed interpretation w/ 2's complement
+                sign_bit = 1 << (output_width - 1)
+                full_mask = 1 << output_width
+                sint_output = [(v - full_mask) if (v & sign_bit) else v for v in int_outputs]
 
-            rows.append([sint_output])
+                rows.append([sint_output])
 
-        # scale back from fixed point
-        output = np.array(rows, dtype=np.int32)
-        output = output.astype(input_type) / scale
-        output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
+            return rows
 
-        os.chdir(curr_dir)
-        if n_samples == 1 and n_outputs == 1:
-            print('A')
-            return output[0][0]
-        elif n_outputs == 1:
-            print(output[0].shape)
-            print('B', output)
-            return output[0]
-        elif n_samples == 1:
-            print('C')
-            return [output_i[0] for output_i in output]
-        else:
-            print('D')
+        def _go_to_original_type(rows: list, 
+                                 n_samples: int, 
+                                 n_outputs: int, 
+                                 python_input_type: np.dtype[np.floating], 
+                                 scale) -> list[NDArray[np.floating]]:
+            output = np.array(rows, dtype=np.int32)
+            output = output.astype(python_input_type) / scale
+            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
             return output
 
+        def _correct_dims(results_floats: list[NDArray[np.floating]], n_samples: int, n_outputs: int) -> list[NDArray[np.floating]]:
+            if n_samples == 1 and n_outputs == 1:
+                return result_floats[0][0]
+            elif n_outputs == 1:
+                return result_floats[0]
+            elif n_samples == 1:
+                return [output_i[0] for output_i in result_floats]
+            else:
+                return result_floats
 
+        path: str = self._get_backend_exec_path(model)
+        layers: list[Layer] = list(model.get_layers())
+
+        # Extract dimensions
+        n_samples: int = model._compute_n_samples(x)
+        n_inputs: int = list(layers[0].get_output_variable().get_shape())[0][1] # Get input dimensions
+        n_outputs: int = len(model.get_output_variables())
+
+        # Extract type
+        input_width: int = list(layers[0].get_layer_precision().items())[0][1].precision.width
+        input_frac: int = input_width - list(layers[0].get_layer_precision().items())[0][1].precision.integer
+        output_width: int = list(layers[len(layers)-1].get_layer_precision().items())[0][1].precision.width
+        output_frac: int = output_width - list(layers[len(layers)-1].get_layer_precision().items())[0][1].precision.integer
+
+        # extract python type (float/double)
+        if isinstance(x, np.ndarray):
+            python_input_type: np.dtype[np.floating] = x[0].dtype
+        else:
+            python_input_type: np.dtype[np.floating]  = x.dtype
+        
+        if n_samples == 1 and n_inputs == 1 and isinstance(x, np.floating):
+            x_list: NDArray[np.floating] = np.array([x], dtype=x.dtype)
+        elif isinstance(x, np.ndarray): 
+            x_list: NDArray[np.floating] = x
+
+        # Change dirs
+        curr_dir = os.getcwd()
+        os.chdir(f'{model.config.get_output_dir()}/predictions')
+
+        # Result processing pipeling
+        result = _interpret_input(model, path, x_list, n_samples, n_inputs, input_width, input_frac)
+        os.chdir(curr_dir)
+        result_formatted = _format_output(result)
+        result_floats: list[NDArray[np.floating]] = _go_to_original_type(result_formatted, 
+            n_samples, 
+            n_outputs, 
+            python_input_type, 
+            scale=2 ** output_frac
+        )
+        result_corrected_dims: list[NDArray[np.floating]] = _correct_dims(result_floats, n_samples, n_outputs)
+        return result_corrected_dims
+
+
+    #TODO: use the other flags
     def build(
         self,
         model,
@@ -279,104 +315,29 @@ class XLSBackend(FPGABackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
+        codegen_flags='--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps=5000 --reset=reset',
     ):
-        # TODO: include vivado & understand exactly what this does
-        # TODO: Use the real config
-        config = {
-            'output_dir': 'build',
-            'workspace_path': '$HOME/workspace/xls4nn',
-            'xls_bazel_bin_path': '$HOME/xls/bazel-bin',
-            'kernel_name': 'proc_jet_tagging_dense',
-            'codegen_flags': '--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps=5000 --pipeline_stages=2 --reset=reset'
-        }
-
+        print("IN BUILD!")
         if 'linux' in sys.platform:
-            workspace = os.path.expandvars(config['workspace_path'])
-            path = os.path.expandvars(config['xls_bazel_bin_path'])
+            path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
             if os.path.isdir(path) == 0:
                 raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
 
         curr_dir = os.getcwd()
-        os.chdir(config['output_dir'])
-        kernel_name = config['kernel_name']
-
-        ## Run interpreter
-        interpreter_cmd = [ 
-            f'{path}/xls/dslx/interpreter_main',
-            f'{workspace}/kernels/end2end/{kernel_name}.x'
-        ]
-        subprocess.run(interpreter_cmd, check=True)
-
-        ## Generate IR
-        with open(f'{kernel_name}.ir', 'w') as ir_file:
-            gen_cmd = [ 
-                f'{path}/xls/dslx/ir_convert/ir_converter_main',
-                f'--top={kernel_name}',
-                f'{workspace}/kernels/end2end/{kernel_name}.x'
-            ]
-            subprocess.run(gen_cmd, check=True, stdout=ir_file)
-
-        ## Optimize IR
-        with open(f'{kernel_name}.opt.ir', 'w') as opt_file:
-            opt_cmd = [ 
-                f'{path}/xls/tools/opt_main',
-                f'{kernel_name}.ir'
-            ]
-            subprocess.run(opt_cmd, check=True, stdout=opt_file)
+        os.chdir(f'{model.config.get_output_dir()}/firmware')
+        kernel_name = model.config.get_project_name()
 
         ## Generate RTL
-        with open(f'{kernel_name}.sv', 'w') as opt_file:
-            flags = shlex.split(config["codegen_flags"])
-            rtl_cmd = [ 
+        with open(f'{kernel_name}.sv', 'w') as synth_file:
+            flags = shlex.split(codegen_flags)
+            synth_cmd = [ 
                 f'{path}/xls/tools/codegen_main',
                 *flags,
                 f'{kernel_name}.opt.ir',
             ]
-            subprocess.run(rtl_cmd, check=True, stdout=opt_file)
+            subprocess.run(synth_cmd, check=True, stdout=synth_file)
 
         os.chdir(curr_dir)
 
         #TODO: return parsed report
         # return parse_vivado_report(model.config.get_output_dir())
-
-    # TODO: What do the layer optimizers achieve?
-    # @layer_optimizer(Layer)
-    # def init_base_layer(self, layer):
-    #     reuse_factor = layer.model.config.get_reuse_factor(layer)
-    #     layer.set_attr('reuse_factor', reuse_factor)
-
-    #     target_cycles = layer.model.config.get_target_cycles(layer)
-    #     layer.set_attr('target_cycles', target_cycles)
-
-    # @layer_optimizer(Dense)
-    # def init_dense(self, layer):
-    #     index_t = IntegerPrecisionType(width=1, signed=False)
-    #     compression = layer.model.config.get_compression(layer)
-    #     if layer.model.config.is_resource_strategy(layer):
-    #         n_in, n_out = self.get_layer_mult_size(layer)
-    #         self.set_target_reuse_factor(layer)
-    #         self.set_closest_reuse_factor(layer, n_in, n_out)
-    #         if compression:
-    #             layer.set_attr('strategy', 'compressed')
-    #             index_t = layer.get_weights('weight').type.index_precision
-    #         else:
-    #             layer.set_attr('strategy', 'resource')
-    #     elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
-    #         use_resource_instead = False
-    #         if layer.get_attr('reuse_factor', 1) == 1:
-    #             print(
-    #                 f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
-    #                 'Using "resource" strategy instead.'
-    #             )
-    #             use_resource_instead = True
-    #         n_in, n_out = self.get_layer_mult_size(layer)
-    #         self.set_target_reuse_factor(layer)
-    #         if use_resource_instead:
-    #             self.set_closest_reuse_factor(layer, n_in, n_out)
-    #             layer.set_attr('strategy', 'resource')
-    #         else:
-    #             self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
-    #             layer.set_attr('strategy', 'resource_unrolled')
-    #     else:
-    #         layer.set_attr('strategy', 'latency')
-    #     layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))

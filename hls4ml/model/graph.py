@@ -859,7 +859,7 @@ class ModelGraph(Serializable):
 
         return top_function, ctype
 
-    def _compute_n_samples(self, x):
+    def _compute_n_samples(self, x) -> int:
         if len(self.get_input_variables()) == 1:
             xlist = [x]
         else:

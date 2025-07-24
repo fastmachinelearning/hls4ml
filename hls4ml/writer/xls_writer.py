@@ -68,19 +68,25 @@ class XLSLayerConfigBuilder:
     def out_dim_val(self, v: int):
         self._kw["out_dim_val"] = v; 
         return self
-    def fxp_weights(self, weights, out_dim, in_dim):
+    def fxp_weights(self, weights, precisions, out_dim, in_dim):
+        #TODO: check which element in the precision array should we take Currently we assume the precision of weights is the first elem.
+        width = list(precisions.items())[0][1].precision.width
+        frac = width - list(precisions.items())[0][1].precision.integer
         for w in weights:
             if (len(list(w)) == out_dim*in_dim):
                 mat = np.array(list(w)).reshape(in_dim, out_dim)
                 mat_T = mat.T   # in Keras the weights are transposed
-                fxp_w = Fxp(mat_T, signed=True, n_word=16, n_frac=10).raw()
+                fxp_w = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
                 self._kw["fxp_weights"] = fxp_w 
                 return self
         return self
-    def fxp_bias(self, weights, out_dim):
+    def fxp_bias(self, weights, precisions, out_dim):
+        #TODO: check which element in the precision array should we take Currently we assume the precision of weights is the first elem.
+        width = list(precisions.items())[0][1].precision.width
+        frac = width - list(precisions.items())[0][1].precision.integer
         for w in weights:
             if (len(list(w)) == out_dim):
-                fxp_b = Fxp(list(w), signed=True, n_word=16, n_frac=10).raw()
+                fxp_b = Fxp(list(w), signed=True, n_word=width, n_frac=frac).raw()
                 self._kw["fxp_bias"] = fxp_b
         return self
     def in_nb(self, prev_layer_precision): # TODO: right now we only care about the first defined type in the list
@@ -162,8 +168,8 @@ class XLSLayerConfigBuilder:
                 .out_nb(layer.get_layer_precision())
                 .out_en()
                 .out_bu(layer.get_layer_precision())
-                .fxp_weights(layer.get_weights(), out_dim=cur_out_dim_val, in_dim=prev_out_dim_val)
-                .fxp_bias(layer.get_weights(), out_dim=cur_out_dim_val)
+                .fxp_weights(layer.get_weights(), layer.get_layer_precision(), out_dim=cur_out_dim_val, in_dim=prev_out_dim_val)
+                .fxp_bias(layer.get_weights(), layer.get_layer_precision(), out_dim=cur_out_dim_val)
                 .build()
             )
             xls_layers.append(new_layer)
@@ -254,14 +260,14 @@ class XLSWriter(Writer):
                 for i, layer in enumerate(xls_layers):
                     next_layer = xls_layers[i + 1] if i < len(xls_layers) - 1 else None
                     if layer.class_name == 'Dense' and (next_layer is not None and next_layer.class_name == 'Activation'):
-                        if prev_var is '':
+                        if prev_var == '':
                             newline += indent + f'let z{i} = multi_dense_fxd::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>(x, w{i}, b{i});\n'
                             prev_var = f'z{i}'
                         else:
                             newline += indent + f'let z{i} = multi_dense_fxd::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
                             prev_var = f'z{i}'
                     if layer.class_name == 'Dense' and (next_layer is not None and next_layer.class_name == 'Softmax'):
-                        if prev_var is '':
+                        if prev_var == '':
                             newline += indent + f'let y{i} = multi_dense_fxd::dense<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>(x, w{i}, b{i});\n'
                             prev_var = f'y{i}'
                         else:
@@ -400,9 +406,6 @@ class XLSWriter(Writer):
         builder = XLSLayerConfigBuilder()
         xls_layers: list[XLSLayerConfig] = builder.build_xls_layers(model)
 
-        print('Writing HLS project')
         self.write_project_dir(model)
         self.write_project_dslx(model, xls_layers)
         self.write_nnet_utils(model)
-
-        print('Done writing')
