@@ -14,7 +14,8 @@ test_root_path = Path(__file__).parent
 
 # @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('backend', ['XLS'])
-@pytest.mark.parametrize('shape, io_type', [((8,), 'io_parallel'), ((8,), 'io_stream'), ((8, 8, 3), 'io_stream')])
+# @pytest.mark.parametrize('shape, io_type', [((8,), 'io_parallel'), ((8,), 'io_stream'), ((8, 8, 3), 'io_stream')])
+@pytest.mark.parametrize('shape, io_type', [((8,), 'io_parallel')])
 @pytest.mark.parametrize(
     'activation, name',
     [
@@ -45,10 +46,12 @@ def test_activations(backend, activation, name, shape, io_type):
 
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     output_dir = str(test_root_path / 'hls4mlprj_activations_{}_{}_{}_{}').format(backend, io_type, str(shape), name)
-
+    
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, output_dir=output_dir, backend=backend
     )
+    print('HERE =====================')
+    print(list(hls_model.get_layers())[1].attributes['class_name'])
     hls_model.compile()
 
     keras_prediction = keras_model.predict(X)

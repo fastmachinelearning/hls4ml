@@ -176,7 +176,7 @@ class XLSBackend(FPGABackend):
 
         os.chdir(curr_dir)
 
-    def predict(self, model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]):
+    def predict(self, model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> list[NDArray[np.floating]]:
 
         def _interpret_input(model: ModelGraph, 
                              path: str, 

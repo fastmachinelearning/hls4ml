@@ -34,8 +34,8 @@ pub type CommonFxdPoint = FixedPoint<NB_COMMON, EN_COMMON, BU_COMMON>;
 // let w3 = fixed_point::to_common_type<u32:16, u32:10>(w2);
 
 
-// =============================================================================
-// ----------------------- Required Fixed Point Changes ------------------------
+// ================================================================
+// ----------------------- Fixed Point Lib ------------------------
 
 // Returns a FixedPoint that uses a common num bits and binary exponent.
 //
@@ -227,14 +227,23 @@ fn dot_prod
 // // ----------------------- NN Implementation ----------------------
 
 pub fn relu
-    <NB: u32, EN: u32, BU: u32, 
-    BE: s32 = {fixed_point::binary_exponent(EN, BU)}>
+    <NB: u32>
     (fxd_x: sN[NB]) -> sN[NB] {
     
     if (fxd_x > sN[NB]:0) 
         { fxd_x } 
     else 
         { sN[NB]:0 }
+} 
+
+pub fn relu_activation
+    <NB: u32, VEC_SZ: u32>
+    (y: sN[NB][VEC_SZ]) -> sN[NB][VEC_SZ] {
+    
+    for (i, z): (u32, sN[NB][VEC_SZ]) in u32:0..VEC_SZ {
+        let with_relu = relu<NB>(y[i]);
+        update(z, i, with_relu)
+    }(y) 
 } 
 
 pub fn argmax
@@ -332,7 +341,7 @@ pub fn dense_relu
         let vec_prod  = dot_prod<NB_IN, EN_IN, BU_IN, NB_IN, EN_IN, BU_IN>(x, W[i]);
         let with_bias = add<NB_DOT_PROD, EN_DOT_PROD, BU_DOT_PROD, NB_IN, EN_IN, BU_IN>(vec_prod, bias[i]);
         let with_bias_common = to_common_type<NB_OUT, BU_OUT, NB_BIAS, EN_BIAS, BU_BIAS>(with_bias);
-        let with_relu = relu<NB_OUT, EN_OUT, BU_OUT>(with_bias_common);
+        let with_relu = relu<NB_OUT>(with_bias_common);
         update(z, i, with_relu)
     }(sN[NB_OUT][COLS]:[sN[NB_OUT]:0, ...]) 
 }
@@ -442,6 +451,47 @@ fn argmax_test() {
         sN[NB_COMMON]:0,
     ];  
     assert_eq(expected, argmax<NB_COMMON, u32:1, u32:10>(x));
+}
+
+#[test]
+fn relu_activation_test() {
+    let x = sN[NB_COMMON][2]:[
+        sN[NB_COMMON]:1536, 
+        sN[NB_COMMON]:1024
+    ]; 
+    let expected = sN[NB_COMMON][2]:[
+        sN[NB_COMMON]:1536, 
+        sN[NB_COMMON]:1024
+    ];  
+    assert_eq(expected, relu_activation<NB_COMMON>(x));
+
+    let x = sN[NB_COMMON][4]:[
+        sN[NB_COMMON]:-1536, 
+        sN[NB_COMMON]:-1024,
+        sN[NB_COMMON]:0,
+        sN[NB_COMMON]:-1024
+    ]; 
+    let expected = sN[NB_COMMON][4]:[
+        sN[NB_COMMON]:0, 
+        sN[NB_COMMON]:0,
+        sN[NB_COMMON]:0,
+        sN[NB_COMMON]:0,
+    ];  
+    assert_eq(expected, relu_activation<NB_COMMON>(x));
+
+    let x = sN[NB_COMMON][4]:[
+        sN[NB_COMMON]:-1536, 
+        sN[NB_COMMON]:-1024,
+        sN[NB_COMMON]:1024,
+        sN[NB_COMMON]:-1024
+    ]; 
+    let expected = sN[NB_COMMON][4]:[
+        sN[NB_COMMON]:0, 
+        sN[NB_COMMON]:0,
+        sN[NB_COMMON]:1024,
+        sN[NB_COMMON]:0,
+    ];  
+    assert_eq(expected, relu_activation<NB_COMMON>(x));
 }
 
 #[test]
