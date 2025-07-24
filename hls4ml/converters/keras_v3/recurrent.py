@@ -1,6 +1,8 @@
 import typing
 from collections.abc import Sequence
 
+from hls4ml.converters.keras.recurrent import parse_rnn_layer
+
 from ._base import KerasV3LayerHandler, register
 
 if typing.TYPE_CHECKING:
@@ -9,6 +11,48 @@ if typing.TYPE_CHECKING:
 
 rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
 weight_dict = {'kernel': 'weight', 'recurrent_kernel': 'recurrent_weight', 'bias': 'bias'}
+
+
+@register
+class RecurentHandler(KerasV3LayerHandler):
+    handles = (
+        'keras.src.layers.rnn.simple_rnn.SimpleRNN',
+        'keras.src.layers.rnn.lstm.LSTM',
+        'keras.src.layers.rnn.gru.GRU',
+    )
+
+    def handle(
+        self,
+        layer: 'keras.layers.SimpleRNN|keras.layers.LSTM|keras.layers.GRU',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        import numpy as np
+
+        layer_config = layer.get_config()
+        layer_dict = {'config': layer_config, 'class_name': layer.__class__.__name__}
+        module = layer.__module__
+
+        class IsolatedLayerReader:
+            def get_weights_data(self, layer_name, var_name):
+                assert layer_name == layer.name, f'Processing {layer.name}, but handler tried to read {layer_name}'
+                for w in layer.weights:
+                    if var_name in w.name:
+                        return np.array(w)
+                return None
+
+        reader = IsolatedLayerReader()
+        input_shapes = [list(t.shape) for t in in_tensors]
+        input_names = [t.name for t in in_tensors]
+        output_names = [t.name for t in out_tensors]
+
+        config, _ = parse_rnn_layer(layer_dict, input_names, input_shapes, reader)
+        config['module'] = module
+        config['input_keras_tensor_names'] = input_names
+        config['input_shape'] = input_shapes
+        config['output_keras_tensor_names'] = output_names
+
+        return (config,)
 
 
 @register
