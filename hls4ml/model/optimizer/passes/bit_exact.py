@@ -133,6 +133,30 @@ def _(layer: Reshape):
 @_request_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes.get('activation')
+
+    if layer.attributes.get('trusted', False):
+        result_t = layer.get_output_variable().type.precision
+        if fn_name in ('linear', 'relu'):
+            output_shape = get_output_shape(layer)
+            k, w, f = result_t.signed, result_t.width, result_t.fractional
+            i = w - k - f
+            k = np.full(output_shape, k, dtype=np.int8)
+            i = np.full(output_shape, i, dtype=np.int8)
+            f = np.full(output_shape, f, dtype=np.int8)
+            if result_t.rounding_mode == RoundingMode.RND:
+                f += 1
+            elif result_t.rounding_mode != RoundingMode.TRN:
+                f = np.full(output_shape, 126, dtype=np.int8)
+            if result_t.saturation_mode != SaturationMode.WRAP:
+                k = np.ones(output_shape, dtype=np.int8)
+                i = np.full(output_shape, 126, dtype=np.int8)
+            if fn_name == 'linear':
+                return ((k, i, f),)
+            else:
+                k = np.ones(output_shape, dtype=np.int8)
+                i = np.full(output_shape, 126, dtype=np.int8)
+                return ((k, i, f),)
+
     if fn_name == 'linear':
         return (requested_kif(layer),)
     if fn_name == 'relu':
@@ -531,6 +555,16 @@ def _(layer: Concatenate):
 @_produce_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes['activation'].lower()
+    if layer.attributes.get('trusted', False):
+        output_shape = get_output_shape(layer)
+        result_t = layer.get_output_variable().type.precision
+        k, w, f = result_t.signed, result_t.width, result_t.fractional
+        i = w - k - f
+        k = np.full(output_shape, k, dtype=np.int8)
+        i = np.full(output_shape, i, dtype=np.int8)
+        f = np.full(output_shape, f, dtype=np.int8)
+        return k, i, f
+
     k, i, f = get_input_kifs(layer)[0]
 
     match fn_name:
@@ -603,6 +637,10 @@ def requested_by_non_saturating_quantizer(layer: Layer) -> bool:
 
 
 def default_register_precision(layer: Layer):
+    if layer.attributes.get('trusted', False):
+        # Trusted layers have their precision already set
+        return
+
     _pk, _pi, _pf = produce_kif(layer)  # Maximum possible k,i,f output from this layer
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
     _oi, _of = np.minimum(_pi, _ri), np.minimum(_pf, _rf)
@@ -791,7 +829,11 @@ class BitExact(ModelOptimizerPass):
         return True
 
     def _match(self, model: 'ModelGraph'):
-        return self.has_fixed_quantizer(model)
+        enabled = model.config.config['HLSConfig']['Model'].get('BitExact', None)
+        if enabled is None:
+            # Enable by default if any FixedPointQuantizer is present
+            enabled = self.has_fixed_quantizer(model)
+        return enabled
 
     def transform(self, model: 'ModelGraph'):
         if not self._match(model):
