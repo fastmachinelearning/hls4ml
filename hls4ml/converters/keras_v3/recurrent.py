@@ -31,7 +31,6 @@ class RecurentHandler(KerasV3LayerHandler):
 
         layer_config = layer.get_config()
         layer_dict = {'config': layer_config, 'class_name': layer.__class__.__name__}
-        module = layer.__module__
 
         class IsolatedLayerReader:
             def get_weights_data(self, layer_name, var_name):
@@ -44,13 +43,11 @@ class RecurentHandler(KerasV3LayerHandler):
         reader = IsolatedLayerReader()
         input_shapes = [list(t.shape) for t in in_tensors]
         input_names = [t.name for t in in_tensors]
-        output_names = [t.name for t in out_tensors]
 
-        config, _ = parse_rnn_layer(layer_dict, input_names, input_shapes, reader)
-        config['module'] = module
-        config['input_keras_tensor_names'] = input_names
-        config['input_shape'] = input_shapes
-        config['output_keras_tensor_names'] = output_names
+        config = {}
+        config.update(self.default_config)
+        layer_config, _ = parse_rnn_layer(layer_dict, input_names, input_shapes, reader)
+        config.update(layer_config)
 
         return (config,)
 
