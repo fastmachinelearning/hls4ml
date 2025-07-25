@@ -126,6 +126,7 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
     static constexpr int full_padded_width = CONFIG_T::n_in + CONFIG_T::pad_left + CONFIG_T::pad_right;
     static constexpr int restricted_padded_width =
         (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
+
 FiltLoop:
     #pragma unroll
     #pragma disable_loop_pipelining
@@ -226,6 +227,7 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
         (full_padded_width - CONFIG_T::pool_width) / CONFIG_T::stride_width * CONFIG_T::stride_width + 1;
     static constexpr int restricted_padded_height =
         (full_padded_height - CONFIG_T::pool_height) / CONFIG_T::stride_height * CONFIG_T::stride_height + 1;
+
 FiltLoop:
     #pragma unroll
     #pragma disable_loop_pipelining

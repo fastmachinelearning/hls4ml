@@ -146,17 +146,19 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         params = self._default_config_params(node)
+        in_0, in_1 = map(str, node.get_input_variable().shape[:2])
 
-        params['n_in'] = node.get_input_variable().dim_names[1]
-        params['n_sequence'] = node.get_input_variable().dim_names[0]
+        params['n_in'] = in_1
+        params['n_sequence'] = in_0
         if node.get_attr('return_sequences'):
-            params['n_sequence_out'] = node.get_output_variable().dim_names[0]
-            params['n_state'] = node.get_output_variable().dim_names[1]
-            params['n_out'] = node.get_output_variable().dim_names[1]
+            out_0, out_1 = map(str, node.get_output_variable().shape[:2])
+            params['n_sequence_out'] = out_0
+            params['n_state'] = out_1
+            params['n_out'] = out_1
         else:
             params['n_sequence_out'] = 1
-            params['n_state'] = node.get_output_variable().dim_names[0]
-            params['n_out'] = node.get_output_variable().dim_names[0]
+            params['n_state'] = params['n_out'] = str(node.get_output_variable().shape[0])
+
         params['config_mult_t1'] = f'config{node.index}_1'
         params['config_mult_t2'] = f'config{node.index}_2'
         params['recr_act_t'] = '{}_config{}_recr'.format(node.get_attr('recurrent_activation'), node.index)

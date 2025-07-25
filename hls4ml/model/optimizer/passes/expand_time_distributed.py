@@ -28,9 +28,7 @@ class ExpandTimeDistributed(OptimizerPass):
 
         # Replace the current node's output shape to one time step (the input to the wrapped layer)
         new_output_shape = node.get_input_variable().shape[1:]
-        new_output_dims = [dim.replace('OUT_', 'IN_') for dim in output_var.dim_names[1:]]
         output_var.shape = new_output_shape
-        output_var.dim_names = new_output_dims
 
         # Insert the node into the graph after existing TimeDistributed layer
         # (which should pick up the input shape as one time step)
