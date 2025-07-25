@@ -49,3 +49,41 @@ class ValidateResourceUnrolledStrategy(OptimizerPass):
             f'WARNING: "ResourceUnrolled" strategy in "{node.name}" ({node.class_name}) may have unexpected II in'
             'Vitis backend.\nVerify that the final design satisfies the latency/II constraints.'
         )
+
+
+class ValidateBidirectionalMergeMode(OptimizerPass):
+    _unrolled_layer_cls = ['Bidirectional']
+
+    def match(self, node):
+        is_bidirectional_rnn_layer = (
+            len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
+        )
+        is_merge_mode_not_concat = node.get_attr('merge_mode', 'concat') != 'concat'
+
+        return is_bidirectional_rnn_layer and is_merge_mode_not_concat
+
+    def transform(self, model, node):
+        merge_mode = node.get_attr('merge_mode', 'concat')
+        print(
+            f'WARNING: "{merge_mode}" merge mode in "{node.name}" ({node.class_name}) is not supported in Vitis backend. '
+            'Switching to "concat" merge mode.'
+        )
+        node.set_attr('merge_mode', 'concat')
+
+
+class ValidateBidirectionalIoType(OptimizerPass):
+    _unrolled_layer_cls = ['Bidirectional']
+
+    def match(self, node):
+        is_bidirectional_rnn_layer = (
+            len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
+        )
+        is_layer_io_type_stream = node.model.config.config['IOType'] != 'io_parallel'
+
+        return is_bidirectional_rnn_layer and is_layer_io_type_stream
+
+    def transform(self, model, node):
+        raise Exception(
+            f'WARNING: "{node.model.config.config["IOType"]}" IO Type is not supported in Vitis backend '
+            f'for "{node.name}" ({node.class_name}). Please use "io_parallel".'
+        )

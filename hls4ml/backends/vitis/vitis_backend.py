@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
@@ -27,6 +28,8 @@ class VitisBackend(VivadoBackend):
             'vitis:validate_conv_implementation',
             'vitis:validate_resource_strategy',
             'vitis:validate_resource_unrolled_strategy',
+            'vitis:validate_bidirectional_merge_mode',
+            'vitis:validate_bidirectional_io_type',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
 
@@ -111,23 +114,28 @@ class VitisBackend(VivadoBackend):
         log_to_stdout=True,
     ):
         if 'linux' in sys.platform:
-            found = os.system('command -v vitis_hls > /dev/null')
-            if found != 0:
-                raise Exception('Vitis HLS installation not found. Make sure "vitis_hls" is on PATH.')
+            found_vrun = os.system('command -v vitis-run > /dev/null') == 0
+            if not found_vrun:
+                raise Exception('Vitis installation not found. Make sure "vitis-run" is on PATH.')
 
-        build_command = (
-            'vitis_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-            'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
-        ).format(
-            reset=reset,
-            csim=csim,
-            synth=synth,
-            cosim=cosim,
-            validation=validation,
-            export=export,
-            vsynth=vsynth,
-            fifo_opt=fifo_opt,
+        build_opts = (
+            'array set opt {\n'
+            f'    reset      {int(reset)}\n'
+            f'    csim       {int(csim)}\n'
+            f'    synth      {int(synth)}\n'
+            f'    cosim      {int(cosim)}\n'
+            f'    validation {int(validation)}\n'
+            f'    export     {int(export)}\n'
+            f'    vsynth     {int(vsynth)}\n'
+            f'    fifo_opt   {int(fifo_opt)}\n'
+            '}\n'
         )
+
+        tcl_path = Path(model.config.get_output_dir()) / 'build_opt.tcl'
+        with open(tcl_path, 'w') as file:
+            file.write(build_opts)
+
+        build_command = 'vitis-run --tcl build_prj.tcl'
 
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
