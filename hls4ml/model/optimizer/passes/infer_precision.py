@@ -606,9 +606,17 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         # For threshold relu, set the parameter precision to be the input precision by default;
         # for other parametrized activations, just allow the default precision to be used.
         # Can override these values in the configuration by explicitly setting them.
-        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'thresholdedrelu':
-            in_type = node.get_input_variable().type.precision
-            node.attributes['param_t'].precision = in_type
+        if 'param_t' in types_to_infer:
+            if node.get_attr('activation').lower() == 'thresholdedrelu':
+                # For threshold relu, set the parameter precision to be the input precision by default;
+                in_type = node.get_input_variable().type.precision
+                node.attributes['param_t'].precision = in_type
+                inferred_types.append('param_t')
+            else:
+                # find a constant to represent the values
+                param = node.get_attr('activ_param')
+                precision = _get_precision_from_constant(param)
+                node.attributes['param_t'].precision = precision
             inferred_types.append('param_t')
 
         return inferred_types
@@ -627,3 +635,30 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('param_t')
 
         return inferred_types
+
+
+def _get_precision_from_constant(value: int | float, max_width=8):
+    """A utility function to find a fixed type to store the constant
+
+    Arguments:
+        value (int or float): the constant value
+        max_width (int, optional): the maximum fixed width (+ 1 if signed). Defaults to 8
+
+    Returns:
+        FixedPrecisionType: the type to use
+    """
+    if value == 0:
+        return FixedPrecisionType(width=1, integer=1, signed=False)
+
+    signed = value < 0
+    absval = abs(value)
+    # check if power of 2
+    mantissa, exp = np.frexp(absval)
+    ispo2 = mantissa == 0.5
+    if ispo2:
+        # One could consider returning an ExponentPrecisionType here.
+        # Decided on FixedPrecisionType everywhere since ExponentPrecisionType is less supported
+        return FixedPrecisionType(1 + signed, exp, signed)
+
+    # now is the general case. Let's just use the max value for now
+    return FixedPrecisionType(signed + max_width, signed + exp, signed)
