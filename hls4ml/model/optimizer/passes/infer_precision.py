@@ -2,6 +2,7 @@ import math
 from collections.abc import Iterable
 
 import numpy as np
+from fxpmath import Fxp
 
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
 from hls4ml.model.types import (
@@ -567,39 +568,6 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         return inferred_types
 
-    # def _infer_const_precision(self, node, type_to_infer, attr_name):
-    #     inferred_types = []
-
-    #     def get_man_exp(f):
-    #         f = np.abs(f)
-    #         s = struct.pack('>f', f)
-    #         l_float = struct.unpack('>l', s)[0]
-    #         bits = f'{l_float:032b}'
-    #         m = bits[-23:]
-    #         e = bits[-23 - 8 : -23]
-    #         return m, e
-
-    #     param = node.get_attr(attr_name)
-    #     m, e = get_man_exp(param)
-    #     I_pos = int(e, 2) - 127 + 1  # -127 is the bias of the exponent
-    #     try:
-    #         # + 1 for accounting the index starting from 0, +1 for the leading 1 of the exponent
-    #         W_bits = m.rindex('1') + 2
-    #     except Exception:
-    #         W_bits = 1  # the value is a power of 2, 1 bit is needed, I_pos will offset the bit in the proper place
-    #     if param < 0 and W_bits > 1:  # for po2 values the increment is not needed
-    #         I_pos += 1
-    #         W_bits += 1
-    #     node.attributes[type_to_infer].precision = FixedPrecisionType(W_bits, I_pos, True if param < 0 else False)
-    #     inferred_types.append(type_to_infer)
-    #     return inferred_types
-
-    # def _infer_par_act_precision(self, node, types_to_infer):
-    #     inferred_types = []
-    #     if 'param_t' in types_to_infer:
-    #         inferred_types.extend(self._infer_const_precision(node, 'param_t', 'activ_param'))
-    #     return inferred_types
-
     def _infer_par_act_precision(self, node, types_to_infer):
         inferred_types = []
 
@@ -654,11 +622,14 @@ def _get_precision_from_constant(value: int | float, max_width=8):
     absval = abs(value)
     # check if power of 2
     mantissa, exp = np.frexp(absval)
-    ispo2 = mantissa == 0.5
-    if ispo2:
+    if mantissa == 0.5:  # is it a power of 2?
         # One could consider returning an ExponentPrecisionType here.
         # Decided on FixedPrecisionType everywhere since ExponentPrecisionType is less supported
         return FixedPrecisionType(1 + signed, exp, signed)
 
-    # now is the general case. Let's just use the max value for now
+    # now is the general case. First try Fxp
+    fxpval = Fxp(value, signed=signed)
+    if isinstance(fxpval.n_word, int) and fxpval.n_word <= max_width:
+        return FixedPrecisionType(fxpval.n_word, signed + fxpval.n_int, signed)
+
     return FixedPrecisionType(signed + max_width, signed + exp, signed)
