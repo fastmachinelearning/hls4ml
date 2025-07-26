@@ -1132,6 +1132,31 @@ class ApplyAlpha(BatchNormalization):
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer, precision=precision)
 
 
+class LayerNormalization(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('seq_len'),
+        Attribute('axis', value_type=int, default=2),
+        Attribute('epsilon_power_of_10', value_type=int, default=3),
+        WeightAttribute('scale'),
+        WeightAttribute('bias'),
+        TypeAttribute('scale'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+        scale = self.get_attr('gamma_data')
+        bias = self.get_attr('beta_data')
+
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+
+
 class Merge(Layer):
     def initialize(self):
         assert len(self.inputs) == 2
@@ -1902,6 +1927,7 @@ layer_map = {
     'BatchNormOnnx': BatchNormOnnx,
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
+    'LayerNormalization': LayerNormalization,
     'EinsumDense': EinsumDense,
     'Einsum': Einsum,
     # TensorFlow-specific layers:
