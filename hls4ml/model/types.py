@@ -270,7 +270,7 @@ class FixedPrecisionType(PrecisionType):
 
     @property
     def max(self):
-        return 2.0 ** (self.integer - 1) - 2.0**-self.fractional
+        return 2.0 ** (self.integer - self.signed) - 2.0**-self.fractional
 
 
 class XnorPrecisionType(PrecisionType):
