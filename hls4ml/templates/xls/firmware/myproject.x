@@ -1,4 +1,5 @@
-import nnet_utils.multi_dense_fxd;
+import nnet_utils.activations;
+import nnet_utils.fc;
 
 // hls-fpga-machine-learning debugging
 

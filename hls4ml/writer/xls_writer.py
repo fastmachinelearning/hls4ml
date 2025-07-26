@@ -261,19 +261,19 @@ class XLSWriter(Writer):
                 for i, layer in enumerate(xls_layers):
                     next_layer = xls_layers[i + 1] if i < len(xls_layers) - 1 else None
                     if layer.class_name == 'Dense' and (next_layer is not None and next_layer.class_name == 'Activation'):
-                            newline += indent + f'let z{i} = multi_dense_fxd::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
+                            newline += indent + f'let z{i} = fc::dense_relu<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
                             prev_var = f'z{i}'
                             prev_layer = layer
                     if layer.class_name == 'Dense' and (next_layer is not None and next_layer.class_name == 'Softmax'):
-                            newline += indent + f'let y{i} = multi_dense_fxd::dense<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
+                            newline += indent + f'let y{i} = fc::dense<{layer.in_nb}, {layer.in_en}, {layer.in_bu}, {layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var}, w{i}, b{i});\n'
                             prev_var = f'y{i}'
                             prev_layer = layer
                     if layer.class_name == 'Activation' and (prev_layer is not None and prev_layer.class_name != 'Dense'):
-                        newline += indent + f'let z{i} = multi_dense_fxd::relu_activation<{layer.out_nb}>({prev_var});\n'
+                        newline += indent + f'let z{i} = activations::relu<{layer.out_nb}>({prev_var});\n'
                         prev_var = f'z{i}'
                         prev_layer = layer
                     if layer.class_name == 'Softmax':
-                        newline += indent + f'let z{i} = multi_dense_fxd::argmax<{layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var});\n'
+                        newline += indent + f'let z{i} = activations::argmax<{layer.out_nb}, {layer.out_en}, {layer.out_bu}>({prev_var});\n'
                         prev_var = f'z{i}'
                         prev_layer = layer
 

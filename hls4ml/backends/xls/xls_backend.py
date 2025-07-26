@@ -151,13 +151,6 @@ class XLSBackend(FPGABackend):
         os.chdir(f'{model.config.get_output_dir()}/firmware')
         kernel_name = model.config.get_project_name()
 
-        # ## Run interpreter
-        # interpreter_cmd = [ 
-        #     f'{path}/xls/dslx/interpreter_main',
-        #     f'{kernel_name}.x'
-        # ]
-        # subprocess.run(interpreter_cmd, check=True)
-
         ## Generate IR
         with open(f'{kernel_name}.ir', 'w') as ir_file:
             gen_cmd = [ 
@@ -315,9 +308,8 @@ class XLSBackend(FPGABackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
-        codegen_flags='--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps=5000 --reset=reset',
+        codegen_flags='--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps=100 --reset=reset',
     ):
-        print("IN BUILD!")
         if 'linux' in sys.platform:
             path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
             if os.path.isdir(path) == 0:
