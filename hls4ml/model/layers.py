@@ -1501,21 +1501,18 @@ class Bidirectional(Layer):
     def initialize(self):
         if self.attributes['return_sequences']:
             shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
-            dims = [f'N_TIME_STEPS_{self.index}', f'N_OUT_{self.index}']
         else:
             shape = [self.attributes['n_out']]
-            dims = [f'N_OUT_{self.index}']
 
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape)
 
         if self.attributes['return_state']:
             state_shape = [self.attributes['n_out']]
-            state_dims = [f'N_OUT_{self.index}']
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+                state_shape, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
             )
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+                state_shape, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
             )
 
         for dir in ['forward', 'backward']:
@@ -1728,7 +1725,7 @@ class SymbolicExpression(Layer):
 
     def initialize(self):
         self.set_attr('expr_t', NamedType(*reversed(self.model.config.get_precision(self, 'expr'))))
-        self.add_output_variable([len(self.get_attr('expression'))], [f'N_OUTPUTS_{self.index}'], var_name='y')
+        self.add_output_variable([len(self.get_attr('expression'))], var_name='y')
 
 
 class EinsumDense(Layer):
