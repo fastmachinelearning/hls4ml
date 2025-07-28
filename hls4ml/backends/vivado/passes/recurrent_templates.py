@@ -1,6 +1,6 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import GRU, LSTM, Bidirectional, TimeDistributed
+from hls4ml.model.layers import GRU, LSTM, Bidirectional, Layer, TimeDistributed
 
 # recurrent multiplication template
 
@@ -261,15 +261,15 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
         self.mult1_template = recr_mult_config_template_1
         self.mult2_template = recr_mult_config_template_2
 
-    def format(self, node):
+    def format(self, node: Layer):
 
         # ----- Bidirectional Layer Config -----#
         params = self._default_config_params(node)
 
-        params['n_in'] = node.get_input_variable().dim_names[1]
-        params['n_sequence'] = node.get_input_variable().dim_names[0]
+        params['n_in'] = node.get_input_variable().shape[1]
+        params['n_sequence'] = node.get_input_variable().shape[0]
         if node.get_attr('return_sequences'):
-            params['n_sequence_out'] = node.get_output_variable().dim_names[0]
+            params['n_sequence_out'] = node.get_output_variable().shape[0]
         else:
             params['n_sequence_out'] = 1
         params['n_out'] = node.get_attr('n_out')
