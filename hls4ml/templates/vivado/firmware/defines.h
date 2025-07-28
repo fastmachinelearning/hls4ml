@@ -6,6 +6,9 @@
 #include "nnet_utils/nnet_types.h"
 #include <cstddef>
 #include <cstdio>
+#if __cplusplus > 202002L
+#include <stdfloat>
+#endif
 
 // hls-fpga-machine-learning insert namespace-start
 

@@ -65,6 +65,10 @@ class APStandardFloatPrecisionDefinition(PrecisionDefinition):
         typestring = str(self)
         if typestring.startswith('std_float'):
             typestring = typestring.replace('std_float', 'ap_float')
+        elif typestring == 'half':
+            typestring = 'std::float16_t'
+        elif typestring == 'bfloat16':
+            typestring = 'std::bfloat16_t'
         return typestring
 
 

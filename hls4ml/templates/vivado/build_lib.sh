@@ -2,7 +2,14 @@
 set -e
 
 CC=g++
-CFLAGS="-O3 -fPIC -std=c++11"
+CFLAGS="-O3 -fPIC"
+
+# Include -std=c++23 if the compiler supports it (enables half and bfloat16 types, errors otherwise)
+if echo "" | ${CC} -Werror -fsyntax-only -std=c++23 -xc++ - -o /dev/null &> /dev/null; then
+  CFLAGS+=" -std=c++23"
+else
+  CFLAGS+=" -std=c++11"
+fi
 
 # Include -fno-gnu-unique if it is there
 if echo "" | ${CC} -Werror -fsyntax-only -fno-gnu-unique -xc++ - -o /dev/null &> /dev/null; then
