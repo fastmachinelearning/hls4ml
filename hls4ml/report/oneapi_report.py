@@ -23,7 +23,6 @@ def _find_projects(hls_dir):
     prjList = glob.glob(os.path.join(hls_dir, '**/*.prj'))
 
     if not prjList:
-        print('No project folders found in target directory!')
         return
 
     if len(prjList) > 1:
