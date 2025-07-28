@@ -12,6 +12,15 @@ class CoyoteAcceleratorBackend(VitisBackend):
     backend, but the underlying platforms are different. The implementation of this backend
     remains mostly simple, inheriting most of the functionality from the Vitis backend and
     providing the necessary infrastructure to run model inference on Alveo boards.
+
+    Currently, this backend supports batched inference of a single model on hardware.
+    In the future, it can easily be extended with the following capabilities, leveraging
+    Coyote's features:
+        - Distributed inference 
+        - Multiple parallel instances of hls4ml models (same or distinct models)
+        - Dynamic, run-time reconfiguration of models
+
+    Generic examples of Coyote can be found at the above-mentioned repository, under examples/
     """
 
     def __init__(self):
@@ -109,7 +118,7 @@ class CoyoteAcceleratorBackend(VitisBackend):
             f'-DBUILD_OPT={int(timing_opt)} '
             f'-DEN_HLS_RESET={int(reset)} '
             f'-DEN_HLS_CSIM={int(csim)} '
-            f'-DEN_HLS_CSYNTH={int(synth)} '
+            f'-DEN_HLS_SYNTH={int(synth)} '
             f'-DEN_HLS_COSIM={int(cosim)} '
             f'-DEN_HLS_VALIDATION={int(validation)} '
             f'-DHLS_CLOCK_PERIOD={hls_clock_period} '

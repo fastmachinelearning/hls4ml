@@ -5,6 +5,7 @@
 
 namespace nnet {
 
+// Converts an array of data (fixed-point numbers) into 512-bit AXI stream packets; see model_wrapper.hpp for usage
 template <class array_T, class axi_T, unsigned int SIZE, unsigned int AXI_BITS, unsigned int PRECISION> 
 void data_to_axi_stream(array_T data_in[SIZE], hls::stream<ap_axiu<AXI_BITS, 0, 0, 0>> &axi_out) {
     #pragma HLS INLINE OFF
@@ -47,6 +48,7 @@ void data_to_axi_stream(array_T data_in[SIZE], hls::stream<ap_axiu<AXI_BITS, 0, 
     }
 }
 
+// Unpacks beats of 512-bit AXI beats into an array of data (fixed-point numbers) see model_wrapper.hpp for usage
 template <class array_T, class axi_T, unsigned int SIZE, unsigned int AXI_BITS, unsigned int PRECISION> 
 void axi_stream_to_data(hls::stream<ap_axiu<AXI_BITS, 0, 0, 0>> &axi_in, array_T data_out[SIZE]) {
     #pragma HLS INLINE OFF
