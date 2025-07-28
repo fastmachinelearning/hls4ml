@@ -97,7 +97,7 @@ AverageLoop:
     AveragePack:
         for (int j = 0; j < res_T::size; j++) {
             // #pragma HLS UNROLL
-            out_data[j] = (in_data1[j] + in_data2[j]) / (typename res_T::value_type)2;
+            out_data[j] = (in_data1[j] + in_data2[j]) * ac_fixed<1, 0, false>(0.5);
         }
 
         res.write(out_data);
@@ -122,7 +122,7 @@ MaximumLoop:
     MaximumPack:
         for (int j = 0; j < res_T::size; j++) {
             // #pragma HLS UNROLL
-            out_data[j] = (in_data1[j] > in_data2[j]) ? in_data1[j] : in_data2[j];
+            out_data[j] = (in_data1[j] > in_data2[j]) ? static_cast<res_T>(in_data1[j]) : static_cast<res_T>(in_data2[j]);
         }
 
         res.write(out_data);
@@ -147,7 +147,7 @@ MinimumLoop:
     MinimumPack:
         for (int j = 0; j < res_T::size; j++) {
             // #pragma HLS UNROLL
-            out_data[j] = (in_data1[j] < in_data2[j]) ? in_data1[j] : in_data2[j];
+            out_data[j] = (in_data1[j] < in_data2[j]) ? static_cast<res_T>(in_data1[j]) : static_cast<res_T>(in_data2[j]);
         }
 
         res.write(out_data);

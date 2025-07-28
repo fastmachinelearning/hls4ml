@@ -1,4 +1,5 @@
 import typing
+from copy import copy
 
 import numpy as np
 
@@ -21,6 +22,7 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     NamedType,
+    PrecisionType,
     Serializable,
     TensorVariable,
     UnspecifiedPrecisionType,
@@ -29,6 +31,9 @@ from hls4ml.model.types import (
 )
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
+
+if typing.TYPE_CHECKING:
+    from hls4ml.model import ModelGraph
 
 # TODO move this to some utility module
 
@@ -82,7 +87,7 @@ class Layer(Serializable):
                 "No model layer should be named 'input' because that is a reserved;"
                 + "layer name in ModelGraph; Please rename the layer in your model"
             )
-        self.model = model
+        self.model: 'ModelGraph' = model
         self.name = name
         self.inputs = inputs
         self.outputs = outputs
@@ -150,6 +155,9 @@ class Layer(Serializable):
 
         # Validate existing attributes
         for attr_name, attr_value in self.attributes.items():
+            if isinstance(attr_value, PrecisionType):
+                attr_value = self._wrap_precision_to_type(f'{self.name}_{attr_name}', attr_value)
+                self.set_attr(attr_name, attr_value)
             exp_attr = all_attributes.pop(attr_name, None)
             if exp_attr is not None:
                 if not exp_attr.validate_value(attr_value):
@@ -165,7 +173,7 @@ class Layer(Serializable):
         for attr_name, attr in all_attributes.items():
             if attr.default is not None:
                 if isinstance(attr, TypeAttribute):
-                    self.set_attr(attr_name, self._wrap_precision_to_type(self.name + '_' + attr_name, attr.default))
+                    self.set_attr(attr_name, self._wrap_precision_to_type(self.name + '_' + attr_name, copy(attr.default)))
                 else:
                     self.set_attr(attr_name, attr.default)
             else:
@@ -933,6 +941,47 @@ class ZeroPadding2D(Layer):
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 
+class Cropping1D(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('crop_left'),
+        Attribute('crop_right'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        # no data_format attribute for Cropping1D
+        shape = [self.attributes['out_width'], self.attributes['n_chan']]
+        dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
+
+
+class Cropping2D(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('crop_top'),
+        Attribute('crop_bottom'),
+        Attribute('crop_left'),
+        Attribute('crop_right'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
+
+
 class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -944,7 +993,8 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
-        self.set_attr('n_in', self.get_input_variable().size())
+        if 'n_in' not in self.attributes:
+            self.set_attr('n_in', self.get_input_variable().size())
 
 
 class ParametrizedActivation(Activation):
@@ -1368,7 +1418,7 @@ class LSTM(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         Attribute('pass_initial_states', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        ChoiceAttribute('direction', ['forward', 'backward'], configurable=False, default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -1425,9 +1475,9 @@ class GRU(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         Attribute('pass_initial_states', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        ChoiceAttribute('direction', ['forward', 'backward'], configurable=False, default='forward'),
         Attribute('time_major', value_type=bool, default=False),
-        ChoiceAttribute('apply_reset_gate', ['before', 'after'], default='after'),
+        ChoiceAttribute('apply_reset_gate', ['before', 'after'], configurable=False, default='after'),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
@@ -1489,6 +1539,80 @@ class TimeDistributed(Layer):
             dims += [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape))]
 
         self.add_output_variable(shape, dims)
+
+
+class Bidirectional(Layer):
+    _expected_attributes = [
+        Attribute('n_out'),
+        Attribute('return_sequences', value_type=bool, default=False),
+        Attribute('return_state', value_type=bool, default=False),
+        Attribute('pass_initial_states', value_type=bool, default=False),
+        Attribute('time_major', value_type=bool, default=False),
+        Attribute('forward_activation', value_type=str),
+        Attribute('forward_recurrent_activation', value_type=str),
+        WeightAttribute('forward_weight'),
+        WeightAttribute('forward_bias'),
+        WeightAttribute('forward_recurrent_weight'),
+        WeightAttribute('forward_recurrent_bias'),
+        TypeAttribute('forward_weight'),
+        TypeAttribute('forward_bias'),
+        TypeAttribute('forward_recurrent_weight'),
+        TypeAttribute('forward_recurrent_bias'),
+        Attribute('backward_activation', value_type=str),
+        Attribute('backward_recurrent_activation', value_type=str),
+        WeightAttribute('backward_weight'),
+        WeightAttribute('backward_bias'),
+        WeightAttribute('backward_recurrent_weight'),
+        WeightAttribute('backward_recurrent_bias'),
+        TypeAttribute('backward_weight'),
+        TypeAttribute('backward_bias'),
+        TypeAttribute('backward_recurrent_weight'),
+        TypeAttribute('backward_recurrent_bias'),
+    ]
+
+    def initialize(self):
+        if self.attributes['return_sequences']:
+            shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
+            dims = [f'N_TIME_STEPS_{self.index}', f'N_OUT_{self.index}']
+        else:
+            shape = [self.attributes['n_out']]
+            dims = [f'N_OUT_{self.index}']
+
+        self.add_output_variable(shape, dims)
+
+        if self.attributes['return_state']:
+            state_shape = [self.attributes['n_out']]
+            state_dims = [f'N_OUT_{self.index}']
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+            )
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+            )
+
+        for dir in ['forward', 'backward']:
+            # weights
+            self.add_weights_variable(name=f'{dir}_weight', var_name=(f'w_{dir[0]}_' + '{index}'))
+
+            # recurrent weights
+            recurrent_weight = self.get_attr(f'{dir}_recurrent_weight_data')
+            self.add_weights_variable(
+                name=f'{dir}_recurrent_weight', var_name=(f'wr_{dir[0]}_' + '{index}'), data=recurrent_weight
+            )
+
+            # biases
+            self.add_weights_variable(name=f'{dir}_bias', var_name=(f'b_{dir[0]}_' + '{index}'))
+
+            if self.attributes[f'{dir}_class_name'] == 'LSTM':
+                if "pytorch" in self.attributes.keys():
+                    self.add_weights_variable(name=f'{dir}_recurrent_bias', var_name=(f'br_{dir[0]}_' + '{index}'))
+                else:
+                    recurrent_bias = np.zeros(recurrent_weight.shape[1])
+                    self.add_weights_variable(
+                        name=f'{dir}_recurrent_bias', var_name=(f'br_{dir[0]}_' + '{index}'), data=recurrent_bias
+                    )
+            else:
+                self.add_weights_variable(name=f'{dir}_recurrent_bias', var_name=(f'br_{dir[0]}_' + '{index}'))
 
 
 class GarNet(Layer):
@@ -1767,6 +1891,8 @@ layer_map = {
     'GlobalAveragePooling2D': GlobalPooling2D,
     'ZeroPadding1D': ZeroPadding1D,
     'ZeroPadding2D': ZeroPadding2D,
+    'Cropping1D': Cropping1D,
+    'Cropping2D': Cropping2D,
     'Merge': Merge,
     'MatMul': MatMul,
     'Dot': Dot,
@@ -1779,6 +1905,7 @@ layer_map = {
     'SimpleRNN': SimpleRNN,
     'LSTM': LSTM,
     'GRU': GRU,
+    'Bidirectional': Bidirectional,
     'QSimpleRNN': SimpleRNN,
     'QLSTM': LSTM,
     'QGRU': GRU,

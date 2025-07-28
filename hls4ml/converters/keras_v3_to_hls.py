@@ -20,9 +20,9 @@ T_kv3_handler = Callable[
 
 
 def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None):
-    '''Given a keras layer, return a list of tuples of input and output
-    tensors. If the layer is called only once (i.e., a layer is not used multiple times in the same model),
-    the list will contain only one tuple.
+    """Given a keras layer, return a list of tuples of input and output
+    tensors. If the layer is called only once (i.e., layer is not used
+    multiple times in the same model), the list will contain only one tuple.
 
     The layer must have been built before calling this function.
 
@@ -37,7 +37,7 @@ def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None)
         A list of tuples of input and output tensors. Each inner tuple
         contains two tuples: the first with input KerasTensors and the
         second with output KerasTensors.
-    '''
+    """
 
     in_nodes = layer._inbound_nodes
     if node_whitelist is not None:
@@ -190,9 +190,12 @@ class KerasV3HandlerDispatcher:
         ret['input_keras_tensor_names'] = input_names
         ret = (ret,)
 
+        recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU', 'Bidirectional']
         activation = getattr(layer, 'activation', None)
-        if activation not in (keras.activations.linear, None):
-            assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
+        name = layer.name
+        class_name = layer.__class__.__name__
+        if activation not in (keras.activations.linear, None) and class_name not in recurrent_layers:
+            assert isinstance(activation, FunctionType), f'Activation function for layer {name} is not a function'
             intermediate_tensor_name = f'{output_names[0]}_activation'
             ret[0]['output_keras_tensor_names'] = (intermediate_tensor_name,)
             act_cls_name = activation.__name__
@@ -285,6 +288,7 @@ def parse_keras_v3_model(model: 'keras.Model'):
     input_layer_names = [provides[tname] for tname in model_inputs]
     output_layer_names = [provides[tname] for tname in model_outputs]
     batch_output_shapes = [list(tensors[tname].shape) for tname in model_outputs]
+    batch_output_shapes = [shape if shape != [None] else [1] for shape in batch_output_shapes]
 
     return layer_list, input_layer_names, output_layer_names, batch_output_shapes
 
