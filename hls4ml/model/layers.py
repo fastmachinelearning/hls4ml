@@ -214,7 +214,7 @@ class Layer(Serializable):
         else:
             return nodes[0]
 
-    def get_input_variable(self, input_name=None):
+    def get_input_variable(self, input_name=None) -> TensorVariable:
         if input_name is not None:
             return self.model.get_layer_output_variable(input_name)
         else:
@@ -243,7 +243,7 @@ class Layer(Serializable):
                         output_nodes.append(layer)
         return output_nodes
 
-    def get_output_variable(self, output_name=None):
+    def get_output_variable(self, output_name=None) -> TensorVariable:
         if output_name is not None:
             return self.variables[output_name]
         else:
