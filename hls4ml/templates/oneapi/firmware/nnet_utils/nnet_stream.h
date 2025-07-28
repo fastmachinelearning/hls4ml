@@ -200,7 +200,7 @@ ClonePack:
     res4_pipe::write(out_data4);
     res5_pipe::write(out_data5);
     res6_pipe::write(out_data6);
-    res6_pipe::write(out_data7);
+    res7_pipe::write(out_data7);
 }
 
 template <class data_pipe, class res_pipe> void repack_stream() {
