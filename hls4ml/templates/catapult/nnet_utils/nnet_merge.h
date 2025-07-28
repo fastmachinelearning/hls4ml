@@ -58,7 +58,7 @@ void multiply(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem]
 template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void average(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem], res_T res[CONFIG_T::n_elem]) {
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = (data1[ii] + data2[ii]) * ac_fixed<1, 0, false>(0.5);
+        res[ii] = (data1[ii] + data2[ii]) * ac_fixed<1, -1, false>(0.5);
     }
 }
 
