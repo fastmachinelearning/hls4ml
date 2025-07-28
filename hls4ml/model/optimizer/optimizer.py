@@ -10,10 +10,10 @@ class OptimizerPass:
 
     name = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def match(self, node):
+    def match(self, node) -> bool:
         """Predicate to match on a given node.
 
         Args:
@@ -21,7 +21,7 @@ class OptimizerPass:
         """
         raise NotImplementedError
 
-    def transform(self, model, node):
+    def transform(self, model, node) -> bool:
         """Transformation to apply if matching was successful.
 
         Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).

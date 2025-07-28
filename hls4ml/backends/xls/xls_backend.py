@@ -17,10 +17,14 @@ from fxpmath import Fxp
 from hls4ml.backends import FPGABackend
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.flow import register_flow
+from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.layers import (
     Dense,
     Layer,
+    Activation,
+    Softmax
 )
+from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.model.types import IntegerPrecisionType, NamedType
 
 class XLSBackend(FPGABackend):
@@ -32,12 +36,24 @@ class XLSBackend(FPGABackend):
         self._register_layer_attributes()
         self._register_flows()
 
-    def _register_layer_attributes(self):
-        # TODO: implement this
+    def _register_layer_attributes(self) -> None:
         pass
+        # all_layers = [
+        #     Layer,
+        #     Dense,
+        #     Activation,
+        #     Softmax,
+        # ]
+
+        # for layer in all_layers:
+        #     attrs = self.attribute_map.get(layer, [])
+        #     attrs.append(
+        #         ConfigurableAttribute('skip', value_type=bool, default=True, description=descriptions.softmax_skip)
+        #     )
+        #     self.attribute_map[layer] = attrs
 
     def _register_flows(self) -> None:
-        initializers = self._get_layer_initializers()
+        initializers: list = self._get_layer_initializers()
         init_flow: str = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         optimization_passes = [
@@ -45,26 +61,28 @@ class XLSBackend(FPGABackend):
         ]
         optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
-        # vivado_types = [
-        #     'xls:transform_types',
-        # ]
-        # vivado_types_flow: str = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
+        xls_attributes = [
+            'xls:build_attr',
+        ]
+        xls_attributes_flow: str = register_flow('specific_attributes', xls_attributes, requires=[optimization_flow], backend=self.name)
 
-        templates = self._get_layer_templates()
-        template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
+        xls_optimization_passes = [
+            'xls:merge_dense_relu',
+        ]
+        xls_optimization_passes_flow: str = register_flow('merge_dense_relu_layers', xls_optimization_passes, requires=[xls_attributes_flow], backend=self.name)
 
         writer_passes = ['make_stamp', 'xls:write_hls'] 
-        self._writer_flow = register_flow('write', writer_passes, requires=['xls:ip'], backend=self.name)   # TODO: what is this xls:ip
+        self._writer_flow = register_flow('write', writer_passes, requires=['xls:ip'], backend=self.name) 
 
-        all_passes = get_backend_passes(self.name)
+        all_passes: list = get_backend_passes(self.name)
 
+        #TODO: what is this extras structure here
         extras = [
             # Ideally this should be empty
             opt_pass
             for opt_pass in all_passes
             if opt_pass
             not in initializers
-            + templates
             + writer_passes
         ]
 
@@ -76,7 +94,8 @@ class XLSBackend(FPGABackend):
             'optimize',
             init_flow,
             optimization_flow,
-            template_flow,
+            xls_attributes_flow,
+            xls_optimization_passes_flow,
         ]
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
@@ -143,7 +162,7 @@ class XLSBackend(FPGABackend):
         return path
 
     #TODO: this return value conflicts with the expected return value in ModelGraph of compile()
-    def compile(self, model: ModelGraph):
+    def compile(self, model: ModelGraph) -> None:
 
         path = self._get_backend_exec_path(model)
 
@@ -185,7 +204,7 @@ class XLSBackend(FPGABackend):
                 else:
                     inp = [np.asarray(xj) for xj in x_list[i]]
                 newline += '['
-                fxp_x: list = Fxp(inp, signed=True, n_word=input_width, n_frac=input_frac).raw() 
+                fxp_x: list[NDArray[np.int_]] = Fxp(inp, signed=True, n_word=input_width, n_frac=input_frac).raw() 
                 if n_inputs == 1:
                     newline += f'bits[{input_width}]:{fxp_x[0][0]}'
                 else:

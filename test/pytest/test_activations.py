@@ -50,8 +50,6 @@ def test_activations(backend, activation, name, shape, io_type):
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, output_dir=output_dir, backend=backend
     )
-    print('HERE =====================')
-    print(list(hls_model.get_layers())[1].attributes['class_name'])
     hls_model.compile()
 
     keras_prediction = keras_model.predict(X)

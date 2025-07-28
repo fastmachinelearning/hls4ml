@@ -104,8 +104,19 @@ def test_activations(activation_function, backend, io_type):
     model.compile(optimizer='adam', loss='mse')
     X_input = np.random.rand(100, 1)
     keras_prediction = model.predict(X_input)
+
+    # Print Keras model weights
+    print("Keras model weights:")
+    for layer in model.layers:
+        weights = layer.get_weights()
+        if weights:
+            print(f"Layer {layer.name}:")
+            for w in weights:
+                print(w)
+
     config = hls4ml.utils.config_from_keras_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
+    
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
