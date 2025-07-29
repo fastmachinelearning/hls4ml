@@ -105,7 +105,7 @@ def parse_batchnorm_layer(node, input_names, input_shapes, graph):
     return layer
 
 
-@onnx_handler('Quant')
+@onnx_handler('Quant', 'IntQuant')
 def parse_quant_layer(node, input_names, input_shapes, graph):
     layer = {}
 

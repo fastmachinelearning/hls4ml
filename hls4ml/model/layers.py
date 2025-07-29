@@ -1913,6 +1913,7 @@ layer_map = {
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
     'Quant': Quant,
+    'IntQuant': Quant,
     'BipolarQuant': BipolarQuant,
     'ApplyAlpha': ApplyAlpha,
     'BatchNormOnnx': BatchNormOnnx,
