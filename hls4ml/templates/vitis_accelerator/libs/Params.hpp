@@ -14,7 +14,7 @@ class Params {
   public:
     Params(int argc, char **argv) {
         int opt, temp;
-        while ((opt = getopt(argc, argv, "x:vhr:n:i:o:d:c:")) != EOF)
+        while ((opt = getopt(argc, argv, "x:vhr:n:i:o:d:c:b:")) != EOF)
             switch (opt) {
             case 'd':
                 deviceBDFs.push_back(optarg);
@@ -31,8 +31,12 @@ class Params {
             case 'c':
                 temp = atoi(optarg);
                 if (temp > 0 && temp < NUM_CU)
-                    ;
-                numCU = temp;
+                    numCU = temp;
+                break;
+            case 'b':
+                temp = atoi(optarg);
+                if (temp > 0)
+                    batchSize = temp;
                 break;
             case 'n':
                 temp = atoi(optarg);

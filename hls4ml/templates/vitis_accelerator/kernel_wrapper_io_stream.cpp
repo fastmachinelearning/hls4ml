@@ -27,13 +27,15 @@ extern "C" {
   \param in Input Vector
   \param out Output Vector
 */
-void kernel_wrapper(const /*IN_INTERFACE_TYPE*/ *in, /*OUT_INTERFACE_TYPE*/ *out) {
+void kernel_wrapper(const unsigned int batchsize, const /*IN_INTERFACE_TYPE*/ *in, /*OUT_INTERFACE_TYPE*/ *out) {
+    #pragma HLS interface mode=s_axilite port=batchsize
+
     hls::stream<input_t> input("input");
     hls::stream<result_t> output("output");
     #pragma HLS STREAM variable=input depth=DATA_SIZE_IN
     #pragma HLS STREAM variable=output depth=1
 
-    for (int n = 0; n < BATCHSIZE; n++) {
+    for (int n = 0; n < batchsize; n++) {
         #pragma HLS DATAFLOW
         read_input(in, input, n);
         myproject(input, output);

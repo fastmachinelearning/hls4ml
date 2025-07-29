@@ -57,8 +57,9 @@ template <class T, class U> class Worker {
                                                   memmap_out.data(), &err));
 
         // Set kernel arguments will effectively affect the memory bank location
-        OCL_CHECK(err, err = krnl.setArg(0, input_buffer));
-        OCL_CHECK(err, err = krnl.setArg(1, output_buffer));
+        OCL_CHECK(err, err = krnl.setArg(0, _batchsize));
+        OCL_CHECK(err, err = krnl.setArg(1, input_buffer));
+        OCL_CHECK(err, err = krnl.setArg(2, output_buffer));
 
         // Perform a dummy transfer input batch to FPGA to ensure that allocation time is not counted
         // in the evaluation time. Also allows us to query the memory bank location.
