@@ -1,3 +1,5 @@
+import numpy as np
+
 from hls4ml.converters.keras_v2_to_hls import (
     KerasModelReader,
     KerasNestedFileReader,
@@ -40,6 +42,13 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
     layer['weight_data'], layer['recurrent_weight_data'], layer['bias_data'] = get_weights_data(
         data_reader, layer['name'], ['kernel', 'recurrent_kernel', 'bias']
     )
+
+    if layer['bias_data'] is None:
+        d_out = layer['bias_data'].shape[-1]
+        if 'GRU' in layer['class_name']:
+            layer['bias_data'] = np.zeros((2, d_out), dtype=np.float32)
+        else:
+            layer['bias_data'] = np.zeros((d_out,), dtype=np.float32)
 
     if 'GRU' in layer['class_name']:
         layer['apply_reset_gate'] = 'after' if keras_layer['config']['reset_after'] else 'before'
