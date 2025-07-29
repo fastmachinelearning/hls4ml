@@ -58,16 +58,17 @@ class Params {
     }
 
     void help(void) {
-        std::cout << "Options:" << std::endl;
-        std::cout << "  -d: device BDF (can be specified multiple times)" << std::endl;
-        std::cout << "  -x: XCLBIN path" << std::endl;
-        std::cout << "  -i: input file" << std::endl;
-        std::cout << "  -o: output file" << std::endl;
-        std::cout << "  -c: maximum computing units count" << std::endl;
-        std::cout << "  -n: maximum workers count" << std::endl;
-        std::cout << "  -r: input data repeat count" << std::endl;
-        std::cout << "  -v: enable verbose output" << std::endl;
-        std::cout << "  -h: this helps message" << std::endl;
+        std::cout << "Available options:" << std::endl;
+        std::cout << "  -d <BDF>     : Specify device BDF (can be used multiple times)" << std::endl;
+        std::cout << "  -x <path>    : Path to the XCLBIN file" << std::endl;
+        std::cout << "  -b <size>    : Batch size (default = " << BATCHSIZE << ")" << std::endl;
+        std::cout << "  -i <file>    : Input file path" << std::endl;
+        std::cout << "  -o <file>    : Output file path" << std::endl;
+        std::cout << "  -c <number>  : Maximum number of compute units to use" << std::endl;
+        std::cout << "  -n <number>  : Maximum number of worker threads to use" << std::endl;
+        std::cout << "  -r <number>  : Number of times to repeat input data" << std::endl;
+        std::cout << "  -v           : Enable verbose output" << std::endl;
+        std::cout << "  -h           : Display this help message" << std::endl;
     }
 
     void print(void) {
