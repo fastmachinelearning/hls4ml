@@ -176,6 +176,11 @@ template <int M, int E, int E0> int operator>>(std::istringstream s, ap_float<M,
     b = std::stof(str);
     return 0;
 }
+
+template <int M, int E, int E0> std::ostream &operator<<(std::ostream &os, const ap_float<M, E, E0> &b) {
+    os << b.to_float();
+    return os;
+}
 #endif
 
 #endif
