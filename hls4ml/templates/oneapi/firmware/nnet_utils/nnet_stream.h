@@ -239,20 +239,18 @@ template <class data_pipe, class res_pipe> void repack_stream() {
     } else { // datasize < ressize
         [[intel::fpga_memory]] res_T out_data;
         constexpr unsigned pack_diff = ressize / datasize;
-        unsigned pack_cnt = 0;
+        [[intel::initiation_interval(1)]] for (unsigned pack_cnt = 0; pack_cnt < pack_diff; pack_cnt++) {
 
-        [[intel::fpga_memory]] auto in_data = data_pipe::read();
+            [[intel::fpga_memory]] auto in_data = data_pipe::read();
 
-        #pragma unroll
-        for (int j = 0; j < datasize; j++) {
-            out_data[pack_cnt * datasize + j] = in_data[j];
-        }
+            #pragma unroll
+            for (int j = 0; j < datasize; j++) {
+                out_data[pack_cnt * datasize + j] = in_data[j];
+            }
 
-        if (pack_cnt == pack_diff - 1) {
-            res_pipe::write(out_data);
-            pack_cnt = 0;
-        } else {
-            pack_cnt++;
+            if (pack_cnt == pack_diff - 1) {
+                res_pipe::write(out_data);
+            }
         }
     }
 }
