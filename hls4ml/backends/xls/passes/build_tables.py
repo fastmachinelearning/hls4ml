@@ -1,6 +1,6 @@
 # Typing imports
 from __future__ import annotations # makes all annotations into strings
-from typing import List, Literal, Any, Optional, Callable, TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING
 from numpy.typing import NDArray
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
@@ -9,14 +9,14 @@ if TYPE_CHECKING:
 
 from hls4ml.model.optimizer import OptimizerPass
 
-from functools import wraps
-import numpy as np
 import math
 from fxpmath import Fxp
 
     
-    
 class BuildTables(OptimizerPass):
+    """Builds attributes that store the softmax and multiplication inverse for the approximation
+    of the Softmax function.
+    """
 
     def match(self, node: Layer) -> bool:
         if node.class_name == 'Softmax':

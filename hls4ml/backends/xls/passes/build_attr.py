@@ -168,10 +168,17 @@ class XLSAttrBuilder:
         func_call_str = ''
         if self.node.class_name == 'Dense':
             func_call_str = f'fc::dense<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
+        
         elif self.node.class_name == 'Activation':
             func_call_str = f'activations::relu<{self.node.get_attr("out_nb")}>'
+
         elif self.node.class_name == 'Softmax':
-            func_call_str = f'activations::argmax<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
+            strategy = dict(self.node.attributes)['strategy']
+            if strategy == 'latency':
+                table_size = dict(self.node.attributes)['table_size']
+                func_call_str = f'activations::softmax_latency<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}, u32:{table_size}>'
+            elif strategy == 'argmax':
+                func_call_str = f'activations::argmax<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
         return func_call_str
     
     
