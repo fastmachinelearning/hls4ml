@@ -1,135 +1,319 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.10.16, pytest-8.4.0, pluggy-1.6.0
-pytest-randomly: reseed with 1317154935
-Using --randomly-seed=1317154935
+pytest-randomly: reseed with 4196337682
+Using --randomly-seed=4196337682
 rootdir: /home/girji/workspace/forks/hls4ml
 configfile: pyproject.toml
 plugins: randomly-3.16.0, cov-6.2.1, anyio-4.9.0
-pytest-randomly: reseed with 1317154935
+pytest-randomly: reseed with 4196337682
 collected 2 items
 
-test_keras_api.py F.                                                     [100%]
+test_softmax.py FF                                                       [100%]
 
 =================================== FAILURES ===================================
-_________________________ test_dense[io_parallel-XLS] __________________________
+______ test_softmax[16,6-input_shape0-18,8-io_parallel-False-latency-XLS] ______
 
-backend = 'XLS', io_type = 'io_parallel'
+backend = 'XLS', strategy = 'latency'
+generate_data = array([[ -9.06465089,  23.22051406,   6.93603944, ...,  31.        ,
+         10.8794157 ,  12.70340042],
+       [ 14....0.72062448],
+       [ 16.65739911,   1.49536802,   8.77838192, ..., -10.51041717,
+         15.60206778,  16.67082722]])
+input_bits = '16,6', input_shape = (8,), table_bits = '18,8'
+io_type = 'io_parallel', custom_accum = False
 
     @pytest.mark.parametrize('backend', ['XLS'])
-    @pytest.mark.parametrize('io_type', ['io_parallel'])
-    def test_dense(backend, io_type):
+    @pytest.mark.parametrize('strategy', ['latency', 'argmax'])
+    @pytest.mark.parametrize(
+        'input_bits,input_shape,table_bits,io_type,custom_accum',
+        [
+            ('16,6', (8,), '18,8', 'io_parallel', False),
+        ],
+    )
+    def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+        X = generate_data
         model = tf.keras.models.Sequential()
-        model.add(
-            Dense(
-                2,
-                input_shape=(2,),
-                name='Dense',
-                use_bias=True,
-                kernel_initializer=tf.keras.initializers.RandomUniform(minval=1, maxval=10),
-                bias_initializer='zeros',
-                kernel_regularizer=None,
-                bias_regularizer=None,
-                activity_regularizer=None,
-                kernel_constraint=None,
-                bias_constraint=None,
+        model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+        model.compile()
+    
+        table_type = f'fixed<{table_bits}, RND, SAT>'
+    
+        cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+        cfg['LayerName']['softmax']['Strategy'] = strategy
+        cfg['LayerName']['softmax']['inv_table_t'] = table_type
+        cfg['LayerName']['softmax']['exp_table_t'] = table_type
+        cfg['LayerName']['softmax']['accum_t'] = table_type
+        cfg['LayerName']['softmax']['inv_inp_t'] = table_type
+        if custom_accum:
+            if backend not in ['Vivado', 'Vitis']:
+                pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
+            W, I = map(int, input_bits.split(','))  # noqa: E741
+            cfg['LayerName']['softmax']['accum_t'] = f'fixed<{W+3},{I+3}>'
+            cfg['LayerName']['softmax']['inv_inp_t'] = f'fixed<{W+2},{I+2}>'
+        inp_layer_name = next(iter(cfg['LayerName'].keys()))
+        cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
+    
+        odir = str(
+            test_root_path
+            / (
+                f'hls4mlprj_softmax_{backend}_{io_type}_{strategy}_{input_shape}'
+                f'_input-bits={input_bits}_table-bits={table_bits}_custom-accum={custom_accum}'
             )
         )
-        model.add(Activation(activation='relu', name='Activation'))
-        model.compile(optimizer='adam', loss='mse')
-    
-        X_input = np.random.rand(100, 2)
-    
-        keras_prediction = model.predict(X_input)
-    
-        config = hls4ml.utils.config_from_keras_model(model)
-        output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
-    
-        hls_model = hls4ml.converters.convert_from_keras_model(
-            model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+>       hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
         )
-    
-        hls_model.compile()
-    
-        hls_prediction = hls_model.predict(X_input)
-    
-        np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=1e-2, atol=0.01)
-    
-        assert len(model.layers) + 1 == len(hls_model.get_layers())
->       assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
-E       AssertionError: assert 'Input' == 'InputLayer'
-E         
-E         - InputLayer
-E         + Input
 
-test_keras_api.py:70: AssertionError
+test_softmax.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../hls4ml/utils/dependency.py:46: in inner
+    return f(*args, **kwargs)
+../../hls4ml/converters/__init__.py:225: in convert_from_keras_model
+    return keras_v2_to_hls(config)
+../../hls4ml/converters/keras_v2_to_hls.py:351: in keras_v2_to_hls
+    return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
+../../hls4ml/model/graph.py:457: in from_layer_list
+    model.apply_flow(flow)
+../../hls4ml/model/graph.py:525: in apply_flow
+    self._apply_sub_flow(flow, applied_flows)
+../../hls4ml/model/graph.py:534: in _apply_sub_flow
+    self._apply_sub_flow(sub_flow, applied_flows)
+../../hls4ml/model/graph.py:537: in _apply_sub_flow
+    applied_passes = optimize_model(self, flow.optimizers)
+../../hls4ml/model/optimizer/optimizer.py:319: in optimize_model
+    res = opt.transform(model, node)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <hls4ml.backends.xls.passes.build_tables.BuildTables object at 0x7b724407ebf0>
+model = <hls4ml.model.graph.ModelGraph object at 0x7b7243f69ae0>
+node = <hls4ml.backends.fpga.fpga_backend.XLSSoftmax object at 0x7b7243f6af80>
+
+    def transform(self, model: ModelGraph, node: Layer) -> Literal[False]:
+    
+        # i * 2^{integer_part - clog2(table_size)}
+        def get_real_val_from_idx(i, type_var, table_size):
+            return i * (2 ** (type_var.precision.integer - math.ceil(math.log2(table_size))))
+    
+        table_size = dict(node.attributes)['table_size']
+        exp_table = []
+        div_table = []
+    
+        _, type_var = list(node.get_layer_precision().items())[0]
+    
+        # create exp table
+        for i in range(table_size):
+            real_val = get_real_val_from_idx(i, type_var, table_size)
+            e = math.exp(real_val)
+            exp_table.append(e)
+    
+        print("TESTETSTS ------------------")
+        print(dict(node.attributes))
+    
+        # create div table
+        for i in range(table_size):
+            real_val = get_real_val_from_idx(i, type_var, table_size)
+>           inv = 1.0 / real_val
+E           ZeroDivisionError: float division by zero
+
+../../hls4ml/backends/xls/passes/build_tables.py:50: ZeroDivisionError
 ---------------------------- Captured stdout setup -----------------------------
-pytest-randomly: reseed with 1317154934
+pytest-randomly: reseed with 4196337681
 ----------------------------- Captured stdout call -----------------------------
-pytest-randomly: reseed with 1317154935
-1/4 [======>.......................] - ETA: 0s4/4 [==============================] - 0s 3ms/step
-IN MATCH
-IN TRUE MATCH
-IN TRANSFORM
-IN MATCH
-IN MATCH
-HERERE ===========
-Node:  u32:1
-HERERE ===========
-Node:  u32:1
-HERERE ===========
-Node:  u32:1
+pytest-randomly: reseed with 4196337682
+WARNING: Config parameter "accum_t" overwrites an existing attribute in layer "softmax" (Softmax)
+TESTETSTS ------------------
+{'name': 'softmax', 'class_name': 'Softmax', 'data_format': 'channels_last', 'activation': 'softmax', 'axis': -1, 'index': 2, 'accum_t': <hls4ml.model.types.NamedType object at 0x7b7243f6b1c0>, 'trace': False, 'precision': {'result': 'auto', 'table': 'fixed<18,8,TRN,WRAP,0>', 'exp_table': 'fixed<18,8,RND,SAT,0>', 'inv_table': 'fixed<18,8,RND,SAT,0>', 'inv_inp': 'fixed<18,8,RND,SAT,0>', 'accum': 'fixed<18,8,RND,SAT,0>'}, 'reuse_factor': 1, 'table_size': 1024, 'implementation': 'stable', 'skip': False, 'strategy': 'latency', 'inv_table_t': <hls4ml.model.types.NamedType object at 0x7b7243f6b0a0>, 'exp_table_t': <hls4ml.model.types.NamedType object at 0x7b7243f6b130>, 'inv_inp_t': <hls4ml.model.types.NamedType object at 0x7b7243f6b040>, 'result_t': <hls4ml.model.types.NamedType object at 0x7b7243f6b2b0>, 'softmax': <hls4ml.model.types.TensorVariable object at 0x7b7243f6b280>, 'n_in': 8, 'table_t': <hls4ml.model.types.NamedType object at 0x7b7243f6b340>, 'n_outer': 1, 'n_inner': 1, 'write_dims': False, 'write_weights': False, 'write_func': True, 'in_dim_key': 'N_INPUT_1_1', 'in_dim_val': 8, 'out_dim_key': 'N_INPUT_1_1', 'out_dim_val': 8, 'in_nb': 'u32:16', 'in_en': 'u32:1', 'in_bu': 'u32:10', 'in_type': 'sN[u32:16]', 'out_type': 'sN[u32:18]', 'out_nb': 'u32:18', 'out_en': 'u32:1', 'out_bu': 'u32:10', 'fxp_weights': array([], dtype=float64), 'fxp_bias': array([], dtype=float64), 'func_call': 'activations::argmax<u32:16, u32:1, u32:10, u32:18, u32:1, u32:10>'}
 --------------------------- Captured stdout teardown ---------------------------
-pytest-randomly: reseed with 1317154936
+pytest-randomly: reseed with 4196337683
+______ test_softmax[16,6-input_shape0-18,8-io_parallel-False-argmax-XLS] _______
+
+backend = 'XLS', strategy = 'argmax'
+generate_data = array([[ -9.06465089,  23.22051406,   6.93603944, ...,  31.        ,
+         10.8794157 ,  12.70340042],
+       [ 14....0.72062448],
+       [ 16.65739911,   1.49536802,   8.77838192, ..., -10.51041717,
+         15.60206778,  16.67082722]])
+input_bits = '16,6', input_shape = (8,), table_bits = '18,8'
+io_type = 'io_parallel', custom_accum = False
+
+    @pytest.mark.parametrize('backend', ['XLS'])
+    @pytest.mark.parametrize('strategy', ['latency', 'argmax'])
+    @pytest.mark.parametrize(
+        'input_bits,input_shape,table_bits,io_type,custom_accum',
+        [
+            ('16,6', (8,), '18,8', 'io_parallel', False),
+        ],
+    )
+    def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+        X = generate_data
+        model = tf.keras.models.Sequential()
+        model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+        model.compile()
+    
+        table_type = f'fixed<{table_bits}, RND, SAT>'
+    
+        cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+        cfg['LayerName']['softmax']['Strategy'] = strategy
+        cfg['LayerName']['softmax']['inv_table_t'] = table_type
+        cfg['LayerName']['softmax']['exp_table_t'] = table_type
+        cfg['LayerName']['softmax']['accum_t'] = table_type
+        cfg['LayerName']['softmax']['inv_inp_t'] = table_type
+        if custom_accum:
+            if backend not in ['Vivado', 'Vitis']:
+                pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
+            W, I = map(int, input_bits.split(','))  # noqa: E741
+            cfg['LayerName']['softmax']['accum_t'] = f'fixed<{W+3},{I+3}>'
+            cfg['LayerName']['softmax']['inv_inp_t'] = f'fixed<{W+2},{I+2}>'
+        inp_layer_name = next(iter(cfg['LayerName'].keys()))
+        cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
+    
+        odir = str(
+            test_root_path
+            / (
+                f'hls4mlprj_softmax_{backend}_{io_type}_{strategy}_{input_shape}'
+                f'_input-bits={input_bits}_table-bits={table_bits}_custom-accum={custom_accum}'
+            )
+        )
+>       hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+        )
+
+test_softmax.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../hls4ml/utils/dependency.py:46: in inner
+    return f(*args, **kwargs)
+../../hls4ml/converters/__init__.py:225: in convert_from_keras_model
+    return keras_v2_to_hls(config)
+../../hls4ml/converters/keras_v2_to_hls.py:351: in keras_v2_to_hls
+    return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
+../../hls4ml/model/graph.py:457: in from_layer_list
+    model.apply_flow(flow)
+../../hls4ml/model/graph.py:525: in apply_flow
+    self._apply_sub_flow(flow, applied_flows)
+../../hls4ml/model/graph.py:534: in _apply_sub_flow
+    self._apply_sub_flow(sub_flow, applied_flows)
+../../hls4ml/model/graph.py:537: in _apply_sub_flow
+    applied_passes = optimize_model(self, flow.optimizers)
+../../hls4ml/model/optimizer/optimizer.py:319: in optimize_model
+    res = opt.transform(model, node)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <hls4ml.backends.xls.passes.build_tables.BuildTables object at 0x7b724407ebf0>
+model = <hls4ml.model.graph.ModelGraph object at 0x7b7247b728c0>
+node = <hls4ml.backends.fpga.fpga_backend.XLSSoftmax object at 0x7b7247b726b0>
+
+    def transform(self, model: ModelGraph, node: Layer) -> Literal[False]:
+    
+        # i * 2^{integer_part - clog2(table_size)}
+        def get_real_val_from_idx(i, type_var, table_size):
+            return i * (2 ** (type_var.precision.integer - math.ceil(math.log2(table_size))))
+    
+        table_size = dict(node.attributes)['table_size']
+        exp_table = []
+        div_table = []
+    
+        _, type_var = list(node.get_layer_precision().items())[0]
+    
+        # create exp table
+        for i in range(table_size):
+            real_val = get_real_val_from_idx(i, type_var, table_size)
+            e = math.exp(real_val)
+            exp_table.append(e)
+    
+        print("TESTETSTS ------------------")
+        print(dict(node.attributes))
+    
+        # create div table
+        for i in range(table_size):
+            real_val = get_real_val_from_idx(i, type_var, table_size)
+>           inv = 1.0 / real_val
+E           ZeroDivisionError: float division by zero
+
+../../hls4ml/backends/xls/passes/build_tables.py:50: ZeroDivisionError
+---------------------------- Captured stdout setup -----------------------------
+pytest-randomly: reseed with 4196337681
+----------------------------- Captured stdout call -----------------------------
+pytest-randomly: reseed with 4196337682
+WARNING: Config parameter "accum_t" overwrites an existing attribute in layer "softmax" (Softmax)
+TESTETSTS ------------------
+{'name': 'softmax', 'class_name': 'Softmax', 'data_format': 'channels_last', 'activation': 'softmax', 'axis': -1, 'index': 2, 'accum_t': <hls4ml.model.types.NamedType object at 0x7b7247b73250>, 'trace': False, 'precision': {'result': 'auto', 'table': 'fixed<18,8,TRN,WRAP,0>', 'exp_table': 'fixed<18,8,RND,SAT,0>', 'inv_table': 'fixed<18,8,RND,SAT,0>', 'inv_inp': 'fixed<18,8,RND,SAT,0>', 'accum': 'fixed<18,8,RND,SAT,0>'}, 'reuse_factor': 1, 'table_size': 1024, 'implementation': 'stable', 'skip': False, 'strategy': 'argmax', 'inv_table_t': <hls4ml.model.types.NamedType object at 0x7b7247b72e90>, 'exp_table_t': <hls4ml.model.types.NamedType object at 0x7b7247b732e0>, 'inv_inp_t': <hls4ml.model.types.NamedType object at 0x7b7247b72e60>, 'result_t': <hls4ml.model.types.NamedType object at 0x7b7247b734c0>, 'softmax': <hls4ml.model.types.TensorVariable object at 0x7b7247b733a0>, 'n_in': 8, 'table_t': <hls4ml.model.types.NamedType object at 0x7b7247b73430>, 'n_outer': 1, 'n_inner': 1, 'write_dims': False, 'write_weights': False, 'write_func': True, 'in_dim_key': 'N_INPUT_1_1', 'in_dim_val': 8, 'out_dim_key': 'N_INPUT_1_1', 'out_dim_val': 8, 'in_nb': 'u32:16', 'in_en': 'u32:1', 'in_bu': 'u32:10', 'in_type': 'sN[u32:16]', 'out_type': 'sN[u32:18]', 'out_nb': 'u32:18', 'out_en': 'u32:1', 'out_bu': 'u32:10', 'fxp_weights': array([], dtype=float64), 'fxp_bias': array([], dtype=float64), 'func_call': 'activations::argmax<u32:16, u32:1, u32:10, u32:18, u32:1, u32:10>'}
+--------------------------- Captured stdout teardown ---------------------------
+pytest-randomly: reseed with 4196337683
 =============================== warnings summary ===============================
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:reshape_stream" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:reshape_stream" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:process_fixed_point_quantizer_layer" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:repack_function_template" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:clone_output" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:process_fixed_point_quantizer_layer" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:remove_final_reshape" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:fixedpointquantizer_function_template" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:register_bram_weights" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:unarylut_function_template" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:xnor_pooling" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:clone_output" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:generate_conv_im2col" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:clone_function_template" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:skip_softmax" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:remove_final_reshape" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:fix_softmax_table_size" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:register_bram_weights" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:inplace_parallel_reshape" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:xnor_pooling" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:inplace_stream_flatten" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:generate_conv_im2col" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
-../../hls4ml/backends/xls/xls_backend.py:89
-  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:89: UserWarning: WARNING: Optimizer "xls:build_attr" is not part of any flow and will not be executed.
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:embedding_config_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:embedding_function_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:skip_softmax" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:fix_softmax_table_size" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:inplace_parallel_reshape" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:inplace_stream_flatten" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:build_tables" is not part of any flow and will not be executed.
     warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ============================
-FAILED test_keras_api.py::test_dense[io_parallel-XLS] - AssertionError: asser...
-=================== 1 failed, 1 passed, 12 warnings in 5.93s ===================
+FAILED test_softmax.py::test_softmax[16,6-input_shape0-18,8-io_parallel-False-latency-XLS]
+FAILED test_softmax.py::test_softmax[16,6-input_shape0-18,8-io_parallel-False-argmax-XLS]
+======================== 2 failed, 18 warnings in 2.07s ========================

@@ -23,8 +23,8 @@ class XLSWriter(Writer):
         if not os.path.isdir(f"{model.config.get_output_dir()}/firmware"):
             os.makedirs(f"{model.config.get_output_dir()}/firmware")
 
-        if not os.path.isdir(f"{model.config.get_output_dir()}/predictions"):
-            os.makedirs(f"{model.config.get_output_dir()}/predictions")
+        # if not os.path.isdir(f"{model.config.get_output_dir()}/predictions"):
+        #     os.makedirs(f"{model.config.get_output_dir()}/predictions")
 
     def write_project_dslx(self, model: ModelGraph) -> None:
         """Write the main architecture source file (myproject.x)
@@ -67,7 +67,6 @@ class XLSWriter(Writer):
                             newline += '\n'
 
             elif '// hls-fpga-machine-learning output ' in line:
-                indent = '    '
                 last_layer_type = layers[-1].get_attr("out_type")
                 last_layer_dim_key = layers[-1].get_attr("out_dim_key")
                 newline = indent + f'{last_layer_type}[{last_layer_dim_key}]\n'
@@ -141,6 +140,56 @@ class XLSWriter(Writer):
         f.close()
         fout.close()
 
+    def write_lookup_tables(self, model: ModelGraph) -> None:
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        f = open(os.path.join(filedir, '../templates/xls/firmware/ap_types/lookup_tables.x'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/ap_types/lookup_tables.x', 'w')
+
+        layers = list(model.get_layers())
+        indent = '    '
+        elems_per_line = 8
+        for line in f.readlines():
+
+            if '// hls-fpga-machine-learning insert exponent table' in line:
+                newline = line
+                for layer in layers:
+                    if layer.get_attr('write_table'):
+                        newline += f'pub const EXP_TABLE = sN[{layer.get_attr("out_nb")}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
+                        newline += indent
+                        for i, elem in enumerate(layer.get_attr("exp_table_xls")):
+                            newline += f'sN[{layer.get_attr("out_nb")}]:{elem}'
+                            if i < len(layer.get_attr("exp_table_xls")) - 1:
+                                newline += ','
+                            if (i+1) % elems_per_line == 0:
+                                newline += '\n'
+                                if i < len(layer.get_attr("inv_table_xls")) - 1:
+                                    newline += indent
+                        newline += '];\n'
+
+            elif '// hls-fpga-machine-learning insert inversion table' in line:
+                newline = line
+                for layer in layers:
+                    if layer.get_attr('write_table'):
+                        newline += f'pub const INV_TABLE = sN[{layer.get_attr("out_nb")}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
+                        newline += indent
+                        for i, elem in enumerate(layer.get_attr("inv_table_xls")):
+                            newline += f'sN[{layer.get_attr("out_nb")}]:{elem}'
+                            if i < len(layer.get_attr("inv_table_xls")) - 1:
+                                newline += ', '
+                            if (i+1) % elems_per_line == 0:
+                                newline += '\n' 
+                                if i < len(layer.get_attr("inv_table_xls")) - 1:
+                                    newline += indent
+                        newline += '];\n'
+
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+
     def write_nnet_utils(self, model: ModelGraph) -> None:
         """Copy the nnet_utils, AP types headers to the project output directory
 
@@ -175,3 +224,4 @@ class XLSWriter(Writer):
         self.write_project_dir(model)
         self.write_project_dslx(model)
         self.write_nnet_utils(model)
+        self.write_lookup_tables(model)

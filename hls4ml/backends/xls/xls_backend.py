@@ -66,6 +66,11 @@ class XLSBackend(FPGABackend):
         ]
         xls_attributes_flow: str = register_flow('specific_attributes', xls_attributes, requires=[optimization_flow], backend=self.name)
 
+        xls_build_graph_ir = [
+            'xls:build_tables',
+        ]
+        xls_build_graph_ir_flow: str = register_flow('build_tables_ir', xls_build_graph_ir, requires=[xls_attributes_flow], backend=self.name)
+
         xls_optimization_passes = [
             'xls:merge_dense_relu',
         ]
@@ -84,6 +89,9 @@ class XLSBackend(FPGABackend):
             if opt_pass
             not in initializers
             + writer_passes
+            + optimization_passes
+            + xls_attributes
+            + xls_optimization_passes
         ]
 
         if len(extras) > 0:
@@ -95,6 +103,7 @@ class XLSBackend(FPGABackend):
             init_flow,
             optimization_flow,
             xls_attributes_flow,
+            xls_build_graph_ir_flow,
             xls_optimization_passes_flow,
         ]
 
@@ -217,7 +226,7 @@ class XLSBackend(FPGABackend):
             # run command
             interpret_cmd = [ 
                 f'{path}/xls/tools/eval_ir_main',
-                f'../firmware/{model.config.get_project_name()}.opt.ir',
+                f'firmware/{model.config.get_project_name()}.opt.ir',
                 f'--input_file=-'
             ]
             result = subprocess.run(
@@ -299,7 +308,7 @@ class XLSBackend(FPGABackend):
 
         # Change dirs
         curr_dir = os.getcwd()
-        os.chdir(f'{model.config.get_output_dir()}/predictions')
+        os.chdir(f'{model.config.get_output_dir()}')
 
         # Result processing pipeling
         result = _interpret_input(model, path, x_list, n_samples, n_inputs, input_width, input_frac)

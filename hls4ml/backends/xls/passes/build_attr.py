@@ -73,7 +73,7 @@ class XLSAttrBuilder:
     
     @attach_to_node()
     def write_func(self) -> bool:
-        return self.node.class_name in ['Input', 'Dense', 'Activation', 'Softmax']
+        return self.node.class_name in ['Dense', 'Activation', 'Softmax']
     
     
     @attach_to_node()
@@ -171,8 +171,9 @@ class XLSAttrBuilder:
         elif self.node.class_name == 'Activation':
             func_call_str = f'activations::relu<{self.node.get_attr("out_nb")}>'
         elif self.node.class_name == 'Softmax':
-            func_call_str = f'activations::argmax<{self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
+            func_call_str = f'activations::argmax<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
         return func_call_str
+    
     
 class BuildAttr(OptimizerPass):
     """Builds all the XLS specific attributes for all layers.
