@@ -140,6 +140,7 @@ class XLSWriter(Writer):
         f.close()
         fout.close()
 
+    #TODO: modify with actual table types
     def write_lookup_tables(self, model: ModelGraph) -> None:
         filedir = os.path.dirname(os.path.abspath(__file__))
 

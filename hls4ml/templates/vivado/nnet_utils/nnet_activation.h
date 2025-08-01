@@ -86,7 +86,7 @@ template <typename CONFIG_T, int N_TABLE> void init_sigmoid_table(typename CONFI
         float in_val = 2 * 8.0 * (ii - float(N_TABLE) / 2.0) / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = sigmoid_fcn_float(in_val);
-        // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        // // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }
@@ -134,7 +134,9 @@ template <class data_T, unsigned table_size> inline float softmax_real_val_from_
     // Treat the index as the top N bits
     static constexpr int N = ceillog2(table_size); // number of address bits for table
     data_T x(0);
+    // std::cout << "Width: " << x.width << " N: " << N << std::endl;
     x(x.width - 1, x.width - N) = i;
+    // std::cout << " X: " << x << std::endl;
     return (float)x;
 }
 
@@ -142,6 +144,7 @@ template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_re
     // Slice the top N bits to get an index into the table
     static constexpr int N = ceillog2(table_size); // number of address bits for table
     ap_uint<N> y = x(x.width - 1, x.width - N);    // slice the top N bits of input
+    // std::cout << "INDEX GOES BRRR: " << (unsigned)y(N - 1, 0) << " X: "<< (float)x << std::endl;
     return (unsigned)y(N - 1, 0);
 }
 
@@ -154,10 +157,12 @@ void init_exp_table(typename CONFIG_T::exp_table_t table_out[CONFIG_T::exp_table
         if (negative) {
             // for normalized inputs, we keep the normalization values positive (x_bar = x_max - x)
             // so we need to negate the input (exp(-x_bar) = exp(x - x_max))
+            // std::cout << " INVERSE: " << x << std::endl;
             x = -x;
         }
         typename CONFIG_T::exp_table_t exp_x = exp_fcn_float(x);
         table_out[i] = exp_x;
+        // std::cout << "exp_table[" << i << "] = " << exp_x << " X: " << x << std::endl;
     }
 }
 
@@ -168,6 +173,7 @@ void init_invert_table(typename CONFIG_T::inv_table_t table_out[CONFIG_T::inv_ta
         float x = softmax_real_val_from_idx<data_T, CONFIG_T::inv_table_size>(i);
         typename CONFIG_T::inv_table_t inv_x = 1 / x;
         table_out[i] = inv_x;
+        // std::cout << "inv_table[" << i << "] = " << inv_x << " X: " << x << std::endl;
     }
 }
 
@@ -192,8 +198,8 @@ void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice
         init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
         initialized = true;
     }
-
     // Calculate all the e^x's
+    // std::cout << "NOW EXPONENT TIME" << std::endl;
     typename CONFIG_T::accum_t exp_res[CONFIG_T::n_slice];
     #pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::inv_inp_t exp_sum(0);
@@ -207,7 +213,7 @@ void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice
     // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
     Op_add<typename CONFIG_T::accum_t> op_add;
     exp_sum = reduce<typename CONFIG_T::accum_t, CONFIG_T::n_slice, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
-
+    // std::cout << "NOW INVERSE TIME" << std::endl;
     typename CONFIG_T::inv_table_t inv_exp_sum =
         invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
     for (unsigned i = 0; i < CONFIG_T::n_slice; i++) {
@@ -237,7 +243,6 @@ void softmax_stable(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]
         init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
         initialized = true;
     }
-
     // Find the max and compute all delta(x_i, x_max)
     Op_max<data_T> op_max;
     data_T x_max = reduce<data_T, CONFIG_T::n_slice, Op_max<data_T>>(data, op_max);
@@ -277,7 +282,7 @@ template <typename CONFIG_T, int N_TABLE> void init_exp_table_legacy(typename CO
         float in_val = 2 * 8.0 * (ii - float(N_TABLE) / 2.0) / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = exp_fcn_float(in_val);
-        // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        // // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }
@@ -429,7 +434,7 @@ template <typename CONFIG_T, int N_TABLE> void init_tanh_table(typename CONFIG_T
         float in_val = 2 * 4.0 * (ii - float(N_TABLE) / 2.0) / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = tanh(in_val);
-        // std::cout << "Tanh:  Lookup table Index: " <<  ii<< " In Value: " << in_val << " Result: " << real_val <<
+        // // std::cout << "Tanh:  Lookup table Index: " <<  ii<< " In Value: " << in_val << " Result: " << real_val <<
         // std::endl;
         table_out[ii] = real_val;
     }
@@ -457,7 +462,7 @@ template <class data_T, class res_T, typename CONFIG_T> void tanh(data_T data[CO
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         data_round = data[ii] * CONFIG_T::table_size / 8;
         index = data_round + 4 * CONFIG_T::table_size / 8;
-        // std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
+        // // std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
         if (index < 0)
             index = 0;
         if (index > CONFIG_T::table_size - 1)
@@ -568,7 +573,7 @@ template <typename CONFIG_T, int N_TABLE> void init_softplus_table(typename CONF
         float in_val = 2 * 8.0 * (ii - float(N_TABLE) / 2.0) / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = softplus_fcn_float(in_val);
-        // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        // // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }
@@ -617,7 +622,7 @@ template <typename CONFIG_T, int N_TABLE> void init_softsign_table(typename CONF
         float in_val = 2 * 8.0 * (ii - float(N_TABLE) / 2.0) / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = softsign_fcn_float(in_val);
-        // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        // // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }
@@ -666,7 +671,7 @@ template <typename CONFIG_T, int N_TABLE> void init_elu_table(typename CONFIG_T:
         float in_val = -8.0 * ii / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = elu_fcn_float(in_val);
-        // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        // // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }
@@ -723,7 +728,7 @@ template <typename CONFIG_T, int N_TABLE> void init_selu_table(typename CONFIG_T
         float in_val = -8.0 * ii / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = selu_fcn_float(in_val);
-        // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        // // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }

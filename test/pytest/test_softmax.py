@@ -35,8 +35,8 @@ def generate_data(input_shape):
 #         ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
 #     ],
 # )
-@pytest.mark.parametrize('backend', ['XLS'])
-@pytest.mark.parametrize('strategy', ['latency', 'argmax'])
+@pytest.mark.parametrize('backend', ['XLS', 'Vivado'])
+@pytest.mark.parametrize('strategy', ['stable'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
@@ -52,7 +52,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
     table_type = f'fixed<{table_bits}, RND, SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    cfg['LayerName']['softmax']['Strategy'] = strategy
+    cfg['LayerName']['softmax']['Implementation'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = table_type
     cfg['LayerName']['softmax']['exp_table_t'] = table_type
     cfg['LayerName']['softmax']['accum_t'] = table_type

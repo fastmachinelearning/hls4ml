@@ -91,10 +91,10 @@ fn get_exp
 #[test]
 fn get_exp_test() {
     let x = sN[16][4]:[
-        sN[16]:4096,
-        sN[16]:4096,
-        sN[16]:4096,
-        sN[16]:4096
+        sN[16]:1024,
+        sN[16]:1024,
+        sN[16]:1024,
+        sN[16]:1024
     ];
     let expected = sN[18][4]:[
         sN[18]:2784,
@@ -127,7 +127,8 @@ fn get_accum
     let sum = for (i, acc): (u32, sN[NB_ACCUM]) in u32:0..VEC_SZ {
         fixed_point_fix::add_already_widened<NB_OUT, EN_OUT, BU_OUT, NB_ACCUM, EN_ACCUM, BU_ACCUM>(exp_result[i], acc)
     }(sN[NB_ACCUM]:0);
-    let inv_exp_sum = lookup_tables::INV_TABLE[lookup_tables::idx_from_real_val<TABLE_SZ>(sum)];
+    let truncate = fixed_point_fix::to_common_type<NB_OUT, BU_OUT, NB_ACCUM, EN_ACCUM, BU_ACCUM>(sum);
+    let inv_exp_sum = lookup_tables::INV_TABLE[lookup_tables::idx_from_real_val<TABLE_SZ>(truncate)];
 
     inv_exp_sum
 } 
@@ -135,12 +136,12 @@ fn get_accum
 #[test]
 fn get_accum_test() {
     let x = sN[16][4]:[
-        sN[16]:4096,
-        sN[16]:4096,
-        sN[16]:4096,
-        sN[16]:4096
+        sN[16]:1024,
+        sN[16]:1024,
+        sN[16]:1024,
+        sN[16]:1024
     ];
-    let expected = sN[18]:410; // ideal 256
+    let expected = sN[18]:95; // ideal 95
     assert_eq(expected, get_accum<u32:16, u32:1, u32:10, u32:18, u32:1, u32:10, u32:1024>(x));
 }
 
@@ -171,7 +172,8 @@ pub fn softmax_latency
     let sum = for (i, acc): (u32, sN[NB_ACCUM]) in u32:0..VEC_SZ {
         fixed_point_fix::add_already_widened<NB_OUT, EN_OUT, BU_OUT, NB_ACCUM, EN_ACCUM, BU_ACCUM>(exp_result[i], acc)
     }(sN[NB_ACCUM]:0);
-    let inv_exp_sum = lookup_tables::INV_TABLE[lookup_tables::idx_from_real_val<TABLE_SZ>(sum)];
+    let truncate = fixed_point_fix::to_common_type<NB_OUT, BU_OUT, NB_ACCUM, EN_ACCUM, BU_ACCUM>(sum);
+    let inv_exp_sum = lookup_tables::INV_TABLE[lookup_tables::idx_from_real_val<TABLE_SZ>(truncate)];
 
     let inv_result = for (i, inv_vec): (u32, sN[NB_OUT][VEC_SZ]) in u32:0..VEC_SZ {
         update(inv_vec, i, fixed_point_fix::to_common_type<NB_OUT, BU_OUT, NB_MUL, EN_MUL, BU_MUL>(fixed_point_fix::mul<NB_OUT, EN_OUT, BU_OUT, NB_OUT, EN_OUT, BU_OUT>(exp_result[i], inv_exp_sum))) 
@@ -208,10 +210,10 @@ fn softmax_latency_test() {
         sN[16]:1024
     ];
     let expected = sN[18][4]:[
-        sN[18]:1051,  // We want 256
-        sN[18]:1051,
-        sN[18]:1051,
-        sN[18]:1051
+        sN[18]:258,  // Ideal 256
+        sN[18]:258,
+        sN[18]:258,
+        sN[18]:258
     ];
     assert_eq(expected, softmax_latency<u32:16, u32:1, u32:10, u32:18, u32:1, u32:10, u32:1024>(x));
 }
