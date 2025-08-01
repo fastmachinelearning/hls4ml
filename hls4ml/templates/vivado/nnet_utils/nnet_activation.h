@@ -157,12 +157,11 @@ void init_exp_table(typename CONFIG_T::exp_table_t table_out[CONFIG_T::exp_table
         if (negative) {
             // for normalized inputs, we keep the normalization values positive (x_bar = x_max - x)
             // so we need to negate the input (exp(-x_bar) = exp(x - x_max))
-            // std::cout << " INVERSE: " << x << std::endl;
             x = -x;
         }
         typename CONFIG_T::exp_table_t exp_x = exp_fcn_float(x);
         table_out[i] = exp_x;
-        // std::cout << "exp_table[" << i << "] = " << exp_x << " X: " << x << std::endl;
+        std::cout << "exp_table[" << i << "] = " << exp_x << " X: " << x << std::endl;
     }
 }
 

@@ -1,0 +1,1896 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.16, pytest-8.4.0, pluggy-1.6.0
+pytest-randomly: reseed with 3154144949
+Using --randomly-seed=3154144949
+rootdir: /home/girji/workspace/forks/hls4ml
+configfile: pyproject.toml
+plugins: randomly-3.16.0, cov-6.2.1, anyio-4.9.0
+pytest-randomly: reseed with 3154144949
+collected 2 items
+
+test_softmax.py FF                                                       [100%]
+
+=================================== FAILURES ===================================
+_______ test_softmax[16,6-input_shape0-9,6-io_parallel-False-stable-XLS] _______
+
+backend = 'XLS', strategy = 'stable'
+generate_data = array([[13.9744297 , 15.92180375, 22.9723219 , ...,  8.19185447,
+         7.68837113, 19.16780557],
+       [12.8074795...107, 28.08511306],
+       [ 5.51985369, 13.12982809,  4.56763497, ...,  3.48239095,
+        12.02306702, 11.76489227]])
+input_bits = '16,6', input_shape = (8,), table_bits = '9,6'
+io_type = 'io_parallel', custom_accum = False
+
+    @pytest.mark.parametrize('backend', ['Vivado', 'XLS'])
+    @pytest.mark.parametrize('strategy', ['stable'])
+    @pytest.mark.parametrize(
+        'input_bits,input_shape,table_bits,io_type,custom_accum',
+        [
+            # ('16,6', (8,), '18,8', 'io_parallel', False),
+            ('16,6', (8,), '9,6', 'io_parallel', False),
+        ],
+    )
+    def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+        X = generate_data
+        model = tf.keras.models.Sequential()
+        model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+        model.compile()
+    
+        table_type = f'fixed<{table_bits}, RND, SAT>'
+    
+        cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+        cfg['LayerName']['softmax']['Implementation'] = strategy
+        cfg['LayerName']['softmax']['inv_table_t'] = table_type
+        cfg['LayerName']['softmax']['exp_table_t'] = table_type
+        cfg['LayerName']['softmax']['accum_t'] = table_type
+        cfg['LayerName']['softmax']['inv_inp_t'] = table_type
+        if custom_accum:
+            if backend not in ['Vivado', 'Vitis']:
+                pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
+            W, I = map(int, input_bits.split(','))  # noqa: E741
+            cfg['LayerName']['softmax']['accum_t'] = f'fixed<{W+3},{I+3}>'
+            cfg['LayerName']['softmax']['inv_inp_t'] = f'fixed<{W+2},{I+2}>'
+        inp_layer_name = next(iter(cfg['LayerName'].keys()))
+        cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
+    
+        odir = str(
+            test_root_path
+            / (
+                f'hls4mlprj_softmax_{backend}_{io_type}_{strategy}_{input_shape}'
+                f'_input-bits={input_bits}_table-bits={table_bits}_custom-accum={custom_accum}'
+            )
+        )
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+        )
+>       hls_model.compile()
+
+/home/girji/workspace/forks/hls4ml/test/pytest/test_softmax.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/girji/workspace/forks/hls4ml/hls4ml/model/graph.py:807: in compile
+    self._compile()
+/home/girji/workspace/forks/hls4ml/hls4ml/model/graph.py:810: in _compile
+    lib_name = self.config.backend.compile(self)
+/home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:189: in compile
+    subprocess.run(gen_cmd, check=True, stdout=ir_file)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['/home/girji/xls/bazel-bin/xls/dslx/ir_convert/ir_converter_main', '--top=myproject', 'myproject.x'],)
+kwargs = {'stdout': <_io.TextIOWrapper name='myproject.ir' mode='w' encoding='UTF-8'>}
+process = <Popen: returncode: 1 args: ['/home/girji/xls/bazel-bin/xls/dslx/ir_convert/...>
+stdout = None, stderr = None, retcode = 1
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout is given, and the process takes too long, a TimeoutExpired
+        exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/home/girji/xls/bazel-bin/xls/dslx/ir_convert/ir_converter_main', '--top=myproject', 'myproject.x']' returned non-zero exit status 1.
+
+/home/girji/miniconda3/envs/hls4ml/lib/python3.10/subprocess.py:526: CalledProcessError
+---------------------------- Captured stdout setup -----------------------------
+pytest-randomly: reseed with 3154144948
+----------------------------- Captured stdout call -----------------------------
+pytest-randomly: reseed with 3154144949
+WARNING: Config parameter "accum_t" overwrites an existing attribute in layer "softmax" (Softmax)
+XLS:  0  x:  -0.0
+XLS:  1  x:  -0.03125
+XLS:  2  x:  -0.0625
+XLS:  3  x:  -0.09375
+XLS:  4  x:  -0.125
+XLS:  5  x:  -0.15625
+XLS:  6  x:  -0.1875
+XLS:  7  x:  -0.21875
+XLS:  8  x:  -0.25
+XLS:  9  x:  -0.28125
+XLS:  10  x:  -0.3125
+XLS:  11  x:  -0.34375
+XLS:  12  x:  -0.375
+XLS:  13  x:  -0.40625
+XLS:  14  x:  -0.4375
+XLS:  15  x:  -0.46875
+XLS:  16  x:  -0.5
+XLS:  17  x:  -0.53125
+XLS:  18  x:  -0.5625
+XLS:  19  x:  -0.59375
+XLS:  20  x:  -0.625
+XLS:  21  x:  -0.65625
+XLS:  22  x:  -0.6875
+XLS:  23  x:  -0.71875
+XLS:  24  x:  -0.75
+XLS:  25  x:  -0.78125
+XLS:  26  x:  -0.8125
+XLS:  27  x:  -0.84375
+XLS:  28  x:  -0.875
+XLS:  29  x:  -0.90625
+XLS:  30  x:  -0.9375
+XLS:  31  x:  -0.96875
+XLS:  32  x:  -1.0
+XLS:  33  x:  -1.03125
+XLS:  34  x:  -1.0625
+XLS:  35  x:  -1.09375
+XLS:  36  x:  -1.125
+XLS:  37  x:  -1.15625
+XLS:  38  x:  -1.1875
+XLS:  39  x:  -1.21875
+XLS:  40  x:  -1.25
+XLS:  41  x:  -1.28125
+XLS:  42  x:  -1.3125
+XLS:  43  x:  -1.34375
+XLS:  44  x:  -1.375
+XLS:  45  x:  -1.40625
+XLS:  46  x:  -1.4375
+XLS:  47  x:  -1.46875
+XLS:  48  x:  -1.5
+XLS:  49  x:  -1.53125
+XLS:  50  x:  -1.5625
+XLS:  51  x:  -1.59375
+XLS:  52  x:  -1.625
+XLS:  53  x:  -1.65625
+XLS:  54  x:  -1.6875
+XLS:  55  x:  -1.71875
+XLS:  56  x:  -1.75
+XLS:  57  x:  -1.78125
+XLS:  58  x:  -1.8125
+XLS:  59  x:  -1.84375
+XLS:  60  x:  -1.875
+XLS:  61  x:  -1.90625
+XLS:  62  x:  -1.9375
+XLS:  63  x:  -1.96875
+XLS:  64  x:  -2.0
+XLS:  65  x:  -2.03125
+XLS:  66  x:  -2.0625
+XLS:  67  x:  -2.09375
+XLS:  68  x:  -2.125
+XLS:  69  x:  -2.15625
+XLS:  70  x:  -2.1875
+XLS:  71  x:  -2.21875
+XLS:  72  x:  -2.25
+XLS:  73  x:  -2.28125
+XLS:  74  x:  -2.3125
+XLS:  75  x:  -2.34375
+XLS:  76  x:  -2.375
+XLS:  77  x:  -2.40625
+XLS:  78  x:  -2.4375
+XLS:  79  x:  -2.46875
+XLS:  80  x:  -2.5
+XLS:  81  x:  -2.53125
+XLS:  82  x:  -2.5625
+XLS:  83  x:  -2.59375
+XLS:  84  x:  -2.625
+XLS:  85  x:  -2.65625
+XLS:  86  x:  -2.6875
+XLS:  87  x:  -2.71875
+XLS:  88  x:  -2.75
+XLS:  89  x:  -2.78125
+XLS:  90  x:  -2.8125
+XLS:  91  x:  -2.84375
+XLS:  92  x:  -2.875
+XLS:  93  x:  -2.90625
+XLS:  94  x:  -2.9375
+XLS:  95  x:  -2.96875
+XLS:  96  x:  -3.0
+XLS:  97  x:  -3.03125
+XLS:  98  x:  -3.0625
+XLS:  99  x:  -3.09375
+XLS:  100  x:  -3.125
+XLS:  101  x:  -3.15625
+XLS:  102  x:  -3.1875
+XLS:  103  x:  -3.21875
+XLS:  104  x:  -3.25
+XLS:  105  x:  -3.28125
+XLS:  106  x:  -3.3125
+XLS:  107  x:  -3.34375
+XLS:  108  x:  -3.375
+XLS:  109  x:  -3.40625
+XLS:  110  x:  -3.4375
+XLS:  111  x:  -3.46875
+XLS:  112  x:  -3.5
+XLS:  113  x:  -3.53125
+XLS:  114  x:  -3.5625
+XLS:  115  x:  -3.59375
+XLS:  116  x:  -3.625
+XLS:  117  x:  -3.65625
+XLS:  118  x:  -3.6875
+XLS:  119  x:  -3.71875
+XLS:  120  x:  -3.75
+XLS:  121  x:  -3.78125
+XLS:  122  x:  -3.8125
+XLS:  123  x:  -3.84375
+XLS:  124  x:  -3.875
+XLS:  125  x:  -3.90625
+XLS:  126  x:  -3.9375
+XLS:  127  x:  -3.96875
+XLS:  128  x:  -4.0
+XLS:  129  x:  -4.03125
+XLS:  130  x:  -4.0625
+XLS:  131  x:  -4.09375
+XLS:  132  x:  -4.125
+XLS:  133  x:  -4.15625
+XLS:  134  x:  -4.1875
+XLS:  135  x:  -4.21875
+XLS:  136  x:  -4.25
+XLS:  137  x:  -4.28125
+XLS:  138  x:  -4.3125
+XLS:  139  x:  -4.34375
+XLS:  140  x:  -4.375
+XLS:  141  x:  -4.40625
+XLS:  142  x:  -4.4375
+XLS:  143  x:  -4.46875
+XLS:  144  x:  -4.5
+XLS:  145  x:  -4.53125
+XLS:  146  x:  -4.5625
+XLS:  147  x:  -4.59375
+XLS:  148  x:  -4.625
+XLS:  149  x:  -4.65625
+XLS:  150  x:  -4.6875
+XLS:  151  x:  -4.71875
+XLS:  152  x:  -4.75
+XLS:  153  x:  -4.78125
+XLS:  154  x:  -4.8125
+XLS:  155  x:  -4.84375
+XLS:  156  x:  -4.875
+XLS:  157  x:  -4.90625
+XLS:  158  x:  -4.9375
+XLS:  159  x:  -4.96875
+XLS:  160  x:  -5.0
+XLS:  161  x:  -5.03125
+XLS:  162  x:  -5.0625
+XLS:  163  x:  -5.09375
+XLS:  164  x:  -5.125
+XLS:  165  x:  -5.15625
+XLS:  166  x:  -5.1875
+XLS:  167  x:  -5.21875
+XLS:  168  x:  -5.25
+XLS:  169  x:  -5.28125
+XLS:  170  x:  -5.3125
+XLS:  171  x:  -5.34375
+XLS:  172  x:  -5.375
+XLS:  173  x:  -5.40625
+XLS:  174  x:  -5.4375
+XLS:  175  x:  -5.46875
+XLS:  176  x:  -5.5
+XLS:  177  x:  -5.53125
+XLS:  178  x:  -5.5625
+XLS:  179  x:  -5.59375
+XLS:  180  x:  -5.625
+XLS:  181  x:  -5.65625
+XLS:  182  x:  -5.6875
+XLS:  183  x:  -5.71875
+XLS:  184  x:  -5.75
+XLS:  185  x:  -5.78125
+XLS:  186  x:  -5.8125
+XLS:  187  x:  -5.84375
+XLS:  188  x:  -5.875
+XLS:  189  x:  -5.90625
+XLS:  190  x:  -5.9375
+XLS:  191  x:  -5.96875
+XLS:  192  x:  -6.0
+XLS:  193  x:  -6.03125
+XLS:  194  x:  -6.0625
+XLS:  195  x:  -6.09375
+XLS:  196  x:  -6.125
+XLS:  197  x:  -6.15625
+XLS:  198  x:  -6.1875
+XLS:  199  x:  -6.21875
+XLS:  200  x:  -6.25
+XLS:  201  x:  -6.28125
+XLS:  202  x:  -6.3125
+XLS:  203  x:  -6.34375
+XLS:  204  x:  -6.375
+XLS:  205  x:  -6.40625
+XLS:  206  x:  -6.4375
+XLS:  207  x:  -6.46875
+XLS:  208  x:  -6.5
+XLS:  209  x:  -6.53125
+XLS:  210  x:  -6.5625
+XLS:  211  x:  -6.59375
+XLS:  212  x:  -6.625
+XLS:  213  x:  -6.65625
+XLS:  214  x:  -6.6875
+XLS:  215  x:  -6.71875
+XLS:  216  x:  -6.75
+XLS:  217  x:  -6.78125
+XLS:  218  x:  -6.8125
+XLS:  219  x:  -6.84375
+XLS:  220  x:  -6.875
+XLS:  221  x:  -6.90625
+XLS:  222  x:  -6.9375
+XLS:  223  x:  -6.96875
+XLS:  224  x:  -7.0
+XLS:  225  x:  -7.03125
+XLS:  226  x:  -7.0625
+XLS:  227  x:  -7.09375
+XLS:  228  x:  -7.125
+XLS:  229  x:  -7.15625
+XLS:  230  x:  -7.1875
+XLS:  231  x:  -7.21875
+XLS:  232  x:  -7.25
+XLS:  233  x:  -7.28125
+XLS:  234  x:  -7.3125
+XLS:  235  x:  -7.34375
+XLS:  236  x:  -7.375
+XLS:  237  x:  -7.40625
+XLS:  238  x:  -7.4375
+XLS:  239  x:  -7.46875
+XLS:  240  x:  -7.5
+XLS:  241  x:  -7.53125
+XLS:  242  x:  -7.5625
+XLS:  243  x:  -7.59375
+XLS:  244  x:  -7.625
+XLS:  245  x:  -7.65625
+XLS:  246  x:  -7.6875
+XLS:  247  x:  -7.71875
+XLS:  248  x:  -7.75
+XLS:  249  x:  -7.78125
+XLS:  250  x:  -7.8125
+XLS:  251  x:  -7.84375
+XLS:  252  x:  -7.875
+XLS:  253  x:  -7.90625
+XLS:  254  x:  -7.9375
+XLS:  255  x:  -7.96875
+XLS:  256  x:  -8.0
+XLS:  257  x:  -8.03125
+XLS:  258  x:  -8.0625
+XLS:  259  x:  -8.09375
+XLS:  260  x:  -8.125
+XLS:  261  x:  -8.15625
+XLS:  262  x:  -8.1875
+XLS:  263  x:  -8.21875
+XLS:  264  x:  -8.25
+XLS:  265  x:  -8.28125
+XLS:  266  x:  -8.3125
+XLS:  267  x:  -8.34375
+XLS:  268  x:  -8.375
+XLS:  269  x:  -8.40625
+XLS:  270  x:  -8.4375
+XLS:  271  x:  -8.46875
+XLS:  272  x:  -8.5
+XLS:  273  x:  -8.53125
+XLS:  274  x:  -8.5625
+XLS:  275  x:  -8.59375
+XLS:  276  x:  -8.625
+XLS:  277  x:  -8.65625
+XLS:  278  x:  -8.6875
+XLS:  279  x:  -8.71875
+XLS:  280  x:  -8.75
+XLS:  281  x:  -8.78125
+XLS:  282  x:  -8.8125
+XLS:  283  x:  -8.84375
+XLS:  284  x:  -8.875
+XLS:  285  x:  -8.90625
+XLS:  286  x:  -8.9375
+XLS:  287  x:  -8.96875
+XLS:  288  x:  -9.0
+XLS:  289  x:  -9.03125
+XLS:  290  x:  -9.0625
+XLS:  291  x:  -9.09375
+XLS:  292  x:  -9.125
+XLS:  293  x:  -9.15625
+XLS:  294  x:  -9.1875
+XLS:  295  x:  -9.21875
+XLS:  296  x:  -9.25
+XLS:  297  x:  -9.28125
+XLS:  298  x:  -9.3125
+XLS:  299  x:  -9.34375
+XLS:  300  x:  -9.375
+XLS:  301  x:  -9.40625
+XLS:  302  x:  -9.4375
+XLS:  303  x:  -9.46875
+XLS:  304  x:  -9.5
+XLS:  305  x:  -9.53125
+XLS:  306  x:  -9.5625
+XLS:  307  x:  -9.59375
+XLS:  308  x:  -9.625
+XLS:  309  x:  -9.65625
+XLS:  310  x:  -9.6875
+XLS:  311  x:  -9.71875
+XLS:  312  x:  -9.75
+XLS:  313  x:  -9.78125
+XLS:  314  x:  -9.8125
+XLS:  315  x:  -9.84375
+XLS:  316  x:  -9.875
+XLS:  317  x:  -9.90625
+XLS:  318  x:  -9.9375
+XLS:  319  x:  -9.96875
+XLS:  320  x:  -10.0
+XLS:  321  x:  -10.03125
+XLS:  322  x:  -10.0625
+XLS:  323  x:  -10.09375
+XLS:  324  x:  -10.125
+XLS:  325  x:  -10.15625
+XLS:  326  x:  -10.1875
+XLS:  327  x:  -10.21875
+XLS:  328  x:  -10.25
+XLS:  329  x:  -10.28125
+XLS:  330  x:  -10.3125
+XLS:  331  x:  -10.34375
+XLS:  332  x:  -10.375
+XLS:  333  x:  -10.40625
+XLS:  334  x:  -10.4375
+XLS:  335  x:  -10.46875
+XLS:  336  x:  -10.5
+XLS:  337  x:  -10.53125
+XLS:  338  x:  -10.5625
+XLS:  339  x:  -10.59375
+XLS:  340  x:  -10.625
+XLS:  341  x:  -10.65625
+XLS:  342  x:  -10.6875
+XLS:  343  x:  -10.71875
+XLS:  344  x:  -10.75
+XLS:  345  x:  -10.78125
+XLS:  346  x:  -10.8125
+XLS:  347  x:  -10.84375
+XLS:  348  x:  -10.875
+XLS:  349  x:  -10.90625
+XLS:  350  x:  -10.9375
+XLS:  351  x:  -10.96875
+XLS:  352  x:  -11.0
+XLS:  353  x:  -11.03125
+XLS:  354  x:  -11.0625
+XLS:  355  x:  -11.09375
+XLS:  356  x:  -11.125
+XLS:  357  x:  -11.15625
+XLS:  358  x:  -11.1875
+XLS:  359  x:  -11.21875
+XLS:  360  x:  -11.25
+XLS:  361  x:  -11.28125
+XLS:  362  x:  -11.3125
+XLS:  363  x:  -11.34375
+XLS:  364  x:  -11.375
+XLS:  365  x:  -11.40625
+XLS:  366  x:  -11.4375
+XLS:  367  x:  -11.46875
+XLS:  368  x:  -11.5
+XLS:  369  x:  -11.53125
+XLS:  370  x:  -11.5625
+XLS:  371  x:  -11.59375
+XLS:  372  x:  -11.625
+XLS:  373  x:  -11.65625
+XLS:  374  x:  -11.6875
+XLS:  375  x:  -11.71875
+XLS:  376  x:  -11.75
+XLS:  377  x:  -11.78125
+XLS:  378  x:  -11.8125
+XLS:  379  x:  -11.84375
+XLS:  380  x:  -11.875
+XLS:  381  x:  -11.90625
+XLS:  382  x:  -11.9375
+XLS:  383  x:  -11.96875
+XLS:  384  x:  -12.0
+XLS:  385  x:  -12.03125
+XLS:  386  x:  -12.0625
+XLS:  387  x:  -12.09375
+XLS:  388  x:  -12.125
+XLS:  389  x:  -12.15625
+XLS:  390  x:  -12.1875
+XLS:  391  x:  -12.21875
+XLS:  392  x:  -12.25
+XLS:  393  x:  -12.28125
+XLS:  394  x:  -12.3125
+XLS:  395  x:  -12.34375
+XLS:  396  x:  -12.375
+XLS:  397  x:  -12.40625
+XLS:  398  x:  -12.4375
+XLS:  399  x:  -12.46875
+XLS:  400  x:  -12.5
+XLS:  401  x:  -12.53125
+XLS:  402  x:  -12.5625
+XLS:  403  x:  -12.59375
+XLS:  404  x:  -12.625
+XLS:  405  x:  -12.65625
+XLS:  406  x:  -12.6875
+XLS:  407  x:  -12.71875
+XLS:  408  x:  -12.75
+XLS:  409  x:  -12.78125
+XLS:  410  x:  -12.8125
+XLS:  411  x:  -12.84375
+XLS:  412  x:  -12.875
+XLS:  413  x:  -12.90625
+XLS:  414  x:  -12.9375
+XLS:  415  x:  -12.96875
+XLS:  416  x:  -13.0
+XLS:  417  x:  -13.03125
+XLS:  418  x:  -13.0625
+XLS:  419  x:  -13.09375
+XLS:  420  x:  -13.125
+XLS:  421  x:  -13.15625
+XLS:  422  x:  -13.1875
+XLS:  423  x:  -13.21875
+XLS:  424  x:  -13.25
+XLS:  425  x:  -13.28125
+XLS:  426  x:  -13.3125
+XLS:  427  x:  -13.34375
+XLS:  428  x:  -13.375
+XLS:  429  x:  -13.40625
+XLS:  430  x:  -13.4375
+XLS:  431  x:  -13.46875
+XLS:  432  x:  -13.5
+XLS:  433  x:  -13.53125
+XLS:  434  x:  -13.5625
+XLS:  435  x:  -13.59375
+XLS:  436  x:  -13.625
+XLS:  437  x:  -13.65625
+XLS:  438  x:  -13.6875
+XLS:  439  x:  -13.71875
+XLS:  440  x:  -13.75
+XLS:  441  x:  -13.78125
+XLS:  442  x:  -13.8125
+XLS:  443  x:  -13.84375
+XLS:  444  x:  -13.875
+XLS:  445  x:  -13.90625
+XLS:  446  x:  -13.9375
+XLS:  447  x:  -13.96875
+XLS:  448  x:  -14.0
+XLS:  449  x:  -14.03125
+XLS:  450  x:  -14.0625
+XLS:  451  x:  -14.09375
+XLS:  452  x:  -14.125
+XLS:  453  x:  -14.15625
+XLS:  454  x:  -14.1875
+XLS:  455  x:  -14.21875
+XLS:  456  x:  -14.25
+XLS:  457  x:  -14.28125
+XLS:  458  x:  -14.3125
+XLS:  459  x:  -14.34375
+XLS:  460  x:  -14.375
+XLS:  461  x:  -14.40625
+XLS:  462  x:  -14.4375
+XLS:  463  x:  -14.46875
+XLS:  464  x:  -14.5
+XLS:  465  x:  -14.53125
+XLS:  466  x:  -14.5625
+XLS:  467  x:  -14.59375
+XLS:  468  x:  -14.625
+XLS:  469  x:  -14.65625
+XLS:  470  x:  -14.6875
+XLS:  471  x:  -14.71875
+XLS:  472  x:  -14.75
+XLS:  473  x:  -14.78125
+XLS:  474  x:  -14.8125
+XLS:  475  x:  -14.84375
+XLS:  476  x:  -14.875
+XLS:  477  x:  -14.90625
+XLS:  478  x:  -14.9375
+XLS:  479  x:  -14.96875
+XLS:  480  x:  -15.0
+XLS:  481  x:  -15.03125
+XLS:  482  x:  -15.0625
+XLS:  483  x:  -15.09375
+XLS:  484  x:  -15.125
+XLS:  485  x:  -15.15625
+XLS:  486  x:  -15.1875
+XLS:  487  x:  -15.21875
+XLS:  488  x:  -15.25
+XLS:  489  x:  -15.28125
+XLS:  490  x:  -15.3125
+XLS:  491  x:  -15.34375
+XLS:  492  x:  -15.375
+XLS:  493  x:  -15.40625
+XLS:  494  x:  -15.4375
+XLS:  495  x:  -15.46875
+XLS:  496  x:  -15.5
+XLS:  497  x:  -15.53125
+XLS:  498  x:  -15.5625
+XLS:  499  x:  -15.59375
+XLS:  500  x:  -15.625
+XLS:  501  x:  -15.65625
+XLS:  502  x:  -15.6875
+XLS:  503  x:  -15.71875
+XLS:  504  x:  -15.75
+XLS:  505  x:  -15.78125
+XLS:  506  x:  -15.8125
+XLS:  507  x:  -15.84375
+XLS:  508  x:  -15.875
+XLS:  509  x:  -15.90625
+XLS:  510  x:  -15.9375
+XLS:  511  x:  -15.96875
+XLS:  512  x:  -16.0
+XLS:  513  x:  -16.03125
+XLS:  514  x:  -16.0625
+XLS:  515  x:  -16.09375
+XLS:  516  x:  -16.125
+XLS:  517  x:  -16.15625
+XLS:  518  x:  -16.1875
+XLS:  519  x:  -16.21875
+XLS:  520  x:  -16.25
+XLS:  521  x:  -16.28125
+XLS:  522  x:  -16.3125
+XLS:  523  x:  -16.34375
+XLS:  524  x:  -16.375
+XLS:  525  x:  -16.40625
+XLS:  526  x:  -16.4375
+XLS:  527  x:  -16.46875
+XLS:  528  x:  -16.5
+XLS:  529  x:  -16.53125
+XLS:  530  x:  -16.5625
+XLS:  531  x:  -16.59375
+XLS:  532  x:  -16.625
+XLS:  533  x:  -16.65625
+XLS:  534  x:  -16.6875
+XLS:  535  x:  -16.71875
+XLS:  536  x:  -16.75
+XLS:  537  x:  -16.78125
+XLS:  538  x:  -16.8125
+XLS:  539  x:  -16.84375
+XLS:  540  x:  -16.875
+XLS:  541  x:  -16.90625
+XLS:  542  x:  -16.9375
+XLS:  543  x:  -16.96875
+XLS:  544  x:  -17.0
+XLS:  545  x:  -17.03125
+XLS:  546  x:  -17.0625
+XLS:  547  x:  -17.09375
+XLS:  548  x:  -17.125
+XLS:  549  x:  -17.15625
+XLS:  550  x:  -17.1875
+XLS:  551  x:  -17.21875
+XLS:  552  x:  -17.25
+XLS:  553  x:  -17.28125
+XLS:  554  x:  -17.3125
+XLS:  555  x:  -17.34375
+XLS:  556  x:  -17.375
+XLS:  557  x:  -17.40625
+XLS:  558  x:  -17.4375
+XLS:  559  x:  -17.46875
+XLS:  560  x:  -17.5
+XLS:  561  x:  -17.53125
+XLS:  562  x:  -17.5625
+XLS:  563  x:  -17.59375
+XLS:  564  x:  -17.625
+XLS:  565  x:  -17.65625
+XLS:  566  x:  -17.6875
+XLS:  567  x:  -17.71875
+XLS:  568  x:  -17.75
+XLS:  569  x:  -17.78125
+XLS:  570  x:  -17.8125
+XLS:  571  x:  -17.84375
+XLS:  572  x:  -17.875
+XLS:  573  x:  -17.90625
+XLS:  574  x:  -17.9375
+XLS:  575  x:  -17.96875
+XLS:  576  x:  -18.0
+XLS:  577  x:  -18.03125
+XLS:  578  x:  -18.0625
+XLS:  579  x:  -18.09375
+XLS:  580  x:  -18.125
+XLS:  581  x:  -18.15625
+XLS:  582  x:  -18.1875
+XLS:  583  x:  -18.21875
+XLS:  584  x:  -18.25
+XLS:  585  x:  -18.28125
+XLS:  586  x:  -18.3125
+XLS:  587  x:  -18.34375
+XLS:  588  x:  -18.375
+XLS:  589  x:  -18.40625
+XLS:  590  x:  -18.4375
+XLS:  591  x:  -18.46875
+XLS:  592  x:  -18.5
+XLS:  593  x:  -18.53125
+XLS:  594  x:  -18.5625
+XLS:  595  x:  -18.59375
+XLS:  596  x:  -18.625
+XLS:  597  x:  -18.65625
+XLS:  598  x:  -18.6875
+XLS:  599  x:  -18.71875
+XLS:  600  x:  -18.75
+XLS:  601  x:  -18.78125
+XLS:  602  x:  -18.8125
+XLS:  603  x:  -18.84375
+XLS:  604  x:  -18.875
+XLS:  605  x:  -18.90625
+XLS:  606  x:  -18.9375
+XLS:  607  x:  -18.96875
+XLS:  608  x:  -19.0
+XLS:  609  x:  -19.03125
+XLS:  610  x:  -19.0625
+XLS:  611  x:  -19.09375
+XLS:  612  x:  -19.125
+XLS:  613  x:  -19.15625
+XLS:  614  x:  -19.1875
+XLS:  615  x:  -19.21875
+XLS:  616  x:  -19.25
+XLS:  617  x:  -19.28125
+XLS:  618  x:  -19.3125
+XLS:  619  x:  -19.34375
+XLS:  620  x:  -19.375
+XLS:  621  x:  -19.40625
+XLS:  622  x:  -19.4375
+XLS:  623  x:  -19.46875
+XLS:  624  x:  -19.5
+XLS:  625  x:  -19.53125
+XLS:  626  x:  -19.5625
+XLS:  627  x:  -19.59375
+XLS:  628  x:  -19.625
+XLS:  629  x:  -19.65625
+XLS:  630  x:  -19.6875
+XLS:  631  x:  -19.71875
+XLS:  632  x:  -19.75
+XLS:  633  x:  -19.78125
+XLS:  634  x:  -19.8125
+XLS:  635  x:  -19.84375
+XLS:  636  x:  -19.875
+XLS:  637  x:  -19.90625
+XLS:  638  x:  -19.9375
+XLS:  639  x:  -19.96875
+XLS:  640  x:  -20.0
+XLS:  641  x:  -20.03125
+XLS:  642  x:  -20.0625
+XLS:  643  x:  -20.09375
+XLS:  644  x:  -20.125
+XLS:  645  x:  -20.15625
+XLS:  646  x:  -20.1875
+XLS:  647  x:  -20.21875
+XLS:  648  x:  -20.25
+XLS:  649  x:  -20.28125
+XLS:  650  x:  -20.3125
+XLS:  651  x:  -20.34375
+XLS:  652  x:  -20.375
+XLS:  653  x:  -20.40625
+XLS:  654  x:  -20.4375
+XLS:  655  x:  -20.46875
+XLS:  656  x:  -20.5
+XLS:  657  x:  -20.53125
+XLS:  658  x:  -20.5625
+XLS:  659  x:  -20.59375
+XLS:  660  x:  -20.625
+XLS:  661  x:  -20.65625
+XLS:  662  x:  -20.6875
+XLS:  663  x:  -20.71875
+XLS:  664  x:  -20.75
+XLS:  665  x:  -20.78125
+XLS:  666  x:  -20.8125
+XLS:  667  x:  -20.84375
+XLS:  668  x:  -20.875
+XLS:  669  x:  -20.90625
+XLS:  670  x:  -20.9375
+XLS:  671  x:  -20.96875
+XLS:  672  x:  -21.0
+XLS:  673  x:  -21.03125
+XLS:  674  x:  -21.0625
+XLS:  675  x:  -21.09375
+XLS:  676  x:  -21.125
+XLS:  677  x:  -21.15625
+XLS:  678  x:  -21.1875
+XLS:  679  x:  -21.21875
+XLS:  680  x:  -21.25
+XLS:  681  x:  -21.28125
+XLS:  682  x:  -21.3125
+XLS:  683  x:  -21.34375
+XLS:  684  x:  -21.375
+XLS:  685  x:  -21.40625
+XLS:  686  x:  -21.4375
+XLS:  687  x:  -21.46875
+XLS:  688  x:  -21.5
+XLS:  689  x:  -21.53125
+XLS:  690  x:  -21.5625
+XLS:  691  x:  -21.59375
+XLS:  692  x:  -21.625
+XLS:  693  x:  -21.65625
+XLS:  694  x:  -21.6875
+XLS:  695  x:  -21.71875
+XLS:  696  x:  -21.75
+XLS:  697  x:  -21.78125
+XLS:  698  x:  -21.8125
+XLS:  699  x:  -21.84375
+XLS:  700  x:  -21.875
+XLS:  701  x:  -21.90625
+XLS:  702  x:  -21.9375
+XLS:  703  x:  -21.96875
+XLS:  704  x:  -22.0
+XLS:  705  x:  -22.03125
+XLS:  706  x:  -22.0625
+XLS:  707  x:  -22.09375
+XLS:  708  x:  -22.125
+XLS:  709  x:  -22.15625
+XLS:  710  x:  -22.1875
+XLS:  711  x:  -22.21875
+XLS:  712  x:  -22.25
+XLS:  713  x:  -22.28125
+XLS:  714  x:  -22.3125
+XLS:  715  x:  -22.34375
+XLS:  716  x:  -22.375
+XLS:  717  x:  -22.40625
+XLS:  718  x:  -22.4375
+XLS:  719  x:  -22.46875
+XLS:  720  x:  -22.5
+XLS:  721  x:  -22.53125
+XLS:  722  x:  -22.5625
+XLS:  723  x:  -22.59375
+XLS:  724  x:  -22.625
+XLS:  725  x:  -22.65625
+XLS:  726  x:  -22.6875
+XLS:  727  x:  -22.71875
+XLS:  728  x:  -22.75
+XLS:  729  x:  -22.78125
+XLS:  730  x:  -22.8125
+XLS:  731  x:  -22.84375
+XLS:  732  x:  -22.875
+XLS:  733  x:  -22.90625
+XLS:  734  x:  -22.9375
+XLS:  735  x:  -22.96875
+XLS:  736  x:  -23.0
+XLS:  737  x:  -23.03125
+XLS:  738  x:  -23.0625
+XLS:  739  x:  -23.09375
+XLS:  740  x:  -23.125
+XLS:  741  x:  -23.15625
+XLS:  742  x:  -23.1875
+XLS:  743  x:  -23.21875
+XLS:  744  x:  -23.25
+XLS:  745  x:  -23.28125
+XLS:  746  x:  -23.3125
+XLS:  747  x:  -23.34375
+XLS:  748  x:  -23.375
+XLS:  749  x:  -23.40625
+XLS:  750  x:  -23.4375
+XLS:  751  x:  -23.46875
+XLS:  752  x:  -23.5
+XLS:  753  x:  -23.53125
+XLS:  754  x:  -23.5625
+XLS:  755  x:  -23.59375
+XLS:  756  x:  -23.625
+XLS:  757  x:  -23.65625
+XLS:  758  x:  -23.6875
+XLS:  759  x:  -23.71875
+XLS:  760  x:  -23.75
+XLS:  761  x:  -23.78125
+XLS:  762  x:  -23.8125
+XLS:  763  x:  -23.84375
+XLS:  764  x:  -23.875
+XLS:  765  x:  -23.90625
+XLS:  766  x:  -23.9375
+XLS:  767  x:  -23.96875
+XLS:  768  x:  -24.0
+XLS:  769  x:  -24.03125
+XLS:  770  x:  -24.0625
+XLS:  771  x:  -24.09375
+XLS:  772  x:  -24.125
+XLS:  773  x:  -24.15625
+XLS:  774  x:  -24.1875
+XLS:  775  x:  -24.21875
+XLS:  776  x:  -24.25
+XLS:  777  x:  -24.28125
+XLS:  778  x:  -24.3125
+XLS:  779  x:  -24.34375
+XLS:  780  x:  -24.375
+XLS:  781  x:  -24.40625
+XLS:  782  x:  -24.4375
+XLS:  783  x:  -24.46875
+XLS:  784  x:  -24.5
+XLS:  785  x:  -24.53125
+XLS:  786  x:  -24.5625
+XLS:  787  x:  -24.59375
+XLS:  788  x:  -24.625
+XLS:  789  x:  -24.65625
+XLS:  790  x:  -24.6875
+XLS:  791  x:  -24.71875
+XLS:  792  x:  -24.75
+XLS:  793  x:  -24.78125
+XLS:  794  x:  -24.8125
+XLS:  795  x:  -24.84375
+XLS:  796  x:  -24.875
+XLS:  797  x:  -24.90625
+XLS:  798  x:  -24.9375
+XLS:  799  x:  -24.96875
+XLS:  800  x:  -25.0
+XLS:  801  x:  -25.03125
+XLS:  802  x:  -25.0625
+XLS:  803  x:  -25.09375
+XLS:  804  x:  -25.125
+XLS:  805  x:  -25.15625
+XLS:  806  x:  -25.1875
+XLS:  807  x:  -25.21875
+XLS:  808  x:  -25.25
+XLS:  809  x:  -25.28125
+XLS:  810  x:  -25.3125
+XLS:  811  x:  -25.34375
+XLS:  812  x:  -25.375
+XLS:  813  x:  -25.40625
+XLS:  814  x:  -25.4375
+XLS:  815  x:  -25.46875
+XLS:  816  x:  -25.5
+XLS:  817  x:  -25.53125
+XLS:  818  x:  -25.5625
+XLS:  819  x:  -25.59375
+XLS:  820  x:  -25.625
+XLS:  821  x:  -25.65625
+XLS:  822  x:  -25.6875
+XLS:  823  x:  -25.71875
+XLS:  824  x:  -25.75
+XLS:  825  x:  -25.78125
+XLS:  826  x:  -25.8125
+XLS:  827  x:  -25.84375
+XLS:  828  x:  -25.875
+XLS:  829  x:  -25.90625
+XLS:  830  x:  -25.9375
+XLS:  831  x:  -25.96875
+XLS:  832  x:  -26.0
+XLS:  833  x:  -26.03125
+XLS:  834  x:  -26.0625
+XLS:  835  x:  -26.09375
+XLS:  836  x:  -26.125
+XLS:  837  x:  -26.15625
+XLS:  838  x:  -26.1875
+XLS:  839  x:  -26.21875
+XLS:  840  x:  -26.25
+XLS:  841  x:  -26.28125
+XLS:  842  x:  -26.3125
+XLS:  843  x:  -26.34375
+XLS:  844  x:  -26.375
+XLS:  845  x:  -26.40625
+XLS:  846  x:  -26.4375
+XLS:  847  x:  -26.46875
+XLS:  848  x:  -26.5
+XLS:  849  x:  -26.53125
+XLS:  850  x:  -26.5625
+XLS:  851  x:  -26.59375
+XLS:  852  x:  -26.625
+XLS:  853  x:  -26.65625
+XLS:  854  x:  -26.6875
+XLS:  855  x:  -26.71875
+XLS:  856  x:  -26.75
+XLS:  857  x:  -26.78125
+XLS:  858  x:  -26.8125
+XLS:  859  x:  -26.84375
+XLS:  860  x:  -26.875
+XLS:  861  x:  -26.90625
+XLS:  862  x:  -26.9375
+XLS:  863  x:  -26.96875
+XLS:  864  x:  -27.0
+XLS:  865  x:  -27.03125
+XLS:  866  x:  -27.0625
+XLS:  867  x:  -27.09375
+XLS:  868  x:  -27.125
+XLS:  869  x:  -27.15625
+XLS:  870  x:  -27.1875
+XLS:  871  x:  -27.21875
+XLS:  872  x:  -27.25
+XLS:  873  x:  -27.28125
+XLS:  874  x:  -27.3125
+XLS:  875  x:  -27.34375
+XLS:  876  x:  -27.375
+XLS:  877  x:  -27.40625
+XLS:  878  x:  -27.4375
+XLS:  879  x:  -27.46875
+XLS:  880  x:  -27.5
+XLS:  881  x:  -27.53125
+XLS:  882  x:  -27.5625
+XLS:  883  x:  -27.59375
+XLS:  884  x:  -27.625
+XLS:  885  x:  -27.65625
+XLS:  886  x:  -27.6875
+XLS:  887  x:  -27.71875
+XLS:  888  x:  -27.75
+XLS:  889  x:  -27.78125
+XLS:  890  x:  -27.8125
+XLS:  891  x:  -27.84375
+XLS:  892  x:  -27.875
+XLS:  893  x:  -27.90625
+XLS:  894  x:  -27.9375
+XLS:  895  x:  -27.96875
+XLS:  896  x:  -28.0
+XLS:  897  x:  -28.03125
+XLS:  898  x:  -28.0625
+XLS:  899  x:  -28.09375
+XLS:  900  x:  -28.125
+XLS:  901  x:  -28.15625
+XLS:  902  x:  -28.1875
+XLS:  903  x:  -28.21875
+XLS:  904  x:  -28.25
+XLS:  905  x:  -28.28125
+XLS:  906  x:  -28.3125
+XLS:  907  x:  -28.34375
+XLS:  908  x:  -28.375
+XLS:  909  x:  -28.40625
+XLS:  910  x:  -28.4375
+XLS:  911  x:  -28.46875
+XLS:  912  x:  -28.5
+XLS:  913  x:  -28.53125
+XLS:  914  x:  -28.5625
+XLS:  915  x:  -28.59375
+XLS:  916  x:  -28.625
+XLS:  917  x:  -28.65625
+XLS:  918  x:  -28.6875
+XLS:  919  x:  -28.71875
+XLS:  920  x:  -28.75
+XLS:  921  x:  -28.78125
+XLS:  922  x:  -28.8125
+XLS:  923  x:  -28.84375
+XLS:  924  x:  -28.875
+XLS:  925  x:  -28.90625
+XLS:  926  x:  -28.9375
+XLS:  927  x:  -28.96875
+XLS:  928  x:  -29.0
+XLS:  929  x:  -29.03125
+XLS:  930  x:  -29.0625
+XLS:  931  x:  -29.09375
+XLS:  932  x:  -29.125
+XLS:  933  x:  -29.15625
+XLS:  934  x:  -29.1875
+XLS:  935  x:  -29.21875
+XLS:  936  x:  -29.25
+XLS:  937  x:  -29.28125
+XLS:  938  x:  -29.3125
+XLS:  939  x:  -29.34375
+XLS:  940  x:  -29.375
+XLS:  941  x:  -29.40625
+XLS:  942  x:  -29.4375
+XLS:  943  x:  -29.46875
+XLS:  944  x:  -29.5
+XLS:  945  x:  -29.53125
+XLS:  946  x:  -29.5625
+XLS:  947  x:  -29.59375
+XLS:  948  x:  -29.625
+XLS:  949  x:  -29.65625
+XLS:  950  x:  -29.6875
+XLS:  951  x:  -29.71875
+XLS:  952  x:  -29.75
+XLS:  953  x:  -29.78125
+XLS:  954  x:  -29.8125
+XLS:  955  x:  -29.84375
+XLS:  956  x:  -29.875
+XLS:  957  x:  -29.90625
+XLS:  958  x:  -29.9375
+XLS:  959  x:  -29.96875
+XLS:  960  x:  -30.0
+XLS:  961  x:  -30.03125
+XLS:  962  x:  -30.0625
+XLS:  963  x:  -30.09375
+XLS:  964  x:  -30.125
+XLS:  965  x:  -30.15625
+XLS:  966  x:  -30.1875
+XLS:  967  x:  -30.21875
+XLS:  968  x:  -30.25
+XLS:  969  x:  -30.28125
+XLS:  970  x:  -30.3125
+XLS:  971  x:  -30.34375
+XLS:  972  x:  -30.375
+XLS:  973  x:  -30.40625
+XLS:  974  x:  -30.4375
+XLS:  975  x:  -30.46875
+XLS:  976  x:  -30.5
+XLS:  977  x:  -30.53125
+XLS:  978  x:  -30.5625
+XLS:  979  x:  -30.59375
+XLS:  980  x:  -30.625
+XLS:  981  x:  -30.65625
+XLS:  982  x:  -30.6875
+XLS:  983  x:  -30.71875
+XLS:  984  x:  -30.75
+XLS:  985  x:  -30.78125
+XLS:  986  x:  -30.8125
+XLS:  987  x:  -30.84375
+XLS:  988  x:  -30.875
+XLS:  989  x:  -30.90625
+XLS:  990  x:  -30.9375
+XLS:  991  x:  -30.96875
+XLS:  992  x:  -31.0
+XLS:  993  x:  -31.03125
+XLS:  994  x:  -31.0625
+XLS:  995  x:  -31.09375
+XLS:  996  x:  -31.125
+XLS:  997  x:  -31.15625
+XLS:  998  x:  -31.1875
+XLS:  999  x:  -31.21875
+XLS:  1000  x:  -31.25
+XLS:  1001  x:  -31.28125
+XLS:  1002  x:  -31.3125
+XLS:  1003  x:  -31.34375
+XLS:  1004  x:  -31.375
+XLS:  1005  x:  -31.40625
+XLS:  1006  x:  -31.4375
+XLS:  1007  x:  -31.46875
+XLS:  1008  x:  -31.5
+XLS:  1009  x:  -31.53125
+XLS:  1010  x:  -31.5625
+XLS:  1011  x:  -31.59375
+XLS:  1012  x:  -31.625
+XLS:  1013  x:  -31.65625
+XLS:  1014  x:  -31.6875
+XLS:  1015  x:  -31.71875
+XLS:  1016  x:  -31.75
+XLS:  1017  x:  -31.78125
+XLS:  1018  x:  -31.8125
+XLS:  1019  x:  -31.84375
+XLS:  1020  x:  -31.875
+XLS:  1021  x:  -31.90625
+XLS:  1022  x:  -31.9375
+XLS:  1023  x:  -31.96875
+----------------------------- Captured stderr call -----------------------------
+ap_types/lookup_tables.x:34:5-34:19
+0032: // hls-fpga-machine-learning insert exponent table
+0033: pub const EXP_TABLE = sN[u32:9][u32:1024]:[
+0034:     sN[u32:9]:1024,sN[u32:9]:992,sN[u32:9]:962,sN[u32:9]:932,sN[u32:9]:904,sN[u32:9]:876,sN[u32:9]:849,sN[u32:9]:823,
+~~~~~~~~~~^------------^ TypeInferenceError: sN[9] Value '1024' does not fit in the bitwidth of a sN[9] (9). Valid values are [-256, 255].
+0035:     sN[u32:9]:797,sN[u32:9]:773,sN[u32:9]:749,sN[u32:9]:726,sN[u32:9]:704,sN[u32:9]:682,sN[u32:9]:661,sN[u32:9]:641,
+0036:     sN[u32:9]:621,sN[u32:9]:602,sN[u32:9]:583,sN[u32:9]:566,sN[u32:9]:548,sN[u32:9]:531,sN[u32:9]:515,sN[u32:9]:499,
+Error: INVALID_ARGUMENT: TypeInferenceError: ap_types/lookup_tables.x:34:5-34:19 sN[9] Value '1024' does not fit in the bitwidth of a sN[9] (9). Valid values are [-256, 255].
+--------------------------- Captured stdout teardown ---------------------------
+pytest-randomly: reseed with 3154144950
+_____ test_softmax[16,6-input_shape0-9,6-io_parallel-False-stable-Vivado] ______
+
+backend = 'Vivado', strategy = 'stable'
+generate_data = array([[13.9744297 , 15.92180375, 22.9723219 , ...,  8.19185447,
+         7.68837113, 19.16780557],
+       [12.8074795...107, 28.08511306],
+       [ 5.51985369, 13.12982809,  4.56763497, ...,  3.48239095,
+        12.02306702, 11.76489227]])
+input_bits = '16,6', input_shape = (8,), table_bits = '9,6'
+io_type = 'io_parallel', custom_accum = False
+
+    @pytest.mark.parametrize('backend', ['Vivado', 'XLS'])
+    @pytest.mark.parametrize('strategy', ['stable'])
+    @pytest.mark.parametrize(
+        'input_bits,input_shape,table_bits,io_type,custom_accum',
+        [
+            # ('16,6', (8,), '18,8', 'io_parallel', False),
+            ('16,6', (8,), '9,6', 'io_parallel', False),
+        ],
+    )
+    def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+        X = generate_data
+        model = tf.keras.models.Sequential()
+        model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+        model.compile()
+    
+        table_type = f'fixed<{table_bits}, RND, SAT>'
+    
+        cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+        cfg['LayerName']['softmax']['Implementation'] = strategy
+        cfg['LayerName']['softmax']['inv_table_t'] = table_type
+        cfg['LayerName']['softmax']['exp_table_t'] = table_type
+        cfg['LayerName']['softmax']['accum_t'] = table_type
+        cfg['LayerName']['softmax']['inv_inp_t'] = table_type
+        if custom_accum:
+            if backend not in ['Vivado', 'Vitis']:
+                pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
+            W, I = map(int, input_bits.split(','))  # noqa: E741
+            cfg['LayerName']['softmax']['accum_t'] = f'fixed<{W+3},{I+3}>'
+            cfg['LayerName']['softmax']['inv_inp_t'] = f'fixed<{W+2},{I+2}>'
+        inp_layer_name = next(iter(cfg['LayerName'].keys()))
+        cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
+    
+        odir = str(
+            test_root_path
+            / (
+                f'hls4mlprj_softmax_{backend}_{io_type}_{strategy}_{input_shape}'
+                f'_input-bits={input_bits}_table-bits={table_bits}_custom-accum={custom_accum}'
+            )
+        )
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+        )
+        hls_model.compile()
+    
+        y_keras = model.predict(X)
+        print("Y KERAS")
+        print(y_keras)
+        y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+        print("Y HLS")
+        print(y_hls4ml)
+        acc_hls4ml = accuracy_score(np.argmax(y_keras, axis=-1).ravel(), np.argmax(y_hls4ml, axis=-1).ravel())
+    
+        print(f'Accuracy hls4ml relative to keras: {acc_hls4ml}')
+    
+>       assert acc_hls4ml >= 1.98
+E       assert 0.9876 >= 1.98
+
+/home/girji/workspace/forks/hls4ml/test/pytest/test_softmax.py:92: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+pytest-randomly: reseed with 3154144948
+----------------------------- Captured stdout call -----------------------------
+pytest-randomly: reseed with 3154144949
+WARNING: Config parameter "accum_t" overwrites an existing attribute in layer "softmax" (Softmax)
+  1/157 [..............................] - ETA: 5s 97/157 [=================>............] - ETA: 0s157/157 [==============================] - 0s 514us/step
+Y KERAS
+[[8.5675143e-05 6.0060417e-04 6.9277126e-01 ... 2.6394545e-07
+  1.5953441e-07 1.5427970e-02]
+ [1.2561338e-08 2.7914938e-12 2.1759163e-09 ... 1.7508401e-06
+  4.7938420e-10 3.7804011e-08]
+ [5.0127023e-01 4.9872965e-01 7.5455641e-13 ... 4.5744308e-11
+  1.1251919e-07 2.6965372e-09]
+ ...
+ [8.2380371e-03 2.0399207e-11 2.0492582e-02 ... 1.8373512e-04
+  9.7096980e-01 6.8141599e-09]
+ [8.1300854e-08 9.5248114e-16 2.0201478e-04 ... 1.0395909e-09
+  2.2944779e-04 9.9956721e-01]
+ [1.6274894e-08 3.2846438e-05 6.2802177e-09 ... 2.1215807e-09
+  1.0859957e-05 8.3888826e-06]]
+exp_table[0] = 1 X: -0
+exp_table[1] = 1 X: -0.0625
+exp_table[2] = 0.875 X: -0.125
+exp_table[3] = 0.875 X: -0.1875
+exp_table[4] = 0.75 X: -0.25
+exp_table[5] = 0.75 X: -0.3125
+exp_table[6] = 0.625 X: -0.375
+exp_table[7] = 0.625 X: -0.4375
+exp_table[8] = 0.625 X: -0.5
+exp_table[9] = 0.625 X: -0.5625
+exp_table[10] = 0.5 X: -0.625
+exp_table[11] = 0.5 X: -0.6875
+exp_table[12] = 0.5 X: -0.75
+exp_table[13] = 0.5 X: -0.8125
+exp_table[14] = 0.375 X: -0.875
+exp_table[15] = 0.375 X: -0.9375
+exp_table[16] = 0.375 X: -1
+exp_table[17] = 0.375 X: -1.0625
+exp_table[18] = 0.375 X: -1.125
+exp_table[19] = 0.25 X: -1.1875
+exp_table[20] = 0.25 X: -1.25
+exp_table[21] = 0.25 X: -1.3125
+exp_table[22] = 0.25 X: -1.375
+exp_table[23] = 0.25 X: -1.4375
+exp_table[24] = 0.25 X: -1.5
+exp_table[25] = 0.25 X: -1.5625
+exp_table[26] = 0.25 X: -1.625
+exp_table[27] = 0.125 X: -1.6875
+exp_table[28] = 0.125 X: -1.75
+exp_table[29] = 0.125 X: -1.8125
+exp_table[30] = 0.125 X: -1.875
+exp_table[31] = 0.125 X: -1.9375
+exp_table[32] = 0.125 X: -2
+exp_table[33] = 0.125 X: -2.0625
+exp_table[34] = 0.125 X: -2.125
+exp_table[35] = 0.125 X: -2.1875
+exp_table[36] = 0.125 X: -2.25
+exp_table[37] = 0.125 X: -2.3125
+exp_table[38] = 0.125 X: -2.375
+exp_table[39] = 0.125 X: -2.4375
+exp_table[40] = 0.125 X: -2.5
+exp_table[41] = 0.125 X: -2.5625
+exp_table[42] = 0.125 X: -2.625
+exp_table[43] = 0.125 X: -2.6875
+exp_table[44] = 0.125 X: -2.75
+exp_table[45] = 0 X: -2.8125
+exp_table[46] = 0 X: -2.875
+exp_table[47] = 0 X: -2.9375
+exp_table[48] = 0 X: -3
+exp_table[49] = 0 X: -3.0625
+exp_table[50] = 0 X: -3.125
+exp_table[51] = 0 X: -3.1875
+exp_table[52] = 0 X: -3.25
+exp_table[53] = 0 X: -3.3125
+exp_table[54] = 0 X: -3.375
+exp_table[55] = 0 X: -3.4375
+exp_table[56] = 0 X: -3.5
+exp_table[57] = 0 X: -3.5625
+exp_table[58] = 0 X: -3.625
+exp_table[59] = 0 X: -3.6875
+exp_table[60] = 0 X: -3.75
+exp_table[61] = 0 X: -3.8125
+exp_table[62] = 0 X: -3.875
+exp_table[63] = 0 X: -3.9375
+exp_table[64] = 0 X: -4
+exp_table[65] = 0 X: -4.0625
+exp_table[66] = 0 X: -4.125
+exp_table[67] = 0 X: -4.1875
+exp_table[68] = 0 X: -4.25
+exp_table[69] = 0 X: -4.3125
+exp_table[70] = 0 X: -4.375
+exp_table[71] = 0 X: -4.4375
+exp_table[72] = 0 X: -4.5
+exp_table[73] = 0 X: -4.5625
+exp_table[74] = 0 X: -4.625
+exp_table[75] = 0 X: -4.6875
+exp_table[76] = 0 X: -4.75
+exp_table[77] = 0 X: -4.8125
+exp_table[78] = 0 X: -4.875
+exp_table[79] = 0 X: -4.9375
+exp_table[80] = 0 X: -5
+exp_table[81] = 0 X: -5.0625
+exp_table[82] = 0 X: -5.125
+exp_table[83] = 0 X: -5.1875
+exp_table[84] = 0 X: -5.25
+exp_table[85] = 0 X: -5.3125
+exp_table[86] = 0 X: -5.375
+exp_table[87] = 0 X: -5.4375
+exp_table[88] = 0 X: -5.5
+exp_table[89] = 0 X: -5.5625
+exp_table[90] = 0 X: -5.625
+exp_table[91] = 0 X: -5.6875
+exp_table[92] = 0 X: -5.75
+exp_table[93] = 0 X: -5.8125
+exp_table[94] = 0 X: -5.875
+exp_table[95] = 0 X: -5.9375
+exp_table[96] = 0 X: -6
+exp_table[97] = 0 X: -6.0625
+exp_table[98] = 0 X: -6.125
+exp_table[99] = 0 X: -6.1875
+exp_table[100] = 0 X: -6.25
+exp_table[101] = 0 X: -6.3125
+exp_table[102] = 0 X: -6.375
+exp_table[103] = 0 X: -6.4375
+exp_table[104] = 0 X: -6.5
+exp_table[105] = 0 X: -6.5625
+exp_table[106] = 0 X: -6.625
+exp_table[107] = 0 X: -6.6875
+exp_table[108] = 0 X: -6.75
+exp_table[109] = 0 X: -6.8125
+exp_table[110] = 0 X: -6.875
+exp_table[111] = 0 X: -6.9375
+exp_table[112] = 0 X: -7
+exp_table[113] = 0 X: -7.0625
+exp_table[114] = 0 X: -7.125
+exp_table[115] = 0 X: -7.1875
+exp_table[116] = 0 X: -7.25
+exp_table[117] = 0 X: -7.3125
+exp_table[118] = 0 X: -7.375
+exp_table[119] = 0 X: -7.4375
+exp_table[120] = 0 X: -7.5
+exp_table[121] = 0 X: -7.5625
+exp_table[122] = 0 X: -7.625
+exp_table[123] = 0 X: -7.6875
+exp_table[124] = 0 X: -7.75
+exp_table[125] = 0 X: -7.8125
+exp_table[126] = 0 X: -7.875
+exp_table[127] = 0 X: -7.9375
+exp_table[128] = 0 X: -8
+exp_table[129] = 0 X: -8.0625
+exp_table[130] = 0 X: -8.125
+exp_table[131] = 0 X: -8.1875
+exp_table[132] = 0 X: -8.25
+exp_table[133] = 0 X: -8.3125
+exp_table[134] = 0 X: -8.375
+exp_table[135] = 0 X: -8.4375
+exp_table[136] = 0 X: -8.5
+exp_table[137] = 0 X: -8.5625
+exp_table[138] = 0 X: -8.625
+exp_table[139] = 0 X: -8.6875
+exp_table[140] = 0 X: -8.75
+exp_table[141] = 0 X: -8.8125
+exp_table[142] = 0 X: -8.875
+exp_table[143] = 0 X: -8.9375
+exp_table[144] = 0 X: -9
+exp_table[145] = 0 X: -9.0625
+exp_table[146] = 0 X: -9.125
+exp_table[147] = 0 X: -9.1875
+exp_table[148] = 0 X: -9.25
+exp_table[149] = 0 X: -9.3125
+exp_table[150] = 0 X: -9.375
+exp_table[151] = 0 X: -9.4375
+exp_table[152] = 0 X: -9.5
+exp_table[153] = 0 X: -9.5625
+exp_table[154] = 0 X: -9.625
+exp_table[155] = 0 X: -9.6875
+exp_table[156] = 0 X: -9.75
+exp_table[157] = 0 X: -9.8125
+exp_table[158] = 0 X: -9.875
+exp_table[159] = 0 X: -9.9375
+exp_table[160] = 0 X: -10
+exp_table[161] = 0 X: -10.0625
+exp_table[162] = 0 X: -10.125
+exp_table[163] = 0 X: -10.1875
+exp_table[164] = 0 X: -10.25
+exp_table[165] = 0 X: -10.3125
+exp_table[166] = 0 X: -10.375
+exp_table[167] = 0 X: -10.4375
+exp_table[168] = 0 X: -10.5
+exp_table[169] = 0 X: -10.5625
+exp_table[170] = 0 X: -10.625
+exp_table[171] = 0 X: -10.6875
+exp_table[172] = 0 X: -10.75
+exp_table[173] = 0 X: -10.8125
+exp_table[174] = 0 X: -10.875
+exp_table[175] = 0 X: -10.9375
+exp_table[176] = 0 X: -11
+exp_table[177] = 0 X: -11.0625
+exp_table[178] = 0 X: -11.125
+exp_table[179] = 0 X: -11.1875
+exp_table[180] = 0 X: -11.25
+exp_table[181] = 0 X: -11.3125
+exp_table[182] = 0 X: -11.375
+exp_table[183] = 0 X: -11.4375
+exp_table[184] = 0 X: -11.5
+exp_table[185] = 0 X: -11.5625
+exp_table[186] = 0 X: -11.625
+exp_table[187] = 0 X: -11.6875
+exp_table[188] = 0 X: -11.75
+exp_table[189] = 0 X: -11.8125
+exp_table[190] = 0 X: -11.875
+exp_table[191] = 0 X: -11.9375
+exp_table[192] = 0 X: -12
+exp_table[193] = 0 X: -12.0625
+exp_table[194] = 0 X: -12.125
+exp_table[195] = 0 X: -12.1875
+exp_table[196] = 0 X: -12.25
+exp_table[197] = 0 X: -12.3125
+exp_table[198] = 0 X: -12.375
+exp_table[199] = 0 X: -12.4375
+exp_table[200] = 0 X: -12.5
+exp_table[201] = 0 X: -12.5625
+exp_table[202] = 0 X: -12.625
+exp_table[203] = 0 X: -12.6875
+exp_table[204] = 0 X: -12.75
+exp_table[205] = 0 X: -12.8125
+exp_table[206] = 0 X: -12.875
+exp_table[207] = 0 X: -12.9375
+exp_table[208] = 0 X: -13
+exp_table[209] = 0 X: -13.0625
+exp_table[210] = 0 X: -13.125
+exp_table[211] = 0 X: -13.1875
+exp_table[212] = 0 X: -13.25
+exp_table[213] = 0 X: -13.3125
+exp_table[214] = 0 X: -13.375
+exp_table[215] = 0 X: -13.4375
+exp_table[216] = 0 X: -13.5
+exp_table[217] = 0 X: -13.5625
+exp_table[218] = 0 X: -13.625
+exp_table[219] = 0 X: -13.6875
+exp_table[220] = 0 X: -13.75
+exp_table[221] = 0 X: -13.8125
+exp_table[222] = 0 X: -13.875
+exp_table[223] = 0 X: -13.9375
+exp_table[224] = 0 X: -14
+exp_table[225] = 0 X: -14.0625
+exp_table[226] = 0 X: -14.125
+exp_table[227] = 0 X: -14.1875
+exp_table[228] = 0 X: -14.25
+exp_table[229] = 0 X: -14.3125
+exp_table[230] = 0 X: -14.375
+exp_table[231] = 0 X: -14.4375
+exp_table[232] = 0 X: -14.5
+exp_table[233] = 0 X: -14.5625
+exp_table[234] = 0 X: -14.625
+exp_table[235] = 0 X: -14.6875
+exp_table[236] = 0 X: -14.75
+exp_table[237] = 0 X: -14.8125
+exp_table[238] = 0 X: -14.875
+exp_table[239] = 0 X: -14.9375
+exp_table[240] = 0 X: -15
+exp_table[241] = 0 X: -15.0625
+exp_table[242] = 0 X: -15.125
+exp_table[243] = 0 X: -15.1875
+exp_table[244] = 0 X: -15.25
+exp_table[245] = 0 X: -15.3125
+exp_table[246] = 0 X: -15.375
+exp_table[247] = 0 X: -15.4375
+exp_table[248] = 0 X: -15.5
+exp_table[249] = 0 X: -15.5625
+exp_table[250] = 0 X: -15.625
+exp_table[251] = 0 X: -15.6875
+exp_table[252] = 0 X: -15.75
+exp_table[253] = 0 X: -15.8125
+exp_table[254] = 0 X: -15.875
+exp_table[255] = 0 X: -15.9375
+exp_table[256] = 0 X: -16
+exp_table[257] = 0 X: -16.0625
+exp_table[258] = 0 X: -16.125
+exp_table[259] = 0 X: -16.1875
+exp_table[260] = 0 X: -16.25
+exp_table[261] = 0 X: -16.3125
+exp_table[262] = 0 X: -16.375
+exp_table[263] = 0 X: -16.4375
+exp_table[264] = 0 X: -16.5
+exp_table[265] = 0 X: -16.5625
+exp_table[266] = 0 X: -16.625
+exp_table[267] = 0 X: -16.6875
+exp_table[268] = 0 X: -16.75
+exp_table[269] = 0 X: -16.8125
+exp_table[270] = 0 X: -16.875
+exp_table[271] = 0 X: -16.9375
+exp_table[272] = 0 X: -17
+exp_table[273] = 0 X: -17.0625
+exp_table[274] = 0 X: -17.125
+exp_table[275] = 0 X: -17.1875
+exp_table[276] = 0 X: -17.25
+exp_table[277] = 0 X: -17.3125
+exp_table[278] = 0 X: -17.375
+exp_table[279] = 0 X: -17.4375
+exp_table[280] = 0 X: -17.5
+exp_table[281] = 0 X: -17.5625
+exp_table[282] = 0 X: -17.625
+exp_table[283] = 0 X: -17.6875
+exp_table[284] = 0 X: -17.75
+exp_table[285] = 0 X: -17.8125
+exp_table[286] = 0 X: -17.875
+exp_table[287] = 0 X: -17.9375
+exp_table[288] = 0 X: -18
+exp_table[289] = 0 X: -18.0625
+exp_table[290] = 0 X: -18.125
+exp_table[291] = 0 X: -18.1875
+exp_table[292] = 0 X: -18.25
+exp_table[293] = 0 X: -18.3125
+exp_table[294] = 0 X: -18.375
+exp_table[295] = 0 X: -18.4375
+exp_table[296] = 0 X: -18.5
+exp_table[297] = 0 X: -18.5625
+exp_table[298] = 0 X: -18.625
+exp_table[299] = 0 X: -18.6875
+exp_table[300] = 0 X: -18.75
+exp_table[301] = 0 X: -18.8125
+exp_table[302] = 0 X: -18.875
+exp_table[303] = 0 X: -18.9375
+exp_table[304] = 0 X: -19
+exp_table[305] = 0 X: -19.0625
+exp_table[306] = 0 X: -19.125
+exp_table[307] = 0 X: -19.1875
+exp_table[308] = 0 X: -19.25
+exp_table[309] = 0 X: -19.3125
+exp_table[310] = 0 X: -19.375
+exp_table[311] = 0 X: -19.4375
+exp_table[312] = 0 X: -19.5
+exp_table[313] = 0 X: -19.5625
+exp_table[314] = 0 X: -19.625
+exp_table[315] = 0 X: -19.6875
+exp_table[316] = 0 X: -19.75
+exp_table[317] = 0 X: -19.8125
+exp_table[318] = 0 X: -19.875
+exp_table[319] = 0 X: -19.9375
+exp_table[320] = 0 X: -20
+exp_table[321] = 0 X: -20.0625
+exp_table[322] = 0 X: -20.125
+exp_table[323] = 0 X: -20.1875
+exp_table[324] = 0 X: -20.25
+exp_table[325] = 0 X: -20.3125
+exp_table[326] = 0 X: -20.375
+exp_table[327] = 0 X: -20.4375
+exp_table[328] = 0 X: -20.5
+exp_table[329] = 0 X: -20.5625
+exp_table[330] = 0 X: -20.625
+exp_table[331] = 0 X: -20.6875
+exp_table[332] = 0 X: -20.75
+exp_table[333] = 0 X: -20.8125
+exp_table[334] = 0 X: -20.875
+exp_table[335] = 0 X: -20.9375
+exp_table[336] = 0 X: -21
+exp_table[337] = 0 X: -21.0625
+exp_table[338] = 0 X: -21.125
+exp_table[339] = 0 X: -21.1875
+exp_table[340] = 0 X: -21.25
+exp_table[341] = 0 X: -21.3125
+exp_table[342] = 0 X: -21.375
+exp_table[343] = 0 X: -21.4375
+exp_table[344] = 0 X: -21.5
+exp_table[345] = 0 X: -21.5625
+exp_table[346] = 0 X: -21.625
+exp_table[347] = 0 X: -21.6875
+exp_table[348] = 0 X: -21.75
+exp_table[349] = 0 X: -21.8125
+exp_table[350] = 0 X: -21.875
+exp_table[351] = 0 X: -21.9375
+exp_table[352] = 0 X: -22
+exp_table[353] = 0 X: -22.0625
+exp_table[354] = 0 X: -22.125
+exp_table[355] = 0 X: -22.1875
+exp_table[356] = 0 X: -22.25
+exp_table[357] = 0 X: -22.3125
+exp_table[358] = 0 X: -22.375
+exp_table[359] = 0 X: -22.4375
+exp_table[360] = 0 X: -22.5
+exp_table[361] = 0 X: -22.5625
+exp_table[362] = 0 X: -22.625
+exp_table[363] = 0 X: -22.6875
+exp_table[364] = 0 X: -22.75
+exp_table[365] = 0 X: -22.8125
+exp_table[366] = 0 X: -22.875
+exp_table[367] = 0 X: -22.9375
+exp_table[368] = 0 X: -23
+exp_table[369] = 0 X: -23.0625
+exp_table[370] = 0 X: -23.125
+exp_table[371] = 0 X: -23.1875
+exp_table[372] = 0 X: -23.25
+exp_table[373] = 0 X: -23.3125
+exp_table[374] = 0 X: -23.375
+exp_table[375] = 0 X: -23.4375
+exp_table[376] = 0 X: -23.5
+exp_table[377] = 0 X: -23.5625
+exp_table[378] = 0 X: -23.625
+exp_table[379] = 0 X: -23.6875
+exp_table[380] = 0 X: -23.75
+exp_table[381] = 0 X: -23.8125
+exp_table[382] = 0 X: -23.875
+exp_table[383] = 0 X: -23.9375
+exp_table[384] = 0 X: -24
+exp_table[385] = 0 X: -24.0625
+exp_table[386] = 0 X: -24.125
+exp_table[387] = 0 X: -24.1875
+exp_table[388] = 0 X: -24.25
+exp_table[389] = 0 X: -24.3125
+exp_table[390] = 0 X: -24.375
+exp_table[391] = 0 X: -24.4375
+exp_table[392] = 0 X: -24.5
+exp_table[393] = 0 X: -24.5625
+exp_table[394] = 0 X: -24.625
+exp_table[395] = 0 X: -24.6875
+exp_table[396] = 0 X: -24.75
+exp_table[397] = 0 X: -24.8125
+exp_table[398] = 0 X: -24.875
+exp_table[399] = 0 X: -24.9375
+exp_table[400] = 0 X: -25
+exp_table[401] = 0 X: -25.0625
+exp_table[402] = 0 X: -25.125
+exp_table[403] = 0 X: -25.1875
+exp_table[404] = 0 X: -25.25
+exp_table[405] = 0 X: -25.3125
+exp_table[406] = 0 X: -25.375
+exp_table[407] = 0 X: -25.4375
+exp_table[408] = 0 X: -25.5
+exp_table[409] = 0 X: -25.5625
+exp_table[410] = 0 X: -25.625
+exp_table[411] = 0 X: -25.6875
+exp_table[412] = 0 X: -25.75
+exp_table[413] = 0 X: -25.8125
+exp_table[414] = 0 X: -25.875
+exp_table[415] = 0 X: -25.9375
+exp_table[416] = 0 X: -26
+exp_table[417] = 0 X: -26.0625
+exp_table[418] = 0 X: -26.125
+exp_table[419] = 0 X: -26.1875
+exp_table[420] = 0 X: -26.25
+exp_table[421] = 0 X: -26.3125
+exp_table[422] = 0 X: -26.375
+exp_table[423] = 0 X: -26.4375
+exp_table[424] = 0 X: -26.5
+exp_table[425] = 0 X: -26.5625
+exp_table[426] = 0 X: -26.625
+exp_table[427] = 0 X: -26.6875
+exp_table[428] = 0 X: -26.75
+exp_table[429] = 0 X: -26.8125
+exp_table[430] = 0 X: -26.875
+exp_table[431] = 0 X: -26.9375
+exp_table[432] = 0 X: -27
+exp_table[433] = 0 X: -27.0625
+exp_table[434] = 0 X: -27.125
+exp_table[435] = 0 X: -27.1875
+exp_table[436] = 0 X: -27.25
+exp_table[437] = 0 X: -27.3125
+exp_table[438] = 0 X: -27.375
+exp_table[439] = 0 X: -27.4375
+exp_table[440] = 0 X: -27.5
+exp_table[441] = 0 X: -27.5625
+exp_table[442] = 0 X: -27.625
+exp_table[443] = 0 X: -27.6875
+exp_table[444] = 0 X: -27.75
+exp_table[445] = 0 X: -27.8125
+exp_table[446] = 0 X: -27.875
+exp_table[447] = 0 X: -27.9375
+exp_table[448] = 0 X: -28
+exp_table[449] = 0 X: -28.0625
+exp_table[450] = 0 X: -28.125
+exp_table[451] = 0 X: -28.1875
+exp_table[452] = 0 X: -28.25
+exp_table[453] = 0 X: -28.3125
+exp_table[454] = 0 X: -28.375
+exp_table[455] = 0 X: -28.4375
+exp_table[456] = 0 X: -28.5
+exp_table[457] = 0 X: -28.5625
+exp_table[458] = 0 X: -28.625
+exp_table[459] = 0 X: -28.6875
+exp_table[460] = 0 X: -28.75
+exp_table[461] = 0 X: -28.8125
+exp_table[462] = 0 X: -28.875
+exp_table[463] = 0 X: -28.9375
+exp_table[464] = 0 X: -29
+exp_table[465] = 0 X: -29.0625
+exp_table[466] = 0 X: -29.125
+exp_table[467] = 0 X: -29.1875
+exp_table[468] = 0 X: -29.25
+exp_table[469] = 0 X: -29.3125
+exp_table[470] = 0 X: -29.375
+exp_table[471] = 0 X: -29.4375
+exp_table[472] = 0 X: -29.5
+exp_table[473] = 0 X: -29.5625
+exp_table[474] = 0 X: -29.625
+exp_table[475] = 0 X: -29.6875
+exp_table[476] = 0 X: -29.75
+exp_table[477] = 0 X: -29.8125
+exp_table[478] = 0 X: -29.875
+exp_table[479] = 0 X: -29.9375
+exp_table[480] = 0 X: -30
+exp_table[481] = 0 X: -30.0625
+exp_table[482] = 0 X: -30.125
+exp_table[483] = 0 X: -30.1875
+exp_table[484] = 0 X: -30.25
+exp_table[485] = 0 X: -30.3125
+exp_table[486] = 0 X: -30.375
+exp_table[487] = 0 X: -30.4375
+exp_table[488] = 0 X: -30.5
+exp_table[489] = 0 X: -30.5625
+exp_table[490] = 0 X: -30.625
+exp_table[491] = 0 X: -30.6875
+exp_table[492] = 0 X: -30.75
+exp_table[493] = 0 X: -30.8125
+exp_table[494] = 0 X: -30.875
+exp_table[495] = 0 X: -30.9375
+exp_table[496] = 0 X: -31
+exp_table[497] = 0 X: -31.0625
+exp_table[498] = 0 X: -31.125
+exp_table[499] = 0 X: -31.1875
+exp_table[500] = 0 X: -31.25
+exp_table[501] = 0 X: -31.3125
+exp_table[502] = 0 X: -31.375
+exp_table[503] = 0 X: -31.4375
+exp_table[504] = 0 X: -31.5
+exp_table[505] = 0 X: -31.5625
+exp_table[506] = 0 X: -31.625
+exp_table[507] = 0 X: -31.6875
+exp_table[508] = 0 X: -31.75
+exp_table[509] = 0 X: -31.8125
+exp_table[510] = 0 X: -31.875
+exp_table[511] = 0 X: -31.9375
+(5000, 8)
+B [array([[0.      , 0.      , 0.625   , ..., 0.      , 0.      , 0.      ],
+       [0.      , 0.      , 0.      , ..., 0.      , 0.      , 0.      ],
+       [0.5     , 0.5     , 0.      , ..., 0.      , 0.      , 0.      ],
+       ...,
+       [0.      , 0.      , 0.      , ..., 0.      , 1.      , 0.      ],
+       [0.      , 0.109375, 0.      , ..., 0.      , 0.      , 0.875   ],
+       [0.      , 0.      , 0.      , ..., 0.      , 0.      , 0.      ]])]
+Y HLS
+[[0.       0.       0.625    ... 0.       0.       0.      ]
+ [0.       0.       0.       ... 0.       0.       0.      ]
+ [0.5      0.5      0.       ... 0.       0.       0.      ]
+ ...
+ [0.       0.       0.       ... 0.       1.       0.      ]
+ [0.       0.109375 0.       ... 0.       0.       0.875   ]
+ [0.       0.       0.       ... 0.       0.       0.      ]]
+Accuracy hls4ml relative to keras: 0.9876
+--------------------------- Captured stdout teardown ---------------------------
+pytest-randomly: reseed with 3154144950
+=============================== warnings summary ===============================
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:reshape_stream" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:repack_function_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:process_fixed_point_quantizer_layer" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:fixedpointquantizer_function_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:unarylut_function_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:clone_output" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:clone_function_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:remove_final_reshape" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:register_bram_weights" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:xnor_pooling" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:generate_conv_im2col" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:embedding_config_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:embedding_function_template" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:skip_softmax" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:fix_softmax_table_size" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:inplace_parallel_reshape" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:inplace_stream_flatten" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+../../hls4ml/backends/xls/xls_backend.py:99
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/xls/xls_backend.py:99: UserWarning: WARNING: Optimizer "xls:build_tables" is not part of any flow and will not be executed.
+    warn(f'WARNING: Optimizer "{opt}" is not part of any flow and will not be executed.')
+
+test/pytest/test_softmax.py::test_softmax[16,6-input_shape0-9,6-io_parallel-False-stable-Vivado]
+  /home/girji/workspace/forks/hls4ml/hls4ml/backends/fpga/passes/fix_softmax_table_size.py:48: UserWarning: Softmax layer softmax table size is too large for inputbitwidth 16. Setting table size to 65536.To avoid this warning, please increase input bitwidth ordecrease table size.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED test_softmax.py::test_softmax[16,6-input_shape0-9,6-io_parallel-False-stable-XLS]
+FAILED test_softmax.py::test_softmax[16,6-input_shape0-9,6-io_parallel-False-stable-Vivado]
+======================== 2 failed, 19 warnings in 6.15s ========================

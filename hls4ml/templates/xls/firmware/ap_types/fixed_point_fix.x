@@ -77,6 +77,28 @@ pub fn add
     aligned_lhs + aligned_rhs
 }
 
+// Subtracts two unsigned fixed point numbers, returns lhs - rhs
+pub fn sub
+    <NB_A: u32, EN_A: u32, BU_A: u32, 
+    NB_B: u32, EN_B: u32, BU_B: u32,
+    BE_A: s32 = {fixed_point_lib::binary_exponent(EN_A, BU_A)}, 
+    BE_B: s32 = {fixed_point_lib::binary_exponent(EN_B, BU_B)},
+    NB_R:
+    u32 = {
+        fixed_point_lib::aligned_width(NB_A, BE_A, NB_B, BE_B) +
+        if fixed_point_lib::num_bits_overlapping(NB_A, BE_A, NB_B, BE_B) == u32:0 { u32:0 } else { u32:1 }},
+    BE_R: s32 = {std::min(BE_A, BE_B)}, EN_R: u32 = {fixed_point_lib::is_negative(BE_R)},
+    BU_R: u32 = {fixed_point_lib::binary_uexponent(BE_R)}>
+    (fxd_a: sN[NB_A], 
+    fxd_b: sN[NB_B])
+    -> sN[NB_R] {
+    // Widen before left shifting to avoid overflow
+    let aligned_lhs = (fxd_a as sN[NB_R]) << (BE_A - BE_R) as u32;
+    let aligned_rhs = (fxd_b as sN[NB_R]) << (BE_B - BE_R) as u32;
+
+    aligned_lhs - aligned_rhs
+}
+
 
 // Fused-multiply-add. To infer the final precision, we chain the precision calculation as a multiplication
 // followed by an add.
@@ -123,6 +145,22 @@ pub fn add_already_widened
     let aligned_rhs = fxd_b;
 
     aligned_lhs + aligned_rhs
+}
+
+// Performs an subtraction assuming that the rhs is already wide enough to not overflow.
+// WARNING: rhs must be wide enough to avoid any overflow
+pub fn sub_already_widened
+    <NB_A: u32, EN_A: u32, BU_A: u32, 
+    NB_B: u32, EN_B: u32, BU_B: u32,
+    BE_A: s32 = {fixed_point_lib::binary_exponent(EN_A, BU_A)}, 
+    BE_B: s32 = {fixed_point_lib::binary_exponent(EN_B, BU_B)}>
+    (fxd_a: sN[NB_A], fxd_b: sN[NB_B])
+    -> sN[NB_B] {
+    // Widen before left shifting to avoid overflow
+    let aligned_lhs = (fxd_a as sN[NB_B]) << (BE_A - BE_B) as u32;
+    let aligned_rhs = fxd_b;
+
+    aligned_lhs - aligned_rhs
 }
 
 // Performs an fused-multiply-add assuming that the rhs is already wide enough to not overflow.

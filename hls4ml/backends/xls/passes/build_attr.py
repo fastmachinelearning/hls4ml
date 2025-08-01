@@ -159,6 +159,9 @@ class XLSAttrBuilder:
     
     @attach_to_node()
     def out_type(self, layer_precision) -> str:
+        if layer_precision.get('result_t', False):
+            width = layer_precision['result_t'].precision.width
+            return f'sN[u32:{width}]'
         for _, type_var in layer_precision.items():
             return f'sN[u32:{type_var.precision.width}]'
         return ''
