@@ -143,6 +143,9 @@ class XLSAttrBuilder:
     
     @attach_to_node()
     def out_nb(self, layer_precision: dict) -> str:
+        if layer_precision.get('result_t', False):
+            width = layer_precision['result_t'].precision.width
+            return f'u32:{width}'
         for _, type_var in layer_precision.items():
             return f'u32:{type_var.precision.width}'
         return ''
@@ -179,10 +182,22 @@ class XLSAttrBuilder:
             implementation = dict(self.node.attributes).get('implementation', 'stable')
             if implementation == 'stable':
                 table_size = dict(self.node.attributes)['table_size']
-                func_call_str = f'activations::softmax_stable<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}, u32:{table_size}>'
+                exp_width = self.node.get_layer_precision()['softmax_exp_table_t'].precision.width
+                exp_frac = exp_width - self.node.get_layer_precision()['softmax_exp_table_t'].precision.integer
+                inv_width = self.node.get_layer_precision()['softmax_inv_table_t'].precision.width
+                inv_frac = inv_width - self.node.get_layer_precision()['softmax_inv_table_t'].precision.integer
+
+                func_call_str = (
+                    f"lookup_tables::softmax_stable<"
+                    f"{self.node.get_attr('in_nb')}, {self.node.get_attr('in_en')}, {self.node.get_attr('in_bu')}, "
+                    f" {self.node.get_attr('out_nb')}, {self.node.get_attr('out_en')}, {self.node.get_attr('out_bu')}, "
+                    f"u32:{exp_width}, u32:1, u32:{exp_frac}, "
+                    f"u32:{inv_width}, u32:1, u32:{inv_frac}, "
+                    f"u32:{table_size}>"
+                )
             elif implementation == 'latency':
                 table_size = dict(self.node.attributes)['table_size']
-                func_call_str = f'activations::softmax_latency<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}, u32:{table_size}>'
+                func_call_str = f'lookup_tables::softmax_latency<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}, u32:{table_size}>'
             elif implementation == 'argmax':
                 func_call_str = f'activations::argmax<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
         return func_call_str

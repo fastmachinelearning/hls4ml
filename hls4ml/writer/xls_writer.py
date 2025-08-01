@@ -45,6 +45,12 @@ class XLSWriter(Writer):
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
 
+            elif '// hls-fpga-machine-learning imports' in line:
+                newline = line
+                for layer in layers:
+                    if 'lookup_tables' in layer.get_attr("func_call"):
+                        newline += 'import nnet_utils.lookup_tables;\n'
+
             elif '// hls-fpga-machine-learning insert dimensions' in line:
                 newline = line
                 for layer in layers:
@@ -144,8 +150,8 @@ class XLSWriter(Writer):
     def write_lookup_tables(self, model: ModelGraph) -> None:
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        f = open(os.path.join(filedir, '../templates/xls/firmware/ap_types/lookup_tables.x'))
-        fout = open(f'{model.config.get_output_dir()}/firmware/ap_types/lookup_tables.x', 'w')
+        f = open(os.path.join(filedir, '../templates/xls/firmware/nnet_utils/lookup_tables.x'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/nnet_utils/lookup_tables.x', 'w')
 
         layers = list(model.get_layers())
         indent = '    '
@@ -156,10 +162,13 @@ class XLSWriter(Writer):
                 newline = line
                 for layer in layers:
                     if layer.get_attr('write_table'):
-                        newline += f'pub const EXP_TABLE = sN[{layer.get_attr("out_nb")}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
+                        # Get types
+                        exp_width = layer.get_layer_precision()['softmax_exp_table_t'].precision.width
+
+                        newline += f'pub const EXP_TABLE = sN[{exp_width}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
                         newline += indent
                         for i, elem in enumerate(layer.get_attr("exp_table_xls")):
-                            newline += f'sN[{layer.get_attr("out_nb")}]:{elem}'
+                            newline += f'sN[{exp_width}]:{elem}'
                             if i < len(layer.get_attr("exp_table_xls")) - 1:
                                 newline += ','
                             if (i+1) % elems_per_line == 0:
@@ -172,10 +181,13 @@ class XLSWriter(Writer):
                 newline = line
                 for layer in layers:
                     if layer.get_attr('write_table'):
-                        newline += f'pub const INV_TABLE = sN[{layer.get_attr("out_nb")}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
+                        # Get types
+                        inv_width = layer.get_layer_precision()['softmax_inv_table_t'].precision.width
+
+                        newline += f'pub const INV_TABLE = sN[{inv_width}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
                         newline += indent
                         for i, elem in enumerate(layer.get_attr("inv_table_xls")):
-                            newline += f'sN[{layer.get_attr("out_nb")}]:{elem}'
+                            newline += f'sN[{inv_width}]:{elem}'
                             if i < len(layer.get_attr("inv_table_xls")) - 1:
                                 newline += ', '
                             if (i+1) % elems_per_line == 0:
@@ -183,7 +195,6 @@ class XLSWriter(Writer):
                                 if i < len(layer.get_attr("inv_table_xls")) - 1:
                                     newline += indent
                         newline += '];\n'
-
             else:
                 newline = line
             fout.write(newline)

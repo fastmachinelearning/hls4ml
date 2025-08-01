@@ -40,8 +40,8 @@ def generate_data(input_shape):
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
-        # ('16,6', (8,), '18,8', 'io_parallel', False),
-        ('16,6', (8,), '9,6', 'io_parallel', False),
+        ('16,6', (8,), '18,8', 'io_parallel', False),
+        # ('16,6', (8,), '9,6', 'io_parallel', False),
     ],
 )
 def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
