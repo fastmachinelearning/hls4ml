@@ -39,9 +39,7 @@ void CoyoteInference::predict() {
     }
 
     // Poll on completion; each batch increments the counter by one
-    while (coyote_thread.checkCompleted(coyote::CoyoteOper::LOCAL_TRANSFER) != batch_size) {
-        std::this_thread::sleep_for(std::chrono::nanoseconds(50));
-    }
+    while (coyote_thread.checkCompleted(coyote::CoyoteOper::LOCAL_TRANSFER) != batch_size) {}
 }
 
 void CoyoteInference::set_data(float *x, unsigned int i) { 
