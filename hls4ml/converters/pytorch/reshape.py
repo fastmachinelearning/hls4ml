@@ -26,6 +26,9 @@ def parse_reshape_layer(operation, layer_name, input_names, input_shapes, node, 
                 cl.remove(-1)
                 layer['target_shape'][i] = int(size / np.prod(cl))
 
+    # remove the batch dimension
+    layer['target_shape'] = layer['target_shape'][1:]
+
     output_shape = input_shapes[0][:1] + layer['target_shape']
 
     return layer, output_shape
