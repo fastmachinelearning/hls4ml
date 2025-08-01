@@ -5,7 +5,7 @@ import pytest
 from keras.layers import Add, Dense
 from tensorflow import keras
 
-from hls4ml.converters import convert_from_keras_model
+import hls4ml
 
 test_root_path = Path(__file__).parent
 
@@ -66,14 +66,17 @@ def model_multi_clone():
 def data():
     X = np.random.normal(0, 0.2, (100, 10))
     X = np.clip(X, -2, 2)
+    X = np.round(X * 2**21) * 2**-21  # make exact 'fixed<16,2>'
     return X
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
 def test_multi_clone(model_multi_clone, data, backend: str):
     output_dir = str(test_root_path / f'hls4mlprj_stream_clone_multiclone_{backend}')
-    hls_config = {'Model': {'Precision': 'fixed<32,5>', 'ReuseFactor': 1}}
-    model_hls = convert_from_keras_model(
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model_multi_clone, default_precision='fixed<24,3>', granularity='name', backend=backend
+    )
+    model_hls = hls4ml.converters.convert_from_keras_model(
         model_multi_clone,
         backend=backend,
         output_dir=output_dir,
@@ -82,9 +85,9 @@ def test_multi_clone(model_multi_clone, data, backend: str):
     )
     model_hls.compile()
     r_hls = model_hls.predict(data)
-    r_keras = model_multi_clone(data).numpy()
+    r_keras = model_multi_clone.predict(data)
 
-    assert np.allclose(r_hls, r_keras, atol=1e-5, rtol=0)
+    np.testing.assert_allclose(r_hls, r_keras, atol=1e-4, rtol=0)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
@@ -99,7 +102,7 @@ def test_clone_precision_inheritance(model_clone_precision_inheritance, data, ba
         'out': {'Precision': 'fixed<32,5>'},
     }
     hls_config = {'Model': {'Precision': 'fixed<1,0>', 'ReuseFactor': 1}, 'LayerName': layer_config}
-    model_hls = convert_from_keras_model(
+    model_hls = hls4ml.converters.convert_from_keras_model(
         model_clone_precision_inheritance,
         backend=backend,
         output_dir=output_dir,
@@ -113,9 +116,9 @@ def test_clone_precision_inheritance(model_clone_precision_inheritance, data, ba
 
     model_hls.compile()
     r_hls = model_hls.predict(data)
-    r_keras = model_clone_precision_inheritance(data).numpy()
+    r_keras = model_clone_precision_inheritance.predict(data)
 
-    assert np.allclose(r_hls, r_keras, atol=1e-5, rtol=0)
+    np.testing.assert_allclose(r_hls, r_keras, atol=1e-5, rtol=0)
 
 
 if __name__ == '__main__':

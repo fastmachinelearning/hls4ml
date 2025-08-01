@@ -867,12 +867,7 @@ def test_view(backend, io_type):
 
     hls_model.compile()
 
-    # reshape hls prediction to channels last, then transpose, then reshape
-    # to match .view
-    hls_prediction = np.reshape(
-        np.transpose(np.reshape(hls_model.predict(X_input), (n_batch, size_in, n_out)), (0, 2, 1)),
-        (n_batch, size_in * n_out),
-    )
+    hls_prediction = hls_model.predict(X_input)
 
     rtol = 0
     atol = 5.0e-2
