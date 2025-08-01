@@ -25,6 +25,7 @@ from hls4ml.model.layers import (
     GarNetStack,
     GlobalPooling1D,
     GlobalPooling2D,
+    LayerNormalization,
     MatMul,
     Merge,
     Pooling1D,
@@ -73,6 +74,7 @@ class FPGABackend(Backend):
             Dot,
             Conv,
             MatMul,
+            LayerNormalization,
         ]
 
         for layer in accum_layers:
