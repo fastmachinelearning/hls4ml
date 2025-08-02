@@ -43,9 +43,8 @@ class BipolarQuantConstantParameters(OptimizerPass):
 
 class BipolarQuantToActivation(OptimizerPass):
     """
-    This is for the case when scale is po2.
-    It is a a 1:1 transformation of a BipolarQuant to an Activation.
-    As an optimization, this is not called when the input is constant.
+    This is for the case when scale is 1. It is a a 1:1 transformation of a BipolarQuant to an Activation.
+    This is not called when the input is constant.
     """
 
     def match(self, node):
@@ -56,15 +55,10 @@ class BipolarQuantToActivation(OptimizerPass):
             and not isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
-        # Only match if the scale is po2
+        # Only match if the scale is 1
         if is_match:  # to make sure this is a quant node with inputs
             scale = node.get_attr('scale')
-            scale_unit_or_po2 = (scale == 1.0).all()
-            # This optimization only works if all scales are the same
-            if np.all(scale[0] == scale):
-                mantissa, _ = np.frexp(scale[0])
-                scale_unit_or_po2 = mantissa == 0.5
-            is_match = scale_unit_or_po2
+            is_match = (scale == 1.0).all()
 
         return is_match
 
@@ -75,16 +69,11 @@ class BipolarQuantToActivation(OptimizerPass):
         precision = XnorPrecisionType()
         quantizer = BinaryQuantizer(bits=1)
 
-        attributes = {'activation': 'linear', 'quantizer': quantizer}
+        attributes = {'activation': 'binary_tanh', 'quantizer': quantizer, 'precision': precision}
 
-        # update the configuration
-        config = model.config.get_layer_config(node)
-        prec_config = config.setdefault('Precision', {})
-        prec_config['result'] = str(precision)
+        # don't update the configuration because we can't manually set
+        # the precision as xnor type
         new_name = f'{node.name}_act'
-        model.config.set_name_config(new_name, config)
-        model.config.parse_name_config(new_name, config)
-        print(f"Node {new_name} inputs: {[node.inputs[0]]}, outputs: {list(node.outputs)}.")
         new_node = model.make_node(Activation, new_name, attributes, [node.inputs[0]], list(node.outputs))
         model.replace_node(node, new_node)
         return True

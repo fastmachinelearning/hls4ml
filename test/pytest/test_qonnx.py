@@ -534,5 +534,7 @@ def test_bnn(model_name, io_type, backend, request):
     for x in data_x:
         idict = {qonnx_model.graph.input[0].name: x}
         y_qonnx = oxe.execute_onnx(qonnx_model, idict)[qonnx_model.graph.output[0].name]
-        y_hls4ml = hls_model.predict(x)
-        np.array_equal(y_qonnx.ravel(), y_hls4ml.ravel())
+        y_hls4ml = hls_model.predict(x[0])
+        # note, y_hls4ml returns xnor type, so let's interpret it
+        y_hls4ml_logical = 2 * y_hls4ml - 1
+        np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml_logical.ravel())
