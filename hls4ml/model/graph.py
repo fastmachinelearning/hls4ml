@@ -693,6 +693,11 @@ class ModelGraph(Serializable):
         repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node.outputs)}
         repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node.inputs)})
 
+        for old_output in old_node.outputs:
+            if old_output in self.outputs:
+                new_output = repl[old_output]
+                self.outputs = [new_output if name == old_output else name for name in self.outputs]
+
         for node in self.graph.values():
             for i, n in enumerate(node.inputs):
                 if n in repl:
@@ -703,10 +708,7 @@ class ModelGraph(Serializable):
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
-        old_name = old_node.name
-        if old_name in self.outputs:
-            new_name = new_node.name
-            self.outputs = [new_name if name == old_name else name for name in self.outputs]
+
 
     def split_node(self, old_node, new_node1, new_node2):
         """Replace an existing node in the graph with two nodes in sequence.
@@ -728,6 +730,11 @@ class ModelGraph(Serializable):
         repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node2.outputs)}
         repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node1.inputs)})
 
+        for old_output in old_node.outputs:
+            if old_output in self.outputs:
+                new_output = repl[old_output]
+                self.outputs = [new_output if name == old_output else name for name in self.outputs]
+
         for node in self.graph.values():
             for i, n in enumerate(node.inputs):
                 if n in repl:
@@ -745,8 +752,6 @@ class ModelGraph(Serializable):
                 new_graph[key] = value
         self.graph = new_graph
 
-        if old_node.name in self.outputs:
-            self.outputs = [new_node2.name if name == old_node.name else name for name in self.outputs]
 
     def next_layer(self):
         self.index += 1
