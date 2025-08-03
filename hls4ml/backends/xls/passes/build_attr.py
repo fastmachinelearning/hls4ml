@@ -93,12 +93,13 @@ class XLSAttrBuilder:
         return v
     
     @attach_to_node()
-    def fxp_weights(self, weights, precisions: dict, out_dim: int, in_dim: int) -> NDArray[NDArray[np.int_]]:
+    def fxp_weights(self, weights, out_dim: int, in_dim: int) -> NDArray[NDArray[np.int_]]:
         #TODO: check which element in the precision array should we take Currently we assume the precision of weights is the first elem.
-        width: int = list(precisions.items())[0][1].precision.width
-        frac: int = width - list(precisions.items())[0][1].precision.integer
         # has weights
         if len(weights) >= 1:
+            width = int(self.node.get_attr('in_nb').split(':', 1)[1])
+            frac = int(self.node.get_attr('in_bu').split(':', 1)[1])
+
             mat = np.array(list(list(weights)[0])).reshape(in_dim, out_dim)
             mat_T = mat.T   # in Keras the weights are transposed
             fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
@@ -106,12 +107,13 @@ class XLSAttrBuilder:
         return np.array([])
     
     @attach_to_node()
-    def fxp_bias(self, weights, precisions: dict) -> NDArray[np.int_]:
+    def fxp_bias(self, weights) -> NDArray[np.int_]:
         #TODO: check which element in the precision array should we take Currently we assume the precision of weights is the first elem.
-        width: int = list(precisions.items())[0][1].precision.width
-        frac: int  = width - list(precisions.items())[0][1].precision.integer
         # has bias
         if len(weights) >= 2:
+            width = int(self.node.get_attr('in_nb').split(':', 1)[1])
+            frac = int(self.node.get_attr('in_bu').split(':', 1)[1])
+
             fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
             return fxp_b
         return np.array([])
@@ -135,13 +137,6 @@ class XLSAttrBuilder:
         return ''
     
     @attach_to_node()
-    def in_type(self, prev_layer_precision: dict | None) -> str:
-        if prev_layer_precision:
-            for _, type_var in prev_layer_precision.items():
-                return f'sN[u32:{type_var.precision.width}]'
-        return ''
-    
-    @attach_to_node()
     def out_nb(self, layer_precision: dict) -> str:
         if layer_precision.get('result_t', False):
             width = layer_precision['result_t'].precision.width
@@ -156,18 +151,21 @@ class XLSAttrBuilder:
 
     @attach_to_node()
     def out_bu(self, layer_precision) -> str:
+        if layer_precision.get('result_t', False):
+            width = layer_precision['result_t'].precision.width
+            integer = layer_precision['result_t'].precision.integer
+            return f'u32:{width - integer}'
         for _, type_var in layer_precision.items():
             return f'u32:{type_var.precision.width - type_var.precision.integer}'
         return ''
     
     @attach_to_node()
-    def out_type(self, layer_precision) -> str:
-        if layer_precision.get('result_t', False):
-            width = layer_precision['result_t'].precision.width
-            return f'sN[u32:{width}]'
-        for _, type_var in layer_precision.items():
-            return f'sN[u32:{type_var.precision.width}]'
-        return ''
+    def in_type(self) -> str:
+        return f'sN[{self.node.get_attr("in_nb")}]'
+    
+    @attach_to_node()
+    def out_type(self) -> str:
+        return f'sN[{self.node.get_attr("out_nb")}]'
 
     @attach_to_node()
     def func_call(self) -> str:
@@ -204,7 +202,7 @@ class XLSAttrBuilder:
     
     
 class BuildAttr(OptimizerPass):
-    """Builds all the XLS specific attributes for all layers.
+    """Builds the XLS specific attributes for all layers.
     """
 
     def match(self, node: Layer) -> bool:
@@ -236,13 +234,13 @@ class BuildAttr(OptimizerPass):
                 .in_nb(prev_layer_precision)
                 .in_en()
                 .in_bu(prev_layer_precision)
-                .in_type(prev_layer_precision)
-                .out_type(curr_prec)
                 .out_nb(curr_prec)
                 .out_en()
                 .out_bu(curr_prec)
-                .fxp_weights(curr_weights, curr_prec, out_dim=curr_out_dim_val, in_dim=prev_out_dim_val)
-                .fxp_bias(curr_weights, curr_prec)
+                .in_type()
+                .out_type()
+                .fxp_weights(curr_weights, out_dim=curr_out_dim_val, in_dim=prev_out_dim_val)
+                .fxp_bias(curr_weights)
                 .func_call()
 
             )

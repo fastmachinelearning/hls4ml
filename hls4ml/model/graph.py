@@ -903,17 +903,12 @@ class ModelGraph(Serializable):
         output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
 
         if n_samples == 1 and n_outputs == 1:
-            print('A')
             return output[0][0]
         elif n_outputs == 1:
-            print(output[0].shape)
-            print('B', output)
             return output[0]
         elif n_samples == 1:
-            print('C')
             return [output_i[0] for output_i in output]
         else:
-            print('D')
             return output
 
     def predict(self, x):
@@ -1324,7 +1319,6 @@ class MultiModelGraph:
 
     def compile(self):
         self.write()
-        print("HERERERE")
         self._compile()
 
     def predict(self, x, sim='csim'):

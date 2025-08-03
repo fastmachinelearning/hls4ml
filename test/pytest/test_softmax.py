@@ -35,13 +35,14 @@ def generate_data(input_shape):
 #         ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
 #     ],
 # )
-@pytest.mark.parametrize('backend', ['Vivado', 'XLS'])
-@pytest.mark.parametrize('strategy', ['stable'])
+@pytest.mark.parametrize('backend', ['XLS'])
+@pytest.mark.parametrize('strategy', ['stable', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
         ('16,6', (8,), '18,8', 'io_parallel', False),
-        # ('16,6', (8,), '9,6', 'io_parallel', False),
+        ('16,6', (8,), '9,6', 'io_parallel', False),
+        ('9,6', (8,), '18,8', 'io_parallel', False),
     ],
 )
 def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
@@ -80,11 +81,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
     hls_model.compile()
 
     y_keras = model.predict(X)
-    print("Y KERAS")
-    print(y_keras)
     y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
-    print("Y HLS")
-    print(y_hls4ml)
     acc_hls4ml = accuracy_score(np.argmax(y_keras, axis=-1).ravel(), np.argmax(y_hls4ml, axis=-1).ravel())
 
     print(f'Accuracy hls4ml relative to keras: {acc_hls4ml}')

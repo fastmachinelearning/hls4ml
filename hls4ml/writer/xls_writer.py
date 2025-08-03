@@ -47,9 +47,12 @@ class XLSWriter(Writer):
 
             elif '// hls-fpga-machine-learning imports' in line:
                 newline = line
+                seen_libs = []
                 for layer in layers:
-                    if 'lookup_tables' in layer.get_attr("func_call"):
-                        newline += 'import nnet_utils.lookup_tables;\n'
+                    lib = layer.get_attr('func_call').split('::', 1)[0]
+                    if lib and lib not in seen_libs:
+                        seen_libs.append(lib)
+                        newline += f'import nnet_utils.{lib};\n'
 
             elif '// hls-fpga-machine-learning insert dimensions' in line:
                 newline = line
@@ -64,8 +67,8 @@ class XLSWriter(Writer):
                     if layer.class_name == 'Input':
                         newline += indent + f'x: {layer.get_attr("out_type")}[{layer.get_attr("out_dim_key")}],\n'
                     elif layer.get_attr("write_weights"):
-                        newline += indent + f'w{i}: {layer.get_attr("out_type")}[{layer.get_attr("in_dim_key")}][{layer.get_attr("out_dim_key")}],\n'
-                        newline += indent + f'b{i}: {layer.get_attr("out_type")}[{layer.get_attr("out_dim_key")}]'
+                        newline += indent + f'w{i}: {layer.get_attr("in_type")}[{layer.get_attr("in_dim_key")}][{layer.get_attr("out_dim_key")}],\n'
+                        newline += indent + f'b{i}: {layer.get_attr("in_type")}[{layer.get_attr("out_dim_key")}]'
                         if weighted_layers_count < len([layer for layer in layers if layer.get_attr("write_weights")]) - 1:
                             newline += ',\n'
                             weighted_layers_count += 1
@@ -102,11 +105,11 @@ class XLSWriter(Writer):
                 for i, layer in enumerate(layers):
                     if layer.get_attr("write_weights"):
                         # Weights
-                        newline += indent + f'let w{i} = {layer.get_attr("out_type")}[{layer.get_attr("in_dim_key")}][{layer.get_attr("out_dim_key")}]:[\n'
+                        newline += indent + f'let w{i} = {layer.get_attr("in_type")}[{layer.get_attr("in_dim_key")}][{layer.get_attr("out_dim_key")}]:[\n'
                         for idx_row, row in enumerate(layer.get_attr('fxp_weights')):
                             newline += indent + indent + '['
                             for idx_col, w in enumerate(row):
-                                newline += f'{layer.get_attr("out_type")}:{w}'
+                                newline += f'{layer.get_attr("in_type")}:{w}'
                                 if idx_col < len(row) - 1:
                                     newline += ','
                             newline += ']'
@@ -116,10 +119,10 @@ class XLSWriter(Writer):
                                 newline += '\n'
                         newline += indent + '];\n'
                         # Bias
-                        newline += indent + f'let b{i} = {layer.get_attr("out_type")}[{layer.get_attr("out_dim_key")}]:[\n'
+                        newline += indent + f'let b{i} = {layer.get_attr("in_type")}[{layer.get_attr("out_dim_key")}]:[\n'
                         newline += indent + indent
                         for idx_b, b in enumerate(layer.get_attr("fxp_bias")):
-                            newline += f'{layer.get_attr("out_type")}:{b}'
+                            newline += f'{layer.get_attr("in_type")}:{b}'
                             if idx_b < len(layer.get_attr("fxp_bias")) - 1:
                                 newline += ','
                         newline += '\n' + indent + '];\n'

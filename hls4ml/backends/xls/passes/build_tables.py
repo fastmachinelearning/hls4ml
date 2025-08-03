@@ -1,7 +1,6 @@
 # Typing imports
 from __future__ import annotations # makes all annotations into strings
 from typing import Literal, TYPE_CHECKING
-from numpy.typing import NDArray
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
     from hls4ml.model.layers import Layer
@@ -19,7 +18,9 @@ class BuildTables(OptimizerPass):
     """
 
     def match(self, node: Layer) -> bool:
-        if node.class_name == 'Softmax':
+        """Matches too all softmax layers. The only optimization that does not include a table lookup is 'argmax'.
+        """
+        if node.class_name == 'Softmax' and dict(node.attributes).get('implementation', 'stable') != 'argmax':
             return True
         return False
 
@@ -27,13 +28,18 @@ class BuildTables(OptimizerPass):
 
         # i * 2^{integer_part - clog2(table_size)}
         def get_real_val_from_idx(i, table_size, integer, negative):
+            """Helper function to generate corresponding real values from table indexes.
+            The top N-bits of a fixed-point representation are set according to the index. 
+            Note that the last bit is the sign bit.
+            
+            When negative (we normalize by subtracting the highest softmax value) we must account for the sign change.
+            """
             N = math.ceil(math.log2(table_size))
             exp = integer - N
 
             if negative:
                 base = i
                 return -(base * 2**(exp-1))
-            
             else:
                 if i < table_size / 2:
                     base = i
@@ -45,26 +51,11 @@ class BuildTables(OptimizerPass):
         exp_table = []
         inv_table = []
 
-        # Types:
-        #   softmax_accum_t:        18
-        #   softmax_inv_table_t:    18
-        #   softmax_exp_table_t:    18
-        #   softamx_inv_inp_t:      18
-        #   result_t:               16
-        #   softmax_table_t:        18
-        # TODO: manage the differnet types
-
-        for name, var in node.get_layer_precision().items():
-            print(name, ': ', var.precision.width)
+        # extract bit precisions for tables
         exp_width = node.get_layer_precision()['softmax_exp_table_t'].precision.width
         exp_frac = exp_width - node.get_layer_precision()['softmax_exp_table_t'].precision.integer
         inv_width = node.get_layer_precision()['softmax_inv_table_t'].precision.width
         inv_frac = inv_width - node.get_layer_precision()['softmax_inv_table_t'].precision.integer
-
-
-        type_var = node.get_layer_precision()['softmax_table_t']
-        width = type_var.precision.width 
-        frac  = type_var.precision.width - type_var.precision.integer
 
         nb = int(node.get_attr('in_nb').split(':', 1)[1])
         bu = int(node.get_attr('in_bu').split(':', 1)[1])
@@ -75,7 +66,6 @@ class BuildTables(OptimizerPass):
         for i in range(table_size):
             real_val = get_real_val_from_idx(i, table_size, integer=in_integer, negative=requires_negative_exp)
             e = math.exp(real_val)
-            # print("XLS: ", i, " x: ", real_val)
             fxp_e = Fxp(e, signed=True, n_word=exp_width, n_frac=exp_frac, rounding='around', overflow='saturate').raw()
             exp_table.append(fxp_e)
 
