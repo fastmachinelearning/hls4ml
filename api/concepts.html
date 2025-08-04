@@ -171,7 +171,7 @@ currently supported frontends and backends or the dedicated sections for each fr
 <p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports multiple styles for handling data transfer to/from the network and between layers, known as the <code class="docutils literal notranslate"><span class="pre">io_type</span></code>.</p>
 <section id="io-parallel">
 <h3>io_parallel<a class="headerlink" href="#io-parallel" title="Link to this heading"></a></h3>
-<p>In this processing style, data is passed in parallel between the layers. Conceptually this corresponds to the C/C++ array where all elements can be accessed ay any time. This style allows for maximum parallelism and is well suited for MLP networks and small CNNs which aim for lowest latency. Due to the impact of parallel processing on resource utilization on FPGAs, the synthesis may fail for larger networks.</p>
+<p>In this processing style, data is passed in parallel between the layers. Conceptually this corresponds to the C/C++ array where all elements can be accessed at any time. This style allows for maximum parallelism and is well suited for MLP networks and small CNNs which aim for lowest latency. Due to the impact of parallel processing on resource utilization on FPGAs, the synthesis may fail for larger networks.</p>
 </section>
 <section id="io-stream">
 <h3>io_stream<a class="headerlink" href="#io-stream" title="Link to this heading"></a></h3>
