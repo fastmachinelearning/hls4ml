@@ -112,6 +112,7 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
 
     return layer, output_shape
 
+
 @keras_handler('Bidirectional')
 def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reader):
     assert keras_layer['class_name'] == 'Bidirectional'
