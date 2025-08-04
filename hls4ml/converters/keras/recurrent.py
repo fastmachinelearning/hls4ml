@@ -110,6 +110,7 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
     layer['output_shape'] = output_shape[1:]  # Remove the batch dimension
     layer['n_time_steps'] = output_shape[1]
 
+    return layer, output_shape
 
 @keras_handler('Bidirectional')
 def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reader):
