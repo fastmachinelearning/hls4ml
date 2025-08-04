@@ -296,7 +296,6 @@ class FPGABackend(Backend):
         if not include_max_rf:
             valid_rf.pop()
         chosen_rf = layer.get_attr(attribute)
-        print("\n\nREuse factor:", chosen_rf, "\n\n")
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
             valid_rf_str = ','.join(map(str, valid_rf))
