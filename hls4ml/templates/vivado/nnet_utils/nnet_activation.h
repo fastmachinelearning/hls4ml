@@ -785,17 +785,16 @@ void prelu(data_T data[CONFIG_T::n_in], param_T alpha[CONFIG_T::n_in], res_T res
     }
 }
 
-template<class data_T, class res_T>
+template <class data_T, class res_T>
 inline typename std::enable_if<(!std::is_same<res_T, ap_uint<1>>::value), res_T>::type binary_cast(data_T data) {
     return static_cast<res_T>(data);
 }
 
 // should choose this via function overloading
-template<class data_T, class res_T>
+template <class data_T, class res_T>
 inline typename std::enable_if<(std::is_same<res_T, ap_uint<1>>::value), res_T>::type binary_cast(data_T data) {
     return (data > 0) ? static_cast<res_T>(data) : static_cast<res_T>(0);
 }
-
 
 // *************************************************
 //       Binary TanH Activation

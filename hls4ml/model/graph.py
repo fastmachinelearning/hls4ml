@@ -708,8 +708,6 @@ class ModelGraph(Serializable):
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
-
-
     def split_node(self, old_node, new_node1, new_node2):
         """Replace an existing node in the graph with two nodes in sequence.
 
@@ -751,7 +749,6 @@ class ModelGraph(Serializable):
             else:
                 new_graph[key] = value
         self.graph = new_graph
-
 
     def next_layer(self):
         self.index += 1
