@@ -13,8 +13,9 @@ class ChannelsLastConverter(OptimizerPass):
 
     def match(self, node):
         # If this parameter has not been set, this model does not need to be converted
-        if 'ChannelsLastConversion' not in node.model.config.config['HLSConfig']['Model']:
-            return False  # No littering of unused property
+        do_convert = node.model.config.config['HLSConfig']['Model'].get('ChannelsLastConversion', 'off')
+        if do_convert == 'off':
+            return False
         if not hasattr(node, 'channels_last_converted'):
             return True
 
