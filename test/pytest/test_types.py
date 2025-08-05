@@ -167,7 +167,7 @@ def test_float_cpp_parsing(prec_pair):
 @pytest.mark.parametrize(
     'prec_tuple',
     [
-        # Should result in ap_float
+        # Should result in ac_float
         ('ac_float<25,2, 8>', 33, 2, 8, RoundingMode.TRN),
         ('ac_float<54,2,11, AC_RND>', 65, 2, 11, RoundingMode.RND),
         ('ac_float<25,4, 8>', 33, 4, 8, RoundingMode.TRN),
