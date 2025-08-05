@@ -135,7 +135,7 @@ class VitisBackend(VivadoBackend):
         with open(tcl_path, 'w') as file:
             file.write(build_opts)
 
-        build_command = 'vitis-run --tcl build_prj.tcl'
+        build_command = 'vitis-run --tcl build_prj.tcl --mode hls'
 
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')

@@ -179,8 +179,8 @@ def parse_layernorm_layer(operation, layer_name, input_names, input_shapes, node
 
     if not ((len(input_shapes[0])) == 3):
         raise Exception(
-            'input size is not currently supported by hls4ml; '
-            'only three-dimensional input (including batch dimension) is supported'
+            f'Input shape {input_shapes[0]} is not currently supported for LayerNorm; '
+            'only three-dimensional inputs (including batch dimension) are supported'
         )
     layer['seq_len'] = input_shapes[0][-2]
 
