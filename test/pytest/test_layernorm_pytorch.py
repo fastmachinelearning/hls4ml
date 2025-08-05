@@ -11,7 +11,6 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 in_shape = (10, 8)
-atol = 5e-2
 
 
 @pytest.fixture(scope='module')
@@ -52,7 +51,7 @@ def test_layernorm_parsing(custom_epsilon_model, backend):
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         custom_epsilon_model, backend=backend, hls_config=custom_config, io_type='io_parallel', output_dir=output_dir
     )
-    hls_model.compile()
+    hls_model.write()
 
     # Check that custom configuration is picked up correctly
     hls_layer = list(hls_model.get_layers())[1]  # 0 is input, 1 is LayerNorm
@@ -76,4 +75,4 @@ def test_layernorm(model, data, backend):
     # Predict
     y_pytorch = model(torch.Tensor(data)).detach().numpy().flatten()
     y_hls = hls_model.predict(data).flatten()
-    np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=atol, verbose=True)
+    np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=5e-2, verbose=True)
