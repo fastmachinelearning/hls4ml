@@ -3,9 +3,11 @@ This file includes optimizations related to BipolarQuant nodes.
 
 """
 
+import copy
+
 import numpy as np
 
-from hls4ml.model.layers import Activation, BipolarQuant, Constant
+from hls4ml.model.layers import Activation, ApplyAlpha, BipolarQuant, Constant
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.quantizers import BinaryQuantizer
 from hls4ml.model.types import XnorPrecisionType
@@ -71,9 +73,12 @@ class BipolarQuantToActivation(OptimizerPass):
 
         attributes = {'activation': 'binary_tanh', 'quantizer': quantizer, 'quantizer_precision': precision}
 
-        # don't update the configuration because we can't manually set
-        # the precision as xnor type
+        # update the configuration (not setting the precision since can't specify xnor type)
+        config = model.config.get_layer_config(node)
         new_name = f'{node.name}_act'
+        model.config.set_name_config(new_name, config)
+        model.config.parse_name_config(new_name, config)
+
         new_node = model.make_node(Activation, new_name, attributes, [node.inputs[0]], list(node.outputs))
         model.replace_node(node, new_node)
         return True
@@ -81,7 +86,7 @@ class BipolarQuantToActivation(OptimizerPass):
 
 class FuseBipolarQuantWithConstant(OptimizerPass):
     """
-    This is for the case when scale is po2.
+    This is for the case when scale is 1 and the input is a constant
     """
 
     def match(self, node):
@@ -94,15 +99,10 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
             and isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
-        # Only match if the scale is po2
+        # Only match if the scale is 1
         if is_match:  # to make sure this is a quant node with inputs
             scale = node.get_attr('scale')
-            scale_unit_or_po2 = (scale == 1.0).all()
-            # This optimization only works if all scales are the same
-            if np.all(scale[0] == scale):
-                mantissa, _ = np.frexp(scale[0])
-                scale_unit_or_po2 = mantissa == 0.5
-            is_match = scale_unit_or_po2
+            is_match = (scale == 1.0).all()
 
         return is_match
 
@@ -119,4 +119,145 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
 
         # remove the Quant node
         model.remove_node(node)
+        return True
+
+
+class BipolarQuantToAlphaActivationAlpha(OptimizerPass):
+    """
+    This is for the case when scale is not 1. It is a a 1:3 transformation of
+    a BipolarQuant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to rescale).
+
+    NOTE:  It needs to be scheduled after BipolarQuantToActivation (or we need to make the match criteria stricter)
+    """
+
+    def match(self, node):
+        # only matches after the other inputs are already folded
+        is_match = (
+            isinstance(node, BipolarQuant)
+            and len(node.inputs) == 1
+            and not isinstance(node.get_input_node(node.inputs[0]), Constant)
+        )
+        return is_match
+
+    def transform(self, model, node):
+        """
+        Change quant node to ApplyAlhpa, Activation, ApplyAlpha
+        """
+
+        # Do the Activation as in the simple case
+
+        precision = XnorPrecisionType()
+        quantizer = BinaryQuantizer(bits=1)
+
+        activation_attributes = {'activation': 'binary_tanh', 'quantizer': quantizer, 'quantizer_precision': precision}
+
+        # update the configuration (not setting the precision since can't specify xnor type)
+        config = model.config.get_layer_config(node)
+        act_config = copy.deepcopy(config)
+        act_name = f'{node.name}_act'
+        model.config.set_name_config(act_name, act_config)
+        model.config.parse_name_config(act_name, act_config)
+
+        new_node = model.make_node(Activation, act_name, activation_attributes, [node.inputs[0]], [x for x in node.outputs])
+        model.replace_node(node, new_node)
+
+        # but now add the ApplyAlhpas before and after
+
+        inshape = node.get_input_variable().shape
+
+        scale = node.get_attr('scale')
+        bias = np.array(0)
+
+        attributes_scale = {'n_filt': -1}
+        attributes_rescale = {'n_filt': -1}
+
+        scale_config = copy.deepcopy(config)
+        scale_name = f'{node.name}_scale'
+        model.config.set_name_config(scale_name, scale_config)
+        model.config.parse_name_config(scale_name, scale_config)
+
+        rescale_config = config  # no need to deep copy the last
+        rescale_name = f'{node.name}_rescale'
+        model.config.set_name_config(rescale_name, rescale_config)
+        model.config.parse_name_config(rescale_name, rescale_config)
+
+        firstscale = 1 / scale
+        firstbias = bias
+        attributes_scale['scale_data'] = np.broadcast_to(firstscale, inshape)
+        attributes_scale['bias_data'] = np.broadcast_to(firstbias, inshape)
+
+        scale_node = model.make_node(ApplyAlpha, scale_name, attributes_scale, [node.inputs[0]])
+        model.insert_node(scale_node)
+
+        rescale = scale
+        rebias = -bias * scale
+        attributes_rescale['scale_data'] = np.broadcast_to(rescale, inshape)
+        attributes_rescale['bias_data'] = np.broadcast_to(rebias, inshape)
+
+        rescale_node = model.make_node(ApplyAlpha, rescale_name, attributes_rescale, [new_node.outputs[0]])
+        model.insert_node(rescale_node)
+
+        return True
+
+
+class ConstBipolarQuantToConstAlpha(OptimizerPass):
+    """
+    This is for the case when scale is not 1. It is a a 1:3 transformation of
+    a BipolarQuant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to unscale), but an input
+    consts allows for optimization, so the ApplyAlpha (to scale), Activation are
+    optimized away right away.
+    """
+
+    def match(self, node):
+        # only matches after the other inputs are already folded
+        is_match = (
+            isinstance(node, BipolarQuant)
+            and len(node.inputs) == 1
+            and isinstance(node.get_input_node(node.inputs[0]), Constant)
+        )
+
+        if is_match:  # to make sure this is a quant node with inputs
+            scale = node.get_attr('scale')
+            is_match = is_match and ((scale != np.ones_like(scale)).any())
+        return is_match
+
+    def transform(self, model, node):
+        """
+        Change Constant + Quant node to Constant, ApplyAlpha
+        """
+
+        precision = XnorPrecisionType()
+        quantizer = BinaryQuantizer(bits=1)
+
+        const_node = node.get_input_node(node.inputs[0])
+
+        scale = node.get_attr('scale')
+        bias = np.array(0)  # zeropt not defined for bipolar quants
+
+        # caclucate the new value
+        new_val = const_node.get_attr('value') / scale + bias
+        const_node.set_attr('value', new_val)
+        const_node.set_attr('quantizer', quantizer)
+
+        const_node.get_output_variable().type.precision = precision
+
+        inshape = node.get_input_variable().shape
+
+        attributes_rescale = {'n_filt': -1}
+
+        rescale_config = copy.deepcopy(model.config.get_layer_config(node))
+        rescale_name = f'{node.name}_rescale'
+        model.config.set_name_config(rescale_name, rescale_config)
+        model.config.parse_name_config(rescale_name, rescale_config)
+
+        rescale = scale
+        rebias = -bias * scale
+        attributes_rescale['scale_data'] = np.broadcast_to(rescale, inshape)
+        attributes_rescale['bias_data'] = np.broadcast_to(rebias, inshape)
+
+        rescale_node = model.make_node(
+            ApplyAlpha, rescale_name, attributes_rescale, [x for x in node.inputs], [x for x in node.outputs]
+        )
+        model.replace_node(node, rescale_node)
+
         return True
