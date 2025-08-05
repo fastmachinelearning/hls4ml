@@ -69,7 +69,7 @@ class BipolarQuantToActivation(OptimizerPass):
         precision = XnorPrecisionType()
         quantizer = BinaryQuantizer(bits=1)
 
-        attributes = {'activation': 'binary_tanh', 'quantizer': quantizer, 'precision': precision}
+        attributes = {'activation': 'binary_tanh', 'quantizer': quantizer, 'quantizer_precision': precision}
 
         # don't update the configuration because we can't manually set
         # the precision as xnor type

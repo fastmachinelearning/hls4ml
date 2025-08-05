@@ -992,7 +992,7 @@ class Activation(Layer):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
-        self.add_output_variable(shape, dims, precision=self.get_attr('precision'))
+        self.add_output_variable(shape, dims, precision=self.get_attr('quantizer_precision'))  # for xor precision
         if 'n_in' not in self.attributes:
             self.set_attr('n_in', self.get_input_variable().size())
 
