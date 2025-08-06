@@ -884,7 +884,7 @@ PReLUActLoop:
         for (int j = 0; j < res_T::size; j++) {
             cache_T cache;
 
-            if (in_data[j] > 0)
+            if (in_data[j] >= 0)
                 cache = 1;
             else
                 cache = -1;

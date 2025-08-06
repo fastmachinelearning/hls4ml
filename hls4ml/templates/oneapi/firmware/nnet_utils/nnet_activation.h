@@ -479,7 +479,7 @@ template <class data_T, class res_T, typename CONFIG_T> void binary_tanh(const d
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto datareg = data[ii];
         cache_T cache;
-        if (datareg > 0)
+        if (datareg >= 0)
             cache = 1;
         else
             cache = -1;

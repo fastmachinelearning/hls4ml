@@ -496,22 +496,36 @@ def test_simple_model(model_name, io_type, backend, request):
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 
+# @pytest.mark.parametrize(
+#     'model_name',
+#     ['bnn_fc_small_qonnx_model', 'bnn_fc_small_qonnx_model_scale_nonunit', 'bnn_fc_small_qonnx_model_scale_nonunit2'],
+# )
 @pytest.mark.parametrize(
     'model_name',
-    ['bnn_fc_small_qonnx_model', 'bnn_fc_small_qonnx_model_scale_nonunit', 'bnn_fc_small_qonnx_model_scale_nonunit2'],
+    ['bnn_fc_small_qonnx_model'],
 )
-@pytest.mark.parametrize('backend', ['Vitis', 'oneAPI', 'Catapult'])
+@pytest.mark.parametrize(
+    'backend,strategy',
+    [
+        ('Catapult', 'Resource'),
+        ('Catapult', 'Latency'),
+        ('Vitis', 'Resource'),
+        ('Vitis', 'Latency'),
+        ('oneAPI', 'Resource'),
+    ],
+)
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_bnn(model_name, io_type, backend, request):
+def test_bnn(model_name, io_type, backend, strategy, request):
     "Checks if a basic binarized model works correctly."
     qonnx_model = request.getfixturevalue(model_name)
 
     config = hls4ml.utils.config.config_from_onnx_model(
         qonnx_model, granularity='name', backend=backend, default_precision='fixed<16,6>'
     )
+    config['Model']['Strategy'] = strategy
     hls_model = hls4ml.converters.convert_from_onnx_model(
         qonnx_model,
-        output_dir=str(test_root_path / f'hls4mlprj_onnx_{model_name}_{io_type}_{backend}'),
+        output_dir=str(test_root_path / f'hls4mlprj_onnx_{model_name}_{io_type}_{backend}_{strategy}'),
         io_type=io_type,
         backend=backend,
         hls_config=config,

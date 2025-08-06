@@ -675,7 +675,7 @@ BinaryTanHActLoop:
         for (int j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
             cache_T cache;
 
-            if (in_data[j] > 0)
+            if (in_data[j] >= 0)
                 cache = 1;
             else
                 cache = -1;

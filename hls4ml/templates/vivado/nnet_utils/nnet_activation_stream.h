@@ -763,7 +763,7 @@ PReLUActLoop:
     PReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            if (in_data[j] > 0)
+            if (in_data[j] >= 0)
                 cache = 1;
             else
                 cache = -1;
