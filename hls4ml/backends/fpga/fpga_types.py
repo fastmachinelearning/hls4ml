@@ -5,9 +5,11 @@ from hls4ml.model.types import (
     ExponentPrecisionType,
     ExponentType,
     FixedPrecisionType,
+    FloatPrecisionType,
     IntegerPrecisionType,
     NamedType,
     PackedType,
+    StandardFloatPrecisionType,
     XnorPrecisionType,
 )
 
@@ -51,6 +53,25 @@ class APFixedPrecisionDefinition(PrecisionDefinition):
         return typestring
 
 
+class APFloatPrecisionDefinition(PrecisionDefinition):
+    def definition_cpp(self):
+        raise NotImplementedError(
+            'FloatPrecisionType is not supported in AP type precision definitions. Use StandardFloatPrecisionType instead.'
+        )
+
+
+class APStandardFloatPrecisionDefinition(PrecisionDefinition):
+    def definition_cpp(self):
+        typestring = str(self)
+        if typestring.startswith('std_float'):
+            typestring = typestring.replace('std_float', 'ap_float')
+        elif typestring == 'half':
+            typestring = 'std::float16_t'
+        elif typestring == 'bfloat16':
+            typestring = 'std::bfloat16_t'
+        return typestring
+
+
 class ACIntegerPrecisionDefinition(PrecisionDefinition):
     def definition_cpp(self):
         typestring = f'ac_int<{self.width}, {str(self.signed).lower()}>'
@@ -75,6 +96,10 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self._saturation_mode_cpp(self.saturation_mode),
             self.saturation_bits,
         ]
+        if args[0] == 1:
+            # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
+            # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
+            args[0] = 2
         if args[3] == 'AC_TRN' and args[4] == 'AC_WRAP':
             # This is the default, so we won't write the full definition for brevity
             args[3] = args[4] = None
@@ -90,12 +115,40 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
         return typestring
 
 
+class ACFloatPrecisionDefinition(PrecisionDefinition):
+    def _rounding_mode_cpp(self, mode):
+        if mode is not None:
+            return 'AC_' + str(mode)
+
+    def definition_cpp(self):
+        args = [
+            self.width,
+            self.integer,
+            self.exponent,
+            self._rounding_mode_cpp(self.rounding_mode),
+        ]
+        if args[3] == 'AC_TRN':
+            # This is the default, so we won't write the full definition for brevity
+            args[3] = None
+        args = ','.join([str(arg) for arg in args[:5] if arg is not None])
+        typestring = f'ac_float<{args}>'
+        return typestring
+
+
+class ACStandardFloatPrecisionDefinition(PrecisionDefinition):
+    def definition_cpp(self):
+        typestring = str(self)
+        if typestring.startswith('std_float'):
+            typestring = 'ac_' + typestring
+        return typestring
+
+
 class PrecisionConverter:
     def convert(self, precision_type):
         raise NotImplementedError
 
 
-class FixedPrecisionConverter(PrecisionConverter):
+class FPGAPrecisionConverter(PrecisionConverter):
     def __init__(self, type_map, prefix):
         self.type_map = type_map
         self.prefix = prefix
@@ -120,12 +173,14 @@ class FixedPrecisionConverter(PrecisionConverter):
             raise Exception(f'Cannot convert precision type to {self.prefix}: {precision_type.__class__.__name__}')
 
 
-class APTypeConverter(FixedPrecisionConverter):
+class APTypeConverter(FPGAPrecisionConverter):
     def __init__(self):
         super().__init__(
             type_map={
                 FixedPrecisionType: APFixedPrecisionDefinition,
                 IntegerPrecisionType: APIntegerPrecisionDefinition,
+                FloatPrecisionType: APFloatPrecisionDefinition,
+                StandardFloatPrecisionType: APStandardFloatPrecisionDefinition,
                 ExponentPrecisionType: APIntegerPrecisionDefinition,
                 XnorPrecisionType: APIntegerPrecisionDefinition,
             },
@@ -133,12 +188,14 @@ class APTypeConverter(FixedPrecisionConverter):
         )
 
 
-class ACTypeConverter(FixedPrecisionConverter):
+class ACTypeConverter(FPGAPrecisionConverter):
     def __init__(self):
         super().__init__(
             type_map={
                 FixedPrecisionType: ACFixedPrecisionDefinition,
                 IntegerPrecisionType: ACIntegerPrecisionDefinition,
+                FloatPrecisionType: ACFloatPrecisionDefinition,
+                StandardFloatPrecisionType: ACStandardFloatPrecisionDefinition,
                 ExponentPrecisionType: ACIntegerPrecisionDefinition,
                 XnorPrecisionType: ACIntegerPrecisionDefinition,
             },

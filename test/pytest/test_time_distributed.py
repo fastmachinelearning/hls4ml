@@ -40,7 +40,7 @@ def test_time_distributed_layer(io_type, backend, use_h5):
     config['IOType'] = io_type
     config['HLSConfig'] = hls4ml.utils.config_from_keras_model(keras_model, default_precision='fixed<10,8>')
 
-    hls_model = hls4ml.converters.keras_to_hls(config)
+    hls_model = hls4ml.converters.keras_v2_to_hls(config)
     hls_model.compile()
 
     x = np.random.randint(0, 5, size=(10, *input_shape)).astype('float')
@@ -80,7 +80,7 @@ def test_time_distributed_layer_lstm(io_type, backend, use_h5):
     config['IOType'] = io_type
     config['HLSConfig'] = hls4ml.utils.config_from_keras_model(keras_model, default_precision='fixed<32,16>')
 
-    hls_model = hls4ml.converters.keras_to_hls(config)
+    hls_model = hls4ml.converters.keras_v2_to_hls(config)
     hls_model.compile()
 
     x = np.random.rand(10, *input_shape) - 0.5
@@ -127,7 +127,7 @@ def test_time_distributed_model(io_type, backend, use_h5):
     config['IOType'] = io_type
     config['HLSConfig'] = hls4ml.utils.config_from_keras_model(keras_model, default_precision='fixed<10,8>')
 
-    hls_model = hls4ml.converters.keras_to_hls(config)
+    hls_model = hls4ml.converters.keras_v2_to_hls(config)
     hls_model.compile()
 
     x = np.random.randint(0, 5, size=(10, *input_shape)).astype('float')

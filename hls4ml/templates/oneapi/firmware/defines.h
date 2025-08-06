@@ -2,6 +2,7 @@
 #define DEFINES_H_
 
 #include <sycl/ext/intel/ac_types/ac_fixed.hpp>
+#include <sycl/ext/intel/ac_types/ac_float.hpp>
 #include <sycl/ext/intel/ac_types/ac_int.hpp>
 #include <sycl/ext/intel/fpga_extensions.hpp>
 #include <sycl/sycl.hpp>
