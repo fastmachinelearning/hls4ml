@@ -1060,13 +1060,13 @@ void prelu(data_T data[CONFIG_T::n_in], param_T alpha[CONFIG_T::n_in], res_T res
 }
 
 template <class data_T, class res_T>
-inline typename std::enable_if<(!std::is_same<res_T, ap_uint<1>>::value), res_T>::type binary_cast(data_T data) {
+inline typename std::enable_if<(!std::is_same<res_T, ac_int<1, false>>::value), res_T>::type binary_cast(data_T data) {
     return static_cast<res_T>(data);
 }
 
 // should choose this via function overloading
 template <class data_T, class res_T>
-inline typename std::enable_if<(std::is_same<res_T, ap_uint<1>>::value), res_T>::type binary_cast(data_T data) {
+inline typename std::enable_if<(std::is_same<res_T, ac_int<1, false>>::value), res_T>::type binary_cast(data_T data) {
     return (data > 0) ? static_cast<res_T>(data) : static_cast<res_T>(0);
 }
 
@@ -1076,7 +1076,7 @@ inline typename std::enable_if<(std::is_same<res_T, ap_uint<1>>::value), res_T>:
 template <class data_T, class res_T, typename CONFIG_T>
 void binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     //#pragma HLS PIPELINE
-    using cache_T = ac_int<2>;
+    using cache_T = ac_int<2, true>;
 
     data_T datareg;
     cache_T cache;

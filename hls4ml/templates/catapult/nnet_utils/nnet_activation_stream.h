@@ -871,7 +871,7 @@ PReLUActLoop:
 //       Binary TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void binary_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
-    using cache_T = ac_int<2>;
+    using cache_T = ac_int<2, true>;
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         //#pragma HLS PIPELINE

@@ -662,7 +662,7 @@ HardSigmoidActLoop:
 //       Binary TanH Activation
 // *************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T> void binary_tanh_stream() {
-    using cache_T = ac_int<2>;
+    using cache_T = ac_int<2, true>;
 BinaryTanHActLoop:
     [[intel::initiation_interval(
         1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; i++) {
