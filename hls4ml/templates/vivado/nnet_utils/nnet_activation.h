@@ -802,9 +802,9 @@ inline typename std::enable_if<(std::is_same<res_T, ap_uint<1>>::value), res_T>:
 template <class data_T, class res_T, typename CONFIG_T>
 void binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     #pragma HLS PIPELINE
-
+    using cache_T = ap_int<2>;
     data_T datareg;
-    ap_int<2> cache;
+    cache_T cache;
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         datareg = data[ii];
         if (datareg >= 0)
@@ -812,7 +812,7 @@ void binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
         else
             cache = -1;
 
-        res[ii] = binary_cast<data_T, res_T>(cache);
+        res[ii] = binary_cast<cache_T, res_T>(cache);
     }
 }
 

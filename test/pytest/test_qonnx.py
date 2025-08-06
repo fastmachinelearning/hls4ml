@@ -500,7 +500,7 @@ def test_simple_model(model_name, io_type, backend, request):
     'model_name',
     ['bnn_fc_small_qonnx_model', 'bnn_fc_small_qonnx_model_scale_nonunit', 'bnn_fc_small_qonnx_model_scale_nonunit2'],
 )
-@pytest.mark.parametrize('backend', ['Vitis'])
+@pytest.mark.parametrize('backend', ['Vitis', 'oneAPI', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bnn(model_name, io_type, backend, request):
     "Checks if a basic binarized model works correctly."
