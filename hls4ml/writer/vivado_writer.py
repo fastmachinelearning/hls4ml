@@ -368,8 +368,24 @@ class VivadoWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-            # Insert numbers
-            if '// hls-fpga-machine-learning insert numbers' in line:
+            if '// hls-fpga-machine-learning insert headers' in line:
+                uses_stdfloat = False
+                uses_apfloat = False
+                for layer in model.get_layers():
+                    layer_precision = layer.get_layer_precision()
+                    for type_var in layer_precision.values():
+                        cpp = type_var.definition_cpp()
+                        if 'std::' in cpp:
+                            uses_stdfloat = True
+                            break
+                        if 'ap_float' in cpp:
+                            uses_apfloat = True
+                            break
+                if uses_stdfloat:
+                    newline = line + '#include <stdfloat>\n'
+                if uses_apfloat:
+                    newline = line + '#include "ap_float.h"\n'
+            elif '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
 
                 defines = set()
