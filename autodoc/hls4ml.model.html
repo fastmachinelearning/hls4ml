@@ -1815,6 +1815,34 @@ for QKeras po2 quantizers, for example.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.FloatPrecisionType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">FloatPrecisionType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">33</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exponent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rounding_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.FloatPrecisionType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.PrecisionType" title="hls4ml.model.types.PrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionType</span></code></a></p>
+<p>Class representing a floating-point precision type.</p>
+<p>This type is equivalent to ac_float HLS types. If the use of C++ equivalent types is required, see
+<code class="docutils literal notranslate"><span class="pre">StandardFloatPrecisionType</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>int</em><em>, </em><em>optional</em>) – Total number of bits used. Defaults to 33.</p></li>
+<li><p><strong>integer</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of bits used for the integer part. Defaults to 2.</p></li>
+<li><p><strong>exponent</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of bits used for the exponent. Defaults to 8.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.model.types.FloatPrecisionType.rounding_mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rounding_mode</span></span><a class="headerlink" href="#hls4ml.model.types.FloatPrecisionType.rounding_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.types.FloatPrecisionType.serialize_state">
+<span class="sig-name descname"><span class="pre">serialize_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.FloatPrecisionType.serialize_state" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.types.InplaceTensorVariable">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">InplaceTensorVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.InplaceTensorVariable" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.TensorVariable" title="hls4ml.model.types.TensorVariable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorVariable</span></code></a></p>
@@ -2079,6 +2107,30 @@ expected to capture all internal state to be able to recreate the object indisti
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.types.Source.serialize_state">
 <span class="sig-name descname"><span class="pre">serialize_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.Source.serialize_state" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.StandardFloatPrecisionType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">StandardFloatPrecisionType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exponent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cpp_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.StandardFloatPrecisionType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.PrecisionType" title="hls4ml.model.types.PrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionType</span></code></a></p>
+<p>Class representing a floating-point precision type.</p>
+<p>This type is equivalent to ap_float and ac_std_float HLS types. &lt;32,8&gt; corresponds to a ‘float’ type in C/C++. &lt;64,11&gt;
+corresponds to a ‘double’ type in C/C++. &lt;16,5&gt; corresponds to a ‘half’ type in C/C++. &lt;16,8&gt; corresponds to a
+‘bfloat16’ type in C/C++.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>int</em><em>, </em><em>optional</em>) – Total number of bits used. Defaults to 32.</p></li>
+<li><p><strong>exponent</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of bits used for the exponent. Defaults to 8.</p></li>
+<li><p><strong>use_cpp_type</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use C++ equivalent types if available. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.types.StandardFloatPrecisionType.serialize_state">
+<span class="sig-name descname"><span class="pre">serialize_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.StandardFloatPrecisionType.serialize_state" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
