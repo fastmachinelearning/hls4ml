@@ -31,7 +31,7 @@ def test_constantpad_1d():
     hls_model_pytorch.compile()
 
     onnx_path = str(test_root_path / 'hls4mlprj_constpad_1d/pad1d.onnx')
-    torch.onnx.export(model, torch.randn(1, 2, 4), onnx_path, opset_version=10)
+    torch.onnx.export(model, torch.randn(1, 2, 4), onnx_path, dynamo=True)
     qonnx.util.cleanup.cleanup(onnx_path, out_file=onnx_path)
     pad1d_onnx = ModelWrapper(onnx_path)
 
@@ -68,7 +68,7 @@ def test_constantpad_2d():
     hls_model_pytorch.compile()
 
     onnx_path = str(test_root_path / 'hls4mlprj_constpad_2d/pad2d.onnx')
-    torch.onnx.export(model, torch.randn(1, 2, 3, 4), onnx_path, opset_version=10)
+    torch.onnx.export(model, torch.randn(1, 2, 3, 4), onnx_path, dynamo=True)
     qonnx.util.cleanup.cleanup(onnx_path, out_file=onnx_path)
     pad2d_onnx = ModelWrapper(onnx_path)
 
