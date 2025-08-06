@@ -1,14 +1,75 @@
 import typing
 from collections.abc import Sequence
 
+import numpy as np
+
 from ._base import KerasV3LayerHandler, register
 
 if typing.TYPE_CHECKING:
     import keras
     from keras import KerasTensor
 
-rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
-weight_dict = {'kernel': 'weight', 'recurrent_kernel': 'recurrent_weight', 'bias': 'bias'}
+rnn_layers = ('SimpleRNN', 'LSTM', 'GRU')
+
+
+@register
+class RecurentHandler(KerasV3LayerHandler):
+    handles = (
+        'keras.src.layers.rnn.simple_rnn.SimpleRNN',
+        'keras.src.layers.rnn.lstm.LSTM',
+        'keras.src.layers.rnn.gru.GRU',
+    )
+
+    def handle(
+        self,
+        layer: 'keras.layers.SimpleRNN|keras.layers.LSTM|keras.layers.GRU',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        import keras
+
+        if layer.return_state:
+            raise Exception(f'return_state=True is not supported for {layer.__class__} layer.')
+
+        config = {
+            'direction': 'forward',
+            'return_sequences': layer.return_sequences,
+            'return_state': layer.return_state,
+            'time_major': False,
+            'n_timesteps': in_tensors[0].shape[1],
+            'n_in': in_tensors[0].shape[2],
+            'n_out': layer.units,
+        }
+
+        config['weight_data'] = self.load_weight(layer.cell, 'kernel')
+        config['recurrent_weight_data'] = self.load_weight(layer.cell, 'recurrent_kernel')
+
+        if layer.use_bias:
+            if isinstance(layer, keras.layers.GRU):
+                bias = self.load_weight(layer.cell, 'bias')
+                config['bias_data'] = bias[0]
+                config['recurrent_bias_data'] = bias[1]
+            else:
+                config['bias_data'] = self.load_weight(layer.cell, 'bias')
+        else:
+            d_out = config['weight_data'].shape[-1]
+            config['bias_data'] = np.zeros((d_out,), dtype=np.float32)
+            if isinstance(layer, keras.layers.GRU):
+                config['recurrent_bias_data'] = np.zeros((d_out,), dtype=np.float32)
+
+        if isinstance(layer, keras.layers.GRU):
+            config['apply_reset_gate'] = 'after' if layer.reset_after else 'before'
+
+        if hasattr(layer, 'activation'):
+            config['activation'] = layer.activation.__name__
+        if hasattr(layer, 'recurrent_activation'):
+            config['recurrent_activation'] = layer.recurrent_activation.__name__
+
+        _config = {}
+        _config.update(self.default_config)
+        _config.update(config)
+
+        return (_config,)
 
 
 @register
@@ -39,16 +100,14 @@ class BidirectionalHandler(KerasV3LayerHandler):
             assert class_name in rnn_layers or class_name[1:] in rnn_layers
 
         config = {}
-        config['name'] = layer.name
-        config['class_name'] = layer.__class__.__name__
 
         config['direction'] = 'bidirectional'
         config['return_sequences'] = layer.return_sequences
         config['return_state'] = layer.return_state
-        config['time_major'] = getattr(layer, 'time_major', False)
-        # TODO Should we handle time_major?
-        if config['time_major']:
-            raise Exception('Time-major format is not supported by hls4ml')
+        config['time_major'] = False
+
+        if config['return_state']:
+            raise Exception(f'return_state=True is not supported for {layer.__class__} layer.')
 
         config['n_timesteps'] = in_tensors[0].shape[1]
         config['n_in'] = in_tensors[0].shape[2]
@@ -60,27 +119,31 @@ class BidirectionalHandler(KerasV3LayerHandler):
             config[f'{direction}_class_name'] = rnn_layer.__class__.__name__
             if hasattr(rnn_layer, 'activation'):
                 config[f'{direction}_activation'] = rnn_layer.activation.__name__
-            if 'SimpleRNN' not in rnn_layer.__class__.__name__:
+            if hasattr(rnn_layer, 'recurrent_activation'):
                 config[f'{direction}_recurrent_activation'] = rnn_layer.recurrent_activation.__name__
 
-            config[f'{direction}_data_format'] = getattr(rnn_layer, 'data_format', 'channels_last')
-            if hasattr(rnn_layer, 'epsilon'):
-                config[f'{direction}_epsilon'] = rnn_layer.epsilon
+            # config[f'{direction}_data_format'] = getattr(rnn_layer, 'data_format', 'channels_last')
             if hasattr(rnn_layer, 'use_bias'):
                 config[f'{direction}_use_bias'] = rnn_layer.use_bias
 
-            for w in rnn_layer.weights:
-                name = w.name.replace('kernel', 'weight') if 'kernel' in w.name else w.name
-                config[f'{direction}_{name}_data'] = keras.ops.convert_to_numpy(w)
+            config[f'{direction}_weight_data'] = self.load_weight(rnn_layer.cell, 'kernel')
+            config[f'{direction}_recurrent_weight_data'] = self.load_weight(rnn_layer.cell, 'recurrent_kernel')
 
-            if 'GRU' in rnn_layer.__class__.__name__:
+            if rnn_layer.use_bias:
+                if isinstance(rnn_layer.cell, keras.layers.GRU):
+                    bias = self.load_weight(rnn_layer.cell, 'bias')
+                    config[f'{direction}_bias_data'] = bias[0]
+                    config[f'{direction}_recurrent_bias_data'] = bias[1]
+                else:
+                    config[f'{direction}_bias_data'] = self.load_weight(rnn_layer.cell, 'bias')
+            else:
+                d_out = config[f'{direction}_weight_data'].shape[-1]
+                config[f'{direction}_bias_data'] = np.zeros(d_out, dtype=np.float32)
+                if isinstance(rnn_layer, keras.layers.GRU):
+                    config[f'{direction}_recurrent_bias_data'] = np.zeros(d_out, dtype=np.float32)
+
+            if isinstance(rnn_layer, keras.layers.GRU):
                 config[f'{direction}_apply_reset_gate'] = 'after' if rnn_layer.reset_after else 'before'
-
-                # biases array is actually a 2-dim array of arrays (bias + recurrent bias)
-                # both arrays have shape: n_units * 3 (z, r, h_cand)
-                biases = config[f'{direction}_bias_data']
-                config[f'{direction}_bias_data'] = biases[0]
-                config[f'{direction}_recurrent_bias_data'] = biases[1]
 
             config[f'{direction}_n_states'] = rnn_layer.units
 
@@ -88,8 +151,5 @@ class BidirectionalHandler(KerasV3LayerHandler):
             config['n_out'] = config['forward_n_states'] + config['backward_n_states']
         else:
             config['n_out'] = config['forward_n_states']
-
-        if config['return_state']:
-            raise Exception('"return_state" of {} layer is not yet supported.')
 
         return config
