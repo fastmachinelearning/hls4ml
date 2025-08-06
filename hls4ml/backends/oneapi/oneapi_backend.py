@@ -10,6 +10,7 @@ from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.report import parse_oneapi_report
 from hls4ml.utils import attribute_descriptions as descriptions
 
 # from hls4ml.report import parse_oneapi_report
@@ -67,7 +68,6 @@ class OneAPIBackend(FPGABackend):
             'oneapi:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
             'oneapi:xnor_pooling',
-            'oneapi:generate_conv_im2col',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -78,6 +78,7 @@ class OneAPIBackend(FPGABackend):
             'oneapi:skip_softmax',
             'oneapi:fix_softmax_table_size',
             'infer_precision_types',
+            'oneapi:process_fixed_point_quantizer_layer',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -103,7 +104,6 @@ class OneAPIBackend(FPGABackend):
             + optimization_passes
             + writer_passes
             + ['oneapi:inplace_stream_flatten', 'oneapi:reshape_stream']  # not needed
-            + ['oneapi:process_fixed_point_quantizer_layer']  # not yet supported
         ]
 
         if len(extras) > 0:
@@ -129,12 +129,15 @@ class OneAPIBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel', write_tar=False, **_):
+    def create_initial_config(
+        self, part='Agilex7', clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
+    ):
         """Create initial configuration of the oneAPI backend.
 
         Args:
-            part (str, optional): The FPGA part to be used. Defaults to 'Arria10'.
-            clock_period (int, optional): The clock period. Defaults to 5.
+            part (str, optional): The FPGA part to be used. Defaults to 'Agilex7'.
+            clock_period (int, optional): The clock period in ns. Defaults to 5.
+            hyperopt_handshake (bool, optional): Should hyper-optimized handshaking be used? Defaults to False
             io_type (str, optional): Type of implementation used. One of
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
@@ -145,8 +148,9 @@ class OneAPIBackend(FPGABackend):
 
         config = {}
 
-        config['Part'] = part if part is not None else 'Arria10'
+        config['Part'] = part if part is not None else 'Agilex7'
         config['ClockPeriod'] = clock_period
+        config['HyperoptHandshake'] = hyperopt_handshake
         config['IOType'] = io_type
         config['HLSConfig'] = {}
         config['WriterConfig'] = {
@@ -166,20 +170,12 @@ class OneAPIBackend(FPGABackend):
             Exception: If the project failed to compile
 
         Returns:
-            string: Returns the name of the compiled library.
+            Path: Returns the name of the compiled library.
         """
         outdir = Path(Path.cwd(), model.config.get_output_dir())
-        builddir = outdir / 'build'
-        builddir.mkdir(exist_ok=True)
-        try:
-            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
-        except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
-        subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
-        subprocess.run('make lib', shell=True, cwd=builddir, check=True)
+        self.build(model, build_type='lib', run=False)
 
-        lib_name = builddir / f'lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
-        return lib_name
+        return outdir / f'build/lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
@@ -203,9 +199,13 @@ class OneAPIBackend(FPGABackend):
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
-        if run and build_type in ('fpga_emu', 'fpga_sim', 'fpga'):
+        if run:
+            if build_type not in ('fpga_emu', 'fpga_sim', 'fpga'):
+                raise ValueError('Running is only supported for fpga_emu, fpga_sim, or fpga builds')
             executable = builddir / f'{model.config.get_project_name()}.{build_type}'
             subprocess.run(f'{str(executable)}', shell=True, cwd=builddir, check=True)
+
+        return parse_oneapi_report(model.config.get_output_dir())
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):

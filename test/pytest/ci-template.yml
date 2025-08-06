@@ -10,7 +10,7 @@
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
-    - pip install .[testing,sr,optimization]
+    - pip install .[da,testing,sr,optimization]
   script:
     - cd test/pytest
     - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed

@@ -1,5 +1,5 @@
 import math
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -51,7 +51,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Dense']:
             return self._infer_dense_precision(node, types_to_infer)
 
-        if node_class in ['BatchNormalization', 'ApplyAlpha']:
+        if node_class in ['BatchNormalization', 'ApplyAlpha', 'LayerNormalization']:
             return self._infer_bn_precision(node, types_to_infer)
 
         if node_class in ['Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D', 'Conv2DBatchnorm']:
@@ -81,7 +81,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Embedding']:
             return self._infer_embedding_precision(node, types_to_infer)
 
-        if node_class in ['SimpleRNN', 'LSTM', 'GRU']:
+        if node_class in ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional']:
             return self._infer_rnn_precision(node, types_to_infer)
 
         if node_class in ['ParametrizedActivation']:
@@ -90,6 +90,8 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['MultiHeadAttention']:
             return self._infer_mha_precision(node, types_to_infer)
 
+        if node_class in ['PReLU']:
+            return self._infer_prelu_act_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -556,7 +558,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         inferred_types = []
 
         # for now just do the weights and leave the rest for the default catch
-        for weightvar in ('weight', 'bias', 'recurrent_weight', 'recurrent_bias'):
+        rnn_weights = ('weight', 'bias', 'recurrent_weight', 'recurrent_bias')
+        if node.class_name == 'Bidirectional':
+            rnn_weights = [direction + '_' + weight for direction in ['forward', 'backward'] for weight in rnn_weights]
+
+        for weightvar in rnn_weights:
             if f'{weightvar}_t' in types_to_infer:
                 self._infer_default_type(node, f'{weightvar}_t')
                 node.weights[weightvar].update_precision(node.types[f'{weightvar}_t'].precision)
@@ -570,9 +576,24 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         # For threshold relu, set the parameter precision to be the input precision by default;
         # for other parametrized activations, just allow the default precision to be used.
         # Can override these values in the configuration by explicitly setting them.
-        if 'param_t' in inferred_types and self.get_attr('activation').lower() == 'thresholdedrelu':
+        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'thresholdedrelu':
             in_type = node.get_input_variable().type.precision
-            node.attributes['param_t'].type = in_type
+            node.attributes['param_t'].precision = in_type
+            inferred_types.append('param_t')
+
+        return inferred_types
+
+    def _infer_prelu_act_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        # For PReLU, set the parameter precision to be the input precision by default;
+        # As the parameters are stored as a weight tensor, need to update that precision as well.
+        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'prelu':
+
+            in_type = node.get_input_variable().type.precision
+            node.attributes['param_t'].precision = in_type
+            node.weights['param'].update_precision(node.types['param_t'].precision)
+
             inferred_types.append('param_t')
 
         return inferred_types

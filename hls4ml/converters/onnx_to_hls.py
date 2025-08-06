@@ -63,12 +63,17 @@ def get_input_shape(graph, node):
     """
     rv = []
     for inp in node.input:
-        try:
-            value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == inp))
-            dim = list(d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim)
-        except StopIteration:
-            # The input is not in the graph, likely it's the input
-            dim = get_global_input_shape(graph, inp)
+        # first try regular variables
+        vals = [x for x in graph.value_info if x.name == inp]
+        if not vals:
+            # then try outputs (possible if an output is intermediate)
+            vals = [x for x in graph.output if x.name == inp]
+        if not vals:
+            # then try global input.
+            vals = [x for x in graph.input if x.name == inp]
+        if not vals:
+            raise RuntimeError(f'Could not find the shape for input {inp}')
+        dim = list(d.dim_value for d in vals[0].type.tensor_type.shape.dim)
         if dim:
             rv.append(dim)
     return rv
@@ -287,5 +292,5 @@ def onnx_to_hls(config):
     #################
 
     print('Creating HLS model')
-    hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
+    hls_model = ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
     return hls_model

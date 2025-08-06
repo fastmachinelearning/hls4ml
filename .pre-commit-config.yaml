@@ -10,7 +10,7 @@ repos:
            '--skip-string-normalization']
 
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.5.1
+  rev: v2.6.0
   hooks:
     - id: pyproject-fmt
 
@@ -35,19 +35,22 @@ repos:
   - id: isort
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.19.1
+  rev: v3.20.0
   hooks:
   - id: pyupgrade
-    args: ["--py36-plus"]
+    args: ["--py310-plus"]
 
 - repo: https://github.com/pycqa/flake8
-  rev: 7.1.2
+  rev: 7.3.0
   hooks:
   - id: flake8
     exclude: docs/conf.py
     additional_dependencies: [flake8-bugbear, flake8-print]
     args: ['--max-line-length=125',  # github viewer width
-           '--extend-ignore=E203,T201']  # E203 is not PEP8 compliant
+           '--extend-ignore=E203,T201',  # E203 is not PEP8 compliant
+           '--per-file-ignores=hls4ml/model/optimizer/passes/bit_exact.py:E741',
+           # i for #int w/o sign, I for #int w/ sign when massively processing bw conversions
+    ]
 
 - repo: https://github.com/mgedmin/check-manifest
   rev: "0.50"

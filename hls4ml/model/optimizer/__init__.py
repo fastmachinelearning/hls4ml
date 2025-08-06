@@ -64,6 +64,7 @@ register_flow(
         'remove_nop_transpose',
         'remove_single_channel_transpose',
         'fuse_bias_add',
+        'expand_time_distributed',
         'expand_layer_group',
         'output_rounding_saturation_mode',
         'qkeras_factorize_alpha',
@@ -72,6 +73,9 @@ register_flow(
         'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
         'enforce_proxy_model_embedded_config',
+        'bit_exact',
+        'fuse_fixed_point_quantizer',
+        'fix_input_precision',
         'eliminate_linear_activation',
         'merge_linear_activation',
         # many of the above optimzers need to be done before this

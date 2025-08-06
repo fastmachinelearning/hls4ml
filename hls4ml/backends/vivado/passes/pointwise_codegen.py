@@ -16,7 +16,7 @@ def generate_pointwise_conv1d_fn(layer_idx, reuse_factor=1):
 
     generated_code = (
         'template<class data_T, class res_T, typename CONFIG_T>\n'
-        'class pointwise_conv_{index} : public Conv1DKernel<data_T, res_T, CONFIG_T> {{\n'
+        'class pointwise_conv_{index} : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T> {{\n'
         '  public:\n'
         '    static void conv(\n'
         '                     data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n'
@@ -41,7 +41,7 @@ def generate_pointwise_conv1d_fn(layer_idx, reuse_factor=1):
     for i in range(reuse_factor):
         generated_code += indent
         generated_code += (
-            f'pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[{i}], res_tmp[{i}], weights, biases);\n'
+            f'nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[{i}], res_tmp[{i}], weights, biases);\n'
         )
 
     generated_code += (

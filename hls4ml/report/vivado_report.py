@@ -672,3 +672,53 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
         body = body.format(**params)
 
     return body
+
+
+def aggregate_graph_reports(graph_reports):
+    """
+    Aggregate the build results of each subgraph into a single dictionary.
+    """
+
+    if graph_reports is None or len(graph_reports) == 0:
+        return {}
+
+    keys_to_sum = ['BRAM_18K', 'DSP', 'FF', 'LUT', 'URAM']
+    first_subgraph = next(iter(graph_reports))
+    reportChoice = 'CSynthesisReport' if 'VivadoSynthReport' not in graph_reports[first_subgraph] else 'VivadoSynthReport'
+    base_report = graph_reports[first_subgraph][reportChoice]
+    csynth_report = graph_reports[first_subgraph].get('CSynthesisReport', base_report)
+
+    final_report = {
+        'TargetClockPeriod': csynth_report.get('TargetClockPeriod', 'N/A'),
+        'EstimatedClockPeriod': float(csynth_report.get('EstimatedClockPeriod', float('inf'))),
+        'BestLatency': 'N/A',
+        'WorstLatency': 'N/A',
+    }
+
+    final_report['AvailableBRAM_18K'] = csynth_report.get('AvailableBRAM_18K', 'N/A')
+    final_report['AvailableDSP'] = csynth_report.get('AvailableDSP', 'N/A')
+    final_report['AvailableFF'] = csynth_report.get('AvailableFF', 'N/A')
+    final_report['AvailableLUT'] = csynth_report.get('AvailableLUT', 'N/A')
+    final_report['AvailableURAM'] = csynth_report.get('AvailableURAM', 'N/A')
+
+    for k in keys_to_sum:
+        final_report[k] = float(base_report.get(k, '0'))
+
+    for subgraph, data in graph_reports.items():
+        if subgraph == first_subgraph:
+            continue
+        report = data.get(reportChoice, {})
+        est_cp = float(report.get('EstimatedClockPeriod', float('inf')))
+        if est_cp > final_report['EstimatedClockPeriod']:
+            final_report['EstimatedClockPeriod'] = est_cp
+
+        for k in keys_to_sum:
+            final_report[k] += float(report.get(k, '0'))
+            if k == 'DSP':
+                final_report[k] += float(report.get('DSP48E', '0'))
+
+    final_report['EstimatedClockPeriod'] = f"{final_report['EstimatedClockPeriod']:.3f}"
+    for k in keys_to_sum:
+        final_report[k] = str(final_report[k])
+
+    return {'StitchedDesignReport': final_report}

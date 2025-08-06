@@ -1,4 +1,5 @@
 import typing
+from copy import copy
 
 import numpy as np
 
@@ -21,6 +22,8 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     NamedType,
+    PrecisionType,
+    Serializable,
     TensorVariable,
     UnspecifiedPrecisionType,
     WeightVariable,
@@ -29,8 +32,12 @@ from hls4ml.model.types import (
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.string_utils import convert_to_snake_case
 
+if typing.TYPE_CHECKING:
+    from hls4ml.model import ModelGraph
 
 # TODO move this to some utility module
+
+
 class classproperty:
     def __init__(self, func):
         self.func = func
@@ -39,7 +46,7 @@ class classproperty:
         return self.func(owner)
 
 
-class Layer:
+class Layer(Serializable):
     """The base class for all layers, which are the nodes in the model graph.
     Note:  they don't necessarily correspond 1:1 with the network layers.
 
@@ -74,15 +81,14 @@ class Layer:
             all_attributes.extend(cls._expected_attributes)
         return all_attributes
 
-    def __init__(self, model, name, attributes, inputs, outputs=None):
+    def __init__(self, model, name, attributes, inputs, outputs=None, initialize=True):
         if name == 'input':
             raise RuntimeError(
                 "No model layer should be named 'input' because that is a reserved;"
                 + "layer name in ModelGraph; Please rename the layer in your model"
             )
-        self.model = model
+        self.model: 'ModelGraph' = model
         self.name = name
-        self.index = model.next_layer()
         self.inputs = inputs
         self.outputs = outputs
         if self.outputs is None:
@@ -91,33 +97,37 @@ class Layer:
         self.attributes = AttributeDict(self)
         self.attributes.update(attributes)
 
-        self.set_attr('index', self.index)
-
         self.weights = WeightMapping(self.attributes)
         self.variables = VariableMapping(self.attributes)
         self.types = TypeMapping(self.attributes)
         self.code = CodeMapping(self.attributes)
 
-        self._set_accum_t()
+        if initialize:
+            self.index = model.next_layer()
+            self.set_attr('index', self.index)
 
-        layer_config = self.model.config.get_layer_config(self)
-        for config_key, config_value in layer_config.items():
-            config_key = convert_to_snake_case(config_key)
-            if config_key in self.attributes:
-                print(
-                    'WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(
-                        config_key, self.name, self.class_name
+            self._set_accum_t()
+
+            layer_config = self.model.config.get_layer_config(self)
+            for config_key, config_value in layer_config.items():
+                config_key = convert_to_snake_case(config_key)
+                if config_key in self.attributes:
+                    print(
+                        'WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(
+                            config_key, self.name, self.class_name
+                        )
                     )
-                )
-            if config_key.endswith('_t') and isinstance(
-                config_value, str
-            ):  # TODO maybe move this to __setitem__ of AttributeDict?
-                precision = self.model.config.backend.convert_precision_string(config_value)
-                config_value = NamedType(self.name + '_' + config_key, precision)
-            self.attributes[config_key] = config_value
+                if config_key.endswith('_t') and isinstance(
+                    config_value, str
+                ):  # TODO maybe move this to __setitem__ of AttributeDict?
+                    precision = self.model.config.backend.convert_precision_string(config_value)
+                    config_value = NamedType(self.name + '_' + config_key, precision)
+                self.attributes[config_key] = config_value
 
-        self.initialize()
-        self._validate_attributes()
+            self.initialize()
+            self._validate_attributes()
+        else:
+            self.index = self.get_attr('index')
 
     @property
     def class_name(self, include_wrapped=False):
@@ -145,6 +155,9 @@ class Layer:
 
         # Validate existing attributes
         for attr_name, attr_value in self.attributes.items():
+            if isinstance(attr_value, PrecisionType):
+                attr_value = self._wrap_precision_to_type(f'{self.name}_{attr_name}', attr_value)
+                self.set_attr(attr_name, attr_value)
             exp_attr = all_attributes.pop(attr_name, None)
             if exp_attr is not None:
                 if not exp_attr.validate_value(attr_value):
@@ -160,7 +173,7 @@ class Layer:
         for attr_name, attr in all_attributes.items():
             if attr.default is not None:
                 if isinstance(attr, TypeAttribute):
-                    self.set_attr(attr_name, self._wrap_precision_to_type(self.name + '_' + attr_name, attr.default))
+                    self.set_attr(attr_name, self._wrap_precision_to_type(self.name + '_' + attr_name, copy(attr.default)))
                 else:
                     self.set_attr(attr_name, attr.default)
             else:
@@ -277,7 +290,7 @@ class Layer:
                 data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
             type_name = 'bias{index}_t'
-            quantizer = None  # Don't quantize non-existant bias
+            quantizer = None  # Don't quantize non-existent bias
 
         self.add_weights_variable(
             name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantizer=quantizer
@@ -342,6 +355,20 @@ class Layer:
         for data_type in self.types.values():
             precision[data_type.name] = data_type
         return precision
+
+    def serialize_state(self):
+        attrs = {}
+        for key, val in self.attributes.items():
+            if isinstance(val, Serializable):
+                attrs[key] = val.serialize()
+            else:
+                attrs[key] = val  # Should be safe, but maybe we'll need a copy here if the type is a reference
+        state = {
+            'inputs': self.inputs,
+            'outputs': self.outputs,
+            'attributes': attrs,
+        }
+        return state
 
 
 class Input(Layer):
@@ -441,7 +468,7 @@ class Reshape(Layer):
             dummy_x = np.ones(input_shape)
             dummy_y = np.reshape(dummy_x, target_shape)
             return list(dummy_y.shape)
-        return target_shape
+        return [int(dim) for dim in target_shape]  # Do not use numpy types
 
 
 class Dense(Layer):
@@ -899,6 +926,47 @@ class ZeroPadding2D(Layer):
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 
+class Cropping1D(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('crop_left'),
+        Attribute('crop_right'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        # no data_format attribute for Cropping1D
+        shape = [self.attributes['out_width'], self.attributes['n_chan']]
+        dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
+
+
+class Cropping2D(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('crop_top'),
+        Attribute('crop_bottom'),
+        Attribute('crop_left'),
+        Attribute('crop_right'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
+
+
 class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -910,7 +978,8 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
-        self.set_attr('n_in', self.get_input_variable().size())
+        if 'n_in' not in self.attributes:
+            self.set_attr('n_in', self.get_input_variable().size())
 
 
 class ParametrizedActivation(Activation):
@@ -1016,16 +1085,21 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.get_attr('gamma_data')
-        beta = self.get_attr('beta_data')
-        mean = self.get_attr('mean_data')
-        var = self.get_attr('variance_data')
+        if self.get_attr('scale_data') is None:
+            gamma = self.get_attr('gamma_data')
+            var = self.get_attr('variance_data')
+            scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+            self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        else:
+            self.add_weights_variable(name='scale', var_name='s{index}')
 
-        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - scale * mean
-
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        if self.get_attr('bias_data') is None:
+            beta = self.get_attr('beta_data')
+            mean = self.get_attr('mean_data')
+            bias = beta - scale * mean
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        else:
+            self.add_weights_variable(name='bias', var_name='b{index}')
 
 
 # TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
@@ -1056,6 +1130,31 @@ class ApplyAlpha(BatchNormalization):
 
     def add_bias(self, bias, quantizer=None, precision=None):
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer, precision=precision)
+
+
+class LayerNormalization(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('seq_len'),
+        Attribute('axis', value_type=int, default=2),
+        Attribute('epsilon_power_of_10', value_type=int, default=3),
+        WeightAttribute('scale'),
+        WeightAttribute('bias'),
+        TypeAttribute('scale'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+        scale = self.get_attr('gamma_data')
+        bias = self.get_attr('beta_data')
+
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
 
 class Merge(Layer):
@@ -1329,7 +1428,7 @@ class LSTM(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         Attribute('pass_initial_states', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        ChoiceAttribute('direction', ['forward', 'backward'], configurable=False, default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -1386,9 +1485,9 @@ class GRU(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         Attribute('pass_initial_states', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        ChoiceAttribute('direction', ['forward', 'backward'], configurable=False, default='forward'),
         Attribute('time_major', value_type=bool, default=False),
-        ChoiceAttribute('apply_reset_gate', ['before', 'after'], default='after'),
+        ChoiceAttribute('apply_reset_gate', ['before', 'after'], configurable=False, default='after'),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
@@ -1428,6 +1527,102 @@ class GRU(Layer):
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
+
+
+class TimeDistributed(Layer):
+    _expected_attributes = [
+        Attribute('wrapped_layer', value_type=None),  # Value type can be a 'dict' (unprocessed) or 'Layer' (processed)
+        Attribute('n_time_steps'),
+        Attribute('output_shape', value_type=list),
+    ]
+
+    def initialize(self):
+        shape = self.attributes['output_shape']
+        dims = [f'N_TIME_STEPS_{self.index}']
+        if len(shape[1:]) == 1:
+            dims += [f'N_OUT_{self.index}']
+        elif len(shape[1:]) == 2:
+            dims += [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        elif len(shape[1:]) == 3:
+            dims += [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        else:
+            dims += [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+
+class Bidirectional(Layer):
+    _expected_attributes = [
+        Attribute('n_out'),
+        Attribute('return_sequences', value_type=bool, default=False),
+        Attribute('return_state', value_type=bool, default=False),
+        Attribute('pass_initial_states', value_type=bool, default=False),
+        Attribute('time_major', value_type=bool, default=False),
+        Attribute('forward_activation', value_type=str),
+        Attribute('forward_recurrent_activation', value_type=str),
+        WeightAttribute('forward_weight'),
+        WeightAttribute('forward_bias'),
+        WeightAttribute('forward_recurrent_weight'),
+        WeightAttribute('forward_recurrent_bias'),
+        TypeAttribute('forward_weight'),
+        TypeAttribute('forward_bias'),
+        TypeAttribute('forward_recurrent_weight'),
+        TypeAttribute('forward_recurrent_bias'),
+        Attribute('backward_activation', value_type=str),
+        Attribute('backward_recurrent_activation', value_type=str),
+        WeightAttribute('backward_weight'),
+        WeightAttribute('backward_bias'),
+        WeightAttribute('backward_recurrent_weight'),
+        WeightAttribute('backward_recurrent_bias'),
+        TypeAttribute('backward_weight'),
+        TypeAttribute('backward_bias'),
+        TypeAttribute('backward_recurrent_weight'),
+        TypeAttribute('backward_recurrent_bias'),
+    ]
+
+    def initialize(self):
+        if self.attributes['return_sequences']:
+            shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
+            dims = [f'N_TIME_STEPS_{self.index}', f'N_OUT_{self.index}']
+        else:
+            shape = [self.attributes['n_out']]
+            dims = [f'N_OUT_{self.index}']
+
+        self.add_output_variable(shape, dims)
+
+        if self.attributes['return_state']:
+            state_shape = [self.attributes['n_out']]
+            state_dims = [f'N_OUT_{self.index}']
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+            )
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+            )
+
+        for dir in ['forward', 'backward']:
+            # weights
+            self.add_weights_variable(name=f'{dir}_weight', var_name=(f'w_{dir[0]}_' + '{index}'))
+
+            # recurrent weights
+            recurrent_weight = self.get_attr(f'{dir}_recurrent_weight_data')
+            self.add_weights_variable(
+                name=f'{dir}_recurrent_weight', var_name=(f'wr_{dir[0]}_' + '{index}'), data=recurrent_weight
+            )
+
+            # biases
+            self.add_weights_variable(name=f'{dir}_bias', var_name=(f'b_{dir[0]}_' + '{index}'))
+
+            if self.attributes[f'{dir}_class_name'] == 'LSTM':
+                if "pytorch" in self.attributes.keys():
+                    self.add_weights_variable(name=f'{dir}_recurrent_bias', var_name=(f'br_{dir[0]}_' + '{index}'))
+                else:
+                    recurrent_bias = np.zeros(recurrent_weight.shape[1])
+                    self.add_weights_variable(
+                        name=f'{dir}_recurrent_bias', var_name=(f'br_{dir[0]}_' + '{index}'), data=recurrent_bias
+                    )
+            else:
+                self.add_weights_variable(name=f'{dir}_recurrent_bias', var_name=(f'br_{dir[0]}_' + '{index}'))
 
 
 class GarNet(Layer):
@@ -1669,6 +1864,47 @@ class MultiHeadAttention(Layer):
         self.add_output_variable(shape, dims)
 
 
+class EinsumDense(Layer):
+    _expected_attributes = [
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+        self.add_weights(compression=self.model.config.get_compression(self))
+        self.add_bias()
+
+
+class Einsum(Layer):
+    _expected_attributes = [
+        TypeAttribute('accum'),
+        Attribute('equation', value_type=str),
+        Attribute('inp0_shape', value_type=tuple),
+        Attribute('inp1_shape', value_type=tuple),
+        Attribute('out_shape', value_type=tuple),
+    ]
+
+    def initialize(self):
+        out_shape = self.attributes['out_shape']
+        if len(out_shape) > 1:
+            dims = [f'N_LAYER_{self.index}_D{i}' for i in range(1, len(out_shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+        self.add_output_variable(list(out_shape), dims)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1713,6 +1949,8 @@ layer_map = {
     'GlobalAveragePooling2D': GlobalPooling2D,
     'ZeroPadding1D': ZeroPadding1D,
     'ZeroPadding2D': ZeroPadding2D,
+    'Cropping1D': Cropping1D,
+    'Cropping2D': Cropping2D,
     'Merge': Merge,
     'MatMul': MatMul,
     'Dot': Dot,
@@ -1725,9 +1963,11 @@ layer_map = {
     'SimpleRNN': SimpleRNN,
     'LSTM': LSTM,
     'GRU': GRU,
+    'Bidirectional': Bidirectional,
     'QSimpleRNN': SimpleRNN,
     'QLSTM': LSTM,
     'QGRU': GRU,
+    'TimeDistributed': TimeDistributed,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
     'Quant': Quant,
@@ -1736,11 +1976,14 @@ layer_map = {
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
     'MultiHeadAttention': MultiHeadAttention,
+    'LayerNormalization': LayerNormalization,
+    'EinsumDense': EinsumDense,
+    'Einsum': Einsum,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }
 
 
 def register_layer(name, clazz):
-    global layer_map
+    global layer_map  # noqa 824
     layer_map[name] = clazz

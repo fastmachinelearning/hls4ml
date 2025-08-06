@@ -53,7 +53,8 @@ ReadInputHeight:
     ReadInputWidth:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
             #pragma HLS LOOP_FLATTEN
-            if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
+            if ((CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) &&
+                data_T::size / CONFIG_T::n_chan == 1) {
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
             compute_scaled_indices_2d<data_T, CONFIG_T>(i_ih, i_iw, pixel_idx);
@@ -85,7 +86,7 @@ ReadInputHeight:
     ReadInputWidth:
         for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
             #pragma HLS LOOP_FLATTEN
-            if (CONFIG_T::strategy == nnet::latency) {
+            if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
             if (CONFIG_T::filt_height > 1) {
