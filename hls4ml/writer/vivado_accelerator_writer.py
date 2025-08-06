@@ -304,14 +304,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
             elif f'{model.config.get_project_name()}(' in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
                 newline = indent_amount + f'{model.config.get_project_name()}_axi(inputs,outputs);\n'
-            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
-                newline = (
-                    line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name, 'input_axi_t')
-                )
-            elif out.size_cpp() in line or out.name in line or out.type.name in line:
-                newline = (
-                    line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name, 'output_axi_t')
-                )
+            elif inp.name in line or inp.type.name in line:
+                newline = line.replace(inp.name, 'inputs').replace(inp.type.name, 'input_axi_t')
+            elif out.name in line or out.type.name in line:
+                newline = line.replace(out.name, 'outputs').replace(out.type.name, 'output_axi_t')
             else:
                 newline = line
             if self.vivado_accelerator_config.get_interface() == 'axi_stream':
@@ -350,10 +346,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(
                     model.config.get_project_name(), inp.name, out.name
                 )
-            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
-                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, 'input_axi_t')
-            elif out.size_cpp() in line or out.name in line or out.type.name in line:
-                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, 'output_axi_t')
+            elif inp.type.name in line:
+                newline = line.replace(inp.type.name, 'input_axi_t')
+            elif out.type.name in line:
+                newline = line.replace(out.type.name, 'output_axi_t')
             else:
                 newline = line
             fout.write(newline)
