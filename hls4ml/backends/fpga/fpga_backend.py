@@ -28,6 +28,7 @@ from hls4ml.model.layers import (
     LayerNormalization,
     MatMul,
     Merge,
+    MultiHeadAttention,
     Pooling1D,
     Pooling2D,
     Quant,
@@ -76,6 +77,7 @@ class FPGABackend(Backend):
             Dot,
             Conv,
             MatMul,
+            MultiHeadAttention,
             LayerNormalization,
         ]
 
