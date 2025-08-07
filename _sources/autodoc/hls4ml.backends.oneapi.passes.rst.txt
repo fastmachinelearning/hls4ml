@@ -52,6 +52,14 @@ hls4ml.backends.oneapi.passes.embedding\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.oneapi.passes.feature\_check module
+---------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.feature_check
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.oneapi.passes.merge\_templates module
 -----------------------------------------------------
 
