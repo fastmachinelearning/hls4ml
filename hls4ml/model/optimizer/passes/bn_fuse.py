@@ -2,7 +2,7 @@ import numpy as np
 
 from hls4ml.model.layers import BatchNormalization, Conv1D, Conv2D, Dense
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType, XnorPrecisionType
 
 
 class FuseBatchNormalization(OptimizerPass):
@@ -25,6 +25,11 @@ class FuseBatchNormalization(OptimizerPass):
             and isinstance(prev_node.get_output_variable().type.precision, UnspecifiedPrecisionType)
         )
         if basic_match:
+            # don't merge if binary weights.
+            # (Can technically merge if only one of weight or input is not binary, be more conservative here)
+            weight_t = prev_node.get_attr('weight_t')
+            if weight_t and isinstance(weight_t.precision, XnorPrecisionType):
+                return False
             s0 = prev_node.weights['weight'].data_unquantized
             b0 = prev_node.weights['bias'].data_unquantized
             s1 = node.weights['scale'].data_unquantized

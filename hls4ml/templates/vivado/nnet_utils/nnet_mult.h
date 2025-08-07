@@ -96,7 +96,7 @@ inline typename std::enable_if<std::is_same<data_T, ap_uint<1>>::value &&
                                    std::is_same<typename CONFIG_T::weight_t, ap_uint<1>>::value,
                                ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>>::type
 cast(typename CONFIG_T::accum_t x) {
-    return (ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>)(x - CONFIG_T::n_in / 2) * 2;
+    return static_cast<ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>>(x * 2 - CONFIG_T::n_in);
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
