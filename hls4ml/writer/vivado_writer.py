@@ -340,15 +340,23 @@ class VivadoWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-            # Insert numbers
-            if '// hls-fpga-machine-learning insert numbers' in line:
-                newline = line
-
-                defines = set()
+            if '// hls-fpga-machine-learning insert headers' in line:
+                uses_stdfloat = False
+                uses_apfloat = False
                 for layer in model.get_layers():
-                    for k, v in layer.get_output_variable().get_shape():
-                        defines.add(f'constexpr size_t {k} = {v};')
-                newline += '\n'.join(defines) + '\n'
+                    layer_precision = layer.get_layer_precision()
+                    for type_var in layer_precision.values():
+                        cpp = type_var.definition_cpp()
+                        if 'std::' in cpp:
+                            uses_stdfloat = True
+                            break
+                        if 'ap_float' in cpp:
+                            uses_apfloat = True
+                            break
+                if uses_stdfloat:
+                    newline = line + '#include <stdfloat>\n'
+                if uses_apfloat:
+                    newline = line + '#include "ap_float.h"\n'
 
             elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
@@ -861,11 +869,11 @@ class VivadoWriter(Writer):
 
                     for inp in model_inputs:
                         decl = inp.definition_cpp(name_suffix='_ap').strip()
-                        dims = inp.shape
+                        shape = inp.shape
 
                         if decl.startswith("hls::stream"):
-                            if len(dims) == 1:
-                                N = dims[0]
+                            if len(shape) == 1:
+                                N = shape[0]
                                 newline += f'    for(int i = 0; i < {N}; i++) {{\n'
                                 newline += f'        auto temp = {inp.name}_ap.read();\n'
                                 newline += (
