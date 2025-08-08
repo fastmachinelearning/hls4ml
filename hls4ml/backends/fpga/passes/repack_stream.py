@@ -12,9 +12,8 @@ class Repack(Layer):
         shape = self.attributes['target_shape']
         if shape[0] is None:
             shape = shape[1:]
-        dims = [f'N_SIZE_{i}_{self.index}' for i in range(1, len(shape) + 1)]
 
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape)
 
 
 repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
