@@ -1112,8 +1112,7 @@ class LayerNormalization(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape)
 
         scale = self.get_attr('gamma_data')
         bias = self.get_attr('beta_data')
