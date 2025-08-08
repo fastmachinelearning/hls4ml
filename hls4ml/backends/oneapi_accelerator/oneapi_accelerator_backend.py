@@ -16,3 +16,23 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
 
         ip_flow_requirements = get_flow('oneapi:ip').requires.copy()
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
+
+    def create_initial_config(
+        self, part, clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
+    ):
+        """Create initial configuration of the oneAPI backend.
+
+        Args:
+            part (str): The path to the board support file to be used.
+            clock_period (int, optional): The clock period in ns. Defaults to 5.
+            hyperopt_handshake (bool, optional): Should hyper-optimized handshaking be used? Defaults to False
+            io_type (str, optional): Type of implementation used. One of
+                'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+
+        Returns:
+            dict: initial configuration.
+        """
+        config = super().create_initial_config(part, clock_period, hyperopt_handshake, io_type, write_tar, **_)
+        config['UseOneAPIBSP'] = True
+        return config
