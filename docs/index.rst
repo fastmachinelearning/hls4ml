@@ -47,6 +47,8 @@
     advanced/profiling
     advanced/auto
     advanced/hgq
+    advanced/da
+    advanced/precision
     advanced/fifo_depth
     advanced/extension
     advanced/model_optimization

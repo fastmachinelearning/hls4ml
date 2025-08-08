@@ -18,10 +18,10 @@ To implement a custom layer in ``hls4ml`` with the extension API, the required c
 * Function config template
 * Registration of layer, source code, and templates
 
-Complete example
-================
+Complete example for Keras v2
+=============================
 
-For concreteness, let's say our custom layer ``KReverse`` is implemented in Keras and reverses the order of the last dimension of the input.
+For concreteness, let's say our custom layer ``KReverse`` is implemented in Keras v2 and reverses the order of the last dimension of the input.
 
 .. code-block:: Python
 
@@ -140,7 +140,8 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.
 .. code-block:: Python
 
     # Register the converter for custom Keras layer
-    hls4ml.converters.register_keras_layer_handler('KReverse', parse_reverse_layer)
+    hls4ml.converters.register_keras_v2_layer_handler('KReverse', parse_reverse_layer)
+    # For keras v3, use register on subclassed KerasV3LayerHandler from hls4ml.converters.keras_v3._base instead
 
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('HReverse', HReverse)

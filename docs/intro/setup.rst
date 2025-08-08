@@ -14,12 +14,6 @@ The latest release of ``hls4ml`` can be installed with ``pip``:
 
    pip install hls4ml
 
-If you want to use our :doc:`profiling <../advanced/profiling>` toolbox, you might need to install extra dependencies:
-
-.. code-block::
-
-   pip install hls4ml[profiling]
-
 .. warning::
    Previously, versions of hls4ml were made available on ``conda-forge``. These are outdated and should NOT be used. Installing with ``pip`` is currently the only supported method.
 
@@ -40,6 +34,10 @@ Dependencies
 .. note::
    As of version 1.1.0+, all conversion frontend specific packages are optional. Only install the packages you need.
 
+
+Frontend
+--------
+
 The ``hls4ml`` library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed by ``pip`` or ``conda``.
 
 The following Python packages are all optional and are only required if you intend to use the corresponding converter.
@@ -55,12 +53,13 @@ The following Python packages are all optional and are only required if you inte
 * Quantization support
    * `QKeras <https://github.com/fastmachinelearning/qkeras>`_: based on Keras v2. See `frontend/keras <../frontend/keras.html>`_ for more details
    * `HGQ <https://github.com/calad0i/HGQ>`_: Based on Keras v2. See `advanced/HGQ <../advanced/hgq.html>`_ for more details.
+   * `HGQ2 <https://github.com/calad0i/HGQ2>`_: Based on Keras v3. See `advanced/HGQ2 <../advanced/hgq.html>`_ for more details.
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
    * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/onnx <../frontend/onnx.html>`_ for more details.
 
-Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent
-Linux should work. On MacOS, the *clang*-based ``g++`` is enough. For the oneAPI backend, one must have oneAPI installed, along with the FPGA compiler,
-to run C/SYCL simulations.
+Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, the *clang*-based ``g++`` is enough. For the oneAPI backend, one must have oneAPI installed, along with the FPGA compiler, to run C/SYCL simulations.
+
+Specific functionalities may need additional Python packages. If any needed is missing, ``hls4ml`` will raise an error and prompt you to install the missing packages.
 
 To run FPGA synthesis, installation of following tools is required:
 
@@ -84,15 +83,15 @@ Here we give line-by-line instructions to demonstrate the general workflow.
 .. code-block:: python
 
    import hls4ml
-   import tensorflow as tf
-   from tensorflow.keras.layers import Dense
+   from keras.models import Sequential
+   from keras.layers import Dense
 
    # Construct a basic keras model
-   model = tf.keras.models.Sequential()
-   model.add(Dense(64, input_shape=(16,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
-   model.add(Activation(activation='elu', name='Activation'))
-   model.add(Dense(32, name='Dense2', kernel_initializer='lecun_uniform', kernel_regularizer=None))
-   model.add(Activation(activation='elu', name='Activation2'))
+   model = Sequential()
+   model.add(Dense(64, input_shape=(16,)))
+   model.add(Activation(activation='relu'))
+   model.add(Dense(32))
+   model.add(Activation(activation='relu'))
 
    # This is where you would train the model in a real-world scenario
 
@@ -139,71 +138,6 @@ Done! You've built your first project using ``hls4ml``! To learn more about our 
 
 If you want to configure your model further, check out our :doc:`Configuration <../api/configuration>` page.
 
-..
-   Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:
-
-   Getting started with hls4ml CLI (deprecated)
-   --------------------------------------------
-
-   As an alternative to the recommended Python PI, the command-line interface is provided via the ``hls4ml`` command.
-
-   To follow this tutorial, you must first download our ``example-models`` repository:
-
-   .. code-block:: bash
-
-      git clone https://github.com/fastmachinelearning/example-models
-
-   Alternatively, you can clone the ``hls4ml`` repository with submodules
-
-   .. code-block:: bash
-
-      git clone --recurse-submodules https://github.com/fastmachinelearning/hls4ml
-
-   The model files, along with other configuration parameters, are defined in the ``.yml`` files.
-   Further information about ``.yml`` files can be found in :doc:`Configuration <api/configuration>` page.
-
-   In order to create an example HLS project, first go to ``example-models/`` from the main directory:
-
-   .. code-block:: bash
-
-      cd example-models/
-
-   And use this command to translate a Keras model:
-
-   .. code-block:: bash
-
-      hls4ml convert -c keras-config.yml
-
-   This will create a new HLS project directory with an implementation of a model from the ``example-models/keras/`` directory.
-   To build the HLS project, do:
-
-   .. code-block:: bash
-
-      hls4ml build -p my-hls-test -a
-
-   This will create a Vivado HLS project with your model implementation!
-
-   **NOTE:** For the last step, you can alternatively do the following to build the HLS project:
-
-   .. code-block:: Bash
-
-      cd my-hls-test
-      vivado_hls -f build_prj.tcl
-
-   ``vivado_hls`` can be controlled with:
-
-   .. code-block:: bash
-
-      vivado_hls -f build_prj.tcl "csim=1 synth=1 cosim=1 export=1 vsynth=1"
-
-   Setting the additional parameters from ``1`` to ``0`` disables that step, but disabling ``synth`` also disables ``cosim`` and ``export``.
-
-   Further help
-   ^^^^^^^^^^^^
-
-   * For further information about how to use ``hls4ml``\ , do: ``hls4ml --help`` or ``hls4ml -h``
-   * If you need help for a particular ``command``\ , ``hls4ml command -h`` will show help for the requested ``command``
-   * We provide a detailed documentation for each of the command in the :doc:`Command Help <advanced/command>` section
 
 Existing examples
 -----------------
