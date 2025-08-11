@@ -58,3 +58,68 @@ def parse_resize_layer(node, input_names, input_shapes, graph):
     )
 
     return layer
+
+
+@onnx_handler('Pad')
+def parse_pad_layer(node, input_names, input_shapes, graph):
+    layer = {}
+    layer['name'] = node.name
+    layer['class_name'] = 'ZeroPadding'
+    layer['inputs'] = input_names
+    layer['outputs'] = list(node.output)
+    layer['data_format'] = (
+        'channels_last' if any(node.domain == 'qonnx.custom_op.channels_last' for node in graph.node) else 'channels_first'
+    )
+
+    mode = get_onnx_attribute(node, 'mode')
+    if mode is not None and mode != 'constant':
+        raise RuntimeError(f'Unsupported padding mode: {mode} in node {node.name}')
+
+    pads = get_onnx_attribute(node, 'pads')
+
+    dim = 0
+    if len(input_shapes[0]) == 3:
+        dim = 1  # 2D input (batch, channels, width), will use ZeroPadding1D
+        if layer['data_format'] == 'channels_first':
+            _, channels, width = input_shapes[0]
+            pad_left, pad_right = pads[2], pads[5]
+        else:
+            _, width, channels = input_shapes[0]
+            pad_left, pad_right = pads[1], pads[4]
+        out_width = width + pad_left + pad_right
+
+        layer['n_chan'] = channels
+        layer['in_width'] = width
+        layer['out_width'] = out_width
+
+        layer['pad_left'] = pad_left
+        layer['pad_right'] = pad_right
+    elif len(input_shapes[0]) == 4:
+        dim = 2  # 3D input (batch, channels, height, width), will use ZeroPadding2D
+        if layer['data_format'] == 'channels_first':
+            _, channels, height, width = input_shapes[0]
+            pad_top, pad_bottom = pads[2], pads[6]
+            pad_left, pad_right = pads[3], pads[7]
+        else:
+            _, height, width, channels = input_shapes[0]
+            pad_top, pad_bottom = pads[1], pads[5]
+            pad_left, pad_right = pads[2], pads[6]
+        out_height = height + pad_top + pad_bottom
+        out_width = width + pad_left + pad_right
+
+        layer['n_chan'] = channels
+        layer['in_height'] = height
+        layer['in_width'] = width
+        layer['out_height'] = out_height
+        layer['out_width'] = out_width
+
+        layer['pad_top'] = pad_top
+        layer['pad_bottom'] = pad_bottom
+        layer['pad_left'] = pad_left
+        layer['pad_right'] = pad_right
+    else:
+        raise RuntimeError(f'Unsupported input shape: {input_shapes[0]} for Pad node {node.name}')
+
+    layer['class_name'] += str(dim) + 'D'
+
+    return layer
