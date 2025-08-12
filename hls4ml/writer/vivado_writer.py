@@ -322,6 +322,34 @@ class VivadoWriter(Writer):
                 if namespace is not None:
                     newline += '}\n'
 
+            elif '// hls-fpga-machine-learning insert emulator-defines' in line:
+                newline = line
+
+                if model.config.get_writer_config().get('WriteEmulationConstants', False):
+                    brams_def_str = ', '.join([b.definition_cpp(as_reference=False) for b in model_brams])
+                    brams_call_str = ', '.join([b.name for b in model_brams])
+
+                    if model.config.get_config_value('IOType') == 'io_stream':
+                        input_call_str = ', '.join([f'std::get<{n}>(inputs)' for n in range(len(model_inputs))])
+                        output_call_str = ', '.join([f'std::get<{n}>(outputs)' for n in range(len(model_outputs))])
+                    else:
+                        input_call_str = ', '.join([f'std::get<{n}>(inputs).data()' for n in range(len(model_inputs))])
+                        output_call_str = ', '.join([f'std::get<{n}>(outputs).data()' for n in range(len(model_outputs))])
+
+                    newline += (
+                        f'\ninline void {model.config.get_project_name()}_emulator('
+                        'inputs_t& inputs, outputs_t& outputs'  # the inputs_t should ideally be const
+                    )
+                    if len(model_brams) > 0:
+                        newline += ',\n' + brams_def_str
+                    newline += ') {\n'
+                    newline += indent + model.config.get_project_name() + '(\n'
+                    newline += indent + indent + input_call_str + ',\n'
+                    newline += indent + indent + output_call_str
+                    if len(model_brams) > 0:
+                        newline += ',\n' + indent + indent + brams_call_str
+                    newline += '\n' + indent + ');\n}\n'
+
             else:
                 newline = line
             fout.write(newline)
@@ -385,6 +413,20 @@ class VivadoWriter(Writer):
                 if namespace is not None:
                     newline += '}\n'
 
+            elif '// hls-fpga-machine-learning insert emulator-defines' in line:
+                newline = line
+
+                if model.config.get_writer_config().get('WriteEmulationConstants', False):
+                    if model.config.get_config_value('IOType') == 'io_stream':
+                        input_types = [f'hls::stream<{v.type.name}>' for v in model.get_input_variables()]
+                        output_types = [f'hls::stream<{v.type.name}>' for v in model.get_output_variables()]
+                    else:
+                        input_types = [f'std::array<{v.type.name}, {v.size_cpp()}>' for v in model.get_input_variables()]
+                        output_types = [f'std::array<{v.type.name}, {v.size_cpp()}>' for v in model.get_output_variables()]
+                    input_types_str = ', '.join(input_types)
+                    output_types_str = ', '.join(output_types)
+                    newline += '\n' + f'using inputs_t = std::tuple<{input_types_str}>;'
+                    newline += '\n' + f'using outputs_t = std::tuple<{output_types_str}>;\n'
             else:
                 newline = line
             fout.write(newline)
