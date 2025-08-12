@@ -9,3 +9,4 @@ from hls4ml.report.vivado_report import aggregate_graph_reports  # noqa: F401
 from hls4ml.report.vivado_report import parse_vivado_report  # noqa: F401
 from hls4ml.report.vivado_report import print_vivado_report  # noqa: F401
 from hls4ml.report.vivado_report import read_vivado_report  # noqa: F401
+from hls4ml.report.xls_report import parse_xls_report  # noqa: F401

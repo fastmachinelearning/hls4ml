@@ -23,8 +23,18 @@ class XLSWriter(Writer):
         if not os.path.isdir(f"{model.config.get_output_dir()}/firmware"):
             os.makedirs(f"{model.config.get_output_dir()}/firmware")
 
-        # if not os.path.isdir(f"{model.config.get_output_dir()}/predictions"):
-        #     os.makedirs(f"{model.config.get_output_dir()}/predictions")
+        if not os.path.isdir(f"{model.config.get_output_dir()}/reports"):
+            os.makedirs(f"{model.config.get_output_dir()}/reports")
+
+
+    def write_build_script(self, model: ModelGraph) -> None:
+        # build_prj.tcl
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        srcpath = os.path.join(filedir, '../templates/xls/build_prj.tcl')
+        dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
+        copyfile(srcpath, dstpath)
+
+
 
     def write_project_dslx(self, model: ModelGraph) -> None:
         """Write the main architecture source file (myproject.x)
@@ -237,6 +247,7 @@ class XLSWriter(Writer):
     def write_hls(self, model: ModelGraph) -> None:
 
         self.write_project_dir(model)
+        self.write_build_script(model)
         self.write_project_dslx(model)
         self.write_nnet_utils(model)
         self.write_lookup_tables(model)

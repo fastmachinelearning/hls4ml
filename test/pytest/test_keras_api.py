@@ -63,6 +63,7 @@ def test_dense(backend, io_type):
     hls_model.compile()
 
     hls_prediction = hls_model.predict(X_input)
+    hls_model.build()
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=1e-2, atol=0.01)
 

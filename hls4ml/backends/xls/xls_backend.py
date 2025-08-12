@@ -24,8 +24,7 @@ from hls4ml.model.layers import (
     Activation,
     Softmax
 )
-from hls4ml.utils import attribute_descriptions as descriptions
-from hls4ml.model.types import IntegerPrecisionType, NamedType
+from hls4ml.report import parse_xls_report
 
 class XLSBackend(FPGABackend):
     def __init__(self) -> None:
@@ -117,7 +116,7 @@ class XLSBackend(FPGABackend):
     
     def create_initial_config(
         self,
-        part='xcvu13p-flga2577-2-e',
+        part='xcu250-figd2104-2L-e',
         clock_period=5,
         clock_uncertainty='12.5%',
         io_type='io_parallel',
@@ -170,7 +169,6 @@ class XLSBackend(FPGABackend):
                 raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
         return path
 
-    #TODO: this return value conflicts with the expected return value in ModelGraph of compile()
     def compile(self, model: ModelGraph) -> None:
 
         path = self._get_backend_exec_path(model)
@@ -324,30 +322,53 @@ class XLSBackend(FPGABackend):
         return result_corrected_dims
 
 
-    #TODO: use the other flags
     def build(
-        self,
-        model,
-        reset=False,
-        csim=True,
-        synth=True,
-        cosim=False,
-        validation=False,
-        export=False,
-        vsynth=False,
-        fifo_opt=False,
-        codegen_flags='--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps=100 --reset=reset',
-    ):
+            self,
+            model: ModelGraph,
+            reset: bool = True,
+            clk_period: int = 4000,
+            pr: bool = False,
+        ) -> dict:
+        """ Builds the RTL (SystemVerilog) code and uses Vivado to return the resource utilization.
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+            reset (bool): the reset synthesis option
+            clk_period (int):  clock period in picoseconds (e.g., 4000 ps => 1,000,000 / 4000 = 250 MHz)
+            pr (bool): place and route option
+        """
+        
         if 'linux' in sys.platform:
             path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
             if os.path.isdir(path) == 0:
                 raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
+            
+        def build_flags() -> str:
+            flags = f'--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps={clk_period} '
+            if reset:
+                flags += '--reset=reset'
+            return flags
 
-        curr_dir = os.getcwd()
+        def build_vivado_flags() -> list[str]:
+            f = [
+                '-mode', 'batch',
+                '-nolog',
+                '-nojournal',
+                '-source', './build_prj.tcl',
+                '-tclargs',
+                f'firmware/{model.config.get_project_name()}.sv',
+                f'{model.config.get_config_value("Part")}'
+            ]
+            if pr:
+                f += '--pr'
+            return f
+
+        curr_dir: str = os.getcwd()
         os.chdir(f'{model.config.get_output_dir()}/firmware')
         kernel_name = model.config.get_project_name()
 
-        ## Generate RTL
+        # Generate RTL
+        codegen_flags: str = build_flags()
         with open(f'{kernel_name}.sv', 'w') as synth_file:
             flags = shlex.split(codegen_flags)
             synth_cmd = [ 
@@ -357,7 +378,12 @@ class XLSBackend(FPGABackend):
             ]
             subprocess.run(synth_cmd, check=True, stdout=synth_file)
 
+        # Run Vivado for resource report
         os.chdir(curr_dir)
+        os.chdir(f'{model.config.get_output_dir()}')
 
-        #TODO: return parsed report
-        # return parse_vivado_report(model.config.get_output_dir())
+        vivado_command: list[str] = ['vivado'] + build_vivado_flags()
+        subprocess.run(vivado_command, check=True)
+
+        os.chdir(curr_dir)
+        return parse_xls_report(model.config.get_output_dir())
