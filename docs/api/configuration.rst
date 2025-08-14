@@ -101,6 +101,20 @@ Finally, one then uses the configuration to create an hls model:
         backend='Vitis'
     )
 
+To target an oneAPI Board Support Package (BSP) enabled FPGA for offload acceleration, you can specify the ``part`` argument to be the path to your BSP and the BSP variant. Then, set ``use_oneapi_bsp=True``.
+
+.. code-block:: python
+
+  hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir="my_project_dir",
+        io_type="io_parallel",
+        backend="oneAPI",
+        part="/path/to/my/bsp:bsp_variant",
+        use_oneapi_bsp=True
+    )
+
 See :py:class:`~hls4ml.converters.convert_from_keras_model` for more information on the various options. Similar functions exist for ONNX and PyTorch.
 
 ----
@@ -131,6 +145,9 @@ It looks like this:
    Part: xcvu13p-flga2577-2-e
    ClockPeriod: 5
    IOType: io_parallel # options: io_parallel/io_stream
+
+   # oneAPI Offload Acceleration flag.
+   UseOneAPIBSP: True
 
    HLSConfig:
      Model:
@@ -167,6 +184,10 @@ For Vivado backend the options are:
   * **PipelineStyle**\ : Set the top level pipeline style. Valid options are "auto", "pipeline" and "dataflow". If unspecified, it defaults to "auto".
   * **PipelineInterval**\ : Optionally override the desired initiation interval of the design. Only valid in combination with "pipeline" style. If unspecified, it is left to the compiler to decide, ideally matching the largest reuse factor of the network.
   * **Precision**\ : this defines the precision of your inputs, outputs, weights and biases. It is denoted by ``fixed<X,Y>``\ , where ``Y`` is the number of bits representing the signed number above the binary point (i.e. the integer part), and ``X`` is the total number of bits. Additionally, integers in the type (\ ``int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. The format follows ``ap_fixed`` and ``ap_int`` conventions. You have a chance to further configure this more finely with per-layer configuration described below. In the per-layer configuration (but not globally) one can also use ``'auto'`` precision.
+
+For oneaAPI the options are similar but also include:
+
+* **UseOneAPIBSP**\ : path to the oneAPI Board Support Package (and the BSP variant) to enable offload acceleration with an Altera FPGA. This is only needed if you are using oneAPI in the accelerator style.
 
 2.2 Per-Layer Configuration
 ---------------------------

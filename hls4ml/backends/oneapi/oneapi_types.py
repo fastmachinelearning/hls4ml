@@ -179,11 +179,18 @@ class OneAPIInterfaceVariableDefinition(VariableDefinition):
         else:
             return f'{self.type.name} {self.name}{name_suffix}'
 
-    def declare_cpp(self, pipe_min_size=0, indent=''):
-        lines = indent + f'class {self.pipe_id};\n'
-        lines += indent + (
-            f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
-            + f'{self.type.name}, {pipe_min_size}, PipeProps>;\n'
+    # Updated pipe min size to be 32 for simulation.
+    def declare_cpp(self, pipe_min_size=32, indent=''):
+        # Updated to use streaming beat for restartable streaming kernel.
+        # Streaming beat is a wrapper type of the actual type with sideband control signals.
+        # Syntax: using BeatT = sycl::ext::intel::experimental::StreamingBeat<DataT, eop, empty>;
+        streaming_beat_t = f"{self.pipe_name}BeatT"
+        lines = (
+            f"{indent}class {self.pipe_id};\n"
+            f"{indent}using {streaming_beat_t} = "
+            f"sycl::ext::intel::experimental::StreamingBeat<{self.type.name}, true, true>;\n"
+            f"{indent}using {self.pipe_name} = sycl::ext::intel::experimental::pipe<"
+            f"{self.pipe_id}, {streaming_beat_t}, {pipe_min_size}, HostPipePropertiesT>;\n"
         )
         return lines
 
@@ -202,10 +209,13 @@ class OneAPIStreamVariableDefinition(VariableDefinition):
         return f'{self.name}{name_suffix}'
 
     def declare_cpp(self, indent=''):
-        lines = indent + f'class {self.pipe_id};\n'
-        lines += indent + (
-            f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
-            + f'{self.type.name}, {self.pragma[-1]}>;\n'
+        streaming_beat_t = f"{self.pipe_name}BeatT"
+        lines = (
+            f"{indent}class {self.pipe_id};\n"
+            f"{indent}using {streaming_beat_t} = "
+            f"sycl::ext::intel::experimental::StreamingBeat<{self.type.name}, true, true>;\n"
+            f"{indent}using {self.pipe_name} = "
+            f"sycl::ext::intel::experimental::pipe<{self.pipe_id}, {streaming_beat_t}, {self.pragma[-1]}>;\n"
         )
         return lines
 
