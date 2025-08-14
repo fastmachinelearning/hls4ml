@@ -15,6 +15,10 @@ def to_apfixed(k, b, i, RND, SAT):
 
 def to_acfixed(k, b, i, RND, SAT):
     k = 'false' if k == 0 else 'true'
+    if b == 1:
+        # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
+        # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
+        b = 2
     return f'ac_fixed<{b},{i},{k},AC_{RND},AC_{SAT}>'
 
 
@@ -23,12 +27,12 @@ def generate_mask_fn(
 ) -> str:
     """Generate heterogenous quantization mask function, ONLY works for IOType=io_parallel"""
     assert k.shape[0] == b.shape[0] == i.shape[0] == 1
-    assert backend.lower() in ('quartus', 'vivado', 'vitis'), f'Backend {backend} not tested'
+    assert backend.lower() in ('oneapi', 'quartus', 'vivado', 'vitis'), f'Backend {backend} not tested'
     Ks, Bs, Is = k[0], b[0], i[0]
     Ks, Bs, Is = np.broadcast_to(Ks, shape), np.broadcast_to(Bs, shape), np.broadcast_to(Is, shape)
     Ks, Bs, Is = Ks.ravel(), Bs.ravel(), Is.ravel()
     masks = []
-    to_fixed = to_acfixed if backend.lower() == 'quartus' else to_apfixed
+    to_fixed = to_acfixed if backend.lower() in ['oneapi', 'quartus'] else to_apfixed
     for idx, (k, b, i) in enumerate(zip(Ks, Bs, Is)):
         if b == 0:
             fn = f'out[{idx}] = 0;'
@@ -36,10 +40,13 @@ def generate_mask_fn(
             fn = f'out[{idx}] = {to_fixed(k, b, i, RND, SAT)}(inp[{idx}]);'
         masks.append(f'    {fn}')
     body = "\n".join(masks)
+    arguments = (
+        'input_t *inp, output_t *out' if backend.lower() not in ['oneapi', 'quartus'] else 'input_t &inp, output_t &out'
+    )
     mask_fn = f'''
 template<typename input_t, typename output_t>
-void {name}(input_t *inp, output_t *out) {{
-    #pragma HLS INLINE
+void {name}({arguments}) {{
+    {'#pragma HLS INLINE' if backend.lower() not in ['oneapi', 'quartus'] else ''}
 
 {body}
 }}

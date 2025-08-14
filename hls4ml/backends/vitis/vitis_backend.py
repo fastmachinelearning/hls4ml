@@ -28,6 +28,9 @@ class VitisBackend(VivadoBackend):
             'vitis:validate_conv_implementation',
             'vitis:validate_resource_strategy',
             'vitis:validate_resource_unrolled_strategy',
+            'vitis:validate_bidirectional_merge_mode',
+            'vitis:validate_bidirectional_io_type',
+            'vitis:validate_std_cpp_types',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
 
@@ -133,7 +136,7 @@ class VitisBackend(VivadoBackend):
         with open(tcl_path, 'w') as file:
             file.write(build_opts)
 
-        build_command = 'vitis-run --tcl build_prj.tcl'
+        build_command = 'vitis-run --tcl build_prj.tcl --mode hls'
 
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
