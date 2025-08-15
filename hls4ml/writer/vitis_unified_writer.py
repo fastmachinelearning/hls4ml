@@ -1011,7 +1011,7 @@ class VitisUnifiedWriter(VitisWriter):
         self.vitis_unified_config = VitisUnifiedConfig(
             model.config, model.get_input_variables(), model.get_output_variables()
         )
-        super().write_hls(model, is_multigraph=is_multigraph)
+        super().write_hls(model)
         if not is_multigraph:
             self.write_board_script(model)
             self.write_driver(model)
