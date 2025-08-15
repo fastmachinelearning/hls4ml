@@ -17,7 +17,7 @@ mem_rd:
     }
 }
 
-static void store_result(float* out, hls::stream<dma_data_packet>& out_stream, int size) {
+static void store_result(ATOMIC_TYPE* out, hls::stream<dma_data_packet>& out_stream, int size) {
 mem_wr:
     for (int i = 0; i < size; i++) {
 #pragma HLS PIPELINE II=1
