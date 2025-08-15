@@ -283,6 +283,91 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
 
                 fout.write(newline)
 
+    def write_bridge(self, model):
+        """Write the Python-C++ bridge (myproject_bridge.cpp)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        project_name = model.config.get_project_name()
+        stamp = model.config.get_config_value('Stamp')
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+        # model brambs aren't actually supported yet
+
+        # io_type = model.config.get_config_value('IOType')
+        indent = '    '
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        with (
+            open(os.path.join(filedir, '../templates/oneapi/myproject_bridge.cpp')) as f,
+            open(f'{model.config.get_output_dir()}/src/{project_name}_bridge.cpp', 'w') as fout,
+        ):
+            for line in f.readlines():
+                if 'MYPROJECT' in line:
+                    newline = line.replace('MYPROJECT', format(project_name.upper()))
+
+                elif 'myproject' in line:
+                    newline = line.replace('myproject', format(project_name))
+
+                elif 'MyProject' in line:
+                    newline = line.replace('MyProject', convert_to_pascal_case(project_name))
+
+                elif '// hls-fpga-machine-learning insert bram' in line:
+                    newline = line
+                    for bram in model_brams:
+                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
+                elif '// hls-fpga-machine-learning insert class def' in line:
+                    dtype = line.split('#', 1)[1].strip()
+                    newline = f'class {convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp};\n'
+
+                elif '// hls-fpga-machine-learning insert header' in line:
+                    dtype = line.split('#', 1)[1].strip()
+                    inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
+                    outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
+
+                    newline = ''
+                    newline += indent + inputs_str + ',\n'
+                    newline += indent + outputs_str + '\n'
+
+                elif '// hls-fpga-machine-learning insert wrapper' in line:
+                    dtype = line.split('#', 1)[1].strip()
+                    newline = ''
+                    for i in model_inputs:
+                        newline += indent + f'nnet::DMA_convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+
+                    newline += (
+                        indent
+                        + f'q.single_task<{convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp}>'
+                        + f'({convert_to_pascal_case(project_name)}{{}});\n'
+                    )
+
+                    for o in model_outputs:
+                        newline += (
+                            indent + f'nnet::DMA_convert_data_back<{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
+                        )
+                    newline += '\n'
+                    newline += indent + 'q.wait();\n'
+
+                elif '// hls-fpga-machine-learning insert trace_outputs' in line:
+                    newline = ''
+                    for layer in model.get_layers():
+                        func = layer.get_attr('function_cpp')
+                        if func and model.config.trace_output and layer.get_attr('trace', False):
+                            vars = layer.get_variables()
+                            for var in vars:
+                                newline += (
+                                    indent
+                                    + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
+                                    + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
+                                )
+
+                else:
+                    newline = line
+                fout.write(newline)
+
     def write_build_script(self, model):
         """Write the build scripts (Makefile, build_lib.sh)
 
