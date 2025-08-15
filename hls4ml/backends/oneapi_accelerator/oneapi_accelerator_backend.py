@@ -8,13 +8,23 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
     """
 
     def __init__(self):
-        super().__init__(name='OneAPIAccelerator')
+        super().__init__(name='oneAPIAccelerator')
 
     def _register_flows(self):
         writer_passes = ['make_stamp', 'oneapiaccelerator:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=['oneapi:ip'], backend=self.name)
 
-        ip_flow_requirements = get_flow('oneapi:ip').requires.copy()
+        oneapi_types = [
+            'oneapiaccelerator:transform_types',
+            'oneapi:register_bram_weights',
+            'oneapi:apply_resource_strategy',
+            'oneapi:apply_winograd_kernel_transformation',
+        ]
+        oneapi_types_flow = register_flow('specific_types', oneapi_types, requires=['oneapi:init_layers'], backend=self.name)
+
+        ip_flow_requirements = [
+            oneapi_types_flow if opt == 'oneapi:specific_types' else opt for opt in get_flow('oneapi:ip').requires
+        ]
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
     def create_initial_config(
@@ -23,7 +33,7 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
         """Create initial configuration of the oneAPI backend.
 
         Args:
-            part (str): The path to the board support file to be used.
+            part (str): The path to the board support package to be used. Can add :<board-variant>
             clock_period (int, optional): The clock period in ns. Defaults to 5.
             hyperopt_handshake (bool, optional): Should hyper-optimized handshaking be used? Defaults to False
             io_type (str, optional): Type of implementation used. One of

@@ -29,5 +29,7 @@ class OneAPIAcceleratorInterfaceVariableDefinition(VariableDefinition):
 class OneAPIAcceleratorInterfaceVariableConverter(AggregratedArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(
-            type_converter=type_converter, prefix='OneAPI', definition_cls=OneAPIAcceleratorInterfaceVariableDefinition
+            type_converter=type_converter,
+            prefix='OneAPIAccelerator',
+            definition_cls=OneAPIAcceleratorInterfaceVariableDefinition,
         )
