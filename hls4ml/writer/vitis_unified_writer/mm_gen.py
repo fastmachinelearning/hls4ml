@@ -34,7 +34,7 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
             line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_out_sz()))
         elif "load_input" in line:
             line = line.replace("ATOMIC_TYPE", inp_axi_t)
-        elif "load_output" in line:
+        elif "store_output" in line:
             line = line.replace("ATOMIC_TYPE", out_axi_t)
         elif "MY_PROJECT_CON" in line:
             line = line.replace("MY_PROJECT_CON", mg.getAxisTopFuncName(model))
