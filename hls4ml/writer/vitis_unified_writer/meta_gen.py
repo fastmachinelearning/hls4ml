@@ -12,6 +12,9 @@ def getGmemWrapperFileName(model):
 def getAxiWrapperFileName(model):
     return f"{model.config.get_project_name()}_axi"
 
+def getMainFileName(model):
+    return f"{model.config.get_project_name()}"
+
 #######################################################
 ## naming of variable function helper #################
 #######################################################
@@ -33,6 +36,9 @@ def getWrapperPortName(tensorVar, isInput: bool):
 
 def getTopModelName(model):
     return f"{model.config.get_project_name()}_axi"
+
+def getGemTopFuncName(model):
+    return f"{model.config.get_project_name()}_gem"
 
 def getAxisTopFuncName(model):
     return f"{model.config.get_project_name()}_axi"

@@ -21,7 +21,7 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
     ######################################
 
     filedir = os.path.dirname(os.path.abspath(__file__))
-    fin     = open(os.path.join(filedir, '../templates/vitis/myproject_dm.cpp'), 'r')
+    fin     = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_dm.cpp'), 'r')
     fout    = open(f'{model.config.get_output_dir()}/firmware/myproject_dm.cpp', 'w')
 
     for line in fin.readlines():
@@ -38,8 +38,35 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
             line = line.replace("ATOMIC_TYPE", out_axi_t)
         elif "MY_PROJECT_CON" in line:
             line = line.replace("MY_PROJECT_CON", mg.getAxisTopFuncName(model))
+        elif "MY_PROJECT_TOP_FUNC" in line:
+            line = line.replace("ATOMIC_TYPE* in", f"{inp_axi_t}* in")
+            line = line.replace("ATOMIC_TYPE* out", f"{out_axi_t}* out")
+            line = line.replace("MY_PROJECT_TOP_FUNC", mg.getGemTopFuncName(model))
         fout.write(line)
 
+
+    fin.close()
+    fout.close()
+
+    ######################################
+    ###### start write myproject_dm.h   ##
+    ######################################
+
+    filedir = os.path.dirname(os.path.abspath(__file__))
+    fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_dm.h'), 'r')
+    fout = open(f'{model.config.get_output_dir()}/firmware/myproject_dm.h', 'w')
+
+    for line in fin.readlines():
+
+        if "FILENAME" in line:
+            line = line.replace("FILENAME", mg.getGmemWrapperFileName(model).upper())
+        elif "MY_PROJECT_TOP_FUNC" in line:
+            line = line.replace("ATOMIC_TYPE* in", f"{inp_axi_t}* in")
+            line = line.replace("ATOMIC_TYPE* out", f"{out_axi_t}* out")
+            line = line.replace("MY_PROJECT_TOP_FUNC", mg.getGemTopFuncName(model))
+
+
+        fout.write(line)
 
     fin.close()
     fout.close()

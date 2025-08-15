@@ -1,0 +1,9 @@
+{
+  "name": "{HLS_NAME}",
+  "type": "HLS",
+  "configuration": {
+    "componentType": "HLS",
+    "configFiles": ["{CONFIG_FILE}"],
+    "work_dir": "unifiedPrj"
+  }
+}
