@@ -174,3 +174,9 @@ class VitisUnifiedConfig:
             return '../templates/vitis_accelerator_ip_flow/' + 'alveo/' + '/tcl_scripts/' + tcl_script
         else:
             return '../templates/vitis_accelerator_ip_flow/' + self.board + '/tcl_scripts/' + tcl_script
+
+    def get_gmem_in_bufferSz(self):
+        return 12 ###### todo it must get in the config
+
+    def get_gmem_out_bufferSz(self):
+        return 12 ###### todo it must get in the config

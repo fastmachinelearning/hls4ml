@@ -1,0 +1,22 @@
+name: hls4ml-tutorial-dev
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.16
+  - notebook<7
+  - jupyter_contrib_nbextensions
+  - jupyterhub
+  - jupyter-book
+  - jsonschema-with-format-nongpl
+  - pydot==1.4.2
+  - graphviz==7.1.0
+  - scikit-learn==1.2.2
+  - tensorflow==2.14.0
+  - tensorflow-datasets==4.8.3
+  - webcolors
+  - widgetsnbextension==3.6.0
+  - pip==23.0.1
+  - pip:
+      - pysr==0.16.3
+      - xgboost==1.7.5
+      - zstd
