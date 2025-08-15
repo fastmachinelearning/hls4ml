@@ -5,14 +5,14 @@ from shutil import copyfile
 
 from hls4ml.writer.vitis_writer import VitisWriter
 
-import build_gen       as bg
-import meta_gen        as mtg
-import mm_gen          as mmg
-import stream_gen      as sg
-import test_bridge_gen as tbg
-import test_cosim_gen  as tcg
+from . import build_gen       as bg
+from . import meta_gen        as mtg
+from . import mm_gen          as mmg
+from . import stream_gen      as sg
+from . import test_bridge_gen as tbg
+from . import test_cosim_gen  as tcg
 
-from meta import VitisUnifiedWriterMeta
+from .meta import VitisUnifiedWriterMeta
 
 
 
@@ -26,7 +26,7 @@ class VitisUnifiedWriter(VitisWriter):
 
         from hls4ml.backends import VitisUnifiedConfig
 
-        self.vitis_unified_config = VitisUnifiedConfig(
+        self.writer_meta.vitis_unified_config = VitisUnifiedConfig(
             model.config, model.get_input_variables(), model.get_output_variables()
         )
         super().write_hls(model)

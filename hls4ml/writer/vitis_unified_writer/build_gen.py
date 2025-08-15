@@ -72,7 +72,7 @@ def modify_build_script(meta, model):
     # build_lib.sh
     ###################
 
-    f = open(os.path.join(filedir, '../templates/vitis_unified/build_lib.sh'))
+    f = open(os.path.join(filedir, '../../templates/vitis_unified/build_lib.sh'))
     fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
 
     for line in f.readlines():

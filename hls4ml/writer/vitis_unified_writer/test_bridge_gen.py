@@ -1,6 +1,6 @@
 import os
-from meta import VitisUnifiedWriterMeta
-import meta_gen as mg
+from .meta import VitisUnifiedWriterMeta
+from . import meta_gen as mg
 
 def write_bridge_multigraph(meta, model):
     filedir = os.path.dirname(os.path.abspath(__file__))

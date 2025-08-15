@@ -3,8 +3,8 @@ from pathlib import Path
 import stat
 from shutil import copyfile
 
-from meta import VitisUnifiedWriterMeta
-import meta_gen as mg
+from .meta import VitisUnifiedWriterMeta
+from .     import meta_gen as mg
 
 ################################################################################
 ###### main function ###########################################################

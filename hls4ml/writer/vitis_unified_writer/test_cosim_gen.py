@@ -1,11 +1,11 @@
 import os
-from meta import VitisUnifiedWriterMeta
-import meta_gen as mg
+from .meta import VitisUnifiedWriterMeta
+from . import meta_gen as mg
 
 def write_wrapper_test(meta, model):
 
     filedir = os.path.dirname(os.path.abspath(__file__))
-    f    = open(os.path.join(filedir, '../templates/vitis_unified/myproject_test.cpp'))
+    f    = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_test.cpp'))
     fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w')
 
     model_inputs  = model.get_input_variables()
@@ -142,7 +142,7 @@ def write_wrapper_test(meta, model):
     ### write myproject_bridge.cpp #####################
     ####################################################
     filedir = os.path.dirname(os.path.abspath(__file__))
-    f = open(os.path.join(filedir, '../templates/vitis_unified/myproject_bridge.cpp'))
+    f = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_bridge.cpp'))
     fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp', 'w')
 
     model_inputs = model.get_input_variables()
