@@ -29,9 +29,9 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
         if "MY_PROJECT_AXI_INC" in line:
             line = line.replace("MY_PROJECT_AXI_INC", mg.getAxiWrapperFileName(model))
         elif "DMX_BUF_IN_SZ" in line:
-            line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_in_sz()))
+            line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_in_bufferSz()))
         elif "DMX_BUF_OUT_SZ" in line:
-            line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_out_sz()))
+            line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_out_bufferSz()))
         elif "load_input" in line:
             line = line.replace("ATOMIC_TYPE", inp_axi_t)
         elif "store_output" in line:

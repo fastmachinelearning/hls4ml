@@ -30,11 +30,12 @@ class VitisUnifiedWriter(VitisWriter):
             model.config, model.get_input_variables(), model.get_output_variables()
         )
         super().write_hls(model)
-        mmg.write_gmem_wrapper(self.writer_meta, model)
-        sg.write_axi_wrapper   (self.writer_meta, model)
-        bg.write_hls_kernel_cfg(self.writer_meta, model)
-        bg .write_driver       (self.writer_meta, model)
-        tcg.write_wrapper_test (self.writer_meta, model)
+        mmg.write_gmem_wrapper      (self.writer_meta, model)
+        sg.write_axi_wrapper        (self.writer_meta, model)
+        bg.build_unified_project_ske(self.writer_meta, model)
+        bg.write_hls_kernel_cfg     (self.writer_meta, model)
+        bg .write_driver            (self.writer_meta, model)
+        tcg.write_wrapper_test      (self.writer_meta, model)
 
 
         #self.write_new_tar(model)

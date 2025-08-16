@@ -6,6 +6,10 @@ import stat
 
 from shutil import copyfile
 
+#######################################################
+## file and directory #################################
+#######################################################
+
 def getGmemWrapperFileName(model):
     return f"{model.config.get_project_name()}_dm"
 
@@ -14,6 +18,17 @@ def getAxiWrapperFileName(model):
 
 def getMainFileName(model):
     return f"{model.config.get_project_name()}"
+
+def getVitisUnifiedWorkingDirectoryDir(model):
+    return os.path.join(model.config.get_output_dir(), "unifiedWorkspace")
+
+def getVitisHlsDir(model):
+    vitisWorkingDir = getVitisUnifiedWorkingDirectoryDir(model)
+    return os.path.join(vitisWorkingDir, model.config.get_project_name())
+
+def getVitisHlsExecDir(model):
+    hlsDir = getVitisHlsDir(model)
+    return os.path.join(hlsDir, "unifiedPrj")
 
 #######################################################
 ## naming of variable function helper #################
