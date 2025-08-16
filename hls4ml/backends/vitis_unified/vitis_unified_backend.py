@@ -7,6 +7,8 @@ from hls4ml.backends import VitisBackend, VivadoBackend
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vivado_report
 
+from hls4ml.writer.vitis_unified_writer import meta_gen as mg
+
 
 class VitisUnifiedBackend(VitisBackend):
     def __init__(self):
@@ -15,11 +17,33 @@ class VitisUnifiedBackend(VitisBackend):
         self._register_flows()
 
 
+    def run_term_command(self, model, taskName: str,command: str, logOutput: bool, cwd):
+
+
+        output_dir = model.config.get_output_dir()
+
+        out_log_path = os.path.join(output_dir, f'{taskName}_out.log')
+        err_log_path = os.path.join(output_dir, f'{taskName}_err.log')
+        out_target   = None if logOutput else open(out_log_path, 'w')
+        err_target   = None if logOutput else open(err_log_path, 'w')
+
+        runningProcess = subprocess.Popen(
+            command, shell=True, cwd=cwd, stdout=out_target, stderr=err_target, text=True
+        )
+        runningProcess.communicate()
+        if runningProcess.returncode != 0:
+            raise Exception(f'Package failed for {taskName} for project {model.config.get_project_name()}. See logs for details.')
+
+        stdout, stderr = runningProcess.communicate()
+        return stdout, stderr
+
+
+
     def build(
         self,
         model,
         reset=False,
-        csim=True,
+        csim=False,
         synth=True,
         cosim=False,
         validation=False,
@@ -35,36 +59,23 @@ class VitisUnifiedBackend(VitisBackend):
             if found != 0:
                 raise Exception('Vitis installation not found. Make sure "vitis" is on PATH.')
 
-        # build_command = (
-        #     'vitis -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-        #     'validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
-        # ).format(
-        #     reset=reset,
-        #     csim=csim,
-        #     synth=synth,
-        #     cosim=cosim,
-        #     validation=validation,
-        #     export=export,
-        #     vsynth=vsynth,
-        #     fifo_opt=fifo_opt,
-        # )
+        ##### TODO support this system
+        if csim:
+            raise Exception("Current Vitis Unified not support csim. Please set csim=False to run Vitis Unified.")
+        if validation:
+            raise Exception("Current Vitis Unified not support validation. Please set validation=False to run Vitis Unified.")
+        if export:
+            raise Exception("Current Vitis Unified not support export. Please set export=False to run Vitis Unified.")
+        if fifo_opt:
+            raise Exception("Current Vitis Unified not support fifo_opt. Please set fifo_opt=False to run Vitis Unified.")
 
         output_dir = model.config.get_output_dir()
-        ##### build working directory
-        if not os.path.exists(os.path.join(output_dir,"unifiedPrj")):
-            os.makedirs(os.path.join(output_dir, "unifiedPrj"))
-
 
         ##### build command
-        build_command = (
+        csynth_cmd = (
             "v++ -c --mode hls --config {configPath} --work_dir unifiedPrj"
-        ).format(configPath=(os.path.join(output_dir, "hls_config.cfg")))
-
-        stdout_log = os.path.join(output_dir, 'build_stdout.log')
-        stderr_log = os.path.join(output_dir, 'build_stderr.log')
-
-        stdout_target = None if log_to_stdout else open(stdout_log, 'w')
-        stderr_target = None if log_to_stdout else open(stderr_log, 'w')
+        ).format(configPath=(os.path.join(output_dir, "hls_kernel_config.cfg")))
+        csynth_cwd = mg.getVitisHlsDir(model)
 
         ##### util template (used in csim/cosim/package)
         util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir unifiedPrj"
@@ -73,23 +84,15 @@ class VitisUnifiedBackend(VitisBackend):
         ##### package command
 
         package_command = util_command.format(op="package", configPath=os.path.join(output_dir, "hls_config.cfg"))
-        pk_out_log_path = os.path.join(output_dir, 'package_out.log')
-        pk_err_log_path = os.path.join(output_dir, 'package_err.log')
-        pk_out_target = None if log_to_stdout else open(pk_out_log_path, 'w')
-        pk_err_target = None if log_to_stdout else open(pk_err_log_path, 'w')
+        cosim_command = util_command.format(op="cosim", configPath=os.path.join(output_dir, "hls_config_cosim.cfg"))
+        csim_command = util_command.format(op="csim", configPath=os.path.join(output_dir, "hls_config_csim.cfg"))
 
         ##### co-sim command
 
-        cosim_command = util_command.format(op="cosim", configPath=os.path.join(output_dir, "hls_config_cosim.cfg"))
-        #cosim_command += ' --flag "RTL_SIM"'
-        cos_out_log_path = os.path.join(output_dir, 'cosim_out.log')
-        cos_err_log_path = os.path.join(output_dir, 'cosim_err.log')
-        cos_out_target = None if log_to_stdout or (not cosim) else open(cos_out_log_path, 'w')
-        cos_err_target = None if log_to_stdout or (not cosim) else open(cos_err_log_path, 'w')
+
 
         ##### c-sim command
 
-        csim_command = util_command.format(op="csim", configPath=os.path.join(output_dir, "hls_config_csim.cfg"))
         # cosim_command += ' --flag "RTL_SIM"'
         cs_out_log_path = os.path.join(output_dir, 'csim_out.log')
         cs_err_log_path = os.path.join(output_dir, 'csim_err.log')
