@@ -33,6 +33,16 @@ def getVitisHlsExecDir(model):
     hlsDir = getVitisHlsDir(model)
     return os.path.join(hlsDir, "unifiedPrj")
 
+def getVitisLinkerDir(model):
+    vitisWorkingDir = getVitisUnifiedWorkingDirectoryDir(model)
+    return os.path.join(vitisWorkingDir, "linker")
+
+def getXOfileName(model):
+    return f"{getGemTopFuncName(model)}.xo"
+
+def getXOfilePath(model):
+    return os.path.join(getVitisHlsExecDir(model), getXOfileName(model))
+
 #######################################################
 ## naming of variable function helper #################
 #######################################################

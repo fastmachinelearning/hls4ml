@@ -1,0 +1,1 @@
+v++ -l -t hw --platform {PLATFORM_XPFM} {KERNEL_XO} --config buildConfig.cfg -o {PROJECT_NAME}.bin --save-temps

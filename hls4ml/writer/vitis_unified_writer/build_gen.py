@@ -61,3 +61,42 @@ def build_unified_project_ske(meta, model, workspaceDir = None):
 
     fin.close()
     fout.close()
+
+def write_launch_vitis_linker_dir(meta, model):
+    os.makedirs(mg.getVitisLinkerDir(model), exist_ok=True)
+
+def write_launch_vitis_linker_launcher(meta, model):
+    filedir = os.path.dirname(os.path.abspath(__file__))
+    fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildAcc.sh'), 'r')
+    fout = open(f"{mg.getVitisLinkerDir(model)}/buildAcc.sh", 'w')
+
+    for line in fin.readlines():
+        if "{PLATFORM_XPFM}" in line:
+            line.replace("{PLATFORM_XPFM}", meta.vitis_unified_config.getXPFMPath())
+        if "{KERNEL_XO}" in line:
+            line.replace("{KERNEL_XO}", mg.getXOfilePath(model))
+        if "{PROJECT_NAME}" in line:
+            line.replace("{PROJECT_NAME}", model.config.get_project_name())
+
+        fout.write(line)
+
+    fin.close()
+    fout.close()
+
+
+
+def write_launch_vitis_linker_cfg(meta, model):
+    filedir = os.path.dirname(os.path.abspath(__file__))
+    fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildConfig.cfg'), 'r')
+    fout = open(f"{mg.getVitisLinkerDir(model)}/buildConfig.cfg", 'w')
+
+    for line in fin.readlines():
+        if "{CLK}" in line:
+            line.replace("{CLK}", model.config.get_config_value('ClockPeriod'))
+        if "{KERNEL_NAME}" in line:
+            line.replace("{KERNEL_NAME}", mg.getGemTopFuncName(model))
+
+        fout.write(line)
+
+    fin.close()
+    fout.close()

@@ -8,15 +8,19 @@ from hls4ml.model.layers import FixedPrecisionType, IntegerPrecisionType
 class VitisUnifiedConfig:
     def __init__(self, config, model_inputs, model_outputs):
         self.config = config.config
-        self.board = self.config.get('AcceleratorConfig', {}).get('Board', 'pynq-z2')
-        self.supported_boards = json.load(open(os.path.dirname(__file__) + '/supported_boards.json'))
+        # self.board = self.config.get('AcceleratorConfig', {}).get('Board', 'pynq-z2')
+        # self.supported_boards = json.load(open(os.path.dirname(__file__) + '/supported_boards.json'))
         self.freeInterimInput = self.config.get('MultiGraphConfig', {}).get('IOInterimType', {}).get("Input") == "io_free_stream"
         self.freeInterimOutput = self.config.get('MultiGraphConfig', {}).get('IOInterimType', {}).get("Output") == "io_free_stream"
-        if self.board in self.supported_boards.keys():
-            board_info = self.supported_boards[self.board]
-            self.part = board_info['part']
-        else:
-            raise Exception('The board does not appear in supported_boards.json file')
+        # if self.board in self.supported_boards.keys():
+        #     board_info = self.supported_boards[self.board]
+        #     self.part = board_info['part']
+        # else:
+        #     raise Exception('The board does not appear in supported_boards.json file')
+
+        self.gmem_in_bufferSz  = self.config.get("UnifiedConfig", {}).get("bufInSize", 12)
+        self.gmem_out_bufferSz = self.config.get("UnifiedConfig", {}).get("bufOutSize", 12)
+        self.XPFMPath          = self.config.get("UnifiedConfig", {}).get("XPFMPath", "")
 
         if self.config.get('Part') is not None:
             if self.config.get('Part') != self.part:
@@ -176,7 +180,10 @@ class VitisUnifiedConfig:
             return '../templates/vitis_accelerator_ip_flow/' + self.board + '/tcl_scripts/' + tcl_script
 
     def get_gmem_in_bufferSz(self):
-        return 12 ###### todo it must get in the config
+        return self.gmem_in_bufferSz
 
     def get_gmem_out_bufferSz(self):
-        return 12 ###### todo it must get in the config
+        return self.gmem_out_bufferSz
+
+    def get_XPFMPath(self):
+        return self.XPFMPath

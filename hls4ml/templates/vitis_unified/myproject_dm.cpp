@@ -43,6 +43,7 @@ void MY_PROJECT_TOP_FUNC(
 ){
 
 // vitis-unified-wrapper-interface
+#pragma HLS INTERFACE s_axilite port=return bundle=control
 
 
 // vitis-unified-wrapper-stream-dec
