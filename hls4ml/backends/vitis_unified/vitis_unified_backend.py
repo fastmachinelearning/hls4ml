@@ -175,17 +175,21 @@ class VitisUnifiedBackend(VitisBackend):
 
     def create_initial_config(
         self,
-        board='pynq-z2',
-        part=None,
-        clock_period=5,
-        clock_uncertainty='12.5%',
-        io_type='io_parallel',
-        interface='axi_stream',
-        driver='python',
-        input_type='float',
-        output_type='float',
-        input_interim_type='io_stream',    #### it should be io_stream or io_free_stream/ io_stream
-        output_interim_type='io_stream'
+        board               ='pynq-z2',
+        part                =None,
+        clock_period        =5,
+        clock_uncertainty   ='12.5%',
+        io_type             ='io_parallel',
+        interface           ='axi_stream',
+        driver              ='python',
+        input_type          ='float',
+        output_type         ='float',
+        gmemBuf_in_size     =12,
+        gmemBuf_out_size    =12,
+        xpfmPath            ='/tools/Xilinx/Vitis/2023.2/base_platforms/'
+                             'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
+        input_interim_type  ='io_stream',    #### it should be io_stream or io_free_stream/ io_stream
+        output_interim_type ='io_stream'
     ):
         board = board if board is not None else 'pynq-z2'
 
@@ -204,6 +208,11 @@ class VitisUnifiedBackend(VitisBackend):
         config['AcceleratorConfig']['Precision']['Output'] = {}
         config['AcceleratorConfig']['Precision']['Input'] = input_type  # float, double or ap_fixed<a,b>
         config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
+
+        config['UnifiedConfig'] = {}
+        config['UnifiedConfig']['bufInSize']    = gmemBuf_in_size
+        config['UnifiedConfig']['bufOutSize']   = gmemBuf_out_size
+        config['UnifiedConfig']['XPFMPath']     = xpfmPath
 
         config['MultiGraphConfig'] = {}
         config['MultiGraphConfig']['IOInterimType'] = {}
