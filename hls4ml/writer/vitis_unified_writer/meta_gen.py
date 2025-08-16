@@ -16,6 +16,9 @@ def getGmemWrapperFileName(model):
 def getAxiWrapperFileName(model):
     return f"{model.config.get_project_name()}_axi"
 
+def getMainWrapperFileName(model):
+    return model.config.get_project_name()
+
 def getMainFileName(model):
     return f"{model.config.get_project_name()}"
 
@@ -34,13 +37,17 @@ def getVitisHlsExecDir(model):
 ## naming of variable function helper #################
 #######################################################
 
-def getGmemTypeName(atomicType: str):
-    if atomicType not in  ["float", "double"]:
-        raise Exception(f"Unsupported atomic type {atomicType}")
-    return f"{atomicType}*"
+####### FOR GMEM WRAPPER
 
-def getGmemPortName(isInput: bool):
-    return "in" if isInput else "out"
+def getGmemIOPortName(tensorVar, isInput: bool, idx: int):
+    ioDirect = "in" if isInput else "out"
+    return f"gmem_{ioDirect}{str(idx)}_ptr_{tensorVar.name}"
+def getGmemIOPortSizeName(tensorVar, isInput: bool, idx: int):
+    ioDirect = "in" if isInput else "out"
+    return f"gmem_{ioDirect}{str(idx)}_size_{tensorVar.name}"
+def getGmemLocalStreamName(tensorVar, isInput: bool, idx: int):
+    ioDirect = "in" if isInput else "out"
+    return f"stream_{ioDirect}{str(idx)}_{tensorVar.name}"
 
 def getDmaTypeName():
     return "dma_data_packet"
@@ -50,7 +57,7 @@ def getWrapperPortName(tensorVar, isInput: bool):
     return f"par_{ioStr}_{tensorVar.name}"
 
 def getTopModelName(model):
-    return f"{model.config.get_project_name()}_axi"
+    return f"{model.config.get_project_name()}"
 
 def getGemTopFuncName(model):
     return f"{model.config.get_project_name()}_gem"
