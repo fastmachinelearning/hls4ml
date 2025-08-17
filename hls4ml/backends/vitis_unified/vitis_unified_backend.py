@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+from shutil import copy2
 
 
 from hls4ml.backends import VitisBackend, VivadoBackend
@@ -17,25 +18,39 @@ class VitisUnifiedBackend(VitisBackend):
         self._register_flows()
 
 
-    def run_term_command(self, model, taskName: str,command: str, logOutput: bool, cwd):
+    def run_term_command(self, model, taskName: str,command: str, logStdOut: bool, cwd):
 
+        print("-------------------------------------------------------")
+        print(f"start running task : {taskName}")
+        print("-------------------------------------------------------")
 
         output_dir = model.config.get_output_dir()
 
         out_log_path = os.path.join(output_dir, f'{taskName}_out.log')
         err_log_path = os.path.join(output_dir, f'{taskName}_err.log')
-        out_target   = None if logOutput else open(out_log_path, 'w')
-        err_target   = None if logOutput else open(err_log_path, 'w')
+        out_target   = None if logStdOut else open(out_log_path, 'w')
+        err_target   = None if logStdOut else open(err_log_path, 'w')
 
-        runningProcess = subprocess.Popen(
-            command, shell=True, cwd=cwd, stdout=out_target, stderr=err_target, text=True
-        )
-        runningProcess.communicate()
-        if runningProcess.returncode != 0:
-            raise Exception(f'Package failed for {taskName} for project {model.config.get_project_name()}. See logs for details.')
 
-        stdout, stderr = runningProcess.communicate()
-        return stdout, stderr
+        try:
+
+            runningProcess = subprocess.Popen(
+                command, shell=True, cwd=cwd, stdout=out_target, stderr=err_target, text=True
+            )
+            runningProcess.communicate()
+            if runningProcess.returncode != 0:
+                raise Exception(f'Package failed for {taskName} for project {model.config.get_project_name()}. See logs for details.')
+
+            stdout, stderr = runningProcess.communicate()
+            print(f"stdout: {stdout}")
+            print(f"stderr: {stderr}")
+
+            print(f"task {taskName} finished")
+        finally:
+            if out_target:
+                out_target.close()
+            if err_target:
+                err_target.close()
 
 
 
@@ -71,110 +86,61 @@ class VitisUnifiedBackend(VitisBackend):
 
         output_dir = model.config.get_output_dir()
 
+        hls_config_file = os.path.join(output_dir, "hls_kernel_config.cfg")
         ##### build command
         csynth_cmd = (
             "v++ -c --mode hls --config {configPath} --work_dir unifiedPrj"
-        ).format(configPath=(os.path.join(output_dir, "hls_kernel_config.cfg")))
+        ).format(configPath=hls_config_file)
         csynth_cwd = mg.getVitisHlsDir(model)
 
         ##### util template (used in csim/cosim/package)
         util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir unifiedPrj"
-
-
         ##### package command
 
-        package_command = util_command.format(op="package", configPath=os.path.join(output_dir, "hls_config.cfg"))
-        cosim_command = util_command.format(op="cosim", configPath=os.path.join(output_dir, "hls_config_cosim.cfg"))
-        csim_command = util_command.format(op="csim", configPath=os.path.join(output_dir, "hls_config_csim.cfg"))
+        package_cmd = util_command.format(op="package", configPath=hls_config_file)
+        package_cwd = mg.getVitisHlsDir(model)
+        cosim_cmd   = util_command.format(op="cosim"  , configPath=hls_config_file)
+        cosim_cwd   = mg.getVitisHlsDir(model)
+        csim_cmd    = util_command.format(op="csim"   , configPath=hls_config_file)
+        csim_cwd = mg.getVitisHlsDir(model)
 
-        ##### co-sim command
+        kerlink_cmd = "./buildAcc.sh"
+        kerlink_cwd = mg.getVitisLinkerDir(model)
 
+        if csim or synth or cosim or bitfile :
+            self.run_term_command(model, "csynth", csynth_cmd, log_to_stdout, csynth_cwd)
+            self.run_term_command(model, "package", package_cmd, log_to_stdout, package_cwd)
 
+        if csim:
+            self.run_term_command(model, "csim", csim_cmd, log_to_stdout, csim_cwd)
 
-        ##### c-sim command
+        if cosim:
+            self.run_term_command(model, "cosim", cosim_cmd, log_to_stdout, cosim_cwd)
 
-        # cosim_command += ' --flag "RTL_SIM"'
-        cs_out_log_path = os.path.join(output_dir, 'csim_out.log')
-        cs_err_log_path = os.path.join(output_dir, 'csim_err.log')
-        cs_out_target = None if log_to_stdout or (not csim) else open(cs_out_log_path, 'w')
-        cs_err_target = None if log_to_stdout or (not csim) else open(cs_err_log_path, 'w')
-
-        try:
-            if synth:
-                print("---------------------------------------------------")
-                print("-----------   start build command   ---------------")
-                print("---------------------------------------------------")
-                ##### run build project
-                process = subprocess.Popen(
-                    build_command, shell=True, cwd=output_dir, stdout=stdout_target, stderr=stderr_target, text=True
-                )
-                process.communicate()
-                if process.returncode != 0:
-                    raise Exception(f'Build failed for {model.config.get_project_name()}. See logs for details.')
-                ##### run package project
-                print("---------------------------------------------------")
-                print("-----------   start package command ---------------")
-                print("---------------------------------------------------")
-
-                packageProcess = subprocess.Popen(
-                    package_command, shell=True, cwd=output_dir, stdout=pk_out_target, stderr=pk_err_target, text=True
-                )
-                packageProcess.communicate()
-                if packageProcess.returncode != 0:
-                    raise Exception(f'Package failed for {model.config.get_project_name()}. See logs for details.')
-
-            if cosim:
-                print("---------------------------------------------------")
-                print("-----------   start cosim command ---------------")
-                print("---------------------------------------------------")
-                cosimProcess = subprocess.Popen(
-                    cosim_command, shell=True, cwd=output_dir, stdout=cos_out_target, stderr=cos_err_target, text=True
-                )
-                cosimProcess.communicate()
-                if cosimProcess.returncode != 0:
-                    raise Exception(f'Cosim failed for {model.config.get_project_name()}. See logs for details.')
-
-            if csim:
-                print("---------------------------------------------------")
-                print("-----------   start csim command ---------------")
-                print("---------------------------------------------------")
-                csimProcess = subprocess.Popen(
-                    csim_command, shell=True, cwd=output_dir, stdout=cs_out_target, stderr=cs_err_target, text=True
-                )
-                csimProcess.communicate()
-                if csimProcess.returncode != 0:
-                    raise Exception(f'Csim failed for {model.config.get_project_name()}. See logs for details.')
-
-
-
-
-        finally:
-            if not log_to_stdout:
-                if synth:
-                    stdout_target.close()
-                    stderr_target.close()
-                    pk_out_target.close()
-                    pk_err_target.close()
-
-                if cosim:
-                    cos_out_target.close()
-                    cos_err_target.close()
-
-                if csim:
-                    cs_out_target.close()
-                    cs_err_target.close()
-
-        # now make a bitfile
+        ##if bitfile
         if bitfile:
-            curr_dir = os.getcwd()
-            os.chdir(model.config.get_output_dir())
-            try:
-                os.system('vivado -mode batch -source design.tcl')  # check if this is accepted as a command
-            except Exception:
-                print("Something went wrong, check the Vivado logs")
-            os.chdir(curr_dir)
+            self.run_term_command(model, "kerlink", kerlink_cmd, log_to_stdout, kerlink_cwd)
+            ### dump the output
+            exportPath = os.path.join(output_dir, "export")
+            os.makedirs(exportPath, exist_ok=True)
+            srcBitFile = os.path.join(mg.getVitisLinkerDir(model),
+                                      f"{model.config.get_project_name()}.bin")
+                                      #"_x/link/vivado/vpl/prj/prj.runs/impl_1/vitis_design_wrapper.bin")
+            srcHwhFile = os.path.join(mg.getVitisLinkerDir(model),
+                                      "_x/link/vivado/vpl/prj/prj.runs/impl_1/vitis_design_wrapper.hwh")
+            desBitFile = os.path.join(exportPath, "system.bin")
+            desHwhFile = os.path.join(exportPath, "system.hwh")
+            print("copy src bit file to des bit file: ", srcBitFile, " to ", desBitFile)
+            copy2(str(srcBitFile), desBitFile)
+            print("copy src hwh file to des hwh file: ", srcHwhFile, " to ", desHwhFile)
+            copy2(srcHwhFile, desHwhFile)
 
-        return parse_vivado_report(model.config.get_output_dir())
+
+
+
+
+
+
 
     def create_initial_config(
         self,
