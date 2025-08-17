@@ -22,6 +22,9 @@ class VitisUnifiedWriter(VitisWriter):
         super().__init__()
         self.writer_meta = VitisUnifiedWriterMeta()
 
+    def write_bridge(self, model):
+        tbg.write_bridge(self.writer_meta, model)
+
     def write_hls(self, model, is_multigraph=False):
 
         from hls4ml.backends import VitisUnifiedConfig

@@ -1,7 +1,7 @@
 #ifndef MYPROJECT_BRIDGE_H_
 #define MYPROJECT_BRIDGE_H_
 
-#include "firmware/myproject_axi.h"
+#include "firmware/PROJECT_FILE_NAME.h"
 #include "firmware/nnet_utils/nnet_helpers.h"
 #include <algorithm>
 #include <map>
