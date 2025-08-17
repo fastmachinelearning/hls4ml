@@ -1,4 +1,5 @@
 import os
+import stat
 from pathlib import Path
 
 
@@ -22,6 +23,10 @@ def write_bridge_build_script(meta: VitisUnifiedWriterMeta, model):
 
     fin.close()
     fout.close()
+
+    #### change permission
+    build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+    build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
 def write_hls_kernel_cfg(meta, model):
     filedir = os.path.dirname(os.path.abspath(__file__))
