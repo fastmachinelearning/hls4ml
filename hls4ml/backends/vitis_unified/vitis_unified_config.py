@@ -22,13 +22,13 @@ class VitisUnifiedConfig:
         self.gmem_out_bufferSz = self.config.get("UnifiedConfig", {}).get("bufOutSize", 12)
         self.XPFMPath          = self.config.get("UnifiedConfig", {}).get("XPFMPath", "")
 
-        if self.config.get('Part') is not None:
-            if self.config.get('Part') != self.part:
-                print(
-                    'WARNING: You set a Part that does not correspond to the Board you specified. The correct '
-                    'Part is now set.'
-                )
-                self.config['Part'] = self.part
+        # if self.config.get('Part') is not None:
+        #     if self.config.get('Part') != self.part:
+        #         print(
+        #             'WARNING: You set a Part that does not correspond to the Board you specified. The correct '
+        #             'Part is now set.'
+        #         )
+        #         self.config['Part'] = self.part
         accel_config = self.config.get('AcceleratorConfig', None)
         if accel_config is not None:
             prec = accel_config.get('Precision')

@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <hls_stream.h>
 #include <iostream>
-#include "ap_axi_sdata.h"
+//#include "ap_axi_sdata.h"
 #include "MY_PROJECT_AXI_INC.h"
 
 #define DMX_BUF_IN_SZ   VAL
@@ -36,9 +36,7 @@ mem_wr:
 
 
 void MY_PROJECT_TOP_FUNC(
-// vitis-unified-wrapper-input
-
-// vitis-unified-wrapper-output
+// vitis-unified-wrapper-io
 
 ){
 

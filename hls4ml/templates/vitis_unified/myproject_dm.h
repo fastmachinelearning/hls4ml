@@ -4,6 +4,11 @@
 #include <iostream>
 
 
-void MY_PROJECT_TOP_FUNC(ATOMIC_TYPE* in, ATOMIC_TYPE* out, int inSize, int outSize);
+void MY_PROJECT_TOP_FUNC(
+
+// vitis-unified-wrapper-io
+
+
+);
 
 #endif

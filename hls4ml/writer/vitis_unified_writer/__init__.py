@@ -22,6 +22,15 @@ class VitisUnifiedWriter(VitisWriter):
         super().__init__()
         self.writer_meta = VitisUnifiedWriterMeta()
 
+    def write_board_script_override(self, model):
+        pass
+    def write_build_prj_override(self, model):
+        pass
+    def write_build_opts(self, model):
+        pass
+    def write_tar(self, model):
+        pass
+
     def write_bridge(self, model):
         tbg.write_bridge(self.writer_meta, model)
 

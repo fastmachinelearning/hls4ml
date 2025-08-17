@@ -10,6 +10,29 @@ from .     import meta_gen as mg
 ###### main function ###########################################################
 ################################################################################
 
+def genIoStr(indent, inp_gmem_t, out_gmem_t, inps, outs):
+
+    inputPtrList   = []
+    outputPtrList  = []
+    inputSizeList  = []
+    outputSizeList = []
+
+    for inp_idx, inp in enumerate(inps):
+        inputPtrList.append(f"{indent} {inp_gmem_t}* {mg.getGmemIOPortName(inp, True, inp_idx)}")
+        inputSizeList.append(f"{indent} int {mg.getGmemIOPortSizeName(inp, True, inp_idx)}")
+
+    for out_idx, out in enumerate(outs):
+        outputPtrList.append(f"{indent} {inp_gmem_t}* {mg.getGmemIOPortName(out, False, out_idx)}")
+        outputSizeList.append(f"{indent} int {mg.getGmemIOPortSizeName(out, False, out_idx)}")
+
+
+    line = ", ".join(inputPtrList)   + ",\n"
+    line += ", ".join(outputPtrList) + ",\n"
+    line += ", ".join(inputSizeList) + ",\n"
+    line += ", ".join(outputSizeList)
+
+    return line
+
 
 def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
 
@@ -34,21 +57,8 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
             line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_in_bufferSz()))
         elif "DMX_BUF_OUT_SZ" in line:
             line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_out_bufferSz()))
-        elif "// vitis-unified-wrapper-input" in line:
-            inputList = []
-            for inp_idx, inp in enumerate(inps):
-                inputList.append(f"{indent} {inp_gmem_t}* {mg.getGmemIOPortName(inp, True, inp_idx)}")
-                inputList.append(f"{indent} int {mg.getGmemIOPortSizeName(inp, True, inp_idx)}")
-            line += ",\n".join(inputList)
-            line += ",\n"      #### we assume that there is at least one output
-        elif "// vitis-unified-wrapper-output" in line:
-            outputList = []
-            for out_idx, out in enumerate(outs):
-                outputList.append(f"{indent} {inp_gmem_t}* {mg.getGmemIOPortName(out, False, out_idx)}")
-                outputList.append(f"{indent} int {mg.getGmemIOPortSizeName(out, False, out_idx)}")
-            line += ",\n".join(outputList)
-            line += "\n"
-
+        elif "// vitis-unified-wrapper-io" in line:
+            line = genIoStr(indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
         elif "// vitis-unified-wrapper-interface" in line:
             for inp_idx, inp in enumerate(inps):
                 line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.getGmemIOPortName(inp, True, inp_idx)} bundle = gmem_in{inp_idx}\n"
@@ -56,8 +66,6 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
             for out_idx, out in enumerate(outs):
                 line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.getGmemIOPortName(out, False, out_idx)} bundle = gmem_out{out_idx}\n"
                 line += f"{indent} #pragma HLS INTERFACE s_axilite port={mg.getGmemIOPortSizeName(out, False, out_idx)} bundle = control\n"
-
-
         elif "// vitis-unified-wrapper-stream-dec"    in line:
 
             for inp_idx, inp in enumerate(inps):
@@ -106,11 +114,9 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
         if "FILENAME" in line:
             line = line.replace("FILENAME", mg.getGmemWrapperFileName(model).upper())
         elif "MY_PROJECT_TOP_FUNC" in line:
-            line = line.replace("ATOMIC_TYPE* in", f"{inp_gmem_t}* in")
-            line = line.replace("ATOMIC_TYPE* out", f"{out_gmem_t}* out")
             line = line.replace("MY_PROJECT_TOP_FUNC", mg.getGemTopFuncName(model))
-
-
+        elif "// vitis-unified-wrapper-io" in line:
+            line += genIoStr(indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
         fout.write(line)
 
     fin.close()

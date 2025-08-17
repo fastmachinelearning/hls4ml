@@ -12,12 +12,14 @@ def write_driver(meta, model):
 
 def write_bridge_build_script(meta: VitisUnifiedWriterMeta, model):
     filedir = os.path.dirname(os.path.abspath(__file__))
-    fin = open(os.path.join(filedir, '../templates/vitis_unified/build_lib.sh'))
+    fin = open(os.path.join(filedir, '../../templates/vitis_unified/build_lib.sh'))
     fout = open(f"{model.config.get_output_dir()}/build_lib.sh", 'w')
 
     for line in fin.readlines():
         if 'myproject' in line:
             line = line.replace('myproject', format(model.config.get_project_name()))
+        if 'mystamp' in line:
+            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
         fout.write(line)
 
@@ -93,7 +95,7 @@ def write_launch_vitis_linker_launcher(meta, model):
 
     for line in fin.readlines():
         if "{PLATFORM_XPFM}" in line:
-            line.replace("{PLATFORM_XPFM}", meta.vitis_unified_config.getXPFMPath())
+            line.replace("{PLATFORM_XPFM}", meta.vitis_unified_config.get_XPFMPath())
         if "{KERNEL_XO}" in line:
             line.replace("{KERNEL_XO}", mg.getXOfilePath(model))
         if "{PROJECT_NAME}" in line:
