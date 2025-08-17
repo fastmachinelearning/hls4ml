@@ -13,7 +13,7 @@ from .     import meta_gen as mg
 
 def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
 
-    inp_axi_t, out_axi_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
+    inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
     indent = '      '
 
     ######################################
@@ -37,14 +37,14 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
         elif "// vitis-unified-wrapper-input" in line:
             inputList = []
             for inp_idx, inp in enumerate(inps):
-                inputList.append(f"{indent} {inp_axi_t}* {mg.getGmemIOPortName(inp, True, inp_idx)}")
+                inputList.append(f"{indent} {inp_gmem_t}* {mg.getGmemIOPortName(inp, True, inp_idx)}")
                 inputList.append(f"{indent} int {mg.getGmemIOPortSizeName(inp, True, inp_idx)}")
             line += ",\n".join(inputList)
             line += ",\n"      #### we assume that there is at least one output
         elif "// vitis-unified-wrapper-output" in line:
             outputList = []
             for out_idx, out in enumerate(outs):
-                outputList.append(f"{indent} {inp_axi_t}* {mg.getGmemIOPortName(out, False, out_idx)}")
+                outputList.append(f"{indent} {inp_gmem_t}* {mg.getGmemIOPortName(out, False, out_idx)}")
                 outputList.append(f"{indent} int {mg.getGmemIOPortSizeName(out, False, out_idx)}")
             line += ",\n".join(outputList)
             line += "\n"
@@ -106,8 +106,8 @@ def write_gmem_wrapper(meta: VitisUnifiedWriterMeta, model):
         if "FILENAME" in line:
             line = line.replace("FILENAME", mg.getGmemWrapperFileName(model).upper())
         elif "MY_PROJECT_TOP_FUNC" in line:
-            line = line.replace("ATOMIC_TYPE* in", f"{inp_axi_t}* in")
-            line = line.replace("ATOMIC_TYPE* out", f"{out_axi_t}* out")
+            line = line.replace("ATOMIC_TYPE* in", f"{inp_gmem_t}* in")
+            line = line.replace("ATOMIC_TYPE* out", f"{out_gmem_t}* out")
             line = line.replace("MY_PROJECT_TOP_FUNC", mg.getGemTopFuncName(model))
 
 
