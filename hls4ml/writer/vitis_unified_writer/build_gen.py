@@ -2,10 +2,26 @@ import os
 from pathlib import Path
 
 
+from .meta import VitisUnifiedWriterMeta
 from . import meta_gen as mg
 
 def write_driver(meta, model):
     print("[partial reconfig] we are not supporting write_driver this yet")
+
+
+def write_bridge_build_script(meta: VitisUnifiedWriterMeta, model):
+    filedir = os.path.dirname(os.path.abspath(__file__))
+    fin = open(os.path.join(filedir, '../templates/vitis_unified/build_lib.sh'))
+    fout = open(f"{model.config.get_output_dir()}/build_lib.sh", 'w')
+
+    for line in fin.readlines():
+        if 'myproject' in line:
+            line = line.replace('myproject', format(model.config.get_project_name()))
+
+        fout.write(line)
+
+    fin.close()
+    fout.close()
 
 def write_hls_kernel_cfg(meta, model):
     filedir = os.path.dirname(os.path.abspath(__file__))

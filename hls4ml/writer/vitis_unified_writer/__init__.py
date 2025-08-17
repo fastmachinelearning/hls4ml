@@ -25,6 +25,17 @@ class VitisUnifiedWriter(VitisWriter):
     def write_bridge(self, model):
         tbg.write_bridge(self.writer_meta, model)
 
+    def write_build_script(self, model):
+        #### for bridge simulation
+        bg.write_bridge_build_script(self.writer_meta, model)
+        #### for hls kernel generation
+        bg.build_unified_project_ske(self.writer_meta, model)
+        bg.write_hls_kernel_cfg(self.writer_meta, model)
+        #### for v++ to link hls to the system
+        bg.write_launch_vitis_linker_dir(self.writer_meta, model)
+        bg.write_launch_vitis_linker_launcher(self.writer_meta, model)
+        bg.write_launch_vitis_linker_cfg(self.writer_meta, model)
+
     def write_hls(self, model, is_multigraph=False):
 
         from hls4ml.backends import VitisUnifiedConfig
@@ -35,14 +46,6 @@ class VitisUnifiedWriter(VitisWriter):
         super().write_hls(model)
         mmg.write_gmem_wrapper      (self.writer_meta, model)
         sg.write_axi_wrapper        (self.writer_meta, model)
-        #### for hls kernel generation
-        bg.build_unified_project_ske(self.writer_meta, model)
-        bg.write_hls_kernel_cfg     (self.writer_meta, model)
-        #### for v++ to link hls to the system
-        bg.write_launch_vitis_linker_dir(self.writer_meta, model)
-        bg.write_launch_vitis_linker_launcher(self.writer_meta, model)
-        bg.write_launch_vitis_linker_cfg(self.writer_meta, model)
-
 
         #########
         bg .write_driver            (self.writer_meta, model)
