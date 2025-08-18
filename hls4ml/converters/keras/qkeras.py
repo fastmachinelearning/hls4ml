@@ -174,6 +174,7 @@ def get_activation_quantizer(keras_layer, input_names, activation_name='activati
         layer[activation_name] = activation_config['class_name'].replace('quantized_', '')
 
     layer[f'{activation_name}_quantizer'] = activation_config
+    layer['trusted'] = True
 
     return layer
 

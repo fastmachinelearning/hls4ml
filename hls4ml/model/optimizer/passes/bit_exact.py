@@ -133,6 +133,30 @@ def _(layer: Reshape):
 @_request_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes.get('activation')
+
+    if layer.attributes.get('trusted', False):
+        result_t = layer.get_output_variable().type.precision
+        if fn_name in ('linear', 'relu'):
+            output_shape = get_output_shape(layer)
+            k, w, f = result_t.signed, result_t.width, result_t.fractional
+            i = w - k - f
+            k = np.full(output_shape, k, dtype=np.int8)
+            i = np.full(output_shape, i, dtype=np.int8)
+            f = np.full(output_shape, f, dtype=np.int8)
+            if result_t.rounding_mode == RoundingMode.RND:
+                f += 1
+            elif result_t.rounding_mode != RoundingMode.TRN:
+                f = np.full(output_shape, 126, dtype=np.int8)
+            if result_t.saturation_mode != SaturationMode.WRAP:
+                k = np.ones(output_shape, dtype=np.int8)
+                i = np.full(output_shape, 126, dtype=np.int8)
+            if fn_name == 'linear':
+                return ((k, i, f),)
+            else:
+                k = np.ones(output_shape, dtype=np.int8)
+                i = np.full(output_shape, 126, dtype=np.int8)
+                return ((k, i, f),)
+
     if fn_name == 'linear':
         return (requested_kif(layer),)
     if fn_name == 'relu':
@@ -196,8 +220,16 @@ def _produce_kif(layer: Layer) -> KIF_t:
 
 @_produce_kif.register
 def _(layer: Input):
-    k = np.ones(get_output_shape(layer), dtype=np.int8)
-    i = f = np.full(get_output_shape(layer), 126, dtype=np.int8)
+    shape = get_output_shape(layer)
+    if layer.attributes.get('trusted', False):
+        precision: FixedPrecisionType = layer.get_output_variable().type.precision
+        k, i, f = precision.signed, precision.integer - precision.signed, precision.fractional
+        k = np.full(shape, k, dtype=np.int8)
+        i = np.full(shape, i, dtype=np.int8)
+        f = np.full(shape, f, dtype=np.int8)
+    else:
+        k = np.ones(shape, dtype=np.int8)
+        i = f = np.full(shape, 126, dtype=np.int8)
     return k, i, f
 
 
@@ -531,6 +563,16 @@ def _(layer: Concatenate):
 @_produce_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes['activation'].lower()
+    if layer.attributes.get('trusted', False):
+        output_shape = get_output_shape(layer)
+        result_t = layer.get_output_variable().type.precision
+        k, w, f = result_t.signed, result_t.width, result_t.fractional
+        i = w - k - f
+        k = np.full(output_shape, k, dtype=np.int8)
+        i = np.full(output_shape, i, dtype=np.int8)
+        f = np.full(output_shape, f, dtype=np.int8)
+        return k, i, f
+
     k, i, f = get_input_kifs(layer)[0]
 
     match fn_name:
@@ -569,8 +611,8 @@ def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
     return tuple(int(np.max(a)) for a in arr)
 
 
-def produce_kif(layer: Layer) -> KIF_t:
-    if layer.attributes.get('_produce_kif'):
+def produce_kif(layer: Layer, force_reset=False) -> KIF_t:
+    if layer.attributes.get('_produce_kif') and not force_reset:
         return layer.attributes['_produce_kif']
     kif = _produce_kif(layer)
     layer.attributes['_produce_kif'] = kif
@@ -603,6 +645,10 @@ def requested_by_non_saturating_quantizer(layer: Layer) -> bool:
 
 
 def default_register_precision(layer: Layer):
+    if layer.attributes.get('trusted', False):
+        # Trusted layers have their precision already set
+        return
+
     _pk, _pi, _pf = produce_kif(layer)  # Maximum possible k,i,f output from this layer
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
     _oi, _of = np.minimum(_pi, _ri), np.minimum(_pf, _rf)
@@ -791,7 +837,11 @@ class BitExact(ModelOptimizerPass):
         return True
 
     def _match(self, model: 'ModelGraph'):
-        return self.has_fixed_quantizer(model)
+        enabled = model.config.config['HLSConfig']['Model'].get('BitExact', None)
+        if enabled is None:
+            # Enable by default if any FixedPointQuantizer is present
+            enabled = self.has_fixed_quantizer(model)
+        return enabled
 
     def transform(self, model: 'ModelGraph'):
         if not self._match(model):
@@ -807,7 +857,9 @@ class BitExact(ModelOptimizerPass):
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
                 continue
-            produce_kif(node)  # Shrink FixedPointQuantizer bits when possible to be used in backward flow (requested_kif).
+            produce_kif(
+                node, force_reset=True
+            )  # Shrink FixedPointQuantizer bits when possible to be used in backward flow (requested_kif).
 
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
@@ -816,12 +868,29 @@ class BitExact(ModelOptimizerPass):
             node.attributes['bit_exact_transformed'] = True
 
         for node in model.graph.values():
-            if node.attributes.get('_produce_kif'):
+            if '_produce_kif' in node.attributes:
                 del node.attributes['_produce_kif']
-            if node.attributes.get('_request_kif'):
+            if '_request_kif' in node.attributes:
                 del node.attributes['_request_kif']
 
         return True
+
+
+def get_output_layers_and_quantizers(
+    node: Layer, layers: list | None = None, quantizers: list | None = None
+) -> tuple[list[Layer], list[FixedPointQuantizer]]:
+
+    layers = layers if layers is not None else []
+    quantizers = quantizers if quantizers is not None else []
+    for _node in get_output_layers(node):
+        if isinstance(_node, FixedPointQuantizer):
+            quantizers.append(_node)
+        elif isinstance(_node, (Reshape, Transpose, Concatenate)):
+            layers.append(_node)
+            get_output_layers_and_quantizers(_node, layers, quantizers)
+        else:
+            raise ValueError(f'Layer {node.name} ({node.class_name}) unexpected input layer chain.')
+    return layers, quantizers
 
 
 class FixInputPrecision(OptimizerPass):
@@ -833,21 +902,17 @@ class FixInputPrecision(OptimizerPass):
         return node.get_output_variable().type.precision.width > 100
 
     def transform(self, model, node: Layer):
-        out_layers: list[FixedPointQuantizer] = get_output_layers(node)  # type: ignore
-        for layer in out_layers:
-            assert isinstance(
-                layer, FixedPointQuantizer
-            ), f'Input {node.name} connected to non-quantizer {layer.name} with non-trivial configuration'
+        layers, out_quantizers = get_output_layers_and_quantizers(node)
 
-        if len(out_layers) == 0:  # Input connected to nothing
+        if len(out_quantizers) == 0:  # Input connected to nothing
             new_type = to_hls4ml_fixed(0, 0, 1, f'{node.name}_t')
             node.get_output_variable().type = new_type
             node.model.config.layer_name_precision[node.name] = str(new_type)
             return False
 
-        sat_modes = [l.SAT for l in out_layers]
+        sat_modes = [l.SAT for l in out_quantizers]
         sat_modes_set = set(sat_modes)
-        rnd_modes = [l.RND for l in out_layers]
+        rnd_modes = [l.RND for l in out_quantizers]
         rnd_modes_set = set(rnd_modes)
         illegal_sat_modes = sat_modes_set - {'WRAP', 'SAT', 'SAT_SYM'}
         illegal_rnd_modes = rnd_modes_set - {'TRN', 'RND'}
@@ -858,7 +923,7 @@ class FixInputPrecision(OptimizerPass):
         if illegal_rnd_modes:
             warn(f'Saturation mode {illegal_rnd_modes} may compromise bit-exactness. Forcing at maximum 24 fractional bits.')
 
-        kifs = [_produce_kif(l) for l in out_layers]
+        kifs = [_produce_kif(l) for l in out_quantizers]
         i = np.max([np.max(i) for _, i, _ in kifs])
         k = np.max([np.max(k) for k, _, _ in kifs])
         if illegal_rnd_modes:
@@ -873,4 +938,15 @@ class FixInputPrecision(OptimizerPass):
             new_type.precision.saturation_mode = 'SAT'
         node.get_output_variable().type = new_type
         node.model.config.layer_name_precision[node.name] = str(new_type)
+        node.attributes['trusted'] = True
+
+        for layer in layers:
+            produce_kif(layer, force_reset=True)
+        for layer in layers:
+            register_precision(layer)
+        for layer in layers:
+            if '_produce_kif' in layer.attributes:
+                del layer.attributes['_produce_kif']
+            if '_request_kif' in layer.attributes:
+                del layer.attributes['_request_kif']
         return False
