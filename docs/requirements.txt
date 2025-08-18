@@ -1,6 +1,7 @@
 .
 setuptools_scm[toml]>=5
 sphinx>=3.2.1
+sphinx-tabs
 sphinx_contributors
 sphinx_github_changelog
 sphinx_rtd_theme
