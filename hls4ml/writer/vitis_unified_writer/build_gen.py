@@ -6,8 +6,8 @@ from pathlib import Path
 from .meta import VitisUnifiedWriterMeta
 from . import meta_gen as mg
 
-def write_driver(meta, model):
-    print("[partial reconfig] we are not supporting write_driver this yet")
+# def write_driver(meta, model):
+#     print("[partial reconfig] we are not supporting write_driver this yet")
 
 
 def write_bridge_build_script(meta: VitisUnifiedWriterMeta, model):

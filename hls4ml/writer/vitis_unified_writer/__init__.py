@@ -11,6 +11,7 @@ from . import mm_gen          as mmg
 from . import stream_gen      as sg
 from . import test_bridge_gen as tbg
 from . import test_cosim_gen  as tcg
+from . import driver_gen      as dg
 
 from .meta import VitisUnifiedWriterMeta
 
@@ -57,7 +58,7 @@ class VitisUnifiedWriter(VitisWriter):
         sg.write_axi_wrapper        (self.writer_meta, model)
 
         #########
-        bg .write_driver            (self.writer_meta, model)
+        dg .write_driver            (self.writer_meta, model)
         tcg.write_wrapper_test      (self.writer_meta, model)
 
 
