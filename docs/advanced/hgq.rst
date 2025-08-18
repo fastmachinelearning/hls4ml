@@ -3,7 +3,8 @@ High Granularity Quantization (HGQ2)
 ======================================
 
 .. note::
-   HGQ2 is the successor of the original `HGQ <./hgq1.html>`__. framework, which was built on Keras v2. HGQ2 built on top of Keras v3, leveraging its new features and improvements.
+   New projects are encouraged to use `HGQ2 <../hgq2.html>`_ instead of the original `HGQ <../hgq.html>`_.
+   HGQ2 extends the original HGQ with more supported layers, more quantizer options, and is on top of Keras v3, which can be used natively with JAX, PyTorch, and TensorFlow backends.
 
 .. image:: https://img.shields.io/badge/License-LGPLv3-blue.svg
    :target: https://www.gnu.org/licenses/lgpl-3.0.en.html

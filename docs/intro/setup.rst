@@ -57,19 +57,19 @@ The following Python packages are all optional and are only required if you inte
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
    * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/onnx <../frontend/onnx.html>`_ for more details.
 
-Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, the *clang*-based ``g++`` is enough. For the oneAPI backend, one must have oneAPI installed, along with the FPGA compiler, to run C/SYCL simulations.
+Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, the *clang*-based ``g++`` is enough. For the oneAPI backend, one must have `oneAPI=2025.0` (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
 
 Specific functionalities may need additional Python packages. If any needed is missing, ``hls4ml`` will raise an error and prompt you to install the missing packages.
 
 To run FPGA synthesis, installation of following tools is required:
 
-* Xilinx Vivado HLS 2018.2 to 2020.1 for synthesis for Xilinx FPGAs using the ``Vivado`` backend.
+* Xilinx Vivado HLS 2020.1 for synthesis for Xilinx FPGAs using the ``Vivado`` backend. Older versions may work, but use at your own risk.
 
 * Vitis HLS 2022.2 or newer is required for synthesis for Xilinx FPGAs using the ``Vitis`` backend.
 
 * Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
 
-* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend.
+* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions are known **not to work**.
 
 Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 

@@ -26,14 +26,14 @@ For concreteness, let's say our custom layer ``KReverse`` is implemented in Kera
 .. code-block:: Python
 
     # Keras implementation of a custom layer
-    class KReverse(tf.keras.layers.Layer):
+    class KReverse(keras.layers.Layer):
         '''Keras implementation of a hypothetical custom layer'''
 
         def __init__(self):
             super().__init__()
 
         def call(self, inputs):
-            return tf.reverse(inputs, axis=[-1])
+            return inputs[..., ::-1]
 
         def get_config(self):
             return super().get_config()
@@ -58,19 +58,42 @@ This parser reads the attributes of the Keras layer instance and populates a dic
 It also returns a list of output shapes (one sjape for each output).
 In this case, there a single output with the same shape as the input.
 
-.. code-block:: Python
+.. tabs::
+    .. tab:: Keras v2
+    .. code-block:: Python
 
-    # Parser for converter
-    def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader):
-        layer = {}
-        layer['class_name'] = 'HReverse'
-        layer['name'] = keras_layer['config']['name']
-        layer['n_in'] = input_shapes[0][1]
+        # Parser for converter
+        def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader):
+            layer = {}
+            layer['class_name'] = 'KReverse'
+            layer['name'] = keras_layer['config']['name']
+            layer['n_in'] = input_shapes[0][1]
 
-        if input_names is not None:
-            layer['inputs'] = input_names
+            if input_names is not None:
+                layer['inputs'] = input_names
 
-        return layer, [shape for shape in input_shapes[0]]
+            return layer, [shape for shape in input_shapes[0]]
+
+    .. tab:: Keras v3
+    .. code-block:: Python
+
+        from hls4ml.converters.keras_v3._base import register, KerasV3LayerHandler
+
+        @register
+        class KReverseHandler(KerasV3LayerHandler):
+            '''Keras v3 layer handler for KReverse'''
+
+            handles = ('KReverse',)
+            def handle(
+                self,
+                layer: 'keras.Layer',
+                in_tensors: Sequence['KerasTensor'],
+                out_tensors: Sequence['KerasTensor'],
+            ) -> dict[str, Any] | tuple[dict[str, Any], ...]:
+                # Only layer-specific parameters are needed.
+                # Common parameters are automatically added in the base class.
+                assert len(in_tensors[0].shape) == 2, 'KReverse is only supported for 2D tensors'
+                return {'n_in': in_tensors[0].shape[-1]}
 
 Next, we need the actual HLS implementaton of the function, which can be written in a header file ``nnet_reverse.h``.
 
@@ -144,30 +167,29 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.
     # For keras v3, use register on subclassed KerasV3LayerHandler from hls4ml.converters.keras_v3._base instead
 
     # Register the hls4ml's IR layer
-    hls4ml.model.layers.register_layer('HReverse', HReverse)
+    hls4ml.model.layers.register_layer('KReverse', HReverse)
 
     for backend_id in ['Vivado', 'Quartus']:
         # Register the optimization passes (if any)
         backend = hls4ml.backends.get_backend(backend_id)
-        backend.register_pass('remove_duplicate_reverse', RemoveDuplicateReverse, flow=f'{backend_id.lower()}:optimize')
 
         # Register template passes for the given backend
         backend.register_template(HReverseConfigTemplate)
         backend.register_template(HReverseFunctionTemplate)
 
         # Register HLS implementation
-        backend.register_source('nnet_reverse.h')
+        backend.register_source('/path/to/your/nnet_reverse.h')
 
 Finally, we can actually test the ``hls4ml`` custom layer compared to the Keras one.
 
 .. code-block:: Python
 
     # Test if it works
-    kmodel = tf.keras.models.Sequential(
+    kmodel = keras.models.Sequential(
         [
-            tf.keras.layers.Input(shape=(8,)),
+            keras.layers.Input(shape=(8,)),
             KReverse(),
-            tf.keras.layers.ReLU(),
+            keras.layers.ReLU(),
         ]
     )
 

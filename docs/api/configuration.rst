@@ -73,7 +73,10 @@ for automatic setting of precisions.  The layer-level precisions with the ``'nam
 (see :ref:`Automatic precision inference`). Note that layer-level settings take precedence over model-level settings. A ``'name'`` granularity is required for QKeras
 and QONNX model parsing. Passing the backend to these functions is recommended because some configuration options depend on the backend. See :py:class:`~hls4ml.utils.config.config_from_keras_model`
 and similar for more information on the various options. Note specifically the documentation of :py:class:`~hls4ml.utils.config.config_from_pytorch_model` on how to handle differences in input data
-formats between pytorch and keras (hls4ml follows keras conventions internally). Note that passing precision configurations for HGQ/HGQ2 models is not needed in general, and **should not be done** without understanding the implications.
+formats between pytorch and keras (hls4ml follows keras conventions internally).
+
+.. warning::
+    Note that passing precision configurations when invoking the full model precision propagation (by default for HGQ/HGQ2 models, or when `bit_exact=True` is set for other frontends) is **not needed** and **should not be done** without understanding the implications.
 
 One can override specific values before using the configuration:
 

@@ -18,6 +18,6 @@ The ``data_format='channels_first'`` parameter of Keras layers is supported for 
 * `QKeras <https://github.com/fastmachinelearning/qkeras>`_
     The equivalent QKeras API and its quantizers are also supported by ``hls4ml``. QKeras is not compatible with Keras v3.
 * `HGQ <https://github.com/calad0i/HGQ>`_
-    The equivalent HGQ API is also supported.
+    The equivalent HGQ API is also supported. Still maintained but deprecated in favor of `HGQ2 <../hgq2.html>`_.
 * `HGQ2 <https://github.com/calad0i/HGQ2>`_
     The equivalent HGQ2 API is also supported, plus some additional advanced operators.
