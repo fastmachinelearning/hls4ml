@@ -18,10 +18,11 @@ class VitisUnifiedBackend(VitisBackend):
         self._register_flows()
 
 
-    def run_term_command(self, model, taskName: str,command: str, logStdOut: bool, cwd):
+    def run_term_command(self, model, taskName: str, command: str, logStdOut: bool, cwd):
 
         print("-------------------------------------------------------")
         print(f"start running task : {taskName}")
+        print(f"    with command: {command}")
         print("-------------------------------------------------------")
 
         output_dir = model.config.get_output_dir()
@@ -31,9 +32,7 @@ class VitisUnifiedBackend(VitisBackend):
         out_target   = None if logStdOut else open(out_log_path, 'w')
         err_target   = None if logStdOut else open(err_log_path, 'w')
 
-
         try:
-
             runningProcess = subprocess.Popen(
                 command, shell=True, cwd=cwd, stdout=out_target, stderr=err_target, text=True
             )
@@ -46,6 +45,11 @@ class VitisUnifiedBackend(VitisBackend):
             print(f"stderr: {stderr}")
 
             print(f"task {taskName} finished")
+
+        except Exception as e:
+            print(f"task {taskName} failed")
+            print(e)
+            raise e
         finally:
             if out_target:
                 out_target.close()
@@ -59,7 +63,7 @@ class VitisUnifiedBackend(VitisBackend):
         model,
         reset=False,
         csim=False,
-        synth=True,
+        synth=False,
         cosim=False,
         validation=False,
         export=False,
@@ -107,7 +111,7 @@ class VitisUnifiedBackend(VitisBackend):
         kerlink_cmd = "./buildAcc.sh"
         kerlink_cwd = mg.getVitisLinkerDir(model)
 
-        if csim or synth or cosim or bitfile :
+        if synth:
             self.run_term_command(model, "csynth", csynth_cmd, log_to_stdout, csynth_cwd)
             self.run_term_command(model, "package", package_cmd, log_to_stdout, package_cwd)
 
@@ -120,24 +124,6 @@ class VitisUnifiedBackend(VitisBackend):
         ##if bitfile
         if bitfile:
             self.run_term_command(model, "kerlink", kerlink_cmd, log_to_stdout, kerlink_cwd)
-            ### dump the output
-            exportPath = os.path.join(output_dir, "export")
-            os.makedirs(exportPath, exist_ok=True)
-            srcBitFile = os.path.join(mg.getVitisLinkerDir(model),
-                                      f"{model.config.get_project_name()}.bin")
-                                      #"_x/link/vivado/vpl/prj/prj.runs/impl_1/vitis_design_wrapper.bin")
-            srcHwhFile = os.path.join(mg.getVitisLinkerDir(model),
-                                      "_x/link/vivado/vpl/prj/prj.runs/impl_1/vitis_design_wrapper.hwh")
-            desBitFile = os.path.join(exportPath, "system.bin")
-            desHwhFile = os.path.join(exportPath, "system.hwh")
-            print("copy src bit file to des bit file: ", srcBitFile, " to ", desBitFile)
-            copy2(str(srcBitFile), desBitFile)
-            print("copy src hwh file to des hwh file: ", srcHwhFile, " to ", desHwhFile)
-            copy2(srcHwhFile, desHwhFile)
-
-
-
-
 
 
 

@@ -95,16 +95,19 @@ def write_launch_vitis_linker_launcher(meta, model):
 
     for line in fin.readlines():
         if "{PLATFORM_XPFM}" in line:
-            line.replace("{PLATFORM_XPFM}", meta.vitis_unified_config.get_XPFMPath())
+            line = line.replace("{PLATFORM_XPFM}", meta.vitis_unified_config.get_XPFMPath())
         if "{KERNEL_XO}" in line:
-            line.replace("{KERNEL_XO}", mg.getXOfilePath(model))
+            line = line.replace("{KERNEL_XO}", mg.getXOfilePath(model))
         if "{PROJECT_NAME}" in line:
-            line.replace("{PROJECT_NAME}", model.config.get_project_name())
+            line = line.replace("{PROJECT_NAME}", model.config.get_project_name())
 
         fout.write(line)
 
     fin.close()
     fout.close()
+
+    link_lib_dst = Path(f"{mg.getVitisLinkerDir(model)}/buildAcc.sh").resolve()
+    link_lib_dst.chmod(link_lib_dst.stat().st_mode | stat.S_IEXEC)
 
 
 
@@ -115,10 +118,12 @@ def write_launch_vitis_linker_cfg(meta, model):
 
     for line in fin.readlines():
         if "{CLK}" in line:
-            line.replace("{CLK}", model.config.get_config_value('ClockPeriod'))
+            line = line.replace("{CLK}", str(100_000_000))#model.config.get_config_value('ClockPeriod'))
         if "{KERNEL_NAME}" in line:
-            line.replace("{KERNEL_NAME}", mg.getGemTopFuncName(model))
-
+            line = line.replace("{KERNEL_NAME}", mg.getGemTopFuncName(model))
+        if "{GUI_STATUS}" in line:
+            line = line.replace("{GUI_STATUS}", "true")
+        line=""
         fout.write(line)
 
     fin.close()
