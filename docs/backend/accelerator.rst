@@ -147,6 +147,7 @@ The generated host code application support the following options to tweak the e
 
  * ``-d``: device BDF to use (can be specified multiple times)
  * ``-x``: XCLBIN path
+ * ``-b``: Batch size
  * ``-i``: input feature file
  * ``-o``: output feature file
  * ``-c``: maximum computing units count to use
@@ -160,6 +161,18 @@ The following example shows how to limit on only one device, one CU, and on work
 .. code-block:: Bash
 
     ./host -d 0000:c1:00.1 -c 1 -n 1
+
+
+Inference workflow
+==================
+
+The host code can also be used for inference directly in a Python script through the ``hardware_predict`` method :
+
+    * ``target``: Can be one of ``hw``, ``hw_emu``, ``sw_emu``, to define which build target to use (Default is ``hw``).
+    * ``debug``: If True, uses the c++ host code compiled in debug mode.
+    * ``profilingRepeat``: Number of times to repeat the inference for profiling (Default is -1, no repeat).
+    * ``method``: Can be ``file`` or ``lib``, to define how the host code is called (Default is ``lib``). 
+      If ``file``, the host code is called as a separate process (input and output are passed through files), if ``lib``, the host code is called as a shared library.
 
 Example
 =======
@@ -183,4 +196,4 @@ The following example is a modified version of `hsl4ml example 7 <https://github
     )
     hls_model.compile()
     hls_model.build()
-    y = hls_model.predict_hardware(y) # Limited to batchsize * num_kernel * num_thread for now
+    y = hls_model.predict_hardware(x) # Limited to batchsize * num_kernel * num_thread for now
