@@ -194,6 +194,10 @@ The following example is a modified version of `hsl4ml example 7 <https://github
         hw_quant=False,
         vivado_directives=["prop=run.impl_1.STEPS.PLACE_DESIGN.ARGS.DIRECTIVE=Explore"]
     )
-    hls_model.compile()
-    hls_model.build()
+
+    build = True    # Change to False to skip the build step
+    if build:
+        hls_model.compile()
+        hls_model.build()
+
     y = hls_model.predict_hardware(x) # Limited to batchsize * num_kernel * num_thread for now
