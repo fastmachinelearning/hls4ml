@@ -215,8 +215,6 @@ def test_activations(activation_function, backend, io_type):
 
 # chans_options = ['channels_last']
 # padds_options = ['same', 'valid']
-
-
 # @pytest.mark.parametrize('chans', chans_options)
 # @pytest.mark.parametrize('padds', padds_options)
 # @pytest.mark.parametrize(
@@ -231,106 +229,119 @@ def test_activations(activation_function, backend, io_type):
 #     ],
 # )
 # @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-# def test_conv2d(chans, padds, backend, strategy, io_type):
-#     model = tf.keras.models.Sequential()
-#     input_shape = (28, 28, 3)
-#     model.add(
-#         Conv2D(
-#             filters=32,
-#             kernel_size=(4, 4),
-#             strides=(4, 4),
-#             padding=padds,
-#             input_shape=input_shape,
-#             kernel_initializer='normal',
-#             use_bias=False,
-#             data_format=chans,
-#         )
-#     )
-#     model.compile(optimizer='adam', loss='mse')
 
-#     X_input = np.random.rand(100, *input_shape)
-#     keras_prediction = model.predict(X_input)
+chans_options = ['channels_last']
+padds_options = ['valid']
+@pytest.mark.parametrize('chans', chans_options)
+@pytest.mark.parametrize('padds', padds_options)
+@pytest.mark.parametrize(
+    'backend,strategy',
+    [
+        # ('Vivado', 'Latency'),
+        ('XLS', 'Latency'),
+    ],
+)
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_conv2d(chans, padds, backend, strategy, io_type):
+    model = tf.keras.models.Sequential()
+    input_shape = (28, 28, 3)
+    model.add(
+        Conv2D(
+            filters=32,
+            kernel_size=(4, 4),
+            strides=(1, 1),
+            padding=padds,
+            input_shape=input_shape,
+            kernel_initializer='normal',
+            use_bias=False,
+            data_format=chans,
+        )
+    )
+    model.compile(optimizer='adam', loss='mse')
 
-#     config = hls4ml.utils.config_from_keras_model(model)
-#     config['Model']['Strategy'] = strategy
-#     output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv2d_{backend}_{strategy}_{chans}_{padds}_{io_type}')
-#     hls_model = hls4ml.converters.convert_from_keras_model(
-#         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
-#     )
-#     hls_model.compile()
-#     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
+    X_input = np.random.rand(100, *input_shape)
+    keras_prediction = model.predict(X_input)
 
-#     # A high tolerance, simply to verify correct functionality
-#     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=5e-2)
+    config = hls4ml.utils.config_from_keras_model(model)
+    config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv2d_{backend}_{strategy}_{chans}_{padds}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+    hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-#     assert len(model.layers) + 1 == len(hls_model.get_layers())
-#     assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
-#     assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv2D'
-#     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
-#     assert list(hls_model.get_layers())[1].attributes['filt_width'] == model.layers[0].kernel_size[1]
-#     assert list(hls_model.get_layers())[1].attributes['filt_height'] == model.layers[0].kernel_size[0]
-#     assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
-#     assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[1]
-#     assert list(hls_model.get_layers())[1].attributes['stride_height'] == model.layers[0].strides[0]
-#     assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
+    # A high tolerance, simply to verify correct functionality
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=5e-2)
 
-#     if model.layers[0].data_format == 'channels_first':
-#         assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0]._batch_input_shape[1]
-#         assert list(hls_model.get_layers())[1].attributes['in_height'] == model.layers[0]._batch_input_shape[2]
-#         assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[3]
-#         assert list(hls_model.get_layers())[1].attributes['out_height'] == model.layers[0].output_shape[2]
-#         assert list(hls_model.get_layers())[1].attributes['out_width'] == model.layers[0].output_shape[3]
-#     elif model.layers[0].data_format == 'channels_last':
-#         assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0]._batch_input_shape[3]
-#         assert list(hls_model.get_layers())[1].attributes['in_height'] == model.layers[0]._batch_input_shape[1]
-#         assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[2]
-#         assert list(hls_model.get_layers())[1].attributes['out_height'] == model.layers[0].output_shape[1]
-#         assert list(hls_model.get_layers())[1].attributes['out_width'] == model.layers[0].output_shape[2]
+    assert len(model.layers) + 1 == len(hls_model.get_layers())
+    assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
+    assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv2D'
+    assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
+    assert list(hls_model.get_layers())[1].attributes['filt_width'] == model.layers[0].kernel_size[1]
+    assert list(hls_model.get_layers())[1].attributes['filt_height'] == model.layers[0].kernel_size[0]
+    assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
+    assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[1]
+    assert list(hls_model.get_layers())[1].attributes['stride_height'] == model.layers[0].strides[0]
+    assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
 
-#     if model.layers[0].padding == 'same':
-#         if model.layers[0].data_format == 'channels_first':
-#             out_height = model.layers[0].output_shape[2]
-#             out_width = model.layers[0].output_shape[3]
-#             pad_along_height = max(
-#                 (out_height - 1) * model.layers[0].strides[0]
-#                 + model.layers[0].kernel_size[0]
-#                 - model.layers[0]._batch_input_shape[2],
-#                 0,
-#             )
-#             pad_along_width = max(
-#                 (out_width - 1) * model.layers[0].strides[1]
-#                 + model.layers[0].kernel_size[1]
-#                 - model.layers[0]._batch_input_shape[3],
-#                 0,
-#             )
-#         elif model.layers[0].data_format == 'channels_last':
-#             out_height = model.layers[0].output_shape[1]
-#             out_width = model.layers[0].output_shape[2]
-#             pad_along_height = max(
-#                 (out_height - 1) * model.layers[0].strides[0]
-#                 + model.layers[0].kernel_size[0]
-#                 - model.layers[0]._batch_input_shape[1],
-#                 0,
-#             )
-#             pad_along_width = max(
-#                 (out_width - 1) * model.layers[0].strides[1]
-#                 + model.layers[0].kernel_size[1]
-#                 - model.layers[0]._batch_input_shape[2],
-#                 0,
-#             )
-#         pad_top = pad_along_height // 2
-#         pad_bottom = pad_along_height - pad_top
-#         pad_left = pad_along_width // 2
-#         pad_right = pad_along_width - pad_left
-#         assert list(hls_model.get_layers())[1].attributes['pad_top'] == pad_top
-#         assert list(hls_model.get_layers())[1].attributes['pad_bottom'] == pad_bottom
-#         assert list(hls_model.get_layers())[1].attributes['pad_left'] == pad_left
-#         assert list(hls_model.get_layers())[1].attributes['pad_right'] == pad_right
-#     elif model.layers[0].padding == 'valid':
-#         assert list(hls_model.get_layers())[1].attributes['pad_top'] == 0
-#         assert list(hls_model.get_layers())[1].attributes['pad_bottom'] == 0
-#         assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
-#         assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
+    if model.layers[0].data_format == 'channels_first':
+        assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0]._batch_input_shape[1]
+        assert list(hls_model.get_layers())[1].attributes['in_height'] == model.layers[0]._batch_input_shape[2]
+        assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[3]
+        assert list(hls_model.get_layers())[1].attributes['out_height'] == model.layers[0].output_shape[2]
+        assert list(hls_model.get_layers())[1].attributes['out_width'] == model.layers[0].output_shape[3]
+    elif model.layers[0].data_format == 'channels_last':
+        assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0]._batch_input_shape[3]
+        assert list(hls_model.get_layers())[1].attributes['in_height'] == model.layers[0]._batch_input_shape[1]
+        assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[2]
+        assert list(hls_model.get_layers())[1].attributes['out_height'] == model.layers[0].output_shape[1]
+        assert list(hls_model.get_layers())[1].attributes['out_width'] == model.layers[0].output_shape[2]
+
+    if model.layers[0].padding == 'same':
+        if model.layers[0].data_format == 'channels_first':
+            out_height = model.layers[0].output_shape[2]
+            out_width = model.layers[0].output_shape[3]
+            pad_along_height = max(
+                (out_height - 1) * model.layers[0].strides[0]
+                + model.layers[0].kernel_size[0]
+                - model.layers[0]._batch_input_shape[2],
+                0,
+            )
+            pad_along_width = max(
+                (out_width - 1) * model.layers[0].strides[1]
+                + model.layers[0].kernel_size[1]
+                - model.layers[0]._batch_input_shape[3],
+                0,
+            )
+        elif model.layers[0].data_format == 'channels_last':
+            out_height = model.layers[0].output_shape[1]
+            out_width = model.layers[0].output_shape[2]
+            pad_along_height = max(
+                (out_height - 1) * model.layers[0].strides[0]
+                + model.layers[0].kernel_size[0]
+                - model.layers[0]._batch_input_shape[1],
+                0,
+            )
+            pad_along_width = max(
+                (out_width - 1) * model.layers[0].strides[1]
+                + model.layers[0].kernel_size[1]
+                - model.layers[0]._batch_input_shape[2],
+                0,
+            )
+        pad_top = pad_along_height // 2
+        pad_bottom = pad_along_height - pad_top
+        pad_left = pad_along_width // 2
+        pad_right = pad_along_width - pad_left
+        assert list(hls_model.get_layers())[1].attributes['pad_top'] == pad_top
+        assert list(hls_model.get_layers())[1].attributes['pad_bottom'] == pad_bottom
+        assert list(hls_model.get_layers())[1].attributes['pad_left'] == pad_left
+        assert list(hls_model.get_layers())[1].attributes['pad_right'] == pad_right
+    elif model.layers[0].padding == 'valid':
+        assert list(hls_model.get_layers())[1].attributes['pad_top'] == 0
+        assert list(hls_model.get_layers())[1].attributes['pad_bottom'] == 0
+        assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
+        assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
 
 
 # # Currently only Vivado and Vitis is supported for io_stream.
