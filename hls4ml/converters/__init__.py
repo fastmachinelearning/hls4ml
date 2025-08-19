@@ -168,7 +168,6 @@ def convert_from_keras_model(
     **kwargs,
 ):
 
-    print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
     """Convert Keras model to hls4ml model based on the provided configuration.
 
     Args:
