@@ -10,40 +10,46 @@ from shutil import copyfile
 ## file and directory #################################
 #######################################################
 
-class MetaGen:
+class VitisUnified_MetaGen:
 
-    def getGmemWrapperFileName(self, model):
+    @classmethod
+    def get_wrapper_file_name(self, model):
         return f"{model.config.get_project_name()}_dm"
 
-    def getAxiWrapperFileName(self, model):
-        return f"{model.config.get_project_name()}_axi"
-
-    def getMainWrapperFileName(self, model):
+    @classmethod
+    def get_main_wrapper_file_name(self, model):
         return model.config.get_project_name()
 
-    def getMainFileName(self, model):
-        return f"{model.config.get_project_name()}"
+    @classmethod
+    def get_main_file_name(self, model):
+        return model.config.get_project_name()
 
-    def getVitisUnifiedWorkingDirectoryDir(self, model):
+    @classmethod
+    def get_vitis_unified_working_directory_dir(self, model):
         return os.path.join(model.config.get_output_dir(), "unifiedWorkspace")
 
-    def getVitisHlsDir(self, model):
-        vitisWorkingDir = self.getVitisUnifiedWorkingDirectoryDir(model)
+    @classmethod
+    def get_vitis_hls_dir(self, model):
+        vitisWorkingDir = self.get_vitis_unified_working_directory_dir(model)
         return os.path.join(vitisWorkingDir, model.config.get_project_name())
 
-    def getVitisHlsExecDir(self, model):
-        hlsDir = self.getVitisHlsDir(model)
+    @classmethod
+    def get_vitis_hls_exec_dir(self, model):
+        hlsDir = self.get_vitis_hls_dir(model)
         return os.path.join(hlsDir, "unifiedPrj")
 
-    def getVitisLinkerDir(self, model):
-        vitisWorkingDir = self.getVitisUnifiedWorkingDirectoryDir(model)
+    @classmethod
+    def get_vitis_linker_dir(self, model):
+        vitisWorkingDir = self.get_vitis_unified_working_directory_dir(model)
         return os.path.join(vitisWorkingDir, "linker")
 
-    def getXOfileName(self, model):
-        return f"{self.getGemTopFuncName(model)}.xo"
+    @classmethod
+    def get_xo_file_name(self, model):
+        return f"{self.get_top_wrap_func_name(model)}.xo"
 
-    def getXOfilePath(self, model):
-        return os.path.join(self.getVitisHlsExecDir(model), self.getXOfileName(model))
+    @classmethod
+    def get_xo_file_path(self, model):
+        return os.path.join(self.get_vitis_hls_exec_dir(model), self.get_xo_file_name(model))
 
     #######################################################
     ## naming of variable function helper #################
@@ -51,60 +57,38 @@ class MetaGen:
 
     ####### FOR GMEM WRAPPER
 
-    def getGmemIOPortName(self, tensorVar, isInput: bool, idx: int):
+    @classmethod
+    def get_io_port_name(self, tensorVar, isInput: bool, idx: int):
         ioDirect = "in" if isInput else "out"
         return f"gmem_{ioDirect}{str(idx)}_ptr_{tensorVar.name}"
-    def getGmemIOPortSizeName(self, tensorVar, isInput: bool, idx: int):
+    @classmethod
+    def get_io_port_size_name(self, tensorVar, isInput: bool, idx: int):
         ioDirect = "in" if isInput else "out"
         return f"gmem_{ioDirect}{str(idx)}_size_{tensorVar.name}"
-    def getGmemLocalStreamName(self, tensorVar, isInput: bool, idx: int):
+    @classmethod
+    def get_local_stream_name(self, tensorVar, isInput: bool, idx: int):
         ioDirect = "in" if isInput else "out"
         return f"stream_{ioDirect}{str(idx)}_{tensorVar.name}"
 
-    def getDmaTypeName(self):
+    @classmethod
+    def get_dma_type_name(self):
         return "dma_data_packet"
 
-    def getWrapperPortName(self, tensorVar, isInput: bool):
+    @classmethod
+    def get_wrapper_port_name(self, tensorVar, isInput: bool):
         ioStr = "in" if isInput else "out"
         return f"par_{ioStr}_{tensorVar.name}"
 
-    def getTopModelName(self, model):
+    @classmethod
+    def get_top_model_name(self, model):
         return f"{model.config.get_project_name()}"
 
-    def getGemTopFuncName(self, model):
+    @classmethod
+    def get_top_wrap_func_name(self, model):
         return f"{model.config.get_project_name()}_gem"
 
-    def getAxisTopFuncName(self, model):
-        return f"{model.config.get_project_name()}_axi"
-
     ### it is renamed for stitch layer
-    def renameType(self, tensorVar, layerIdx:int, isInput: bool):
+    @classmethod
+    def rename_type(self, tensorVar, layerIdx: int, isInput: bool):
         return "result_" + tensorVar.type.name + f"_at_layer_{str(layerIdx)}"
 
-    def get_inputSizeArrName(self, model):
-        return "N_IN_" + model.config.get_project_name()
-
-    def get_outputSizeArrName(self, model):
-        return "N_OUT_" + model.config.get_project_name()
-
-    def get_axi_wrapper_type(self, tensorVar):
-        return f"{tensorVar.type.name}_packet"
-
-    def get_axi_wrapper_dec(self, tensorVar):
-        return f"typedef hls::axis<{tensorVar.type.name}, 0,0,0, AXIS_ENABLE_LAST> {self.get_axi_wrapper_type(tensorVar)};"
-
-
-    ########################################################
-    ## axi_wrapper.h & axi_wrapper.cpp  function helper ####
-    ########################################################
-    ##### variable
-    def getWrapperPortNameLocal(self, tensorVar, isInput: bool):
-        ioStr = "in" if isInput else "out"
-        return f"par_{ioStr}_{tensorVar.name}_local"
-
-    def getWrapperTmpName(self, tensorVar, isInput: bool):
-        ioStr = "in" if isInput else "out"
-        return f"par_{ioStr}_{tensorVar.name}_tmp"
-
-    def getWrapperIsLastCnt(self, idx):
-        return f"isLastCnt_{str(idx)}"

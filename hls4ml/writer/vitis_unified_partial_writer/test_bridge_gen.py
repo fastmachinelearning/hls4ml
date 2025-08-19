@@ -1,0 +1,28 @@
+import os
+
+from hls4ml.writer.vitis_unified_writer.meta import VitisUnifiedWriterMeta
+from hls4ml.writer.vitis_unified_writer.test_bridge_gen import VitisUnified_BridgeGen
+from .meta_gen import VitisUnifiedPartial_MetaGen as mg
+
+class VitisUnifiedPartial_BridgeGen(VitisUnified_BridgeGen):
+
+
+    def write_bridge(meta: VitisUnifiedWriterMeta, model):
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        #### we will use the same bridge template file as VitisUnified_BridgeGen
+        fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_bridge.cpp'))
+        fout = open(f"{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp", 'w')
+
+        indent = '    '
+
+
+        for line in fin.readlines():
+
+            #### TODO we will do the code next time
+            newline = line
+            fout.write(newline)
+
+
+        fin.close()
+        fout.close()

@@ -3,8 +3,9 @@
 #define MYPROJECT_AXI_H_
 
 #include <iostream>
-// hls-fpga-machine-learning insert include
 
+#include "ap_axi_sdata.h
+#include "MY_PROJECT_AXI_INC.h"
 // hls-fpga-machine-learning insert definitions
 
 void myproject_axi(

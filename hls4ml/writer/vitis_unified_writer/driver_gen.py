@@ -4,52 +4,55 @@ from pathlib import Path
 
 
 from .meta import VitisUnifiedWriterMeta
-from . import meta_gen as mg
+from .meta_gen import VitisUnified_MetaGen as mg
 
-def write_driver(meta, model):
-    filedir = os.path.dirname(os.path.abspath(__file__))
-    fin     = open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver.py'), 'r')
-    fout    = open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w')
+class VitisUnified_DriverGen:
 
-    inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
+    @classmethod
+    def write_driver(self, meta, model):
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        fin     = open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver.py'), 'r')
+        fout    = open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w')
 
-    strideInPtrAddr   = 4*3
-    strideOutPtrAddr  = 4*3
-    strideInSizeAddr  = 4*2
-    strideOutSizeAddr = 4*2
+        inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
 
-    startInPtrAddr = 0x10
-    startOutPtrAddr = startInPtrAddr   + strideInPtrAddr  * len(inps)
-    startInSizeAddr = startOutPtrAddr  + strideOutPtrAddr * len(outs)
-    startOutSizeAddr = startInSizeAddr + strideInSizeAddr * len(inps)
+        strideInPtrAddr   = 4*3
+        strideOutPtrAddr  = 4*3
+        strideInSizeAddr  = 4*2
+        strideOutSizeAddr = 4*2
 
-    def genHexAddrList(startAddr, stride, size, indent):
-        addrs = [f"{indent}{hex(startAddr + inp_idx * stride)}" for inp_idx in range(size)]
-        return addrs
+        startInPtrAddr = 0x10
+        startOutPtrAddr = startInPtrAddr   + strideInPtrAddr  * len(inps)
+        startInSizeAddr = startOutPtrAddr  + strideOutPtrAddr * len(outs)
+        startOutSizeAddr = startInSizeAddr + strideInSizeAddr * len(inps)
 
-    indentAmt = 3
-    indentStr = indentAmt * "    " if indentAmt > 0 else ""
+        def genHexAddrList(startAddr, stride, size, indent):
+            addrs = [f"{indent}{hex(startAddr + inp_idx * stride)}" for inp_idx in range(size)]
+            return addrs
 
-    for line in fin.readlines():
+        indentAmt = 3
+        indentStr = indentAmt * "    " if indentAmt > 0 else ""
 
-        if "#### hls-driver-input-dbg-name" in line:
-            input_names = [ f'{indentStr}"{mg.getGmemIOPortName(inp, True, idx)}"' for idx, inp in enumerate(inps) ]
-            line += ",\n".join(input_names) + "\n"
-        if "#### hls-driver-input-ptr" in line:
-            line += ",\n".join(genHexAddrList(startInPtrAddr, strideInPtrAddr, len(inps), indentStr)) + "\n"
-        if "#### hls-driver-input-size" in line:
-            line += ",\n".join(genHexAddrList(startInSizeAddr, strideInSizeAddr, len(inps), indentStr)) + "\n"
-        if "#### hls-driver-output-dbg-name" in line:
-            output_names = [ f'{indentStr}"{mg.getGmemIOPortName(out, False, idx)}"' for idx, out in enumerate(outs) ]
-            line += ",\n".join(output_names) + "\n"
-        if "#### hls-driver-output-ptr" in line:
-            line += ",\n".join(genHexAddrList(startOutPtrAddr, strideOutPtrAddr, len(outs), indentStr)) + "\n"
-        if "#### hls-driver-output-size" in line:
-            line += ",\n".join(genHexAddrList(startOutSizeAddr, strideOutSizeAddr, len(outs), indentStr)) + "\n"
-        if "<TOP_NAME>" in line:
-            line = line.replace("<TOP_NAME>", mg.getGemTopFuncName(model))
+        for line in fin.readlines():
 
-        fout.write(line)
+            if "#### hls-driver-input-dbg-name" in line:
+                input_names = [ f'{indentStr}"{mg.get_io_port_name(inp, True, idx)}"' for idx, inp in enumerate(inps) ]
+                line += ",\n".join(input_names) + "\n"
+            if "#### hls-driver-input-ptr" in line:
+                line += ",\n".join(genHexAddrList(startInPtrAddr, strideInPtrAddr, len(inps), indentStr)) + "\n"
+            if "#### hls-driver-input-size" in line:
+                line += ",\n".join(genHexAddrList(startInSizeAddr, strideInSizeAddr, len(inps), indentStr)) + "\n"
+            if "#### hls-driver-output-dbg-name" in line:
+                output_names = [ f'{indentStr}"{mg.get_io_port_name(out, False, idx)}"' for idx, out in enumerate(outs) ]
+                line += ",\n".join(output_names) + "\n"
+            if "#### hls-driver-output-ptr" in line:
+                line += ",\n".join(genHexAddrList(startOutPtrAddr, strideOutPtrAddr, len(outs), indentStr)) + "\n"
+            if "#### hls-driver-output-size" in line:
+                line += ",\n".join(genHexAddrList(startOutSizeAddr, strideOutSizeAddr, len(outs), indentStr)) + "\n"
+            if "<TOP_NAME>" in line:
+                line = line.replace("<TOP_NAME>", mg.get_top_wrap_func_name(model))
 
-    fin.close()
-    fout.close()
+            fout.write(line)
+
+        fin.close()
+        fout.close()
