@@ -76,8 +76,9 @@ void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG
     #pragma HLS ARRAY_PARTITION variable=inputacc_c   complete
     #pragma HLS ARRAY_PARTITION variable=s_actstate   complete
 
-    nnet::dense<data_T, res_T, typename CONFIG_T::mult_config1>(data, tmpres, param, param_b);
-    nnet::dense<data_T, res_T, typename CONFIG_T::mult_config2>(h_newstate, tmpres_state, param_r, param_br);
+    nnet::dense<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config1>(data, tmpres, param, param_b);
+    nnet::dense<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config2>(h_newstate, tmpres_state, param_r,
+                                                                                    param_br);
 
     for (int iacc = 0; iacc < (3 * CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL
@@ -284,7 +285,7 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_newsta
             data_in[j] = data[j + iloop * CONFIG_T::n_in];
         }
 
-        nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
+        nnet::lstm<data_T, h_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
             for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
                 #pragma HLS UNROLL
