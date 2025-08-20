@@ -336,7 +336,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
                     for i in model_inputs:
-                        newline += indent + f'nnet::DMA_convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+                        newline += indent + f'nnet::DMA_bridge_convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     newline += (
                         indent
@@ -346,7 +346,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
 
                     for o in model_outputs:
                         newline += (
-                            indent + f'nnet::DMA_convert_data_back<{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
+                            indent + f'nnet::DMA_bridge_convert_data_back<{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
                         )
                     newline += '\n'
                     newline += indent + 'q.wait();\n'

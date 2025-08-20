@@ -11,7 +11,7 @@
 namespace nnet {
 
 //////////////////////////////////////////////////////////////////////////////
-// These are the simple, testbench-only versions for the HLS flow
+// These are the simple, testbench and bridge versions for the HLS flow
 //////////////////////////////////////////////////////////////////////////////
 template <class srcType, class dest_pipe, size_t SIZE> void convert_data(sycl::queue &q, srcType *src) {
     constexpr auto dstTypeSize = std::tuple_size<typename ExtractPipeType<dest_pipe>::value_type>{};
@@ -136,6 +136,57 @@ template <class src_pipe, class dst_T> struct DMA_convert_data_back {
         }
     }
 };
+
+//////////////////////////////////////////////////////////////////////////////
+// These are versions to convert data for the accelerator bridge (using BSP)
+//////////////////////////////////////////////////////////////////////////////
+template <class srcType, class dest_pipe, size_t SIZE> void DMA_bridge_convert_data(sycl::queue &q, srcType *src) {
+    // First, extract the PipeDataT from the pipe
+    using PipeDataType = typename nnet::ExtractPipeType<dest_pipe>::value_type;
+    // Then, extract the DataT from StreamingBeat
+    using DstDataType = typename nnet::ExtractDataType<PipeDataType>::value_type;
+    constexpr auto dstTypeSize = std::tuple_size<DstDataType>{};
+
+    constexpr size_t num_iterations = SIZE / dstTypeSize;
+
+    // Allocate host memory
+    srcType *vals = sycl::malloc_host<srcType>(SIZE, q);
+    if (vals == nullptr) {
+        std::cerr << "ERROR: host allocation failed for input\n";
+        return;
+    }
+    // copy to host memory
+    for (size_t i = 0; i < SIZE; i++) {
+        vals[i] = src[i];
+    }
+    q.single_task(DMA_convert_data<srcType, dest_pipe>{vals, num_iterations});
+}
+
+template <class src_pipe, class dstType, size_t SIZE> void DMA_bridge_convert_data_back(sycl::queue &q, dstType *dst) {
+    // First, extract the PipeDataT from the pipe
+    using PipeDataType = typename nnet::ExtractPipeType<src_pipe>::value_type;
+    // Then, extract the DataT from StreamingBeat
+    using SrcDataType = typename nnet::ExtractDataType<PipeDataType>::value_type;
+    constexpr auto srcTypeSize = std::tuple_size<SrcDataType>{};
+
+    constexpr size_t num_iterations = SIZE / srcTypeSize;
+
+    // Allocate host memory
+    dstType *outputs = sycl::malloc_host<dstType>(SIZE, q);
+    if (outputs == nullptr) {
+        std::cerr << "ERROR: host allocation failed for output\n";
+        return;
+    }
+
+    q.single_task(DMA_convert_data_back<src_pipe, dstType>{outputs, num_iterations}).wait();
+
+    // copy the data back
+    for (size_t j = 0; j < SIZE; j++) {
+        dst[j] = outputs[j];
+    }
+}
+
+
 
 } // namespace nnet
 
