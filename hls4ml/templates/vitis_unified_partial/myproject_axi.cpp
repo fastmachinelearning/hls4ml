@@ -2,7 +2,7 @@
 #include <hls_stream.h>
 #include <iostream>
 
-
+#include "WRAPPER_FILE_NAME.h"
 
 template<typename INPUT_LAYER_ARR, int SIZE>
 void enqueue_atom2layer(hls::stream<dma_data_packet>& src_dma_stream, hls::stream<INPUT_LAYER_ARR>& raw_stream, bool& isLastIndicate){
@@ -77,6 +77,8 @@ void MY_PROJECT_TOP_FUNC(
 // hls-fpga-machine-learning insert interface
 
 // hls-fpga-machine-learning insert local vars
+
+// hls-fpga-machine-learning insert isLast vars
 
 // hls-fpga-machine-learning insert enqueue
 

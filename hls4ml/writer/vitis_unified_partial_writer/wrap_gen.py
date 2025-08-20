@@ -48,10 +48,12 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
 
         for line in fin.readlines():
 
-            if "MY_PROJECT_AXI_INC" in line:
-                line = line.replace("MY_PROJECT_AXI_INC", mg.get_main_wrapper_file_name(model))
-            elif "MY_PROJECT_TOP_FUNC" in line:
+            # if "MY_PROJECT_AXI_INC" in line:
+            #     line = line.replace("MY_PROJECT_AXI_INC", mg.get_main_wrapper_file_name(model))
+            if "MY_PROJECT_TOP_FUNC" in line:
                 line = line.replace("MY_PROJECT_TOP_FUNC", mg.get_top_wrap_func_name(model))
+            elif "WRAPPER_FILE_NAME" in line:
+                line = line.replace("WRAPPER_FILE_NAME", mg.get_wrapper_file_name(model))
             elif "// hls-fpga-machine-learning insert multi-io" in line:
                 line = self.gen_io_str(mg, indent, inp_axis_t, out_axis_t, inps, outs, meta) + "\n"
             elif "// hls-fpga-machine-learning insert interface" in line:
@@ -71,6 +73,9 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
                 for out_idx, out in enumerate(outs):
                     line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(out, False, out_idx)} depth={out.pragma[1]}\n"
 
+            elif "// hls-fpga-machine-learning insert isLast vars" in line:
+                for inp_idx in range(len(inps)):
+                    line += f"bool {mg.get_is_last_var(inp_idx)} = false;\n"
 
             elif "// hls-fpga-machine-learning insert enqueue"    in line:
                 for inp_idx, inp in enumerate(inps):
@@ -110,8 +115,14 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
         fout = open(f'{model.config.get_output_dir()}/firmware/myproject_axi.h', 'w')
 
         for line in fin.readlines():
-            if "MY_PROJECT_AXI_INC" in line:
-                line = line.replace("MY_PROJECT_AXI_INC", mg.get_main_wrapper_file_name(model))
+
+            newline = line
+            if "FILENAME" in line:
+                newline = line.replace("FILENAME", mg.get_wrapper_file_name(model).upper())
+            if "MY_PROJECT_TOP_FUNC" in line:
+                newline = line.replace("MY_PROJECT_TOP_FUNC", mg.get_top_wrap_func_name(model))
+            elif "MY_PROJECT_AXI_INC" in line:
+                newline = line.replace("MY_PROJECT_AXI_INC", mg.get_main_wrapper_file_name(model))
             elif "// hls-fpga-machine-learning insert definitions" in line:
                 ##### make input
                 newline = ''
@@ -130,7 +141,9 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
                 if meta.vitis_unified_config.is_free_interim_output():
                     for out in outs:
                         newline += mg.get_axi_wrapper_dec(out) + "\n"
-            fout.write(line)
+            elif "// vitis-unified-wrapper-io" in line:
+                newline = self.gen_io_str(mg, indent, inp_axis_t, out_axis_t, inps, outs, meta) + "\n"
+            fout.write(newline)
 
 
         fin.close()

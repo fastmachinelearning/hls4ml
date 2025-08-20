@@ -14,8 +14,10 @@ class VitisUnified_BuildGen:
         fout = open(f"{model.config.get_output_dir()}/build_lib.sh", 'w')
 
         for line in fin.readlines():
-            if 'myproject' in line:
-                line = line.replace('myproject', format(model.config.get_project_name()))
+            if 'myprojectBaseName' in line:
+                line = line.replace('myprojectBaseName', format(model.config.get_project_name()))
+            if 'myprojectWrapName' in line:
+                line = line.replace('myprojectWrapName', mg.get_wrapper_file_name(model))
             if 'mystamp' in line:
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 

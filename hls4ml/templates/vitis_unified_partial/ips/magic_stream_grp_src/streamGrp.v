@@ -7,7 +7,7 @@ module streamGrp #(
     // hls4ml-streamGrp-gen-io
 
     input wire clk,
-    input wire nreset,
+    input wire nreset
 
 );
 
