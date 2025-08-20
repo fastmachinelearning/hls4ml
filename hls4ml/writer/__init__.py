@@ -13,7 +13,7 @@ register_writer('Vivado', VivadoWriter)
 register_writer('VivadoAccelerator', VivadoAcceleratorWriter)
 register_writer('Vitis', VitisWriter)
 register_writer('VitisUnified', VitisUnifiedWriter)
-
+register_writer('VitisUnifiedPartial', VitisUnifiedPartialWriter)
 register_writer('Quartus', QuartusWriter)
 register_writer('oneAPI', OneAPIWriter)
 register_writer('Catapult', CatapultWriter)
