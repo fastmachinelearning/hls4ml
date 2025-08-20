@@ -31,10 +31,18 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
         vsynth=False,
         fifo_opt=False,
         bitfile=False,
-        log_to_stdout=True
+        log_to_stdout=True,
+        compose_streamers=False
     ):
 
         ##### do magic streamer generation
+        if compose_streamers:
+            magic_stream_grp_ip_prj = f'{model.config.get_output_dir()}/ips/magic_streamer_grp_prj'
+            self.run_term_command(model,
+                                  "magic_streamer_ip_generation",
+                                  "vivado -mode gui -source composer.tcl", log_to_stdout,
+                                  magic_stream_grp_ip_prj
+            )
 
 
         pass

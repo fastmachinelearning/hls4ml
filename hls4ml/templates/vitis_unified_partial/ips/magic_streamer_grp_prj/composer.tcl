@@ -1,6 +1,6 @@
 create_project mgs_ip_prj . -part xczu9eg-ffvb1156-2-e
 set_property board_part xilinx.com:zcu102:part0:3.4 [current_project]
-add_files -norecurse ../magic_stream_grp_src/streamGrp.v
+add_files -norecurse ../magic_streamer_grp_src/streamGrp.v
 update_compile_order -fileset sources_1
 add_files -norecurse ../magic_streamer/src/magicStreamer.v
 
