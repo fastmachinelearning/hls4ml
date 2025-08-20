@@ -7,6 +7,7 @@ from .meta import VitisUnifiedWriterMeta
 
 class VitisUnified_BuildGen:
 
+    @classmethod
     def write_bridge_build_script(self, meta: VitisUnifiedWriterMeta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/build_lib.sh'))
@@ -27,6 +28,7 @@ class VitisUnified_BuildGen:
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
+    @classmethod
     def write_hls_kernel_cfg(self, meta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin     = open(os.path.join(filedir, '../../templates/vitis_unified/hls_kernel_config.cfg'), 'r')
@@ -56,6 +58,7 @@ class VitisUnified_BuildGen:
         fin.close()
         fout.close()
 
+    @classmethod
     def build_unified_project_ske(self, meta, model, mg, workspaceDir = None):
         if workspaceDir is None:
             workspaceDir = mg.get_vitis_unified_working_directory_dir(model)
@@ -82,9 +85,11 @@ class VitisUnified_BuildGen:
         fin.close()
         fout.close()
 
+    @classmethod
     def write_launch_vitis_linker_dir(self, meta, model, mg):
         os.makedirs(mg.get_vitis_linker_dir(model), exist_ok=True)
 
+    @classmethod
     def write_launch_vitis_linker_launcher(self, meta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildAcc.sh'), 'r')
@@ -106,8 +111,7 @@ class VitisUnified_BuildGen:
         link_lib_dst = Path(f"{mg.get_vitis_linker_dir(model)}/buildAcc.sh").resolve()
         link_lib_dst.chmod(link_lib_dst.stat().st_mode | stat.S_IEXEC)
 
-
-
+    @classmethod
     def write_launch_vitis_linker_cfg(self, meta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildConfig.cfg'), 'r')

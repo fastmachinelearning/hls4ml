@@ -4,15 +4,6 @@ import stat
 from shutil import copyfile
 
 from hls4ml.writer.vitis_writer import VitisWriter
-
-from . import build_gen       as bg
-from . import meta_gen        as mtg
-from . import mm_gen          as mmg
-from . import stream_gen      as sg
-from . import test_bridge_gen as tbg
-from . import test_cosim_gen  as tcg
-from . import driver_gen      as dg
-
 from .meta import VitisUnifiedWriterMeta
 
 
@@ -23,6 +14,23 @@ class VitisUnifiedWriter(VitisWriter):
         super().__init__()
         self.writer_meta = VitisUnifiedWriterMeta()
 
+        from .build_gen       import VitisUnified_BuildGen
+        from .driver_gen      import VitisUnified_DriverGen
+        from .meta_gen        import VitisUnified_MetaGen
+        from .test_bridge_gen import VitisUnified_BridgeGen
+        from .test_cosim_gen  import VitisUnified_TestGen
+        from .wrap_gen        import VitisUnified_WrapperGen
+
+        self.bg   = VitisUnified_BuildGen
+        self.dg   = VitisUnified_DriverGen
+        self.mg   = VitisUnified_MetaGen
+        self.tbg  = VitisUnified_BridgeGen
+        self.tcg  = VitisUnified_TestGen
+        self.wg   = VitisUnified_WrapperGen
+
+
+
+
     def write_board_script_override(self, model):
         pass
     def write_build_prj_override(self, model):
@@ -32,34 +40,38 @@ class VitisUnifiedWriter(VitisWriter):
     def write_tar(self, model):
         pass
 
-    def write_bridge(self, model):
-        tbg.write_bridge(self.writer_meta, model)
+    def write_bridge(self, model): ### test bench gen
+        self.tbg.write_bridge(self.writer_meta, model)
 
     def write_build_script(self, model):
         #### for bridge simulation
-        bg.write_bridge_build_script(self.writer_meta, model)
+        self.bg.write_bridge_build_script(self.writer_meta, model, self.mg)
         #### for hls kernel generation
-        bg.build_unified_project_ske(self.writer_meta, model)
-        bg.write_hls_kernel_cfg(self.writer_meta, model)
+        self.bg.build_unified_project_ske(self.writer_meta, model, self.mg)
+        self.bg.write_hls_kernel_cfg(self.writer_meta, model, self.mg)
         #### for v++ to link hls to the system
-        bg.write_launch_vitis_linker_dir(self.writer_meta, model)
-        bg.write_launch_vitis_linker_launcher(self.writer_meta, model)
-        bg.write_launch_vitis_linker_cfg(self.writer_meta, model)
+        self.bg.write_launch_vitis_linker_dir(self.writer_meta, model, self.mg)
+        self.bg.write_launch_vitis_linker_launcher(self.writer_meta, model, self.mg)
+        self.bg.write_launch_vitis_linker_cfg(self.writer_meta, model, self.mg)
 
-    def write_hls(self, model, is_multigraph=False):
-
+    def generate_config(self, model):
         from hls4ml.backends import VitisUnifiedConfig
-
         self.writer_meta.vitis_unified_config = VitisUnifiedConfig(
             model.config, model.get_input_variables(), model.get_output_variables()
         )
+
+    def write_hls(self, model, is_multigraph=False):
+
+        self.generate_config(model)
+
+
         super().write_hls(model)
-        mmg.write_gmem_wrapper      (self.writer_meta, model)
-        sg.write_axi_wrapper        (self.writer_meta, model)
+        self.wg.write_wrapper(self.writer_meta, model, self.mg)
+
 
         #########
-        dg .write_driver            (self.writer_meta, model)
-        tcg.write_wrapper_test      (self.writer_meta, model)
+        self.dg .write_driver            (self.writer_meta, model, self.mg)
+        self.tcg.write_wrapper_test      (self.writer_meta, model, self.mg)
 
 
         #self.write_new_tar(model)

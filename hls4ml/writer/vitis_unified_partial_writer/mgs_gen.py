@@ -1,18 +1,32 @@
 import os
+import shutil
 import stat
 from pathlib import Path
 
 
 from hls4ml.writer.vitis_unified_writer.meta import VitisUnifiedWriterMeta
-from .meta_gen import VitisUnifiedPartial_MetaGen as mg
 
-class VitisUnifiedPartial_MgsGen():
+class VitisUnifiedPartial_MagicArchGen():
+
+
+    @classmethod
+    def copyMagicArchIp(self, meta: VitisUnifiedWriterMeta, model):
+
+        magic_arch_src_folder_path = '../../templates/vitis_unified_partial/ips'
+        magic_arch_des_folder_path = f'{model.config.get_output_dir()}/ips'
+
+        if os.path.exists(magic_arch_des_folder_path):
+            shutil.rmtree(magic_arch_des_folder_path)
+        shutil.copytree(magic_arch_src_folder_path, magic_arch_des_folder_path, dirs_exist_ok=True)
+
+
 
     @classmethod
     def write_mgs(self, meta: VitisUnifiedWriterMeta, model):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified_partial/ips/magic_stream_grp_gen/streamGrp.v'), 'r')
+
         fout = open(f'{model.config.get_output_dir()}/ips/magic_stream_grp_gen/myproject_mgs.cpp', 'w')
 
         metaList = meta.vitis_unified_config.get_mgs_meta_list()
