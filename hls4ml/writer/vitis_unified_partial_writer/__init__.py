@@ -45,6 +45,6 @@ class VitisUnifiedPartialWriter(VitisUnifiedWriter):
 
         super().write_hls(model, is_multigraph)
 
-        if is_multigraph:
+        if True:
             self.magic_gen.copyMagicArchIp(self.writer_meta, model)
             self.magic_gen.write_mgs(self.writer_meta, model)

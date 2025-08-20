@@ -41,7 +41,7 @@ class VitisUnifiedWriter(VitisWriter):
         pass
 
     def write_bridge(self, model): ### test bench gen
-        self.tbg.write_bridge(self.writer_meta, model)
+        self.tbg.write_bridge(self.writer_meta, model, self.mg)
 
     def write_build_script(self, model):
         #### for bridge simulation
@@ -60,6 +60,11 @@ class VitisUnifiedWriter(VitisWriter):
             model.config, model.get_input_variables(), model.get_output_variables()
         )
 
+    def make_export_path(self, model):
+        export_path = f'{model.config.get_output_dir()}/export'
+        if not os.path.exists(export_path):
+            os.makedirs(export_path)
+
     def write_hls(self, model, is_multigraph=False):
 
         self.generate_config(model)
@@ -70,6 +75,7 @@ class VitisUnifiedWriter(VitisWriter):
 
 
         #########
+        self.make_export_path(model)
         self.dg .write_driver            (self.writer_meta, model, self.mg)
         self.tcg.write_wrapper_test      (self.writer_meta, model, self.mg)
 

@@ -7,7 +7,7 @@ from hls4ml.writer.vitis_unified_writer.test_cosim_gen import VitisUnified_TestG
 class VitisUnifiedPartial_TestGen(VitisUnified_TestGen):
 
     @classmethod
-    def write_wrapper(self, meta, model, mg):
+    def write_wrapper_test(self, meta, model, mg):
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
 
 

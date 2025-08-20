@@ -38,7 +38,7 @@ class VitisUnified_TestGen:
                 for inputIdx, inp in enumerate(model_inputs):
                     ##### input should be float
                     newline += '        float* {inputPortName} = &in[{startIdx}];\n'.format( ### can not be double because it fix by template
-                        inputPortName=mg.c(inp, True, inputIdx),
+                        inputPortName=mg.get_io_port_name(inp, True, inputIdx),
                         startIdx=str(offset)
                     )
                     offset += inp.size()

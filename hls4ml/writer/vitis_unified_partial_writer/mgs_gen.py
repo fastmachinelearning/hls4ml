@@ -12,7 +12,8 @@ class VitisUnifiedPartial_MagicArchGen():
     @classmethod
     def copyMagicArchIp(self, meta: VitisUnifiedWriterMeta, model):
 
-        magic_arch_src_folder_path = '../../templates/vitis_unified_partial/ips'
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        magic_arch_src_folder_path = os.path.join(filedir, '../../templates/vitis_unified_partial/ips')
         magic_arch_des_folder_path = f'{model.config.get_output_dir()}/ips'
 
         if os.path.exists(magic_arch_des_folder_path):

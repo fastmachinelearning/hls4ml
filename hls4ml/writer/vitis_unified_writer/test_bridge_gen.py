@@ -4,7 +4,7 @@ from .meta import VitisUnifiedWriterMeta
 class VitisUnified_BridgeGen:
 
     @classmethod
-    def write_bridge(meta: VitisUnifiedWriterMeta, model, mg):
+    def write_bridge(self, meta: VitisUnifiedWriterMeta, model, mg):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_bridge.cpp'))

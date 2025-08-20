@@ -70,9 +70,14 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
                  'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
         input_interim_type='io_stream',  #### it should be io_stream or io_free_stream/ io_stream
         output_interim_type='io_stream',
+        init_mgs_meta=None,
         **_
     ):
 
+        if init_mgs_meta is None:
+            init_mgs_meta = list()
+        if init_mgs_meta is None:
+            init_mgs_meta = []
         config = super().create_initial_config(
             board=board,
             part=part,
@@ -91,12 +96,15 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
         config['MultiGraphConfig'] = {}
         config['MultiGraphConfig']['amtGraph'] = -1 # it should be set by the multigraph system
         config['MultiGraphConfig']['graphIdx'] = -1 # -1 means unset yet or it is multigraph stitcher
-        config['MultiGraphConfig']['MgsMeta']  = [] #### it should be only used for stitcher
+        print(f"mgs initial is set to {init_mgs_meta}")
+        config['MultiGraphConfig']['MgsMeta']  = init_mgs_meta if init_mgs_meta is not None else [] #### it should be only used for stitcher
 
 
         config['MultiGraphConfig']['IOInterimType'] = {}
         config['MultiGraphConfig']['IOInterimType']['Input'] = input_interim_type
         config['MultiGraphConfig']['IOInterimType']['Output'] = output_interim_type
+
+        return config
 
 
 

@@ -67,9 +67,9 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
                     line += f"{indent} static hls::stream<{out.type.name}> {mg.get_local_stream_name(out, False, out_idx)};\n"
                 #### declare stream size
                 for inp_idx, inp in enumerate(inps):
-                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(inp, True, inp_idx)} depth={inp[inp_idx].pragma[1]}\n"
+                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(inp, True, inp_idx)} depth={inp.pragma[1]}\n"
                 for out_idx, out in enumerate(outs):
-                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(out, False, out_idx)} depth={out[out_idx].pragma[1]}\n"
+                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(out, False, out_idx)} depth={out.pragma[1]}\n"
 
 
             elif "// hls-fpga-machine-learning insert enqueue"    in line:

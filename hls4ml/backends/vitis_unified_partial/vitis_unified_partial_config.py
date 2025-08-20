@@ -21,7 +21,9 @@ class VitisUnifiedPartialConfig(VitisUnifiedConfig):
         self.amt_graph = self.config.get('MultiGraphConfig', {}).get('amtGraph', -1)
         self.graph_idx = self.config.get('MultiGraphConfig', {}).get('graphIdx', -1)
 
-        self.mgs_meta = self.config.get('MultiGraphConfig', {}).get('mgsMeta', None)
+        self.mgs_meta = self.config.get('MultiGraphConfig', {}).get('MgsMeta', None)
+
+
 
 
     def is_free_interim_input(self):
