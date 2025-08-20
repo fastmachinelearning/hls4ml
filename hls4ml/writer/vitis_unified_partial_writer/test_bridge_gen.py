@@ -2,12 +2,11 @@ import os
 
 from hls4ml.writer.vitis_unified_writer.meta import VitisUnifiedWriterMeta
 from hls4ml.writer.vitis_unified_writer.test_bridge_gen import VitisUnified_BridgeGen
-from .meta_gen import VitisUnifiedPartial_MetaGen as mg
 
 class VitisUnifiedPartial_BridgeGen(VitisUnified_BridgeGen):
 
 
-    def write_bridge(meta: VitisUnifiedWriterMeta, model):
+    def write_bridge(meta: VitisUnifiedWriterMeta, model, mg):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         #### we will use the same bridge template file as VitisUnified_BridgeGen

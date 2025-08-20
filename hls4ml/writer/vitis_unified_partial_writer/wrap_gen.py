@@ -10,29 +10,29 @@ from .meta_gen import VitisUnifiedPartial_MetaGen as mg
 class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
 
     @classmethod
-    def gen_io_str(self, indent, inp_gmem_t, out_gmem_t, inps, outs, meta=None):
+    def gen_io_str(self, mg,indent, inp_gmem_t, out_gmem_t, inps, outs, meta=None):
         inputStreamList   = []
         outputStreamList  = []
 
 
         for inp_idx, inp in enumerate(inps):
             inp_type = mg.get_dma_type_name()
-            if  (meta.vitis_unified_config.isFreeInterimInput()) and \
+            if  (meta.vitis_unified_config.is_free_interim_input()) and \
                 (meta.vitis_unified_config.getGraphIdx() != 0  ):
                 inp_type = mg.get_axi_wrapper_type(inp)
             inputStreamList.append(f"{indent} hls::stream<{inp_type}>& {mg.get_io_port_name(inp, True, inp_idx)}")
 
         for out_idx, out in enumerate(outs):
             out_type = mg.get_dma_type_name()
-            if  (meta.vitis_unified_config.isFreeInterimOutput()) and \
+            if  (meta.vitis_unified_config.is_free_interim_output()) and \
                 (meta.vitis_unified_config.getGraphIdx() != (meta.vitis_unified_config.getGraphAmtGraph()-1)  ):
                 out_type = mg.get_axi_wrapper_type(out)
             outputStreamList.append(f"{indent} hls::stream<{out_type}>& {mg.get_io_port_name(out, False, out_idx)}")
 
-        return ", \n".join(inputStreamList) + ",\n" + ", \n".join()
+        return ", \n".join(inputStreamList) + ",\n" + ", \n".join(outputStreamList)
 
     @classmethod
-    def write_wrapper(self, meta: VitisUnifiedWriterMeta, model):
+    def write_wrapper(self, meta: VitisUnifiedWriterMeta, model, mg):
 
         inp_axis_t, out_axis_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
         indent = '      '
@@ -53,7 +53,7 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
             elif "MY_PROJECT_TOP_FUNC" in line:
                 line = line.replace("MY_PROJECT_TOP_FUNC", mg.get_top_wrap_func_name(model))
             elif "// hls-fpga-machine-learning insert multi-io" in line:
-                line = self.gen_io_str(indent, inp_axis_t, out_axis_t, inps, outs, meta) + "\n"
+                line = self.gen_io_str(mg, indent, inp_axis_t, out_axis_t, inps, outs, meta) + "\n"
             elif "// hls-fpga-machine-learning insert interface" in line:
                 for inp_idx, inp in enumerate(inps):
                     line += f"{indent} #pragma HLS INTERFACE axis port={mg.get_io_port_name(inp, True, inp_idx)}\n"
@@ -74,7 +74,7 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
 
             elif "// hls-fpga-machine-learning insert enqueue"    in line:
                 for inp_idx, inp in enumerate(inps):
-                    if meta.vitis_unified_config.isFreeInterimInput():
+                    if meta.vitis_unified_config.is_free_interim_input():
                         line += mg.get_enqueue_func_stream2rstream(inp, inp_idx)
                     else:
                         line += mg.get_enqueue_func_atom2stream(inp, inp_idx)
@@ -90,7 +90,7 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
 
             elif "// hls-fpga-machine-learning insert dequeue"  in line:
                 for out_idx, out in enumerate(outs):
-                    if meta.vitis_unified_config.isFreeInterimOutput():
+                    if meta.vitis_unified_config.is_free_interim_output():
                         line += mg.get_dequeue_func_rstream2stream(out, out_idx,
                                                                    mg.get_all_last_logic(len(inps))) + "\n"
                     else:
@@ -123,11 +123,16 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
                 newline += f'constexpr unsigned {mg.get_output_size_arr_name(model)} [{len(outs)}] = {outputSizeStr};\n'
                 newline += f'typedef hls::axis<{inp_axis_t}, 0, 0, 0, AXIS_ENABLE_LAST> dma_data_packet;\n'
                 #### incase the io is interim input
-                if meta.vitis_unified_config.isFreeInterimInput():
+                if meta.vitis_unified_config.is_free_interim_input():
                     for inp in inps:
                         newline += mg.get_axi_wrapper_dec(inp) + "\n"
                 #### incase the io is interim output
-                if meta.vitis_unified_config.isFreeInterimOutput():
+                if meta.vitis_unified_config.is_free_interim_output():
                     for out in outs:
                         newline += mg.get_axi_wrapper_dec(out) + "\n"
+            fout.write(line)
+
+
+        fin.close()
+        fout.close()
 

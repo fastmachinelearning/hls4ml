@@ -1,12 +1,10 @@
 import os
 from .meta import VitisUnifiedWriterMeta
-from .meta_gen import VitisUnified_MetaGen as mg
-
 
 class VitisUnified_BridgeGen:
 
     @classmethod
-    def write_bridge(meta: VitisUnifiedWriterMeta, model):
+    def write_bridge(meta: VitisUnifiedWriterMeta, model, mg):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_bridge.cpp'))

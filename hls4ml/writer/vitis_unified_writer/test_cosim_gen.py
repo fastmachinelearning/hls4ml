@@ -1,12 +1,11 @@
 import os
 from .meta import VitisUnifiedWriterMeta
-from .meta_gen import VitisUnified_MetaGen as mg
 
 
 class VitisUnified_TestGen:
 
     @classmethod
-    def write_wrapper_test(self, meta, model):
+    def write_wrapper_test(self, meta, model, mg):
 
 
         #### warning we have to fix to float because the system locked by template

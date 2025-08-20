@@ -10,8 +10,6 @@ class VitisUnifiedConfig:
         self.config = config.config
         # self.board = self.config.get('AcceleratorConfig', {}).get('Board', 'pynq-z2')
         # self.supported_boards = json.load(open(os.path.dirname(__file__) + '/supported_boards.json'))
-        self.freeInterimInput = self.config.get('MultiGraphConfig', {}).get('IOInterimType', {}).get("Input") == "io_free_stream"
-        self.freeInterimOutput = self.config.get('MultiGraphConfig', {}).get('IOInterimType', {}).get("Output") == "io_free_stream"
         # if self.board in self.supported_boards.keys():
         #     board_info = self.supported_boards[self.board]
         #     self.part = board_info['part']
@@ -159,12 +157,6 @@ class VitisUnifiedConfig:
 
     def get_output_type(self):
         return self.output_type
-
-    def isFreeInterimInput(self):
-        return self.freeInterimInput
-
-    def isFreeInterimOutput(self):
-        return self.freeInterimOutput
 
     def get_tcl_file_path(self):
         board_info = self.get_board_info(self.board)

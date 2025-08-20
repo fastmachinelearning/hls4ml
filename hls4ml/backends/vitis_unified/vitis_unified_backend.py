@@ -8,7 +8,7 @@ from hls4ml.backends import VitisBackend, VivadoBackend
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vivado_report
 
-from hls4ml.writer.vitis_unified_writer import meta_gen as mg
+from hls4ml.writer.vitis_unified_writer.meta_gen import VitisUnified_MetaGen  as mg
 
 
 class VitisUnifiedBackend(VitisBackend):
@@ -95,21 +95,21 @@ class VitisUnifiedBackend(VitisBackend):
         csynth_cmd = (
             "v++ -c --mode hls --config {configPath} --work_dir unifiedPrj"
         ).format(configPath=hls_config_file)
-        csynth_cwd = mg.getVitisHlsDir(model)
+        csynth_cwd = mg.get_vitis_hls_dir(model)
 
         ##### util template (used in csim/cosim/package)
         util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir unifiedPrj"
         ##### package command
 
         package_cmd = util_command.format(op="package", configPath=hls_config_file)
-        package_cwd = mg.getVitisHlsDir(model)
+        package_cwd = mg.get_vitis_hls_dir(model)
         cosim_cmd   = util_command.format(op="cosim"  , configPath=hls_config_file)
-        cosim_cwd   = mg.getVitisHlsDir(model)
+        cosim_cwd   = mg.get_vitis_hls_dir(model)
         csim_cmd    = util_command.format(op="csim"   , configPath=hls_config_file)
-        csim_cwd = mg.getVitisHlsDir(model)
+        csim_cwd = mg.get_vitis_hls_dir(model)
 
         kerlink_cmd = "./buildAcc.sh"
-        kerlink_cwd = mg.getVitisLinkerDir(model)
+        kerlink_cwd = mg.get_vitis_linker_dir(model)
 
         if synth:
             self.run_term_command(model, "csynth", csynth_cmd, log_to_stdout, csynth_cwd)
@@ -144,9 +144,9 @@ class VitisUnifiedBackend(VitisBackend):
         xpfmPath            ='/tools/Xilinx/Vitis/2023.2/base_platforms/'
                              'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
         input_interim_type  ='io_stream',    #### it should be io_stream or io_free_stream/ io_stream
-        output_interim_type ='io_stream'
+        output_interim_type ='io_stream',
+        **_
     ):
-        board = board if board is not None else 'pynq-z2'
 
         if input_interim_type not in ['io_free_stream', 'io_stream']:
             raise Exception(f'input_interim_type should be io_free_stream or io_stream, but got {input_interim_type}')
@@ -168,11 +168,6 @@ class VitisUnifiedBackend(VitisBackend):
         config['UnifiedConfig']['bufInSize']    = gmemBuf_in_size
         config['UnifiedConfig']['bufOutSize']   = gmemBuf_out_size
         config['UnifiedConfig']['XPFMPath']     = xpfmPath
-
-        config['MultiGraphConfig'] = {}
-        config['MultiGraphConfig']['IOInterimType'] = {}
-        config['MultiGraphConfig']['IOInterimType']['Input'] = input_interim_type
-        config['MultiGraphConfig']['IOInterimType']['Output'] = output_interim_type
 
         return config
 

@@ -4,12 +4,11 @@ from pathlib import Path
 
 
 from .meta import VitisUnifiedWriterMeta
-from .meta_gen import VitisUnified_MetaGen as mg
 
 class VitisUnified_DriverGen:
 
     @classmethod
-    def write_driver(self, meta, model):
+    def write_driver(self, meta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin     = open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver.py'), 'r')
         fout    = open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w')

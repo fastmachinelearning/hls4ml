@@ -2,13 +2,12 @@ import os
 
 from hls4ml.writer.vitis_unified_writer.meta import VitisUnifiedWriterMeta
 from hls4ml.writer.vitis_unified_writer.test_cosim_gen import VitisUnified_TestGen
-from .meta_gen import VitisUnifiedPartial_MetaGen as mg
 
 
 class VitisUnifiedPartial_TestGen(VitisUnified_TestGen):
 
     @classmethod
-    def write_wrapper(self, meta, model):
+    def write_wrapper(self, meta, model, mg):
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
 
 

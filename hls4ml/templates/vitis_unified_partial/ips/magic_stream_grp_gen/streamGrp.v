@@ -11,6 +11,6 @@ module streamGrp #(
 
 );
 
-    // hls4ml-streamGrp-gen-io
+    // hls4ml-streamGrp-gen-create-module
 
 endmodule

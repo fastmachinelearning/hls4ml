@@ -13,7 +13,7 @@ from .meta_gen import VitisUnified_MetaGen as mg
 class VitisUnified_WrapperGen:
 
     @classmethod
-    def gen_io_str(self, indent, inp_gmem_t, out_gmem_t, inps, outs, meta=None):
+    def gen_io_str(self, mg, indent, inp_gmem_t, out_gmem_t, inps, outs, meta=None):
 
         inputPtrList   = []
         outputPtrList  = []
@@ -37,7 +37,7 @@ class VitisUnified_WrapperGen:
         return line
 
     @classmethod
-    def write_wrapper(self, meta: VitisUnifiedWriterMeta, model):
+    def write_wrapper(self, meta: VitisUnifiedWriterMeta, model, mg):
 
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
         indent = '      '
@@ -61,7 +61,7 @@ class VitisUnified_WrapperGen:
             elif "DMX_BUF_OUT_SZ" in line:
                 line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_out_bufferSz()))
             elif "// vitis-unified-wrapper-io" in line:
-                line = self.gen_io_str(indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
+                line = self.gen_io_str(mg, indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
             elif "// vitis-unified-wrapper-interface" in line:
                 for inp_idx, inp in enumerate(inps):
                     line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(inp, True, inp_idx)} bundle = gmem_in{inp_idx}\n"
@@ -119,7 +119,7 @@ class VitisUnified_WrapperGen:
             elif "MY_PROJECT_TOP_FUNC" in line:
                 line = line.replace("MY_PROJECT_TOP_FUNC", mg.get_top_wrap_func_name(model))
             elif "// vitis-unified-wrapper-io" in line:
-                line += self.gen_io_str(indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
+                line += self.gen_io_str(mg, indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
             fout.write(line)
 
         fin.close()
