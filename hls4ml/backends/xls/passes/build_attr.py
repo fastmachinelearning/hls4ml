@@ -65,28 +65,28 @@ class XLSAttrBuilder:
     
     @attach_to_node()
     def write_weights(self) -> bool:
-        return self.node.class_name in ['Dense']
+        return self.node.class_name in ['Dense', 'Conv2D']
 
     @attach_to_node()
     def write_dims(self) -> bool:
-        return self.node.class_name in ['Input', 'Dense']
+        return self.node.class_name in ['Input', 'Dense', 'Conv2D']
     
     @attach_to_node()
     def write_func(self) -> bool:
-        return self.node.class_name in ['Dense', 'Activation', 'Softmax']
+        return self.node.class_name in ['Dense', 'Activation', 'Softmax', 'Conv2D']
     
     
     @attach_to_node()
-    def in_dim_key(self, v: str) -> str:
-        return v
+    def in_dim_key(self, k: str) -> str:
+        return k
     
     @attach_to_node()
     def in_dim_val(self, v: int) -> int:
         return v
     
     @attach_to_node()
-    def out_dim_key(self, v: str) -> str:
-        return v
+    def out_dim_key(self, k: str) -> str:
+        return k
     
     @attach_to_node()
     def out_dim_val(self, v: int) -> int:
@@ -99,11 +99,23 @@ class XLSAttrBuilder:
         if len(weights) >= 1:
             width = int(self.node.get_attr('in_nb').split(':', 1)[1])
             frac = int(self.node.get_attr('in_bu').split(':', 1)[1])
-
-            mat = np.array(list(list(weights)[0])).reshape(in_dim, out_dim)
-            mat_T = mat.T   # in Keras the weights are transposed
-            fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
-            return fxp_w 
+            # Conv
+            if self.node.class_name == 'Conv2D':
+                n_chan = self.node.get_attr('n_chan')
+                filt_height = self.node.get_attr('filt_height')
+                filt_width = self.node.get_attr('filt_width')
+                n_filt = self.node.get_attr('n_filt')
+                mat = np.array(list(list(weights)[0])).reshape(filt_height, filt_width, n_chan, n_filt)
+                mat_T = np.transpose(mat, (3, 2, 0, 1))   # in Keras the weights are transposed
+                fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
+                return fxp_w 
+            
+            # Dense
+            elif self.node.class_name == 'Dense':
+                mat = np.array(list(list(weights)[0])).reshape(in_dim, out_dim)
+                mat_T = mat.T   # in Keras the weights are transposed
+                fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
+                return fxp_w 
         return np.array([])
     
     @attach_to_node()
@@ -113,9 +125,15 @@ class XLSAttrBuilder:
         if len(weights) >= 2:
             width = int(self.node.get_attr('in_nb').split(':', 1)[1])
             frac = int(self.node.get_attr('in_bu').split(':', 1)[1])
-
-            fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
-            return fxp_b
+            # Conv
+            if self.node.class_name == 'Conv2D':
+                fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
+                return fxp_b
+            
+            # Dense
+            elif self.node.class_name == 'Dense':
+                fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
+                return fxp_b
         return np.array([])
     
     @attach_to_node()
@@ -218,6 +236,7 @@ class BuildAttr(OptimizerPass):
         for layer in model.get_layers():
             curr_out_dim_key: str = list(layer.get_output_variable().get_shape())[0][0]
             curr_out_dim_val: int = list(layer.get_output_variable().get_shape())[0][1]
+
             curr_weights = layer.get_weights()
             curr_prec: dict = layer.get_layer_precision()
 

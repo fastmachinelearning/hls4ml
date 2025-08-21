@@ -14,7 +14,7 @@
 pub fn myproject_architecture(
     // hls-fpga-machine-learning architecture arguments
     ) ->
-    // hls-fpga-machine-learning output 
+    // hls-fpga-machine-learning output
     {
 
     // hls-fpga-machine-learning insert layers
@@ -24,7 +24,7 @@ pub fn myproject_architecture(
 pub fn myproject(
     // hls-fpga-machine-learning top function input
     )-> 
-    // hls-fpga-machine-learning top function output
+    // hls-fpga-machine-learning output
     {
 
     // hls-fpga-machine-learning load weights

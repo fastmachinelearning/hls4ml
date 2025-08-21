@@ -9,11 +9,31 @@ from shutil import copyfile, copytree, rmtree
 from hls4ml.writer.writers import Writer
 
 
-config_filename = 'hls4ml_config.yml'
-
 
 class XLSWriter(Writer):
     
+    def _write_weights(self, layer, weights):
+        """A recursive function to write weights of any number of dimensions. 
+
+        It uses the function call stack to close paranthesis. 
+        """
+        indent = '    '
+        
+        if len(weights.shape) == 1:
+            newline = indent + indent + '['
+            for idx_col, w in enumerate(weights):
+                newline += f'{layer.get_attr("in_type")}:{w}'
+                if idx_col < len(weights) - 1:
+                    newline += ','
+            newline += '],\n'
+            return newline
+        
+        newline = indent + '[\n'
+        for idx in range(len(weights)):
+            newline += self._write_weights(layer, weights[idx])
+        newline += indent + '],\n'
+        return newline
+
     def write_project_dir(self, model: ModelGraph) -> None:
         """Write the base project directory
 
@@ -33,7 +53,6 @@ class XLSWriter(Writer):
         srcpath = os.path.join(filedir, '../templates/xls/build_prj.tcl')
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
-
 
 
     def write_project_dslx(self, model: ModelGraph) -> None:
@@ -68,27 +87,40 @@ class XLSWriter(Writer):
                 newline = line
                 for layer in layers:
                     if layer.get_attr("write_dims"):
-                        newline += f'const {layer.get_attr("out_dim_key")} = u32:{layer.get_attr("out_dim_val")};\n'
+                        for dim in list(layer.get_output_variable().get_shape()):
+                            newline += f'const {dim[0]} = u32:{dim[1]};\n'
 
             elif '// hls-fpga-machine-learning architecture arguments' in line:
                 newline = ''
                 weighted_layers_count = 0
                 for i, layer in enumerate(layers):
                     if layer.class_name == 'Input':
-                        newline += indent + f'x: {layer.get_attr("out_type")}[{layer.get_attr("out_dim_key")}],\n'
+                        newline += indent + f'x: {layer.get_attr("out_type")}'
+                        for dim in list(layer.get_output_variable().get_shape()):
+                            newline += f'[{dim[0]}]'
+                        newline += ',\n'
                     elif layer.get_attr("write_weights"):
-                        newline += indent + f'w{i}: {layer.get_attr("in_type")}[{layer.get_attr("in_dim_key")}][{layer.get_attr("out_dim_key")}],\n'
-                        newline += indent + f'b{i}: {layer.get_attr("in_type")}[{layer.get_attr("out_dim_key")}]'
+                        # weights arguments
+                        newline += indent + f'w{i}: {layer.get_attr("in_type")}'
+                        for w_dim in layer.get_attr("fxp_weights").shape:
+                            newline += f'[u32:{w_dim}]'
+                        newline += ',\n'
+                        # bias argument
+                        newline += indent + f'b{i}: {layer.get_attr("in_type")}'
+                        for b_dim in layer.get_attr("fxp_bias").shape:
+                            newline += f'[u32:{b_dim}]'
                         if weighted_layers_count < len([layer for layer in layers if layer.get_attr("write_weights")]) - 1:
                             newline += ',\n'
                             weighted_layers_count += 1
                         else:
                             newline += '\n'
 
-            elif '// hls-fpga-machine-learning output ' in line:
+            elif '// hls-fpga-machine-learning output' in line:
                 last_layer_type = layers[-1].get_attr("out_type")
-                last_layer_dim_key = layers[-1].get_attr("out_dim_key")
-                newline = indent + f'{last_layer_type}[{last_layer_dim_key}]\n'
+                newline = indent + f'{last_layer_type}'
+                for dim in list(layers[-1].get_output_variable().get_shape()):
+                    newline += f'[{dim[0]}]'
+                newline += '\n'
 
             elif '// hls-fpga-machine-learning insert layers' in line:
                 newline = line
@@ -105,36 +137,29 @@ class XLSWriter(Writer):
                 newline += indent + prev_var + '\n'
 
             elif '// hls-fpga-machine-learning top function input' in line:
-                newline = indent + f'x: {layers[0].get_attr("out_type")}[{layers[0].get_attr("out_dim_key")}]\n'
-
-            elif '// hls-fpga-machine-learning top function output' in line:
-                newline = indent + f'{layers[-1].get_attr("out_type")}[{layers[-1].get_attr("out_dim_key")}]\n'
+                newline = indent + f'x: {layer.get_attr("out_type")}'
+                for dim in list(layers[0].get_output_variable().get_shape()):
+                    newline += f'[{dim[0]}]'
+                newline += '\n'
 
             elif '// hls-fpga-machine-learning load weights' in line:
                 newline = line
                 for i, layer in enumerate(layers):
                     if layer.get_attr("write_weights"):
                         # Weights
-                        newline += indent + f'let w{i} = {layer.get_attr("in_type")}[{layer.get_attr("in_dim_key")}][{layer.get_attr("out_dim_key")}]:[\n'
-                        for idx_row, row in enumerate(layer.get_attr('fxp_weights')):
-                            newline += indent + indent + '['
-                            for idx_col, w in enumerate(row):
-                                newline += f'{layer.get_attr("in_type")}:{w}'
-                                if idx_col < len(row) - 1:
-                                    newline += ','
-                            newline += ']'
-                            if idx_row < len(layer.get_attr("fxp_weights")) - 1:
-                                    newline += ',\n'
-                            else:
-                                newline += '\n'
+                        newline += indent + f'let w{i} = {layer.get_attr("in_type")}'
+                        for w_dim in layer.get_attr("fxp_weights").shape:
+                            newline += f'[u32:{w_dim}]'
+                        newline += ':\n'
+                        newline += indent + '[\n'
+                        for idx in range(len(layer.get_attr("fxp_weights"))):
+                            newline += self._write_weights(layer, layer.get_attr("fxp_weights")[idx])
                         newline += indent + '];\n'
                         # Bias
-                        newline += indent + f'let b{i} = {layer.get_attr("in_type")}[{layer.get_attr("out_dim_key")}]:[\n'
+                        newline += indent + f'let b{i} = {layer.get_attr("in_type")}[u32:{layer.get_attr("fxp_bias").shape[0]}]:[\n'
                         newline += indent + indent
-                        for idx_b, b in enumerate(layer.get_attr("fxp_bias")):
-                            newline += f'{layer.get_attr("in_type")}:{b}'
-                            if idx_b < len(layer.get_attr("fxp_bias")) - 1:
-                                newline += ','
+                        for b in layer.get_attr("fxp_bias"):
+                            newline += f'{layer.get_attr("in_type")}:{b},'
                         newline += '\n' + indent + '];\n'
 
             elif '// hls-fpga-machine-learning call inlined weights' in line:
