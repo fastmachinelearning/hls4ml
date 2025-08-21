@@ -18,7 +18,7 @@ module MagicSeqTop #(
 
     parameter BANK0_CONTROL_WIDTH    = 4,
     parameter BANK0_STATUS_WIDTH     = 4,
-    parameter BANK0_CNT_WIDTH        = BANK1_INDEX_WIDTH, /// the counter for the sequencer
+    parameter BANK0_CNT_WIDTH        = BANK1_INDEX_WIDTH, /// the counter for the sequencer    the BANK1_INDEX_WIDTH SHOULD BE EQUAL TO BANK0_CNT_WIDTH
     parameter BANK0_INTR_WIDTH       = 1, /// the round counter for the sequencer
     parameter BANK0_ROUNDTRIP_WIDTH  = 16, /// the round trip counter for the sequencer
 

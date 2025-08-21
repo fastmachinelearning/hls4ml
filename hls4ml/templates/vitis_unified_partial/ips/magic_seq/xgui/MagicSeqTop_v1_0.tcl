@@ -3,26 +3,10 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "Component_Name"
   #Adding Page
   set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
-  ipgui::add_param $IPINST -name "ADDR_WIDTH" -parent ${Page_0}
   ipgui::add_param $IPINST -name "BANK0_CNT_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK0_CONTROL_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK0_INTR_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK0_ROUNDTRIP_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK0_STATUS_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK1_DST_ADDR_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK1_DST_SIZE_WIDTH" -parent ${Page_0}
   ipgui::add_param $IPINST -name "BANK1_INDEX_WIDTH" -parent ${Page_0}
   ipgui::add_param $IPINST -name "BANK1_LD_MSK_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK1_PROFILE_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK1_SRC_ADDR_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK1_SRC_SIZE_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "BANK1_STATUS_WIDTH" -parent ${Page_0}
   ipgui::add_param $IPINST -name "BANK1_ST_MSK_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "DATA_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "DMA_EXEC_TASK_CNT" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "DMA_INIT_TASK_CNT" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "GLOB_ADDR_WIDTH" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "GLOB_DATA_WIDTH" -parent ${Page_0}
 
 
 }

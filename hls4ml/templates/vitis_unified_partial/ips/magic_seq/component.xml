@@ -2,7 +2,7 @@
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <spirit:vendor>user.org</spirit:vendor>
   <spirit:library>user</spirit:library>
-  <spirit:name>MagicSeq</spirit:name>
+  <spirit:name>MagicSeqTop</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
@@ -357,7 +357,7 @@
       <spirit:parameters>
         <spirit:parameter>
           <spirit:name>SENSITIVITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.HW_INTR.SENSITIVITY" spirit:choiceRef="choice_list_9ca20931">LEVEL_HIGH</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.HW_INTR.SENSITIVITY" spirit:choiceRef="choice_list_99a1d2b9">LEVEL_HIGH</spirit:value>
         </spirit:parameter>
       </spirit:parameters>
     </spirit:busInterface>
@@ -398,7 +398,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>2882be72</spirit:value>
+            <spirit:value>189b94c8</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -414,7 +414,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>2882be72</spirit:value>
+            <spirit:value>189b94c8</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -428,7 +428,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>2750c49f</spirit:value>
+            <spirit:value>8684dac7</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1337,7 +1337,7 @@
   </spirit:model>
   <spirit:choices>
     <spirit:choice>
-      <spirit:name>choice_list_9ca20931</spirit:name>
+      <spirit:name>choice_list_99a1d2b9</spirit:name>
       <spirit:enumeration>LEVEL_HIGH</spirit:enumeration>
       <spirit:enumeration>LEVEL_LOW</spirit:enumeration>
       <spirit:enumeration>EDGE_RISING</spirit:enumeration>
@@ -1385,7 +1385,7 @@
       <spirit:file>
         <spirit:name>src/magicSeq.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_07379c0c</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_feefee95</spirit:userFileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1435,14 +1435,14 @@
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/MagicSeq_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/MagicSeqTop_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_2750c49f</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_8684dac7</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
-  <spirit:description>MagicSeq</spirit:description>
+  <spirit:description>MagicSeqTop</spirit:description>
   <spirit:parameters>
     <spirit:parameter>
       <spirit:name>GLOB_ADDR_WIDTH</spirit:name>
@@ -1581,17 +1581,17 @@
       <xilinx:taxonomies>
         <xilinx:taxonomy>/UserIP</xilinx:taxonomy>
       </xilinx:taxonomies>
-      <xilinx:displayName>MagicSeq</xilinx:displayName>
+      <xilinx:displayName>MagicSeqTop</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
       <xilinx:coreRevision>3</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2025-08-19T11:05:58Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2025-08-21T09:29:51Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2023.2</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="22d6a5d9"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="ed7084c8"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="307b11c7"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="ed0969b9"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="2570842c"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="b5f49858"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="d97ca7dc"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="e35664e3"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="af061426"/>
