@@ -577,7 +577,7 @@ class ModelGraph(Serializable):
             self.output_vars[o] = out_var
         return node
 
-    def insert_node(self, node, before=None, input_idx=0):
+    def insert_node(self, node, before=None, input_idx=-1):
         """Insert a new node into the model graph.
 
         The node to be inserted should be created with `make_node()` function. The optional
@@ -587,7 +587,8 @@ class ModelGraph(Serializable):
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
                 new node should be inserted.
-            input_idx (int, optional): If the next node takes multiple inputs, the input index
+            input_idx (int, optional): If the next node takes multiple inputs, the input index;
+                The default (-1) means match by name
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -603,19 +604,28 @@ class ModelGraph(Serializable):
             if overlap:
                 next_nodes.append(x)
 
-        if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] in prev_node.outputs), None)
-        else:
-            if before not in next_nodes:
-                raise Exception(
-                    'Cannot insert a node {} before {} (candidates: {}).'.format(
-                        node.name, before.name, ','.join([n.name for n in next_nodes])
-                    )
-                )
-            next_node = before
+        if before is not None:
+            if not isinstance(before, (tuple, list)):
+                before = [before]
 
-        if next_node is not None:
-            next_node.inputs[input_idx] = node.outputs[0]
+            # check that before is in next_nodes
+            for bf in before:
+                if bf not in next_nodes:
+                    raise RuntimeError(
+                        'Cannot insert a node {} before {} (candidates: {}).'.format(
+                            node.name, before.name, ','.join([n.name for n in next_nodes])
+                        )
+                    )
+            # only put before as next_nodes
+            next_nodes = before
+
+        if next_nodes:
+            repl = {old_name: new_name for old_name, new_name in zip(prev_node.outputs, node.outputs)}
+            for next_node in next_nodes:
+                if input_idx >= 0:
+                    next_node.inputs[input_idx] = node.outputs[0]
+                else:
+                    next_node.inputs = [repl[val] if val in repl else val for val in next_node.inputs]
         else:
             self.outputs = [node.outputs[0] if name == prev_node.outputs[0] else name for name in self.outputs]
 
@@ -708,8 +718,6 @@ class ModelGraph(Serializable):
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
-
-
     def split_node(self, old_node, new_node1, new_node2):
         """Replace an existing node in the graph with two nodes in sequence.
 
@@ -751,7 +759,6 @@ class ModelGraph(Serializable):
             else:
                 new_graph[key] = value
         self.graph = new_graph
-
 
     def next_layer(self):
         self.index += 1

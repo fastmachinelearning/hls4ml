@@ -1,5 +1,5 @@
 from hls4ml.backends import OneAPIBackend
-from hls4ml.model.flow import get_flow, register_flow
+from hls4ml.model.flow import register_flow
 
 
 class OneAPIAcceleratorBackend(OneAPIBackend):
@@ -22,10 +22,25 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
         ]
         oneapi_types_flow = register_flow('specific_types', oneapi_types, requires=['oneapi:init_layers'], backend=self.name)
 
-        ip_flow_requirements = [
-            oneapi_types_flow if opt == 'oneapi:specific_types' else opt for opt in get_flow('oneapi:ip').requires
+        streaming_passes = [
+            'oneapi:clone_output',
+            'oneapiaccelerator:extract_sideband',
+            'oneapiaccelerator:merge_sideband',
         ]
-        self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
+        streaming_flow = register_flow('streaming', streaming_passes, requires=['oneapi:init_layers'], backend=self.name)
+
+        accel_flow_requirements = [
+            'optimize',
+            'oneapi:init_layers',
+            streaming_flow,
+            'oneapi:quantization',
+            'oneapi:optimize',
+            oneapi_types_flow,
+            'oneapi:apply_templates',
+        ]
+
+        accel_flow_requirements = list(filter(None, accel_flow_requirements))
+        self._default_flow = register_flow('accel', None, requires=accel_flow_requirements, backend=self.name)
 
     def create_initial_config(
         self, part, clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
