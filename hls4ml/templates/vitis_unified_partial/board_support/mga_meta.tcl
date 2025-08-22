@@ -1,0 +1,18 @@
+variable HLS_CFG_AMT_MGS
+set      HLS_CFG_AMT_MGS VAL
+variable HLS_CFG_MGS_INDEX
+set      HLS_CFG_MGS_INDEX VAL
+variable HLS_CFG_BANK_IDX_WIDTH
+set      HLS_CFG_BANK_IDX_WIDTH VAL
+variable HLS_CFG_MGS_WRAP_WIDTH
+set      HLS_CFG_MGS_WRAP_WIDTH VAL
+
+
+
+
+
+
+
+
+
+

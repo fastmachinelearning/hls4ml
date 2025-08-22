@@ -2,11 +2,58 @@ import os
 import shutil
 import stat
 from pathlib import Path
+import math
 
 
 from hls4ml.writer.vitis_unified_writer.meta import VitisUnifiedWriterMeta
 
 class VitisUnifiedPartial_MagicArchGen():
+
+    def gen_vivado_project(self, meta: VitisUnifiedWriterMeta, model, board_name = "zcu102"):
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        vivado_project_des_folder_path = f'{model.config.get_output_dir()}/vivado_project'
+
+        if not os.path.exists(vivado_project_des_folder_path):
+            os.makedirs(vivado_project_des_folder_path)
+
+        #### copy project building script
+        vivado_project_src_script_path = os.path.join(filedir,
+                                                      f'../../templates/vitis_unified_partial/board_support/{board_name}/project_builder.tcl')
+        des_project_script_path        = f'{vivado_project_des_folder_path}/project_builder.tcl'
+        shutil.copyfile(vivado_project_src_script_path, des_project_script_path)
+
+        #### copy mgs argument
+        vivado_project_src_meta_arg_path = os.path.join(filedir,
+                                                        f'../../templates/vitis_unified_partial/board_support/mga_meta.tcl')
+        des_projectscript_meta_arg_path = f'{vivado_project_des_folder_path}/mga_meta.tcl'
+
+        fin = open(vivado_project_src_meta_arg_path, 'r')
+        fout = open(des_projectscript_meta_arg_path, 'w')
+
+        meta_list    = meta.vitis_unified_config.get_mgs_meta_list()
+        amt_subGraph = meta.vitis_unified_config.get_amt_graph()
+
+        meta_idx_width = str(max(0, int(math.ceil(math.log2(len(meta_list))))))
+        graph_idx_width = str(max(0, int(math.ceil(math.log2(amt_subGraph)))))
+
+        for line in fin.readlines():
+            if "HLS_CFG_AMT_MGS" in line:
+                line = line.replace("VAL", str(len(meta_list)))
+            if "HLS_CFG_MGS_INDEX" in line:
+                line = line.replace("VAL", meta_idx_width)
+            if "HLS_CFG_BANK_IDX_WIDTH" in line:
+                line = line.replace("VAL", graph_idx_width)
+            if "HLS_CFG_MGS_WRAP_WIDTH" in line:
+                line = line.replace("VAL", "{ "+ ", ".join([str(width) for width, *_ in meta_list]) + " }")
+            fout.write(line)
+
+        fin.close()
+        fout.close()
+
+
+
+
 
 
     @classmethod
