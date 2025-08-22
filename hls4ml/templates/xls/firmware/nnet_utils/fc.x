@@ -26,7 +26,6 @@ pub const FXP_12_0     = sN[NB_COMMON]:12288;
 pub const FXP_13_5     = sN[NB_COMMON]:13824;
 
 
-
 // Wx = y
 // When called must specify the fixed point precision that is in the output. 
 // This allows the truncation to be done correctly.
@@ -35,7 +34,6 @@ pub fn dense
     NB_OUT: u32, EN_OUT: u32, BU_OUT: u32, 
     COLS: u32, ROWS: u32,
     BE_OUT: s32 = {fixed_point_lib::binary_exponent(EN_OUT, BU_OUT)}, //new
-
     BE_IN: s32 = {fixed_point_lib::binary_exponent(EN_IN, BU_IN)}, // binary exp X
     // Precision inference MUL
     BE_MUL: s32 = {BE_IN + BE_IN},                           // binary exp MUL
@@ -74,7 +72,6 @@ pub fn dense_relu
     NB_OUT: u32, EN_OUT: u32, BU_OUT: u32, 
     COLS: u32, ROWS: u32,
     BE_OUT: s32 = {fixed_point_lib::binary_exponent(EN_OUT, BU_OUT)}, //new
-
     BE_IN: s32 = {fixed_point_lib::binary_exponent(EN_IN, BU_IN)}, // binary exp X
     // Precision inference MUL
     BE_MUL: s32 = {BE_IN + BE_IN},                           // binary exp MUL

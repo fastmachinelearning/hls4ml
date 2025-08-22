@@ -102,7 +102,7 @@ class XLSWriter(Writer):
                     elif layer.get_attr("write_weights"):
                         # weights arguments
                         newline += indent + f'w{i}: {layer.get_attr("in_type")}'
-                        for w_dim in layer.get_attr("fxp_weights").shape:
+                        for w_dim in reversed(layer.get_attr("fxp_weights").shape):
                             newline += f'[u32:{w_dim}]'
                         newline += ',\n'
                         # bias argument
@@ -148,7 +148,7 @@ class XLSWriter(Writer):
                     if layer.get_attr("write_weights"):
                         # Weights
                         newline += indent + f'let w{i} = {layer.get_attr("in_type")}'
-                        for w_dim in layer.get_attr("fxp_weights").shape:
+                        for w_dim in reversed(layer.get_attr("fxp_weights").shape):
                             newline += f'[u32:{w_dim}]'
                         newline += ':\n'
                         newline += indent + '[\n'

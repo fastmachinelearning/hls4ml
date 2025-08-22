@@ -125,15 +125,8 @@ class XLSAttrBuilder:
         if len(weights) >= 2:
             width = int(self.node.get_attr('in_nb').split(':', 1)[1])
             frac = int(self.node.get_attr('in_bu').split(':', 1)[1])
-            # Conv
-            if self.node.class_name == 'Conv2D':
-                fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
-                return fxp_b
-            
-            # Dense
-            elif self.node.class_name == 'Dense':
-                fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
-                return fxp_b
+            fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
+            return fxp_b
         return np.array([])
     
     @attach_to_node()
@@ -191,6 +184,9 @@ class XLSAttrBuilder:
         if self.node.class_name == 'Dense':
             func_call_str = f'fc::dense<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
         
+        elif self.node.class_name == 'Conv2D':
+            func_call_str = f'conv2d::conv2d_latency<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
+
         elif self.node.class_name == 'Activation':
             func_call_str = f'activations::relu<{self.node.get_attr("out_nb")}>'
 
