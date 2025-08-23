@@ -37,15 +37,19 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
 
         ##### do magic streamer generation
         if compose_streamers:
+            #### generate magic sequencer wrapper
             magic_stream_grp_ip_prj = f'{model.config.get_output_dir()}/ips/magic_streamer_grp_prj'
             self.run_term_command(model,
                                   "magic_streamer_ip_generation",
                                   "vivado -mode gui -source composer.tcl", log_to_stdout,
                                   magic_stream_grp_ip_prj
             )
-
-
-        pass
+            #### generate vivado project
+            magic_arch_prj = f"{model.config.get_output_dir()}/vivado_project"
+            self.run_term_command(model,
+                                  "magic_streamer_arch_generation",
+                                  "vivado -mode gui -source project_builder.tcl", log_to_stdout,
+                                  magic_arch_prj)
 
         # super().build(
         # model,
@@ -79,6 +83,7 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
         input_interim_type='io_stream',  #### it should be io_stream or io_free_stream/ io_stream
         output_interim_type='io_stream',
         init_mgs_meta=None,
+        init_amt_graph=3,
         **_
     ):
 
@@ -102,7 +107,7 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
         )
 
         config['MultiGraphConfig'] = {}
-        config['MultiGraphConfig']['amtGraph'] = -1 # it should be set by the multigraph system
+        config['MultiGraphConfig']['amtGraph'] = init_amt_graph # it should be set by the multigraph system
         config['MultiGraphConfig']['graphIdx'] = -1 # -1 means unset yet or it is multigraph stitcher
         print(f"mgs initial is set to {init_mgs_meta}")
         config['MultiGraphConfig']['MgsMeta']  = init_mgs_meta if init_mgs_meta is not None else [] #### it should be only used for stitcher

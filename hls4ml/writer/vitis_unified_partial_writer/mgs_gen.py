@@ -9,13 +9,18 @@ from hls4ml.writer.vitis_unified_writer.meta import VitisUnifiedWriterMeta
 
 class VitisUnifiedPartial_MagicArchGen():
 
-    def gen_vivado_project(self, meta: VitisUnifiedWriterMeta, model, board_name = "zcu102"):
+    @classmethod
+    def gen_vivado_project(cls, meta: VitisUnifiedWriterMeta, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         vivado_project_des_folder_path = f'{model.config.get_output_dir()}/vivado_project'
 
-        if not os.path.exists(vivado_project_des_folder_path):
-            os.makedirs(vivado_project_des_folder_path)
+        if os.path.exists(vivado_project_des_folder_path):
+            shutil.rmtree(vivado_project_des_folder_path)
+
+        os.makedirs(vivado_project_des_folder_path)
+
+        board_name = meta.vitis_unified_config.get_board()
 
         #### copy project building script
         vivado_project_src_script_path = os.path.join(filedir,
@@ -40,15 +45,15 @@ class VitisUnifiedPartial_MagicArchGen():
         for line in fin.readlines():
             if "HLS_CFG_AMT_MGS" in line:
                 line = line.replace("VAL", str(len(meta_list)))
-            if "HLS_CFG_MGS_INDEX" in line:
-                line = line.replace("VAL", meta_idx_width)
             if "HLS_CFG_BANK_IDX_WIDTH" in line:
                 line = line.replace("VAL", graph_idx_width)
             if "HLS_CFG_MGS_WRAP_WIDTH" in line:
-                line = line.replace("VAL", "{ "+ ", ".join([str(width) for width, *_ in meta_list]) + " }")
+                width_list = ([str(meta.vitis_unified_config.get_dma_size())])
+                width_list.extend([str(width) for width, *_ in meta_list])
+                line = line.replace("VAL", "{"+ " ".join(width_list) + "}")
             fout.write(line)
 
-        fin.close()
+        fin .close()
         fout.close()
 
 

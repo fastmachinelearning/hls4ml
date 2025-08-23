@@ -24,7 +24,8 @@ class VitisUnifiedPartialConfig(VitisUnifiedConfig):
         self.mgs_meta = self.config.get('MultiGraphConfig', {}).get('MgsMeta', None)
 
 
-
+    def get_dma_size(self):
+        return 32
 
     def is_free_interim_input(self):
         return self.free_interim_input

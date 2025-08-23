@@ -18,3 +18,6 @@ ipx::check_integrity [ipx::current_core]
 ipx::save_core [ipx::current_core]
 set_property  ip_repo_paths  ../magic_streamer_grp_ip [current_project]
 update_ip_catalog
+
+close_project
+exit
