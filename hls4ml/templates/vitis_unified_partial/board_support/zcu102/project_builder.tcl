@@ -765,6 +765,65 @@ proc cr_bd_system {} {
     create_hier_cell_dfx_decup       [current_bd_instance .] dfx_decup_m    $HLS_CFG_AMT_MGS
     create_hier_cell_dfx_par         [current_bd_instance .] dfx_par        $HLS_CFG_AMT_MGS $HLS_CFG_MGS_WRAP_WIDTH
 
+
+    # Create interface connections
+    connect_bd_intf_net -intf_net S_AXI_DFX_CTRL_1 [get_bd_intf_pins magic_seq_ctrl/S_AXI_DFX_CTRL] [get_bd_intf_pins axi_interconnect_main_control/M00_AXI]
+    connect_bd_intf_net -intf_net S_AXI_INTR_CTRL_1 [get_bd_intf_pins magic_seq_ctrl/S_AXI_INTR_CTRL] [get_bd_intf_pins axi_interconnect_main_control/M02_AXI]
+    connect_bd_intf_net -intf_net S_AXI_MGQ_CTRL_1 [get_bd_intf_pins magic_seq_ctrl/S_AXI_MGQ_CTRL] [get_bd_intf_pins axi_interconnect_main_control/M01_AXI]
+    connect_bd_intf_net -intf_net axi_interconnect_dma_control_M00_AXI [get_bd_intf_pins axi_interconnect_dma_control/M00_AXI] [get_bd_intf_pins data_mover/S_AXI_DMA_CTRL]
+    
+    for {set i 0} {$i <= $HLS_CFG_AMT_MGS} {incr i} {
+        #### data mover connections -----> to master decoupler
+        connect_bd_intf_net -intf_net data_mover_M${i}_AXI [get_bd_intf_pins data_mover/M${i}_AXI] [get_bd_intf_pins dfx_decup_m/rp_intf_${i}]
+        #### master decoupler ------> to dfx region
+        connect_bd_intf_net -intf_net dfx_decup_m_s_intf_${i} [get_bd_intf_pins dfx_decup_m/s_intf_${i}] [get_bd_intf_pins dfx_par/S_AXI_${i}]
+        #### dfx region -------> to slave decoupler
+        connect_bd_intf_net -intf_net dfx_par_M_AXI_${i} [get_bd_intf_pins dfx_par/M_AXI_${i}] [get_bd_intf_pins dfx_decup_s/rp_intf_${i}]
+        #### slave decoupler -------> data mover
+        connect_bd_intf_net -intf_net dfx_decup_s_s_intf_${i} [get_bd_intf_pins dfx_decup_s/s_intf_${i}] [get_bd_intf_pins data_mover/S${i}_AXI]
+
+    }
+
+
+        ###### data transfer connections
+    # connect_bd_intf_net -intf_net data_mover_M0_AXI [get_bd_intf_pins data_mover/M0_AXI] [get_bd_intf_pins dfx_decup_m/rp_intf_0]
+    # connect_bd_intf_net -intf_net data_mover_M1_AXI [get_bd_intf_pins data_mover/M1_AXI] [get_bd_intf_pins dfx_decup_m/rp_intf_1]
+    # connect_bd_intf_net -intf_net data_mover_M2_AXI [get_bd_intf_pins data_mover/M2_AXI] [get_bd_intf_pins dfx_decup_m/rp_intf_2]
+    # connect_bd_intf_net -intf_net dfx_decup_m_s_intf_0 [get_bd_intf_pins dfx_decup_m/s_intf_0] [get_bd_intf_pins dfx_par/S_AXI_0]
+    # connect_bd_intf_net -intf_net dfx_decup_m_s_intf_1 [get_bd_intf_pins dfx_decup_m/s_intf_1] [get_bd_intf_pins dfx_par/S_AXI_1]
+    # connect_bd_intf_net -intf_net dfx_decup_m_s_intf_2 [get_bd_intf_pins dfx_decup_m/s_intf_2] [get_bd_intf_pins dfx_par/S_AXI_2]
+    # connect_bd_intf_net -intf_net dfx_decup_s_s_intf_0 [get_bd_intf_pins dfx_decup_s/s_intf_0] [get_bd_intf_pins data_mover/S0_AXI]
+    # connect_bd_intf_net -intf_net dfx_decup_s_s_intf_1 [get_bd_intf_pins dfx_decup_s/s_intf_1] [get_bd_intf_pins data_mover/S1_AXI]
+    # connect_bd_intf_net -intf_net dfx_decup_s_s_intf_2 [get_bd_intf_pins dfx_decup_s/s_intf_2] [get_bd_intf_pins data_mover/S2_AXI]
+    # connect_bd_intf_net -intf_net dfx_par_M_AXI_0 [get_bd_intf_pins dfx_par/M_AXI_0] [get_bd_intf_pins dfx_decup_s/rp_intf_0]
+    # connect_bd_intf_net -intf_net dfx_par_M_AXI_1 [get_bd_intf_pins dfx_par/M_AXI_1] [get_bd_intf_pins dfx_decup_s/rp_intf_1]
+    # connect_bd_intf_net -intf_net dfx_par_M_AXI_2 [get_bd_intf_pins dfx_par/M_AXI_2] [get_bd_intf_pins dfx_decup_s/rp_intf_2]
+
+    connect_bd_intf_net -intf_net data_mover_M_AXI_MM2S [get_bd_intf_pins data_mover/M_AXI_MM2S] [get_bd_intf_pins smartconnect_reader/S00_AXI]
+    connect_bd_intf_net -intf_net data_mover_M_AXI_S2MM [get_bd_intf_pins data_mover/M_AXI_S2MM] [get_bd_intf_pins smartconnect_writer/S00_AXI]
+
+    connect_bd_intf_net -intf_net magic_seq_ctrl_M_AXI_DFX_LOADER [get_bd_intf_pins magic_seq_ctrl/M_AXI_DFX_LOADER] [get_bd_intf_pins smartconnect_reader/S01_AXI]
+    connect_bd_intf_net -intf_net magic_seq_ctrl_M_AXI_DMA_CTRL [get_bd_intf_pins magic_seq_ctrl/M_AXI_DMA_CTRL] [get_bd_intf_pins axi_interconnect_dma_control/S00_AXI]
+    connect_bd_intf_net -intf_net smartconnect_reader_M00_AXI [get_bd_intf_pins smartconnect_reader/M00_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC0_FPD]
+    connect_bd_intf_net -intf_net smartconnect_writer_M00_AXI [get_bd_intf_pins smartconnect_writer/M00_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC1_FPD]
+    connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM0_FPD [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM0_FPD] [get_bd_intf_pins axi_interconnect_main_control/S00_AXI]
+    connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM1_FPD [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM1_FPD] [get_bd_intf_pins axi_interconnect_dma_control/S01_AXI]
+
+    # Create port connections
+    connect_bd_net -net data_mover_finStore [get_bd_pins data_mover/finStore] [get_bd_pins magic_seq_ctrl/mgsFinExec]
+    connect_bd_net -net magic_seq_ctrl_decup [get_bd_pins magic_seq_ctrl/decup] [get_bd_pins dfx_decup_s/decouple] [get_bd_pins dfx_decup_m/decouple]
+    connect_bd_net -net magic_seq_ctrl_irq [get_bd_pins magic_seq_ctrl/irq] [get_bd_pins zynq_ultra_ps_e_0/pl_ps_irq0]
+    connect_bd_net -net magic_seq_ctrl_mgsLoadInit [get_bd_pins magic_seq_ctrl/mgsLoadInit] [get_bd_pins data_mover/loadInit]
+    connect_bd_net -net magic_seq_ctrl_mgsLoadReset [get_bd_pins magic_seq_ctrl/mgsLoadReset] [get_bd_pins data_mover/loadReset]
+    connect_bd_net -net magic_seq_ctrl_mgsStoreInit [get_bd_pins magic_seq_ctrl/mgsStoreInit] [get_bd_pins data_mover/storeInit]
+    connect_bd_net -net magic_seq_ctrl_mgsStoreReset [get_bd_pins magic_seq_ctrl/mgsStoreReset] [get_bd_pins data_mover/storeReset]
+    connect_bd_net -net rst_ps8_0_99M_peripheral_aresetn [get_bd_pins rst_ps8_0_99M/peripheral_aresetn] [get_bd_pins axi_interconnect_dma_control/ARESETN] [get_bd_pins axi_interconnect_dma_control/M00_ARESETN] [get_bd_pins data_mover/nreset] [get_bd_pins axi_interconnect_dma_control/S00_ARESETN] [get_bd_pins magic_seq_ctrl/nreset] [get_bd_pins axi_interconnect_dma_control/S01_ARESETN] [get_bd_pins axi_interconnect_main_control/ARESETN] [get_bd_pins axi_interconnect_main_control/M00_ARESETN] [get_bd_pins axi_interconnect_main_control/M01_ARESETN] [get_bd_pins axi_interconnect_main_control/M02_ARESETN] [get_bd_pins axi_interconnect_main_control/S00_ARESETN] [get_bd_pins smartconnect_reader/aresetn] [get_bd_pins smartconnect_writer/aresetn] [get_bd_pins dfx_par/nreset] [get_bd_pins dfx_decup_s/nreset] [get_bd_pins dfx_decup_m/nreset]
+    connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins axi_interconnect_dma_control/ACLK] [get_bd_pins rst_ps8_0_99M/slowest_sync_clk] [get_bd_pins axi_interconnect_dma_control/M00_ACLK] [get_bd_pins data_mover/clk] [get_bd_pins axi_interconnect_dma_control/S00_ACLK] [get_bd_pins magic_seq_ctrl/clk] [get_bd_pins axi_interconnect_dma_control/S01_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk] [get_bd_pins axi_interconnect_main_control/ACLK] [get_bd_pins axi_interconnect_main_control/M00_ACLK] [get_bd_pins axi_interconnect_main_control/M01_ACLK] [get_bd_pins axi_interconnect_main_control/M02_ACLK] [get_bd_pins axi_interconnect_main_control/S00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/saxihpc0_fpd_aclk] [get_bd_pins smartconnect_reader/aclk] [get_bd_pins zynq_ultra_ps_e_0/saxihpc1_fpd_aclk] [get_bd_pins smartconnect_writer/aclk] [get_bd_pins dfx_decup_m/clk] [get_bd_pins dfx_par/clk] [get_bd_pins dfx_decup_s/clk]
+    connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0] [get_bd_pins rst_ps8_0_99M/ext_reset_in]
+
+    delete_bd_objs [get_bd_addr_segs] [get_bd_addr_segs -excluded]
+    assign_bd_address
+
 }
 
 
