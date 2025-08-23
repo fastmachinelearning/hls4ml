@@ -4,6 +4,8 @@
 // These are functions just for streaming in accelerator mode. They convert from using packets
 // to not using packets, and visa versa.
 
+namespace nnet {
+
 struct sideband_config {
     static const unsigned n_in = 10;
 };
@@ -37,7 +39,7 @@ LinearActLoop:
             }
             eop = in_data.eop;
         }
-        typename ExtractPipeType<skip_pipe>::value_type skip_data; // this is a two-element array, {sop, eop}.
+        typename nnet::ExtractPipeType<skip_pipe>::value_type skip_data; // this is a two-element array, {sop, eop}.
         skip_data[0] = sop;
         skip_data[1] = eop;
         skip_pipe::write(skip_data);
@@ -71,5 +73,5 @@ LinearActLoop:
         res_pipe::write(out_data);
     }
 }
-
+} // namespace nnet
 #endif

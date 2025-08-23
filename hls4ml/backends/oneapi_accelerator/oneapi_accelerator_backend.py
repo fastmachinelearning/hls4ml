@@ -29,6 +29,10 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
         ]
         streaming_flow = register_flow('streaming', streaming_passes, requires=['oneapi:init_layers'], backend=self.name)
 
+        template_flow = register_flow(
+            'apply_templates', self._get_layer_templates, requires=['oneapi:init_layers'], backend=self.name
+        )
+
         accel_flow_requirements = [
             'optimize',
             'oneapi:init_layers',
@@ -36,7 +40,7 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
             'oneapi:quantization',
             'oneapi:optimize',
             oneapi_types_flow,
-            'oneapi:apply_templates',
+            template_flow,
         ]
 
         accel_flow_requirements = list(filter(None, accel_flow_requirements))

@@ -56,7 +56,7 @@ class SidebandExtractionTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['skip_pipe'] = node.get_output_variable(1).pipe_name
+        params['skip_pipe'] = node.get_output_variable('sideband').pipe_name
         return self.template.format(**params)
 
 
@@ -67,5 +67,5 @@ class SidebandMergeTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['skip_pipe'] = node.get_input_variable(1).pipe_name
+        params['skip_pipe'] = node.get_input_variable('sideband').pipe_name
         return self.template.format(**params)
