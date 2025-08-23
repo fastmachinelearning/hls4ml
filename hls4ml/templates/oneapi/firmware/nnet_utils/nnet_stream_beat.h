@@ -4,10 +4,15 @@
 // These are functions just for streaming in accelerator mode. They convert from using packets
 // to not using packets, and visa versa.
 
+struct sideband_config {
+    static const unsigned n_in = 10;
+};
+
 // *************************************************
 // Remove sideband and passes it to end via skip pipe
 // *************************************************
-template <class data_pipe, class res_pipe, class skip_pipe, typename CONFIG_T> [[intel::use_stall_enable_clusters]] void remove_sideband_stream() {
+template <class data_pipe, class res_pipe, class skip_pipe, typename CONFIG_T>
+[[intel::use_stall_enable_clusters]] void extract_sideband_stream() {
 
     [[intel::fpga_register]] typename ExtractPipeType<res_pipe>::value_type out_data;
 
@@ -43,14 +48,14 @@ LinearActLoop:
 // Recieves sideband via skip pipe, and makees it sideband
 // *************************************************
 
-template <class data_pipe, class res_pipe, class skip_pipe, typename CONFIG_T> [[intel::use_stall_enable_clusters]] void add_sideband_stream() {
+template <class data_pipe, class res_pipe, class skip_pipe, typename CONFIG_T>
+[[intel::use_stall_enable_clusters]] void merge_sideband_stream() {
     using ResT = typename ExtractDataType<typename ExtractPipeType<res_pipe>::value_type>::value_type;
     [[intel::fpga_register]] typename ExtractPipeType<res_pipe>::value_type out_data;
 
     constexpr auto num_transfers = CONFIG_T::n_in / std::tuple_size<ResT>{};
 
     auto skip_data = skip_pipe::read();
-
 
 LinearActLoop:
     [[intel::initiation_interval(1)]] for (int i = 0; i < num_transfers; i++) {
@@ -62,10 +67,9 @@ LinearActLoop:
             out_data.data[j] = in_data.data[j];
         }
         out_data.sop = (i == 0) ? skip_data[0] : false;
-        out_data.eop = (i == num_transfers-1) ? skip_data[1] : false;
+        out_data.eop = (i == num_transfers - 1) ? skip_data[1] : false;
         res_pipe::write(out_data);
     }
 }
-
 
 #endif

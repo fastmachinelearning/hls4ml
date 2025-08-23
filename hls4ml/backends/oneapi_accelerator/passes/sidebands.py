@@ -47,9 +47,10 @@ class MergeSideband(OptimizerPass):
     """Add a layer after the last layer to merge the sideband signals."""
 
     def match(self, node):
-        for node_out in node.outputs:
-            if node_out in node.model.outputs:  # if the node output is a model output
-                return True
+        if node.model.config.get_config_value('IOType') == 'io_stream':
+            for node_out in node.outputs:
+                if node_out in node.model.outputs:  # if the node output is a model output
+                    return True
         return False
 
     def transform(self, model, node):
