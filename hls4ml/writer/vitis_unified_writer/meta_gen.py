@@ -92,3 +92,6 @@ class VitisUnified_MetaGen:
     def rename_type(self, tensorVar, layerIdx: int, isInput: bool):
         return "result_" + tensorVar.type.name + f"_at_layer_{str(layerIdx)}"
 
+    @classmethod
+    def get_output_kernel_type(cls):
+        return "xo"

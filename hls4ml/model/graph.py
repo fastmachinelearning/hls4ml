@@ -8,6 +8,7 @@ import shutil
 import threading
 import uuid
 from collections import OrderedDict
+from operator import indexOf
 
 import numpy as np
 import numpy.ctypeslib as npc
@@ -1036,7 +1037,7 @@ class ModelGraph(Serializable):
 
 
 class MultiModelGraph:
-    def __init__(self, graphs: list[ModelGraph]):
+    def __init__(self, graphs: list[ModelGraph], input_node_links = None):
         """
         Create a stitched model from pre-optimized subgraphs.
         """
@@ -1044,53 +1045,228 @@ class MultiModelGraph:
         self._initialize_config(self.graphs[0])
         self._bind_modelgraph_methods()
         self._initialize_io_attributes(self.graphs)
+        self.input_node_links = input_node_links
+
+
+
+        ##### node link is the meta data that used to store how the new generated input node when the graph was chopped connect with the source data node
+        ##### [graph0, graph1, graph2, ...]
+        ##### [[(newInputNodeX, srcOutputNodeY, inofOutputFromNodeY), (x2,y2,ys2), (x3,y3,ys3), .....], []]
+
+
+    @staticmethod
+    def check_io_idx_from_node(node_slices, inspectNode, isAnalyzeInput: bool):
+
+        """
+        check the Input  of the inspectNode (incase isAnalyzeInput=True) that is come from outside current graph
+        check the Output of the inspectNode (incase isAnalyzeInput=False) that is come from outside current graph
+        return idx of the io array to indicate which io should be rerouted
+        """
+
+        requiredReroute = []
+
+        io_of_inspect_node = inspectNode.inputs if isAnalyzeInput else inspectNode.outputs
+
+        for idx, ioName in enumerate(io_of_inspect_node):
+            shouldReroute = True
+            for curNode in node_slices:
+                #### the same node must be skipped
+                if curNode.name == inspectNode.name:
+                    continue
+                io_of_scanning_node = curNode.outputs if isAnalyzeInput else curNode.inputs
+                if ioName in io_of_scanning_node:
+                    shouldReroute = False
+                    break
+            if shouldReroute:
+                requiredReroute.append(idx)
+                # if isAnalyzeInput:
+                #     print("reroute IN put = ", idx, " ", ioName)
+                #     print("     nodeName", inspectNode.name)
+                #     print("     inputs", inspectNode.inputs)
+                #     print("     outputs", inspectNode.outputs)
+                #     print("-----------------")
+        return requiredReroute
+
+    @staticmethod
+    def get_src_node_from_output_name(base_model: ModelGraph, output_name: str):
+        for layer_name, node in base_model.graph.items():
+            if output_name in node.outputs:
+                return node, node.outputs.indexOf(output_name)
+
+
+
+    @staticmethod
+    def group_for_creating_new_io(meta, isAnalyzeInput: bool):
+
+        """
+        some io that we gather from each node from the graph may have the same input source
+        if that so we should group it together
+        meta is list of (ioIdx, ofNode)
+        return {io_name: [(ioIdx, ofNode), ....]}
+        """
+        rerouted_result = dict()
+
+        for idx, node in meta:
+            ioName = node.inputs[idx] if isAnalyzeInput else node.outputs[idx]
+            if ioName not in rerouted_result:
+                rerouted_result[ioName] = []
+            rerouted_result[ioName].append((idx, node))
+
+        return rerouted_result
+
+    @staticmethod
+    def add_config_for_multi_model(baseConfig, newConfig, amount_graph, graph_idx, input_raw, output_raw):
+
+        ######### we focus on copy 'MultiGraphConfig'
+        if 'MultiGraphConfig' in baseConfig:
+            newConfig['MultiGraphConfig'] = copy.deepcopy(baseConfig.get('MultiGraphConfig', {}))
+        ######## create the structure
+        newConfig.setdefault('MultiGraphConfig', {})
+        newConfig['MultiGraphConfig'].setdefault('amtGraph', -2)
+        newConfig['MultiGraphConfig'].setdefault('graphIdx', -2)
+        newConfig['MultiGraphConfig'].setdefault('MgsMeta', [])
+
+        newConfig['MultiGraphConfig'].setdefault('IOInterimType', {})
+        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Input', -2)
+        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Output', -2)
+
+    ######## try to copy from the base model, if it it exist
 
     @classmethod
-    def from_model_graph(cls, base_model: ModelGraph, split_before_layers: list[str]):
+    def from_model_graph(cls, base_model: ModelGraph, split_before_layers: list[str], free_axi_interim: bool = False):
         """
         Create a MultiModelGraph by splitting a base ModelGraph at specified layer names,
         each initiating a subgraph.
         """
+        print("from multi model graph")
         cls._validate_split_points(base_model, split_before_layers)
-        all_nodes = list(base_model.graph.values())
-        layer_names = [node.name for node in all_nodes]
+        all_nodes     = list(base_model.graph.values())
+        layer_names   = [node.name for node in all_nodes]
         split_indices = sorted(layer_names.index(s) for s in split_before_layers)
-        bounds = [0] + split_indices + [len(all_nodes)]
+        bounds        = [0] + split_indices + [len(all_nodes)]
         node_slices: list[list] = [all_nodes[bounds[i] : bounds[i + 1]] for i in range(len(bounds) - 1)]
 
         base_input_layer = base_model.graph[base_model.inputs[0]]
         input_layer_kind = base_input_layer.attributes['class_name']
         next_index = max(n.index for n in all_nodes)
 
+        input_node_links = [ [] for _ in range(len(node_slices))]
+
         subgraphs: list['ModelGraph'] = []
         for idx, slice_ in enumerate(node_slices):
+
+            #### clone and modify the config
             cfg_copy = copy.copy(base_model.config)
             cfg_copy.config = copy.copy(base_model.config.config)
+            cls.add_config_for_multi_model(base_model.config.config,
+                                           cfg_copy.config,
+                                           len(node_slices), idx,
+                                           free_axi_interim and (idx != 0),
+                                           free_axi_interim and (idx != (len(node_slices)-1)))
+
             cfg_copy.config['ProjectName'] = f'{base_model.config.get_project_name()}_graph{idx + 1}'
             cfg_copy.config['OutputDir'] = os.path.join(base_model.config.get_output_dir(), f'graph{idx + 1}')
 
-            subgraph = ModelGraph(cfg_copy, inputs=[], outputs=[])
-            graph_dict: OrderedDict[str, Layer] = OrderedDict()
+            subgraph = base_model.__class__(cfg_copy, inputs=[], outputs=[])
+            graph_dict = OrderedDict()
 
+            pooled_input_layer = []
+            print("-------------- idx = ", idx, " -----------------------------")
+
+            ################################################################
+            ##### check the current slice node and create new input node ###
+            ################################################################
             if idx > 0:
-                next_index += 1
-                input_layer = cls._create_input_node(subgraph, slice_[0], input_layer_kind, next_index)
-                graph_dict[input_layer.name] = input_layer
-                slice_[0].inputs = input_layer.outputs
+                requiredReroute = []
+
+                ###### get input for each slice
+                for checkingNode in slice_:
+                    nodeInputChangeList = cls.check_io_idx_from_node(slice_, checkingNode, True)
+                    #### node input change list = [changeIdx: int, ....]
+                    #### add to requiredReroute
+                    for changeIdx in nodeInputChangeList:
+                        requiredReroute.append((changeIdx, checkingNode))
+
+                ###### grouping it, incase the io have been reused many time
+                ######### rerouteGrp { "ioName" : [(inputIdx, Node), ....]}
+
+
+                #rerouteGrp = cls.group_for_creating_new_io(requiredReroute, True)
+
+
+                ###### create reroute for for each new input
+
+                named_new_input_layer = dict()
+                #### inputIdx is index in input of target Node
+                for inputIdx, targetNode in requiredReroute:
+                    ioName = targetNode.outputs[inputIdx]
+                    ###### nodeUpdateList[0][1] is the sample Node (Layer) that must be inject to the system
+                    input_layer = cls._create_input_node(subgraph, targetNode, #### list of (inputIdx, Node)
+                                                         input_layer_kind, next_index,
+                                                         next_node_portName = ioName,
+                                                         namedNewInputLayer = named_new_input_layer)
+                    pooled_input_layer.append(input_layer)
+                    graph_dict[input_layer.name] = input_layer
+                    targetNode.inputs[inputIdx]  = input_layer.outputs[0]
+
+                    #### update link meta data
+                    src_node, src_node_out_idx = cls.get_src_node_from_output_name(base_model, targetNode.inputs[inputIdx])
+                    input_node_links[idx].append((input_layer, src_node, src_node_out_idx))
+
+
+                    # print("added name is ", input_layer.name )
+                    # print("output from input layer", input_layer.outputs)
+                    # print("input from input layer", input_layer.inputs)
+
+                    next_index += 1
+
+                ####### the input node should have 1 input node right so
+
             else:
                 input_layer = base_input_layer
+                pooled_input_layer.append(input_layer)
+                input_node_links[idx].append((input_layer, None, None))
 
+
+            ##############################
+            ##### config new graph #######
+            ##############################
             for node in slice_:
-                node.model = subgraph  # fix for layer.model.get_layer_output_variable()
+                graph_dict[node.name] = node
+                node.model            = subgraph  # fix for layer.model.get_layer_output_variable()
                 for out_name in node.outputs:
                     subgraph.output_vars[out_name] = base_model.output_vars[out_name]
-                graph_dict[node.name] = node
+            subgraph.graph   = graph_dict
 
-            subgraph.graph = graph_dict
-            subgraph.inputs = input_layer.outputs if idx > 0 else base_model.inputs
-            subgraph.outputs = slice_[-1].outputs if idx < len(node_slices) - 1 else base_model.outputs
+            ###### config input
+            print("idx is ", idx)
+            if idx > 0:
+                subgraph.inputs = [curInputNode.outputs[0] for curInputNode in pooled_input_layer]
+            else:
+                subgraph.inputs = base_model.inputs
+
+            ###### config output
+            pooled_outputs  = []
+            print("checking output")
+            for layer in slice_:
+                outputIdxs = cls.check_io_idx_from_node(slice_, layer, False)
+                print(f"layer name {layer.name} : {outputIdxs}")
+                for outIdx in outputIdxs:
+                    pooled_outputs.append(layer.outputs[outIdx])
+
+            subgraph.outputs = pooled_outputs
+            # subgraph.inputs = input_layer.outputs if idx > 0 else base_model.inputs
+            # subgraph.outputs = slice_[-1].outputs if idx < len(node_slices) - 1 else base_model.outputs
+
+            print("input ---->")
+            print(subgraph.inputs)
+            print("output ---->")
+            print(subgraph.outputs)
+
+
+
+
             subgraph._applied_flows = base_model._applied_flows
-
             # NOTE might need to examine other subgraph-related flows (i.e., fifo_optimizer)
             subgraph.apply_flow('vivado:specific_types')
             subgraph.apply_flow('vitis:apply_templates')
@@ -1101,7 +1277,7 @@ class MultiModelGraph:
 
             subgraphs.append(subgraph)
 
-        return cls(subgraphs)
+        return cls(subgraphs, input_node_links)
 
     @staticmethod
     def _validate_split_points(model: ModelGraph, split_names: list[str]):
@@ -1116,21 +1292,36 @@ class MultiModelGraph:
                 raise ValueError(f"Split layer '{name}' not found in the model.")
             if len(node.inputs) > 1:
                 raise ValueError(f"Cannot split at layer '{name}' (multiple inputs detected).")
-            if model.graph[node.inputs[0]].class_name == 'Reshape' or node.class_name == 'Reshape':
+
+            hostName = None
+            for key, value in model.graph.items():
+                if value.outputs[0] == node.inputs[0]:
+                    hostName = key
+
+            if model.graph[hostName].class_name == 'Reshape' or node.class_name == 'Reshape':
                 raise ValueError(f"Cannot split at '{name}': Reshape layer found in this or previous layer.")
 
     @staticmethod
-    def _create_input_node(model, next_node, kind, index):
+    def _create_input_node(model, next_node, kind, index, next_node_portName = None, namedNewInputLayer = None):
         layer_name = f'{next_node.name}_input'
+
+        if (namedNewInputLayer is not None):
+            if layer_name in namedNewInputLayer:
+                newLayerName = layer_name + "_" + str(namedNewInputLayer[layer_name])
+                namedNewInputLayer[layer_name] = namedNewInputLayer[layer_name] + 1
+                layer_name = newLayerName
+            else:
+                namedNewInputLayer[layer_name] = 0
+
         attrs = {
             'name': layer_name,
             'class_name': kind,
             'data_format': 'channels_last',
-            'input_shape': next_node.get_input_variable().shape,
+            'input_shape': next_node.get_input_variable(next_node_portName).shape,
         }
         model.index = index
         node = model.make_node(kind, layer_name, attrs, [layer_name], [layer_name], initialize=True)
-        model.output_vars[layer_name].type.precision = next_node.get_input_variable().type.precision
+        model.output_vars[layer_name].type.precision = next_node.get_input_variable(next_node_portName).type.precision
         return node
 
     def _initialize_config(self, first_graph):
@@ -1142,6 +1333,10 @@ class MultiModelGraph:
         }
         self._update_project_config(first_graph)
         self.backend = first_graph.config.backend
+
+        ####### after Multigraph split already some config may have been augment after
+        self.backend.writer.multigraph_augment_config(self)
+
 
     def _bind_modelgraph_methods(self):
         # Bind necessary ModelGraph methods to this instance
@@ -1296,11 +1491,12 @@ class MultiModelGraph:
         self.nn_config = self.parse_nn_config()
         self.config.config['Stamp'] = self._make_stamp()
         # Bypass VitisWriter and invoke write_hls directly from VivadoWriter
-        super(self.backend.writer.__class__, self.backend.writer).write_hls(self, is_multigraph=True)
+        #super(self.backend.writer.__class__, self.backend.writer).write_hls(self, is_multigraph=True)
+        self.backend.writer.write_hls(self, is_multigraph=True)
 
     def compile(self):
         self.write()
-        self._compile()
+        #self._compile()
 
     def predict(self, x, sim='csim'):
         if sim == 'csim':

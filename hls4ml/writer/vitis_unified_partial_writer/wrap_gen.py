@@ -43,7 +43,7 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified_partial/myproject_axi.cpp'), 'r')
-        fout = open(f'{model.config.get_output_dir()}/firmware/myproject_axi.cpp', 'w')
+        fout = open(f'{model.config.get_output_dir()}/firmware/{mg.get_wrapper_file_name(model)}.cpp', 'w')
 
 
         for line in fin.readlines():
@@ -83,6 +83,7 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
                         line += mg.get_enqueue_func_stream2rstream(inp, inp_idx)
                     else:
                         line += mg.get_enqueue_func_atom2stream(inp, inp_idx)
+                    line += "\n"
 
             elif "// hls-fpga-machine-learning insert call"       in line:
                 poolList = []
@@ -112,7 +113,7 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified_partial/myproject_axi.h'), 'r')
-        fout = open(f'{model.config.get_output_dir()}/firmware/myproject_axi.h', 'w')
+        fout = open(f'{model.config.get_output_dir()}/firmware/{mg.get_wrapper_file_name(model)}.h', 'w')
 
         for line in fin.readlines():
 

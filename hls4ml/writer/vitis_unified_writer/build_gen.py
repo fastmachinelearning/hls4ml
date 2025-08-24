@@ -53,6 +53,8 @@ class VitisUnified_BuildGen:
                 line = line.replace("{FILE_NAME_AXIS}", mg.get_wrapper_file_name(model))
             if "{FILE_NAME_BASE}" in line:
                 line = line.replace("{FILE_NAME_BASE}", mg.get_main_file_name(model))
+            if "{OUTPUT_KERNEL_TYPE}" in line:
+                line = line.replace("{OUTPUT_KERNEL_TYPE}", mg.get_output_kernel_type())
 
 
             fout.write(line)

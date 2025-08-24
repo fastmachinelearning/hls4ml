@@ -7,8 +7,9 @@ from shutil import copy2
 from hls4ml.backends import VitisUnifiedBackend, VivadoBackend
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vivado_report
-
 from hls4ml.writer.vitis_unified_partial_writer.meta_gen import VitisUnifiedPartial_MetaGen  as mg
+
+from magic_streamer_mng import MagicStreamerManager
 
 
 class VitisUnifiedPartialBackend(VitisUnifiedBackend):
@@ -110,14 +111,27 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
         config['MultiGraphConfig']['amtGraph'] = init_amt_graph # it should be set by the multigraph system
         config['MultiGraphConfig']['graphIdx'] = -1 # -1 means unset yet or it is multigraph stitcher
         print(f"mgs initial is set to {init_mgs_meta}")
-        config['MultiGraphConfig']['MgsMeta']  = init_mgs_meta if init_mgs_meta is not None else [] #### it should be only used for stitcher
-
 
         config['MultiGraphConfig']['IOInterimType'] = {}
         config['MultiGraphConfig']['IOInterimType']['Input'] = input_interim_type
         config['MultiGraphConfig']['IOInterimType']['Output'] = output_interim_type
 
+        config['MagicStreamerMng'] = None
+
         return config
+
+
+
+    def multigraph_augment_config(self, multi_model):
+
+        #### create magic streamer manager
+        mgs_mng = MagicStreamerManager(multi_model)
+
+        ########## fill to every posible graph to make it work
+        multi_model.config.config["MagicStreamerMng"] = mgs_mng
+        for subGraph in multi_model.graphs:
+            subGraph.config.config["MagicStreamerMng"] = mgs_mng
+
 
 
 

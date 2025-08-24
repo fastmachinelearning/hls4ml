@@ -67,10 +67,15 @@ class VitisUnifiedWriter(VitisWriter):
 
     def write_hls(self, model, is_multigraph=False):
 
+
+        if is_multigraph:
+            super().write_hls(model, is_multigraph = True)
+            return
+
         self.generate_config(model)
 
 
-        super().write_hls(model)
+        super().write_hls(model, is_multigraph = False)
         self.wg.write_wrapper(self.writer_meta, model, self.mg)
 
 

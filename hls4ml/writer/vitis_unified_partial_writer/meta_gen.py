@@ -24,6 +24,10 @@ class VitisUnifiedPartial_MetaGen(VitisUnified_MetaGen):
         return f"{model.config.get_project_name()}_axis"
 
     @classmethod
+    def get_output_kernel_type(cls):
+        return "ip_catalog"
+
+    @classmethod
     def get_input_size_arr_name(self, model):
         return "N_IN_" + model.config.get_project_name()
 
@@ -46,7 +50,7 @@ class VitisUnifiedPartial_MetaGen(VitisUnified_MetaGen):
     @classmethod
     def get_all_last_logic(self, amt):
         isLastList = [self.get_is_last_var(idx) for idx in range(amt)]
-        return " & ".join(isLastList)
+        return " && ".join(isLastList)
 
     ##################################################
     ## generation function call        ###############
