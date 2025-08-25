@@ -8,10 +8,12 @@ set      HLS_CFG_MGS_WRAP_WIDTH VAL
 # HLS CFG MGS WRAP WIDTH the Val dma is include
 
 ##### connection meta
-variable HLS_CFG_MGS_M
-set      HLS_CFG_MGS_M VAL
+######### input
 variable HLS_CFG_MGS_S
 set      HLS_CFG_MGS_S VAL
+variable HLS_CFG_MGS_M
+######### output
+set      HLS_CFG_MGS_M VAL
 
 # kernel name setting
 #### src repo path

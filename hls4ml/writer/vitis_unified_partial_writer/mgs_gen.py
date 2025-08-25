@@ -12,15 +12,17 @@ class VitisUnifiedPartial_MagicArchGen():
 
     ########### allow for
     @classmethod
-    def convert_idx_to_io_name(cls, list_of_io_idx, multi_graph, gid, is_input, default_name: str):
+    def convert_idx_to_io_name(cls, meta, mg, list_of_io_idx, multi_graph, gid, is_input, default_name: str):
+        inp_axis_t, out_axis_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
         sub_graph = multi_graph.graphs[gid]
-        io_name_list = sub_graph.inputs if is_input else sub_graph.outputs
+        io_tensor = sub_graph.get_input_variables() if is_input else sub_graph.get_output_variables()
         result_name_list = []
         for io_idx in list_of_io_idx:
             if io_idx is None:
                 result_name_list.append(default_name)
             else:
-                result_name_list.append(io_name_list[io_idx])
+                io_name = mg.get_io_port_name(io_tensor[io_idx], is_input, io_idx)
+                result_name_list.append(io_name)
         return result_name_list
 
     @classmethod
@@ -65,25 +67,28 @@ class VitisUnifiedPartial_MagicArchGen():
                 width_list.extend([str(magic_buffer_meta.data_width) for magic_buffer_meta in mgs_buffer_meta_list])
                 line = line.replace("VAL", "{"+ " ".join(width_list) + "}")
             if "HLS_CFG_MGS_M" in line:
-                all_input_connect = [ ] #### each element is for each subgraph
-                for gid in range(meta.vitis_unified_config.get_amt_graph()):
-                    mgs_buffer_con_idx = meta.vitis_unified_config.get_mgs_mng().get_io_idx_for_all_mgs_buffer_with_dma(gid, True)
-                    input_connect_names = cls.convert_idx_to_io_name(mgs_buffer_con_idx, model, gid, True, "DUMMY")
-                    input_connect_str = "{" + " ".join(input_connect_names) + "}"
-                    all_input_connect.append(input_connect_str)
-
-                line = line.replace("VAL", "{" + " ".join(all_input_connect) + "}")
-
-            if "HLS_CFG_MGS_S" in line:
+                #### output side
                 all_output_connect = []  #### each element is for each subgraph
                 for gid in range(meta.vitis_unified_config.get_amt_graph()):
-                    mgs_buffer_con_idx = meta.vitis_unified_config.get_mgs_mng().get_io_idx_for_all_mgs_buffer_with_dma(gid, False)
-                    output_connect_names = cls.convert_idx_to_io_name(mgs_buffer_con_idx, model, gid, False, "DUMMY")
+                    mgs_buffer_con_idx = meta.vitis_unified_config.get_mgs_mng().get_io_idx_for_all_mgs_buffer_with_dma(
+                        gid, False)
+                    output_connect_names = cls.convert_idx_to_io_name(meta, mg, mgs_buffer_con_idx, model, gid, False, "DUMMY")
                     output_connect_str = "{" + " ".join(output_connect_names) + "}"
                     all_output_connect.append(output_connect_str)
 
                 line = line.replace("VAL", "{" + " ".join(all_output_connect) + "}")
 
+            if "HLS_CFG_MGS_S" in line:
+                #### input side
+                all_input_connect = []  #### each element is for each subgraph
+                for gid in range(meta.vitis_unified_config.get_amt_graph()):
+                    mgs_buffer_con_idx = meta.vitis_unified_config.get_mgs_mng().get_io_idx_for_all_mgs_buffer_with_dma(
+                        gid, True)
+                    input_connect_names = cls.convert_idx_to_io_name(meta, mg, mgs_buffer_con_idx, model, gid, True, "DUMMY")
+                    input_connect_str = "{" + " ".join(input_connect_names) + "}"
+                    all_input_connect.append(input_connect_str)
+
+                line = line.replace("VAL", "{" + " ".join(all_input_connect) + "}")
 
             if "HLS_CFG_HLS_SRC" in line:
                 kernel_paths = [sub_graph.config.get_output_dir() + "/unifiedWorkspace" for sub_graph in model.graphs]

@@ -11,22 +11,36 @@ set script_file "project_builder.tcl"
 # Create project
 create_project ${_xil_proj_name_} ./${_xil_proj_name_} -part xczu9eg-ffvb1156-2-e
 
+source mga_meta.tcl
+
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
 set obj [current_project]
 
-set_property ip_repo_paths ../ips $obj
+# set_property ip_repo_paths ../ips $obj
+# update_ip_catalog
+
+# foreach ip_dir $HLS_CFG_HLS_SRC {
+#     update_ip_catalog -add $ip_dir -repo_path $ip_dir
+# }
+# update_ip_catalog
+
+set HLS_CFG_HLS_ALL_IP {}
+foreach dir $HLS_CFG_HLS_SRC {
+        lappend HLS_CFG_HLS_ALL_IP $dir
+}
+lappend HLS_CFG_HLS_ALL_IP ../ips
+set_property ip_repo_paths $HLS_CFG_HLS_ALL_IP $obj
 update_ip_catalog
 
 set_property -name "board_part" -value "xilinx.com:zcu102:part0:3.4" -objects $obj
 
-source mga_meta.tcl
 
 proc cr_bd_system {} {
 
-    global HLS_CFG_AMT_MGS HLS_CFG_MGS_INDEX HLS_CFG_BANK_IDX_WIDTH HLS_CFG_MGS_WRAP_WIDTH
+    global HLS_CFG_AMT_MGS HLS_CFG_MGS_INDEX HLS_CFG_BANK_IDX_WIDTH HLS_CFG_MGS_WRAP_WIDTH HLS_CFG_MGS_S HLS_CFG_MGS_M HLS_CFG_HLS_TOP_NAME
 
     set design_name system
     create_bd_design $design_name
@@ -337,6 +351,173 @@ proc cr_bd_system {} {
 
         #### return to old instance
         current_bd_instance $oldCurInst
+    
+    }
+
+    proc convert_hier_cell_dfx_to_bd {} {
+
+
+        set oldCurInst [current_bd_instance .]
+
+        ### create block design container
+        validate_bd_design
+        startgroup
+        set curdesign [current_bd_design]
+        create_bd_design -cell [get_bd_cells /dfx_par] dfx_par
+        current_bd_design $curdesign
+        set new_cell [create_bd_cell -type container -reference dfx_par dfx_par_temp]
+        replace_bd_cell [get_bd_cells /dfx_par] $new_cell
+        delete_bd_objs  [get_bd_cells /dfx_par]
+        set_property name dfx_par $new_cell
+        endgroup
+        ### set property for dfx_par to be dfx region
+        set_property CONFIG.ENABLE_DFX {true} [get_bd_cells dfx_par]
+        validate_bd_design
+
+        current_bd_instance $oldCurInst
+        validate_bd_design
+        save_bd_design
+
+        current_bd_design [get_bd_designs system]
+
+
+    }
+
+    proc build_reconfig_module {} {
+    
+        ###############################################
+        ################# create reconfig module ######
+        ###############################################
+        current_bd_design [get_bd_designs system]
+
+        set curdesign [current_bd_design]
+
+        create_bd_design -boundary_from_container [get_bd_cells /dfx_par] dfx_par_1
+
+        current_bd_design $curdesign
+        set_property -dict [list CONFIG.LIST_SYNTH_BD {dfx_par.bd:dfx_par_1.bd} CONFIG.LIST_SIM_BD {dfx_par.bd:dfx_par_1.bd}] [get_bd_cells /dfx_par]
+
+        current_bd_design $curdesign
+        current_bd_design [get_bd_designs dfx_par_1]
+
+
+
+        ################################################
+        ################### add cell ###################
+        ################################################
+
+        startgroup
+        create_bd_cell -type ip -vlnv xilinx.com:hls:myproject_graph1_axis:1.0 myproject_graph1_axis_0
+        endgroup
+
+        ################################################
+        ################### do connection ##############
+        ################################################
+
+        connect_bd_intf_net [get_bd_intf_ports S_AXI_0] [get_bd_intf_pins myproject_graph1_axis_0/streamIo_in0_input_1]
+        connect_bd_intf_net [get_bd_intf_ports M_AXI_0] [get_bd_intf_pins myproject_graph1_axis_0/streamIo_out0_layer13_cpy2]
+        connect_bd_intf_net [get_bd_intf_ports M_AXI_1] [get_bd_intf_pins myproject_graph1_axis_0/streamIo_out1_layer15_out]
+        connect_bd_net [get_bd_ports clk] [get_bd_pins myproject_graph1_axis_0/ap_clk]
+        connect_bd_net [get_bd_ports nreset] [get_bd_pins myproject_graph1_axis_0/ap_rst_n]
+
+        validate_bd_design
+
+        save_bd_design
+
+        current_bd_design [get_bd_designs system]
+    
+    
+    
+    }
+
+    proc build_reconfig_module2 { gid top_func_name input_list output_list dataWidths } {
+
+        current_bd_design [get_bd_designs system]
+
+        set curdesign [current_bd_design]
+
+        create_bd_design -boundary_from_container [get_bd_cells /dfx_par] dfx_par_${gid}
+
+        ################################################
+        #### switch back to system to set the config ###
+        ################################################
+        current_bd_design $curdesign
+        #set_property -dict [list CONFIG.LIST_SYNTH_BD {dfx_par.bd:dfx_par_${gid}.bd} CONFIG.LIST_SIM_BD {dfx_par.bd:dfx_par_${gid}.bd}] [get_bd_cells /dfx_par]
+
+        ################################################
+        #### switch back to the reconfig module ########
+        ################################################
+
+        current_bd_design $curdesign
+        current_bd_design [get_bd_designs dfx_par_${gid}]
+        ################################################
+        #### create cell                        ########
+        ################################################
+
+        startgroup
+        create_bd_cell -type ip -vlnv xilinx.com:hls:${top_func_name}:1.0 ${top_func_name}_0
+        endgroup
+
+        ################################################
+        #### do connection input #######################
+        ################################################
+
+        for {set mgs_buffer_idx 0} {$mgs_buffer_idx < [llength $input_list]} {incr mgs_buffer_idx} {
+            set kernel_port_name [lindex $input_list $mgs_buffer_idx]
+
+
+            switch -- $kernel_port_name {
+                "DUMMY" {
+                    ####### create dummy stream slave
+                    set DummyStreamSlave_${mgs_buffer_idx}  [ create_bd_cell -type ip -vlnv hls4ml_par_gen:user:DummyStreamSlave:1.0 DummyStreamSlave_${mgs_buffer_idx} ]
+                    set_property CONFIG.DATA_WIDTH [lindex $dataWidths $mgs_buffer_idx] [get_bd_cells DummyStreamSlave_${mgs_buffer_idx}]
+
+                    connect_bd_intf_net -intf_net DummyStreamSlave_${mgs_buffer_idx}   [get_bd_intf_pins S_AXI_${mgs_buffer_idx} ] [get_bd_intf_pins DummyStreamSlave_${mgs_buffer_idx}/S_AXI]
+                    connect_bd_net  -net clk_internal    [get_bd_pins clk     ] [get_bd_pins DummyStreamSlave_${mgs_buffer_idx}/clk]
+                    connect_bd_net  -net nreset_internal [get_bd_pins nreset  ] [get_bd_pins DummyStreamSlave_${mgs_buffer_idx}/reset]
+                    
+                }
+                default {
+                    connect_bd_intf_net -intf_net ${kernel_port_name}   [get_bd_intf_pins S_AXI_${mgs_buffer_idx} ] [get_bd_intf_pins ${top_func_name}_0/${kernel_port_name}]
+                }
+            }
+        }
+
+        ################################################
+        #### do connection output ######################
+        ################################################
+
+        for {set mgs_buffer_idx 0} {$mgs_buffer_idx < [llength $output_list]} {incr mgs_buffer_idx} {
+            set kernel_port_name [lindex $output_list $mgs_buffer_idx]
+
+
+            switch -- $kernel_port_name {
+                "DUMMY" {
+                    ####### create dummy stream slave
+                    set DummyStreamMaster_${mgs_buffer_idx}  [ create_bd_cell -type ip -vlnv user.org:user:DummyStreamMaster:1.0 DummyStreamMaster_${mgs_buffer_idx} ]
+                    set_property CONFIG.DATA_WIDTH [lindex $dataWidths $mgs_buffer_idx] [get_bd_cells DummyStreamMaster_${mgs_buffer_idx}]
+
+                    connect_bd_intf_net -intf_net DummyStreamMaster_${mgs_buffer_idx}   [get_bd_intf_pins M_AXI_${mgs_buffer_idx} ] [get_bd_intf_pins DummyStreamMaster_${mgs_buffer_idx}/M_AXI]
+                    connect_bd_net  -net clk_internal    [get_bd_pins clk     ] [get_bd_pins DummyStreamMaster_${mgs_buffer_idx}/clk]
+                    connect_bd_net  -net nreset_internal [get_bd_pins nreset  ] [get_bd_pins DummyStreamMaster_${mgs_buffer_idx}/reset]
+                    
+                }
+                default {
+                    connect_bd_intf_net -intf_net ${kernel_port_name}   [get_bd_intf_pins M_AXI_${mgs_buffer_idx} ] [get_bd_intf_pins ${top_func_name}_0/${kernel_port_name}]
+                }
+            }
+        }
+
+        connect_bd_net [get_bd_ports clk]    [get_bd_pins ${top_func_name}_0/ap_clk]
+        connect_bd_net [get_bd_ports nreset] [get_bd_pins ${top_func_name}_0/ap_rst_n]
+
+
+        validate_bd_design
+        save_bd_design
+        current_bd_design [get_bd_designs system]
+
+    
+        
     
     }
 
@@ -823,6 +1004,56 @@ proc cr_bd_system {} {
 
     delete_bd_objs [get_bd_addr_segs] [get_bd_addr_segs -excluded]
     assign_bd_address
+
+    convert_hier_cell_dfx_to_bd
+    #build_reconfig_module
+
+    set n [llength $HLS_CFG_HLS_TOP_NAME]
+
+    # Loop over each outer list index
+    for {set i 0} {$i < $n} {incr i} {
+        # Get sublists at index 0 of each inner list
+        set input_meta  [lindex $HLS_CFG_MGS_S $i]
+        set output_meta [lindex $HLS_CFG_MGS_M $i]
+        set top_name    [lindex $HLS_CFG_HLS_TOP_NAME $i]
+
+
+        build_reconfig_module2 $i $top_name $input_meta $output_meta $HLS_CFG_MGS_WRAP_WIDTH
+
+    }
+
+    current_bd_design [get_bd_designs system]
+    validate_bd_design
+    save_bd_design
+
+
+    ####################################
+    ### do dfx config ##################
+    ####################################
+
+
+    # # initialize the list with the main dfx_par.bd
+    set dfx_grp_list {"dfx_par.bd"}
+
+    # append dynamic groups
+    for {set i 0} {$i < $n} {incr i} {
+        lappend dfx_grp_list "dfx_par_$i.bd"
+    }
+
+    # join the list with colon ":" for the property string
+    set dfx_str [join $dfx_grp_list ":"]
+
+    # set the properties
+    set_property -dict [list \
+        CONFIG.LIST_SIM_BD "$dfx_str" \
+        CONFIG.LIST_SYNTH_BD "$dfx_str" \
+    ] [get_bd_cells dfx_par]
+
+    current_bd_design [get_bd_designs system]
+    validate_bd_design
+    save_bd_design
+
+
 
 }
 
