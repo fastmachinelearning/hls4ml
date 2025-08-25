@@ -1134,9 +1134,9 @@ class MultiModelGraph:
             newConfig['MultiGraphConfig'] = copy.deepcopy(baseConfig.get('MultiGraphConfig', {}))
         ######## create the structure
         newConfig.setdefault('MultiGraphConfig', {})
-        newConfig['MultiGraphConfig'].setdefault('amtGraph', amount_graph)
-        newConfig['MultiGraphConfig'].setdefault('graphIdx', graph_idx)
-        newConfig['MultiGraphConfig'].setdefault('MgsMeta', [])
+        newConfig['MultiGraphConfig']['amtGraph'] =  amount_graph
+        newConfig['MultiGraphConfig']['graphIdx'] =  graph_idx
+        newConfig['MultiGraphConfig']['MgsMeta' ] =  []
 
         newConfig['MultiGraphConfig'].setdefault('IOInterimType', {})
         newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Input' , None )

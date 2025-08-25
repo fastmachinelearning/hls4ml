@@ -9,7 +9,7 @@ from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfi
 class VitisUnifiedPartialConfig(VitisUnifiedConfig):
 
 
-    def __init__(self, config, model_inputs, model_outputs):
+    def __init__(self, config, model_inputs, model_outputs, mgs_mng):
 
         super().__init__(config, model_inputs, model_outputs)
 
@@ -22,6 +22,8 @@ class VitisUnifiedPartialConfig(VitisUnifiedConfig):
         self.graph_idx = self.config.get('MultiGraphConfig', {}).get('graphIdx', -1)
 
         self.mgs_meta = self.config.get('MultiGraphConfig', {}).get('MgsMeta', None)
+
+        self.mgs_mng = mgs_mng
 
 
     def get_dma_size(self):
@@ -40,6 +42,10 @@ class VitisUnifiedPartialConfig(VitisUnifiedConfig):
         return self.graph_idx
 
     def get_mgs_meta_list(self):
-        ### it is supposed to return [(dataWidth, IndexWidth, ...), ... ]
-        return self.mgs_meta
+        ### it is supposed to return list of MagicBufferMeta
+        return self.mgs_mng.mgs_buffer_meta
+
+    ### get magic streamer
+    def get_mgs_mng(self):
+        return self.mgs_mng
 

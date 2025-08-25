@@ -72,9 +72,8 @@ class VitisUnifiedWriter(VitisWriter):
             super().write_hls(model, is_multigraph = True)
             return
 
+        ##### generate kernel and its driver
         self.generate_config(model)
-
-
         super().write_hls(model, is_multigraph = False)
         self.wg.write_wrapper(self.writer_meta, model, self.mg)
 

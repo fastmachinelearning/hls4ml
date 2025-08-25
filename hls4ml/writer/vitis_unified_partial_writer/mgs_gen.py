@@ -7,10 +7,24 @@ import math
 
 from hls4ml.writer.vitis_unified_writer.meta import VitisUnifiedWriterMeta
 
+#### This class is allowed for multigraph only
 class VitisUnifiedPartial_MagicArchGen():
 
+    ########### allow for
     @classmethod
-    def gen_vivado_project(cls, meta: VitisUnifiedWriterMeta, model):
+    def convert_idx_to_io_name(cls, list_of_io_idx, multi_graph, gid, is_input, default_name: str):
+        sub_graph = multi_graph.graphs[gid]
+        io_name_list = sub_graph.inputs if is_input else sub_graph.outputs
+        result_name_list = []
+        for io_idx in list_of_io_idx:
+            if io_idx is None:
+                result_name_list.append(default_name)
+            else:
+                result_name_list.append(io_name_list[io_idx])
+        return result_name_list
+
+    @classmethod
+    def gen_vivado_project(cls, meta: VitisUnifiedWriterMeta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         vivado_project_des_folder_path = f'{model.config.get_output_dir()}/vivado_project'
@@ -36,21 +50,49 @@ class VitisUnifiedPartial_MagicArchGen():
         fin = open(vivado_project_src_meta_arg_path, 'r')
         fout = open(des_projectscript_meta_arg_path, 'w')
 
-        meta_list    = meta.vitis_unified_config.get_mgs_meta_list()
+        mgs_buffer_meta_list    = meta.vitis_unified_config.get_mgs_meta_list()
         amt_subGraph = meta.vitis_unified_config.get_amt_graph()
 
-        meta_idx_width = str(max(0, int(math.ceil(math.log2(len(meta_list))))))
         graph_idx_width = str(max(0, int(math.ceil(math.log2(amt_subGraph)))))
 
         for line in fin.readlines():
             if "HLS_CFG_AMT_MGS" in line:
-                line = line.replace("VAL", str(len(meta_list)))
+                line = line.replace("VAL", str(len(mgs_buffer_meta_list)))
             if "HLS_CFG_BANK_IDX_WIDTH" in line:
                 line = line.replace("VAL", graph_idx_width)
             if "HLS_CFG_MGS_WRAP_WIDTH" in line:
                 width_list = ([str(meta.vitis_unified_config.get_dma_size())])
-                width_list.extend([str(width) for width, *_ in meta_list])
+                width_list.extend([str(magic_buffer_meta.data_width) for magic_buffer_meta in mgs_buffer_meta_list])
                 line = line.replace("VAL", "{"+ " ".join(width_list) + "}")
+            if "HLS_CFG_MGS_M" in line:
+                all_input_connect = [ ] #### each element is for each subgraph
+                for gid in range(meta.vitis_unified_config.get_amt_graph()):
+                    mgs_buffer_con_idx = meta.vitis_unified_config.get_mgs_mng().get_io_idx_for_all_mgs_buffer_with_dma(gid, True)
+                    input_connect_names = cls.convert_idx_to_io_name(mgs_buffer_con_idx, model, gid, True, "DUMMY")
+                    input_connect_str = "{" + " ".join(input_connect_names) + "}"
+                    all_input_connect.append(input_connect_str)
+
+                line = line.replace("VAL", "{" + " ".join(all_input_connect) + "}")
+
+            if "HLS_CFG_MGS_S" in line:
+                all_output_connect = []  #### each element is for each subgraph
+                for gid in range(meta.vitis_unified_config.get_amt_graph()):
+                    mgs_buffer_con_idx = meta.vitis_unified_config.get_mgs_mng().get_io_idx_for_all_mgs_buffer_with_dma(gid, False)
+                    output_connect_names = cls.convert_idx_to_io_name(mgs_buffer_con_idx, model, gid, False, "DUMMY")
+                    output_connect_str = "{" + " ".join(output_connect_names) + "}"
+                    all_output_connect.append(output_connect_str)
+
+                line = line.replace("VAL", "{" + " ".join(all_output_connect) + "}")
+
+
+            if "HLS_CFG_HLS_SRC" in line:
+                kernel_paths = [sub_graph.config.get_output_dir() + "/unifiedWorkspace" for sub_graph in model.graphs]
+                line = line.replace("VAL", "{" + " ".join(kernel_paths) + "}")
+            if "HLS_CFG_HLS_TOP_NAME" in line:
+                kernel_topNames = [ mg.get_top_wrap_func_name(sub_graph) for sub_graph in model.graphs]
+                line = line.replace("VAL", "{" + " ".join(kernel_topNames) + "}")
+
+
             fout.write(line)
 
         fin .close()
@@ -90,7 +132,7 @@ class VitisUnifiedPartial_MagicArchGen():
 
         fout = open(f'{model.config.get_output_dir()}/ips/magic_streamer_grp_src/streamGrp.v', 'w')
 
-        metaList = meta.vitis_unified_config.get_mgs_meta_list()
+        mgs_buffer_meta_list = meta.vitis_unified_config.get_mgs_meta_list()
         ####     v------ mgs0                       v--------- mgs1
         #### [(data width, indexWidth, ....), (data width, indexWidth, ....)]
 
@@ -99,16 +141,16 @@ class VitisUnifiedPartial_MagicArchGen():
 
             if "// hls4ml-streamGrp-gen-parameter" in line:
                 parameterList = []
-                for idx, (data_width, index_width, *_) in enumerate(metaList):
-                    parameterList.append(f"parameter DATA_WIDTH_{idx+1} = {data_width}")
-                    parameterList.append(f"parameter STORAGE_IDX_WIDTH_{idx+1} = {index_width}")
+                for idx, magic_buffer_meta in enumerate(mgs_buffer_meta_list):
+                    parameterList.append(f"parameter DATA_WIDTH_{idx+1} = {magic_buffer_meta.data_width}")
+                    parameterList.append(f"parameter STORAGE_IDX_WIDTH_{idx+1} = {magic_buffer_meta.row_idx_width}")
 
                 parameterStr = ",\n".join(parameterList)
                 newline += parameterStr + "\n"
 
             elif "// hls4ml-streamGrp-gen-io" in line:
                 ioList = []
-                for idx in range(1, len(metaList) + 1):
+                for idx in range(1, len(mgs_buffer_meta_list) + 1):
                     ioList.append(f"//io for MGS{str(idx)}")
                     ioList.append(f"input  wire [DATA_WIDTH_{str(idx)} -1:0]              S{str(idx)}_AXI_TDATA" )
                     ioList.append(f"input  wire                                           S{str(idx)}_AXI_TVALID")
@@ -126,11 +168,11 @@ class VitisUnifiedPartial_MagicArchGen():
                 ioList.append("//--------- Pool commanding ------------")
                 ioList.append("///// for load  [Reset/Init] of dma will be ignore")
                 ioList.append("///// for store [Reset/Init] of dma will be ignore")
-                ioList.append(f"input  wire[{len(metaList)}: 0]                           storeReset")
-                ioList.append(f"input  wire[{len(metaList)}: 0]                           loadReset")
-                ioList.append(f"input  wire[{len(metaList)}: 0]                           storeInit")
-                ioList.append(f"input  wire[{len(metaList)}: 0]                           loadInit")
-                ioList.append(f"output wire[{len(metaList)}: 0]                           finStore")
+                ioList.append(f"input  wire[{len(mgs_buffer_meta_list)}: 0]                           storeReset")
+                ioList.append(f"input  wire[{len(mgs_buffer_meta_list)}: 0]                           loadReset")
+                ioList.append(f"input  wire[{len(mgs_buffer_meta_list)}: 0]                           storeInit")
+                ioList.append(f"input  wire[{len(mgs_buffer_meta_list)}: 0]                           loadInit")
+                ioList.append(f"output wire[{len(mgs_buffer_meta_list)}: 0]                           finStore")
                 ioList.append(f"input  wire                                               finStoreProxyDma")
 
                 newline += ",\n".join(ioList) + ",\n"
@@ -142,7 +184,7 @@ class VitisUnifiedPartial_MagicArchGen():
             elif "// hls4ml-streamGrp-gen-create-module" in line:
 
 
-                for idx in range(1, len(metaList)+1):
+                for idx in range(1, len(mgs_buffer_meta_list)+1):
                     newline += f"//create module for MGS{str(idx)}\n"
                     newline += f"MagicStreammerCore #(\n"
                     newline += f"  .DATA_WIDTH(DATA_WIDTH_{idx}),\n"

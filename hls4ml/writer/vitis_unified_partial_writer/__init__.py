@@ -46,7 +46,8 @@ class VitisUnifiedPartialWriter(VitisUnifiedWriter):
     def generate_config(self, model):
         from hls4ml.backends.vitis_unified_partial.vitis_unified_partial_config import VitisUnifiedPartialConfig
         self.writer_meta.vitis_unified_config = VitisUnifiedPartialConfig(
-            model.config, model.get_input_variables(), model.get_output_variables()
+            model.config, model.get_input_variables(), model.get_output_variables(), self.mgs_mng
+
         )
 
 
@@ -57,4 +58,4 @@ class VitisUnifiedPartialWriter(VitisUnifiedWriter):
         if is_multigraph:
             self.magic_gen.copyMagicArchIp(self.writer_meta, model)
             self.magic_gen.write_mgs(self.writer_meta, model)
-            self.magic_gen.gen_vivado_project(self.writer_meta, model)
+            self.magic_gen.gen_vivado_project(self.writer_meta, model, self.mg)

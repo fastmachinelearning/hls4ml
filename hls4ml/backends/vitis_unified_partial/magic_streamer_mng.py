@@ -94,11 +94,6 @@ class MgsModel:
         self.mgs_buffer_holding = []
         self.mgs_buffer_empty   = []
 
-    ##############################################
-    ############ start get the data    ###########
-    ##############################################
-
-
     def start_convert_model(self):
         for gid, sub_graph in enumerate(self.multigraph.graphs):
             #### initialize the MgsConGraph
@@ -109,9 +104,38 @@ class MgsModel:
             #### start fill the metadata
             self.add_mgs_con_graph(mgs_con_graph)
 
+        print("finish_convert")
+
     def add_mgs_con_graph(self, mgs_con_graph):
         self.con_graphs.append(mgs_con_graph)
 
+    ##############################################
+    ############ start get the data    ###########
+    ##############################################
+
+    def get_io_idx_for_all_mgs_buffer_with_dma(self, gid, is_input):
+        related_con_graph = self.con_graphs[gid]
+        io_con_meta_list = related_con_graph.input_cons if is_input else related_con_graph.output_cons
+
+        result_list = [None for _ in range(len(self.mgs_buffer_meta))]
+
+        dma_port = []
+
+        for io_idx, io_con_meta in enumerate(io_con_meta_list):
+            mgs_idx = io_con_meta.mgs_idx
+            if mgs_idx == -1:
+                dma_port.append(io_idx)
+                continue
+            result_list[mgs_idx] = io_idx
+
+        ##### calculate with dma
+        if len(dma_port) > 1:
+            print("[warning] the system detect io port that should be used by dma is more than one")
+        result_list_with_dma = [None if len(dma_port) == 0 else dma_port[0]]
+        result_list_with_dma.extend(result_list)
+
+
+        return result_list_with_dma
 
     ### for outsider used
     def get_mgs_idx_src(self, gid, inputIdx):
@@ -170,7 +194,7 @@ class MgsModel:
         ##### filter the match buffer from exis
         matched_buffer = list(filter(
             lambda mgs: mgs.is_data_width_match(mgs_con_meta.mgs_wrap_width),
-            self.mgs_buffer_meta ))
+            self.mgs_buffer_empty ))
 
         highest_possible_buffer = sorted(matched_buffer, key=lambda x: x.row_idx_width, reverse=True)
 
