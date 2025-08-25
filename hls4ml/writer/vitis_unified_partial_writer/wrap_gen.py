@@ -18,14 +18,14 @@ class VitisUnifiedPartial_WrapperGen(VitisUnified_WrapperGen):
         for inp_idx, inp in enumerate(inps):
             inp_type = mg.get_dma_type_name()
             if  (meta.vitis_unified_config.is_free_interim_input()) and \
-                (meta.vitis_unified_config.getGraphIdx() != 0  ):
+                (meta.vitis_unified_config.get_graph_idx() != 0  ):
                 inp_type = mg.get_axi_wrapper_type(inp)
             inputStreamList.append(f"{indent} hls::stream<{inp_type}>& {mg.get_io_port_name(inp, True, inp_idx)}")
 
         for out_idx, out in enumerate(outs):
             out_type = mg.get_dma_type_name()
             if  (meta.vitis_unified_config.is_free_interim_output()) and \
-                (meta.vitis_unified_config.getGraphIdx() != (meta.vitis_unified_config.getGraphAmtGraph()-1)  ):
+                (meta.vitis_unified_config.get_graph_idx() != (meta.vitis_unified_config.get_amt_graph()-1)  ):
                 out_type = mg.get_axi_wrapper_type(out)
             outputStreamList.append(f"{indent} hls::stream<{out_type}>& {mg.get_io_port_name(out, False, out_idx)}")
 

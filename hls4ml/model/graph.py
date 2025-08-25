@@ -1139,8 +1139,16 @@ class MultiModelGraph:
         newConfig['MultiGraphConfig'].setdefault('MgsMeta', [])
 
         newConfig['MultiGraphConfig'].setdefault('IOInterimType', {})
-        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Input' , "io_free_stream" if input_raw  else 'io_stream')
-        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Output', "io_free_stream" if output_raw else 'io_stream')
+        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Input' , None )
+        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Output', None )
+
+        newConfig['MultiGraphConfig']['IOInterimType']['Input'] = "io_free_stream" if input_raw else 'io_stream'
+        newConfig['MultiGraphConfig']['IOInterimType']['Output'] = "io_free_stream" if output_raw else 'io_stream'
+
+
+
+
+        print(newConfig)
 
     @staticmethod
     def print_input_node_link_debug(input_node_links):
@@ -1361,7 +1369,7 @@ class MultiModelGraph:
         self.backend = first_graph.config.backend
 
         ####### after Multigraph split already some config may have been augment after
-        self.backend.augment_multigraph_config(self)
+        self.backend.augment_multigraph_writer(self)
 
 
     def _bind_modelgraph_methods(self):
@@ -1688,7 +1696,7 @@ class MultiModelGraph:
                 print(f'Error copying hls4ml logo to {g.config.get_output_dir()} project: {e}')
 
 
-def to_multi_model_graph(model: ModelGraph, split_before_layers: list[str]):
+def to_multi_model_graph(model: ModelGraph, split_before_layers: list[str], free_axi_interim = False):
     """
     Create a MultiModelGraph by splitting a base ModelGraph before the specified layer names.
 
@@ -1700,4 +1708,4 @@ def to_multi_model_graph(model: ModelGraph, split_before_layers: list[str]):
     Returns:
         multi_model_graph (MultiModelGraph): the partitioned multi model graph
     """
-    return MultiModelGraph.from_model_graph(model, split_before_layers)
+    return MultiModelGraph.from_model_graph(model, split_before_layers, free_axi_interim)

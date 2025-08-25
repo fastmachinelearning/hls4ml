@@ -18,6 +18,7 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
         super(VivadoBackend, self).__init__(name='VitisUnifiedPartial')
         self._register_layer_attributes()
         self._register_flows()
+        self.mgs_model = None
 
 
     def build(
@@ -122,19 +123,14 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
 
 
 
-    def augment_multigraph_config(self, multi_model):
+    def augment_multigraph_writer(self, multi_model):
 
         #### create magic streamer manager
         mgs_mng = MgsModel(multi_model)
         #### start retrieve the metadata
         mgs_mng.start_convert_model()
-        ########## fill to every posible graph to make it work
-        multi_model.config.config["MagicStreamerMng"] = mgs_mng
-        for subGraph in multi_model.graphs:
-            subGraph.config.config["MagicStreamerMng"] = mgs_mng
-
-
-
+        #### assign mgs_mng writer in manager
+        self.writer.mgs_mng = mgs_mng
 
     def _register_flows(self):
         vitis_ip = 'vitis:ip'

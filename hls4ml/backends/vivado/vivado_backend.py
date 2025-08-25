@@ -288,7 +288,7 @@ class VivadoBackend(FPGABackend):
 
         return config
 
-    def augment_multigraph_config(self, multi_model_config):
+    def augment_multigraph_writer(self, multi_model_config):
         """Augment the configuration of a multi-graph model."""
         """
         no return value

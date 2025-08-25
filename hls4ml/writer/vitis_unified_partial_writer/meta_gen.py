@@ -93,7 +93,7 @@ class VitisUnifiedPartial_MetaGen(VitisUnified_MetaGen):
 
     @classmethod
     def get_dequeue_func_rstream2stream(self, tensorVar, idx: int, lastcheck: str):
-        result = "dequeue_layer2layer><{OUTPUT_LAYER_STREAM}, {OUTPUT_LAYER_ARR}, {SIZE}>({DES_STREAM}, {RAW_STREAM}, {IS_LAST_CHECK})".format(
+        result = "dequeue_layer2layer<{OUTPUT_LAYER_STREAM}, {OUTPUT_LAYER_ARR}, {SIZE}>({DES_STREAM}, {RAW_STREAM}, {IS_LAST_CHECK});".format(
             OUTPUT_LAYER_STREAM = self.get_axi_wrapper_type(tensorVar),
             OUTPUT_LAYER_ARR    = tensorVar.type.name,
             SIZE                = str(tensorVar.size()),
