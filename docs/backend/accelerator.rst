@@ -88,15 +88,6 @@ The Vitis accelerator backend has been tested with the following boards:
 * `Alveo u250 <https://www.xilinx.com/products/boards-and-kits/alveo/u250.html>`_
 * `Versal vck5000 <https://www.xilinx.com/products/boards-and-kits/vck5000.html>`_
 
-Kernel wrapper
-==============
-
-To integrate with the Vitis System Design Flow and run on an accelerator, the generated ``hls4ml`` model must be encapsulated and built as a Vitis kernel (``.xo`` file) and linked into a binary file (``.xclbin``) during the implementation step. On the host side, standard C++ code using either `OpenCL <https://xilinx.github.io/XRT/master/html/opencl_extension.html>`_ or `XRT API <https://xilinx.github.io/XRT/master/html/xrt_native_apis.html>`_ can be used to download the ``.xclbin`` file to the accelerator card and use any kernel it contains.
-
-The ``VitisAccelerator`` backend automatically generates a kernel wrapper, an host code example, and a Makefile to build the project.
-
-**Note:** The current implementation of the kernel wrapper code is oriented toward throughput benchmarking and not general inference uses (See :ref:`here<hardware_predict-method>`). It can nonetheless be further customized to fit specific applications.
-
 Options
 =======
 
@@ -113,6 +104,9 @@ Additionaly, the backend proposes the following options to customize the impleme
     * ``hw_quant``: Is arbitrary precision quantization performed in hardware or not. If True, the quantization is performed in hardware and float are used at the kernel interface, otherwise it is performed in software and arbitrary precision types are used at the interface. (Defaults to  ``False``).
     * ``vivado_directives``: A list of strings to be added under the ``[Vivado]`` section of the generated ``accelerator_card.cfg`` link configuration file. Can be used to add custom directives to the Vivado project.
 
+Additionally, the backend supports the global option ``io_type``, which also controls how input/output data is transferred between the FPGA memory banks and the model.
+**Note:** ``io_stream`` may fail for very large inputs, while ``io_parallel`` can have issues with large convolutional models.
+
 Platform selection
 ==================
 
@@ -121,6 +115,17 @@ The backend always retrieves all installed platforms using ``platforminfo``.
 
 * If a ``platform`` argument is provided, it will try to use that platform.
 * If no ``platform`` is given, the backend will use the ``board`` argument to select a default platform.
+
+
+Kernel wrapper
+==============
+
+To integrate with the Vitis System Design Flow and run on an accelerator, the generated ``hls4ml`` model must be encapsulated and built as a Vitis kernel (``.xo`` file) and linked into a binary file (``.xclbin``) during the implementation step. On the host side, standard C++ code using either `OpenCL <https://xilinx.github.io/XRT/master/html/opencl_extension.html>`_ or `XRT API <https://xilinx.github.io/XRT/master/html/xrt_native_apis.html>`_ can be used to download the ``.xclbin`` file to the accelerator card and use any kernel it contains.
+
+The ``VitisAccelerator`` backend automatically generates a kernel wrapper, an host code example, and a Makefile to build the project.
+
+**Note:** The current implementation of the kernel wrapper code is oriented toward throughput benchmarking and not general inference uses (See :ref:`here<hardware_predict-method>`). It can nonetheless be further customized to fit specific applications.
+
 
 Build workflow
 ==============
