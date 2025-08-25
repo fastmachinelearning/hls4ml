@@ -61,7 +61,6 @@ class MgsConGraph:
             src_mgs_con_meta = self.mgs_model.get_mgs_idx(src_gid, src_out_idx)
             mgs_con_meta.mgs_idx = src_mgs_con_meta
             self.mgs_model.move_buffer_to_free_list(src_mgs_con_meta)
-            ### expand the mgs if it is need
 
         self.input_cons.append(mgs_con_meta)
 
@@ -72,13 +71,16 @@ class MgsConGraph:
             return
 
         ###### we check the
-        stream_buffer = self.mgs_model.get_existing_possible_mgs_buffer(mgs_con_meta)
+        stream_buffer_idx = self.mgs_model.get_existing_possible_mgs_buffer(mgs_con_meta)
 
-        if stream_buffer is None:
-            stream_buffer = self.mgs_model.allocate_mgs_buffer(mgs_con_meta)
+        if stream_buffer_idx is None:
+            stream_buffer_idx = self.mgs_model.allocate_mgs_buffer(mgs_con_meta)
 
-        self.mgs_model.move_buffer_to_using_list(stream_buffer.mgs_idx)
-        mgs_con_meta.mgs_idx = stream_buffer.mgs_idx
+        ##### upgrade the magic stream buffer to match size of it is lower
+        self.mgs_model.upgrade_mgs_to_support(mgs_con_meta, stream_buffer_idx)
+
+        self.mgs_model.move_buffer_to_using_list(stream_buffer_idx)
+        mgs_con_meta.mgs_idx = stream_buffer_idx
 
 
         self.output_cons.append(mgs_con_meta)
@@ -110,11 +112,43 @@ class MgsModel:
     def add_mgs_con_graph(self, mgs_con_graph):
         self.con_graphs.append(mgs_con_graph)
 
+
+    ### for outsider used
+    def get_mgs_idx_src(self, gid, inputIdx):
+        if gid not in range(0, self.multigraph.amt_graph):
+            raise Exception(
+                "get_mgs_idx_src: gid {gid} is out of bound. The amount of graph is {amt_graph}".format(
+                    gid=gid, amt_graph=self.multigraph.amt_graph
+                )
+            )
+        if inputIdx not in range(0, len(self.con_graphs[gid].input_cons)):
+            raise Exception(
+                "get_mgs_idx_src: inputIdx {inputIdx} is out of bound. The amount of input is {input_num}".format(
+                    inputIdx=inputIdx, input_num=len(self.con_graphs[gid].input_cons)
+                )
+            )
+        return self.con_graphs[gid].input_cons[inputIdx].mgs_idx
+    ### for outsider usd
+    def get_mgs_idx_dst(self, gid, outputIdx):
+        if gid not in range(0, self.multigraph.amt_graph):
+            raise Exception(
+                "get_mgs_idx_dst: gid {gid} is out of bound. The amount of graph is {amt_graph}".format(
+                    gid=gid, amt_graph=self.multigraph.amt_graph
+                )
+            )
+        if outputIdx not in range(0, len(self.con_graphs[gid].output_cons)):
+            raise Exception(
+                "get_mgs_idx_dst: outputIdx {outputIdx} is out of bound. The amount of output is {output_num}".format(
+                    outputIdx=outputIdx, output_num=len(self.con_graphs[gid].output_cons)
+                )
+            )
+        return self.con_graphs[gid].output_cons[outputIdx].mgs_idx
+
     ##############################################
     ############ magic streamer buffer ###########
     ##############################################
 
-    ##### used by the vitis uniifed partial backend writer
+    ##### used by the vitis uniifed partial backend writer and MgsConGraph
     def get_mgs_idx(self, gid, outputIdx):
         if gid < 0:
             return -1
@@ -124,7 +158,7 @@ class MgsModel:
     def upgrade_mgs_to_support(self, mgs_con_meta, mgsIdx):
         if mgsIdx >= len(self.mgs_buffer_meta) or mgsIdx < 0:
             raise Exception("upgrade magic streamer with Idx {mgsIdx} is out of bound.")
-        self.mgs_buffer_meta[mgsIdx].checkSpecAndUpgrade(mgs_con_meta)
+        self.mgs_buffer_meta[mgsIdx].upgrade_mgs_to_support(mgs_con_meta)
 
     def allocate_mgs_buffer(self, mgs_con_meta):
         newStreamBuffer = MagicBufferMeta(mgs_con_meta.mgs_wrap_width, mgs_con_meta.mgs_row_idx_width, len(self.mgs_buffer_meta))
@@ -140,7 +174,7 @@ class MgsModel:
 
         highest_possible_buffer = sorted(matched_buffer, key=lambda x: x.row_idx_width, reverse=True)
 
-        return None if len(highest_possible_buffer) == 0 else highest_possible_buffer[0]
+        return None if len(highest_possible_buffer) == 0 else highest_possible_buffer[0].mgs_idx
 
     def move_buffer_to_using_list(self, mgs_idx):
         ###### delete from free list first

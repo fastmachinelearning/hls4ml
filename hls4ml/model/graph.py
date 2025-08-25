@@ -1042,10 +1042,11 @@ class MultiModelGraph:
         Create a stitched model from pre-optimized subgraphs.
         """
         self.graphs = graphs
+        self.input_node_links = input_node_links
         self._initialize_config(self.graphs[0])
         self._bind_modelgraph_methods()
         self._initialize_io_attributes(self.graphs)
-        self.input_node_links = input_node_links
+
 
 
 
@@ -1099,9 +1100,10 @@ class MultiModelGraph:
     def get_src_subGraph_and_output_idx(subGraphs, output_name):
 
         for gid, subGraph in enumerate(subGraphs):
-            for layer_name, node in subGraph.graph.items():
-                if output_name in node.outputs:
-                    return gid, node.outputs.indexOf(output_name)
+            if output_name in subGraph.outputs:
+                return gid, subGraph.outputs.index(output_name)
+
+        return -1, -1
 
 
 
@@ -1125,20 +1127,28 @@ class MultiModelGraph:
         return rerouted_result
 
     @staticmethod
-    def add_config_for_multi_model(baseConfig, newConfig, amount_graph, graph_idx, input_raw, output_raw):
+    def add_config_for_multi_model(baseConfig, newConfig, amount_graph, graph_idx, input_raw: bool, output_raw: bool):
 
         ######### we focus on copy 'MultiGraphConfig'
         if 'MultiGraphConfig' in baseConfig:
             newConfig['MultiGraphConfig'] = copy.deepcopy(baseConfig.get('MultiGraphConfig', {}))
         ######## create the structure
         newConfig.setdefault('MultiGraphConfig', {})
-        newConfig['MultiGraphConfig'].setdefault('amtGraph', -2)
-        newConfig['MultiGraphConfig'].setdefault('graphIdx', -2)
+        newConfig['MultiGraphConfig'].setdefault('amtGraph', amount_graph)
+        newConfig['MultiGraphConfig'].setdefault('graphIdx', graph_idx)
         newConfig['MultiGraphConfig'].setdefault('MgsMeta', [])
 
         newConfig['MultiGraphConfig'].setdefault('IOInterimType', {})
-        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Input', -2)
-        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Output', -2)
+        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Input' , "io_free_stream" if input_raw  else 'io_stream')
+        newConfig['MultiGraphConfig']['IOInterimType'].setdefault('Output', "io_free_stream" if output_raw else 'io_stream')
+
+    @staticmethod
+    def print_input_node_link_debug(input_node_links):
+        print("------ input_node_links ----------")
+        for gid, input_metas in enumerate(input_node_links):
+            print(f"    ----- @ graph idx {gid}")
+            for idx, (src_gid, src_output_idx) in enumerate(input_metas):
+                print(f"        input {idx}: get data from graph {src_gid} output {src_output_idx}")
 
     ######## try to copy from the base model, if it it exist
 
@@ -1209,7 +1219,9 @@ class MultiModelGraph:
                 named_new_input_layer = dict()
                 #### inputIdx is index in input of target Node
                 for inputIdx, targetNode in requiredReroute: ### note that tagetNode may be same within requiredRerote
-                    ioName = targetNode.outputs[inputIdx]
+                    if idx == 1:
+                        print("debug here")
+                    ioName = targetNode.inputs[inputIdx]
                     ###### nodeUpdateList[0][1] is the sample Node (Layer) that must be inject to the system
                     input_layer = cls._create_input_node(subgraph, targetNode, #### list of (inputIdx, Node)
                                                          input_layer_kind, next_index,
@@ -1220,7 +1232,9 @@ class MultiModelGraph:
                     targetNode.inputs[inputIdx]  = input_layer.outputs[0]
 
                     #### update link meta data
-                    src_gid, src_graph_out_idx = cls.get_src_subGraph_and_output_idx(subgraphs, targetNode.outputs[inputIdx])
+                    if idx == 1:
+                        print("debug here")
+                    src_gid, src_graph_out_idx = cls.get_src_subGraph_and_output_idx(subgraphs, ioName)
                     input_node_links[idx].append((src_gid, src_graph_out_idx))
 
 
@@ -1287,6 +1301,8 @@ class MultiModelGraph:
 
             subgraphs.append(subgraph)
 
+        cls.print_input_node_link_debug(input_node_links)
+
         return cls(subgraphs, input_node_links)
 
     @staticmethod
@@ -1345,7 +1361,7 @@ class MultiModelGraph:
         self.backend = first_graph.config.backend
 
         ####### after Multigraph split already some config may have been augment after
-        self.backend.writer.multigraph_augment_config(self)
+        self.backend.augment_multigraph_config(self)
 
 
     def _bind_modelgraph_methods(self):

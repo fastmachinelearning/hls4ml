@@ -9,7 +9,7 @@ from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vivado_report
 from hls4ml.writer.vitis_unified_partial_writer.meta_gen import VitisUnifiedPartial_MetaGen  as mg
 
-from magic_streamer_mng import MagicStreamerManager
+from .magic_streamer_mng import MgsModel
 
 
 class VitisUnifiedPartialBackend(VitisUnifiedBackend):
@@ -122,11 +122,12 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
 
 
 
-    def multigraph_augment_config(self, multi_model):
+    def augment_multigraph_config(self, multi_model):
 
         #### create magic streamer manager
-        mgs_mng = MagicStreamerManager(multi_model)
-
+        mgs_mng = MgsModel(multi_model)
+        #### start retrieve the metadata
+        mgs_mng.start_convert_model()
         ########## fill to every posible graph to make it work
         multi_model.config.config["MagicStreamerMng"] = mgs_mng
         for subGraph in multi_model.graphs:
