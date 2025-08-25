@@ -113,6 +113,15 @@ Additionaly, the backend proposes the following options to customize the impleme
     * ``hw_quant``: Is arbitrary precision quantization performed in hardware or not. If True, the quantization is performed in hardware and float are used at the kernel interface, otherwise it is performed in software and arbitrary precision types are used at the interface. (Defaults to  ``False``).
     * ``vivado_directives``: A list of strings to be added under the ``[Vivado]`` section of the generated ``accelerator_card.cfg`` link configuration file. Can be used to add custom directives to the Vivado project.
 
+Platform selection
+==================
+
+The Vitis System Design Flow requires a platform (``.xpfm``) describing the hardware and runtime environment.
+The backend always retrieves all installed platforms using ``platforminfo``.
+
+* If a ``platform`` argument is provided, it will try to use that platform.
+* If no ``platform`` is given, the backend will use the ``board`` argument to select a default platform.
+
 Build workflow
 ==============
 
@@ -171,7 +180,7 @@ The host code can also be used for inference directly in a Python script through
     * ``target``: Can be one of ``hw``, ``hw_emu``, ``sw_emu``, to define which build target to use (Default is ``hw``).
     * ``debug``: If True, uses the c++ host code compiled in debug mode.
     * ``profilingRepeat``: Number of times to repeat the inference for profiling (Default is -1, no repeat).
-    * ``method``: Can be ``file`` or ``lib``, to define how the host code is called (Default is ``lib``). 
+    * ``method``: Can be ``file`` or ``lib``, to define how the host code is called (Default is ``lib``).
       If ``file``, the host code is called as a separate process (input and output are passed through files), if ``lib``, the host code is called as a shared library.
 
 Example
