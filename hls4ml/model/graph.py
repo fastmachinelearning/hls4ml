@@ -1499,6 +1499,8 @@ class MultiModelGraph:
 
         self.graph_reports = build_results
 
+        self.backend.build(self, compose_streamers = True)
+
         if stitch_design or sim_stitched_design or export_stitched_design:
             failed_graphs = [name for name, report in build_results.items() if report is None]
             if failed_graphs:
