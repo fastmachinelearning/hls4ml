@@ -50,6 +50,8 @@ class TransformTypes(GlobalOptimizerPass):
                 raise Exception(f'Unknown IOType {io_type} in {node.name} ({node.class_name})')
 
             node.set_attr(out_name, new_var)
+            if new_var.type.name in node.attributes:
+                node.set_attr(new_var.type.name, new_var.type)  # this is for variables that are not result_t
 
         for w_name, weight in node.weights.items():
             new_weight = self.weight_var_converter.convert(weight)

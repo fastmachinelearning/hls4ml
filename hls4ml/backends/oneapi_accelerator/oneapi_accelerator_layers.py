@@ -1,4 +1,4 @@
-from hls4ml.model.attributes import Attribute
+from hls4ml.model.attributes import Attribute, TypeAttribute
 from hls4ml.model.layers import Layer, register_layer
 from hls4ml.model.types import IntegerPrecisionType
 
@@ -8,9 +8,7 @@ SIDEBAND_SHAPE = 2
 class SidebandExtraction(Layer):
     """This layer extract the sideband and sends it to a different strem"""
 
-    _expected_attributes = [
-        Attribute('n_in'),
-    ]
+    _expected_attributes = [Attribute('n_in'), TypeAttribute('sideband_t', description='The type of the sidbands')]
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -25,6 +23,7 @@ class SidebandExtraction(Layer):
             type_name='sideband_t',
             precision=IntegerPrecisionType(1, False),
         )
+        self.set_attr('sideband_t', self.get_attr('sideband').type)  # need to manually set this, unlike result_t
         self.add_output_variable(inp.shape, precision=inp.type.precision)
 
 
