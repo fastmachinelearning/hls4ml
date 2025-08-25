@@ -1,103 +1,139 @@
-
-
-#### the shared class between subgraph and host graph
-
 class MgsConMeta:
     ####
-    def __init__(self, io_idx, input_node, mgs_wrap_width, mgs_row_idx_width):
-        self.io_idx         = io_idx
-        self.input_node     = input_node
-        self.mgs_idx        = -1
-        self.mgs_wrap_width = mgs_wrap_width
-        self.mgs_row_idx_width = mgs_row_idx_width
+    def __init__(self, io_idx, tensor):
+        self.io_idx            = io_idx
+        self.mgs_idx           = -1
+        self.mgs_wrap_width    = 32
+        self.mgs_row_idx_width = 10
 
-class MagicStreamerMeta:
+
+class MagicBufferMeta:
     def __init__(self, data_width, row_idx_width, mgs_idx):
         self.data_width    = data_width
         self.row_idx_width = row_idx_width
         self.mgs_idx       = mgs_idx
 
-
-class MagicStreamerManager:
-
-    ###
-    ### [ (inputIdx, mgsNumber, mgsNumber) ]
-    ### []
-
-    def __init__(self, multiModel):
-
-        self.magicStreamer_meta_list      = []     ##### (data_width, row_idx_width, mgs_idx)
-        self.input_connection_result_list = [[] for _ in range(len(multiModel.graphs))]
+    def upgrade_mgs_to_support(self, mgs_con_meta):
+        if self.row_idx_width < mgs_con_meta.mgs_row_idx_width:
+            self.row_idx_width = mgs_con_meta.mgs_row_idx_width
 
 
-    def get_MgsConMeta_from_graph(self, graph, input_node,io_idx, is_input):
+    def is_data_width_match(self, check_width):
+        return self.data_width == check_width
 
-        ####### get its tensor variable
-        tensor_var = graph.get_input_variables()[io_idx] if is_input else graph.get_output_variables()[io_idx]
-        ####### fix this two variable
-        mgs_bit_width = 32
-        mgs_row_width = 1024
-        mgs_con_meta = MgsConMeta(io_idx, input_node, mgs_bit_width, mgs_row_width)
-        return mgs_con_meta
+    #### the shared class between subgraph and host graph
 
-    def complete_the_connection(self, mgsCon: MgsConMeta, multiModel):
-        ###[ [ (inputNode, srcNode, srcNodeOutputIdx), .....], [ ..], [ ..] ]
-        node_links = multiModel.input_node_links
+class MgsConGraph:
+    #### in suppose to be pool of connection for each sub graph
 
-        inspect_input_node = mgsCon.input_node
+    def __init__(self, gid, input_node_links, amt_graph, mgs_model):  ### gid = graph id
+        self.gid = gid
+        self.input_cons       = []  #### the index of the list supposed to be the index of the input port as well
+        self.output_cons      = []
+        self.input_node_links = input_node_links
+        self.amt_graph        = amt_graph
+        self.mgs_model    = mgs_model
 
-        for input_node, src_node, src_node_output_idx in node_links:
-            if input_node == inspect_input_node:
-                #### find where is so
+    def start_convert_graph(self, graph):
+        #### do the output first because we need to not free the src first (src des cannot be the same buffer)
+        out_var = graph.get_output_variables()
+        for out_idx, out in enumerate(out_var):
+            mgs_con_meta = MgsConMeta(out_idx, out)
+            self.add_output_con(mgs_con_meta)
 
+        #### do the input
+        in_var = graph.get_input_variables()
+        for in_idx, inp in enumerate(in_var):
+            mgs_con_meta = MgsConMeta(in_idx, inp)
+            self.add_input_con(mgs_con_meta)
 
-    def select_mgs_number_for_port(self, inspect_connection: MgsConMeta, free_list: list[MagicStreamerMeta]):
+    def is_last_graph(self):
+        return (self.gid + 1) == self.amt_graph
 
-        matched_dw_mgs = list(filter(lambda x: x.data_width == inspect_connection.mgs_wrap_width, free_list))
-        sorted_mgs = sorted(matched_dw_mgs, key=lambda x: x.row_idx_width, reverse=True)
-        #### get the MagicStreamerMeta that have the maximum size
-        if len(sorted_mgs) == 0:
-            return None
+    def add_input_con(self, mgs_con_meta):
+
+        src_gid, src_out_idx = self.input_node_links[self.gid][mgs_con_meta.io_idx]
+
+        #### it load from dma
+        if src_gid == -1:
+            src_mgs_idx = -1  ##### it means dma
         else:
-            return sorted_mgs[0]
+            src_mgs_con_meta = self.mgs_model.get_mgs_idx(src_gid, src_out_idx)
+            mgs_con_meta.mgs_idx = src_mgs_con_meta
+            self.mgs_model.move_buffer_to_free_list(src_mgs_con_meta)
+            ### expand the mgs if it is need
+
+        self.input_cons.append(mgs_con_meta)
+
+    def add_output_con(self, mgs_con_meta):
+
+        if self.is_last_graph():
+            self.output_cons.append(mgs_con_meta)
+            return
+
+        ###### we check the
+        stream_buffer = self.mgs_model.get_existing_possible_mgs_buffer(mgs_con_meta)
+
+        if stream_buffer is None:
+            stream_buffer = self.mgs_model.allocate_mgs_buffer(mgs_con_meta)
+
+        self.mgs_model.move_buffer_to_using_list(stream_buffer.mgs_idx)
+        mgs_con_meta.mgs_idx = stream_buffer.mgs_idx
 
 
-    def build_all_meta_data(self, multiModel):
+        self.output_cons.append(mgs_con_meta)
 
-        next_mgs_number = 0
-        ready_to_used_mgs = [] ### list of mgs number
-        using_mgs_list    = [] ### list of mgs number
+class MgsModel:
+    def __init__(self, amt_graph, mgs_mng):
+        self.amt_graph = amt_graph
+        self.con_graphs      = []
+        self.mgs_buffer_meta = []  #### index of the system supposed to be magic streamer and its port id
 
+        self.mgs_buffer_holding = []
+        self.mgs_buffer_empty   = []
 
-        #### loop to all subgraph
-        for gid, subGraph in enumerate(multiModel.graphs):
+    def add_mgs_con_graph(self, mgs_con_graph):
+        self.con_graphs.append(mgs_con_graph)
 
-            ######## we inspect the output
-            connection_out_meta_list = [ self.get_MgsConMeta_from_graph(subGraph, subGraph.graph[io_name], io_idx, False)
-                                         for io_idx, io_name in enumerate(subGraph.outputs)]
-            connection_out_meta_sorted_rs = sorted(connection_out_meta_list, key=lambda x: x.mgs_row_idx_width, reverse=True)
+    def get_mgs_idx(self, gid, outputIdx):
+        if gid < 0:
+            return -1
+        mgs_con_meta = self.con_graphs[gid].output_cons[outputIdx]
+        return mgs_con_meta.mgs_idx
 
-            ##### try to allocate the magic streamer that matched the most match
-            for connection in connection_out_meta_sorted_rs:
-                ##### check the available magic streamer for each connection
-                selected_mgs = self.select_mgs_number_for_port(connection, ready_to_used_mgs)
-                if selected_mgs is None:
-                    ##### not found create the magic streamer
-                    using_mgs_list.append(MagicStreamerMeta(connection.mgs_wrap_width, connection.mgs_row_idx_width, next_mgs_number))
-                else:
-                    ##### found get the increase size of row Idx if it is need
-                    idx_in_ready_list = ready_to_used_mgs.index(selected_mgs)
-                    ready_to_used_mgs.pop(idx_in_ready_list) #### remove it from ready list
-                    using_mgs_list.append(selected_mgs)      #### append it into used list
+    ##############################################
+    ############ magic streamer buffer ###########
+    ##############################################
 
-            ######## we inspect the input
-            connection_in_meta_list = [self.get_MgsConMeta_from_graph(subGraph, subGraph.graph[io_name], io_idx, True)
-                                        for io_idx, io_name in enumerate(subGraph.inputs)]
-            for connection in connection_in_meta_list:
+    def upgrade_mgs_to_support(self, mgs_con_meta, mgsIdx):
+        if mgsIdx >= len(self.mgs_buffer_meta) or mgsIdx < 0:
+            raise Exception("upgrade magic streamer with Idx {mgsIdx} is out of bound.")
+        self.mgs_buffer_meta[mgsIdx].checkSpecAndUpgrade(mgs_con_meta)
 
+    def allocate_mgs_buffer(self, mgs_con_meta):
+        newStreamBuffer = MagicBufferMeta(mgs_con_meta.mgs_wrap_width, mgs_con_meta.mgs_row_idx_width, len(self.mgs_buffer_meta))
+        mgs_idx = len(self.mgs_buffer_meta)
+        self.mgs_buffer_meta.append(newStreamBuffer)
+        return mgs_idx
 
+    def get_existing_possible_mgs_buffer(self, mgs_con_meta):
+        ##### filter the match buffer from exis
+        matched_buffer = list(filter(
+            lambda mgs: mgs.is_data_width_match(mgs_con_meta.mgs_wrap_width),
+            self.mgs_buffer_meta ))
 
+        highest_possible_buffer = sorted(matched_buffer, key=lambda x: x.row_idx_width, reverse=True)
 
+        return None if len(highest_possible_buffer) == 0 else highest_possible_buffer[0]
 
-        ########## finalize the magic streamer metadata
-        self.magic_streamer_meta_list = sorted(ready_to_used_mgs, key=lambda x: x.mgs_idx)
+    def move_buffer_to_using_list(self, mgs_idx):
+        ###### delete from free list first
+        self.mgs_buffer_empty = list(filter(lambda x: x.mgs_idx != mgs_idx, self.mgs_buffer_empty))
+        ###### add to holding list
+        self.mgs_buffer_holding.append(self.mgs_buffer_meta[mgs_idx])
+
+    def move_buffer_to_free_list(self, mgs_idx):
+        ###### delete from holding list first
+        self.mgs_buffer_holding = list(filter(lambda x: x.mgs_idx != mgs_idx, self.mgs_buffer_holding))
+        ###### add to free list
+        self.mgs_buffer_empty.append(self.mgs_buffer_meta[mgs_idx])

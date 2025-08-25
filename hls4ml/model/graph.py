@@ -1050,8 +1050,10 @@ class MultiModelGraph:
 
 
         ##### node link is the meta data that used to store how the new generated input node when the graph was chopped connect with the source data node
-        ##### [graph0, graph1, graph2, ...]
-        ##### [[(newInputNodeX, srcOutputNodeY, inofOutputFromNodeY), (x2,y2,ys2), (x3,y3,ys3), .....], []]
+
+        #####   |-------------graph 0 ------------|
+        ##### [ [(src_graph_idx, output_idx), ....],  ]
+
 
 
     @staticmethod
@@ -1092,6 +1094,14 @@ class MultiModelGraph:
         for layer_name, node in base_model.graph.items():
             if output_name in node.outputs:
                 return node, node.outputs.indexOf(output_name)
+
+    @staticmethod
+    def get_src_subGraph_and_output_idx(subGraphs, output_name):
+
+        for gid, subGraph in enumerate(subGraphs):
+            for layer_name, node in subGraph.graph.items():
+                if output_name in node.outputs:
+                    return gid, node.outputs.indexOf(output_name)
 
 
 
@@ -1198,7 +1208,7 @@ class MultiModelGraph:
 
                 named_new_input_layer = dict()
                 #### inputIdx is index in input of target Node
-                for inputIdx, targetNode in requiredReroute:
+                for inputIdx, targetNode in requiredReroute: ### note that tagetNode may be same within requiredRerote
                     ioName = targetNode.outputs[inputIdx]
                     ###### nodeUpdateList[0][1] is the sample Node (Layer) that must be inject to the system
                     input_layer = cls._create_input_node(subgraph, targetNode, #### list of (inputIdx, Node)
@@ -1210,8 +1220,8 @@ class MultiModelGraph:
                     targetNode.inputs[inputIdx]  = input_layer.outputs[0]
 
                     #### update link meta data
-                    src_node, src_node_out_idx = cls.get_src_node_from_output_name(base_model, targetNode.inputs[inputIdx])
-                    input_node_links[idx].append((input_layer, src_node, src_node_out_idx))
+                    src_gid, src_graph_out_idx = cls.get_src_subGraph_and_output_idx(subgraphs, targetNode.outputs[inputIdx])
+                    input_node_links[idx].append((src_gid, src_graph_out_idx))
 
 
                     # print("added name is ", input_layer.name )
@@ -1225,7 +1235,7 @@ class MultiModelGraph:
             else:
                 input_layer = base_input_layer
                 pooled_input_layer.append(input_layer)
-                input_node_links[idx].append((input_layer, None, None))
+                input_node_links[idx].append((-1, -1))
 
 
             ##############################
