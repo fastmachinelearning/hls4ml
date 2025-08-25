@@ -130,7 +130,7 @@ class VitisUnifiedPartialBackend(VitisUnifiedBackend):
         #### start retrieve the metadata
         mgs_mng.start_convert_model()
         #### assign mgs_mng writer in manager
-        self.writer.mgs_mng = mgs_mng
+        self.writer.set_mgs_mng(mgs_mng)
 
     def _register_flows(self):
         vitis_ip = 'vitis:ip'

@@ -35,6 +35,14 @@ class VitisUnifiedPartialWriter(VitisUnifiedWriter):
         self.magic_gen = VitisUnifiedPartial_MagicArchGen
 
 
+        #################################################
+        ######### magic streamer controller variable ####
+        #################################################
+        self.mgs_mng = None
+
+    def set_mgs_mng(self, mgs_mng):
+        self.mgs_mng = mgs_mng
+
     def generate_config(self, model):
         from hls4ml.backends.vitis_unified_partial.vitis_unified_partial_config import VitisUnifiedPartialConfig
         self.writer_meta.vitis_unified_config = VitisUnifiedPartialConfig(
@@ -46,7 +54,7 @@ class VitisUnifiedPartialWriter(VitisUnifiedWriter):
 
         super().write_hls(model, is_multigraph)
 
-        if False:
+        if is_multigraph:
             self.magic_gen.copyMagicArchIp(self.writer_meta, model)
             self.magic_gen.write_mgs(self.writer_meta, model)
             self.magic_gen.gen_vivado_project(self.writer_meta, model)
