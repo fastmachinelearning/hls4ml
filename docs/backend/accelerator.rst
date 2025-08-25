@@ -104,7 +104,9 @@ Additionaly, the backend proposes the following options to customize the impleme
     * ``hw_quant``: Is arbitrary precision quantization performed in hardware or not. If True, the quantization is performed in hardware and float are used at the kernel interface, otherwise it is performed in software and arbitrary precision types are used at the interface. (Defaults to  ``False``).
     * ``vivado_directives``: A list of strings to be added under the ``[Vivado]`` section of the generated ``accelerator_card.cfg`` link configuration file. Can be used to add custom directives to the Vivado project.
 
-Additionally, the backend supports the global option ``io_type``, which also controls how input/output data is transferred between the FPGA memory banks and the model.
+
+The backend also supports the global option ``io_type``, which also controls how input/output data is transferred between the FPGA memory banks and the model.
+
 **Note:** ``io_stream`` may fail for very large inputs, while ``io_parallel`` can have issues with large convolutional models.
 
 Platform selection
