@@ -66,10 +66,10 @@ LinearActLoop:
     LinearPackLoop:
         #pragma unroll
         for (int j = 0; j < std::tuple_size<ResT>{}; j++) {
-            out_data.data[j] = in_data.data[j];
+            out_data.data[j] = in_data[j];
         }
-        out_data.sop = (i == 0) ? skip_data[0] : false;
-        out_data.eop = (i == num_transfers - 1) ? skip_data[1] : false;
+        out_data.sop = (i == 0) ? static_cast<bool>(skip_data[0]) : false;
+        out_data.eop = (i == num_transfers - 1) ? static_cast<bool>(skip_data[1]) : false;
         res_pipe::write(out_data);
     }
 }
