@@ -84,26 +84,42 @@ class MgsConGraph:
         self.output_cons.append(mgs_con_meta)
 
 class MgsModel:
-    def __init__(self, amt_graph, mgs_mng):
-        self.amt_graph = amt_graph
+    def __init__(self, multigraph):
+        self.multigraph = multigraph
         self.con_graphs      = []
         self.mgs_buffer_meta = []  #### index of the system supposed to be magic streamer and its port id
 
         self.mgs_buffer_holding = []
         self.mgs_buffer_empty   = []
 
+    ##############################################
+    ############ start get the data    ###########
+    ##############################################
+
+
+    def start_convert_model(self):
+        for gid, sub_graph in enumerate(self.multigraph.graphs):
+            #### initialize the MgsConGraph
+            input_node_link = self.multigraph.input_node_links
+            amt_graph       = len(self.multigraph.graphs)
+            mgs_con_graph = MgsConGraph(gid, input_node_link, amt_graph, self)
+            mgs_con_graph.start_convert_graph(sub_graph)
+            #### start fill the metadata
+            self.add_mgs_con_graph(mgs_con_graph)
+
     def add_mgs_con_graph(self, mgs_con_graph):
         self.con_graphs.append(mgs_con_graph)
 
+    ##############################################
+    ############ magic streamer buffer ###########
+    ##############################################
+
+    ##### used by the vitis uniifed partial backend writer
     def get_mgs_idx(self, gid, outputIdx):
         if gid < 0:
             return -1
         mgs_con_meta = self.con_graphs[gid].output_cons[outputIdx]
         return mgs_con_meta.mgs_idx
-
-    ##############################################
-    ############ magic streamer buffer ###########
-    ##############################################
 
     def upgrade_mgs_to_support(self, mgs_con_meta, mgsIdx):
         if mgsIdx >= len(self.mgs_buffer_meta) or mgsIdx < 0:
