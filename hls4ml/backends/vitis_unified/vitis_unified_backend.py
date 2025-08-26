@@ -134,8 +134,7 @@ class VitisUnifiedBackend(VitisBackend):
         part                =None,
         clock_period        =5,
         clock_uncertainty   ='12.5%',
-        io_type             ='io_parallel',
-        interface           ='axi_stream',
+        io_type             ='io_stream',
         driver              ='python',
         input_type          ='float',
         output_type         ='float',
@@ -157,6 +156,8 @@ class VitisUnifiedBackend(VitisBackend):
         config['UnifiedConfig']['InputDtype' ]  = input_type  # float, double or ap_fixed<a,b>
         config['UnifiedConfig']['OutputDtype']  = output_type  # float, double or ap_fixed<a,b>
 
+        if io_type != "io_stream":
+            raise Exception("io_type must be io_stream")
         if input_type not in ["double", "float"]:
             raise Exception("input_type must be float or double")
         if output_type not in ["double", "float"]:
