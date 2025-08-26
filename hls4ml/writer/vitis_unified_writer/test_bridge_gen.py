@@ -74,7 +74,7 @@ class VitisUnified_BridgeGen:
                     output_size_str = ', '.join(otuput_sizes)
 
                     newline = ''
-                    newline += indent + mg.get_top_model_name(model) + "(\n"
+                    newline += indent + mg.get_top_wrap_func_name(model) + "(\n"
                     newline += indent + inputs_str + ',\n'
                     newline += indent + outputs_str + ',\n'
                     newline += indent + input_size_str + ',\n'

@@ -69,8 +69,8 @@ class VitisUnifiedWriter(VitisWriter):
 
 
         if is_multigraph:
-            super().write_hls(model, is_multigraph = True)
-            return
+            raise Exception("Vitis Unified does not support multigraphs; however, vitis unified partial backend is please use it instead")
+
 
         ##### generate kernel and its driver
         self.generate_config(model)
@@ -79,9 +79,9 @@ class VitisUnifiedWriter(VitisWriter):
 
 
         #########
-        self.make_export_path(model)
-        self.dg .write_driver            (self.writer_meta, model, self.mg)
-        self.tcg.write_wrapper_test      (self.writer_meta, model, self.mg)
+        self.make_export_path       (model)
+        self.dg .write_driver       (self.writer_meta, model, self.mg)
+        self.tcg.write_wrapper_test (self.writer_meta, model, self.mg)
 
 
         #self.write_new_tar(model)
