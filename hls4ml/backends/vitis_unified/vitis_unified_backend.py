@@ -130,7 +130,7 @@ class VitisUnifiedBackend(VitisBackend):
 
     def create_initial_config(
         self,
-        board               ='pynq-z2',
+        board               ='zcu102',
         part                =None,
         clock_period        =5,
         clock_uncertainty   ='12.5%',
@@ -143,31 +143,24 @@ class VitisUnifiedBackend(VitisBackend):
         gmemBuf_out_size    =12,
         xpfmPath            ='/tools/Xilinx/Vitis/2023.2/base_platforms/'
                              'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
-        input_interim_type  ='io_stream',    #### it should be io_stream or io_free_stream/ io_stream
-        output_interim_type ='io_stream',
         **_
     ):
 
-        if input_interim_type not in ['io_free_stream', 'io_stream']:
-            raise Exception(f'input_interim_type should be io_free_stream or io_stream, but got {input_interim_type}')
-        if output_interim_type not in ['io_free_stream', 'io_stream']:
-            raise Exception(f'output_interim_type should be io_free_stream or io_stream, but got {output_interim_type}')
-
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
-        config['AcceleratorConfig'] = {}
-        config['AcceleratorConfig']['Board'] = board
-        config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
-        config['AcceleratorConfig']['Driver'] = driver
-        config['AcceleratorConfig']['Precision'] = {}
-        config['AcceleratorConfig']['Precision']['Input'] = {}
-        config['AcceleratorConfig']['Precision']['Output'] = {}
-        config['AcceleratorConfig']['Precision']['Input'] = input_type  # float, double or ap_fixed<a,b>
-        config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
 
         config['UnifiedConfig'] = {}
-        config['UnifiedConfig']['bufInSize']    = gmemBuf_in_size
-        config['UnifiedConfig']['bufOutSize']   = gmemBuf_out_size
-        config['UnifiedConfig']['XPFMPath']     = xpfmPath
+        config['UnifiedConfig']['bufInSize'  ]  = gmemBuf_in_size
+        config['UnifiedConfig']['bufOutSize' ]  = gmemBuf_out_size
+        config['UnifiedConfig']['XPFMPath'   ]  = xpfmPath
+        config['UnifiedConfig']['Board'      ]  = board
+        config['UnifiedConfig']['Driver'     ]  = driver
+        config['UnifiedConfig']['InputDtype' ]  = input_type  # float, double or ap_fixed<a,b>
+        config['UnifiedConfig']['OutputDtype']  = output_type  # float, double or ap_fixed<a,b>
+
+        if input_type not in ["double", "float"]:
+            raise Exception("input_type must be float or double")
+        if output_type not in ["double", "float"]:
+            raise Exception("output_type must be float or double")
 
         return config
 
