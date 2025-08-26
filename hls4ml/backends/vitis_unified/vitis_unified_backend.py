@@ -171,7 +171,6 @@ class VitisUnifiedBackend(VitisBackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-
     def _register_flows(self):
         vitis_ip = 'vitis:ip'
         writer_passes = ['make_stamp', 'vitisunified:write_hls']

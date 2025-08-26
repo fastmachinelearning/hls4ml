@@ -54,7 +54,7 @@ class VitisUnified_BridgeGen:
 
             elif '// hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
-                if dtype == 'float':
+                if dtype == meta.vitis_unified_config.get_input_type():
                     newline = ''
                     input_vars = []
                     input_sizes = []

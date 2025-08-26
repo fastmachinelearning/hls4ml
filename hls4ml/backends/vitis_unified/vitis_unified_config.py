@@ -17,6 +17,10 @@ class VitisUnifiedConfig:
         self.driver            = self.config['UnifiedConfig']['Driver']
         self.input_type        = self.config['UnifiedConfig']['InputDtype' ]
         self.output_type       = self.config['UnifiedConfig']['OutputDtype']
+
+        assert(
+            self.input_type == self.output_type
+        ), "Input and Output data types must be the same type different"
         assert (
             len(model_inputs) >= 1
         ), "Only models with at least one input tensor are currently supported by VitisUnified"
