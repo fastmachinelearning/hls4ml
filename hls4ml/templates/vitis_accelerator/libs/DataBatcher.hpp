@@ -75,8 +75,7 @@ template <class T, class U> class DataBatcher {
      * \param data Pointer to the shared buffer containing input data
      * \param size Size of the shared buffer in bytes
      */
-    void readSharedData(const double* data, uint64_t size)
-    {
+    void readSharedData(const double *data, uint64_t size) {
         if (size == 0) {
             throw std::runtime_error("No data to load");
         }
@@ -253,13 +252,14 @@ template <class T, class U> class DataBatcher {
      * \param data_out Pointer to the shared buffer where results will be written
      * \param size Size of the shared buffer in bytes
      */
-    void returnSharedResults(double* data_out, uint64_t size) {
+    void returnSharedResults(double *data_out, uint64_t size) {
         if (size == 0 || data_out == nullptr) {
             throw std::runtime_error("No data to return");
         }
 
         if (size != storedEvalResults.size()) {
-            throw std::runtime_error("Size mismatch: " + std::to_string(size) + " != " + std::to_string(storedEvalResults.size()));
+            throw std::runtime_error("Size mismatch: " + std::to_string(size) +
+                                     " != " + std::to_string(storedEvalResults.size()));
         }
 
         for (uint64_t i = 0; i < size; i++) {

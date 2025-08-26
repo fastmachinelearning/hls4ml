@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 
+
 class VitisAcceleratorConfig:
     def __init__(self, config):
         self.config = config.config
@@ -30,16 +31,10 @@ class VitisAcceleratorConfig:
                 if accel_config.get("Platform") in platforms:
                     self.platform = accel_config.get("Platform")
                 else:
-                    print(
-                        "WARNING: You set an unrecognized Platform."
-                        "Using " + platforms[0] + " platform instead."
-                    )
+                    print("WARNING: You set an unrecognized Platform." "Using " + platforms[0] + " platform instead.")
                     self.platform = platforms[0]
             else:
-                print(
-                    "WARNING: You didn't set a Platform."
-                    "Using " + platforms[0] + " platform"
-                )
+                print("WARNING: You didn't set a Platform." "Using " + platforms[0] + " platform")
                 self.platform = platforms[0]
 
             self.memory_type = board_info["memory"]["type"]
@@ -65,18 +60,18 @@ class VitisAcceleratorConfig:
     def get_available_platforms(self):
         if "XILINX_VITIS" not in os.environ:
             raise Exception("XILINX_VITIS Variable is not set, please set correctly and rerun")
-    
+
         output = subprocess.run(["platforminfo", "-l"], stdout=subprocess.PIPE)
         p_info = json.loads(output.stdout.decode('utf-8'))
         platforms = []
         for p in p_info['platforms']:
             platforms.append(p['baseName'])
         return platforms
-    
-    def filter_platforms(self, platforms = None, board="alveo-u55c"):
+
+    def filter_platforms(self, platforms=None, board="alveo-u55c"):
         b = board.split('-')
         b_len = len(b)
-        name = b[b_len-1]
+        name = b[b_len - 1]
 
         f_platforms = []
         for p in platforms:

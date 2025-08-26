@@ -150,7 +150,7 @@ template <class T, class U> class FpgaObj {
      * \param profilingDataRepeat Additional number of times the given data is iterated
      * over. Profiling is enabled if this is greater than 0.
      */
-    void loadSharedData(const double* data, uint64_t size, int profilingDataRepeat = 0) {
+    void loadSharedData(const double *data, uint64_t size, int profilingDataRepeat = 0) {
         // Set-up containers for each Worker's batches/workload
         batchedData.reserve(_numCU * _workersPerCU * _numDevice);
         for (int i = 0; i < _numCU * _workersPerCU * _numDevice; i++) {
@@ -159,7 +159,7 @@ template <class T, class U> class FpgaObj {
 
         // Batch and distribute data
         db = new DataBatcher<T, U>(_batchsize, _sampleInputSize, _sampleOutputSize, _numCU * _workersPerCU * _numDevice,
-            profilingDataRepeat);
+                                   profilingDataRepeat);
         db->readSharedData(data, size);
         db->createResultBuffers();
         db->batch(batchedData);
@@ -237,7 +237,7 @@ template <class T, class U> class FpgaObj {
      * \param data_out Pointer to the shared buffer where results will be written
      * \param size Size of the shared buffer in bytes
      */
-    void returnSharedResults(double* data_out, uint64_t size) {
+    void returnSharedResults(double *data_out, uint64_t size) {
         if (db == nullptr) {
             throw std::runtime_error("No data loaded");
         }
