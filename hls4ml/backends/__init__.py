@@ -14,15 +14,11 @@ from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
 from hls4ml.backends.vitis_unified.vitis_unified_backend import VitisUnifiedBackend
 from hls4ml.backends.vitis_unified.vitis_unified_config import  VitisUnifiedConfig
 
-from hls4ml.backends.vitis_unified_partial.vitis_unified_partial_backend import VitisUnifiedPartialBackend
-from hls4ml.backends.vitis_unified_partial.vitis_unified_partial_config import VitisUnifiedPartialConfig
-
-register_backend('Vivado', VivadoBackend)
-register_backend('VivadoAccelerator', VivadoAcceleratorBackend)
-register_backend('Vitis', VitisBackend)
-register_backend('VitisUnified', VitisUnifiedBackend)
-register_backend('VitisUnifiedPartial', VitisUnifiedPartialBackend)
-register_backend('Quartus', QuartusBackend)
-register_backend('Catapult', CatapultBackend)
-register_backend('SymbolicExpression', SymbolicExpressionBackend)
-register_backend('oneAPI', OneAPIBackend)
+register_backend('Vivado'             , VivadoBackend)
+register_backend('VivadoAccelerator'  , VivadoAcceleratorBackend)
+register_backend('Vitis'              , VitisBackend)
+register_backend('VitisUnified'       , VitisUnifiedBackend)
+register_backend('Quartus'            , QuartusBackend)
+register_backend('Catapult'           , CatapultBackend)
+register_backend('SymbolicExpression' , SymbolicExpressionBackend)
+register_backend('oneAPI'             , OneAPIBackend)
