@@ -17,8 +17,8 @@ class VitisUnified_MetaGen:
         return f"{model.config.get_project_name()}_dm"
 
     @classmethod
-    def get_main_wrapper_file_name(self, model):
-        return model.config.get_project_name()
+    def get_sim_file_name(cls): #### false is cosim
+        return f"myproject_test"
 
     @classmethod
     def get_main_file_name(self, model):

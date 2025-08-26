@@ -31,10 +31,11 @@ class VitisUnified_BuildGen:
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     @classmethod
-    def write_hls_kernel_cfg(self, meta, model, mg):
+    def write_hls_kernel_cfg(self, meta, model, mg, is_csim = False): #### is_csim else cosim
         filedir = os.path.dirname(os.path.abspath(__file__))
+        sufix   = "csim" if is_csim else "cosim"
         fin     = open(os.path.join(filedir, '../../templates/vitis_unified/hls_kernel_config.cfg'), 'r')
-        fout    = open(f"{model.config.get_output_dir()}/hls_kernel_config.cfg", 'w')
+        fout    = open(f"{model.config.get_output_dir()}/hls_kernel_config_{sufix}.cfg", 'w')
 
         for line in fin.readlines():
             if "{PART}" in line:
@@ -47,14 +48,17 @@ class VitisUnified_BuildGen:
                 line = line.replace("{OUTDIR}", model.config.get_output_dir())
             if "{TOP_NAME}" in line:
                 line = line.replace("{TOP_NAME}", mg.get_top_wrap_func_name(model))
-            if "{FILE_NAME_DM}" in line:
-                line = line.replace("{FILE_NAME_DM}", mg.get_wrapper_file_name(model))
-            if "{FILE_NAME_AXIS}" in line:
-                line = line.replace("{FILE_NAME_AXIS}", mg.get_wrapper_file_name(model))
+            if "{FILE_NAME_WRAP}" in line:
+                line = line.replace("{FILE_NAME_WRAP}", mg.get_wrapper_file_name(model))
+            if "{SIM_FILE_NAME}" in line:
+                line = line.replace("{SIM_FILE_NAME}", mg.get_sim_file_name())
             if "{FILE_NAME_BASE}" in line:
                 line = line.replace("{FILE_NAME_BASE}", mg.get_main_file_name(model))
             if "{OUTPUT_KERNEL_TYPE}" in line:
                 line = line.replace("{OUTPUT_KERNEL_TYPE}", mg.get_output_kernel_type())
+            if is_csim and ("-DRTL_SIM" in line):
+                line = "#" + line
+
 
 
             fout.write(line)

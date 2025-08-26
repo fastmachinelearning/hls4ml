@@ -112,13 +112,16 @@ class VitisUnifiedBackend(VitisBackend):
         kerlink_cwd = mg.get_vitis_linker_dir(model)
 
         if synth:
+            self.prepare_sim_config_file(model, True)
             self.run_term_command(model, "csynth", csynth_cmd, log_to_stdout, csynth_cwd)
             self.run_term_command(model, "package", package_cmd, log_to_stdout, package_cwd)
 
         if csim:
+            self.prepare_sim_config_file(model, True)
             self.run_term_command(model, "csim", csim_cmd, log_to_stdout, csim_cwd)
 
         if cosim:
+            self.prepare_sim_config_file(model, False)
             self.run_term_command(model, "cosim", cosim_cmd, log_to_stdout, cosim_cwd)
 
         ##if bitfile
@@ -126,7 +129,12 @@ class VitisUnifiedBackend(VitisBackend):
             self.run_term_command(model, "kerlink", kerlink_cmd, log_to_stdout, kerlink_cwd)
 
 
-
+    def prepare_sim_config_file(self, model, is_csim):
+        suffix = "csim" if is_csim else "cosim"
+        src = f"{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg"
+        des = f"{model.config.get_output_dir()}/hls_kernel_config.cfg"
+        copy2(src, des)
+        return des
 
     def create_initial_config(
         self,

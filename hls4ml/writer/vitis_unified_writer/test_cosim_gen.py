@@ -14,7 +14,7 @@ class VitisUnified_TestGen:
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         f    = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_test.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w')
+        fout = open(f'{model.config.get_output_dir()}/{mg.get_sim_file_name()}.cpp', 'w')
 
         model_inputs  = model.get_input_variables()
         model_outputs = model.get_output_variables()
@@ -28,6 +28,9 @@ class VitisUnified_TestGen:
             #Insert numbers
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+            elif '// hls-fpga-machine-learning insert include' in line:
+                newline = line + f'#include "firmware/{mg.get_wrapper_file_name(model)}.h"\n'
+
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
@@ -38,32 +41,34 @@ class VitisUnified_TestGen:
                 offset = 0
                 for inputIdx, inp in enumerate(model_inputs):
                     ##### input should be float
-                    newline += '        float* {inputPortName} = &in[{startIdx}];\n'.format( ### can not be double because it fix by template
+                    newline += indent + 'float* {inputPortName} = &in[{startIdx}];\n'.format( ### can not be double because it fix by template
                         inputPortName=mg.get_io_port_name(inp, True, inputIdx),
                         startIdx=str(offset)
                     )
                     offset += inp.size()
                 for outputIdx, out in enumerate(model_outputs):
-                    newline += f"      float {mg.get_io_port_name(out, False, outputIdx)}[{out.size()}];\n"
+                    newline += indent +  f"float {mg.get_io_port_name(out, False, outputIdx)}[{out.size()}];\n"
 
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
                 input_ios  = []
+                input_sizes = []
                 output_ios = []
+                output_sizes = []
                 bram_ios   = [b.name for b in model_brams]
 
                 for inpIdx, inp in enumerate(model_inputs):
                     input_ios.append(mg.get_io_port_name(inp, True, inpIdx))
-                    input_ios.append(str(inp.size()))
+                    input_sizes.append(str(inp.size()))
 
                 for outIdx, out in enumerate(model_outputs):
                     output_ios.append(mg.get_io_port_name(out, False, outIdx))
-                    output_ios.append(str(out.size()))
+                    output_sizes.append(str(out.size()))
 
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
-                all_vars = ','.join(filter(None, [*input_ios, *output_ios, *bram_ios]))
+                all_vars = ','.join(filter(None, [*input_ios, *output_ios, *input_sizes, *output_sizes, *bram_ios]))
                 top_level = indent + f'{mg.get_top_wrap_func_name(model)}({all_vars});\n'
                 newline += top_level
 
@@ -72,7 +77,7 @@ class VitisUnified_TestGen:
                 for outIdx, out in enumerate(model_outputs):
                     #newline += indent + f'for(int i = 0; i < {out.size_cpp()}; i++) {{\n'
                     #### TODO fix this size retrieve
-                    newline += indent + f'for(int i = 0; i < {out.size()}[{outIdx}]; i++) {{\n'
+                    newline += indent + f'for(int i = 0; i < {out.size()}; i++) {{\n'
                     newline += indent + '  std::cout << pr[i] << " ";\n'
                     newline += indent + '}\n'
                     newline += indent + 'std::cout << std::endl;\n'
@@ -98,10 +103,9 @@ class VitisUnified_TestGen:
 
                 for outIdx, out in enumerate(model_outputs):
                     #### TODO fix this size retrieve
-                    newline += (indent + 'nnet::print_result<{actualType}, {arrName}[{arrIdx}]>({portName}, {des}, {keepOutput});\n'
+                    newline += (indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
                                 .format( actualType = "float",
-                                         arrName    = out.size(),
-                                         arrIdx     = str(outIdx),
+                                         cpysize    = out.size(),
                                          portName   = mg.get_io_port_name(out, False, outIdx),
                                          des        = dest,
                                          keepOutput = keep_output))

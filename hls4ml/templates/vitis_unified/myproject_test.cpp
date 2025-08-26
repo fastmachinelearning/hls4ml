@@ -7,7 +7,8 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "firmware/myproject_axi.h"
+// hls-fpga-machine-learning insert include
+
 #include "firmware/nnet_utils/nnet_helpers.h"
 
 // hls-fpga-machine-learning insert bram

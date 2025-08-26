@@ -53,7 +53,7 @@ class VitisUnified_WrapperGen:
         for line in fin.readlines():
 
             if "MY_PROJECT_AXI_INC" in line:
-                line = line.replace("MY_PROJECT_AXI_INC", mg.get_main_wrapper_file_name(model))
+                line = line.replace("MY_PROJECT_AXI_INC", mg.get_main_file_name(model))
             if "MY_PROJECT_TOP_FUNC" in line:
                 line = line.replace("MY_PROJECT_TOP_FUNC", mg.get_top_wrap_func_name(model))
             elif "DMX_BUF_IN_SZ" in line:

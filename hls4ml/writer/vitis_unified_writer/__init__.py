@@ -48,7 +48,8 @@ class VitisUnifiedWriter(VitisWriter):
         self.bg.write_bridge_build_script(self.writer_meta, model, self.mg)
         #### for hls kernel generation
         self.bg.build_unified_project_ske(self.writer_meta, model, self.mg)
-        self.bg.write_hls_kernel_cfg(self.writer_meta, model, self.mg)
+        self.bg.write_hls_kernel_cfg(self.writer_meta, model, self.mg, True)
+        self.bg.write_hls_kernel_cfg(self.writer_meta, model, self.mg, False)
         #### for v++ to link hls to the system
         self.bg.write_launch_vitis_linker_dir(self.writer_meta, model, self.mg)
         self.bg.write_launch_vitis_linker_launcher(self.writer_meta, model, self.mg)
