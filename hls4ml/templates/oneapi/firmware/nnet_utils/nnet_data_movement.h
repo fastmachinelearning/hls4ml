@@ -186,8 +186,6 @@ template <class src_pipe, class dstType, size_t SIZE> void DMA_bridge_convert_da
     }
 }
 
-
-
 } // namespace nnet
 
 #endif
