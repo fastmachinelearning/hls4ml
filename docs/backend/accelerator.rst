@@ -148,39 +148,8 @@ Once the project is generated, it possible to run manually the build steps by us
 
 It is also possible to run the full build process by calling ``make`` without any target. Modifications to the ``accelerator_card.cfg`` file can be done manually before running the build process (e.g., to change the clock period, or add addition ``.xo`` kernel to the build).
 
-Host code
-=========
-
-Once built, the host program can be run to load the board and perform inferences:
-
-.. code-block:: Bash
-
-    ./host
-
-By defaut, all Computing Unit (CU) on all compatible devices will be used, with 3 worker thread per CU.
-
-The generated host code application support the following options to tweak the execution:
-
- * ``-d``: device BDF to use (can be specified multiple times)
- * ``-x``: XCLBIN path
- * ``-b``: Batch size
- * ``-i``: input feature file
- * ``-o``: output feature file
- * ``-c``: maximum computing units count to use
- * ``-n``: number of worker threads to use
- * ``-r``: number of repeatition of the input feature file (For artificially increasing the data size for benchmarking purpose)
- * ``-v``: enable verbose output
- * ``-h``: print help
-
-The following example shows how to limit on only one device, one CU, and on worker thread:
-
-.. code-block:: Bash
-
-    ./host -d 0000:c1:00.1 -c 1 -n 1
-
-
-Inference workflow
-==================
+Hardware Inference workflow
+===========================
 
 The host code can also be used for inference directly in a Python script through the ``hardware_predict`` method :
 
@@ -217,3 +186,45 @@ The following example is a modified version of `hsl4ml example 7 <https://github
         hls_model.build()
 
     y = hls_model.predict_hardware(x) # Limited to batchsize * num_kernel * num_thread for now
+
+C++ Host code
+=============
+
+This section describes the C++ host application provided alongside the Python interface.
+It serves as a low-level example of how to interact with the generated model directly from C++, and is particularly useful for benchmarking and performance evaluation on FPGA hardware.
+
+Once built, the host program can be executed to load the FPGA and run inferences:
+
+.. code-block:: Bash
+
+    ./host
+
+Compared to the Python ``hardware_predict`` method, this C++ host code offers a more efficient way to benchmark execution time on the board.
+
+If the FPGA contains multiple Computing Units (CUs - instances of the model), the program can take advantage of multithreading to access them in parallel.
+It also supports multiple threads per CU to increase throughput by overlapping data transfer, computation, and result retrieval.
+The batch size can be set dynamically for each inference.
+
+The program reads input from an ASCII file containing space-separated values, one line per model input.
+By default, the Python code generates input and reference (golden) output files if test data are provided when creating the model.
+If not, you can generate such files manually, for example using ``numpy.savetxt``.
+
+The generated host code application support the following options to tweak the execution:
+
+ * ``-d``: device BDF to use (can be specified multiple times)
+ * ``-x``: XCLBIN path (default to the relative path of generated XCLBIN)
+ * ``-b``: Batch size (default to value specified during model creation)
+ * ``-i``: input feature file
+ * ``-o``: output feature file
+ * ``-c``: maximum computing units count to use
+ * ``-n``: number of worker threads per CU
+ * ``-r``: Number of repetitions of the input feature file (useful for artificially increasing dataset size during benchmarking)
+ * ``-v``: enable verbose output
+ * ``-h``: print help
+
+By default, all available CUs on all compatible devices will be used, with three worker threads per CU.
+The following command limits execution to a single device, one CU, and one worker thread:
+
+.. code-block:: Bash
+
+    ./host -d 0000:c1:00.1 -c 1 -n 1
