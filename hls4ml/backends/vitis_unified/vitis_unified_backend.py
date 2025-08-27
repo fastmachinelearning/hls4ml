@@ -146,8 +146,8 @@ class VitisUnifiedBackend(VitisBackend):
         driver              ='python',
         input_type          ='float',
         output_type         ='float',
-        gmemBuf_in_size     =12,
-        gmemBuf_out_size    =12,
+        in_stream_buf_size  =128,
+        out_stream_buf_size =128,
         xpfmPath            ='/tools/Xilinx/Vitis/2023.2/base_platforms/'
                              'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
         **_
@@ -156,13 +156,13 @@ class VitisUnifiedBackend(VitisBackend):
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
 
         config['UnifiedConfig'] = {}
-        config['UnifiedConfig']['bufInSize'  ]  = gmemBuf_in_size
-        config['UnifiedConfig']['bufOutSize' ]  = gmemBuf_out_size
-        config['UnifiedConfig']['XPFMPath'   ]  = xpfmPath
-        config['UnifiedConfig']['Board'      ]  = board
-        config['UnifiedConfig']['Driver'     ]  = driver
-        config['UnifiedConfig']['InputDtype' ]  = input_type  # float, double or ap_fixed<a,b>
-        config['UnifiedConfig']['OutputDtype']  = output_type  # float, double or ap_fixed<a,b>
+        config['UnifiedConfig']["in_stream_buf_Size" ]  = in_stream_buf_size
+        config['UnifiedConfig']["out_stream_buf_Size"]  = out_stream_buf_size
+        config['UnifiedConfig']['XPFMPath'           ]  = xpfmPath
+        config['UnifiedConfig']['Board'              ]  = board
+        config['UnifiedConfig']['Driver'             ]  = driver
+        config['UnifiedConfig']['InputDtype'         ]  = input_type  # float, double or ap_fixed<a,b>
+        config['UnifiedConfig']['OutputDtype'        ]  = output_type  # float, double or ap_fixed<a,b>
 
         if io_type != "io_stream":
             raise Exception("io_type must be io_stream")

@@ -89,26 +89,37 @@ class VitisUnified_TestGen:
                 for outIdx, out in enumerate(model_outputs):
                     newline += indent + f"float {mg.get_io_port_name(out, False, outIdx)}[{str(out.size())}] = {{}};\n"
 
+            elif '// hls-fpga-machine-learning insert tb-output' in line:
+                newline = line
+                tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
+                if tb_stream != "stdout": ### it can be both or file
+                    for outIdx, out in enumerate(model_outputs):
+                        #### TODO fix this size retrieve
+                        newline += (
+                                    indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
+                                    .format(actualType="float",
+                                            cpysize=out.size(),
+                                            portName=mg.get_io_port_name(out, False, outIdx),
+                                            des="fout",
+                                            keepOutput="false"))
             elif (
                    '// hls-fpga-machine-learning insert output'    in line
                 or '// hls-fpga-machine-learning insert quantized' in line
-                or '// hls-fpga-machine-learning insert tb-output' in line
             ):
 
                 newline = line
                 tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
-                dest =  'fout' if ((tb_stream == 'file') or ('// hls-fpga-machine-learning insert tb-output' in line) ) else 'std::cout'
-                keep_output = "true" if ("// hls-fpga-machine-learning insert tb-output" in line) else "false"
-                newline += "/// warning keep is forced to be true\n"
+                keep_output = str(tb_stream != "stdout").lower()
 
-                for outIdx, out in enumerate(model_outputs):
-                    #### TODO fix this size retrieve
-                    newline += (indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
-                                .format( actualType = "float",
-                                         cpysize    = out.size(),
-                                         portName   = mg.get_io_port_name(out, False, outIdx),
-                                         des        = dest,
-                                         keepOutput = keep_output))
+                if tb_stream != "file":
+                    for outIdx, out in enumerate(model_outputs):
+                        #### TODO fix this size retrieve
+                        newline += (indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
+                                    .format( actualType = "float",
+                                             cpysize    = out.size(),
+                                             portName   = mg.get_io_port_name(out, False, outIdx),
+                                             des        = "std::cout",
+                                             keepOutput = keep_output))
 
             elif '// hls-fpga-machine-learning insert namespace' in line:
                 newline = ''

@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "MY_PROJECT_INC.h"
+
 
 void MY_PROJECT_TOP_FUNC(
 

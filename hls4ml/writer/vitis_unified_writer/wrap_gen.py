@@ -52,22 +52,23 @@ class VitisUnified_WrapperGen:
 
         for line in fin.readlines():
 
-            if "MY_PROJECT_AXI_INC" in line:
-                line = line.replace("MY_PROJECT_AXI_INC", mg.get_main_file_name(model))
-            if "MY_PROJECT_TOP_FUNC" in line:
+            if "MY_PROJECT_DM_INC" in line:
+                line = line.replace("MY_PROJECT_DM_INC", mg.get_wrapper_file_name(model))
+            elif "MY_PROJECT_TOP_FUNC" in line:
                 line = line.replace("MY_PROJECT_TOP_FUNC", mg.get_top_wrap_func_name(model))
-            elif "DMX_BUF_IN_SZ" in line:
-                line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_in_bufferSz()))
-            elif "DMX_BUF_OUT_SZ" in line:
-                line = line.replace("VAL", str(meta.vitis_unified_config.get_gmem_out_bufferSz()))
+            elif "STREAM_BUF_IN_SZ" in line:
+                line = line.replace("VAL", str(meta.vitis_unified_config.get_in_stream_bufferSz()))
+            elif "STREAM_BUF_OUT_SZ" in line:
+                line = line.replace("VAL", str(meta.vitis_unified_config.get_out_stream_bufferSz()))
+
             elif "// vitis-unified-wrapper-io" in line:
                 line = self.gen_io_str(mg, indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
             elif "// vitis-unified-wrapper-interface" in line:
                 for inp_idx, inp in enumerate(inps):
-                    line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(inp, True, inp_idx)} bundle = gmem_in{inp_idx}\n"
+                    line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(inp, True, inp_idx)} bundle = gmem_in{inp_idx} depth={str(inp.size())}\n"
                     line += f"{indent} #pragma HLS INTERFACE s_axilite port={mg.get_io_port_size_name(inp, True, inp_idx)} bundle = control\n"
                 for out_idx, out in enumerate(outs):
-                    line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(out, False, out_idx)} bundle = gmem_out{out_idx}\n"
+                    line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(out, False, out_idx)} bundle = gmem_out{out_idx} depth={str(out.size())}\n"
                     line += f"{indent} #pragma HLS INTERFACE s_axilite port={mg.get_io_port_size_name(out, False, out_idx)} bundle = control\n"
             elif "// vitis-unified-wrapper-stream-dec"    in line:
 
@@ -78,9 +79,9 @@ class VitisUnified_WrapperGen:
 
             elif "// vitis-unified-wrapper-stream-config" in line:
                 for inp_idx, inp in enumerate(inps):
-                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(inp, True, inp_idx)} depth=DMX_BUF_IN_SZ\n"
+                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(inp, True, inp_idx)} depth=STREAM_BUF_IN_SZ\n"
                 for out_idx, out in enumerate(outs):
-                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(out, False, out_idx)} depth=DMX_BUF_OUT_SZ\n"
+                    line += f"#pragma HLS STREAM variable={mg.get_local_stream_name(out, False, out_idx)} depth=STREAM_BUF_OUT_SZ\n"
 
             elif "// vitis-unified-wrapper-load"    in line:
                 for inp_idx, inp in enumerate(inps):
@@ -116,6 +117,8 @@ class VitisUnified_WrapperGen:
 
             if "FILENAME" in line:
                 line = line.replace("FILENAME", mg.get_wrapper_file_name(model).upper())
+            elif "MY_PROJECT_INC.h" in line:
+                line = line.replace("MY_PROJECT_INC", mg.get_main_file_name(model))
             elif "MY_PROJECT_TOP_FUNC" in line:
                 line = line.replace("MY_PROJECT_TOP_FUNC", mg.get_top_wrap_func_name(model))
             elif "// vitis-unified-wrapper-io" in line:

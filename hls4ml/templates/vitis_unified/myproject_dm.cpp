@@ -2,10 +2,10 @@
 #include <hls_stream.h>
 #include <iostream>
 //#include "ap_axi_sdata.h"
-#include "MY_PROJECT_AXI_INC.h"
+#include "MY_PROJECT_DM_INC.h"
 
-#define DMX_BUF_IN_SZ   VAL
-#define DMX_BUF_OUT_SZ  VAL
+#define STREAM_BUF_IN_SZ VAL
+#define STREAM_BUF_OUT_SZ VAL
 
 
 template<typename ATOMIC_TYPE, typename INPUT_LAYER_ARR>
