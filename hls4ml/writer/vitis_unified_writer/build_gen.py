@@ -56,10 +56,8 @@ class VitisUnified_BuildGen:
                 line = line.replace("{FILE_NAME_BASE}", mg.get_main_file_name(model))
             if "{OUTPUT_KERNEL_TYPE}" in line:
                 line = line.replace("{OUTPUT_KERNEL_TYPE}", mg.get_output_kernel_type())
-            if is_csim and ("-DRTL_SIM" in line):
-                line = "#" + line
-
-
+            if is_csim and ( ( "enable_fifo_sizing" in line ) or ("-DRTL_SIM" in line)):
+                    line = "#" + line
 
             fout.write(line)
 
