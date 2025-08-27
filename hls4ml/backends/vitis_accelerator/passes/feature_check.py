@@ -29,6 +29,7 @@ class ValidateStrategy(OptimizerPass):
         if rf > n_in and rf % n_in > 0:
             print(
                 f'WARNING: "Resource" strategy in "{node.name}" ({node.class_name}) may have suboptimal QoR in Vitis '
-                'backend due to use of "urem" cores.\n'
-                'Consider using a different ReuseFactor or switching to "Latency" strategy.'
+                'backend due to use of "urem" cores in Vitis HLS <= 2022.1.\n'
+                'Consider using a different ReuseFactor or switching to "Latency" strategy if using older versions '
+                'of Vitis HLS.'
             )
