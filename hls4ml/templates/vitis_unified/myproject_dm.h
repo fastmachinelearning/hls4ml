@@ -9,8 +9,7 @@
 void MY_PROJECT_TOP_FUNC(
 
 // vitis-unified-wrapper-io
-
-
+        ,int amtQuery
 );
 
 #endif

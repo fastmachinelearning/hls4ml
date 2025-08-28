@@ -17,22 +17,16 @@ class VitisUnified_WrapperGen:
 
         inputPtrList   = []
         outputPtrList  = []
-        inputSizeList  = []
-        outputSizeList = []
 
         for inp_idx, inp in enumerate(inps):
             inputPtrList.append(f"{indent} {inp_gmem_t}* {mg.get_io_port_name(inp, True, inp_idx)}")
-            inputSizeList.append(f"{indent} int {mg.get_io_port_size_name(inp, True, inp_idx)}")
 
         for out_idx, out in enumerate(outs):
             outputPtrList.append(f"{indent} {out_gmem_t}* {mg.get_io_port_name(out, False, out_idx)}")
-            outputSizeList.append(f"{indent} int {mg.get_io_port_size_name(out, False, out_idx)}")
 
 
         line = ", ".join(inputPtrList)   + ",\n"
-        line += ", ".join(outputPtrList) + ",\n"
-        line += ", ".join(inputSizeList) + ",\n"
-        line += ", ".join(outputSizeList)
+        line += ", ".join(outputPtrList) + "\n"
 
         return line
 
@@ -65,11 +59,9 @@ class VitisUnified_WrapperGen:
                 line = self.gen_io_str(mg, indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
             elif "// vitis-unified-wrapper-interface" in line:
                 for inp_idx, inp in enumerate(inps):
-                    line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(inp, True, inp_idx)} bundle = gmem_in{inp_idx} depth={str(inp.size())}\n"
-                    line += f"{indent} #pragma HLS INTERFACE s_axilite port={mg.get_io_port_size_name(inp, True, inp_idx)} bundle = control\n"
+                    line += f"#pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(inp, True, inp_idx)} bundle = gmem_in{inp_idx} depth={str(inp.size())}\n"
                 for out_idx, out in enumerate(outs):
-                    line += f"{indent} #pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(out, False, out_idx)} bundle = gmem_out{out_idx} depth={str(out.size())}\n"
-                    line += f"{indent} #pragma HLS INTERFACE s_axilite port={mg.get_io_port_size_name(out, False, out_idx)} bundle = control\n"
+                    line += f"#pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(out, False, out_idx)} bundle = gmem_out{out_idx} depth={str(out.size())}\n"
             elif "// vitis-unified-wrapper-stream-dec"    in line:
 
                 for inp_idx, inp in enumerate(inps):
@@ -85,19 +77,19 @@ class VitisUnified_WrapperGen:
 
             elif "// vitis-unified-wrapper-load"    in line:
                 for inp_idx, inp in enumerate(inps):
-                    line += f"load_input({mg.get_io_port_name(inp, True, inp_idx)}, {mg.get_local_stream_name(inp, True, inp_idx)}, {mg.get_io_port_size_name(inp, True, inp_idx)});\n"
+                    line += f"load_input({mg.get_io_port_name(inp, True, inp_idx)}, {mg.get_local_stream_name(inp, True, inp_idx)}, amtQuery);\n"
             elif "// vitis-unified-wrapper-compute"       in line:
                 poolList = []
                 for inp_idx, inp in enumerate(inps):
                     poolList.append(f"{mg.get_local_stream_name(inp, True, inp_idx)}")
                 for out_idx, out in enumerate(outs):
                     poolList.append(f"{mg.get_local_stream_name(out, False, out_idx)}")
-                joinedIo = ", \n".join(poolList)
+                joinedIo = f",\n{indent}{indent}{indent}".join(poolList)
                 line += f"{indent} {mg.get_top_model_name(model)}({joinedIo});\n"
 
             elif "// vitis-unified-wrapper-store"  in line:
                 for out_idx, out in enumerate(outs):
-                    line += f"store_result({mg.get_io_port_name(out, False, out_idx)}, {mg.get_local_stream_name(out, False, out_idx)}, {mg.get_io_port_size_name(out, False, out_idx)});\n"
+                    line += f"store_result({mg.get_io_port_name(out, False, out_idx)}, {mg.get_local_stream_name(out, False, out_idx)}, amtQuery);\n"
 
             fout.write(line)
 
