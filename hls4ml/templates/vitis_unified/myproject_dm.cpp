@@ -9,32 +9,33 @@
 
 
 template<typename ATOMIC_TYPE, typename INPUT_LAYER_ARR>
-void load_input(ATOMIC_TYPE* in, hls::stream<INPUT_LAYER_ARR>& inStream, int amtQuery) {
+void load_input(ATOMIC_TYPE* in, hls::stream<INPUT_LAYER_ARR>& inStream, int amtQuery, const int TENSOR_SIZE) {
 mem_rd:
     int baseQuery = 0;
-    for (int i = 0; i < amtQuery; i++) {
-#pragma HLS PIPELINE II=1
-        INPUT_LAYER_ARR tmp;
-        for (int j = 0; j < INPUT_LAYER_ARR::size; j++){
-            tmp[j] = in[baseQuery];
-            baseQuery++;
-        }
-        inStream.write(tmp);
+    for (int q = 0; q < amtQuery; q++) {
+            for (int i = 0; i  < TENSOR_SIZE/INPUT_LAYER_ARR::size; i++ ){
+                INPUT_LAYER_ARR tmp;
+                for (int j = 0; j < INPUT_LAYER_ARR::size; j++){
+                    tmp[j] = in[baseQuery];
+                    baseQuery++;
+                }
+                inStream.write(tmp);
+            }
     }
 }
 
 template<typename ATOMIC_TYPE, typename OUT_LAYER_ARR>
-void store_result(ATOMIC_TYPE* out, hls::stream<OUT_LAYER_ARR>& out_stream, int amtQuery) {
+void store_result(ATOMIC_TYPE* out, hls::stream<OUT_LAYER_ARR>& out_stream, int amtQuery, const int TENSOR_SIZE) {
 mem_wr:
     int baseQuery = 0;
-    for (int i = 0; i < amtQuery; i++){
-#pragma HLS PIPELINE II=1
-        OUT_LAYER_ARR tmp = out_stream.read();
-        for (int j = 0; j < OUT_LAYER_ARR::size; j++){
-            out[baseQuery] = tmp[j];
-            baseQuery++;
+    for (int q = 0; q < amtQuery; q++){
+        for (int i = 0; i < TENSOR_SIZE/OUT_LAYER_ARR::size; i++){
+            OUT_LAYER_ARR tmp = out_stream.read();
+            for (int j = 0; j < OUT_LAYER_ARR::size; j++){
+                out[baseQuery] = tmp[j];
+                baseQuery++;
+            }
         }
-
     }
 }
 

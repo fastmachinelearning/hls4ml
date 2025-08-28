@@ -14,6 +14,7 @@ class MyDfxCtrl(DefaultIP):
         super().__init__(description=description)
 
         self.REG_ADDR_AP_CTRL = 0x00
+        self.REG_ADDR_AMT_QUERY = VAL
 
         self.INP_PORT_NAMEs = [
             #### hls-driver-input-dbg-name
@@ -22,9 +23,6 @@ class MyDfxCtrl(DefaultIP):
         self.REG_ADDR_INP_PTRs = [
             #### hls-driver-input-ptr
         ]
-        self.REG_ADDR_INP_SZs = [
-            #### hls-driver-input-size
-        ]
 
         self.OUT_PORT_NAMEs = [
             #### hls-driver-output-dbg-name
@@ -32,10 +30,6 @@ class MyDfxCtrl(DefaultIP):
 
         self.REG_ADDR_OUT_PTRs = [
             #### hls-driver-output-ptr
-        ]
-
-        self.REG_ADDR_OUT_SZs = [
-            #### hls-driver-output-size
         ]
 
     bindto = ['xilinx.com:hls:<TOP_NAME>:1.0']

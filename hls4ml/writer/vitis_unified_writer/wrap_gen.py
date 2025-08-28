@@ -77,7 +77,7 @@ class VitisUnified_WrapperGen:
 
             elif "// vitis-unified-wrapper-load"    in line:
                 for inp_idx, inp in enumerate(inps):
-                    line += f"load_input({mg.get_io_port_name(inp, True, inp_idx)}, {mg.get_local_stream_name(inp, True, inp_idx)}, amtQuery);\n"
+                    line += f"load_input({mg.get_io_port_name(inp, True, inp_idx)}, {mg.get_local_stream_name(inp, True, inp_idx)}, amtQuery, {str(inp.size())});\n"
             elif "// vitis-unified-wrapper-compute"       in line:
                 poolList = []
                 for inp_idx, inp in enumerate(inps):
@@ -89,7 +89,7 @@ class VitisUnified_WrapperGen:
 
             elif "// vitis-unified-wrapper-store"  in line:
                 for out_idx, out in enumerate(outs):
-                    line += f"store_result({mg.get_io_port_name(out, False, out_idx)}, {mg.get_local_stream_name(out, False, out_idx)}, amtQuery);\n"
+                    line += f"store_result({mg.get_io_port_name(out, False, out_idx)}, {mg.get_local_stream_name(out, False, out_idx)}, amtQuery, {str(out.size())});\n"
 
             fout.write(line)
 
