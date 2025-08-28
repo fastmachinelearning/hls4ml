@@ -61,16 +61,16 @@ class VitisUnifiedBackend(VitisBackend):
     def build(
         self,
         model,
-        reset=False,
-        csim=False,
-        synth=False,
-        cosim=False,
-        validation=False,
-        export=False,
-        vsynth=False,
-        fifo_opt=False,
-        bitfile=False,
-        log_to_stdout=True
+        reset         = False,
+        csim          = False,
+        synth         = False,
+        cosim         = False,
+        validation    = False,
+        export        = False,
+        vsynth        = False,
+        fifo_opt      = False,
+        bitfile       = False,
+        log_to_stdout = True
     ):
         ##### it builds and return vivado reports
         if 'linux' in sys.platform:
@@ -85,8 +85,6 @@ class VitisUnifiedBackend(VitisBackend):
             raise Exception("Current Vitis Unified not support validation. Please set validation=False to run Vitis Unified.")
         if export:
             raise Exception("Current Vitis Unified not support export. Please set export=False to run Vitis Unified.")
-        if fifo_opt:
-            raise Exception("Current Vitis Unified not support fifo_opt. Please set fifo_opt=False to run Vitis Unified.")
 
         output_dir = model.config.get_output_dir()
 
@@ -120,7 +118,7 @@ class VitisUnifiedBackend(VitisBackend):
             self.prepare_sim_config_file(model, True)
             self.run_term_command(model, "csim", csim_cmd, log_to_stdout, csim_cwd)
 
-        if cosim:
+        if cosim or fifo_opt:
             self.prepare_sim_config_file(model, False)
             self.run_term_command(model, "cosim", cosim_cmd, log_to_stdout, cosim_cwd)
 
@@ -184,4 +182,10 @@ class VitisUnifiedBackend(VitisBackend):
         writer_passes = ['make_stamp', 'vitisunified:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=['vitis:ip'], backend=self.name)
         self._default_flow = vitis_ip
+
+        ########### register fifo depth optimization
+        fifo_depth_opt_passes = ['vitisunified:fifo_depth_optimization'] + writer_passes
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)
+
 
