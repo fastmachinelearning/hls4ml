@@ -54,21 +54,17 @@ class VitisUnified_TestGen:
                 newline = line
 
                 input_ios  = []
-                input_sizes = []
                 output_ios = []
-                output_sizes = []
                 bram_ios   = [b.name for b in model_brams]
 
                 for inpIdx, inp in enumerate(model_inputs):
                     input_ios.append(mg.get_io_port_name(inp, True, inpIdx))
-                    input_sizes.append(str(inp.size()))
 
                 for outIdx, out in enumerate(model_outputs):
                     output_ios.append(mg.get_io_port_name(out, False, outIdx))
-                    output_sizes.append(str(out.size()))
 
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
-                all_vars = ','.join(filter(None, [*input_ios, *output_ios, *input_sizes, *output_sizes, *bram_ios]))
+                all_vars = ' ,'.join(filter(None, [*input_ios, *output_ios, *bram_ios, "1"]))
                 top_level = indent + f'{mg.get_top_wrap_func_name(model)}({all_vars});\n'
                 newline += top_level
 
@@ -94,7 +90,6 @@ class VitisUnified_TestGen:
                 tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
                 if tb_stream != "stdout": ### it can be both or file
                     for outIdx, out in enumerate(model_outputs):
-                        #### TODO fix this size retrieve
                         newline += (
                                     indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
                                     .format(actualType="float",
@@ -113,7 +108,6 @@ class VitisUnified_TestGen:
 
                 if tb_stream != "file":
                     for outIdx, out in enumerate(model_outputs):
-                        #### TODO fix this size retrieve
                         newline += (indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
                                     .format( actualType = "float",
                                              cpysize    = out.size(),

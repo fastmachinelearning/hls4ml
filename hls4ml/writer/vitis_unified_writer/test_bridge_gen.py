@@ -69,17 +69,13 @@ class VitisUnified_BridgeGen:
                         otuput_sizes.append(out.size_cpp())
 
                     inputs_str  = ', '.join(input_vars)
-                    input_size_str = ', '.join(input_sizes)
                     outputs_str = ', '.join(output_vars)
-                    output_size_str = ', '.join(otuput_sizes)
 
                     newline = ''
                     newline += indent + mg.get_top_wrap_func_name(model) + "(\n"
                     newline += indent + inputs_str + ',\n'
                     newline += indent + outputs_str + ',\n'
-                    newline += indent + input_size_str + ',\n'
-                    newline += indent + output_size_str + '\n'
-                    newline += indent + ");\n"
+                    newline += indent + "1);\n" ##### amount query should be one only
 
 
             elif '// hls-fpga-machine-learning insert trace_outputs' in line:
