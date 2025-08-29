@@ -146,7 +146,7 @@ class VitisUnifiedBackend(VitisBackend):
         output_type         ='float',
         in_stream_buf_size  =128,
         out_stream_buf_size =128,
-        xpfmPath            ='/tools/Xilinx/Vitis/2023.2/base_platforms/'
+        xpfmPath            ='/opt/Xilinx/Vitis/2023.2/base_platforms/'
                              'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
         **_
     ):
