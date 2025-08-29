@@ -1532,7 +1532,7 @@ class MultiModelGraph:
 
     def compile(self):
         self.write()
-        #self._compile()
+        self._compile()
 
     def predict(self, x, sim='csim'):
         if sim == 'csim':
