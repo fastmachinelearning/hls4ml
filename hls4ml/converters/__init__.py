@@ -167,7 +167,6 @@ def convert_from_keras_model(
     hls_config=None,
     **kwargs,
 ):
-
     """Convert Keras model to hls4ml model based on the provided configuration.
 
     Args:
