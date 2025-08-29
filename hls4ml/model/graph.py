@@ -1166,7 +1166,6 @@ class MultiModelGraph:
         Create a MultiModelGraph by splitting a base ModelGraph at specified layer names,
         each initiating a subgraph.
         """
-        print("from multi model graph")
         cls._validate_split_points(base_model, split_before_layers)
         all_nodes     = list(base_model.graph.values())
         layer_names   = [node.name for node in all_nodes]
@@ -1199,7 +1198,7 @@ class MultiModelGraph:
             graph_dict = OrderedDict()
 
             pooled_input_layer = []
-            print("-------------- idx = ", idx, " -----------------------------")
+            #print("-------------- idx = ", idx, " -----------------------------")
 
             ################################################################
             ##### check the current slice node and create new input node ###
@@ -1227,8 +1226,6 @@ class MultiModelGraph:
                 named_new_input_layer = dict()
                 #### inputIdx is index in input of target Node
                 for inputIdx, targetNode in requiredReroute: ### note that tagetNode may be same within requiredRerote
-                    if idx == 1:
-                        print("debug here")
                     ioName = targetNode.inputs[inputIdx]
                     ###### nodeUpdateList[0][1] is the sample Node (Layer) that must be inject to the system
                     input_layer = cls._create_input_node(subgraph, targetNode, #### list of (inputIdx, Node)
@@ -1240,8 +1237,6 @@ class MultiModelGraph:
                     targetNode.inputs[inputIdx]  = input_layer.outputs[0]
 
                     #### update link meta data
-                    if idx == 1:
-                        print("debug here")
                     src_gid, src_graph_out_idx = cls.get_src_subGraph_and_output_idx(subgraphs, ioName)
                     input_node_links[idx].append((src_gid, src_graph_out_idx))
 
@@ -1271,7 +1266,6 @@ class MultiModelGraph:
             subgraph.graph   = graph_dict
 
             ###### config input
-            print("idx is ", idx)
             if idx > 0:
                 subgraph.inputs = [curInputNode.outputs[0] for curInputNode in pooled_input_layer]
             else:
@@ -1279,25 +1273,12 @@ class MultiModelGraph:
 
             ###### config output
             pooled_outputs  = []
-            print("checking output")
             for layer in slice_:
                 outputIdxs = cls.check_io_idx_from_node(slice_, layer, False)
-                print(f"layer name {layer.name} : {outputIdxs}")
                 for outIdx in outputIdxs:
                     pooled_outputs.append(layer.outputs[outIdx])
 
             subgraph.outputs = pooled_outputs
-            # subgraph.inputs = input_layer.outputs if idx > 0 else base_model.inputs
-            # subgraph.outputs = slice_[-1].outputs if idx < len(node_slices) - 1 else base_model.outputs
-
-            print("input ---->")
-            print(subgraph.inputs)
-            print("output ---->")
-            print(subgraph.outputs)
-
-
-
-
             subgraph._applied_flows = base_model._applied_flows
             # NOTE might need to examine other subgraph-related flows (i.e., fifo_optimizer)
             subgraph.apply_flow('vivado:specific_types')
@@ -1309,7 +1290,7 @@ class MultiModelGraph:
 
             subgraphs.append(subgraph)
 
-        cls.print_input_node_link_debug(input_node_links)
+        #cls.print_input_node_link_debug(input_node_links)
 
         return cls(subgraphs, input_node_links)
 
