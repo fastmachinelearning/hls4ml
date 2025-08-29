@@ -22,7 +22,7 @@ def checkEqual(a, b):
 
 
 bridge_result = np.load(test_root_path / "output_file/outputGenbit.npy")
-zcu_result    = np.load(test_root_path / "output_file/zcu102_mandriver.npy")
+zcu_result    = np.load(test_root_path / "output_file/out_hw.npy")
 zcu_flat      = zcu_result.reshape(zcu_result.shape[0], -1)
 
 print(bridge_result.shape)

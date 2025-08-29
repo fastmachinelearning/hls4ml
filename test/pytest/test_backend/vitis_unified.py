@@ -3,9 +3,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import os
-from tensorflow.keras.layers import Activation, Dense, GlobalAveragePooling1D, Input
-from tensorflow.keras.models import Model
-
 import hls4ml
 import hls4ml.model
 
@@ -222,4 +219,4 @@ def test_gen_unified(io_type, strategy, granularity, amt_query):
     vitis_unified_model.compile()
     vitis_unified_model.build(synth=True, bitfile=True)
 
-#test_gen_unified("io_stream", 'latency', 'name', 10000)
+test_gen_unified("io_stream", 'latency', 'name', 10000)
