@@ -219,4 +219,4 @@ def test_gen_unified(io_type, strategy, granularity, amt_query):
     vitis_unified_model.compile()
     vitis_unified_model.build(synth=True, bitfile=True)
 
-test_gen_unified("io_stream", 'latency', 'name', 10000)
+#test_gen_unified("io_stream", 'latency', 'name', 10000)
