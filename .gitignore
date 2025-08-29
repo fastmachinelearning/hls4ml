@@ -17,3 +17,5 @@ hls4mlprj_*
 
 .idea/*
 myTest/*
+test/pytest/test_backend/input_file/*
+test/pytest/test_backend/output_file/*
