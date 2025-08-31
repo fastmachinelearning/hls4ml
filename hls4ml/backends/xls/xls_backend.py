@@ -326,7 +326,6 @@ class XLSBackend(FPGABackend):
             self,
             model: ModelGraph,
             reset: bool = True,
-            clk_period: int = 4000,
             pr: bool = False,
         ) -> dict:
         """ Builds the RTL (SystemVerilog) code and uses Vivado to return the resource utilization.
@@ -334,7 +333,7 @@ class XLSBackend(FPGABackend):
         Args:
             model (ModelGraph): the hls4ml model.
             reset (bool): the reset synthesis option
-            clk_period (int):  clock period in picoseconds (e.g., 4000 ps => 1,000,000 / 4000 = 250 MHz)
+            clk_period (int):  clock period in nanoseconds (e.g., 5 ns => 1,000 / 5 = 200 MHz)
             pr (bool): place and route option
         """
         
@@ -344,7 +343,7 @@ class XLSBackend(FPGABackend):
                 raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
             
         def build_flags() -> str:
-            flags = f'--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps={clk_period} '
+            flags = f'--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps={model.config.get_config_value("ClockPeriod")*1000} '
             if reset:
                 flags += '--reset=reset'
             return flags
@@ -357,7 +356,8 @@ class XLSBackend(FPGABackend):
                 '-source', './build_prj.tcl',
                 '-tclargs',
                 f'firmware/{model.config.get_project_name()}.sv',
-                f'{model.config.get_config_value("Part")}'
+                f'{model.config.get_config_value("Part")}',
+                f'{model.config.get_config_value("ClockPeriod")}'
             ]
             if pr:
                 f += '--pr'
