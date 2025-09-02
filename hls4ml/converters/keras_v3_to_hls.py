@@ -190,12 +190,9 @@ class KerasV3HandlerDispatcher:
         ret['input_keras_tensor_names'] = input_names
         ret = (ret,)
 
-        recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU', 'Bidirectional']
         activation = getattr(layer, 'activation', None)
-        name = layer.name
-        class_name = layer.__class__.__name__
-        if activation not in (keras.activations.linear, None) and class_name not in recurrent_layers:
-            assert isinstance(activation, FunctionType), f'Activation function for layer {name} is not a function'
+        if activation not in (keras.activations.linear, None):
+            assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
             intermediate_tensor_name = f'{output_names[0]}_activation'
             ret[0]['output_keras_tensor_names'] = (intermediate_tensor_name,)
             act_cls_name = activation.__name__

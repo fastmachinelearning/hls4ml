@@ -79,6 +79,7 @@ class OneAPIBackend(FPGABackend):
             'oneapi:fix_softmax_table_size',
             'infer_precision_types',
             'oneapi:process_fixed_point_quantizer_layer',
+            'oneapi:validate_ac_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 

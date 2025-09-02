@@ -1,4 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.types import StandardFloatPrecisionType
 
 
 class ValidateConvImplementation(OptimizerPass):
@@ -87,3 +88,23 @@ class ValidateBidirectionalIoType(OptimizerPass):
             f'WARNING: "{node.model.config.config["IOType"]}" IO Type is not supported in Vitis backend '
             f'for "{node.name}" ({node.class_name}). Please use "io_parallel".'
         )
+
+
+class ValidateStdCppTypes(OptimizerPass):
+    def match(self, node):
+        return True
+
+    def transform(self, model, node):
+        prec_types = [prec_type.precision for prec_type in node.get_layer_precision().values()]
+        prec_types = [
+            prec_type
+            for prec_type in prec_types
+            if isinstance(prec_type, StandardFloatPrecisionType)
+            and prec_type.use_cpp_type
+            and str(prec_type) not in ('float', 'double')
+        ]
+        if len(prec_types) > 0:
+            print(
+                f'WARNING: Layer "{node.name}" uses C++ types that are not synthesizable with Vitis backend. '
+                'Use only for testing purposes.'
+            )
