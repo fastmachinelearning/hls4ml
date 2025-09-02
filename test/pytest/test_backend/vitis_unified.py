@@ -20,6 +20,9 @@ test_root_path = Path(__file__).parent
 os.environ['XILINX_VITIS'] = "/tools/Xilinx/Vitis/2023.2"
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
 
+XPFM_PATH = "/tools/Xilinx/Vitis/2023.2/base_platforms/" "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
+LOG_STD = True
+
 
 def create_io_file_dir():
     os.makedirs(test_root_path / "input_file", exist_ok=True)
@@ -78,6 +81,7 @@ def create_hls_model(model, config, backend, io_type, strategy, granularity, pre
         clock_period='10ns',
         input_type="float",
         output_type="float",
+        xpfmPath=XPFM_PATH,
     )
     hls_model.compile()
     return hls_model
@@ -137,6 +141,9 @@ def test_backend_predict(io_type, strategy, granularity, amt_query):
     assert checkEqual(y_hls4ml_unified, y_hls4ml), "the result from vitis unified and vitis are not equal!"
 
 
+# test_backend_predict("io_stream", 'latency', 'name', 10)
+
+
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
@@ -167,7 +174,7 @@ def test_co_simulation(io_type, strategy, granularity, amt_query):
     )
     # do cosim
     vitis_unified_model_cosim.compile()
-    vitis_unified_model_cosim.build(synth=True, cosim=True)
+    vitis_unified_model_cosim.build(synth=True, cosim=True, log_to_stdout=LOG_STD)
 
     bridge_result_path = (
         gen_prj_dir("VitisUnified", io_type, strategy, granularity, "cosim") + "/tb_data/tb_output_predictions.dat"
@@ -246,7 +253,7 @@ def test_gen_unified(io_type, strategy, granularity, amt_query):
     np.save(test_root_path / "output_file" / "outputGenbit.npy", y_hls4ml_unified)
 
     vitis_unified_model.compile()
-    vitis_unified_model.build(synth=True, bitfile=True)
+    vitis_unified_model.build(synth=True, bitfile=True, log_to_stdout=LOG_STD)
 
 
 # test_gen_unified("io_stream", 'latency', 'name', 10000)

@@ -30,7 +30,7 @@ class VitisUnified_WrapperGen:
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
         indent = '      '
 
-        # start write myproject_dm.cpp ##
+        # start write myproject_dm.cpp
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_dm.cpp'))
@@ -50,6 +50,15 @@ class VitisUnified_WrapperGen:
             elif "// vitis-unified-wrapper-io" in line:
                 line = self.gen_io_str(mg, indent, inp_gmem_t, out_gmem_t, inps, outs) + "\n"
             elif "// vitis-unified-wrapper-interface" in line:
+                # This section will generate the pragma to specify interface type
+                # --> axi master (memory read input)
+                # --> axi master (memory write output)
+                # BOTH IS MASTER
+                # Please note that gmem_in/out depth size must match with the cosim array allocation
+                # if the cosim allocation is larger than depth, the result will not correct
+                # if the cosim allocation is lower than depth, the result is correct,
+                # but the system will throw segment falut error
+                # the depth size will not impact the resource usage in hls generation
                 for inp_idx, inp in enumerate(inps):
                     line += (
                         f"#pragma HLS INTERFACE m_axi     port={mg.get_io_port_name(inp, True, inp_idx)} "
@@ -61,7 +70,8 @@ class VitisUnified_WrapperGen:
                         f"bundle = gmem_out{out_idx} depth={str(out.size())}\n"
                     )
             elif "// vitis-unified-wrapper-stream-dec" in line:
-
+                # this declare the stream buffer that axi master read will store the input  and axi master write
+                # will retrieve the output
                 for inp_idx, inp in enumerate(inps):
                     line += f"{indent} static hls::stream<{inp.type.name}> {mg.get_local_stream_name(inp, True, inp_idx)};\n"
                 for out_idx, out in enumerate(outs):
@@ -82,12 +92,14 @@ class VitisUnified_WrapperGen:
                     )
 
             elif "// vitis-unified-wrapper-load" in line:
+                # this call the load_input function to  convert axi_master read to axi stream (buffer)
                 for inp_idx, inp in enumerate(inps):
                     line += (
                         f"load_input({mg.get_io_port_name(inp, True, inp_idx)}, "
                         f"{mg.get_local_stream_name(inp, True, inp_idx)}, amtQuery, {str(inp.size())});\n"
                     )
             elif "// vitis-unified-wrapper-compute" in line:
+                #
                 poolList = []
                 for inp_idx, inp in enumerate(inps):
                     poolList.append(f"{mg.get_local_stream_name(inp, True, inp_idx)}")
@@ -97,6 +109,7 @@ class VitisUnified_WrapperGen:
                 line += f"{indent} {mg.get_top_model_name(model)}({joinedIo});\n"
 
             elif "// vitis-unified-wrapper-store" in line:
+                # this call the store_result function to convert axi_master read to axi stream (buffer)
                 for out_idx, out in enumerate(outs):
                     line += (
                         f"store_result({mg.get_io_port_name(out, False, out_idx)}, "

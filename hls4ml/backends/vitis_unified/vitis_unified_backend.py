@@ -90,7 +90,8 @@ class VitisUnifiedBackend(VitisBackend):
 
         # util template (used in csim/cosim/package)
         util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir unifiedPrj"
-        # package command
+
+        # command for each configuration
 
         package_cmd = util_command.format(op="package", configPath=hls_config_file)
         package_cwd = mg.get_vitis_hls_dir(model)

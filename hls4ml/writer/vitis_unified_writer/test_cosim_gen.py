@@ -34,6 +34,8 @@ class VitisUnified_TestGen:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
 
             elif '// hls-fpga-machine-learning insert data' in line:
+                # This section will convert the input which stored in vector<float> to the float pointer
+                # the float pointer will point to the start section of for each input for
                 newline = line
                 offset = 0
                 for inputIdx, inp in enumerate(model_inputs):
@@ -44,10 +46,14 @@ class VitisUnified_TestGen:
                         startIdx=str(offset),
                     )
                     offset += inp.size()
+                # This section will declare float arrays used to store input from output layer
                 for outputIdx, out in enumerate(model_outputs):
                     newline += indent + f"float {mg.get_io_port_name(out, False, outputIdx)}[{out.size()}];\n"
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
+
+                # This function will invoke the <Project_name>_dm.cpp which is the wrapper of the system
+
                 newline = line
 
                 input_ios = []
@@ -68,8 +74,8 @@ class VitisUnified_TestGen:
             elif '// hls-fpga-machine-learning insert predictions' in line:
                 newline = line
                 for out in model_outputs:
-                    # newline += indent + f'for(int i = 0; i < {out.size_cpp()}; i++) {{\n'
                     # TODO fix this size retrieve
+
                     newline += indent + f'for(int i = 0; i < {out.size()}; i++) {{\n'
                     newline += indent + '  std::cout << pr[i] << " ";\n'
                     newline += indent + '}\n'

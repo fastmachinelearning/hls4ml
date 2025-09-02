@@ -66,7 +66,7 @@ def execute_cosim_to_profile_fifos(model):
         vsynth=False,
         fifo_opt=True,
         bitfile=False,
-        log_to_stdout=True,
+        log_to_stdout=False,
     )
 
 

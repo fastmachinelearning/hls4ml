@@ -1,5 +1,6 @@
 import os
 
+from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
 from hls4ml.writer.vitis_writer import VitisWriter
 
 from .meta import VitisUnifiedWriterMeta
@@ -53,7 +54,6 @@ class VitisUnifiedWriter(VitisWriter):
         self.bg.write_launch_vitis_linker_cfg(self.writer_meta, model, self.mg)
 
     def generate_config(self, model):
-        from hls4ml.backends import VitisUnifiedConfig
 
         self.writer_meta.vitis_unified_config = VitisUnifiedConfig(
             model.config, model.get_input_variables(), model.get_output_variables()

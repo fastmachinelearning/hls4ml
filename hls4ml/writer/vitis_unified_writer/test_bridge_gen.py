@@ -35,7 +35,8 @@ class VitisUnified_BridgeGen:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
 
             elif '// hls-fpga-machine-learning insert header' in line:
-
+                # this section will write the function arment composed of input and output of hls kernel
+                # for both myproject_float and myproject_double
                 dtype = line.split('#', 1)[1].strip()
 
                 input_ios = []
@@ -54,6 +55,9 @@ class VitisUnified_BridgeGen:
                 newline += indent + outputs_str + '\n'
 
             elif '// hls-fpga-machine-learning insert wrapper' in line:
+
+                # This section will write the calling function to main kernel
+
                 dtype = line.split('#', 1)[1].strip()
                 if dtype == meta.vitis_unified_config.get_input_type():
                     newline = ''

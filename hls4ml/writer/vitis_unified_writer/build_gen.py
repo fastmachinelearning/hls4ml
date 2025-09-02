@@ -31,7 +31,9 @@ class VitisUnified_BuildGen:
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     @classmethod
-    def write_hls_kernel_cfg(self, meta, model, mg, is_csim=False):  # is_csim else cosim
+    def write_hls_kernel_cfg(self, meta, model, mg, is_csim=False):  # True is_csim else is cosim+fifo_optimization
+        # This will gen hls_kernel_config_<csim/cosim>.cfg file which Vitis_hls unified will use it to config
+        # the synthesizer
         filedir = os.path.dirname(os.path.abspath(__file__))
         sufix = "csim" if is_csim else "cosim"
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/hls_kernel_config.cfg'))
@@ -66,6 +68,8 @@ class VitisUnified_BuildGen:
 
     @classmethod
     def build_unified_project_ske(self, meta, model, mg, workspaceDir=None):
+        # this will generate the vitis-comp.json file, the file will enable vitis ide gui to see it
+        # as a project
         if workspaceDir is None:
             workspaceDir = mg.get_vitis_unified_working_directory_dir(model)
         hlsDir = mg.get_vitis_hls_dir(model)
@@ -97,6 +101,7 @@ class VitisUnified_BuildGen:
 
     @classmethod
     def write_launch_vitis_linker_launcher(self, meta, model, mg):
+        # This section generate buildAcc.sh file to combine the platform and the hls kernel together
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildAcc.sh'))
         fout = open(f"{mg.get_vitis_linker_dir(model)}/buildAcc.sh", 'w')
@@ -119,6 +124,7 @@ class VitisUnified_BuildGen:
 
     @classmethod
     def write_launch_vitis_linker_cfg(self, meta, model, mg):
+        # this will generate the config file that linker (platform + vitis)
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildConfig.cfg'))
         fout = open(f"{mg.get_vitis_linker_dir(model)}/buildConfig.cfg", 'w')

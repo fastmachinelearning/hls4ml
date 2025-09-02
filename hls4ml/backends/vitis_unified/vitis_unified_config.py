@@ -4,12 +4,17 @@ class VitisUnifiedConfig:
         self.config = config.config
         self.board = self.config.get('UnifiedConfig', {}).get('Board', 'pynq-z2')
 
+        # before first and afterlast layer we have the configuratble buffer
+        # [platform]<-->[in_steram_bufferSz]<-->[hls]<-->[out_stream_bufferSz]<-->[platform]
         self.in_steram_bufferSz = self.config["UnifiedConfig"]["in_stream_buf_Size"]
         self.out_stream_bufferSz = self.config["UnifiedConfig"]["out_stream_buf_Size"]
 
+        # the path to the generated platform
         self.XPFMPath = self.config["UnifiedConfig"]["XPFMPath"]
 
         self.driver = self.config['UnifiedConfig']['Driver']
+
+        # c++ type for input and output of the hls kernel it must be str (float/double)
         self.input_type = self.config['UnifiedConfig']['InputDtype']
         self.output_type = self.config['UnifiedConfig']['OutputDtype']
 
