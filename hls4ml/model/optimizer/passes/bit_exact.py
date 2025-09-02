@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
     from hls4ml.model import ModelGraph
 
 
-KIF_t = tuple[NDArray[np.int8], NDArray[np.int8], NDArray[np.int8]]
+KIF_t = tuple[NDArray[np.int16], NDArray[np.int16], NDArray[np.int16]]
 rm_cpy = re.compile(r'(?P<name>.+)_cpy\d*')
 
 
@@ -82,9 +82,9 @@ def get_input_shapes(layer: Layer) -> list[tuple[int, ...]]:
 
 
 def _maximum_kif_at_shape(shape: tuple[int, ...]):
-    k = np.ones(shape, dtype=np.int8)
-    i = np.full(shape, 126, dtype=np.int8)
-    f = np.full(shape, 126, dtype=np.int8)
+    k = np.ones(shape, dtype=np.int16)
+    i = np.full(shape, 126, dtype=np.int16)
+    f = np.full(shape, 126, dtype=np.int16)
     return k, i, f
 
 
@@ -104,9 +104,9 @@ def _(layer: FixedPointQuantizer):
         k, i, f = k[0], i[0], f[0]
 
     out_shape = get_output_shape(layer)
-    k = np.broadcast_to(k, out_shape).astype(np.int8)
-    i = np.broadcast_to(i, out_shape).astype(np.int8)
-    f = np.broadcast_to(f, out_shape).astype(np.int8)
+    k = np.broadcast_to(k, out_shape).astype(np.int16)
+    i = np.broadcast_to(i, out_shape).astype(np.int16)
+    f = np.broadcast_to(f, out_shape).astype(np.int16)
 
     if layer.SAT != 'WRAP':
         k[:] = 1
@@ -137,8 +137,8 @@ def _(layer: Activation):
         return (requested_kif(layer),)
     if fn_name == 'relu':
         _, _, f = requested_kif(layer)
-        k = np.ones(f.shape, dtype=np.int8)
-        i = np.full(f.shape, 126, dtype=np.int8)
+        k = np.ones(f.shape, dtype=np.int16)
+        i = np.full(f.shape, 126, dtype=np.int16)
         return ((k, i, f),)
     inp_shape = get_input_shapes(layer)[0]
     return (_maximum_kif_at_shape(inp_shape),)
@@ -175,8 +175,8 @@ def requested_kif(layer: Layer) -> KIF_t:
     if not out_layers:
         return _maximum_kif_at_shape(out_shape)
 
-    k = np.zeros(out_shape, dtype=np.int8)
-    i = np.full(out_shape, -127, dtype=np.int8)
+    k = np.zeros(out_shape, dtype=np.int16)
+    i = np.full(out_shape, -127, dtype=np.int16)
     f = i.copy()
     for out_layer in out_layers:
         _kif_s = request_kif(out_layer)
@@ -196,8 +196,8 @@ def _produce_kif(layer: Layer) -> KIF_t:
 
 @_produce_kif.register
 def _(layer: Input):
-    k = np.ones(get_output_shape(layer), dtype=np.int8)
-    i = f = np.full(get_output_shape(layer), 126, dtype=np.int8)
+    k = np.ones(get_output_shape(layer), dtype=np.int16)
+    i = f = np.full(get_output_shape(layer), 126, dtype=np.int16)
     return k, i, f
 
 
@@ -230,9 +230,9 @@ def _(layer: FixedPointQuantizer):
 
     # Compansate for round-up/downs that may need extra bits for representing (ufixed<2,0> -> ufixed<2,1,RND>, 0.75->1.0)
     if layer.RND != 'TRN':
-        _i += ((lf > f) & (i > li)).astype(np.int8)
+        _i += ((lf > f) & (i > li)).astype(np.int16)
     else:
-        _i += ((lf > f) & (i > li) & k).astype(np.int8)
+        _i += ((lf > f) & (i > li) & k).astype(np.int16)
 
     if layer.SAT in ('SAT', 'SAT_SM'):
         k, i, f = _k, _i, _f
@@ -316,7 +316,7 @@ def _(layer: Merge):
                 k, i, f = k[None], i[None], f[None]
         case _:
             raise NotImplementedError(f'No implementation of Merge for {op}')
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -330,7 +330,7 @@ def _(layer: EinsumDense):
     if _bias is not None:
         qint_out = qint_out + _bias.data
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -341,7 +341,7 @@ def _(layer: Einsum):
     eq = layer.attributes['equation']
     qint_out = einsum(eq, qint_in1, qint_in2)
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -354,7 +354,7 @@ def _(layer: Dense):
     if _bias is not None:
         qint_out = qint_out + _bias.data
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -450,7 +450,7 @@ def _(layer: Conv1D | Conv2D):
     qint_out = qint_in @ kernel
     qint_out = qint_out + bias
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register(Pooling1D)
@@ -469,9 +469,9 @@ def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
     if isinstance(layer, (Pooling1D, Pooling2D)):
         k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
 
-    k_out = k_in.reshape(*k_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
-    i_out = i_in.reshape(*i_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
-    f_out = f_in.reshape(*f_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
+    k_out = k_in.reshape(*k_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
+    i_out = i_in.reshape(*i_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
+    f_out = f_in.reshape(*f_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
 
     pool_op = layer.attributes['pool_op']
     if pool_op == 'Average':
@@ -494,7 +494,7 @@ def _(layer: BatchNormalization):
 
     qint_out = qint_in * scale + bias
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -509,10 +509,10 @@ def _(layer: Softmax):
 
     i_exp, f_exp = I_exp, b_exp - I_exp
     i_inv, f_inv = I_inv, b_inv - I_inv
-    k = np.zeros(out_shape, dtype=np.int8)
+    k = np.zeros(out_shape, dtype=np.int16)
 
-    i = np.full(out_shape, i_exp + i_inv, dtype=np.int8)
-    f = np.full(out_shape, f_exp + f_inv, dtype=np.int8)
+    i = np.full(out_shape, i_exp + i_inv, dtype=np.int16)
+    f = np.full(out_shape, f_exp + f_inv, dtype=np.int16)
 
     return k, i, f
 
@@ -559,9 +559,9 @@ def _(layer: Activation):
 def _(layer: UnaryLUT):
     k, i, f = minimal_kif(layer.attributes['table'].data)
     shape = get_output_shape(layer)
-    k = np.full(shape, np.max(k), dtype=np.int8)
-    i = np.full(shape, np.max(i), dtype=np.int8)
-    f = np.full(shape, np.max(f), dtype=np.int8)
+    k = np.full(shape, np.max(k), dtype=np.int16)
+    i = np.full(shape, np.max(i), dtype=np.int16)
+    f = np.full(shape, np.max(f), dtype=np.int16)
     return k, i, f
 
 
