@@ -88,10 +88,8 @@ Here we give line-by-line instructions to demonstrate the general workflow.
 
    # Construct a basic keras model
    model = Sequential()
-   model.add(Dense(64, input_shape=(16,)))
-   model.add(Activation(activation='relu'))
-   model.add(Dense(32))
-   model.add(Activation(activation='relu'))
+   model.add(Dense(64, input_shape=(16,), activation='relu'))
+   model.add(Dense(32, activation='relu'))
 
    # This is where you would train the model in a real-world scenario
 
