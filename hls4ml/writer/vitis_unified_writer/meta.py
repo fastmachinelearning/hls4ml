@@ -1,5 +1,3 @@
-
-
 class VitisUnifiedWriterMeta:
 
     def __init__(self):

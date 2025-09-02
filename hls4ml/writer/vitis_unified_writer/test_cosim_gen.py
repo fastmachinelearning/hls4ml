@@ -1,5 +1,4 @@
 import os
-from .meta import VitisUnifiedWriterMeta
 
 
 class VitisUnified_TestGen:
@@ -8,15 +7,13 @@ class VitisUnified_TestGen:
     def write_wrapper_test(self, meta, model, mg):
         pass
 
-
-        #### warning we have to fix to float because the system locked by template
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f    = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_test.cpp'))
+        f = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_test.cpp'))
         fout = open(f'{model.config.get_output_dir()}/{mg.get_sim_file_name()}.cpp', 'w')
 
-        model_inputs  = model.get_input_variables()
+        model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
@@ -25,7 +22,7 @@ class VitisUnified_TestGen:
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
-            #Insert numbers
+            # Insert numbers
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '// hls-fpga-machine-learning insert include' in line:
@@ -40,22 +37,22 @@ class VitisUnified_TestGen:
                 newline = line
                 offset = 0
                 for inputIdx, inp in enumerate(model_inputs):
-                    ##### input should be float
-                    newline += indent + 'float* {inputPortName} = &in[{startIdx}];\n'.format( ### can not be double because it fix by template
+                    # input should be float
+                    newline += indent + 'float* {inputPortName} = &in[{startIdx}];\n'.format(
+                        # can not be double because it fix by template
                         inputPortName=mg.get_io_port_name(inp, True, inputIdx),
-                        startIdx=str(offset)
+                        startIdx=str(offset),
                     )
                     offset += inp.size()
                 for outputIdx, out in enumerate(model_outputs):
-                    newline += indent +  f"float {mg.get_io_port_name(out, False, outputIdx)}[{out.size()}];\n"
-
+                    newline += indent + f"float {mg.get_io_port_name(out, False, outputIdx)}[{out.size()}];\n"
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
-                input_ios  = []
+                input_ios = []
                 output_ios = []
-                bram_ios   = [b.name for b in model_brams]
+                bram_ios = [b.name for b in model_brams]
 
                 for inpIdx, inp in enumerate(model_inputs):
                     input_ios.append(mg.get_io_port_name(inp, True, inpIdx))
@@ -70,9 +67,9 @@ class VitisUnified_TestGen:
 
             elif '// hls-fpga-machine-learning insert predictions' in line:
                 newline = line
-                for outIdx, out in enumerate(model_outputs):
-                    #newline += indent + f'for(int i = 0; i < {out.size_cpp()}; i++) {{\n'
-                    #### TODO fix this size retrieve
+                for out in model_outputs:
+                    # newline += indent + f'for(int i = 0; i < {out.size_cpp()}; i++) {{\n'
+                    # TODO fix this size retrieve
                     newline += indent + f'for(int i = 0; i < {out.size()}; i++) {{\n'
                     newline += indent + '  std::cout << pr[i] << " ";\n'
                     newline += indent + '}\n'
@@ -88,17 +85,20 @@ class VitisUnified_TestGen:
             elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
-                if tb_stream != "stdout": ### it can be both or file
+                if tb_stream != "stdout":  # it can be both or file
                     for outIdx, out in enumerate(model_outputs):
                         newline += (
-                                    indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
-                                    .format(actualType="float",
-                                            cpysize=out.size(),
-                                            portName=mg.get_io_port_name(out, False, outIdx),
-                                            des="fout",
-                                            keepOutput="false"))
+                            indent
+                            + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'.format(
+                                actualType="float",
+                                cpysize=out.size(),
+                                portName=mg.get_io_port_name(out, False, outIdx),
+                                des="fout",
+                                keepOutput="false",
+                            )
+                        )
             elif (
-                   '// hls-fpga-machine-learning insert output'    in line
+                '// hls-fpga-machine-learning insert output' in line
                 or '// hls-fpga-machine-learning insert quantized' in line
             ):
 
@@ -108,12 +108,16 @@ class VitisUnified_TestGen:
 
                 if tb_stream != "file":
                     for outIdx, out in enumerate(model_outputs):
-                        newline += (indent + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'
-                                    .format( actualType = "float",
-                                             cpysize    = out.size(),
-                                             portName   = mg.get_io_port_name(out, False, outIdx),
-                                             des        = "std::cout",
-                                             keepOutput = keep_output))
+                        newline += (
+                            indent
+                            + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'.format(
+                                actualType="float",
+                                cpysize=out.size(),
+                                portName=mg.get_io_port_name(out, False, outIdx),
+                                des="std::cout",
+                                keepOutput=keep_output,
+                            )
+                        )
 
             elif '// hls-fpga-machine-learning insert namespace' in line:
                 newline = ''

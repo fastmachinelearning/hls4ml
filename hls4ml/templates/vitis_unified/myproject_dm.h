@@ -5,11 +5,9 @@
 
 #include "MY_PROJECT_INC.h"
 
-
 void MY_PROJECT_TOP_FUNC(
 
-// vitis-unified-wrapper-io
-        ,int amtQuery
-);
+    // vitis-unified-wrapper-io
+    , int amtQuery);
 
 #endif

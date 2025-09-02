@@ -1,5 +1,7 @@
 import os
+
 from .meta import VitisUnifiedWriterMeta
+
 
 class VitisUnified_BridgeGen:
 
@@ -36,9 +38,8 @@ class VitisUnified_BridgeGen:
 
                 dtype = line.split('#', 1)[1].strip()
 
-                input_ios  = []
+                input_ios = []
                 output_ios = []
-
 
                 for idx, inp in enumerate(model_inputs):
                     input_ios.append(f"{dtype} {mg.get_io_port_name(inp, True, idx)}[{inp.size_cpp()}]")
@@ -68,15 +69,14 @@ class VitisUnified_BridgeGen:
                         output_vars.append(mg.get_io_port_name(out, False, idx))
                         otuput_sizes.append(out.size_cpp())
 
-                    inputs_str  = ', '.join(input_vars)
+                    inputs_str = ', '.join(input_vars)
                     outputs_str = ', '.join(output_vars)
 
                     newline = ''
                     newline += indent + mg.get_top_wrap_func_name(model) + "(\n"
                     newline += indent + inputs_str + ',\n'
                     newline += indent + outputs_str + ',\n'
-                    newline += indent + "1);\n" ##### amount query should be one only
-
+                    newline += indent + "1);\n"  # amount query should be one only
 
             elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
@@ -86,9 +86,9 @@ class VitisUnified_BridgeGen:
                         vars = layer.get_variables()
                         for var in vars:
                             newline += (
-                                    indent
-                                    + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
-                                    + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
+                                indent
+                                + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
+                                + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
                             )
 
             elif '// hls-fpga-machine-learning insert namespace' in line:

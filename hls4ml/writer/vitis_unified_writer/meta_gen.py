@@ -1,14 +1,7 @@
 import os
-from pathlib import Path
-import stat
 
+# file and directory
 
-
-from shutil import copyfile
-
-#######################################################
-## file and directory #################################
-#######################################################
 
 class VitisUnified_MetaGen:
 
@@ -17,8 +10,8 @@ class VitisUnified_MetaGen:
         return f"{model.config.get_project_name()}_dm"
 
     @classmethod
-    def get_sim_file_name(cls): #### false is cosim
-        return f"myproject_test"
+    def get_sim_file_name(cls):
+        return "myproject_test"
 
     @classmethod
     def get_main_file_name(self, model):
@@ -51,20 +44,20 @@ class VitisUnified_MetaGen:
     def get_xo_file_path(self, model):
         return os.path.join(self.get_vitis_hls_exec_dir(model), self.get_xo_file_name(model))
 
-    #######################################################
-    ## naming of variable function helper #################
-    #######################################################
+    # naming of variable function helper
 
-    ####### FOR GMEM WRAPPER
+    # FOR GMEM WRAPPER
 
     @classmethod
     def get_io_port_name(self, tensorVar, isInput: bool, idx: int):
         ioDirect = "in" if isInput else "out"
         return f"gmem_{ioDirect}{str(idx)}_ptr_{tensorVar.name}"
+
     @classmethod
     def get_io_port_size_name(self, tensorVar, isInput: bool, idx: int):
         ioDirect = "in" if isInput else "out"
         return f"gmem_{ioDirect}{str(idx)}_size_{tensorVar.name}"
+
     @classmethod
     def get_local_stream_name(self, tensorVar, isInput: bool, idx: int):
         ioDirect = "in" if isInput else "out"
@@ -87,7 +80,7 @@ class VitisUnified_MetaGen:
     def get_top_wrap_func_name(self, model):
         return f"{model.config.get_project_name()}_gem"
 
-    ### it is renamed for stitch layer
+    # it is renamed for stitch layer
     @classmethod
     def rename_type(self, tensorVar, layerIdx: int, isInput: bool):
         return "result_" + tensorVar.type.name + f"_at_layer_{str(layerIdx)}"

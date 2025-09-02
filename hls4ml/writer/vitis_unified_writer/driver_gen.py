@@ -1,26 +1,22 @@
 import os
-import stat
-from pathlib import Path
 
-
-from .meta import VitisUnifiedWriterMeta
 
 class VitisUnified_DriverGen:
 
     @classmethod
     def write_driver(self, meta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        fin     = open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver.py'), 'r')
-        fout    = open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w')
+        fin = open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver.py.hls4ml'))
+        fout = open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w')
 
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
 
-        strideInPtrAddr   = 4*3
-        strideOutPtrAddr  = 4*3
+        strideInPtrAddr = 4 * 3
+        strideOutPtrAddr = 4 * 3
 
         startInPtrAddr = 0x10
-        startOutPtrAddr = startInPtrAddr   + strideInPtrAddr  * len(inps)
-        startAmtQueryAddr = startOutPtrAddr  + strideOutPtrAddr * len(outs)
+        startOutPtrAddr = startInPtrAddr + strideInPtrAddr * len(inps)
+        startAmtQueryAddr = startOutPtrAddr + strideOutPtrAddr * len(outs)
 
         def genHexAddrList(startAddr, stride, size, indent):
             addrs = [f"{indent}{hex(startAddr + inp_idx * stride)}" for inp_idx in range(size)]
@@ -34,12 +30,12 @@ class VitisUnified_DriverGen:
             if "REG_ADDR_AMT_QUERY" in line:
                 line = line.replace("VAL", str(hex(startAmtQueryAddr)))
             if "#### hls-driver-input-dbg-name" in line:
-                input_names = [ f'{indentStr}"{mg.get_io_port_name(inp, True, idx)}"' for idx, inp in enumerate(inps) ]
+                input_names = [f'{indentStr}"{mg.get_io_port_name(inp, True, idx)}"' for idx, inp in enumerate(inps)]
                 line += ",\n".join(input_names) + "\n"
             if "#### hls-driver-input-ptr" in line:
                 line += ",\n".join(genHexAddrList(startInPtrAddr, strideInPtrAddr, len(inps), indentStr)) + "\n"
             if "#### hls-driver-output-dbg-name" in line:
-                output_names = [ f'{indentStr}"{mg.get_io_port_name(out, False, idx)}"' for idx, out in enumerate(outs) ]
+                output_names = [f'{indentStr}"{mg.get_io_port_name(out, False, idx)}"' for idx, out in enumerate(outs)]
                 line += ",\n".join(output_names) + "\n"
             if "#### hls-driver-output-ptr" in line:
                 line += ",\n".join(genHexAddrList(startOutPtrAddr, strideOutPtrAddr, len(outs), indentStr)) + "\n"

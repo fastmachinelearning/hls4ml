@@ -1,12 +1,13 @@
 # import the library
-from pynq import Overlay     # import the overlay
-from pynq import allocate    # import for CMA (contingeous memory allocation)
-from pynq import DefaultIP   # import the ip connector library for extension
-import numpy as np
 import os
-import subprocess
 import re
+import subprocess
 import time
+
+import numpy as np
+from pynq import DefaultIP  # import the ip connector library for extension
+from pynq import Overlay  # import the overlay
+from pynq import allocate  # import for CMA (contingeous memory allocation)
 
 
 class MyDfxCtrl(DefaultIP):
@@ -15,28 +16,25 @@ class MyDfxCtrl(DefaultIP):
 
         self.REG_ADDR_AP_CTRL = 0x00
         self.REG_ADDR_AMT_QUERY = VAL
-        #####################
-        self.REG_ADDR_GIE       = 0x04
-        self.REG_ADDR_IER       = 0x08
-        self.REG_ADDR_ISR       = 0x0C
 
-
-
+        self.REG_ADDR_GIE = 0x04
+        self.REG_ADDR_IER = 0x08
+        self.REG_ADDR_ISR = 0x0C
 
         self.INP_PORT_NAMEs = [
-            #### hls-driver-input-dbg-name
+            # hls-driver-input-dbg-name
         ]
 
         self.REG_ADDR_INP_PTRs = [
-            #### hls-driver-input-ptr
+            # hls-driver-input-ptr
         ]
 
         self.OUT_PORT_NAMEs = [
-            #### hls-driver-output-dbg-name
+            # hls-driver-output-dbg-name
         ]
 
         self.REG_ADDR_OUT_PTRs = [
-            #### hls-driver-output-ptr
+            # hls-driver-output-ptr
         ]
 
     bindto = ['xilinx.com:hls:<TOP_NAME>:1.0']
@@ -68,7 +66,6 @@ class MyDfxCtrl(DefaultIP):
         self.clear_done_status()
         print("----------------------")
 
-
     def set_single_bit(self, addr, idx):
         self.write(addr, 1 << idx)
 
@@ -81,14 +78,18 @@ class MyDfxCtrl(DefaultIP):
 
     def set_input(self, idx, buffer):
 
-        print(f"input {self.INP_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}")
+        print(
+            f"input {self.INP_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}"
+        )
         self.write(self.REG_ADDR_INP_PTRs[idx], buffer.physical_address)
         self.write(self.REG_ADDR_INP_PTRs[idx] + 4, 0)
         buffer.flush()
 
     def set_output(self, idx, buffer):
 
-        print(f"output {self.OUT_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}")
+        print(
+            f"output {self.OUT_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}"
+        )
         self.write(self.REG_ADDR_OUT_PTRs[idx], buffer.physical_address)
         self.write(self.REG_ADDR_OUT_PTRs[idx] + 4, 0)
 

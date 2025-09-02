@@ -2,8 +2,8 @@ import os
 import stat
 from pathlib import Path
 
-
 from .meta import VitisUnifiedWriterMeta
+
 
 class VitisUnified_BuildGen:
 
@@ -26,16 +26,16 @@ class VitisUnified_BuildGen:
         fin.close()
         fout.close()
 
-        #### change permission
+        # change permission
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     @classmethod
-    def write_hls_kernel_cfg(self, meta, model, mg, is_csim = False): #### is_csim else cosim
+    def write_hls_kernel_cfg(self, meta, model, mg, is_csim=False):  # is_csim else cosim
         filedir = os.path.dirname(os.path.abspath(__file__))
-        sufix   = "csim" if is_csim else "cosim"
-        fin     = open(os.path.join(filedir, '../../templates/vitis_unified/hls_kernel_config.cfg'), 'r')
-        fout    = open(f"{model.config.get_output_dir()}/hls_kernel_config_{sufix}.cfg", 'w')
+        sufix = "csim" if is_csim else "cosim"
+        fin = open(os.path.join(filedir, '../../templates/vitis_unified/hls_kernel_config.cfg'))
+        fout = open(f"{model.config.get_output_dir()}/hls_kernel_config_{sufix}.cfg", 'w')
 
         for line in fin.readlines():
             if "{PART}" in line:
@@ -56,8 +56,8 @@ class VitisUnified_BuildGen:
                 line = line.replace("{FILE_NAME_BASE}", mg.get_main_file_name(model))
             if "{OUTPUT_KERNEL_TYPE}" in line:
                 line = line.replace("{OUTPUT_KERNEL_TYPE}", mg.get_output_kernel_type())
-            if is_csim and ( ( "enable_fifo_sizing" in line ) or ("-DRTL_SIM" in line)):
-                    line = "#" + line
+            if is_csim and (("enable_fifo_sizing" in line) or ("-DRTL_SIM" in line)):
+                line = "#" + line
 
             fout.write(line)
 
@@ -65,20 +65,20 @@ class VitisUnified_BuildGen:
         fout.close()
 
     @classmethod
-    def build_unified_project_ske(self, meta, model, mg, workspaceDir = None):
+    def build_unified_project_ske(self, meta, model, mg, workspaceDir=None):
         if workspaceDir is None:
             workspaceDir = mg.get_vitis_unified_working_directory_dir(model)
-        hlsDir    = mg.get_vitis_hls_dir(model)
-        execDir   = mg.get_vitis_hls_dir(model)
+        hlsDir = mg.get_vitis_hls_dir(model)
+        execDir = mg.get_vitis_hls_dir(model)
         vitisComp = os.path.join(str(hlsDir), "vitis-comp.json")
 
-        ###### create my own project for this graph
+        # create my own project for this graph
         os.makedirs(workspaceDir, exist_ok=True)
-        os.makedirs(hlsDir      , exist_ok=True)
-        os.makedirs(execDir      , exist_ok=True)
-        ###### create project vitis-comp.json to
+        os.makedirs(hlsDir, exist_ok=True)
+        os.makedirs(execDir, exist_ok=True)
+        # create project vitis-comp.json to
         filedir = os.path.dirname(os.path.abspath(__file__))
-        fin = open(os.path.join(filedir, "../../templates/vitis_unified/workspace/projectName/vitis-comp.json"), 'r')
+        fin = open(os.path.join(filedir, "../../templates/vitis_unified/workspace/projectName/vitis-comp.json"))
         fout = open(vitisComp, 'w')
 
         for line in fin.readlines():
@@ -98,7 +98,7 @@ class VitisUnified_BuildGen:
     @classmethod
     def write_launch_vitis_linker_launcher(self, meta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildAcc.sh'), 'r')
+        fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildAcc.sh'))
         fout = open(f"{mg.get_vitis_linker_dir(model)}/buildAcc.sh", 'w')
 
         for line in fin.readlines():
@@ -120,17 +120,17 @@ class VitisUnified_BuildGen:
     @classmethod
     def write_launch_vitis_linker_cfg(self, meta, model, mg):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildConfig.cfg'), 'r')
+        fin = open(os.path.join(filedir, '../../templates/vitis_unified/workspace/sysProj/buildConfig.cfg'))
         fout = open(f"{mg.get_vitis_linker_dir(model)}/buildConfig.cfg", 'w')
 
         for line in fin.readlines():
             if "{CLK}" in line:
-                line = line.replace("{CLK}", str(100_000_000))#model.config.get_config_value('ClockPeriod'))
+                line = line.replace("{CLK}", str(100_000_000))  # model.config.get_config_value('ClockPeriod'))
             if "{KERNEL_NAME}" in line:
                 line = line.replace("{KERNEL_NAME}", mg.get_top_wrap_func_name(model))
             if "{GUI_STATUS}" in line:
                 line = line.replace("{GUI_STATUS}", "true")
-            line=""
+            line = ""
             fout.write(line)
 
         fin.close()

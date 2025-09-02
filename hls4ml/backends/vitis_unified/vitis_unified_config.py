@@ -1,38 +1,23 @@
-import json
-import os
-
-import numpy as np
-
-from hls4ml.model.layers import FixedPrecisionType, IntegerPrecisionType
-
 class VitisUnifiedConfig:
-
 
     def __init__(self, config, model_inputs, model_outputs):
         self.config = config.config
         self.board = self.config.get('UnifiedConfig', {}).get('Board', 'pynq-z2')
 
-        self.in_steram_bufferSz  = self.config["UnifiedConfig"]["in_stream_buf_Size" ]
+        self.in_steram_bufferSz = self.config["UnifiedConfig"]["in_stream_buf_Size"]
         self.out_stream_bufferSz = self.config["UnifiedConfig"]["out_stream_buf_Size"]
 
-        self.XPFMPath          = self.config["UnifiedConfig"]["XPFMPath"]
+        self.XPFMPath = self.config["UnifiedConfig"]["XPFMPath"]
 
-        self.driver            = self.config['UnifiedConfig']['Driver']
-        self.input_type        = self.config['UnifiedConfig']['InputDtype' ]
-        self.output_type       = self.config['UnifiedConfig']['OutputDtype']
+        self.driver = self.config['UnifiedConfig']['Driver']
+        self.input_type = self.config['UnifiedConfig']['InputDtype']
+        self.output_type = self.config['UnifiedConfig']['OutputDtype']
 
-        assert(
-            self.input_type == self.output_type
-        ), "Input and Output data types must be the same type different"
-        assert (
-            len(model_inputs) >= 1
-        ), "Only models with at least one input tensor are currently supported by VitisUnified"
-        assert (
-            len(model_outputs) >= 1
-        ), "Only models with one output tensor are currently supported by VitisUnified"
+        assert self.input_type == self.output_type, "Input and Output data types must be the same type different"
+        assert len(model_inputs) >= 1, "Only models with at least one input tensor are currently supported by VitisUnified"
+        assert len(model_outputs) >= 1, "Only models with one output tensor are currently supported by VitisUnified"
         self.inps = model_inputs.copy()
         self.outs = model_outputs.copy()
-
 
     def get_corrected_types(self):
         return self.input_type, self.output_type, self.inps, self.outs
