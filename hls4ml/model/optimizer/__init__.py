@@ -73,6 +73,7 @@ register_flow(
         'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
         'enforce_proxy_model_embedded_config',
+        'absorb_reshape_into_input',
         'bit_exact',
         'fuse_fixed_point_quantizer',
         'fix_input_precision',
