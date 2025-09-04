@@ -2,7 +2,7 @@
 # Based on https://github.com/fastmachinelearning/qonnx/blob/
 # 12c96a3ded06beacab08e0f554e4ed014476c0aa/src/qonnx/transformation/channels_last.py
 
-from hls4ml.model.layers import Concatenate, Dense, Input, LayerNormalization, Reshape, Transpose, LSTM, GRU
+from hls4ml.model.layers import GRU, LSTM, Concatenate, Dense, Input, LayerNormalization, Reshape, Transpose
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import WeightVariable
 
@@ -60,7 +60,7 @@ class ChannelsLastConverter(OptimizerPass):
                 post_transpose.channels_last_converted = True
                 model.insert_node(post_transpose)
         elif isinstance(node, LSTM) or isinstance(node, GRU):
-            pass        
+            pass
         else:
             # Transpose weight tensors
             tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
