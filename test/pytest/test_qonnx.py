@@ -496,13 +496,9 @@ def test_simple_model(model_name, io_type, backend, request):
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 
-# @pytest.mark.parametrize(
-#     'model_name',
-#     ['bnn_fc_small_qonnx_model', 'bnn_fc_small_qonnx_model_scale_nonunit', 'bnn_fc_small_qonnx_model_scale_nonunit2'],
-# )
 @pytest.mark.parametrize(
     'model_name',
-    ['bnn_fc_small_qonnx_model'],
+    ['bnn_fc_small_qonnx_model', 'bnn_fc_small_qonnx_model_scale_nonunit', 'bnn_fc_small_qonnx_model_scale_nonunit2'],
 )
 @pytest.mark.parametrize(
     'backend,strategy',

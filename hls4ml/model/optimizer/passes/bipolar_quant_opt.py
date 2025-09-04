@@ -125,7 +125,8 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
 class BipolarQuantToAlphaActivationAlpha(OptimizerPass):
     """
     This is for the case when scale is not 1. It is a a 1:3 transformation of
-    a BipolarQuant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to rescale).
+    a BipolarQuant to an ApplyAlpha (to scale), Activation, ApplyAlpha (to rescale).
+    Since there is no zero offset, the initial ApplyAlpha has no effect, so it is omitted.
 
     NOTE:  It needs to be scheduled after BipolarQuantToActivation (or we need to make the match criteria stricter)
     """
@@ -161,33 +162,20 @@ class BipolarQuantToAlphaActivationAlpha(OptimizerPass):
         new_node = model.make_node(Activation, act_name, activation_attributes, [node.inputs[0]], [x for x in node.outputs])
         model.replace_node(node, new_node)
 
-        # but now add the ApplyAlhpas before and after
+        # but now add the ApplyAlphas before and after. Because of no zero offset,
+        # the initial ApplyAlpha is omitted, since it has no effect.
 
         inshape = node.get_input_variable().shape
 
         scale = node.get_attr('scale')
         bias = np.array(0)
 
-        attributes_scale = {'n_filt': -1}
         attributes_rescale = {'n_filt': -1}
-
-        scale_config = copy.deepcopy(config)
-        scale_name = f'{node.name}_scale'
-        model.config.set_name_config(scale_name, scale_config)
-        model.config.parse_name_config(scale_name, scale_config)
 
         rescale_config = config  # no need to deep copy the last
         rescale_name = f'{node.name}_rescale'
         model.config.set_name_config(rescale_name, rescale_config)
         model.config.parse_name_config(rescale_name, rescale_config)
-
-        firstscale = 1 / scale
-        firstbias = bias
-        attributes_scale['scale_data'] = np.broadcast_to(firstscale, inshape)
-        attributes_scale['bias_data'] = np.broadcast_to(firstbias, inshape)
-
-        scale_node = model.make_node(ApplyAlpha, scale_name, attributes_scale, [node.inputs[0]])
-        model.insert_node(scale_node)
 
         rescale = scale
         rebias = -bias * scale
@@ -234,11 +222,10 @@ class ConstBipolarQuantToConstAlpha(OptimizerPass):
         scale = node.get_attr('scale')
         bias = np.array(0)  # zeropt not defined for bipolar quants
 
-        # caclucate the new value
-        new_val = const_node.get_attr('value') / scale + bias
-        const_node.set_attr('value', new_val)
+        # caclucate the new value -- actually not needed because bias == 0
+        # new_val = const_node.get_attr('value') / scale + bias
+        # const_node.set_attr('value', new_val)
         const_node.set_attr('quantizer', quantizer)
-
         const_node.get_output_variable().type.precision = precision
 
         inshape = node.get_input_variable().shape
