@@ -6,26 +6,37 @@
   before_script:
     - eval "$(conda shell.bash hook)"
     - conda activate hls4ml-testing
+    # load intel oneAPI
     - source /opt/intel/oneapi/setvars.sh --force
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - git submodule update --init --recursive test/pytest/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
     - pip install .[testing,sr,optimization]
+    # install apptainer
     - sudo yum -y install epel-release
     - sudo yum -y install apptainer
     - apptainer --version
+    # expose env vars
     - export RUN_SYNTHESIS=true
-    - export TOOL_VERSION=2020.1
-    - ls -l /cvmfs/projects.cern.ch/hls4ml/vivado || true
-    - ls -l /cvmfs/projects.cern.ch/hls4ml/vitis || true
-    - mkdir -p cmd_vivado_${TOOL_VERSION}
-    - echo '#!/bin/bash' > cmd_vivado_${TOOL_VERSION}/vivado_hls
-    - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vivado/${TOOL_VERSION} vivado_hls \"\$@\"" >> cmd_vivado_${TOOL_VERSION}/vivado_hls
-    - chmod +x cmd_vivado_${TOOL_VERSION}/vivado_hls
-    - export PATH=$PWD/cmd_vivado_${TOOL_VERSION}:$PATH
+    - export VIVADO_VERSION=2020.1
+    - export VITIS_VERSION=2024.1
+    # set up vivado_hls command
+    - mkdir -p cmd_vivado_${VIVADO_VERSION}
+    - echo '#!/bin/bash' > cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - echo "apptainer exec --cleanenv --env LANG=C,LC_ALL=C /cvmfs/projects.cern.ch/hls4ml/vivado/${VIVADO_VERSION} vivado_hls \"\$@\"" >> cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - chmod +x cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - export PATH=$PWD/cmd_vivado_${VIVADO_VERSION}:$PATH
+    # set up vitis-run command
+    - mkdir -p cmd_vitis_${VITIS_VERSION}
+    - echo '#!/bin/bash' > cmd_vitis_${VITIS_VERSION}/vitis-run
+    - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vitis/${VITIS_VERSION} vitis-run \"\$@\"" >> cmd_vitis_${VITIS_VERSION}/vitis-run
+    - chmod +x cmd_vitis_${VITIS_VERSION}/vitis-run
+    - export PATH=$PWD/cmd_vitis_${VITIS_VERSION}:$PATH
+    # test the commands
     - which vivado_hls
     - vivado_hls -version
+    - vitis-run --help
   script:
     - cd test/pytest
     - pytest -s $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
