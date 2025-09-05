@@ -17,9 +17,11 @@
     - apptainer --version
     - export RUN_SYNTHESIS=true
     - export TOOL_VERSION=2020.1
+    - ls -l /cvmfs/projects.cern.ch/hls4ml/vivado || true
+    - ls -l /cvmfs/projects.cern.ch/hls4ml/vitis || true
     - mkdir -p cmd_vivado_${TOOL_VERSION}
     - echo '#!/bin/bash' > cmd_vivado_${TOOL_VERSION}/vivado_hls
-    - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vivado/2020.1_v1/vivado-2020.1_v1/ vivado_hls \"\$@\"" >> cmd_vivado_${TOOL_VERSION}/vivado_hls
+    - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vivado/${TOOL_VERSION} vivado_hls \"\$@\"" >> cmd_vivado_${TOOL_VERSION}/vivado_hls
     - chmod +x cmd_vivado_${TOOL_VERSION}/vivado_hls
     - export PATH=$PWD/cmd_vivado_${TOOL_VERSION}:$PATH
     - which vivado_hls
