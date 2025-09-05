@@ -1,8 +1,10 @@
+import copy
 import os
 import urllib
 from pathlib import Path
 
 import numpy as np
+import onnx
 import pytest
 import qonnx.core.onnx_exec as oxe
 import qonnx.util.cleanup
@@ -12,6 +14,7 @@ import qonnx.util.to_channels_last
 from qonnx.core.modelwrapper import ModelWrapper
 from qonnx.transformation.channels_last import ConvertToChannelsLastAndClean
 from qonnx.transformation.gemm_to_matmul import GemmToMatMul
+from qonnx.util.cleanup import cleanup_model
 
 import hls4ml
 
@@ -231,6 +234,69 @@ def conv2d_small_mp_keras_model():
     return model
 
 
+@pytest.fixture(scope='module')
+def bnn_fc_small_qonnx_model():
+    """
+    Load a small binarized model of a single fully connected layer.
+    """
+    dl_file = str(example_model_path / "onnx/bnn_model_fc_1layer.onnx")
+    assert os.path.isfile(dl_file)
+
+    model = ModelWrapper(dl_file)
+    model = cleanup_model(model)
+    model = model.transform(GemmToMatMul())  # ishape = (1, 3)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
+def bnn_fc_small_qonnx_model_scale_nonunit(bnn_fc_small_qonnx_model):
+    """
+    Use scale factors of 0.5 to see if that works.
+    This is done by modifying the bnn_fc_small_qonnx_model, which has unit scale factors.
+    """
+
+    model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying neccessary?
+    new_iscale = onnx.helper.make_tensor("BipolarQuant_0_param0", 1, [1], [0.5])
+    new_wscale = onnx.helper.make_tensor("BipolarQuant_1_param1", 1, [1], [0.5])
+    old_iscale = old_wscale = None
+    for init in model.graph.initializer:
+        if init.name == "BipolarQuant_0_param0":
+            old_iscale = init
+        elif init.name == "BipolarQuant_1_param1":
+            old_wscale = init
+    model.graph.initializer.remove(old_iscale)
+    model.graph.initializer.remove(old_wscale)
+    model.graph.initializer.append(new_iscale)
+    model.graph.initializer.append(new_wscale)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
+@pytest.fixture(scope='module')
+def bnn_fc_small_qonnx_model_scale_nonunit2(bnn_fc_small_qonnx_model):
+    """
+    Use po2 scale factors to see if that works.
+    This is done by modifying the bnn_fc_small_qonnx_model, which has unit scale factors.
+    """
+
+    model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying neccessary?
+    new_iscale = onnx.helper.make_tensor("BipolarQuant_0_param0", 1, [1], [2])
+    new_wscale = onnx.helper.make_tensor("BipolarQuant_1_param1", 1, [1], [4])
+    old_iscale = old_wscale = None
+    for init in model.graph.initializer:
+        if init.name == "BipolarQuant_0_param0":
+            old_iscale = init
+        elif init.name == "BipolarQuant_1_param1":
+            old_wscale = init
+    model.graph.initializer.remove(old_iscale)
+    model.graph.initializer.remove(old_wscale)
+    model.graph.initializer.append(new_iscale)
+    model.graph.initializer.append(new_wscale)
+    model = qonnx.util.cleanup.cleanup_model(model)
+    return model
+
+
 # The actual tests
 
 
@@ -428,3 +494,57 @@ def test_simple_model(model_name, io_type, backend, request):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
+
+@pytest.mark.parametrize(
+    'model_name',
+    ['bnn_fc_small_qonnx_model', 'bnn_fc_small_qonnx_model_scale_nonunit', 'bnn_fc_small_qonnx_model_scale_nonunit2'],
+)
+@pytest.mark.parametrize(
+    'backend,strategy',
+    [
+        ('Catapult', 'Resource'),
+        ('Catapult', 'Latency'),
+        ('Vitis', 'Resource'),
+        ('Vitis', 'Latency'),
+        ('oneAPI', 'Resource'),
+    ],
+)
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_bnn(model_name, io_type, backend, strategy, request):
+    "Checks if a basic binarized model works correctly."
+    qonnx_model = request.getfixturevalue(model_name)
+
+    config = hls4ml.utils.config.config_from_onnx_model(
+        qonnx_model, granularity='name', backend=backend, default_precision='fixed<16,6>'
+    )
+    config['Model']['Strategy'] = strategy
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        qonnx_model,
+        output_dir=str(test_root_path / f'hls4mlprj_onnx_{model_name}_{io_type}_{backend}_{strategy}'),
+        io_type=io_type,
+        backend=backend,
+        hls_config=config,
+    )
+    hls_model.compile()
+
+    data_x = np.array(
+        [
+            [[+1, +1, +1]],
+            [[+1, +1, -1]],
+            [[+1, -1, +1]],
+            [[-1, -1, -1]],
+            [[-1, +1, +1]],
+            [[-1, +1, -1]],
+            [[-1, -1, +1]],
+            [[-1, -1, -1]],
+        ],
+        dtype=np.float32,
+    )
+    for x in data_x:
+        idict = {qonnx_model.graph.input[0].name: x}
+        y_qonnx = oxe.execute_onnx(qonnx_model, idict)[qonnx_model.graph.output[0].name]
+        y_hls4ml = hls_model.predict(x[0])
+        # note, y_hls4ml returns xnor type, so let's interpret it
+        y_hls4ml_logical = 2 * y_hls4ml - 1
+        np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml_logical.ravel())
