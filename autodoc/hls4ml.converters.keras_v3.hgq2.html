@@ -167,6 +167,22 @@
 <section id="module-hls4ml.converters.keras_v3.hgq2.multi_head_attention">
 <span id="hls4ml-converters-keras-v3-hgq2-multi-head-attention-module"></span><h2>hls4ml.converters.keras_v3.hgq2.multi_head_attention module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.hgq2.multi_head_attention" title="Link to this heading"></a></h2>
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.hgq2.multi_head_attention.QLinformerAttentionHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.hgq2.multi_head_attention.</span></span><span class="sig-name descname"><span class="pre">QLinformerAttentionHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.hgq2.multi_head_attention.QLinformerAttentionHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_v3.hgq2.multi_head_attention.QMultiHeadAttentionHandler" title="hls4ml.converters.keras_v3.hgq2.multi_head_attention.QMultiHeadAttentionHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">QMultiHeadAttentionHandler</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.hgq2.multi_head_attention.QLinformerAttentionHandler.handle">
+<span class="sig-name descname"><span class="pre">handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">hgq.layers.linformer_attention.QLinformerAttention</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_tensors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">KerasTensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_tensors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">KerasTensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_v3.hgq2.multi_head_attention.QLinformerAttentionHandler.handle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.hgq2.multi_head_attention.QLinformerAttentionHandler.handles">
+<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('hgq.layers.linformer_attention.QLinformerAttention',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.hgq2.multi_head_attention.QLinformerAttentionHandler.handles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.hgq2.multi_head_attention.QMultiHeadAttentionHandler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.hgq2.multi_head_attention.</span></span><span class="sig-name descname"><span class="pre">QMultiHeadAttentionHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.hgq2.multi_head_attention.QMultiHeadAttentionHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QLayerHandler</span></code></p>
