@@ -14,7 +14,7 @@ from hls4ml.model.types import XnorPrecisionType
 
 
 class BipolarQuantConstantParameters(OptimizerPass):
-    """Remove Constant from the BipolarQaunt node parameters (but not input[0])"""
+    """Remove Constant from the BipolarQuant node parameters (but not input[0])"""
 
     def match(self, node):
         is_match = (
@@ -222,9 +222,9 @@ class ConstBipolarQuantToConstAlpha(OptimizerPass):
         scale = node.get_attr('scale')
         bias = np.array(0)  # zeropt not defined for bipolar quants
 
-        # caclucate the new value -- actually not needed because bias == 0
-        # new_val = const_node.get_attr('value') / scale + bias
-        # const_node.set_attr('value', new_val)
+        # Would logically calculate the new value here, but it is not needed because
+        # bias == 0, so after quantization the result would be unchanged.
+
         const_node.set_attr('quantizer', quantizer)
         const_node.get_output_variable().type.precision = precision
 
