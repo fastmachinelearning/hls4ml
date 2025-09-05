@@ -9,7 +9,7 @@ template = """
 pytest.keras_api_part2:
   extends: .pytest
   variables:
-    PYTESTFILE: test_keras_api.py::test_conv1d
+    PYTESTFILE: test_keras_api.py::test_dense
     EXAMPLEMODEL: 0
 """
 
