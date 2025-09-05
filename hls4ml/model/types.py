@@ -9,6 +9,41 @@ from enum import Enum
 
 import numpy as np
 
+# region Serialization
+
+
+class Serializable:
+    """Classes should implement this interface to provide serialization support.
+
+    Objects are serialized into a JSON format, with two fields, ``class_name`` and ``state``. Objects need to provide both.
+    ``class_name`` is used to map the object to the class which which can deserialize the object via ``deserialize`` class
+    method. ``state`` represents the current state of the object and will be passed to ``deserialize``. Implementations are
+    expected to capture all internal state to be able to recreate the object indistinguishable from the original.
+    """
+
+    def serialize_class_name(self):
+        # Wrapped classes are serialized as original types, since many of wrapped classes are created dynamically.
+        if hasattr(self, '_wrapped'):
+            cls_name = self._wrapped
+        else:
+            cls = self.__class__
+            cls_name = cls.__module__ + '.' + cls.__qualname__
+
+        return cls_name
+
+    def serialize_state(self):
+        raise NotImplementedError
+
+    def serialize(self):
+        return {'class_name': self.serialize_class_name(), 'state': self.serialize_state()}
+
+    @classmethod
+    def deserialize(cls, state):
+        return cls(**state)
+
+
+# endregion
+
 # region Precision types
 
 
@@ -49,7 +84,7 @@ class SaturationMode(Enum):
         return cls[mode]
 
 
-class PrecisionType:
+class PrecisionType(Serializable):
     """
     Base class representing a precision type of specified width.
 
@@ -72,6 +107,13 @@ class PrecisionType:
 
     def __hash__(self) -> int:
         return hash((self.width, self.signed))
+
+    def serialize_state(self):
+        state = {
+            'width': self.width,
+            'signed': self.signed,
+        }
+        return state
 
 
 class IntegerPrecisionType(PrecisionType):
@@ -206,6 +248,30 @@ class FixedPrecisionType(PrecisionType):
     def __hash__(self) -> int:
         return super().__hash__() ^ hash((self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits))
 
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'integer': self.integer,
+                'rounding_mode': str(self.rounding_mode),
+                'saturation_mode': str(self.saturation_mode),
+                'saturation_bits': self.saturation_bits,
+            }
+        )
+        return state
+
+    @property
+    def min(self):
+        if not self.signed:
+            return 0.0
+        if self.saturation_mode == SaturationMode.SAT_SYM:
+            return -(2.0 ** (self.integer - 1)) + 2.0**-self.fractional
+        return -(2.0 ** (self.integer - 1))
+
+    @property
+    def max(self):
+        return 2.0 ** (self.integer - 1) - 2.0**-self.fractional
+
 
 class XnorPrecisionType(PrecisionType):
     """
@@ -235,6 +301,126 @@ class ExponentPrecisionType(PrecisionType):
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
+
+
+class FloatPrecisionType(PrecisionType):
+    """
+    Class representing a floating-point precision type.
+
+    This type is equivalent to ac_float HLS types. If the use of C++ equivalent types is required, see
+    ``StandardFloatPrecisionType``.
+
+    Args:
+        width (int, optional): Total number of bits used. Defaults to 33.
+        integer (int, optional): Number of bits used for the integer part. Defaults to 2.
+        exponent (int, optional): Number of bits used for the exponent. Defaults to 8.
+    """
+
+    def __init__(self, width=33, integer=2, exponent=8, rounding_mode=None):
+        super().__init__(width=width, signed=True)
+        self.exponent = exponent
+        self.integer = integer  # If None, will be set to width - exponent - 1
+        self.rounding_mode = rounding_mode
+
+    @property
+    def rounding_mode(self):
+        return self._rounding_mode
+
+    @rounding_mode.setter
+    def rounding_mode(self, mode):
+        if mode is None:
+            self._rounding_mode = RoundingMode.TRN
+        elif isinstance(mode, str):
+            self._rounding_mode = RoundingMode.from_string(mode)
+        else:
+            self._rounding_mode = mode
+
+    def __str__(self):
+        args = [self.width - self.exponent, self.integer, self.exponent, self.rounding_mode]
+        args = ','.join([str(arg) for arg in args])
+        typestring = f'float<{args}>'
+        return typestring
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, FloatPrecisionType):
+            eq = super().__eq__(other)
+            eq = eq and self.integer == other.integer
+            eq = eq and self.exponent == other.exponent
+            eq = eq and self.rounding_mode == other.rounding_mode
+            return eq
+
+        return False
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash((self.integer, self.exponent, self.rounding_mode))
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'integer': self.integer,
+                'exponent': self.exponent,
+                'rounding_mode': str(self.rounding_mode),
+            }
+        )
+        return state
+
+
+class StandardFloatPrecisionType(PrecisionType):
+    """
+    Class representing a floating-point precision type.
+
+    This type is equivalent to ap_float and ac_std_float HLS types. <32,8> corresponds to a 'float' type in C/C++. <64,11>
+    corresponds to a 'double' type in C/C++. <16,5> corresponds to a 'half' type in C/C++. <16,8> corresponds to a
+    'bfloat16' type in C/C++.
+
+    Args:
+        width (int, optional): Total number of bits used. Defaults to 32.
+        exponent (int, optional): Number of bits used for the exponent. Defaults to 8.
+        use_cpp_type (bool, optional): Use C++ equivalent types if available. Defaults to ``True``.
+    """
+
+    def __init__(self, width=32, exponent=8, use_cpp_type=True):
+        super().__init__(width=width, signed=True)
+        self.exponent = exponent
+        self.use_cpp_type = use_cpp_type
+
+    def __str__(self):
+        if self._check_cpp_type(32, 8):
+            typestring = 'float'
+        elif self._check_cpp_type(64, 11):
+            typestring = 'double'
+        elif self._check_cpp_type(16, 5):
+            typestring = 'half'
+        elif self._check_cpp_type(16, 8):
+            typestring = 'bfloat16'
+        else:
+            typestring = f'std_float<{self.width},{self.exponent}>'
+        return typestring
+
+    def _check_cpp_type(self, width, exponent):
+        return self.use_cpp_type and self.width == width and self.exponent == exponent
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, FloatPrecisionType):
+            eq = super().__eq__(other)
+            eq = eq and self.exponent == other.exponent
+            return eq
+
+        return False
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash(self.exponent)
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'exponent': self.exponent,
+                'use_cpp_type': self.use_cpp_type,
+            }
+        )
+        return state
 
 
 class UnspecifiedPrecisionType(PrecisionType):
@@ -283,7 +469,7 @@ def find_minimum_width(data, signed=True):
 # region Data type definitions
 
 
-class NamedType:
+class NamedType(Serializable):
     """Class representing a named type.
 
     For convenience, hls4ml gives names to data types used in the generated HLS. This is equivalent to defining types
@@ -300,6 +486,13 @@ class NamedType:
         self.name = name.format(**kwargs)
         self.precision = precision
 
+    def serialize_state(self):
+        state = {
+            'name': self.name,
+            'precision': self.precision.serialize(),
+        }
+        return state
+
 
 class CompressedType(NamedType):
     """Class representing a compressed type in COO format.
@@ -315,6 +508,15 @@ class CompressedType(NamedType):
             name = 'compressed_' + name
         super().__init__(name, precision, **kwargs)
         self.index_precision = index_precision
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'index_precision': self.index_precision.serialize(),
+            }
+        )
+        return state
 
 
 class ExponentType(NamedType):
@@ -356,13 +558,23 @@ class PackedType(NamedType):
             self.n_pack = n_pack
             self.unpack = False
 
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'n_elem': self.n_elem,
+                'n_pack': self.n_pack,
+            }
+        )
+        return state
+
 
 # endregion
 
 # region Variables
 
 
-class Variable:
+class Variable(Serializable):
     """Base class representing a named multidimensional tensor.
 
     Args:
@@ -374,25 +586,30 @@ class Variable:
         self.name = var_name.format(**kwargs)
         self.type = atype
 
+    def serialize_state(self):
+        state = {
+            'name': self.name,
+            'type': self.type.serialize(),
+        }
+        return state
+
 
 class TensorVariable(Variable):
     """Class representing the output of a layer (like an activation tensor).
 
     Args:
         shape (list, tuple): Shape of the tensor.
-        dim_names (list, tuple): Names given to the dimensions of the tensor.
         var_name (str, optional): Name of the variable in the generated C++/HLS. Defaults to ``layer{index}``.
         type_name (str, optional): Name of the data type used (in NamedType). Defaults to ``layer{index}_t``.
         precision (PrecisionType, optional): Precision data type. Defaults to ``None``.
     """
 
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
+    def __init__(self, shape, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
         super().__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
-        self.shape = shape
-        self.dim_names = dim_names
-
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
+        if isinstance(shape, (list, tuple)):
+            self.shape = list(map(int, shape))  # Ensure shape is a list of integers
+        else:
+            self.shape = [int(shape)]
 
     def size(self):
         nelem = 1
@@ -401,8 +618,21 @@ class TensorVariable(Variable):
         return nelem
 
     def size_cpp(self):
-        # TODO get rid of size_cpp() (and dim_names)
-        return '*'.join([str(k) for k in self.dim_names])
+        return '*'.join([str(k) for k in self.shape])
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state['shape'] = self.shape
+        return state
+
+    @classmethod
+    def deserialize(cls, state):
+        shape = state['shape']
+        var_name = state['name']
+        type_name = state['type'].name
+        precision = state['type'].precision
+
+        return cls(shape, var_name, type_name, precision)
 
 
 class InplaceTensorVariable(TensorVariable):
@@ -417,6 +647,22 @@ class InplaceTensorVariable(TensorVariable):
         self.__dict__.update(tv.__dict__)
         self.type = input_var.type
         self.input_var = input_var
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'input_var': self.input_var.serialize(),
+            }
+        )
+        return state
+
+    @classmethod
+    def deserialize(cls, state):
+        tv = TensorVariable.deserialize(state)
+        input_var = state['input_var']
+
+        return cls(tv, input_var)
 
 
 class WeightVariable(Variable):
@@ -469,9 +715,30 @@ class WeightVariable(Variable):
         elif isinstance(new_precision, FixedPrecisionType):
             decimal_spaces = max(0, new_precision.fractional)
             self.precision_fmt = f'{{:.{decimal_spaces}f}}'
-
+        elif isinstance(new_precision, (FloatPrecisionType, StandardFloatPrecisionType)):
+            self.precision_fmt = '{:.16f}'  # Not ideal, but should be enough for most cases
         else:
             raise RuntimeError(f"Unexpected new precision type: {new_precision}")
+
+    def serialize_state(self):
+        state = super().serialize_state()
+        state.update(
+            {
+                'data': self.data,
+                'quantizer': self.quantizer.serialize() if self.quantizer is not None else None,
+            }
+        )
+        return state
+
+    @classmethod
+    def deserialize(cls, state):
+        var_name = state['name']
+        type_name = state['type'].name
+        precision = state['type'].precision
+        data = state['data']
+        quantizer = state['quantizer']
+
+        return cls(var_name, type_name, precision, data, quantizer)
 
 
 class CompressedWeightVariable(WeightVariable):
@@ -575,7 +842,7 @@ class ExponentWeightVariable(WeightVariable):
 # region Custom source
 
 
-class Source:
+class Source(Serializable):
     """Class representing generated source code blocks.
 
     Args:
@@ -587,6 +854,17 @@ class Source:
 
     def __str__(self):
         return str(self.code)
+
+    def serialize_class_name(self):
+        cls = self.__class__
+        cls_name = cls.__module__ + '.' + cls.__qualname__
+        return cls_name
+
+    def serialize_state(self):
+        state = {
+            'code': str(self.code),
+        }
+        return state
 
 
 # endregion

@@ -173,7 +173,7 @@ class CatapultWriter(Writer):
             # layer.get_output_variable().type.precision.width
             # layer.get_output_variable().type.precision.integer
             # layer.get_output_variable().type.precision.sign
-            for _k, v in layer.get_output_variable().get_shape():
+            for v in layer.get_output_variable().shape:
                 shape = shape + "[" + str(v) + "]"
 
             if layer.attributes.layer.class_name != 'Input':
@@ -413,21 +413,7 @@ class CatapultWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-            # Insert numbers
-            if '// hls-fpga-machine-learning insert numbers' in line:
-                newline = line
-
-                defines_list = []
-                for layer in model.get_layers():
-                    defines = ''
-                    for k, v in layer.get_output_variable().get_shape():
-                        defines += f'#define {k} {v}\n'
-
-                    defines_list.append(defines)
-
-                newline += ''.join(defines_list)
-
-            elif '// hls-fpga-machine-learning insert layer-precision' in line:
+            if '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
                 all_precision = OrderedDict()
                 for layer in model.get_layers():
@@ -914,7 +900,6 @@ class CatapultWriter(Writer):
             print("Project .tar.gz archive already exists")
 
     def write_hls(self, model):
-        print('Writing HLS project')
         self.write_output_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
@@ -928,4 +913,3 @@ class CatapultWriter(Writer):
         self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
-        print('Done')

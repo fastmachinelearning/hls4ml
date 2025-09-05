@@ -11,7 +11,7 @@ class Clone(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         for i, out_name in enumerate(self.outputs):
-            self.add_output_variable(inp.shape, inp.dim_names, out_name=out_name, var_name='layer{index}_cpy' + str(i + 1))
+            self.add_output_variable(inp.shape, out_name=out_name, var_name='layer{index}_cpy' + str(i + 1))
 
 
 clone_include_list = ['nnet_utils/nnet_stream.h']
@@ -79,9 +79,9 @@ class CloneOutput(OptimizerPass):
             n_outputs = len(output_map[output]) + in_output
             if n_outputs == 1:
                 continue
-            if n_outputs > 3:
+            if n_outputs > 7:
                 msg = f'ERROR: Cloning output {output} of {node.class_name}\
-                      ({node.name}) more than 3 times not currently supported'
+                      ({node.name}) more than 7 times not currently supported'
                 raise ValueError(msg)
 
             out_var = node.get_output_variable(output)

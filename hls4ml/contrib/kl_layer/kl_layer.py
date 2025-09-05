@@ -21,7 +21,7 @@ from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import math_ops
 
 import hls4ml
-from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_v2_to_hls import parse_default_keras_layer
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
@@ -63,7 +63,7 @@ class HKLLoss(hls4ml.model.layers.Layer):
     ]
 
     def initialize(self):
-        self.add_output_variable(shape=[1], dim_names=[f'KL_LOSS_{self.index}'])
+        self.add_output_variable(shape=[1])
 
 
 # Templates

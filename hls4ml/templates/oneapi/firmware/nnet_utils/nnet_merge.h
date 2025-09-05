@@ -68,7 +68,8 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void maximum(const input1_T &data1, const input2_T &data2, res_T &res) {
     #pragma unroll
     for (int i = 0; i < CONFIG_T::n_elem; i++) {
-        res[i] = static_cast<typename res_T::value_type>((data1[i] > data2[i]) ? data1[i] : data2[i]);
+        res[i] = (data1[i] > data2[i]) ? static_cast<typename res_T::value_type>(data1[i])
+                                       : static_cast<typename res_T::value_type>(data2[i]);
     }
 }
 
@@ -76,7 +77,8 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void minimum(const input1_T &data1, const input2_T &data2, res_T &res) {
     #pragma unroll
     for (int i = 0; i < CONFIG_T::n_elem; i++) {
-        res[i] = static_cast<typename res_T::value_type>((data1[i] < data2[i]) ? data1[i] : data2[i]);
+        res[i] = (data1[i] < data2[i]) ? static_cast<typename res_T::value_type>(data1[i])
+                                       : static_cast<typename res_T::value_type>(data2[i]);
     }
 }
 
@@ -207,7 +209,7 @@ void concatenate3d_2(const input1_T &data1, const input2_T &data2, res_T &res) {
             }
 
             #pragma unroll
-            for (int k = 0; k < CONFIG_T::n_elem1_2; k++) {
+            for (int k = 0; k < CONFIG_T::n_elem2_2; k++) {
                 int res_idx = i * CONFIG_T::n_elem1_1 * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2) +
                               j * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2) + k + CONFIG_T::n_elem1_2;
                 int data_idx = i * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2 + j * CONFIG_T::n_elem2_2 + k;
