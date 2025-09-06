@@ -6,7 +6,7 @@ from warnings import warn
 import numpy as np
 
 from hls4ml.model.attributes import Attribute, TypeAttribute, WeightAttribute
-from hls4ml.model.layers import Layer, Reshape, register_layer
+from hls4ml.model.layers import Activation, Layer, Reshape, register_layer
 from hls4ml.model.optimizer import OptimizerPass, register_pass
 from hls4ml.model.types import FixedPrecisionType, UnspecifiedPrecisionType
 
@@ -77,11 +77,13 @@ q_kifRS_t = tuple[np.ndarray, np.ndarray, np.ndarray, str, str]
 
 class FuseFixedPointQuantizer(OptimizerPass):
     def match(self, node: Layer):
-        if not isinstance(node, FixedPointQuantizer):
-            return False
-        if any(np.unique(x).size > 1 for x in node.mask_kbi):
-            return False
-        return True
+        if isinstance(node, FixedPointQuantizer):
+            return all(np.unique(x).size == 1 for x in node.mask_kbi)
+
+        if isinstance(node, Activation):
+            return node.get_attr('activation') == 'linear' and node.get_attr('trusted', False)
+
+        return False
 
     def propagate(self, node: Layer, precision: FixedPrecisionType):
         from hls4ml.model.optimizer.passes.bit_exact import get_input_layers, get_output_layers
@@ -113,13 +115,16 @@ class FuseFixedPointQuantizer(OptimizerPass):
     def transform(self, model: 'ModelGraph', node: FixedPointQuantizer):
         from hls4ml.model.optimizer.passes.bit_exact import get_input_layers, get_output_layers
 
-        # Rounding and saturation for FixedPointQuantizer are applied in generated code, thus not reflected in result_t.
-        if node.RND == 'TRN' and node.SAT == 'WRAP':
-            precision: FixedPrecisionType = copy(node.get_output_variable().type.precision)
+        if isinstance(node, FixedPointQuantizer):
+            # Rounding and saturation for FixedPointQuantizer are applied in generated code, thus not reflected in result_t.
+            if node.RND == 'TRN' and node.SAT == 'WRAP':
+                precision: FixedPrecisionType = copy(node.get_output_variable().type.precision)
+            else:
+                k, b, i = node.mask_kbi
+                k, b, i = bool(k.ravel()[0]), max(int(b.ravel()[0]), 1), int(i.ravel()[0])
+                precision = FixedPrecisionType(b, i, k, node.RND, node.SAT)
         else:
-            k, b, i = node.mask_kbi
-            k, b, i = bool(k.ravel()[0]), max(int(b.ravel()[0]), 1), int(i.ravel()[0])
-            precision = FixedPrecisionType(b, i, k, node.RND, node.SAT)
+            precision = copy(node.get_output_variable().type.precision)
 
         inp_layer = get_input_layers(node)[0]
         can_fuse = len(get_output_layers(inp_layer)) == 1
