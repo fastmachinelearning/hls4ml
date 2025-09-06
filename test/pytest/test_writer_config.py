@@ -33,6 +33,18 @@ def test_namespace(keras_model, namespace, io_type, backend):
     hls_model.compile()  # It's enough that the model compiles
 
 
+@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
+@pytest.mark.parametrize('backend', ['Vitis'])  # Only Vitis is supported
+def test_emulator(keras_model, io_type, backend):
+
+    config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
+    odir = str(test_root_path / f'hls4mlprj_emulation_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model, hls_config=config, io_type=io_type, output_dir=odir, write_emulation_constants=True, backend=backend
+    )
+    hls_model.compile()  # It's enough that the model compiles
+
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
 @pytest.mark.parametrize('write_tar', [True, False])
 def test_write_tar(keras_model, write_tar, backend):
