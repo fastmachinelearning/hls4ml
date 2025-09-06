@@ -140,21 +140,21 @@ def _(layer: Activation):
             output_shape = get_output_shape(layer)
             k, w, f = result_t.signed, result_t.width, result_t.fractional
             i = w - k - f
-            k = np.full(output_shape, k, dtype=np.int8)
-            i = np.full(output_shape, i, dtype=np.int8)
-            f = np.full(output_shape, f, dtype=np.int8)
+            k = np.full(output_shape, k, dtype=np.int16)
+            i = np.full(output_shape, i, dtype=np.int16)
+            f = np.full(output_shape, f, dtype=np.int16)
             if result_t.rounding_mode == RoundingMode.RND:
                 f += 1
             elif result_t.rounding_mode != RoundingMode.TRN:
-                f = np.full(output_shape, 126, dtype=np.int8)
+                f = np.full(output_shape, 126, dtype=np.int16)
             if result_t.saturation_mode != SaturationMode.WRAP:
-                k = np.ones(output_shape, dtype=np.int8)
-                i = np.full(output_shape, 126, dtype=np.int8)
+                k = np.ones(output_shape, dtype=np.int16)
+                i = np.full(output_shape, 126, dtype=np.int16)
             if fn_name == 'linear':
                 return ((k, i, f),)
             else:
-                k = np.ones(output_shape, dtype=np.int8)
-                i = np.full(output_shape, 126, dtype=np.int8)
+                k = np.ones(output_shape, dtype=np.int16)
+                i = np.full(output_shape, 126, dtype=np.int16)
                 return ((k, i, f),)
 
     if fn_name == 'linear':
@@ -560,9 +560,9 @@ def _(layer: Activation):
         result_t = layer.get_output_variable().type.precision
         k, w, f = result_t.signed, result_t.width, result_t.fractional
         i = w - k - f
-        k = np.full(output_shape, k, dtype=np.int8)
-        i = np.full(output_shape, i, dtype=np.int8)
-        f = np.full(output_shape, f, dtype=np.int8)
+        k = np.full(output_shape, k, dtype=np.int16)
+        i = np.full(output_shape, i, dtype=np.int16)
+        f = np.full(output_shape, f, dtype=np.int16)
         return k, i, f
 
     k, i, f = get_input_kifs(layer)[0]
