@@ -257,17 +257,29 @@ def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
     np.testing.assert_allclose(y_keras, y_hls, rtol=2e-2, atol=5e-2, verbose=True)
 
 
-def test_precision_from_constant_unit():
-    """unit test on for determining precision needed for a constant"""
-    testvalues = (0, -1024, 1024, 0.03125, -0.03125, 1.25, -1.25, 1.1, -1.1)
+@pytest.mark.parametrize(
+    "val, expected_width",
+    [
+        (0, 1),
+        (-1024, 2),
+        (1024, 1),
+        (0.03125, 1),
+        (-0.03125, 2),
+        (1.25, 3),
+        (-1.25, 4),
+        (1.1, 8),
+        (-1.1, 9),
+    ],
+)
+def test_precision_from_constant_unit(val, expected_width):
+    """Test determining precision needed for a constant."""
     max_width = 8
-    bit_widths = (1, 2, 1, 1, 2, 3, 4, max_width, max_width + 1)
+    fp = _get_precision_from_constant(val, max_width)
 
-    for val, w in zip(testvalues, bit_widths):
-        fp = _get_precision_from_constant(val, max_width)
-        assert fp.min <= val <= fp.max
-        assert fp.width == w
-        assert fp.signed == (val < 0)
-        quantum = 2.0**-fp.fractional
-        if w < max_width:
-            assert val % quantum == 0
+    assert fp.min <= val <= fp.max
+    assert fp.width == expected_width
+    assert fp.signed == (val < 0)
+
+    quantum = 2.0**-fp.fractional
+    if expected_width < max_width:
+        assert val % quantum == 0
