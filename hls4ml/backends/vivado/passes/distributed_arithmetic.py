@@ -40,8 +40,8 @@ def _get_input_kif(node: Layer):
         Is, Fs = _Is - Ks, _Bs - _Is
         Ks, Is, Fs = Ks[0], Is[0], Fs[0]  # remove batch dimension
     else:
-        Ks = np.ones(inp_shape, dtype=np.int8)
-        Is = Fs = np.full(inp_shape, 126, dtype=np.int8)
+        Ks = np.ones(inp_shape, dtype=np.int16)
+        Is = Fs = np.full(inp_shape, 126, dtype=np.int16)
 
     _k, _B, _I = result_t.signed, result_t.width, result_t.integer
     _k, _i, _f = _k, _I - _k, _B - _I

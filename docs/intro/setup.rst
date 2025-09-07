@@ -85,7 +85,7 @@ Here we give line-by-line instructions to demonstrate the general workflow.
 
    import hls4ml
    import tensorflow as tf
-   from tensorflow.keras.layers import Dense
+   from tensorflow.keras.layers import Dense, Activation
 
    # Construct a basic keras model
    model = tf.keras.models.Sequential()
