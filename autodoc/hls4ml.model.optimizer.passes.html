@@ -270,6 +270,137 @@ values or if a bias can go from zeros to other values.</p>
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.model.optimizer.passes.bipolar_quant_opt">
+<span id="hls4ml-model-optimizer-passes-bipolar-quant-opt-module"></span><h2>hls4ml.model.optimizer.passes.bipolar_quant_opt module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.bipolar_quant_opt" title="Link to this heading"></a></h2>
+<p>This file includes optimizations related to BipolarQuant nodes.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bipolar_quant_opt.</span></span><span class="sig-name descname"><span class="pre">BipolarQuantConstantParameters</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Remove Constant from the BipolarQuant node parameters (but not input[0])</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove Constant from the BipolarQuant node parameters (but not input[0])</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bipolar_quant_opt.</span></span><span class="sig-name descname"><span class="pre">BipolarQuantToActivation</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is 1. It is a a 1:1 transformation of a BipolarQuant to an Activation.
+This is not called when the input is constant.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation.transform" title="Link to this definition"></a></dt>
+<dd><p>Change BipolarQuant node to Activation</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bipolar_quant_opt.</span></span><span class="sig-name descname"><span class="pre">BipolarQuantToAlphaActivationAlpha</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is not 1. It is a a 1:3 transformation of
+a BipolarQuant to an ApplyAlpha (to scale), Activation, ApplyAlpha (to rescale).
+Since there is no zero offset, the initial ApplyAlpha has no effect, so it is omitted.</p>
+<p>NOTE:  It needs to be scheduled after BipolarQuantToActivation (or we need to make the match criteria stricter)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha.transform" title="Link to this definition"></a></dt>
+<dd><p>Change quant node to ApplyAlhpa, Activation, ApplyAlpha</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bipolar_quant_opt.</span></span><span class="sig-name descname"><span class="pre">ConstBipolarQuantToConstAlpha</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is not 1. It is a a 1:3 transformation of
+a BipolarQuant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to unscale), but an input
+consts allows for optimization, so the ApplyAlpha (to scale), Activation are
+optimized away right away.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha.transform" title="Link to this definition"></a></dt>
+<dd><p>Change Constant + Quant node to Constant, ApplyAlpha</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bipolar_quant_opt.</span></span><span class="sig-name descname"><span class="pre">FuseBipolarQuantWithConstant</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>This is for the case when scale is 1 and the input is a constant</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant.transform" title="Link to this definition"></a></dt>
+<dd><p>Fuse BipolarQuant with Constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.model.optimizer.passes.bit_exact">
 <span id="hls4ml-model-optimizer-passes-bit-exact-module"></span><h2>hls4ml.model.optimizer.passes.bit_exact module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.bit_exact" title="Link to this heading"></a></h2>
 <dl class="py class">
@@ -1372,6 +1503,7 @@ and Linear nodes are immediately merged into the Constant.</p>
 a Quant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to unscale), but an input
 consts allows for optimization, so the ApplyAlpha (to scale), Activation are
 optimized away right away.</p>
+<p>NOTE:  It needs to be scheduled after FuseQuantWithConstant (or we need to make the match criteria stricter)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha.match" title="Link to this definition"></a></dt>
@@ -1395,7 +1527,7 @@ optimized away right away.</p>
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">FuseQuantWithConstant</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>This is for the case when scale is a positive power of 2 and zeropt is 0.</p>
+<p>This is for the case when scale is a positive power of 2 and zeropt is 0, and when the input is a constant.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.FuseQuantWithConstant.match" title="Link to this definition"></a></dt>
@@ -1445,7 +1577,7 @@ optimized away right away.</p>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a a 1:1 transformation of
 a Quant to an Activation.</p>
-<p>As an optimization, this is not called when the input is constant.</p>
+<p>This is not called when the input is constant.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation.match" title="Link to this definition"></a></dt>
@@ -1470,7 +1602,7 @@ a Quant to an Activation.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">QuantToAlphaActivationAlpha</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>This is for the case when scale is not power-of-2 or zeropt is not 0. It is a a 1:3 transformation of
-a Quant to an ApplyAlpha (to scale), Activatio, ApplyAlpho (to rescale).</p>
+a Quant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to rescale).</p>
 <p>NOTE:  It needs to be scheduled after QuantToActivation (or we need to make the match criteria stricter)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToAlphaActivationAlpha.match">

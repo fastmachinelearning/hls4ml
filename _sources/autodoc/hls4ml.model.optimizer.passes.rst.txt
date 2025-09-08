@@ -12,6 +12,14 @@ hls4ml.model.optimizer.passes.batchnorm\_opt module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.bipolar\_quant\_opt module
+--------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.bipolar_quant_opt
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.bit\_exact module
 -----------------------------------------------
 

@@ -171,6 +171,7 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.batchnorm_opt">hls4ml.model.optimizer.passes.batchnorm_opt module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bipolar_quant_opt">hls4ml.model.optimizer.passes.bipolar_quant_opt module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bit_exact">hls4ml.model.optimizer.passes.bit_exact module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.conv_to_convxd">hls4ml.model.optimizer.passes.conv_to_convxd module</a></li>
@@ -915,6 +916,19 @@ BatchNormalization after the scale and bias are determined</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.layers.Bidirectional.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Bidirectional.initialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.BipolarQuant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">BipolarQuant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.BipolarQuant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>This is a QONNX quantization layer. Optimizations should convert it
+before HLS is produced.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.BipolarQuant.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.BipolarQuant.initialize" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

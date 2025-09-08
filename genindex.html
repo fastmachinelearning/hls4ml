@@ -358,17 +358,25 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.BiasDownAdd">BiasDownAdd (class in hls4ml.model.optimizer.passes.move_scales)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Bidirectional">Bidirectional (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate">BidirectionalConfigTemplate (class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate">BidirectionalFunctionTemplate (class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler">BidirectionalHandler (class in hls4ml.converters.keras_v3.recurrent)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer">BinaryQuantizer (class in hls4ml.model.quantizers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BipolarQuant">BipolarQuant (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters">BipolarQuantConstantParameters (class in hls4ml.model.optimizer.passes.bipolar_quant_opt)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation">BipolarQuantToActivation (class in hls4ml.model.optimizer.passes.bipolar_quant_opt)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha">BipolarQuantToAlphaActivationAlpha (class in hls4ml.model.optimizer.passes.bipolar_quant_opt)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.BitExact">BitExact (class in hls4ml.model.optimizer.passes.bit_exact)</a>
 </li>
@@ -547,6 +555,8 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Constant">Constant (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.ConstantBatchNormFusion">ConstantBatchNormFusion (class in hls4ml.model.optimizer.passes.batchnorm_opt)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha">ConstBipolarQuantToConstAlpha (class in hls4ml.model.optimizer.passes.bipolar_quant_opt)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.ConstQuantToConstAlpha">ConstQuantToConstAlpha (class in hls4ml.model.optimizer.passes.quant_opt)</a>
 </li>
@@ -1473,6 +1483,8 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization">FuseBatchNormalization (class in hls4ml.model.optimizer.passes.bn_fuse)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd">FuseBiasAdd (class in hls4ml.model.optimizer.passes.fuse_biasadd)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant">FuseBipolarQuantWithConstant (class in hls4ml.model.optimizer.passes.bipolar_quant_opt)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization">FuseConsecutiveBatchNormalization (class in hls4ml.model.optimizer.passes.batchnorm_opt)</a>
 </li>
@@ -3170,6 +3182,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.model.optimizer.passes.bipolar_quant_opt
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bipolar_quant_opt">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.model.optimizer.passes.bit_exact
 
       <ul>
@@ -3747,6 +3766,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Bidirectional.initialize">(hls4ml.model.layers.Bidirectional method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BipolarQuant.initialize">(hls4ml.model.layers.BipolarQuant method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Concatenate.initialize">(hls4ml.model.layers.Concatenate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Constant.initialize">(hls4ml.model.layers.Constant method)</a>
@@ -4106,6 +4127,16 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.match">(hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.match">(hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters.match">(hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation.match">(hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha.match">(hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha.match">(hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant.match">(hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision.match">(hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision method)</a>
 </li>
@@ -4600,6 +4631,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.batchnorm_opt">hls4ml.model.optimizer.passes.batchnorm_opt</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bipolar_quant_opt">hls4ml.model.optimizer.passes.bipolar_quant_opt</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bit_exact">hls4ml.model.optimizer.passes.bit_exact</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse</a>
@@ -4893,6 +4926,8 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_bidirectional_layer">parse_bidirectional_layer() (in module hls4ml.converters.keras.recurrent)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_bipolar_quant_layer">parse_bipolar_quant_layer() (in module hls4ml.converters.onnx.core)</a>
+</li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.catapult_report.parse_catapult_report">parse_catapult_report() (in module hls4ml.report.catapult_report)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.simulation_utils.parse_component_xml">parse_component_xml() (in module hls4ml.utils.simulation_utils)</a>
@@ -5027,14 +5062,14 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_resize_layer">parse_resize_layer() (in module hls4ml.converters.onnx.reshape)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer">parse_rnn_layer() (in module hls4ml.converters.keras.recurrent)</a>
 
       <ul>
         <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.recurrent.parse_rnn_layer">(in module hls4ml.converters.pytorch.recurrent)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_squeeze_layer">parse_squeeze_layer() (in module hls4ml.converters.pytorch.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_time_distributed_layer">parse_time_distributed_layer() (in module hls4ml.converters.keras.recurrent)</a>
@@ -5925,6 +5960,16 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization.transform">(hls4ml.model.optimizer.passes.batchnorm_opt.FuseConsecutiveBatchNormalization method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization.transform">(hls4ml.model.optimizer.passes.batchnorm_opt.RemoveNopBatchNormalization method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters.transform">(hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation.transform">(hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha.transform">(hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToAlphaActivationAlpha method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha.transform">(hls4ml.model.optimizer.passes.bipolar_quant_opt.ConstBipolarQuantToConstAlpha method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant.transform">(hls4ml.model.optimizer.passes.bipolar_quant_opt.FuseBipolarQuantWithConstant method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.BitExact.transform">(hls4ml.model.optimizer.passes.bit_exact.BitExact method)</a>
 </li>
