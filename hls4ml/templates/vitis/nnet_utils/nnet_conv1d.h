@@ -61,7 +61,7 @@ class Conv1DLatency : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T> {
     static void conv(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
                      typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
                      typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
-        //#pragma HLS INLINE region
+        #pragma HLS INLINE recursive
         conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
 };
@@ -72,8 +72,46 @@ class Conv1DResource : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T> {
     static void conv(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
                      typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
                      typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
-        //#pragma HLS INLINE region
+        #pragma HLS INLINE recursive
         conv_1d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    }
+};
+
+template <class data_T, class res_T, typename CONFIG_T>
+class BatchedDenseForConv1D : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T> {
+  public:
+    static void conv(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
+                     typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
+                     typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
+
+        #pragma HLS PIPELINE II = CONFIG_T::reuse_factor * CONFIG_T::n_partitions
+        #pragma HLS INLINE RECURSIVE
+        data_T data_tmp[CONFIG_T::n_partitions][CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::n_partitions];
+        #pragma HLS ARRAY_PARTITION variable=data_tmp complete dim=0
+        res_T res_tmp[CONFIG_T::n_partitions][CONFIG_T::out_width * CONFIG_T::n_filt / CONFIG_T::n_partitions];
+        #pragma HLS ARRAY_PARTITION variable=res_tmp complete dim=0
+
+        for (int jj = 0; jj < CONFIG_T::n_partitions; jj++) {
+            #pragma HLS UNROLL
+            for (int ii = 0; ii < CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::n_partitions; ii++) {
+                #pragma HLS UNROLL
+                data_tmp[jj][ii] = data[jj * CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::n_partitions + ii];
+            }
+        }
+
+        #pragma HLS ALLOCATION operation instances=nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T> limit=1
+
+        for (int jj = 0; jj < CONFIG_T::n_partitions; jj++) {
+            nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[jj], res_tmp[jj], weights, biases);
+        }
+
+        for (int jj = 0; jj < CONFIG_T::n_partitions; jj++) {
+            #pragma HLS UNROLL
+            for (int ii = 0; ii < CONFIG_T::out_width * CONFIG_T::n_filt / CONFIG_T::n_partitions; ii++) {
+                #pragma HLS UNROLL
+                res[jj * CONFIG_T::out_width * CONFIG_T::n_filt / CONFIG_T::n_partitions + ii] = res_tmp[jj][ii];
+            }
+        }
     }
 };
 
