@@ -164,7 +164,6 @@ def test_conv1d(padds, backend, strategy, io_type, synthesis_config):
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{strategy}_{io_type}')
-    baseline_file_name = f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{strategy}_{io_type}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -205,8 +204,6 @@ def test_conv1d(padds, backend, strategy, io_type, synthesis_config):
         elif model.layers[0].padding == 'valid':
             assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
             assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
-
-    # run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 chans_options = ['channels_last']
