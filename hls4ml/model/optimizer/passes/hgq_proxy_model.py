@@ -77,6 +77,9 @@ q_kifRS_t = tuple[np.ndarray, np.ndarray, np.ndarray, str, str]
 
 class FuseFixedPointQuantizer(OptimizerPass):
     def match(self, node: Layer):
+        if not node.attributes.get('bit_exact_transformed', False):
+            return False
+
         if isinstance(node, FixedPointQuantizer):
             return all(np.unique(x).size == 1 for x in node.mask_kbi)
 
