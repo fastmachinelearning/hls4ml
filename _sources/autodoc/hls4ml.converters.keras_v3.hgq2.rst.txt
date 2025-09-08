@@ -20,6 +20,14 @@ hls4ml.converters.keras\_v3.hgq2.multi\_head\_attention module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.converters.keras\_v3.hgq2.pooling module
+-----------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.hgq2.pooling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.converters.keras\_v3.hgq2.softmax module
 -----------------------------------------------
 
