@@ -107,7 +107,7 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
                     pool[jj] = pad_val<data_T, CONFIG_T::pool_op>();
             }
 
-            int patch_size = CONFIG_T::count_pad ? CONFIG_T::stride_width : overlap_pixel;
+            int patch_size = CONFIG_T::count_pad ? CONFIG_T::pool_width : overlap_pixel;
 
             res[(ii / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] =
                 pool_op<data_T, CONFIG_T::pool_width, CONFIG_T::pool_op, typename CONFIG_T::accum_t>(pool, patch_size);

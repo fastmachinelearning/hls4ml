@@ -133,6 +133,30 @@ def _(layer: Reshape):
 @_request_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes.get('activation')
+
+    if layer.attributes.get('trusted', False):
+        result_t = layer.get_output_variable().type.precision
+        if fn_name in ('linear', 'relu'):
+            output_shape = get_output_shape(layer)
+            k, w, f = result_t.signed, result_t.width, result_t.fractional
+            i = w - k - f
+            k = np.full(output_shape, k, dtype=np.int16)
+            i = np.full(output_shape, i, dtype=np.int16)
+            f = np.full(output_shape, f, dtype=np.int16)
+            if result_t.rounding_mode == RoundingMode.RND:
+                f += 1
+            elif result_t.rounding_mode != RoundingMode.TRN:
+                f = np.full(output_shape, 126, dtype=np.int16)
+            if result_t.saturation_mode != SaturationMode.WRAP:
+                k = np.ones(output_shape, dtype=np.int16)
+                i = np.full(output_shape, 126, dtype=np.int16)
+            if fn_name == 'linear':
+                return ((k, i, f),)
+            else:
+                k = np.ones(output_shape, dtype=np.int16)
+                i = np.full(output_shape, 126, dtype=np.int16)
+                return ((k, i, f),)
+
     if fn_name == 'linear':
         return (requested_kif(layer),)
     if fn_name == 'relu':
@@ -463,20 +487,22 @@ def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
 
     im2col_shape = *px_shape, ch_in, ch_out  # conv kernel shape
     k_in, i_in, f_in = get_input_kifs(layer)[0]
+    count = np.ones_like(k_in, dtype=np.uint32)
     if isinstance(layer, (Pooling1D, Pooling2D)):
-        k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
-    k_in, i_in, f_in = im2col(im2col_shape, k_in, i_in, f_in)
+        k_in, i_in, f_in, count = pad_arrs(layer, 0, k_in, i_in, f_in, count)
+    k_in, i_in, f_in, count = im2col(im2col_shape, k_in, i_in, f_in, count)
     if isinstance(layer, (Pooling1D, Pooling2D)):
-        k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
+        k_in, i_in, f_in, count = stride_arrs(layer, k_in, i_in, f_in, count)
 
     k_out = k_in.reshape(*k_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
     i_out = i_in.reshape(*i_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
     f_out = f_in.reshape(*f_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
+    count = count.reshape(*count.shape[:-1], -1, ch_in).sum(axis=-2)
 
     pool_op = layer.attributes['pool_op']
     if pool_op == 'Average':
-        f_add = minimal_kif(np.array(1 / prod(px_shape)))[2]
-        f_out += int(f_add)
+        f_add = minimal_kif(1 / count)[2]
+        f_out += f_add
 
     if isinstance(layer, (GlobalPooling1D, GlobalPooling2D)):
         k_out, i_out, f_out = k_out[0], i_out[0], f_out[0]
@@ -531,6 +557,16 @@ def _(layer: Concatenate):
 @_produce_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes['activation'].lower()
+    if layer.attributes.get('trusted', False):
+        output_shape = get_output_shape(layer)
+        result_t = layer.get_output_variable().type.precision
+        k, w, f = result_t.signed, result_t.width, result_t.fractional
+        i = w - k - f
+        k = np.full(output_shape, k, dtype=np.int16)
+        i = np.full(output_shape, i, dtype=np.int16)
+        f = np.full(output_shape, f, dtype=np.int16)
+        return k, i, f
+
     k, i, f = get_input_kifs(layer)[0]
 
     match fn_name:
@@ -603,6 +639,10 @@ def requested_by_non_saturating_quantizer(layer: Layer) -> bool:
 
 
 def default_register_precision(layer: Layer):
+    if layer.attributes.get('trusted', False):
+        # Trusted layers have their precision already set
+        return
+
     _pk, _pi, _pf = produce_kif(layer)  # Maximum possible k,i,f output from this layer
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
     _oi, _of = np.minimum(_pi, _ri), np.minimum(_pf, _rf)
@@ -791,7 +831,11 @@ class BitExact(ModelOptimizerPass):
         return True
 
     def _match(self, model: 'ModelGraph'):
-        return self.has_fixed_quantizer(model)
+        enabled = model.config.config['HLSConfig']['Model'].get('BitExact', None)
+        if enabled is None:
+            # Enable by default if any FixedPointQuantizer is present
+            enabled = self.has_fixed_quantizer(model)
+        return enabled
 
     def transform(self, model: 'ModelGraph'):
         if not self._match(model):
