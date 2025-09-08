@@ -16,7 +16,7 @@ from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import Layer, layer_map
 from hls4ml.model.optimizer import get_available_passes, optimize_model
-from hls4ml.model.types import Serializable, TensorVariable
+from hls4ml.model.types import Serializable
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 
@@ -693,6 +693,11 @@ class ModelGraph(Serializable):
         repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node.outputs)}
         repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node.inputs)})
 
+        for old_output in old_node.outputs:
+            if old_output in self.outputs:
+                new_output = repl[old_output]
+                self.outputs = [new_output if name == old_output else name for name in self.outputs]
+
         for node in self.graph.values():
             for i, n in enumerate(node.inputs):
                 if n in repl:
@@ -702,11 +707,6 @@ class ModelGraph(Serializable):
                     node.outputs[i] = repl[n]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
-
-        old_name = old_node.name
-        if old_name in self.outputs:
-            new_name = new_node.name
-            self.outputs = [new_name if name == old_name else name for name in self.outputs]
 
     def split_node(self, old_node, new_node1, new_node2):
         """Replace an existing node in the graph with two nodes in sequence.
@@ -728,6 +728,11 @@ class ModelGraph(Serializable):
         repl = {old_name: new_name for old_name, new_name in zip(old_node.outputs, new_node2.outputs)}
         repl.update({old_name: new_name for old_name, new_name in zip(old_node.inputs, new_node1.inputs)})
 
+        for old_output in old_node.outputs:
+            if old_output in self.outputs:
+                new_output = repl[old_output]
+                self.outputs = [new_output if name == old_output else name for name in self.outputs]
+
         for node in self.graph.values():
             for i, n in enumerate(node.inputs):
                 if n in repl:
@@ -744,9 +749,6 @@ class ModelGraph(Serializable):
             else:
                 new_graph[key] = value
         self.graph = new_graph
-
-        if old_node.name in self.outputs:
-            self.outputs = [new_node2.name if name == old_node.name else name for name in self.outputs]
 
     def next_layer(self):
         self.index += 1
@@ -1090,11 +1092,6 @@ class MultiModelGraph:
             subgraph.inputs = input_layer.outputs if idx > 0 else base_model.inputs
             subgraph.outputs = slice_[-1].outputs if idx < len(node_slices) - 1 else base_model.outputs
             subgraph._applied_flows = base_model._applied_flows
-
-            for node in subgraph.graph.values():
-                # Prevent name conflict in different subgraphs
-                variable: TensorVariable = node.get_output_variable()
-                variable.dim_names = [f'G{idx}_{name}' for name in variable.dim_names]
 
             # NOTE might need to examine other subgraph-related flows (i.e., fifo_optimizer)
             subgraph.apply_flow('vivado:specific_types')

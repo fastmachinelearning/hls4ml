@@ -29,9 +29,9 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
     k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
     I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
 
-    k = np.broadcast_to(k.astype(np.int8), (1,) + shape)  # type: ignore
-    B = np.broadcast_to(B.astype(np.int8), (1,) + shape)  # type: ignore
-    I = np.broadcast_to(I.astype(np.int8), (1,) + shape)  # noqa: E741
+    k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
+    B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
+    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
 
     overflow_mode: str = internal_q.overflow_mode
     round_mode: str = internal_q.round_mode
