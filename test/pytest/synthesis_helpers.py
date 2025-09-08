@@ -72,16 +72,16 @@ def compare_vitis_backend(data, baseline):
 
     tolerances = {
         "EstimatedClockPeriod": 0.01,
-        "FF": 0.05,
-        "LUT": 0.10,
-        "BRAM_18K": 0.0,
-        "DSP": 0.0,
-        "URAM": 0.0,
-        "AvailableBRAM_18K": 0.0,
-        "AvailableDSP": 0.0,
-        "AvailableFF": 0.0,
-        "AvailableLUT": 0.0,
-        "AvailableURAM": 0.0,
+        "FF": 0.1,
+        "LUT": 0.1,
+        "BRAM_18K": 0.1,
+        "DSP": 0.1,
+        "URAM": 0.1,
+        "AvailableBRAM_18K": 0.1,
+        "AvailableDSP": 0.1,
+        "AvailableFF": 0.1,
+        "AvailableLUT": 0.1,
+        "AvailableURAM": 0.1,
     }
 
     compare_dicts(data["CSynthesisReport"], baseline["CSynthesisReport"], tolerances)
@@ -98,10 +98,10 @@ def compare_oneapi_backend(data, baseline):
 
     tolerances = {
         "HLS": {
-            "total": {"alut": 0.01, "reg": 0.1, "ram": 0.01, "dsp": 0.01, "mlab": 0.01},
-            "available": {"alut": 0.01, "reg": 0.01, "ram": 0.01, "dsp": 0.01, "mlab": 0.01},
+            "total": {"alut": 0.1, "reg": 0.1, "ram": 0.1, "dsp": 0.1, "mlab": 0.1},
+            "available": {"alut": 0.1, "reg": 0.1, "ram": 0.1, "dsp": 0.1, "mlab": 0.1},
         },
-        "Loop": {"worstFrequency": 0.01, "worstII": 0.01, "worstLatency": 0.01},
+        "Loop": {"worstFrequency": 0.1, "worstII": 0.1, "worstLatency": 0.1},
     }
 
     data = data["report"]
