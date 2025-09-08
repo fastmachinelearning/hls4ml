@@ -25,7 +25,7 @@
     - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vitis/${VITIS_VERSION} vitis-run \"\$@\"" >> cmd_vitis_${VITIS_VERSION}/vitis-run
     - chmod +x cmd_vitis_${VITIS_VERSION}/vitis-run
     - export PATH=$PWD/cmd_vitis_${VITIS_VERSION}:$PATH
-    
+
     # Load Intel oneAPI environment variables
     - source /opt/intel/oneapi/setvars.sh --force
   script:
