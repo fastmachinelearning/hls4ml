@@ -101,7 +101,10 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
             and node.get_attr('strategy').lower() == 'latency'
             and node.model.config.get_config_value('IOType') == 'io_parallel'
         )
-        if is_pointwise_parallel_latency:
+
+        n_partitions = node.attributes['n_partitions']
+
+        if is_pointwise_parallel_latency and n_partitions == 1:
             params['conv_fn'] = 'nnet::BatchedDenseForConv1D'
         else:
             if node.get_attr('strategy').lower() == 'latency':
@@ -115,7 +118,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
-        if is_pointwise_parallel_latency:
+        if is_pointwise_parallel_latency and n_partitions == 1:
             mult_params['n_in'] = (
                 node.get_attr('in_width')
                 * node.get_attr('n_chan')
