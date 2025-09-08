@@ -177,6 +177,7 @@ class QDenseHandler(QLayerHandler, DenseHandler):
         out_tensors: Sequence['KerasTensor'],
     ):
         conf = super().handle(layer, in_tensors, out_tensors)
+        conf['class_name'] = 'Dense'
         in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
         if len(in_shape) > 1:
             pf = layer.parallelization_factor
