@@ -1,5 +1,6 @@
 import typing
 from copy import copy
+from warnings import warn
 
 import numpy as np
 
@@ -111,17 +112,18 @@ class Layer(Serializable):
             layer_config = self.model.config.get_layer_config(self)
             for config_key, config_value in layer_config.items():
                 config_key = convert_to_snake_case(config_key)
-                if config_key in self.attributes:
-                    print(
-                        'WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(
-                            config_key, self.name, self.class_name
-                        )
-                    )
                 if config_key.endswith('_t') and isinstance(
                     config_value, str
                 ):  # TODO maybe move this to __setitem__ of AttributeDict?
                     precision = self.model.config.backend.convert_precision_string(config_value)
                     config_value = NamedType(self.name + '_' + config_key, precision)
+                if (old_value := self.attributes.get(config_key, config_value)) != config_value:
+                    warn(
+                        f"Overriding attribute '{config_key}' of layer '{self.name}' ({self.class_name}):"
+                        f"{old_value} -> {config_value}",
+                        UserWarning,
+                        stacklevel=3,
+                    )
                 self.attributes[config_key] = config_value
 
             self.initialize()
