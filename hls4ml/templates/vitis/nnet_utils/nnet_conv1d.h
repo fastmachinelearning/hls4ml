@@ -57,7 +57,6 @@ void pointwise_conv_1d_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
 
     // Inlining helps reduce latency, but may also cause timing issues in some cases, use carefully.
     // But without inlining Vitis HLS doesn't respect the parallelization factor config ¯\_(ツ)_/¯
-    // #pragma HLS PIPELINE II = CONFIG_T::reuse_factor * CONFIG_T::n_partitions
 
     #pragma HLS INLINE recursive
 
