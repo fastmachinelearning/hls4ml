@@ -750,21 +750,25 @@ PReLUActLoop:
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T>
 void binary_tanh(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    using cache_T = ap_int<2>;
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
+        cache_T cache;
         res_T out_data;
         PRAGMA_DATA_PACK(out_data)
 
     PReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            if (in_data[j] > 0)
-                out_data[j] = (typename res_T::value_type)1;
+            if (in_data[j] >= 0)
+                cache = 1;
             else
-                out_data[j] = (typename res_T::value_type) - 1;
+                cache = -1;
+
+            out_data[j] = binary_cast<cache_T, typename res_T::value_type>(cache);
         }
         res.write(out_data);
     }

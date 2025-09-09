@@ -83,8 +83,10 @@ Here we give line-by-line instructions to demonstrate the general workflow.
 .. code-block:: python
 
    import hls4ml
+
    from keras.models import Sequential
-   from keras.layers import Dense
+   from keras.layers import Dense, Activation
+
 
    # Construct a basic keras model
    model = Sequential()
