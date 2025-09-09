@@ -1,4 +1,4 @@
-from hls4ml.converters.onnx_to_hls import get_onnx_attribute, onnx_handler
+from hls4ml.converters.onnx_to_hls import get_constant_value, get_onnx_attribute, onnx_handler
 
 
 @onnx_handler('Transpose')
@@ -75,7 +75,14 @@ def parse_pad_layer(node, input_names, input_shapes, graph):
     if mode is not None and mode != 'constant':
         raise RuntimeError(f'Unsupported padding mode: {mode} in node {node.name}')
 
-    pads = get_onnx_attribute(node, 'pads')
+    pads = get_constant_value(graph, node.input[1])
+    if len(input_names) > 2:
+        const_val = get_constant_value(graph, node.input[2])
+        if const_val != 0:
+            raise RuntimeError(f'Only constant value of 0 supported for Pad node {node.name}, got {const_val}')
+
+    if len(input_names) > 3:
+        raise RuntimeError(f'Parsing axes input of Pad node {node.name} is not supported.')
 
     dim = 0
     if len(input_shapes[0]) == 3:
