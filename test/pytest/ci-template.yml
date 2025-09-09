@@ -10,7 +10,7 @@
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - git submodule update --init --recursive test/pytest/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
-    - pip install .[testing,sr,optimization]
+    - pip install .[da,testing,sr,optimization]
 
     # set up vivado_hls command
     - mkdir -p cmd_vivado_${VIVADO_VERSION}
@@ -30,7 +30,7 @@
     - source /opt/intel/oneapi/setvars.sh --force
   script:
     - cd test/pytest
-    - pytest -s $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
+    - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
   artifacts:
     when: always
     reports:

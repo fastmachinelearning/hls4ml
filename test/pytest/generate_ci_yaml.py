@@ -32,7 +32,7 @@ LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_
 # Test files to split by individual test cases
 # Value = chunk size per CI job
 SPLIT_BY_TEST_CASE = {
-    'test_keras_api': 4,
+    'test_keras_api': 1,
 }
 
 
