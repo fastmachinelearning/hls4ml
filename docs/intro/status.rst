@@ -18,13 +18,17 @@ A list of supported ML frameworks (Frontends), HLS backends, and neural network 
 Frontend support:
 
 * Keras
+
   * Keras v2
+
     * QKeras
     * HGQ
   * Keras v3
+
     * HGQ2
 * PyTorch
 * ONNX
+
   * QONNX
 
 Neural network architectures:

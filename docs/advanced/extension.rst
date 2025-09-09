@@ -60,40 +60,42 @@ In this case, there a single output with the same shape as the input.
 
 .. tabs::
     .. tab:: Keras v2
-    .. code-block:: Python
 
-        # Parser for converter
-        def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader):
-            layer = {}
-            layer['class_name'] = 'KReverse'
-            layer['name'] = keras_layer['config']['name']
-            layer['n_in'] = input_shapes[0][1]
+        .. code-block:: Python
 
-            if input_names is not None:
-                layer['inputs'] = input_names
+            # Parser for converter
+            def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader):
+                layer = {}
+                layer['class_name'] = 'KReverse'
+                layer['name'] = keras_layer['config']['name']
+                layer['n_in'] = input_shapes[0][1]
 
-            return layer, [shape for shape in input_shapes[0]]
+                if input_names is not None:
+                    layer['inputs'] = input_names
+
+                return layer, [shape for shape in input_shapes[0]]
 
     .. tab:: Keras v3
-    .. code-block:: Python
 
-        from hls4ml.converters.keras_v3._base import register, KerasV3LayerHandler
+        .. code-block:: Python
 
-        @register
-        class KReverseHandler(KerasV3LayerHandler):
-            '''Keras v3 layer handler for KReverse'''
+            from hls4ml.converters.keras_v3._base import register, KerasV3LayerHandler
 
-            handles = ('KReverse',)
-            def handle(
-                self,
-                layer: 'keras.Layer',
-                in_tensors: Sequence['KerasTensor'],
-                out_tensors: Sequence['KerasTensor'],
-            ) -> dict[str, Any] | tuple[dict[str, Any], ...]:
-                # Only layer-specific parameters are needed.
-                # Common parameters are automatically added in the base class.
-                assert len(in_tensors[0].shape) == 2, 'KReverse is only supported for 2D tensors'
-                return {'n_in': in_tensors[0].shape[-1]}
+            @register
+            class KReverseHandler(KerasV3LayerHandler):
+                '''Keras v3 layer handler for KReverse'''
+
+                handles = ('KReverse',)
+                def handle(
+                    self,
+                    layer: 'keras.Layer',
+                    in_tensors: Sequence['KerasTensor'],
+                    out_tensors: Sequence['KerasTensor'],
+                ) -> dict[str, Any] | tuple[dict[str, Any], ...]:
+                    # Only layer-specific parameters are needed.
+                    # Common parameters are automatically added in the base class.
+                    assert len(in_tensors[0].shape) == 2, 'KReverse is only supported for 2D tensors'
+                    return {'n_in': in_tensors[0].shape[-1]}
 
 Next, we need the actual HLS implementaton of the function, which can be written in a header file ``nnet_reverse.h``.
 
