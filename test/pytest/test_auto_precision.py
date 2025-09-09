@@ -17,6 +17,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Sequential
 
 import hls4ml
+from hls4ml.model.optimizer.passes.infer_precision import _get_precision_from_constant
 
 test_root_path = Path(__file__).parent
 
@@ -254,3 +255,31 @@ def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
     y_keras = model.predict(data).flatten()
     y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_keras, y_hls, rtol=2e-2, atol=5e-2, verbose=True)
+
+
+@pytest.mark.parametrize(
+    "val, expected_width",
+    [
+        (0, 1),
+        (-1024, 2),
+        (1024, 1),
+        (0.03125, 1),
+        (-0.03125, 2),
+        (1.25, 3),
+        (-1.25, 4),
+        (1.1, 8),
+        (-1.1, 9),
+    ],
+)
+def test_precision_from_constant_unit(val, expected_width):
+    """Test determining precision needed for a constant."""
+    max_width = 8
+    fp = _get_precision_from_constant(val, max_width)
+
+    assert fp.min <= val <= fp.max
+    assert fp.width == expected_width
+    assert fp.signed == (val < 0)
+
+    quantum = 2.0**-fp.fractional
+    if expected_width < max_width:
+        assert val % quantum == 0
