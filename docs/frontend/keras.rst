@@ -10,7 +10,7 @@ For Keras v3, the support for EinsumDense layer is added. For HGQ2, the followin
 
 keras `Operators` that are not layers are generally not supported in ``hls4ml``. This includes operators such as `Add`, `Subtract`, `Multiply`, and `Divide`. Please use the corresponding Keras layers instead.
 
-Arbitrary ``Lambda`` layers are not, and are not planned to be supported in ``hls4ml`` due to the difficultness to parse generic lambda expression. For custom operations required, please refer to the :ref:`Extension API <extension-api>` documentation to add custom layers to the conversion process.
+Arbitrary ``Lambda`` layers are not, and are not planned to be supported in ``hls4ml`` due to the difficultness to parse generic lambda expression. For custom operations required, please refer to the :ref:`Extension API` documentation to add custom layers to the conversion process.
 
 The ``data_format='channels_first'`` parameter of Keras layers is supported for a limited subset of layers and it is not extensively tested. All HLS implementations in ``hls4ml`` are based on ``channels_last`` data format convention and need to be converted to that format before the HLS code can be emitted. We encourage users of ``channels_first`` to report their experiences to developers on GitHub.
 
