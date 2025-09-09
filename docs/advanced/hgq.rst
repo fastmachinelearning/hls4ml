@@ -25,7 +25,7 @@ HGQ2 implements an gradient-based automatic bitwidth optimization and quantizati
    :width: 600
 
 Key Features
------------
+------------
 
 - **Multi-backend support**: Works with TensorFlow, JAX, and PyTorch through Keras v3
 - **Flexible quantization**: Supports different quantization schemes including fixed-point and minifloat
