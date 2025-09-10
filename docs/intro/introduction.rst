@@ -20,11 +20,11 @@ The Solution: ``hls4ml``
 ========================
 
 .. image:: ../img/overview.jpg
-
+   :alt: Overview of hls4ml, taken from `JINST 13 P07027 (2018) <https://dx.doi.org/10.1088/1748-0221/13/07/P07027>`_.
 
 With this in mind, let's take a look at how ``hls4ml`` helps to achieve such a goal. First, it's important to realize the architecture differences between an FPGA and a CPU or GPU.
 An FPGA can be specifically programmed to do a certain task, in this case evaluate neural networks given a set of inputs, and as such can be highly optimized for the task, with tricks like pipelining and parallel evaluation. However, this means dynamic remapping while running isn't really a possibility.
 FPGAs also often come at a comparatively low power cost with respect to CPUs and GPUs. This allows ``hls4ml`` to build HLS code from compressed neural networks that results in predictions on the microsecond scale for latency.
 The ``hls4ml`` tool saves the time investment needed to convert a neural network to a hardware design language or even HLS code, thus allowing for rapid prototyping.
 
-For more detailed information on technical details of ``hls4ml``, read the "Internals" section of our documentation or our :doc:`References <reference>` page. All figures on this page are taken from the following paper: `JINST 13 P07027 (2018) <https://dx.doi.org/10.1088/1748-0221/13/07/P07027>`_.
+For more detailed information on technical details of ``hls4ml``, read the "Internals" section of our documentation or our :doc:`References <reference>` page.

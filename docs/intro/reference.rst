@@ -68,6 +68,20 @@ Additionally, if you use specific features developed in later papers, please cit
         year = "2022"
     }
 
+distributed arithmetic:
+
+..  code-block:: bibtex
+
+    @misc{Sun:2025,
+        title={da4ml: Distributed Arithmetic for Real-time Neural Networks on FPGAs},
+        author={Chang Sun and others},
+        year={2025},
+        eprint={2507.04535},
+        archivePrefix={arXiv},
+        primaryClass={cs.AR},
+        url={https://arxiv.org/abs/2507.04535},
+    }
+
 binary/ternary networks:
 
 ..  code-block:: bibtex
