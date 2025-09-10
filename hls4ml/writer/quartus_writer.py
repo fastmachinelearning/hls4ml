@@ -411,17 +411,7 @@ class QuartusWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-            # Insert numbers
-            if '// hls-fpga-machine-learning insert numbers' in line:
-                newline = line
-
-                defines = set()
-                for layer in model.get_layers():
-                    for k, v in layer.get_output_variable().get_shape():
-                        defines.add(f'constexpr size_t {k} = {v};')
-                newline += '\n'.join(defines) + '\n'
-
-            elif '// hls-fpga-machine-learning insert layer-precision' in line:
+            if '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
                 all_precision = OrderedDict()
                 for layer in model.get_layers():

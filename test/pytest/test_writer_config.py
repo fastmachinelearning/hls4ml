@@ -14,7 +14,7 @@ test_root_path = Path(__file__).parent
 @pytest.fixture(scope='module')
 def keras_model():
     model = Sequential()
-    model.add(Dense(10, kernel_initializer='zeros', use_bias=False, input_shape=(15,)))
+    model.add(Dense(10, input_shape=(15,)))
     model.compile()
     return model
 
@@ -24,11 +24,23 @@ def keras_model():
 @pytest.mark.parametrize('namespace', [None, 'test_namespace'])
 def test_namespace(keras_model, namespace, io_type, backend):
 
-    use_namespace = namespace is None
+    use_namespace = namespace is not None
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
     odir = str(test_root_path / f'hls4mlprj_namespace_{use_namespace}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
-        keras_model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+        keras_model, hls_config=config, io_type=io_type, output_dir=odir, namespace=namespace, backend=backend
+    )
+    hls_model.compile()  # It's enough that the model compiles
+
+
+@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
+@pytest.mark.parametrize('backend', ['Vitis'])  # Only Vitis is supported
+def test_emulator(keras_model, io_type, backend):
+
+    config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
+    odir = str(test_root_path / f'hls4mlprj_emulation_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model, hls_config=config, io_type=io_type, output_dir=odir, write_emulation_constants=True, backend=backend
     )
     hls_model.compile()  # It's enough that the model compiles
 
