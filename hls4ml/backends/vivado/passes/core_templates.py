@@ -7,6 +7,7 @@ from hls4ml.model.layers import (
     BatchNormalization,
     Dense,
     HardActivation,
+    MultiplierReLU,
     LayerNormalization,
     ParametrizedActivation,
     PReLU,
@@ -268,7 +269,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
 class ParamActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((ParametrizedActivation, PReLU))
+        super().__init__((ParametrizedActivation, PReLU, MultiplierReLU))
         self.template = param_activ_config_template
 
     def format(self, node):
@@ -381,7 +382,7 @@ class ParametrizedActivationFunctionTemplate(FunctionCallTemplate):
 
 class PReLUFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(PReLU, include_header=activ_include_list)
+        super().__init__((PReLU, MultiplierReLU), include_header=activ_include_list)
         self.template = param_activ_function_template
 
     def format(self, node):
