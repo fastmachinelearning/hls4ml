@@ -59,6 +59,7 @@
 
     ir/ir
     ir/modelgraph
+    ir/multimodelgraph
     ir/flows
     ir/attributes
 
