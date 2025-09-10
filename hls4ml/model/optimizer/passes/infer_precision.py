@@ -2,9 +2,9 @@ import math
 from collections.abc import Iterable
 
 import numpy as np
-from fxpmath import Fxp
 
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
+from hls4ml.model.optimizer.passes.bit_exact import minimal_kif
 from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
@@ -618,18 +618,6 @@ def _get_precision_from_constant(value: int | float, max_width=8):
     if value == 0:
         return FixedPrecisionType(width=1, integer=1, signed=False)
 
-    signed = value < 0
-    absval = abs(value)
-    # check if power of 2
-    mantissa, exp = np.frexp(absval)
-    if mantissa == 0.5:  # is it a power of 2?
-        # One could consider returning an ExponentPrecisionType here.
-        # Decided on FixedPrecisionType everywhere since ExponentPrecisionType is less supported
-        return FixedPrecisionType(1 + signed, exp, signed)
-
-    # now is the general case. First try Fxp
-    fxpval = Fxp(value, signed=signed)
-    if isinstance(fxpval.n_word, int) and fxpval.n_word <= max_width:
-        return FixedPrecisionType(fxpval.n_word, signed + fxpval.n_int, signed)
-
-    return FixedPrecisionType(signed + max_width, signed + exp, signed)
+    signed, integer, fraction = map(int, minimal_kif(np.array(value)))
+    width = min(signed + integer + fraction, signed + max_width)
+    return FixedPrecisionType(width, signed + integer, bool(signed))
