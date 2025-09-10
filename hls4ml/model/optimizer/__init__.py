@@ -34,6 +34,7 @@ register_flow(
     'parse_qonnx',
     [
         'reshape_constant',
+        'padding_constant',
         'resize_remove_constants',
         'quant_constant_parameters',
         'bipolar_quant_constant_parameters',
