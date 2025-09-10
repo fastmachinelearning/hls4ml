@@ -20,7 +20,9 @@
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimizer Passes and Flows" href="flows.html" />
+    <link rel="prev" title="ModelGraph Class" href="modelgraph.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -85,9 +87,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Internals</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="ir.html">Internal representation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MultiModelGraph Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#keras-example">Keras Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#key-methods-for-multimodelgraph">Key Methods for MultiModelGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="flows.html">Optimizer Passes and Flows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="attributes.html">Layer attributes</a></li>
 </ul>
@@ -162,7 +170,6 @@ The central concept here is the division of a larger model into multiple smaller
 <li><p><a class="reference internal" href="#mmg-compile-method"><span class="std std-ref">compile</span></a></p></li>
 <li><p><a class="reference internal" href="#mmg-predict-method"><span class="std std-ref">predict</span></a></p></li>
 <li><p><a class="reference internal" href="#mmg-build-method"><span class="std std-ref">build</span></a></p></li>
-<li><p><span class="xref std std-ref">trace</span></p></li>
 </ul>
 <hr class="docutils" />
 <section id="compile-method">
@@ -237,7 +244,10 @@ The central concept here is the division of a larger model into multiple smaller
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modelgraph.html" class="btn btn-neutral float-left" title="ModelGraph Class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="flows.html" class="btn btn-neutral float-right" title="Optimizer Passes and Flows" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
