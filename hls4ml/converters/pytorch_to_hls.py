@@ -238,13 +238,27 @@ def parse_pytorch_model(config, verbose=True):
 
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif "getitem" in node.args[0].name:
-                for tmp_node in traced_model.nodes:
-                    if tmp_node.name == node.args[0].name:
-                        if "getitem" in tmp_node.args[0].name:
-                            raise Exception('Nested getitem calles not resolved at the moment.')
-                        input_names = [inputs_map.get(str(tmp_node.args[0]), str(tmp_node.args[0]))]
-                        input_shapes = [output_shapes[str(tmp_node.args[0])]]
-                        node.args = [tmp_node.args[0]]
+                def resolve_getitem_source(node_name, visited=None):
+                    """Recursively resolve nested getitem calls to find the actual source node."""
+                    if visited is None:
+                        visited = set()
+                    
+                    if node_name in visited:
+                        raise Exception(f'Circular reference detected in getitem chain: {node_name}')
+                    visited.add(node_name)
+                    
+                    for tmp_node in traced_model.nodes:
+                        if tmp_node.name == node_name:
+                            if "getitem" in tmp_node.args[0].name:
+                                return resolve_getitem_source(tmp_node.args[0].name, visited)
+                            else:
+                                return tmp_node.args[0]
+                    raise Exception(f'Could not find source node for getitem: {node_name}')
+                
+                source_node = resolve_getitem_source(node.args[0].name)
+                input_names = [inputs_map.get(str(source_node), str(source_node))]
+                input_shapes = [output_shapes[str(source_node)]]
+                node.args = [source_node]
             else:
                 input_shapes = [output_shapes[str(i)] for i in node.args]
             # for Conv layers
@@ -426,3 +440,4 @@ def parse_pytorch_model(config, verbose=True):
 def pytorch_to_hls(config):
     layer_list, input_layers, output_layers = parse_pytorch_model(config)
     return ModelGraph.from_layer_list(config, layer_list, inputs=input_layers, outputs=output_layers)
+
