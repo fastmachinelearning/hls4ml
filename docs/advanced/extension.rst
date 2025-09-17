@@ -18,10 +18,10 @@ To implement a custom layer in ``hls4ml`` with the extension API, the required c
 * Function config template
 * Registration of layer, source code, and templates
 
-Complete example for Keras v2
-=============================
+Complete example
+================
 
-For concreteness, let's say our custom layer ``KReverse`` is implemented in Keras v2 and reverses the order of the last dimension of the input.
+For concreteness, let's say our custom layer ``KReverse`` is implemented in Keras and reverses the order of the last dimension of the input.
 
 .. code-block:: Python
 
