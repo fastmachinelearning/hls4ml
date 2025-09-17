@@ -116,7 +116,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
+        from da4ml.codegen.hls import hls_logic_and_bridge_gen
         from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
 
         kernel: np.ndarray = node.attributes['weight'].data
@@ -136,10 +136,13 @@ class DistributedArithmeticCodegen(OptimizerPass):
         sol = comb_trace(inp, out)
         node.attributes['da_kernel_cost'] = sol.cost
 
-        flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
+        backend = model.config.get_config_value('Backend').lower()
+        assert backend in ('vitis', 'vivado')
+        flavor = 'vitis'
+
         pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
 
-        fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+        fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
         io_type = node.model.config.get_config_value("IOType")
         if io_type != 'io_parallel':
@@ -359,7 +362,7 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
+        from da4ml.codegen.hls import hls_logic_and_bridge_gen
         from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
 
         kernel: np.ndarray = node.attributes['weight'].data
@@ -370,6 +373,12 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
         fn_strs = []
         fn_calls = []
 
+        backend = model.config.get_config_value('Backend').lower()
+        assert backend in ('vitis', 'vivado')
+        flavor = 'vitis'
+
+        node.attributes['da_kernel_cost'] = 0.0
+
         for i in range(I):
             _k, _i, _f = (v[i] for v in inp_kifs)
             fn_name = f'einsum_{node.index}_da_{i}_of_{I}'
@@ -379,9 +388,10 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
             out = inp @ kernel[i]
             sol = comb_trace(inp, out)
 
-            flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
+            node.attributes['da_kernel_cost'] += sol.cost
+
             pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
-            fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+            fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
             fn_strs.append(fn_str)
             fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'
