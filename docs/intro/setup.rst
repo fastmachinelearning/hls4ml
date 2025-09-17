@@ -168,6 +168,9 @@ Optional Dependencies
 
 ``hls4ml`` provides several optional dependency groups that can be installed based on your specific needs:
 
+.. warning::
+   Some optional dependencies may conflict with each other. For example, Keras v2 and Keras v3 cannot coexist in the same Python environment; ``qkeras`` requires certain versions of TensorFlow that may conflict with other packages.
+
 .. code-block::
 
    # For distributed arithmetic
@@ -176,10 +179,10 @@ Optional Dependencies
    # For HGQ frontend
    pip install hls4ml[hgq]
 
-   # For HGQ2 frontend (incl. keras-v2, conflict with keras-v3)
+   # For HGQ2 frontend
    pip install hls4ml[hgq2]
 
-   # For Keras v3 frontend (incl. keras-v3, conflict with keras-v2)
+   # For Keras v3 frontend
    pip install hls4ml[keras-v3]
 
    # For ONNX frontend
@@ -191,7 +194,7 @@ Optional Dependencies
    # For weights and activation range visualization
    pip install hls4ml[profiling]
 
-   # For QKeras frontend (incl. keras-v2, conflict with keras-v3)
+   # For QKeras frontend
    pip install hls4ml[qkeras]
 
    # For Quartus report parsing
