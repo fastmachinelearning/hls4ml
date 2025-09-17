@@ -2,7 +2,7 @@
 High Granularity Quantization (HGQ)
 ===================================
 
-.. note::
+.. warning::
    While still supported and maintained, HGQ is deprecated in favor of `HGQ2 <../hgq2.html>`_. New projects are strongly encouraged to use HGQ2 instead.
 
 .. image:: https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg

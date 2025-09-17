@@ -10,7 +10,7 @@ Distributed Arithmetic
    :target: https://arxiv.org/abs/2507.04535
 
 
-Distributed Arithmetic (DA) is a strategy for constant-matrix-vector multiplication (CMVM) operations used in hls4ml. The implementation is provided by an external library, `da4ml <https://github.com/calad0i/da4ml>`__. The library transforms the CMVM operations into an adder graph with common subexpression elimations to reduce the overall complexity. As the CMVM operation is fully unrolled, `reuse_factor` **must** be 1 (by default) for the corresponding CMVM operations [*]_. Comparing to the traditional `Latency` strategy CMVM kernels, DA can usually reduce up to 30% of the LUTs and all DSPs used.
+Distributed Arithmetic (DA) is a strategy for constant-matrix-vector multiplication (CMVM) operations used in hls4ml. The implementation is provided by an external library, `da4ml <https://github.com/calad0i/da4ml>`__, which can be installed with ``pip install hls4ml[da]``. The library transforms the CMVM operations into an adder graph with common subexpression elimations to reduce the overall complexity. As the CMVM operation is fully unrolled, `reuse_factor` **must** be 1 (by default) for the corresponding CMVM operations [*]_. Comparing to the traditional `Latency` strategy CMVM kernels, DA can usually reduce up to 30% of the LUTs and all DSPs used.
 
 .. rst-class:: light
 .. image:: _static/da4ml-workflow.svg

@@ -17,6 +17,8 @@ The latest release of ``hls4ml`` can be installed with ``pip``:
 .. warning::
    Previously, versions of hls4ml were made available on ``conda-forge``. These are outdated and should NOT be used. Installing with ``pip`` is currently the only supported method.
 
+Some features of ``hls4ml`` need extra dependencies. See the `Optional Dependencies <#optional-dependencies>`_ section for more details.
+
 Development version
 -------------------
 
@@ -69,7 +71,7 @@ To run FPGA synthesis, installation of following tools is required:
 
 * Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
 
-* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions are known **not to work**.
+* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``OneAPI`` removed FPGA support and **will to work** with ``hls4ml``.
 
 Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 
@@ -159,3 +161,47 @@ If installed with ``conda``, remove the package with:
 .. code-block:: bash
 
    conda remove hls4ml
+
+
+Optional Dependencies
+=====================
+
+``hls4ml`` provides several optional dependency groups that can be installed based on your specific needs:
+
+.. code-block::
+
+   # For distributed arithmetic
+   pip install hls4ml[da]
+
+   # For HGQ frontend
+   pip install hls4ml[hgq]
+
+   # For HGQ2 frontend (incl. keras-v2, conflict with keras-v3)
+   pip install hls4ml[hgq2]
+
+   # For Keras v3 frontend (incl. keras-v3, conflict with keras-v2)
+   pip install hls4ml[keras-v3]
+
+   # For ONNX frontend
+   pip install hls4ml[onnx]
+
+   # For DSP-aware pruning
+   pip install hls4ml[optimization]
+
+   # For weights and activation range visualization
+   pip install hls4ml[profiling]
+
+   # For QKeras frontend (incl. keras-v2, conflict with keras-v3)
+   pip install hls4ml[qkeras]
+
+   # For Quartus report parsing
+   pip install hls4ml[quartus-report]
+
+   # For symbolic regression
+   pip install hls4ml[sr]
+
+   # For documentation building (developers)
+   pip install hls4ml[doc]
+
+   # For testing (developers)
+   pip install hls4ml[testing]
