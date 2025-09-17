@@ -179,8 +179,8 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
             quantization_lines, replaces = [], []
             for i, (_k, _B, _I) in enumerate(zip(k, B, I)):
                 u = '' if _k else 'u'
-                _src = f'inp[{i}]'
-                _dst = f'inp_q_{i}'
+                _src = f'model_inp[{i}]'
+                _dst = f'model_inp_q_{i}'
                 if _B > 0:
                     var_def = f'ap_{u}fixed<{_B}, {_I}, AP_{node.RND}, AP_{node.SAT}> {_dst} = {_src};'
                 else:
