@@ -1,9 +1,11 @@
+:orphan:
+
 ===================================
 High Granularity Quantization (HGQ)
 ===================================
 
 .. warning::
-   While still supported and maintained, HGQ is deprecated in favor of `HGQ2 <../hgq2.html>`_. New projects are strongly encouraged to use HGQ2 instead.
+   While still supported and maintained, HGQ is deprecated in favor of `HGQ2 <./hgq.html>`_. New projects are strongly encouraged to use HGQ2 instead.
 
 .. image:: https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg
    :target: https://calad0i.github.io/HGQ/

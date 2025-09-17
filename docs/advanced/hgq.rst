@@ -3,7 +3,7 @@ High Granularity Quantization (HGQ2)
 ======================================
 
 .. note::
-   New projects are encouraged to use ``HGQ2`` instead of the original ``HGQ`` (doc page moved `here <../hgq.html>`_).
+   New projects are encouraged to use ``HGQ2`` instead of the original ``HGQ`` (doc page moved `here <./hgq1   .html>`_).
    HGQ2 is a major improvement over HGQ with more supported layers, more quantizer options, better performance. As HGQ2 moves to Keras v3, it can be used natively with ``JAX``, ``PyTorch``, and ``TensorFlow`` backends.
 
 .. image:: https://img.shields.io/badge/License-LGPLv3-blue.svg
