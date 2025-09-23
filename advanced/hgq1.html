@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Automatic precision inference &mdash; hls4ml 1.1.0 documentation</title>
+  <title>High Granularity Quantization (HGQ) &mdash; hls4ml 1.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
@@ -20,9 +20,7 @@
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="High Granularity Quantization (HGQ2)" href="hgq.html" />
-    <link rel="prev" title="Profiling" href="profiling.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -77,9 +75,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="da.html">Distributed Arithmetic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
@@ -121,9 +119,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Automatic precision inference</li>
+      <li class="breadcrumb-item active">High Granularity Quantization (HGQ)</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/auto.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/hgq1.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -131,38 +129,51 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="automatic-precision-inference">
-<h1>Automatic precision inference<a class="headerlink" href="#automatic-precision-inference" title="Link to this heading"></a></h1>
-<p>The automatic precision inference (implemented in <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes" title="hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferPrecisionTypes</span></code></a>) attempts to infer the appropriate
-widths for a given precision. It is initiated by setting a precision in the configuration as <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>. (Note, only layer-level precisions can be set to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>,
-not model-level.)  Functions like <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_keras_model" title="hls4ml.utils.config.config_from_keras_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_keras_model</span></code></a>, <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_onnx_model" title="hls4ml.utils.config.config_from_onnx_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_onnx_model</span></code></a>,
-and <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_pytorch_model" title="hls4ml.utils.config.config_from_pytorch_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_pytorch_model</span></code></a> automatically set most precisions to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> if the <code class="docutils literal notranslate"><span class="pre">'name'</span></code> granularity is used.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>It is recommended to pass the backend to the <code class="docutils literal notranslate"><span class="pre">config_from_*</span></code> functions so that they can properly extract all the configurable precisions.</p>
+  <section id="high-granularity-quantization-hgq">
+<h1>High Granularity Quantization (HGQ)<a class="headerlink" href="#high-granularity-quantization-hgq" title="Link to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>While still supported and maintained, HGQ is deprecated in favor of <a class="reference external" href="./hgq.html">HGQ2</a>. New projects are strongly encouraged to use HGQ2 instead.</p>
 </div>
-<p>The approach taken by the precision inference is to set accumulator (the internal variable used to accumulate values in the matrix multiplications) and other precisions
-to never truncate, using only the bitwidths of the inputs (not the values). This is quite conservative, especially in cases where post-training quantization is used, or
-if the bit widths were set fairly loosely. The recommended action in that case is to edit the configuration and explicitly set some widths in it, potentially in an iterative process
-after profiling the data. Another option is to pass a maximum precision using the <code class="docutils literal notranslate"><span class="pre">max_precison</span></code> parameter of the <code class="docutils literal notranslate"><span class="pre">config_form_*</span></code> functions. Then the automatic precision
-inference will never set a bitwdith larger than the bitwidth of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> or an integer part larger than the integer part of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> that is passed.
-(The bitwidth and integer parts of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> are treated separately.)</p>
-<p>When manually setting bitdwidths, the accumulator can overflow, and the precision may need to be reduced. For the accumulator, it is usually a bad idea to explicitly
-enable rounding or saturation modes since it dramatically increases the execution time. For other types (e.g. output types or weight types), however, rounding and saturation handling
-can be enabled as needed.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For supported models (Most <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code> models and some <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> models), Model-wise Precision Inference (documented in <a class="reference external" href="../precision.html">model-wise precision inference</a>) can be used to achieve bit-exact conversion. Please refer to that section for more details.</p>
+<a class="reference external image-reference" href="https://calad0i.github.io/HGQ/"><img alt="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" src="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" /></a>
+<a class="reference external image-reference" href="https://badge.fury.io/py/hgq"><img alt="https://badge.fury.io/py/hgq.svg" src="https://badge.fury.io/py/hgq.svg" /></a>
+<a class="reference external image-reference" href="https://arxiv.org/abs/2405.00645"><img alt="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" /></a>
+<p><a class="reference external" href="https://github.com/calad0i/HGQ/">High Granularity Quantization (HGQ)</a> is a library that performs gradient-based automatic bitwidth optimization and quantization-aware training algorithm for neural networks to be deployed on FPGAs. By leveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.</p>
+<img alt="Overview of HGQ" class="align-center" src="https://calad0i.github.io/HGQ/_images/overview.svg" /><p>Conversion of models made with HGQ library is fully supported. The HGQ models are first converted to proxy model format, which can then be parsed by hls4ml bit-accurately. Below is an example of how to create a model with HGQ and convert it to hls4ml model.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">HGQ.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDense</span><span class="p">,</span> <span class="n">HDenseBatchNorm</span><span class="p">,</span> <span class="n">HQuantize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">HGQ</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResetMinMax</span><span class="p">,</span> <span class="n">FreeBOPs</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
+   <span class="n">HQuantize</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">),</span>
+   <span class="n">HDenseBatchNorm</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">),</span>
+   <span class="n">HDenseBatchNorm</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">),</span>
+   <span class="n">HDense</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">),</span>
+<span class="p">])</span>
+
+ <span class="n">opt</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+ <span class="n">loss</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+ <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+ <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">ResetMinMax</span><span class="p">(),</span> <span class="n">FreeBOPs</span><span class="p">()]</span>
+
+ <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">)</span>
+
+ <span class="kn">from</span><span class="w"> </span><span class="nn">HGQ</span><span class="w"> </span><span class="kn">import</span> <span class="n">trace_minmax</span><span class="p">,</span> <span class="n">to_proxy_model</span>
+ <span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_keras_model</span>
+
+ <span class="n">trace_minmax</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">cover_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+ <span class="n">proxy</span> <span class="o">=</span> <span class="n">to_proxy_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">aggressive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+ <span class="n">model_hls</span> <span class="o">=</span> <span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;vivado&#39;</span><span class="p">,</span><span class="n">output_dir</span><span class="o">=...</span> <span class="p">,</span><span class="n">part</span><span class="o">=...</span><span class="p">)</span>
+</pre></div>
 </div>
+<p>An interactive example of HGQ can be found in the <a class="reference external" href="https://www.kaggle.com/code/calad0i/small-jet-tagger-with-hgq-1">kaggle notebook</a>. Full documentation can be found at <a class="reference external" href="https://calad0i.github.io/HGQ/">calad0i.github.io/HGQ</a>.</p>
 </section>
 
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="profiling.html" class="btn btn-neutral float-left" title="Profiling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hgq.html" class="btn btn-neutral float-right" title="High Granularity Quantization (HGQ2)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

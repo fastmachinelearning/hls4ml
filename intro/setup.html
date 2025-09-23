@@ -53,6 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Optional Dependencies</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
@@ -85,7 +86,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
@@ -144,14 +147,11 @@ it takes only a few lines of code to run your first synthesis.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span>
 </pre></div>
 </div>
-<p>If you want to use our <a class="reference internal" href="../advanced/profiling.html"><span class="doc">profiling</span></a> toolbox, you might need to install extra dependencies:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">profiling</span><span class="p">]</span>
-</pre></div>
-</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Previously, versions of hls4ml were made available on <code class="docutils literal notranslate"><span class="pre">conda-forge</span></code>. These are outdated and should NOT be used. Installing with <code class="docutils literal notranslate"><span class="pre">pip</span></code> is currently the only supported method.</p>
 </div>
+<p>Some features of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> need extra dependencies. See the <a class="reference external" href="#optional-dependencies">Optional Dependencies</a> section for more details.</p>
 <section id="development-version">
 <h3>Development version<a class="headerlink" href="#development-version" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is rapidly evolving and many experimental features and bugfixes are available on the development branch. Development
@@ -167,6 +167,8 @@ version can be installed directly from <code class="docutils literal notranslate
 <p class="admonition-title">Note</p>
 <p>As of version 1.1.0+, all conversion frontend specific packages are optional. Only install the packages you need.</p>
 </div>
+<section id="frontend">
+<h3>Frontend<a class="headerlink" href="#frontend" title="Link to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> library requires python 3.10 or later, and depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed by <code class="docutils literal notranslate"><span class="pre">pip</span></code> or <code class="docutils literal notranslate"><span class="pre">conda</span></code>.</p>
 <p>The following Python packages are all optional and are only required if you intend to use the corresponding converter.</p>
 <ul class="simple">
@@ -184,6 +186,7 @@ version can be installed directly from <code class="docutils literal notranslate
 <dt>Quantization support</dt><dd><ul>
 <li><p><a class="reference external" href="https://github.com/fastmachinelearning/qkeras">QKeras</a>: based on Keras v2. See <a class="reference external" href="../frontend/keras.html">frontend/keras</a> for more details</p></li>
 <li><p><a class="reference external" href="https://github.com/calad0i/HGQ">HGQ</a>: Based on Keras v2. See <a class="reference external" href="../advanced/hgq.html">advanced/HGQ</a> for more details.</p></li>
+<li><p><a class="reference external" href="https://github.com/calad0i/HGQ2">HGQ2</a>: Based on Keras v3. See <a class="reference external" href="../advanced/hgq.html">advanced/HGQ2</a> for more details.</p></li>
 <li><p><a class="reference external" href="https://xilinx.github.io/brevitas/">Brevitas</a>: Based on PyTorch. See <a class="reference external" href="../frontend/pytorch.html">frontend/pytorch</a> for more details.</p></li>
 <li><p><a class="reference external" href="https://github.com/fastmachinelearning/qonnx">QONNX</a>: Based on ONNX. See <a class="reference external" href="../frontend/onnx.html">frontend/onnx</a> for more details.</p></li>
 </ul>
@@ -191,32 +194,32 @@ version can be installed directly from <code class="docutils literal notranslate
 </dl>
 </li>
 </ul>
-<p>Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler <code class="docutils literal notranslate"><span class="pre">g++</span></code> is required. Any version from a recent
-Linux should work. On MacOS, the <em>clang</em>-based <code class="docutils literal notranslate"><span class="pre">g++</span></code> is enough. For the oneAPI backend, one must have oneAPI installed, along with the FPGA compiler,
-to run C/SYCL simulations.</p>
+<p>Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler <code class="docutils literal notranslate"><span class="pre">g++</span></code> is required. Any version from a recent Linux should work. On MacOS, when the <em>clang</em>-based <code class="docutils literal notranslate"><span class="pre">g++</span></code> finds issues with <code class="docutils literal notranslate"><span class="pre">ap_types</span></code> headers, one may still need to install GCC, using <code class="docutils literal notranslate"><span class="pre">brew</span></code> for example. For the oneAPI backend, one must have <cite>oneAPI=2025.0</cite> (2025.1 is known <strong>not to work</strong>) installed, along with the FPGA compiler, to run C/SYCL simulations.</p>
+<p>Specific functionalities may need additional Python packages. If any needed is missing, <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> will raise an error and prompt you to install the missing packages.</p>
 <p>To run FPGA synthesis, installation of following tools is required:</p>
 <ul class="simple">
-<li><p>Xilinx Vivado HLS 2018.2 to 2020.1 for synthesis for Xilinx FPGAs using the <code class="docutils literal notranslate"><span class="pre">Vivado</span></code> backend.</p></li>
+<li><p>Xilinx Vivado HLS 2020.1 for synthesis for Xilinx FPGAs using the <code class="docutils literal notranslate"><span class="pre">Vivado</span></code> backend. Older versions may work, but use at your own risk.</p></li>
 <li><p>Vitis HLS 2022.2 or newer is required for synthesis for Xilinx FPGAs using the <code class="docutils literal notranslate"><span class="pre">Vitis</span></code> backend.</p></li>
 <li><p>Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the <code class="docutils literal notranslate"><span class="pre">Quartus</span></code> backend.</p></li>
-<li><p>oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the <code class="docutils literal notranslate"><span class="pre">oneAPI</span></code> backend.</p></li>
+<li><p>oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the <code class="docutils literal notranslate"><span class="pre">oneAPI</span></code> backend. Newer versions of <code class="docutils literal notranslate"><span class="pre">OneAPI</span></code> removed FPGA support and <strong>will to work</strong> with <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>.</p></li>
 </ul>
 <p>Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.</p>
+</section>
 </section>
 <section id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
 <p>For basic concepts to understand the tool, please visit the <a class="reference internal" href="../api/concepts.html"><span class="doc">Concepts</span></a> chapter.
 Here we give line-by-line instructions to demonstrate the general workflow.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hls4ml</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Activation</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Activation</span>
+
 
 <span class="c1"># Construct a basic keras model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">()</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dense&#39;</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="s1">&#39;lecun_uniform&#39;</span><span class="p">,</span> <span class="n">kernel_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Activation&#39;</span><span class="p">))</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dense2&#39;</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="s1">&#39;lecun_uniform&#39;</span><span class="p">,</span> <span class="n">kernel_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Activation2&#39;</span><span class="p">))</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,),</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
 
 <span class="c1"># This is where you would train the model in a real-world scenario</span>
 
@@ -276,6 +279,51 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 </pre></div>
 </div>
 </section>
+</section>
+<section id="id1">
+<h2>Optional Dependencies<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> provides several optional dependency groups that can be installed based on your specific needs. Multiple groups can be installed simultaneously by specifying them in a comma-separated list (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[xxx,yyy,zzz]</span></code>).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Some optional dependencies may conflict with each other. For example, Keras v2 and Keras v3 cannot coexist in the same Python environment; <code class="docutils literal notranslate"><span class="pre">qkeras</span></code> requires certain versions of TensorFlow that may conflict with other packages. For example, <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[qkeras,hgq2]</span></code> will not work.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># For distributed arithmetic</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">da</span><span class="p">]</span>
+
+<span class="c1"># For HGQ frontend</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">hgq</span><span class="p">]</span>
+
+<span class="c1"># For HGQ2 frontend</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">hgq2</span><span class="p">]</span>
+
+<span class="c1"># For Keras v3 frontend</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">keras</span><span class="o">-</span><span class="n">v3</span><span class="p">]</span>
+
+<span class="c1"># For ONNX frontend</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">onnx</span><span class="p">]</span>
+
+<span class="c1"># For DSP-aware pruning</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">optimization</span><span class="p">]</span>
+
+<span class="c1"># For weights and activation range visualization</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">profiling</span><span class="p">]</span>
+
+<span class="c1"># For QKeras frontend</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">qkeras</span><span class="p">]</span>
+
+<span class="c1"># For Quartus report parsing</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">quartus</span><span class="o">-</span><span class="n">report</span><span class="p">]</span>
+
+<span class="c1"># For symbolic regression</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">sr</span><span class="p">]</span>
+
+<span class="c1"># For documentation building (developers)</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">doc</span><span class="p">]</span>
+
+<span class="c1"># For testing (developers)</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">testing</span><span class="p">]</span>
+</pre></div>
+</div>
 </section>
 </section>
 

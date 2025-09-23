@@ -80,7 +80,9 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Profiling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
@@ -131,7 +133,7 @@
              
   <section id="profiling">
 <h1>Profiling<a class="headerlink" href="#profiling" title="Link to this heading"></a></h1>
-<p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <code class="docutils literal notranslate"><span class="pre">Precision</span></code> and <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> with fine granularity.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <code class="docutils literal notranslate"><span class="pre">Precision</span></code> and <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> with up to layer-wise granularity.</p>
 <p>Using a low precision can help reduce the FPGA resource usage of a model, but may result in loss of model performance if chosen inappropriately. The profiling tools in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> help you to decide the appropriate model precision.</p>
 <p>Profiling uses some extra dependencies, to install these, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[profiling]</span></code>. The profiling tools are provided as a <code class="docutils literal notranslate"><span class="pre">Python</span></code> module which you can use.</p>
 <p>Three types of objects can be provided: <strong>a model object</strong>, <strong>test data</strong>, and a <strong>ModelGraph object</strong>. The model can be Keras or PyTorch.

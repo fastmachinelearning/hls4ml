@@ -80,7 +80,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
@@ -524,8 +526,8 @@ computation of these layers may vary across hls4ml backends and conversion confi
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_v2_to_hls.register_keras_layer_handler">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v2_to_hls.</span></span><span class="sig-name descname"><span class="pre">register_keras_layer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_cname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_v2_to_hls.register_keras_layer_handler" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v2_to_hls.register_keras_v2_layer_handler">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v2_to_hls.</span></span><span class="sig-name descname"><span class="pre">register_keras_v2_layer_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_cname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_v2_to_hls.register_keras_v2_layer_handler" title="Link to this definition"></a></dt>
 <dd><p>Register a handler function for the given layer class name.</p>
 <dl class="simple">
 <dt>The handler function should have the following signature:</dt><dd><p>parse_func(keras_layer, input_names, input_shapes, data_reader, config):</p>

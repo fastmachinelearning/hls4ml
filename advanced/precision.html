@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Automatic precision inference &mdash; hls4ml 1.1.0 documentation</title>
+  <title>Model-wise Precision Inference &mdash; hls4ml 1.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="High Granularity Quantization (HGQ2)" href="hgq.html" />
-    <link rel="prev" title="Profiling" href="profiling.html" /> 
+    <link rel="next" title="FIFO Buffer Depth Optimization" href="fifo_depth.html" />
+    <link rel="prev" title="Distributed Arithmetic" href="da.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -79,10 +79,10 @@
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="da.html">Distributed Arithmetic</a></li>
-<li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
@@ -121,9 +121,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Automatic precision inference</li>
+      <li class="breadcrumb-item active">Model-wise Precision Inference</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/auto.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/precision.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -131,28 +131,28 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="automatic-precision-inference">
-<h1>Automatic precision inference<a class="headerlink" href="#automatic-precision-inference" title="Link to this heading"></a></h1>
-<p>The automatic precision inference (implemented in <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes" title="hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferPrecisionTypes</span></code></a>) attempts to infer the appropriate
-widths for a given precision. It is initiated by setting a precision in the configuration as <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>. (Note, only layer-level precisions can be set to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>,
-not model-level.)  Functions like <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_keras_model" title="hls4ml.utils.config.config_from_keras_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_keras_model</span></code></a>, <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_onnx_model" title="hls4ml.utils.config.config_from_onnx_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_onnx_model</span></code></a>,
-and <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_pytorch_model" title="hls4ml.utils.config.config_from_pytorch_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_pytorch_model</span></code></a> automatically set most precisions to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> if the <code class="docutils literal notranslate"><span class="pre">'name'</span></code> granularity is used.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>It is recommended to pass the backend to the <code class="docutils literal notranslate"><span class="pre">config_from_*</span></code> functions so that they can properly extract all the configurable precisions.</p>
+  <section id="model-wise-precision-inference">
+<h1>Model-wise Precision Inference<a class="headerlink" href="#model-wise-precision-inference" title="Link to this heading"></a></h1>
+<p>The model-wise precision inference (implemented in <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.BitExact" title="hls4ml.model.optimizer.passes.bit_exact.BitExact"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitExact</span></code></a>) attempts to infer the appropriate configuration for <strong>all</strong> precision in the model. Unlike the automatic precision inference, this pass disregards all user-defined precision, and “trust” only data embedded in the model, i.e., the actual values of the weights and explicit quantizers defined between layers.</p>
+<p>This pass uses modified symbolic interval arithmetic to compute the ranges and the needed quantization steps for all precision in the model graph, with the goal of eliminating any discrepancy between the quantized model and the original model. In the inference process, only the raw weight values and the explicit quantizers (either <code class="docutils literal notranslate"><span class="pre">FixedPointQuantizer</span></code>, or <code class="docutils literal notranslate"><span class="pre">linear/relu</span></code> layers with <code class="docutils literal notranslate"><span class="pre">trusted=True</span></code>) are considered as sources of precision information. All other precision information (e.g., user-defined precision in <code class="docutils literal notranslate"><span class="pre">config_from_*</span></code> functions) will not be used in the inference process.</p>
+<p>Invoking of this pass is configured by the <code class="docutils literal notranslate"><span class="pre">bit_exact</span></code> key in the backend configuration (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>). There are two ways to enable this pass:
+- When converting from <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code> models, this pass is automatically enabled unless <code class="docutils literal notranslate"><span class="pre">bit_exact</span></code> is explicitly set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.
+- For other models, this pass can be enabled by setting <code class="docutils literal notranslate"><span class="pre">bit_exact</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Currently, only <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> sets this key automatically when converting from <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> models. Support for <code class="docutils literal notranslate"><span class="pre">QONNX</span></code> is planned but not yet implemented.</p>
+<p>If the original model is not properly quantized, this pass will lead to huge bitwidths in the model. In this context, properly quantized models are those that have quantizers defined between <strong>all layers with non-trivial arithmetics</strong> (i.e., essentially all layers other than reshape/flatten/transpose/linear-like layers only rearranging elements). The successful application of this pass should result in bit-exact model, i.e., the quantized model should produce the same outputs as the original model for all inputs <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>*<span class="fn-bracket">]</span></a>.</p>
+<p>Not all operator types are supported in this pass. If any unsupported operator is encountered during the inference, this pass will <strong>crash</strong> the conversion process to prevent silent failures. Please consider use <a class="reference external" href="../auto.html">automatic precision inference</a> if your model contains unsupported operators or unquantized components.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Importantly, quantizers <strong>should be used immediately after the inputs</strong>, or the input precision may not be properly inferred. If you are using <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code>, this is automatically taken care of in most cases. If you are using <code class="docutils literal notranslate"><span class="pre">QKeras</span></code>, make sure to put a <code class="docutils literal notranslate"><span class="pre">QActivation</span></code> with <code class="docutils literal notranslate"><span class="pre">quantized_bits</span></code> right after the input layer such that the input precision can be derived.</p>
 </div>
-<p>The approach taken by the precision inference is to set accumulator (the internal variable used to accumulate values in the matrix multiplications) and other precisions
-to never truncate, using only the bitwidths of the inputs (not the values). This is quite conservative, especially in cases where post-training quantization is used, or
-if the bit widths were set fairly loosely. The recommended action in that case is to edit the configuration and explicitly set some widths in it, potentially in an iterative process
-after profiling the data. Another option is to pass a maximum precision using the <code class="docutils literal notranslate"><span class="pre">max_precison</span></code> parameter of the <code class="docutils literal notranslate"><span class="pre">config_form_*</span></code> functions. Then the automatic precision
-inference will never set a bitwdith larger than the bitwidth of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> or an integer part larger than the integer part of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> that is passed.
-(The bitwidth and integer parts of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> are treated separately.)</p>
-<p>When manually setting bitdwidths, the accumulator can overflow, and the precision may need to be reduced. For the accumulator, it is usually a bad idea to explicitly
-enable rounding or saturation modes since it dramatically increases the execution time. For other types (e.g. output types or weight types), however, rounding and saturation handling
-can be enabled as needed.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">*</a><span class="fn-bracket">]</span></span>
+<p>While quantized, the original model will still operate on float-point values, so there is a chance that the outputs will not be exactly the same due to float rounding errors in the original model.</p>
+</aside>
+</aside>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For supported models (Most <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code> models and some <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> models), Model-wise Precision Inference (documented in <a class="reference external" href="../precision.html">model-wise precision inference</a>) can be used to achieve bit-exact conversion. Please refer to that section for more details.</p>
+<p>When this functionality is used, one <strong>should not</strong> use the <code class="docutils literal notranslate"><span class="pre">config_from_*</span></code> functions to set the precision in the model. Automatic precision inference and this pass cannot be used simultaneously.</p>
 </div>
 </section>
 
@@ -160,8 +160,8 @@ can be enabled as needed.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="profiling.html" class="btn btn-neutral float-left" title="Profiling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hgq.html" class="btn btn-neutral float-right" title="High Granularity Quantization (HGQ2)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="da.html" class="btn btn-neutral float-left" title="Distributed Arithmetic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fifo_depth.html" class="btn btn-neutral float-right" title="FIFO Buffer Depth Optimization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

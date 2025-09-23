@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quartus &mdash; hls4ml 1.1.0 documentation</title>
+  <title>Distributed Arithmetic &mdash; hls4ml 1.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="SymbolicExpression" href="sr.html" />
-    <link rel="prev" title="Catapult" href="catapult.html" /> 
+    <link rel="next" title="Model-wise Precision Inference" href="precision.html" />
+    <link rel="prev" title="High Granularity Quantization (HGQ2)" href="hgq.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -68,25 +68,25 @@
 <li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Backends</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="vitis.html">Vivado/Vitis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="oneapi.html">oneAPI</a></li>
-<li class="toctree-l1"><a class="reference internal" href="catapult.html">Catapult</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quartus</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sr.html">SymbolicExpression</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Internals</span></p>
 <ul>
@@ -121,9 +121,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Quartus</li>
+      <li class="breadcrumb-item active">Distributed Arithmetic</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/backend/quartus.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/da.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -131,24 +131,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="quartus">
-<h1>Quartus<a class="headerlink" href="#quartus" title="Link to this heading"></a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The <strong>Quartus</strong> backend is deprecated and will be removed in a future version. Users should migrate to the <strong>oneAPI</strong> backend.</p>
-</div>
-<p>The <strong>Quartus</strong> backend of hls4ml is designed for deploying NNs on Intel/Altera FPGAs. It uses the discontinued Intel HLS compiler. The <strong>oneAPI</strong> backend should be preferred for new projects.
-The <strong>oneAPI</strong> backend contains the migrated the HLS code from this backend, with significantly better io_stream support, though the <strong>oneAPI</strong> backend does not yet support profiling, tracing,
-or the BramFactor option supported by the <strong>Quartus</strong> backend.  Nevertheless, little or no further development is expected for this backend.</p>
-<p>The <strong>Quartus</strong> backend only implements the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy for the layers. There is no <code class="docutils literal notranslate"><span class="pre">Latency</span></code> implementation of any of the layers.</p>
+  <section id="distributed-arithmetic">
+<h1>Distributed Arithmetic<a class="headerlink" href="#distributed-arithmetic" title="Link to this heading"></a></h1>
+<a class="reference external image-reference" href="https://www.gnu.org/licenses/lgpl-3.0.en.html"><img alt="https://img.shields.io/badge/License-LGPLv3-blue.svg" src="https://img.shields.io/badge/License-LGPLv3-blue.svg" /></a>
+<a class="reference external image-reference" href="https://badge.fury.io/py/da4ml"><img alt="https://badge.fury.io/py/da4ml.svg" src="https://badge.fury.io/py/da4ml.svg" /></a>
+<a class="reference external image-reference" href="https://arxiv.org/abs/2507.04535"><img alt="https://img.shields.io/badge/arXiv-2507.04535-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2507.04535-b31b1b.svg" /></a>
+<p>Distributed Arithmetic (DA) is a strategy for constant-matrix-vector multiplication (CMVM) operations used in hls4ml. The implementation is provided by an external library, <a class="reference external" href="https://github.com/calad0i/da4ml">da4ml</a>, which can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[da]</span></code>. The library transforms the CMVM operations into an adder graph with common subexpression elimations to reduce the overall complexity. As the CMVM operation is fully unrolled, <cite>reuse_factor</cite> <strong>must</strong> be 1 (by default) for the corresponding CMVM operations <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>*<span class="fn-bracket">]</span></a>. Comparing to the traditional <cite>Latency</cite> strategy CMVM kernels, DA can usually reduce up to 30% of the LUTs and all DSPs used.</p>
+<a class="light reference internal image-reference" href="../_images/da4ml-workflow.svg"><img alt="Workflow of DA in hls4ml" class="light" src="../_images/da4ml-workflow.svg" width="600" /></a>
+<p>When the DA strategy is used, the CMVM operations will be implemented bit-exactly, and the accumulator precision setting will not be used.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">*</a><span class="fn-bracket">]</span></span>
+<p>Not to be confused with <cite>II=1</cite>. <cite>reuse_factor</cite> is the <cite>II</cite> for one CMVM operation, not one layer. One layer may invoke the same CMVM kernel multiple times and thus has <cite>II&gt;1</cite> while each CMVM operation is unrolled, e.g., convolution layers with more than one partition.</p>
+</aside>
+</aside>
+<p>Currently, the DA strategy is only available for the Vivado/Vitis HLS backends. The following layers are supported:
+* Dense
+* Convolutional (1D, 2D)
+* EinsumDense
+* Multi-head attention (implemented as multiple EinsumDense layers)</p>
+<p>While possible, the RNN layers are not yet supported by the DA strategy.</p>
+<p>For more details, please refer to the <a class="reference external" href="https://github.com/calad0i/da4ml">da4ml repository</a> or the <a class="reference external" href="https://arxiv.org/abs/2507.04535">paper</a>.</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="catapult.html" class="btn btn-neutral float-left" title="Catapult" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="sr.html" class="btn btn-neutral float-right" title="SymbolicExpression" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hgq.html" class="btn btn-neutral float-left" title="High Granularity Quantization (HGQ2)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="precision.html" class="btn btn-neutral float-right" title="Model-wise Precision Inference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

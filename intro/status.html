@@ -85,7 +85,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
@@ -138,25 +140,45 @@
 <h1>Status and Features<a class="headerlink" href="#status-and-features" title="Link to this heading"></a></h1>
 <section id="status">
 <h2>Status<a class="headerlink" href="#status" title="Link to this heading"></a></h2>
-<p>The latest version (built from <code class="docutils literal notranslate"><span class="pre">main</span></code>) is 1.2.0.dev71+g53d61fe2.
+<p>The latest version (built from <code class="docutils literal notranslate"><span class="pre">main</span></code>) is 1.2.0.dev72+g272d4a37.
 The stable version (released on PyPI) is 1.1.0.
 See the <a class="reference internal" href="release_notes.html#release-notes"><span class="std std-ref">Release Notes</span></a> section for a changelog.</p>
 </section>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
-<p>A list of supported ML frameworks, HLS backends, and neural network architectures, including a summary table is below.  Dependencies are given in the <a class="reference internal" href="setup.html"><span class="doc">Setup</span></a> page.</p>
-<p>ML framework support:</p>
+<p>A list of supported ML frameworks (Frontends), HLS backends, and neural network architectures, including a summary table is below.  Dependencies are given in the <a class="reference internal" href="setup.html"><span class="doc">Setup</span></a> page.</p>
+<p>Frontend support:</p>
 <ul class="simple">
-<li><p>(Q)Keras</p></li>
+<li><p>Keras</p>
+<ul>
+<li><p>Keras v2</p>
+<ul>
+<li><p>QKeras</p></li>
+<li><p>HGQ</p></li>
+</ul>
+</li>
+<li><p>Keras v3</p>
+<ul>
+<li><p>HGQ2</p></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><p>PyTorch</p></li>
-<li><p>(Q)ONNX</p></li>
+<li><p>ONNX</p>
+<ul>
+<li><p>QONNX</p></li>
+</ul>
+</li>
 </ul>
 <p>Neural network architectures:</p>
 <ul class="simple">
 <li><p>Fully connected NN (multilayer perceptron, MLP)</p></li>
-<li><p>Convolutional NN</p></li>
-<li><p>Recurrent NN (LSTM)</p></li>
-<li><p>Graph NN (GarNet)</p></li>
+<li><p>Convolutional NN (1D and 2D)</p></li>
+<li><p>Recurrent NN (RNN, LSTM, GRU)</p></li>
+<li><p>GarNet</p></li>
+<li><p>Einsum and EinsumDense (Einsum)</p></li>
+<li><p>Multi-head attention (MHA) (experimental)</p></li>
 </ul>
 <p>HLS backends:</p>
 <ul class="simple">
@@ -169,77 +191,135 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <p>A summary of the on-going status of the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> tool is in the table below.</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>ML framework/HLS backend</p></th>
-<th class="head"><p>(Q)Keras</p></th>
-<th class="head"><p>PyTorch</p></th>
-<th class="head"><p>(Q)ONNX</p></th>
-<th class="head"><p>Vivado HLS</p></th>
-<th class="head"><p>Intel HLS</p></th>
-<th class="head"><p>Vitis HLS</p></th>
-<th class="head"><p>Catapult HLS</p></th>
-<th class="head"><p>oneAPI</p></th>
+<tr class="row-odd"><th class="head"><p>Frontend/Backend</p></th>
+<th class="head"><p>MLP</p></th>
+<th class="head"><p>CNN</p></th>
+<th class="head"><p>RNN/LSTM/GRU</p></th>
+<th class="head"><p>GarNet</p></th>
+<th class="head"><p>Einsum</p></th>
+<th class="head"><p>MHA</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>MLP</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">experimental</span></code></p></td>
+<tr class="row-even"><td><p>Keras v2</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr class="row-odd"><td><p>CNN</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">experimental</span></code></p></td>
+<tr class="row-odd"><td><p>QKeras</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
 </tr>
-<tr class="row-even"><td><p>RNN (LSTM)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">experimental</span></code></p></td>
+<tr class="row-even"><td><p>HGQ</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
 </tr>
-<tr class="row-odd"><td><p>GNN (GarNet)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">in</span> <span class="pre">development</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">N/A</span></code></p></td>
+<tr class="row-odd"><td><p>Keras v3</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>N/A</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-even"><td><p>HGQ2</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-odd"><td><p>Torch</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-even"><td><p>ONNX</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-odd"><td><p>QONNX</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>Vivado/Vitis HLS</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-odd"><td><p>Intel HLS</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-even"><td><p>Catapult HLS</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-odd"><td><p>oneAPI (experimental)</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
 </tr>
 </tbody>
 </table>
 <p>Other feature notes:</p>
 <ul class="simple">
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is tested on the following platforms. Newer versions might work just fine, but try at your own risk.</dt><dd><ul>
-<li><p>Vivado HLS versions 2018.2 to 2020.1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is tested on the following platforms. Newer versions might work just fine, but try at your own risk.</p>
+<ul>
+<li><p>Vivado HLS 2020.1. Older versions may work, but use at your own risk.</p></li>
 <li><p>Intel HLS versions 20.1 to 21.4, versions &gt; 21.4 have not been tested.</p></li>
-<li><p>Vitis HLS versions 2022.2 to 2024.1. Versions &lt;= 2022.1 are known not to work.</p></li>
+<li><p>Vitis HLS versions 2022.2 to 2024.1. Versions &gt; 2024.1 are less tested.</p></li>
 <li><p>Catapult HLS versions 2024.1_1 to 2024.2</p></li>
-<li><p>oneAPI versions 2024.1 to 2025.0</p></li>
+<li><p>oneAPI versions 2024.1 to 2025.0. Any future versions are known to not work.</p></li>
 </ul>
-</dd>
-</dl>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports Linux and requires python &gt;=3.10. hlsml does not require a specific Linux distribution version and we recommended to follow the requirements of the HLS tool you are using.</p></li>
-<li><p>Windows and macOS are not supported. Setting up <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> on these platforms, for example using the Windows Subsystem for Linux (WSL) should be possible, but we do not provide support for such use cases.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports Linux <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>*<span class="fn-bracket">]</span></a> and requires python &gt;=3.10. hls4ml does not require a specific Linux distribution version and we recommend following the requirements of the HLS tool you are using.</p></li>
+<li><p>Windows and macOS are not supported. Setting up <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> on these platforms, for example using the Windows Subsystem for Linux (WSL), should be possible, but we do not provide support for such use cases.</p></li>
 <li><p>BDT support has moved to the <a class="reference external" href="https://github.com/thesps/conifer">Conifer</a> package</p></li>
 </ul>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">*</a><span class="fn-bracket">]</span></span>
+<p>For compiling the projects for simulation or actual HLS. Otherwise, the code <strong>may</strong> be used on other platforms and it will likely to work. However, please note that Windows or other platforms are <strong>not supported</strong> in general and are not tested.</p>
+</aside>
+</aside>
 </section>
 <section id="example-models">
 <h2>Example Models<a class="headerlink" href="#example-models" title="Link to this heading"></a></h2>

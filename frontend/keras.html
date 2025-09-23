@@ -80,7 +80,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
@@ -131,27 +133,29 @@
              
   <section id="keras-and-its-quantized-variants">
 <h1>Keras and its quantized variants<a class="headerlink" href="#keras-and-its-quantized-variants" title="Link to this heading"></a></h1>
-<p>Keras and the quantization library QKeras are well supported in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>. Both Keras v2 (<code class="docutils literal notranslate"><span class="pre">tf.keras</span></code>) and the new Keras v3 are supported. While the Keras v2 support is based on parsing the serialized json representation of the model, the Keras v3 support uses direct model inspection.</p>
-<p>Currently, <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> can parse most Keras layers, including core layers, convolutional layers, pooling layers, recurrent layers, merging/reshaping layers and activation layers, implemented either via sequential or functional API. Notably missing are the attention and normalization layers. The <code class="docutils literal notranslate"><span class="pre">Lambda</span></code> layers don’t save their state in the serialized format and are thus impossible to parse. In this case, the <code class="docutils literal notranslate"><span class="pre">Lambda</span></code> layers can be implemented as custom layers and parsed via the <a class="reference internal" href="../advanced/extension.html#extension-api"><span class="std std-ref">Extension API</span></a>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">data_format='channels_first'</span></code> parameter of Keras layers is supported, but not extensively tested. All HLS implementations in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> are based on <code class="docutils literal notranslate"><span class="pre">channels_last</span></code> data format and need to be converted to that format before the HLS code can be emitted. We encourage users of <code class="docutils literal notranslate"><span class="pre">channels_first</span></code> to report their experiences to developers on GitHub.</p>
+<p>Keras and its quantized variants are supported in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>. Both Keras v2 (<code class="docutils literal notranslate"><span class="pre">tf.keras</span></code>) and the new Keras v3 are supported. While the Keras v2 support is based on parsing the serialized json representation of the model, the Keras v3 support uses direct model inspection.</p>
+<p>For Keras v2, QKeras, and HGQ, <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports most of its layers, including core layers, convolutional layers, pooling layers, recurrent layers (not implemented in HGQ), merging/reshaping layers, and activation layers. The <code class="docutils literal notranslate"><span class="pre">(Q)BatchNormalization</span></code> layer is also supported. Experimental support for <code class="docutils literal notranslate"><span class="pre">LayerNormalization</span></code> is added for vanilla Keras v2.</p>
+<p>For Keras v3, the support for EinsumDense layer is added in addition, but without recurrent layers in general. For HGQ2, some extra layers are supported in addition, such as <code class="docutils literal notranslate"><span class="pre">QEinsum</span></code>, <code class="docutils literal notranslate"><span class="pre">QMultiHeadAttention</span></code>, <cite>QUnaryFunctionLUT</cite> (arbitrary unary function as a 1-d lookup table) and some binary operators.</p>
+<p>keras <code class="docutils literal notranslate"><span class="pre">Operators</span></code> that are not layers are generally not supported in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>. This includes operators such as <code class="docutils literal notranslate"><span class="pre">Add</span></code>, <code class="docutils literal notranslate"><span class="pre">Subtract</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiply</span></code>, and <code class="docutils literal notranslate"><span class="pre">Divide</span></code>. Please use the corresponding Keras layers instead.</p>
+<p>Arbitrary <code class="docutils literal notranslate"><span class="pre">Lambda</span></code> layers are not, and are not planned to be supported in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> due to the difficultness to parse generic lambda expression. For custom operations required, please refer to the <a class="reference internal" href="../advanced/extension.html#extension-api"><span class="std std-ref">Extension API</span></a> documentation to add custom layers to the conversion process.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">data_format='channels_first'</span></code> parameter of Keras layers is supported for a limited subset of layers and it is not extensively tested. All HLS implementations in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> are based on <code class="docutils literal notranslate"><span class="pre">channels_last</span></code> data format convention and need to be converted to that format before the HLS code can be emitted. We encourage users of <code class="docutils literal notranslate"><span class="pre">channels_first</span></code> to report their experiences to developers on GitHub.</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><a class="reference external" href="https://github.com/fastmachinelearning/qkeras">QKeras</a></dt><dd><p>The equivalent QKeras API and its quantizers are also supported by <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>. QKeras is not compatible with Keras v3. Currently, only HGQ2 is compatible with Keras v3 (see below).</p>
+<dt><a class="reference external" href="https://github.com/fastmachinelearning/qkeras">QKeras</a></dt><dd><p>The equivalent QKeras API and its quantizers are also supported by <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>. QKeras is not compatible with Keras v3.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><a class="reference external" href="https://github.com/calad0i/HGQ">HGQ</a></dt><dd><p>The equivalent HGQ API is also supported. HGQ is not compatible with Keras v3. See <a class="reference external" href="../advanced/hgq.html">advanced/HGQ</a> for more information.</p>
+<dt><a class="reference external" href="https://github.com/calad0i/HGQ">HGQ</a></dt><dd><p>The equivalent HGQ API is also supported. Still maintained but deprecated in favor of <a class="reference external" href="../hgq2.html">HGQ2</a>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><a class="reference external" href="https://github.com/calad0i/HGQ2">HGQ2</a></dt><dd><p>HGQ2 is based on Keras v3. Its support in hls4ml is currently under development.</p>
+<dt><a class="reference external" href="https://github.com/calad0i/HGQ2">HGQ2</a></dt><dd><p>The equivalent HGQ2 API is also supported, plus some additional advanced operators.</p>
 </dd>
 </dl>
 </li>
 </ul>
-<p>The development team of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is currently exploring options for QKeras alternative and will provide a drop-in replacement API compatible with Keras v3.</p>
 </section>
 
 
