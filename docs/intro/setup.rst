@@ -59,7 +59,7 @@ The following Python packages are all optional and are only required if you inte
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
    * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/onnx <../frontend/onnx.html>`_ for more details.
 
-Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, the *clang*-based ``g++`` is enough. For the oneAPI backend, one must have `oneAPI=2025.0` (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
+Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, when the *clang*-based ``g++`` finds issues with ``ap_types`` headers, one may still need to install GCC, using ``brew`` for example. For the oneAPI backend, one must have `oneAPI=2025.0` (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
 
 Specific functionalities may need additional Python packages. If any needed is missing, ``hls4ml`` will raise an error and prompt you to install the missing packages.
 
@@ -166,10 +166,10 @@ If installed with ``conda``, remove the package with:
 Optional Dependencies
 =====================
 
-``hls4ml`` provides several optional dependency groups that can be installed based on your specific needs:
+``hls4ml`` provides several optional dependency groups that can be installed based on your specific needs. Multiple groups can be installed simultaneously by specifying them in a comma-separated list (``pip install hls4ml[xxx,yyy,zzz]``).
 
 .. warning::
-   Some optional dependencies may conflict with each other. For example, Keras v2 and Keras v3 cannot coexist in the same Python environment; ``qkeras`` requires certain versions of TensorFlow that may conflict with other packages.
+   Some optional dependencies may conflict with each other. For example, Keras v2 and Keras v3 cannot coexist in the same Python environment; ``qkeras`` requires certain versions of TensorFlow that may conflict with other packages. For example, ``pip install hls4ml[qkeras,hgq2]`` will not work.
 
 .. code-block::
 
