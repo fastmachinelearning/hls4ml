@@ -185,7 +185,7 @@ We can define the equivalent layer in hls4ml <code class="docutils literal notra
 </div>
 <p>A parser for the Keras to HLS converter is also required.
 This parser reads the attributes of the Keras layer instance and populates a dictionary of attributes for the hls4ml layer.
-It also returns a list of output shapes (one sjape for each output).
+It also returns a list of output shapes (one shape for each output).
 In this case, there a single output with the same shape as the input.</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Keras v2</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Keras v3</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Parser for converter</span>
