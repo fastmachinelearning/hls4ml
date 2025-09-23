@@ -55,7 +55,7 @@ We can define the equivalent layer in hls4ml ``HReverse``, which inherits from `
 
 A parser for the Keras to HLS converter is also required.
 This parser reads the attributes of the Keras layer instance and populates a dictionary of attributes for the hls4ml layer.
-It also returns a list of output shapes (one sjape for each output).
+It also returns a list of output shapes (one shape for each output).
 In this case, there a single output with the same shape as the input.
 
 .. code-block:: Python
