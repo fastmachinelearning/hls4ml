@@ -20,3 +20,6 @@ inference will never set a bitwdith larger than the bitwidth of the ``max_precis
 When manually setting bitdwidths, the accumulator can overflow, and the precision may need to be reduced. For the accumulator, it is usually a bad idea to explicitly
 enable rounding or saturation modes since it dramatically increases the execution time. For other types (e.g. output types or weight types), however, rounding and saturation handling
 can be enabled as needed.
+
+.. note::
+    For supported models (Most ``HGQ/HGQ2`` models and some ``QKeras`` models), Model-wise Precision Inference (documented in `model-wise precision inference <../precision.html>`_) can be used to achieve bit-exact conversion. Please refer to that section for more details.

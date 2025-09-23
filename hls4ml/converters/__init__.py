@@ -8,7 +8,7 @@ from hls4ml.converters.keras_v2_to_hls import KerasModelReader  # noqa: F401
 from hls4ml.converters.keras_v2_to_hls import KerasReader  # noqa: F401
 from hls4ml.converters.keras_v2_to_hls import get_supported_keras_layers  # noqa: F401
 from hls4ml.converters.keras_v2_to_hls import parse_keras_model  # noqa: F401
-from hls4ml.converters.keras_v2_to_hls import keras_v2_to_hls, register_keras_layer_handler
+from hls4ml.converters.keras_v2_to_hls import keras_v2_to_hls, register_keras_v2_layer_handler
 from hls4ml.converters.keras_v3_to_hls import keras_v3_to_hls, parse_keras_v3_model  # noqa: F401
 from hls4ml.converters.onnx_to_hls import get_supported_onnx_layers  # noqa: F401
 from hls4ml.converters.onnx_to_hls import parse_onnx_model  # noqa: F401
@@ -41,7 +41,7 @@ for model_type in model_types:
                 if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
                     for layer in func.handles:  # type: ignore
                         if model_type == 'keras':
-                            register_keras_layer_handler(layer, func)
+                            register_keras_v2_layer_handler(layer, func)
                         elif model_type == 'pytorch':
                             register_pytorch_layer_handler(layer, func)
                         elif model_type == 'onnx':
