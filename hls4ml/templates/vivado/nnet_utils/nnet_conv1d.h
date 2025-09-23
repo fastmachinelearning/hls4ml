@@ -95,7 +95,7 @@ class BatchedDenseForConv1D : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T>
             }
         }
 
-        #pragma HLS ALLOCATION operation instances=nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T> limit=1
+        #pragma HLS ALLOCATION function instances=nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T> limit=1
 
         for (int jj = 0; jj < CONFIG_T::n_partitions; jj++) {
             nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[jj], res_tmp[jj], weights, biases);
