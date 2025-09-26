@@ -26,9 +26,6 @@ Detailed tutorials on how to use `hls4ml`'s various functionalities can be found
 pip install hls4ml
 ```
 
-Specialised backends are now distributed as optional plugins. Install them alongside hls4ml via
-``pip install <plugin>``, for example ``pip install aie4ml`` for the AMD AIE flow.
-
 To install the extra dependencies for profiling:
 
 ```bash
