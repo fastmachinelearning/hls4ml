@@ -2,8 +2,8 @@
 External Backend and Writer Plugins
 =======================================
 
-Starting with this release ``hls4ml`` can discover and load backend implementations from
-external Python packages. This enables specialised flows—such as the AMD AIE backend—to live in
+``hls4ml`` can discover and load backend implementations from
+external Python packages. This enables specialised flows, such as the AMD AIE backend, to live in
 independent projects that version and iterate at their own cadence while reusing the core
 conversion infrastructure.
 

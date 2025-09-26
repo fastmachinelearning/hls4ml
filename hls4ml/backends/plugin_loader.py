@@ -5,9 +5,9 @@ from __future__ import annotations
 import inspect
 import logging
 import os
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from importlib import import_module
-from typing import Any, Callable
+from typing import Any
 
 try:  # pragma: no cover - fall back for older Python versions
     from importlib.metadata import entry_points
@@ -60,7 +60,9 @@ def _load_entry_point_plugins(logger: logging.Logger) -> None:
         try:
             obj = ep.load()
         except Exception as exc:  # pragma: no cover - defensive
-            logger.warning('Failed to load backend plugin entry %s: %s', ep.name, exc, exc_info=logger.isEnabledFor(logging.DEBUG))
+            logger.warning(
+                'Failed to load backend plugin entry %s: %s', ep.name, exc, exc_info=logger.isEnabledFor(logging.DEBUG)
+            )
             continue
         _register_plugin_object(ep.name, obj, logger)
 
@@ -74,7 +76,12 @@ def _load_env_plugins(logger: logging.Logger) -> None:
         try:
             module = import_module(module_name)
         except Exception as exc:  # pragma: no cover - defensive
-            logger.warning('Failed to import backend plugin module %s: %s', module_name, exc, exc_info=logger.isEnabledFor(logging.DEBUG))
+            logger.warning(
+                'Failed to import backend plugin module %s: %s',
+                module_name,
+                exc,
+                exc_info=logger.isEnabledFor(logging.DEBUG),
+            )
             continue
 
         register_callable: Any = getattr(module, 'register', module)
@@ -121,4 +128,6 @@ def _safe_register_backend(name: str, backend_cls: type[Backend], logger: loggin
     try:
         register_backend(name, backend_cls)
     except Exception as exc:  # pragma: no cover - defensive
-        logger.warning('Failed to register backend %s from plugin: %s', name, exc, exc_info=logger.isEnabledFor(logging.DEBUG))
+        logger.warning(
+            'Failed to register backend %s from plugin: %s', name, exc, exc_info=logger.isEnabledFor(logging.DEBUG)
+        )
