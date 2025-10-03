@@ -75,6 +75,9 @@ and QONNX model parsing. Passing the backend to these functions is recommended b
 and similar for more information on the various options. Note specifically the documentation of :py:class:`~hls4ml.utils.config.config_from_pytorch_model` on how to handle differences in input data
 formats between pytorch and keras (hls4ml follows keras conventions internally).
 
+.. warning::
+    Note that passing precision configurations when invoking the full model precision propagation (by default for HGQ/HGQ2 models, or when `bit_exact=True` is set for other frontends) is **not needed** and **should not be done** without understanding the implications.
+
 One can override specific values before using the configuration:
 
 .. code-block:: python
@@ -158,12 +161,12 @@ For Vivado backend the options are:
 * **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex UltraScale+ VU13P FPGA
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
-* **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines the type of data structure used for inputs, intermediate activations between layers, and outputs. For ``io_parallel``, arrays are used that, in principle, can be fully unrolled and are typically implemented in RAMs. For ``io_stream``, HLS streams are used, which are a more efficient/scalable mechanism to represent data that are produced and consumed in a sequential manner. Typically, HLS streams are implemented with FIFOs instead of RAMs. For more information see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
-* **HLSConfig**\: the detailed configuration of precision and parallelism, including:
+* **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines how data is transferred into and out of the HLS model IP, and how the data is transferred between layers. For ``io_parallel``, data are directly wired between layers fully in parallel. For ``io_stream``, HLS streams are used, which instantiates as stateful FIFO buffers, effectively decouples the producer and consumer (upstream and downstream in a neural network) and removing the need of a global state machine coordinating the exact timing for io operations. This is particular useful with the DATAFLOW pipeline style. For more information, see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
+  * **HLSConfig**\: the detailed configuration of precision and parallelism, including:
 
   * **ReuseFactor**\ : in the case that you are pipelining, this defines the pipeline interval or initiation interval
   * **ParallelizationFactor**\ : The number of output "pixels" to compute in parallel in convolutional layers. Increasing this parameter results in significant increase in resources required on the FPGA.
-  * **Strategy**\ : Optimization strategy on FPGA, either "Latency", "Resource" or "Unrolled". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" or "unrolled" strategy. An example of using larger reuse factor can be found `here. <https://github.com/fastmachinelearning/models/tree/master/keras/KERAS_dense>`__
+  * **Strategy**\ : Optimization strategy on FPGA, either "Latency", "Resource", "distributed_arithmetic" (or "da"), or "Unrolled". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor must be 1 if using "distributed_arithmetic", and should be larger than 1 when using "resource" or "unrolled" strategy.
   * **PipelineStyle**\ : Set the top level pipeline style. Valid options are "auto", "pipeline" and "dataflow". If unspecified, it defaults to "auto".
   * **PipelineInterval**\ : Optionally override the desired initiation interval of the design. Only valid in combination with "pipeline" style. If unspecified, it is left to the compiler to decide, ideally matching the largest reuse factor of the network.
   * **Precision**\ : this defines the precision of your inputs, outputs, weights and biases. It is denoted by ``fixed<X,Y>``\ , where ``Y`` is the number of bits representing the signed number above the binary point (i.e. the integer part), and ``X`` is the total number of bits. Additionally, integers in the type (\ ``int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. The format follows ``ap_fixed`` and ``ap_int`` conventions. You have a chance to further configure this more finely with per-layer configuration described below. In the per-layer configuration (but not globally) one can also use ``'auto'`` precision.

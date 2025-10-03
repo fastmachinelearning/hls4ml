@@ -33,6 +33,7 @@ optional-dependencies.doc = [
   "sphinx-contributors",
   "sphinx-github-changelog",
   "sphinx-rtd-theme",
+  "sphinx-tabs",
 ]
 optional-dependencies.hgq = [ "hgq>=0.2.3" ]
 optional-dependencies.hgq2 = [ "hgq2>=0.0.1" ]
