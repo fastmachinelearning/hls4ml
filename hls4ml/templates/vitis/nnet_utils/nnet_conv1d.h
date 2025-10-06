@@ -110,7 +110,8 @@ class BatchedDenseForConv1D : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T>
             }
         }
 
-        #pragma HLS ALLOCATION function instances=nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T> limit=1
+        // #pragma HLS ALLOCATION function instances=nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T> limit=1
+        // Vitis 2025.1 crashes with this, but 2023.2 is fine. Not tested on other versions.
 
         for (int jj = 0; jj < CONFIG_T::n_partitions; jj++) {
             nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[jj], res_tmp[jj], weights, biases);
