@@ -80,7 +80,7 @@ class BatchedDenseForConv1D : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T>
                      typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
                      typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
 
-        #pragma HLS PIPELINE II = CONFIG_T::reuse_factor * CONFIG_T::n_partitions
+        #pragma HLS PIPELINE II = 1
         #pragma HLS INLINE RECURSIVE
         data_T data_tmp[CONFIG_T::n_partitions][CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::n_partitions];
         #pragma HLS ARRAY_PARTITION variable=data_tmp complete dim=0
@@ -94,8 +94,6 @@ class BatchedDenseForConv1D : public nnet::Conv1DKernel<data_T, res_T, CONFIG_T>
                 data_tmp[jj][ii] = data[jj * CONFIG_T::in_width * CONFIG_T::n_chan / CONFIG_T::n_partitions + ii];
             }
         }
-
-        #pragma HLS ALLOCATION function instances=nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T> limit=1
 
         for (int jj = 0; jj < CONFIG_T::n_partitions; jj++) {
             nnet::pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[jj], res_tmp[jj], weights, biases);
