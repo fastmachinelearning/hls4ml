@@ -111,11 +111,12 @@ class ReLUHandler(KerasV3LayerHandler):
             config['param_data'] = np.array(layer.alpha)
             config['activation'] = 'prelu'
 
-        if layer.__class__.__name__ == 'ReLU':
-            assert layer.max_value in (None, float('inf')), 'Only ReLU with max_value=None or inf is supported'
+        if layer.__class__.__name__ in ('ReLU', 'LeakyReLU'):
+            if layer.__class__.__name__ == 'ReLU':
+                assert layer.max_value in (None, float('inf')), 'Only ReLU with max_value=None or inf is supported'
 
             negative_slope = float(layer.negative_slope)
-            threshold = float(layer.threshold)
+            threshold = float(layer.threshold) if hasattr(layer, 'threshold') else 0.0
             if threshold != 0.0 and negative_slope != 0.0:
                 raise NotImplementedError(f'layer {layer.name}: ReLU must has threshold=0 or negative_slope=0')
 
