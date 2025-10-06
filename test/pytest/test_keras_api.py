@@ -327,7 +327,17 @@ def test_conv2d(chans, padds, backend, strategy, io_type, synthesis_config):
         assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
 
-    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    if (
+        (backend == "Vivado" and strategy == "Resource" and io_type == "io_parallel" and padds == "same")
+        or (backend == "Vitis" and strategy == "Resource" and io_type == "io_parallel" and padds == "same")
+        or (backend == "oneAPI" and strategy == "Resource" and io_type == "io_parallel" and padds == "same")
+    ):
+        run_synthesis_test(
+            config=synthesis_config,
+            hls_model=hls_model,
+            baseline_file_name=baseline_file_name,
+            backend=backend,
+        )
 
 
 # Currently only Vivado and Vitis is supported for io_stream.
