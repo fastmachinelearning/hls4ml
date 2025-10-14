@@ -124,8 +124,11 @@ def _parse_single_report(prjDir):
             continue
         if float(loopInfo['af']) < worstFrequency:
             worstFrequency = float(loopInfo['af'])
-        if int(loopInfo['ii']) > worstII:
-            worstII = int(loopInfo['ii'])
+        try:
+            if int(loopInfo['ii']) > worstII:
+                worstII = int(loopInfo['ii'])
+        except ValueError:
+            pass
         if float(loopInfo['lt']) > worstLatency:
             worstLatency = float(loopInfo['lt'])
     loopReport = {'worstFrequency': str(worstFrequency), 'worstII': str(worstII), 'worstLatency': str(worstLatency)}
