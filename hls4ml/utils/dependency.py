@@ -25,7 +25,6 @@ def requires(pkg: str):
         pkg (str): The package to require. 'name' requires hls4ml[name] to be installed.
                    '_name' requires name to be installed.
     """
-    print(extra_requires)
 
     def deco(f):
         if ismethod(f):
@@ -34,7 +33,6 @@ def requires(pkg: str):
             qualifier = f'Function {f.__name__}'
 
         if not pkg.startswith('_'):
-            print(pkg)
             reqs = ', '.join(extra_requires[pkg])
             msg = f'{qualifier} requires {reqs}, but package {{ename}} is missing'
             'Please consider install it with `pip install hls4ml[{pkg}]` for full functionality with {pkg}.'
