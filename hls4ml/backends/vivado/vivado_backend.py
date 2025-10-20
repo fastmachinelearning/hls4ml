@@ -183,7 +183,6 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
             'vivado:generate_conv_im2col',
-            'vivado:generate_pointwise_conv1_d',
             'vivado:generate_unrolled_dense_resource',
             'vivado:set_pipeline_style',
             'vivado:d_a_latency_dense_template',
@@ -415,12 +414,6 @@ class VivadoBackend(FPGABackend):
         user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
         layer_pf = layer.get_attr('parallelization_factor', None)
         chosen_pf = user_pf or layer_pf or 1
-        if user_pf is not None and layer_pf is not None:
-            if user_pf != layer_pf:
-                warn(
-                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
-                )
-
         valid_pf = self.get_valid_conv_partition_splits(1, out_width)
         if chosen_pf not in valid_pf:
             closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
