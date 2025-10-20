@@ -26,6 +26,7 @@ from hls4ml.model.layers import (
     Input,
     Layer,
     Merge,
+    ParametrizedActivation,
     Pooling1D,
     Pooling2D,
     Reshape,
@@ -571,24 +572,48 @@ def _(layer: Activation):
 
     match fn_name:
         case 'linear':
-            return k, i, f
+            pass
         case 'relu':
-            k = np.zeros_like(k)
-            return k, i, f
+            k = np.zeros_like(k, dtype=np.int16)
         case 'tanh':
             i = np.minimum(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            f = np.full_like(f, 126, dtype=np.int16)
         case 'sigmoid':
-            k = np.zeros_like(k)
+            k = np.zeros_like(k, dtype=np.int16)
             i = np.minimum(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            f = np.full_like(f, 126, dtype=np.int16)
         case _:
-            k = np.zeros_like(k)
-            i = np.full_like(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            k = np.ones(k, dtype=np.int16)
+            i = np.full_like(i, 126, dtype=np.int16)
+            f = np.full_like(f, 126, dtype=np.int16)
+    return k, i, f
+
+
+@_produce_kif.register
+def _(layer: ParametrizedActivation):
+    fn_name = layer.attributes['activation'].lower()
+
+    k, i, f = get_input_kifs(layer)[0]
+    p = layer.attributes['activ_param']
+    _k, _i, _f = minimal_kif(np.array(p))
+    match fn_name:
+        case 'leakyrelu':
+            k = k & np.int16(p > 0)
+            i += np.maximum(0, _i - 1)
+            f += np.maximum(0, _f)
+        case 'thresholdedrelu':
+            i = np.maximum(i, _i)
+            f = np.maximum(f, _f)
+            k = k & _k
+        case 'elu':
+            k = k & np.int16(p > 0)
+            f = np.full_like(f, 126, dtype=np.int16)
+            i = np.maximum(i, _i)
+        case _:
+            k = np.ones(k, dtype=np.int16)
+            i = np.full_like(i, 126, dtype=np.int16)
+            f = np.full_like(f, 126, dtype=np.int16)
+    return k, i, f
 
 
 @_produce_kif.register
@@ -807,6 +832,15 @@ def _(node: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
     i_add = ceil(log2(prod(px_shape)))
     node.attributes['accum_t'].precision.width += i_add
     node.attributes['accum_t'].precision.integer += i_add
+
+
+@register_precision.register(ParametrizedActivation)
+def _(node: ParametrizedActivation):
+    default_register_precision(node)
+    param = node.attributes['activ_param']
+    k, i, f = map(int, minimal_kif(np.array(param)))
+    param_t = to_hls4ml_fixed(k, i, f, f'{node.name}_param_t')
+    node.attributes['param_t'] = param_t
 
 
 class BitExact(ModelOptimizerPass):
