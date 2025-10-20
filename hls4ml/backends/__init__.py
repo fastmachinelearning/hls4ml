@@ -1,6 +1,7 @@
 from hls4ml.backends.backend import Backend, get_available_backends, get_backend, register_backend  # noqa: F401
 from hls4ml.backends.fpga.fpga_backend import FPGABackend  # noqa: F401
 from hls4ml.backends.oneapi.oneapi_backend import OneAPIBackend
+from hls4ml.backends.plugin_loader import load_backend_plugins
 from hls4ml.backends.quartus.quartus_backend import QuartusBackend
 from hls4ml.backends.symbolic.symbolic_backend import SymbolicExpressionBackend
 from hls4ml.backends.vivado.vivado_backend import VivadoBackend
@@ -11,10 +12,16 @@ from hls4ml.backends.catapult.catapult_backend import CatapultBackend  # isort: 
 
 from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
 
-register_backend('Vivado', VivadoBackend)
-register_backend('VivadoAccelerator', VivadoAcceleratorBackend)
-register_backend('Vitis', VitisBackend)
-register_backend('Quartus', QuartusBackend)
-register_backend('Catapult', CatapultBackend)
-register_backend('SymbolicExpression', SymbolicExpressionBackend)
-register_backend('oneAPI', OneAPIBackend)
+
+def _register_builtin_backends():
+    register_backend('Vivado', VivadoBackend)
+    register_backend('VivadoAccelerator', VivadoAcceleratorBackend)
+    register_backend('Vitis', VitisBackend)
+    register_backend('Quartus', QuartusBackend)
+    register_backend('Catapult', CatapultBackend)
+    register_backend('SymbolicExpression', SymbolicExpressionBackend)
+    register_backend('oneAPI', OneAPIBackend)
+
+
+_register_builtin_backends()
+load_backend_plugins()
