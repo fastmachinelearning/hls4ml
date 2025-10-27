@@ -1,4 +1,4 @@
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, pytorch_handler
 
 concat_layers = ['cat', 'concat', 'concatenate']
 
@@ -28,7 +28,7 @@ def parse_concat_layer(operation, layer_name, input_names, input_shapes, node, c
     return layer, output_shape
 
 
-add_layers = ['add']
+add_layers = ['add', 'QuantEltwiseAdd']
 multiply_layers = ['mul', 'multiply']
 subtract_layers = ['sub', 'subtract']
 min_layers = ['fmin', 'minimum']
@@ -55,6 +55,12 @@ def parse_merge_layer(operation, layer_name, input_names, input_shapes, node, cl
         layer['op'] = 'maximum'
 
     layer['inputs'] = input_names
+
+    if 'Quant' in operation:
+        if class_object.input_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
+        if class_object.output_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True, scale_up=True)
 
     output_shape = input_shapes[0][:]
 
