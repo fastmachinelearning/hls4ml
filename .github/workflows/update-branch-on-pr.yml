@@ -9,10 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name && github.event.label.name == 'please test' }}
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+        token: ${{ secrets.PAT_HLS4ML_WORKFLOW }}
     - name: Push changes
       if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name && github.event.label.name == 'please test' }}
       run: |
