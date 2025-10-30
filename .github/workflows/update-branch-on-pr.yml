@@ -18,3 +18,5 @@ jobs:
       run: |
         git checkout -b pr/${{ github.event.pull_request.number }}
         git push --force origin pr/${{ github.event.pull_request.number }}
+      with:
+        github_token: ${{ secrets.PAT_HLSML_BUILD_SPHINX }}
