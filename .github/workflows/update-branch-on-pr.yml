@@ -15,6 +15,8 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         persist-credentials: true
         token: ${{ secrets.PAT_HLSML_BUILD_SPHINX }}
+    - name: Force token to be used
+      run: git remote set-url origin https://x-access-token:${{ secrets.PAT_HLSML_BUILD_SPHINX }}@github.com/fastmachinelearning/hls4ml.git
     - name: Push changes
       if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name && github.event.label.name == 'please test' }}
       run: |
