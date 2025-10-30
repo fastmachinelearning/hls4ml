@@ -976,7 +976,7 @@ def test_einsum_single_input(backend, io_type):
     config = config_from_pytorch_model(
         model,
         [(None, 8)],
-        default_precision='ap_fixed<16,6>',
+        default_precision='ap_fixed<32,12>',
         channels_last_conversion="internal",
         transpose_outputs=False,
     )

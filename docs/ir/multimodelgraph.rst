@@ -42,7 +42,6 @@ Key Methods for MultiModelGraph
 * :ref:`compile <mmg-compile-method>`
 * :ref:`predict <mmg-predict-method>`
 * :ref:`build <mmg-build-method>`
-* :ref:`trace <mmg-trace-method>`
 
 ----
 
