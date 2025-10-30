@@ -76,7 +76,7 @@ class KerasV3LayerHandler:
         """
 
         name = layer.name
-        class_name = layer.__class__.__name__
+        class_name = self.default_class_name(layer)
         module = layer.__module__
 
         default_config: DefaultConfig = {
@@ -115,6 +115,9 @@ class KerasV3LayerHandler:
             ret = *ret, act_config
 
         return ret
+
+    def default_class_name(self, layer: 'keras.Layer') -> str:
+        return layer.__class__.__name__
 
     def maybe_get_activation_config(self, layer, out_tensors):
         import keras
