@@ -10,7 +10,7 @@ repos:
            '--skip-string-normalization']
 
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.10.0
+  rev: v2.11.0
   hooks:
     - id: pyproject-fmt
 
@@ -53,7 +53,7 @@ repos:
     ]
 
 - repo: https://github.com/mgedmin/check-manifest
-  rev: "0.50"
+  rev: "0.51"
   hooks:
   - id: check-manifest
     stages: [manual]
