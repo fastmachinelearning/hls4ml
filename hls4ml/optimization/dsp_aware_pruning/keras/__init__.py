@@ -76,7 +76,7 @@ def optimize_model(
         cutoff_bad_trials (int): After how many bad trials (performance below threshold),
             should model pruning / weight sharing stop
         directory (string): Directory to store temporary results
-        tuner (str): Tuning algorithm, choose between Bayesian, Hyperband and None
+        tuner (str): Tuning algorithm, choose between Bayesian, Hyperband and Manual
         knapsack_solver (str): Algorithm to solve Knapsack problem when optimizing;
             default usually works well; for very large networks, greedy algorithm might be more suitable
         regularization_range (list): List of suitable hyperparameters for weight decay
@@ -232,10 +232,10 @@ def optimize_model(
             if verbose:
                 val_res = optimizable_model.evaluate(validation_dataset, verbose=0, return_dict=False)
                 t = time.time() - start_time
-                avg_loss = round(epoch_loss_avg.result(), 3)
-                print(f'Epoch: {epoch + 1} - Time: {t}s - Average training loss: {avg_loss}')
-                print(f'Epoch: {epoch + 1} - learning_rate: {optimizable_model.optimizer.learning_rate.numpy()}')
-                print(f'Epoch: {epoch + 1} - Validation loss: {val_res[0]} - Performance on validation set: {val_res[1]}')
+                avg_loss = epoch_loss_avg.result()
+                tf.print(f'Epoch: {epoch + 1} - Time: {t}s - Average training loss: {avg_loss}')
+                tf.print(f'Epoch: {epoch + 1} - learning_rate: {optimizable_model.optimizer.learning_rate.numpy()}')
+                tf.print(f'Epoch: {epoch + 1} - Validation loss: {val_res[0]} - Performance on validation set: {val_res[1]}')
 
         # Check if model works after pruning
         pruned_performance = optimizable_model.evaluate(validation_dataset, verbose=0, return_dict=False)[-1]
