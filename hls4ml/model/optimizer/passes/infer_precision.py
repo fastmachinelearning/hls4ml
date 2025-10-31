@@ -4,6 +4,7 @@ from collections.abc import Iterable
 import numpy as np
 
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
+from hls4ml.model.optimizer.passes.bit_exact import minimal_kif
 from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
@@ -573,9 +574,17 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         # For threshold relu, set the parameter precision to be the input precision by default;
         # for other parametrized activations, just allow the default precision to be used.
         # Can override these values in the configuration by explicitly setting them.
-        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'thresholdedrelu':
-            in_type = node.get_input_variable().type.precision
-            node.attributes['param_t'].precision = in_type
+        if 'param_t' in types_to_infer:
+            if node.get_attr('activation').lower() == 'thresholdedrelu':
+                # For threshold relu, set the parameter precision to be the input precision by default;
+                in_type = node.get_input_variable().type.precision
+                node.attributes['param_t'].precision = in_type
+                inferred_types.append('param_t')
+            else:
+                # find a constant to represent the values
+                param = node.get_attr('activ_param')
+                precision = _get_precision_from_constant(param)
+                node.attributes['param_t'].precision = precision
             inferred_types.append('param_t')
 
         return inferred_types
@@ -594,3 +603,21 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('param_t')
 
         return inferred_types
+
+
+def _get_precision_from_constant(value: int | float, max_width=8):
+    """A utility function to find a fixed type to store the constant
+
+    Arguments:
+        value (int or float): the constant value
+        max_width (int, optional): the maximum fixed width (+ 1 if signed). Defaults to 8
+
+    Returns:
+        FixedPrecisionType: the type to use
+    """
+    if value == 0:
+        return FixedPrecisionType(width=1, integer=1, signed=False)
+
+    signed, integer, fraction = map(int, minimal_kif(np.array(value)))
+    width = min(signed + integer + fraction, signed + max_width)
+    return FixedPrecisionType(width, signed + integer, bool(signed))
