@@ -33,7 +33,7 @@ def optimize_keras_model_for_hls4ml(
     knapsack_solver='CBC_MIP',
     regularization_range=default_regularization_range,
 ):
-    '''
+    """
     Top-level function for optimizing a Keras model, given hls4ml config and a hardware objective(s)
 
     Args:
@@ -73,7 +73,7 @@ def optimize_keras_model_for_hls4ml(
 
     Returns:
         keras.Model: Optimized model
-    '''
+    """
 
     # Extract model attributes
     model_attributes = get_attributes_from_keras_model_and_hls4ml_config(keras_model, hls_config)

@@ -11,10 +11,10 @@ from hls4ml.backends.template import FunctionCallTemplate
 from hls4ml.model.layers import register_layer
 from hls4ml.model.optimizer import OptimizerPass
 
-'''
+"""
 Custom hls4ml layer implementation for 1x1 Conv filters using im2col
 Allows lower latency andresource usage, due to less loop invocations
-'''
+"""
 
 pointwise_conv1d_function_template = (
     'nnet::pointwise_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'

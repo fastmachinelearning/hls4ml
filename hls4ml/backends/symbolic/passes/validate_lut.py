@@ -3,7 +3,7 @@ from hls4ml.model.optimizer import ConfigurableOptimizerPass
 
 
 class ValidateUserLookupTable(ConfigurableOptimizerPass):
-    '''Validates the precision of user-defined LUTs is adequate'''
+    """Validates the precision of user-defined LUTs is adequate"""
 
     def __init__(self):
         self.raise_exception = False

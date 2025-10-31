@@ -81,7 +81,7 @@ def test_precision_type_creation(capsys):
     ],
 )
 def test_sign_parsing(prec_pair):
-    '''Test that convert_precisions_string determines the signedness correctly'''
+    """Test that convert_precisions_string determines the signedness correctly"""
     strprec, signed = prec_pair
 
     evalprec = FPGABackend.convert_precision_string(strprec)
@@ -102,7 +102,7 @@ def test_sign_parsing(prec_pair):
     ],
 )
 def test_fixed_type_parsing(prec_tuple):
-    '''Test that convert_precision_string correctly parses specified fixed-point types'''
+    """Test that convert_precision_string correctly parses specified fixed-point types"""
     prec_str, width, integer, signed, round_mode, saturation_mode = prec_tuple
 
     evalprec = FPGABackend.convert_precision_string(prec_str)
@@ -127,7 +127,7 @@ def test_fixed_type_parsing(prec_tuple):
     ],
 )
 def test_int_type_parsing(prec_tuple):
-    '''Test that convert_precision_string correctly parses specified fixed-point types'''
+    """Test that convert_precision_string correctly parses specified fixed-point types"""
     prec_str, width, signed = prec_tuple
 
     evalprec = FPGABackend.convert_precision_string(prec_str)
@@ -156,7 +156,7 @@ def test_int_type_parsing(prec_tuple):
     ],
 )
 def test_float_cpp_parsing(prec_pair):
-    '''Test that convert_precision_string correctly parses C++ types'''
+    """Test that convert_precision_string correctly parses C++ types"""
     prec_str, is_cpp = prec_pair
 
     evalprec = FPGABackend.convert_precision_string(prec_str)
@@ -174,7 +174,7 @@ def test_float_cpp_parsing(prec_pair):
     ],
 )
 def test_ac_float_parsing(prec_tuple):
-    '''Test that convert_precision_string correctly parses ac_float types'''
+    """Test that convert_precision_string correctly parses ac_float types"""
     prec_str, width, integer, exponent, round_mode = prec_tuple
 
     evalprec = FPGABackend.convert_precision_string(prec_str)

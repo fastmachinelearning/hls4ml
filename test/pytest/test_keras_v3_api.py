@@ -70,8 +70,8 @@ def test_dense(backend, io_type):
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.02)
 
     assert len(model.layers) + 1 == len(hls_model.get_layers())
-    assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
-    assert list(hls_model.get_layers())[1].attributes["class_name"] == model.layers[0].name
+    assert list(hls_model.get_layers())[0].attributes['class_name'] == 'InputLayer'
+    assert list(hls_model.get_layers())[1].attributes['class_name'] == model.layers[0].name
     assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ELU'
 
 
@@ -80,13 +80,13 @@ def test_dense(backend, io_type):
 
 
 @pytest.mark.parametrize(
-    "activation_function",
+    'activation_function',
     [
         Activation(activation='relu', name='relu'),
         LeakyReLU(negative_slope=0.5),
         ELU(alpha=1.0),
         PReLU(
-            alpha_initializer="zeros",
+            alpha_initializer='zeros',
         ),
         Activation(activation='sigmoid', name='sigmoid'),
     ],
@@ -176,13 +176,13 @@ def test_conv1d(padds, backend, io_type):
 
     assert hls_attr['name'] == model.layers[0].name
     assert hls_attr['class_name'] == 'Conv1D'
-    assert hls_attr["in_width"] == inp_shape[0]
+    assert hls_attr['in_width'] == inp_shape[0]
     assert hls_attr['filt_width'] == ker_w
     assert hls_attr['n_chan'] == ch_in
     assert hls_attr['n_filt'] == ch_out
     assert hls_attr['stride_width'] == _stride
     assert hls_attr['data_format'] == conv.data_format
-    assert hls_attr["out_width"] == out_shape[0]
+    assert hls_attr['out_width'] == out_shape[0]
 
     w_pad = math.ceil(inp_shape[0] / ker_w) * ker_w - inp_shape[0]
 
@@ -300,9 +300,9 @@ def test_conv2d(chans, padds, backend, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 def test_depthwise2d(backend, io_type):
-    '''
+    """
     Test proper handling of DepthwiseConv2D
-    '''
+    """
     X = np.random.rand(10, 32, 32, 3)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = keras.models.Sequential([keras.layers.Input((32, 32, 3)), DepthwiseConv2D(kernel_size=(3, 3))])
@@ -327,9 +327,9 @@ def test_depthwise2d(backend, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_depthwise1d(backend, io_type):
-    '''
+    """
     Test proper handling of DepthwiseConv1D.
-    '''
+    """
     X = np.random.rand(10, 32, 3)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = keras.Sequential([DepthwiseConv1D(kernel_size=3, input_shape=(32, 3))])
@@ -480,7 +480,6 @@ def test_pooling(pooling, padds, chans, backend):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reused_layer(backend, io_type):
-
     inp1 = keras.layers.Input(shape=(10, 10))
     inp2 = keras.layers.Input(shape=(10, 10))
 

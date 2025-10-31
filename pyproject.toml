@@ -87,10 +87,6 @@ git_describe_command = [
 ]
 write_to = "hls4ml/_version.py"
 
-[tool.black]
-line-length = 125
-skip-string-normalization = true
-
 [tool.ruff]
 target-version = "py310"
 
@@ -109,10 +105,6 @@ lint.per-file-ignores = { "__init__.py" = [ "F401" ] }
 
 lint.fixable = [ "ALL" ]
 lint.unfixable = [  ]
-
-[tool.isort]
-profile = "black"
-line_length = 125
 
 [tool.check-manifest]
 ignore = [
