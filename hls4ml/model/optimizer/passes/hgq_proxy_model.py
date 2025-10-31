@@ -6,7 +6,7 @@ from warnings import warn
 import numpy as np
 
 from hls4ml.model.attributes import Attribute, TypeAttribute, WeightAttribute
-from hls4ml.model.layers import Activation, Layer, Reshape, register_layer
+from hls4ml.model.layers import Activation, Layer, Reshape, Transpose, register_layer
 from hls4ml.model.optimizer import OptimizerPass, register_pass
 from hls4ml.model.types import FixedPrecisionType, UnspecifiedPrecisionType
 
@@ -100,7 +100,7 @@ class FuseFixedPointQuantizer(OptimizerPass):
         node.attributes['result_t'].precision = precision
         node.attributes['_result_t_propagated'] = True
 
-        if not isinstance(node, Reshape):
+        if not isinstance(node, (Reshape, Transpose)):
             return node
 
         inp_layer = get_input_layers(node)[0]

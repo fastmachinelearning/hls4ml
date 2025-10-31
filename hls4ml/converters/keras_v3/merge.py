@@ -39,7 +39,8 @@ class MergeHandler(KerasV3LayerHandler):
         match cls_name:
             case 'Concatenate':
                 rank = len(output_shape)
-                class_name = f'Concatenate{rank}d'
+                class_name = 'Concatenate'
+                op = f'Concatenate{rank}d'
                 config['axis'] = layer.axis
             case 'Dot':
                 msg = (
