@@ -108,11 +108,59 @@ class LiberoBackend(FPGABackend):
 
         return config
 
+    def _run_shls_cmd(self, cmd_name, cwd, skip=True):
+        if skip:
+            flag = '-s'
+        else:
+            flag = '-a'
+        ret_val = subprocess.run(
+            ['shls', flag, cmd_name],
+            shell=False,
+            check=True,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            cwd=cwd,
+        )
+        return ret_val
+
+    def compile(self, model):
+        """Compile the generated project that can be linked into Python runtime.
+
+        Args:
+            model (ModelGraph): Model to compile.
+
+        Raises:
+            Exception: If the project failed to compile
+
+        Returns:
+            string: Returns the name of the compiled library.
+        """
+
+        lib_name = None
+
+        # This is a bit hacky, we can't change the Makefile used to run the regular build(), so we have to swap the file
+        # to do the compile(). Alternative was to use environment variables.
+        out_dir = model.config.get_output_dir()
+
+        makefile_path = os.path.join(out_dir, 'Makefile')
+        os.rename(makefile_path, makefile_path + '.build')
+        os.rename(makefile_path + '.compile', makefile_path)
+        ret_val = self._run_shls_cmd('sw_compile', out_dir, skip=True)
+        os.rename(makefile_path, makefile_path + '.compile')
+        os.rename(makefile_path + '.build', makefile_path)
+
+        if ret_val.returncode != 0:
+            print(ret_val.stdout)
+            raise Exception(f'Failed to compile project "{model.config.get_project_name()}"')
+        lib_name = f'{out_dir}/hls_output/.hls/{model.config.get_project_name()}.sw_binary'
+
+        return lib_name
+
     def build(
         self,
         model,
         reset=False,
-        skip_preqs=False,
+        skip_preqs=True,
         sw_compile=True,
         hw=True,
         cosim=False,
@@ -148,32 +196,24 @@ class LiberoBackend(FPGABackend):
             if found != 0:
                 raise Exception('Libero/SmartHLS installation not found. Make sure "shls" is on PATH.')
 
-        def run_shls_cmd(cmd_name):
-            subprocess.run(
-                ['shls', '-s', cmd_name],
-                shell=False,
-                check=True,
-                stdout=sys.stdout,
-                stderr=sys.stderr,
-                cwd=model.config.get_output_dir(),
-            )
+        cwd = model.config.get_output_dir()
 
         if reset:
-            run_shls_cmd('clean')
+            self._run_shls_cmd('clean', cwd, skip_preqs)
         if sw_compile:
-            run_shls_cmd('sw_compile')
+            self._run_shls_cmd('sw_compile', cwd, skip_preqs)
         if hw:
-            run_shls_cmd('hw')
+            self._run_shls_cmd('hw', cwd, skip_preqs)
         if cosim:
-            run_shls_cmd('cosim')
+            self._run_shls_cmd('cosim', cwd, skip_preqs)
         if rtl_synth:
-            run_shls_cmd('rtl_synth')
+            self._run_shls_cmd('rtl_synth', cwd, skip_preqs)
         if fpga:
-            run_shls_cmd('fpga')
+            self._run_shls_cmd('fpga', cwd, skip_preqs)
 
         for arg_name, arg_val in kwargs.items():
             if arg_val:
-                run_shls_cmd(arg_name)
+                self._run_shls_cmd(arg_name, cwd, skip_preqs)
 
         return parse_libero_report(model.config.get_output_dir())
 

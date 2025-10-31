@@ -54,7 +54,13 @@ void myproject_float(
 ) {
     // hls-fpga-machine-learning insert namespace
 
+    // hls-fpga-machine-learning fifo-definitions
+
+    // hls-fpga-machine-learning pack-struct
+
     // hls-fpga-machine-learning insert wrapper #float
+
+    // hls-fpga-machine-learning unpack-struct
 }
 
 void myproject_double(
@@ -62,7 +68,13 @@ void myproject_double(
 ) {
     // hls-fpga-machine-learning insert namespace
 
+    // hls-fpga-machine-learning fifo-definitions
+
+    // hls-fpga-machine-learning pack-struct
+
     // hls-fpga-machine-learning insert wrapper #double
+
+    // hls-fpga-machine-learning unpack-struct
 }
 }
 

@@ -356,21 +356,7 @@ class LiberoWriter(Writer):
 
         with open(defines_src) as src, open(defines_dst, 'w') as dst:
             for line in src.readlines():
-                # Insert numbers
-                if '// hls-fpga-machine-learning insert numbers' in line:
-                    newline = line
-
-                    defines_list = []
-                    for layer in model.get_layers():
-                        defines = ''
-                        for k, v in layer.get_output_variable().get_shape():
-                            defines += f'#define {k} {v}\n'
-
-                        defines_list.append(defines)
-
-                    newline += ''.join(defines_list)
-
-                elif '// hls-fpga-machine-learning insert layer-precision' in line:
+                if '// hls-fpga-machine-learning insert layer-precision' in line:
                     newline = line
                     all_precision = OrderedDict()
                     for layer in model.get_layers():
@@ -478,7 +464,7 @@ class LiberoWriter(Writer):
     def __make_dat_file(self, original_path, project_path):
         """
         Convert other input/output data types into a dat file, which is
-        a text file with the falttened matrix printed out. Note that ' ' is
+        a text file with the flattened matrix printed out. Note that ' ' is
         assumed to be the delimiter.
         """
 
@@ -488,7 +474,7 @@ class LiberoWriter(Writer):
         else:
             raise Exception("Unsupported input/output data files.")
 
-        # Faltten data, just keep first dimension
+        # Flatten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
 
         def print_data(f):
@@ -692,41 +678,45 @@ class LiberoWriter(Writer):
                     newline += indent + inputs_str + ',\n'
                     newline += indent + outputs_str + '\n'
 
+                elif '// hls-fpga-machine-learning pack-struct' in line:
+                    newline = ''
+                    for inp in model_inputs:
+                        tmp_struct_var_name = f'{inp.name}_struct'
+                        newline += indent + f'{inp.struct_name} {tmp_struct_var_name};\n'
+                        newline += indent + f'for (unsigned i = 0; i < {inp.size_cpp()}; i++) {{\n'
+                        newline += indent + f'    {tmp_struct_var_name}.data[i] = {inp.name}[i];\n'
+                        newline += indent + '}\n'
+                        newline += indent + f'{inp.name}_fifo.write({tmp_struct_var_name});\n'
+
+                elif '// hls-fpga-machine-learning unpack-struct' in line:
+                    newline = ''
+                    for out in model_outputs:
+                        tmp_struct_var_name = f'{out.name}_struct'
+                        newline += indent + f'{out.struct_name} {tmp_struct_var_name} = {out.name}_fifo.read();\n'
+                        newline += indent + f'for (unsigned i = 0; i < {out.size_cpp()}; i++) {{\n'
+                        newline += indent + f'    {out.name}[i] = {tmp_struct_var_name}.data[i];\n'
+                        newline += indent + '}\n'
+
+                elif '// hls-fpga-machine-learning fifo-definitions' in line:
+                    newline = ''
+                    for inp in model_inputs:
+                        newline += indent + f'hls::FIFO<{inp.struct_name}> {inp.name}_fifo(DEFAULT_FIFO_DEPTH);\n'
+                    for out in model_outputs:
+                        newline += indent + f'hls::FIFO<{out.struct_name}> {out.name}_fifo(DEFAULT_FIFO_DEPTH);\n'
+
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
-                    for i in model_inputs:
-                        def_cpp = i.definition_cpp(name_suffix='_ap')
-                        vname = i.name
-                        tname = i.type.name
-                        size = i.size_cpp()
-                        newline += indent + f'{def_cpp};\n'
-                        newline += indent + f'nnet::convert_data<{dtype}, {tname}, {size}>({vname}, {vname}_ap);\n'
-                    newline += '\n'
 
-                    for o in model_outputs:
-                        def_cpp = o.definition_cpp(name_suffix='_ap')
-                        newline += indent + f'{def_cpp};\n'
-
-                    newline += '\n'
-
-                    input_vars = ','.join([i.name + '_ap' for i in model_inputs])
+                    input_vars = ','.join([i.name + '_fifo' for i in model_inputs])
                     bram_vars = ','.join([b.name for b in model_brams])
-                    output_vars = ','.join([o.name + '_ap' for o in model_outputs])
+                    output_vars = ','.join([o.name + '_fifo' for o in model_outputs])
 
                     # Concatenate the input, output, and bram variables. Filter out empty/null values
                     all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
 
                     top_level = indent + f'{prj_name}({all_vars});\n'
                     newline += top_level
-
-                    newline += '\n'
-
-                    for o in model_outputs:
-                        vname = o.name
-                        tname = o.type.name
-                        size = o.size_cpp()
-                        newline += indent + f'nnet::convert_data<{tname}, {dtype}, {size}>({vname}_ap, {vname});\n'
 
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                     newline = ''
@@ -782,6 +772,17 @@ class LiberoWriter(Writer):
             # Not sure if this is required, it is present in both GUI- and CLI-generated projects
             f.write('LEVEL = $(SHLS_ROOT_DIR)/examples\n')
             # This must be the last line
+            f.write('include $(LEVEL)/Makefile.common\n')
+
+        # Makefile.compile
+        makefile_dst = Path(f'{model.config.get_output_dir()}/Makefile.compile')
+        with open(makefile_dst, 'w') as f:
+            f.write(f'NAME = {prj_name}\n')
+            f.write('LOCAL_CONFIG = -legup-config=config.tcl\n')
+            f.write(f'SRCS = firmware/{prj_name}.cpp {prj_name}_bridge.cpp \n')
+            f.write('LEVEL = $(SHLS_ROOT_DIR)/examples\n')
+            f.write('USER_CXX_FLAG = -fPIC\n')
+            f.write('USER_LINK_FLAG = -shared\n')
             f.write('include $(LEVEL)/Makefile.common\n')
 
         # build_lib.sh

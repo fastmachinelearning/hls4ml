@@ -8,8 +8,6 @@
 #include <hls/ap_int.hpp>
 #include <hls/streaming.hpp>
 
-// hls-fpga-machine-learning insert numbers
-
 // hls-fpga-machine-learning insert namespace-start
 
 // hls-fpga-machine-learning insert layer-precision

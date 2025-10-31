@@ -1,8 +1,8 @@
 from hls4ml.backends.fpga.fpga_types import (
     ArrayVariableConverter,
     ExponentPrecisionType,
-    FixedPrecisionConverter,
     FixedPrecisionType,
+    FPGAPrecisionConverter,
     InplaceStreamVariableConverter,
     IntegerPrecisionType,
     PrecisionDefinition,
@@ -137,7 +137,7 @@ class LAPFixedPrecisionDefinition(PrecisionDefinition):
         return typestring
 
 
-class LAPTypeConverter(FixedPrecisionConverter):
+class LAPTypeConverter(FPGAPrecisionConverter):
     def __init__(self):
         super().__init__(
             type_map={
