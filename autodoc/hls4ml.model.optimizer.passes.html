@@ -1367,6 +1367,34 @@ bakends that implement special pointwise convolutions.</p>
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.model.optimizer.passes.pad_const">
+<span id="hls4ml-model-optimizer-passes-pad-const-module"></span><h2>hls4ml.model.optimizer.passes.pad_const module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.pad_const" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.pad_const.PaddingConstant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.pad_const.</span></span><span class="sig-name descname"><span class="pre">PaddingConstant</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.pad_const.PaddingConstant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>ONNX has the padding come as an input, not a parameter. This removes the Constant node from the input.
+The constant value was already used; this is just a cleanup uptimization.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.pad_const.PaddingConstant.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.pad_const.PaddingConstant.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.pad_const.PaddingConstant.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.pad_const.PaddingConstant.transform" title="Link to this definition"></a></dt>
+<dd><p>Remove Constant node(s) from the graph. Note, padding is already present in ZeroPadding node.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.model.optimizer.passes.qkeras">
 <span id="hls4ml-model-optimizer-passes-qkeras-module"></span><h2>hls4ml.model.optimizer.passes.qkeras module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.qkeras" title="Link to this heading"></a></h2>
 <dl class="py class">

@@ -140,6 +140,14 @@ hls4ml.model.optimizer.passes.multi\_dense module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.pad\_const module
+-----------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.pad_const
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.qkeras module
 -------------------------------------------
 

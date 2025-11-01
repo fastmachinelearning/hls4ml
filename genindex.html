@@ -2685,8 +2685,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pipeline_style">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pointwise
 
@@ -2694,6 +2692,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pointwise">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pooling_templates
 
@@ -3294,6 +3294,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.multi_dense">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.model.optimizer.passes.pad_const
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.pad_const">module</a>
 </li>
       </ul></li>
       <li>
@@ -4185,6 +4192,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match">(hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.pad_const.PaddingConstant.match">(hls4ml.model.optimizer.passes.pad_const.PaddingConstant method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.match">(hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.match">(hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode method)</a>
@@ -4664,6 +4673,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.multi_dense">hls4ml.model.optimizer.passes.multi_dense</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.pad_const">hls4ml.model.optimizer.passes.pad_const</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.qkeras">hls4ml.model.optimizer.passes.qkeras</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.quant_opt">hls4ml.model.optimizer.passes.quant_opt</a>
@@ -4883,6 +4894,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.pad_arrs">pad_arrs() (in module hls4ml.model.optimizer.passes.bit_exact)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.pad_const.PaddingConstant">PaddingConstant (class in hls4ml.model.optimizer.passes.pad_const)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.core_templates.ParamActivationConfigTemplate">ParamActivationConfigTemplate (class in hls4ml.backends.catapult.passes.core_templates)</a>
 
       <ul>
@@ -5021,6 +5034,8 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.parse_onnx_model">parse_onnx_model() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_pad_layer">parse_pad_layer() (in module hls4ml.converters.onnx.reshape)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_permute_layer">parse_permute_layer() (in module hls4ml.converters.keras.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.pooling.parse_pool_layer">parse_pool_layer() (in module hls4ml.converters.onnx.pooling)</a>
@@ -5061,10 +5076,10 @@
         <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_reshape_layer">(in module hls4ml.converters.pytorch.reshape)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_resize_layer">parse_resize_layer() (in module hls4ml.converters.onnx.reshape)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_resize_layer">parse_resize_layer() (in module hls4ml.converters.onnx.reshape)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer">parse_rnn_layer() (in module hls4ml.converters.keras.recurrent)</a>
 
       <ul>
@@ -6019,6 +6034,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul.transform">(hls4ml.model.optimizer.passes.move_scales.ScaleDownMatMul method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.transform">(hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.pad_const.PaddingConstant.transform">(hls4ml.model.optimizer.passes.pad_const.PaddingConstant method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.transform">(hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold method)</a>
 </li>
