@@ -76,8 +76,8 @@ class VivadoWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        if not os.path.isdir(f"{model.config.get_output_dir()}/firmware/weights"):
-            os.makedirs(f"{model.config.get_output_dir()}/firmware/weights")
+        if not os.path.isdir(f'{model.config.get_output_dir()}/firmware/weights'):
+            os.makedirs(f'{model.config.get_output_dir()}/firmware/weights')
 
     @staticmethod
     def _make_array_pragma(variable):
@@ -165,7 +165,6 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 if model.config.get_writer_config()['WriteWeightsTxt']:
-
                     newline += '#ifndef __SYNTHESIS__\n'
                     newline += '    static bool loaded_weights = false;\n'
                     newline += '    if (!loaded_weights) {\n'
@@ -456,7 +455,7 @@ class VivadoWriter(Writer):
                         if w.storage.lower() != 'bram':
                             newline += f'#include "weights/{w.name}.h"\n'
 
-            elif "// hls-fpga-machine-learning insert layer-config" in line:
+            elif '// hls-fpga-machine-learning insert layer-config' in line:
                 newline = line
                 for layer in model.get_layers():
                     config = layer.get_attr('config_cpp', None)
@@ -521,10 +520,10 @@ class VivadoWriter(Writer):
         """
 
         # Take in data from current supported data files
-        if original_path[-3:] == "npy":
+        if original_path[-3:] == 'npy':
             data = np.load(original_path)
         else:
-            raise Exception("Unsupported input/output data files.")
+            raise Exception('Unsupported input/output data files.')
 
         # Faltten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
@@ -532,11 +531,11 @@ class VivadoWriter(Writer):
         def print_data(f):
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    f.write(str(data[i][j]) + " ")
-                f.write("\n")
+                    f.write(str(data[i][j]) + ' ')
+                f.write('\n')
 
         # Print out in dat file
-        with open(project_path, "w") as f:
+        with open(project_path, 'w') as f:
             print_data(f)
 
     def write_test_bench(self, model):
@@ -555,13 +554,13 @@ class VivadoWriter(Writer):
         output_predictions = model.config.get_config_value('OutputPredictions')
 
         if input_data:
-            if input_data[-3:] == "dat":
+            if input_data[-3:] == 'dat':
                 copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
             else:
                 self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
 
         if output_predictions:
-            if output_predictions[-3:] == "dat":
+            if output_predictions[-3:] == 'dat':
                 copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
             else:
                 self.__make_dat_file(
@@ -585,7 +584,7 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
@@ -691,7 +690,7 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
@@ -769,7 +768,7 @@ class VivadoWriter(Writer):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/vivado/myproject_bridge.cpp'))
-        fout = open(f"{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp", 'w')
+        fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp', 'w')
         model_inputs = model.graphs[0].get_input_variables()
         model_outputs = model.graphs[-1].get_output_variables()
         model_brams = [var for var in model.graphs[0].get_weight_variables() if var.storage.lower() == 'bram']
@@ -798,7 +797,7 @@ class VivadoWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
@@ -829,9 +828,9 @@ class VivadoWriter(Writer):
                                 modified_definition = 'hls::stream<' + datatype + '> ' + parts[1]
                             else:
                                 modified_definition = datatype + ' ' + parts[1]
-                            newline += indent + f"{modified_definition};\n"
+                            newline += indent + f'{modified_definition};\n'
                         else:
-                            newline += indent + f"{definition};\n"
+                            newline += indent + f'{definition};\n'
 
                 newline += '\n'
 
@@ -848,7 +847,7 @@ class VivadoWriter(Writer):
                     output_vars = ','.join([o.name + '_ap' for o in g.get_output_variables()])
                     # Concatenate the input, output, and bram variables. Filter out empty/null values
                     all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
-                    top_level += indent + f"{g.config.get_project_name()}({all_vars});\n"
+                    top_level += indent + f'{g.config.get_project_name()}({all_vars});\n'
                 newline += top_level
 
                 newline += '\n'
@@ -885,10 +884,10 @@ class VivadoWriter(Writer):
 
             elif '// hls-fpga-machine-learning insert tb_input_writer' in line:
                 funcs = [
-                    ("float", "dump_tb_inputs_float"),
-                    ("double", "dump_tb_inputs_double"),
+                    ('float', 'dump_tb_inputs_float'),
+                    ('double', 'dump_tb_inputs_double'),
                 ]
-                newline = ""
+                newline = ''
                 for dtype, funcname in funcs:
                     newline += f'void {funcname}(\n'
                     newline += '    const char* output_path'
@@ -898,30 +897,26 @@ class VivadoWriter(Writer):
 
                     for inp in model_inputs:
                         decl = inp.definition_cpp(name_suffix='_ap').strip()
-                        ap = inp.name + "_ap"
-                        if decl.startswith("hls::stream"):
+                        ap = inp.name + '_ap'
+                        if decl.startswith('hls::stream'):
                             newline += f'    {decl};\n'
                         else:
                             newline += f'    {inp.type.name} {ap}[{inp.size_cpp()}];\n'
-                        newline += (
-                            f'    nnet::convert_data<{dtype}, {inp.type.name}, {inp.size_cpp()}>' f'({inp.name}, {ap});\n'
-                        )
-                    newline += "\n"
+                        newline += f'    nnet::convert_data<{dtype}, {inp.type.name}, {inp.size_cpp()}>({inp.name}, {ap});\n'
+                    newline += '\n'
                     newline += f'    std::ofstream fout(std::string(output_path) + "/{inp.name}_input_data.txt");\n'
 
                     for inp in model_inputs:
                         decl = inp.definition_cpp(name_suffix='_ap').strip()
                         shape = inp.shape
 
-                        if decl.startswith("hls::stream"):
+                        if decl.startswith('hls::stream'):
                             if len(shape) == 1:
                                 N = shape[0]
                                 newline += f'    for(int i = 0; i < {N}; i++) {{\n'
                                 newline += f'        auto temp = {inp.name}_ap.read();\n'
-                                newline += (
-                                    f'        ap_uint<{inp.type.name}::value_type::width> bits = ' f'temp[0].range();\n'
-                                )
-                                newline += f'        fout << bits.to_uint()' f' << (i+1<{N} ? \' \' : \'\\n\');\n'
+                                newline += f'        ap_uint<{inp.type.name}::value_type::width> bits = temp[0].range();\n'
+                                newline += f"        fout << bits.to_uint() << (i+1<{N} ? ' ' : '\\n');\n"
                                 newline += '    }\n'
                             else:
                                 inputs_list = model.nn_config['inputs']
@@ -931,22 +926,20 @@ class VivadoWriter(Writer):
                                 newline += f'        auto temp = {inp.name}_ap.read();\n'
                                 newline += f'        for(int c = 0; c < {batch_size}; c++) {{\n'
                                 newline += (
-                                    f'            ap_uint<{inp.type.name}::value_type::width> bits = ' f'temp[c].range();\n'
+                                    f'            ap_uint<{inp.type.name}::value_type::width> bits = temp[c].range();\n'
                                 )
-                                newline += (
-                                    f'            fout << bits.to_uint()' f' << (c+1<{batch_size} ? \' \' : \'\\n\');\n'
-                                )
+                                newline += f"            fout << bits.to_uint() << (c+1<{batch_size} ? ' ' : '\\n');\n"
                                 newline += '        }\n'
                                 newline += '    }\n'
                         else:
-                            ap = inp.name + "_ap"
+                            ap = inp.name + '_ap'
                             N = inp.size_cpp()
                             newline += f'    for(int i = 0; i < {N}; i++) {{\n'
-                            newline += f'        ap_uint<{inp.type.name}::width> bits = ' f'{ap}[i].range();\n'
-                            newline += f'        fout << bits.to_uint()' f' << (i+1<{N} ? \' \' : \'\\n\');\n'
+                            newline += f'        ap_uint<{inp.type.name}::width> bits = {ap}[i].range();\n'
+                            newline += f"        fout << bits.to_uint() << (i+1<{N} ? ' ' : '\\n');\n"
                             newline += '    }\n'
-                    newline += "    fout.close();\n"
-                    newline += "}\n"
+                    newline += '    fout.close();\n'
+                    newline += '}\n'
             else:
                 newline = line
             fout.write(newline)
@@ -1011,7 +1004,7 @@ class VivadoWriter(Writer):
         os.makedirs(model.config.get_output_dir(), exist_ok=True)
         build_lib_src = (filedir / '../templates/vivado/build_lib_multigraph.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
-        graph_project_names = ' '.join(f"\"{g.config.get_output_dir().split('/')[-1]}\"" for g in model.graphs)
+        graph_project_names = ' '.join(f'"{g.config.get_output_dir().split("/")[-1]}"' for g in model.graphs)
 
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
             for line in src.readlines():

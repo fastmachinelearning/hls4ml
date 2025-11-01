@@ -5,7 +5,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class ApplyResourceStrategy(OptimizerPass):
-    '''Transposes the weights to use the dense_resource matrix multiply routine'''
+    """Transposes the weights to use the dense_resource matrix multiply routine"""
 
     def match(self, node):
         node_matches = isinstance(node, (Dense, Conv1D, Conv2D, GRU, LSTM, SimpleRNN))

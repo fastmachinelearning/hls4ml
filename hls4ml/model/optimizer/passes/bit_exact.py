@@ -915,7 +915,6 @@ class BitExact(ModelOptimizerPass):
 def get_output_layers_and_quantizers(
     node: Layer, layers: list | None = None, quantizers: list | None = None
 ) -> tuple[list[Layer], list[FixedPointQuantizer]]:
-
     layers = layers if layers is not None else []
     quantizers = quantizers if quantizers is not None else []
     for _node in get_output_layers(node):

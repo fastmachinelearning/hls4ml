@@ -39,18 +39,18 @@ def generate_mask_fn(
         else:
             fn = f'out[{idx}] = {to_fixed(k, b, i, RND, SAT)}(inp[{idx}]);'
         masks.append(f'    {fn}')
-    body = "\n".join(masks)
+    body = '\n'.join(masks)
     arguments = (
         'input_t *inp, output_t *out' if backend.lower() not in ['oneapi', 'quartus'] else 'input_t &inp, output_t &out'
     )
-    mask_fn = f'''
+    mask_fn = f"""
 template<typename input_t, typename output_t>
 void {name}({arguments}) {{
     {'#pragma HLS INLINE' if backend.lower() not in ['oneapi', 'quartus'] else ''}
 
 {body}
 }}
-'''
+"""
     return mask_fn
 
 

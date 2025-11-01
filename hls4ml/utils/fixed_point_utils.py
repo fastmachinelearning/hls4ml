@@ -1,7 +1,7 @@
 import math
 import sys
 
-'''
+"""
 A helper class for handling fixed point methods
 Currently, very limited, allowing only:
     - Conversion to float
@@ -9,11 +9,11 @@ Currently, very limited, allowing only:
     - Reciprocals
 Used primarily for generating softmax look-up table
 by using bit manipulation (see Vivado-equivalent implementation)
-'''
+"""
 
 
 class FixedPointEmulator:
-    '''
+    """
     Default constructor
     Args:
         - N : Total number of bits in the fixed point number
@@ -22,7 +22,7 @@ class FixedPointEmulator:
         - signed : True/False - If True, use 2's complement when converting to float
         - self.integer_bits : Bits corresponding to the integer part of the number
         - self.decimal_bits : Bits corresponding to the decimal part of the number
-    '''
+    """
 
     def __init__(self, N, I, signed=True, integer_bits=None, decimal_bits=None):  # noqa E741
         self.N = N
@@ -32,7 +32,7 @@ class FixedPointEmulator:
         self.integer_bits = [0] * self.I if integer_bits is None else integer_bits
         self.decimal_bits = [0] * self.F if decimal_bits is None else decimal_bits
 
-    '''
+    """
     Converts the fixed point number stored in self.bits to a floating pont
     Args:
         - None
@@ -45,7 +45,7 @@ class FixedPointEmulator:
         3. Traverse through decimal bits, incrementing result by 2.0^(-i) (using pow)
     Note:
         - This function uses left shifts instead of integer powers of 2.
-    '''
+    """
 
     def to_float(self):
         val = float(int(self.integer_bits[0]) << (self.I - 1))
@@ -60,11 +60,11 @@ class FixedPointEmulator:
 
         return val
 
-    '''
+    """
     Sets the top bits of the current number
     Args:
         - bits : Values top bit should be set to
-    '''
+    """
 
     def set_msb_bits(self, bits):
         for i in range(0, len(bits)):
@@ -73,7 +73,7 @@ class FixedPointEmulator:
             elif i >= self.I and i < self.N:
                 self.decimal_bits[i - self.I] = bits[i]
 
-    '''
+    """
     Returns e^x, where x is the current fixed point number
     Args:
         - None
@@ -81,7 +81,7 @@ class FixedPointEmulator:
         - Float : e^x, rounded some number of decimal points
     Notice:
         - If e^x overflow, maximum value of float is used
-    '''
+    """
 
     def exp_float(self, sig_figs=12):
         try:
@@ -89,13 +89,13 @@ class FixedPointEmulator:
         except OverflowError:
             return round(sys.float_info.max, sig_figs)
 
-    '''
+    """
     Returns 1/x, where x is the current fixed point number
     Args:
         - None
     Returns:
         - Float : 1/x, rounded some number of decimal points
-    '''
+    """
 
     def inv_float(self, sig_figs=12):
         if self.to_float() != 0:
@@ -104,14 +104,14 @@ class FixedPointEmulator:
             return round(sys.float_info.max, sig_figs)
 
 
-'''
+"""
     Converts unsigned integer i to N-bit binary number
     Args:
         - i : Number to be converted
         - N : Number of bits to be used
     Note:
         - N > log2(i)+1
-'''
+"""
 
 
 def uint_to_binary(i, N):

@@ -8,8 +8,8 @@ from hls4ml.model.types import WeightVariable
 
 
 class ChannelsLastConverter(OptimizerPass):
-    '''Converts a model from channels_first to channels_last data format by transposing the weights of relevant layers
-    and adding a transpose layer for the inputs and outputs, if necessary'''
+    """Converts a model from channels_first to channels_last data format by transposing the weights of relevant layers
+    and adding a transpose layer for the inputs and outputs, if necessary"""
 
     def match(self, node):
         # If this parameter has not been set, this model does not need to be converted
@@ -24,7 +24,7 @@ class ChannelsLastConverter(OptimizerPass):
 
         if isinstance(node, Input):
             # if inputs are not yet transposed into channels_last, add transpose layer
-            if model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "full" and len(outshape) > 1:
+            if model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == 'full' and len(outshape) > 1:
                 # Add transpose for input layer
                 input = node.name
                 if len(outshape) == 2:
@@ -39,7 +39,7 @@ class ChannelsLastConverter(OptimizerPass):
                 transpose_node.channels_last_converted = True
 
                 model.insert_node(transpose_node)
-            elif model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "internal" and len(outshape) > 1:
+            elif model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == 'internal' and len(outshape) > 1:
                 input_shape = node.get_output_variable().shape
                 input_shape.append(input_shape.pop(0))
                 node.get_output_variable().shape = input_shape
@@ -53,7 +53,7 @@ class ChannelsLastConverter(OptimizerPass):
             model.insert_node(pre_transpose)
 
             # If not the output layer, transpose again
-            if not node.get_attr('name') in model.outputs or model.config.config['HLSConfig']['Model']['TransposeOutputs']:
+            if node.get_attr('name') not in model.outputs or model.config.config['HLSConfig']['Model']['TransposeOutputs']:
                 post_transpose = model.make_node(
                     'Transpose', f'post_transpose_for_{node.get_attr("name")}', {'perm': perm}, [node.name]
                 )
@@ -110,7 +110,7 @@ class ChannelsLastConverter(OptimizerPass):
             if (
                 isinstance(node, Reshape)
                 and len(node.attributes['target_shape']) == 1
-                and not model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "off"
+                and not model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == 'off'
             ):
                 previous_node = node.get_input_node(node.inputs[0])
                 input = previous_node.name
@@ -154,8 +154,8 @@ class ChannelsLastConverter(OptimizerPass):
 
 
 class RemoveTransposeBeforeFlatten(OptimizerPass):
-    '''After the channels last conversion, model may have a sequence: Transpose -> Flatten -> Dense.
-    In this case we can remove the expensive transpose and instead transpose the weights of the Dense layer.'''
+    """After the channels last conversion, model may have a sequence: Transpose -> Flatten -> Dense.
+    In this case we can remove the expensive transpose and instead transpose the weights of the Dense layer."""
 
     def match(self, node):
         if node.model.config.get_config_value('IOType') != 'io_parallel':

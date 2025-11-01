@@ -262,7 +262,6 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
         self.mult2_template = recr_mult_config_template_2
 
     def format(self, node: Layer):
-
         # ----- Bidirectional Layer Config -----#
         params = self._default_config_params(node)
 

@@ -12,7 +12,7 @@ test_root_path = Path(__file__).parent
 
 # PyTorch implementation of a custom layer
 class TReverse(hls4ml.utils.torch.HLS4MLModule):
-    '''PyTorch implementation of a hypothetical custom layer'''
+    """PyTorch implementation of a hypothetical custom layer"""
 
     def __init__(self):
         super().__init__()
@@ -24,7 +24,7 @@ class TReverse(hls4ml.utils.torch.HLS4MLModule):
 # hls4ml layer implementation
 # Note that the `Torch` suffix is added here to avoid clashes with other tests and not mandatory
 class HReverseTorch(hls4ml.model.layers.Layer):
-    '''hls4ml implementation of a hypothetical custom layer'''
+    """hls4ml implementation of a hypothetical custom layer"""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -34,7 +34,7 @@ class HReverseTorch(hls4ml.model.layers.Layer):
 
 # hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
-    '''OptimizerPass to remove consecutive HReverseTorch layers.'''
+    """OptimizerPass to remove consecutive HReverseTorch layers."""
 
     def match(self, node):
         return isinstance(node, HReverseTorch) and isinstance(node.get_input_node(), HReverseTorch)

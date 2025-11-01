@@ -52,12 +52,12 @@ class VivadoAcceleratorConfig:
             'Platform', 'xilinx_u250_xdma_201830_2'
         )  # Get platform folder name
 
-        assert (
-            len(model_inputs) == 1
-        ), "Only models with one input tensor are currently supported by VivadoAcceleratorBackend"
-        assert (
-            len(model_outputs) == 1
-        ), "Only models with one output tensor are currently supported by VivadoAcceleratorBackend"
+        assert len(model_inputs) == 1, (
+            'Only models with one input tensor are currently supported by VivadoAcceleratorBackend'
+        )
+        assert len(model_outputs) == 1, (
+            'Only models with one output tensor are currently supported by VivadoAcceleratorBackend'
+        )
         self.inp = model_inputs[0]
         self.out = model_outputs[0]
         inp_axi_t = self.input_type
@@ -83,13 +83,13 @@ class VivadoAcceleratorConfig:
             self.output_bitwidth = config.backend.convert_precision_string(out_axi_t).width
 
     def _next_factor8_type(self, p):
-        '''Return a new type with the width rounded to the next factor of 8 up to p's width
+        """Return a new type with the width rounded to the next factor of 8 up to p's width
         Args:
             p : IntegerPrecisionType or FixedPrecisionType
         Returns:
             An IntegerPrecisionType or FixedPrecisionType with the width rounder up to the next factor of 8
             of p's width. Other parameters (fractional bits, extra modes) stay the same.
-        '''
+        """
         W = p.width
         newW = int(np.ceil(W / 8) * 8)
         if isinstance(p, FixedPrecisionType):

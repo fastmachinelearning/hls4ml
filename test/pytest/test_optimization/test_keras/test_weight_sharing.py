@@ -14,12 +14,12 @@ sparsity = 0.33
 local_masking = [True, False]
 dense_layers = [Dense, QDense]
 
-'''
+"""
 A mock objective class for weight sharing
 When a group of weights is quantized to the mean value, resource savings are equal to the number of weights quantized
 This is similar to ParameterEstimator, but instead of pruning, weight sharing is performed and
 No savings are incurred with unstructured type (unstructured weight sharing doesn't make sense)
-'''
+"""
 
 
 class MockWeightSharingEstimator(ObjectiveEstimator):

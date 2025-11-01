@@ -17,12 +17,11 @@ if typing.TYPE_CHECKING:
 
 
 def add_kernel_wrapper(index: int, n_in: int, n_out: int):
-
-    wrapper = f'''template <typename inp_t, typename out_t, typename DUMMY> struct dense_da_wrapper_{index} {{
+    wrapper = f"""template <typename inp_t, typename out_t, typename DUMMY> struct dense_da_wrapper_{index} {{
 static void dense(inp_t inp[{n_in}], out_t out[{n_out}], void *weights=nullptr, void *biases=nullptr) {{
     dense_da_{index}(inp, out);
 }}
-}};'''
+}};"""
     return wrapper
 
 
@@ -93,7 +92,7 @@ def _(node: EinsumDense):
 
 
 class DistributedArithmeticCodegen(OptimizerPass):
-    '''Generates C++ code for distributed arithmetic implementation of Dense and Conv1/2D layers'''
+    """Generates C++ code for distributed arithmetic implementation of Dense and Conv1/2D layers"""
 
     def match(self, node):
         if not node.get_attr('strategy', None) == 'distributed_arithmetic':
@@ -144,7 +143,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
         fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
-        io_type = node.model.config.get_config_value("IOType")
+        io_type = node.model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
             fn_str += '\n\n' + add_kernel_wrapper(node.index, n_in, n_out)
 
@@ -199,13 +198,13 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
         return True
 
 
-dense_da_stream_template = '''struct config{index} {{
+dense_da_stream_template = """struct config{index} {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned io_type = nnet::io_stream;
     static const unsigned strategy = nnet::distributed_arithmetic;
     constexpr static auto dense_da = nnet::dense_da_{index}<typename {inp_t}::value_type, typename {out_t}::value_type>;
-}};\n'''
+}};\n"""
 
 
 class DALatencyDenseTemplate(OptimizerPass):
@@ -225,7 +224,7 @@ class DALatencyDenseTemplate(OptimizerPass):
         out_name: str = node.get_output_variable().name
 
         # override function_cpp
-        io_type = node.model.config.get_config_value("IOType")
+        io_type = node.model.config.get_config_value('IOType')
         namespace = node.model.config.get_writer_config().get('Namespace', None) or 'nnet'
         if io_type == 'io_parallel':
             fn_name = f'dense_da_{node.index}<{inp_t}, {out_t}>'
@@ -284,14 +283,14 @@ class DALatencyConvTemplate(OptimizerPass):
             return False
         if node.get_attr('implementation') != 'linebuffer':
             return False
-        io_type = node.model.config.get_config_value("IOType")
+        io_type = node.model.config.get_config_value('IOType')
         return io_type == 'io_parallel'
 
     def transform(self, model: 'ModelGraph', node: Layer):
         fmt = node.get_attr('data_format')
-        assert (
-            fmt == 'channels_last'
-        ), f'At layer {node.name}, data_format must be "channels_last" for DA optimization. Got {fmt}.'
+        assert fmt == 'channels_last', (
+            f'At layer {node.name}, data_format must be "channels_last" for DA optimization. Got {fmt}.'
+        )
         inp_t: str = node.get_input_variable().type.name
         out_t: str = node.get_output_variable().type.name
         inp_name: str = node.get_input_variable().name
@@ -338,7 +337,7 @@ class DALatencyConvTemplate(OptimizerPass):
         del node.attributes['bias_t']
 
 
-kernel_fn_template = '''
+kernel_fn_template = """
 template <typename inp_t, typename out_t>
 void einsum_dense{index}_da_kernel(
     inp_t inp_tpose[{inp_tpose}],
@@ -347,11 +346,11 @@ void einsum_dense{index}_da_kernel(
 ) {{
     {fn_call_str}
 }}
-'''
+"""
 
 
 class DistributedArithmeticEinsumCodegen(OptimizerPass):
-    '''Generates C++ code for distributed arithmetic implementation of Dense layers'''
+    """Generates C++ code for distributed arithmetic implementation of Dense layers"""
 
     def match(self, node):
         if not node.get_attr('strategy', None) == 'distributed_arithmetic':

@@ -137,7 +137,7 @@ def parse_catapult_report(output_dir):
     with open(output_dir + '/hls4ml_config.yml') as yfile:
         ydata = yaml.safe_load(yfile)
 
-    if not ydata['ProjectDir'] is None:
+    if ydata['ProjectDir'] is not None:
         ProjectDir = ydata['ProjectDir']
     else:
         ProjectDir = ydata['ProjectName'] + '_prj'

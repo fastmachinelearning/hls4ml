@@ -40,7 +40,6 @@ def _find_projects(hls_dir):
 
 
 def _parse_single_report(prjDir):
-
     if not os.path.exists(prjDir):
         print(f'Path {prjDir} does not exist. Exiting.')
         return
@@ -136,7 +135,7 @@ def _parse_single_report(prjDir):
 
 
 def parse_oneapi_report(hls_dir):
-    '''
+    """
     Parse a report from a given oneAPI project as a dictionary.
 
     Args:
@@ -144,7 +143,7 @@ def parse_oneapi_report(hls_dir):
     Returns:
         results (dict): The report dictionary, containing latency, resource usage etc.
 
-    '''
+    """
     prjList = _find_projects(hls_dir)
     if not prjList:
         return
@@ -158,7 +157,7 @@ def parse_oneapi_report(hls_dir):
 
 
 def print_oneapi_report(report_dict):
-    '''
+    """
     Prints the oneAPI report dictionary as a table.
 
     Args:
@@ -167,7 +166,7 @@ def print_oneapi_report(report_dict):
     Returns:
         None
 
-    '''
+    """
     for prjTarget, prjReport in report_dict.items():
         if len(report_dict) > 1:
             print('*' * 54 + '\n')
@@ -207,7 +206,7 @@ def _is_running_in_notebook():
         return False  # Probably standard Python interpreter
 
 
-_table_css = '''
+_table_css = """
 <style>
 .hls4ml {
     font-family: Tahoma, Geneva, sans-serif;
@@ -248,9 +247,9 @@ _table_css = '''
     background-color: #ffffff;
 }
 </style>
-'''
+"""
 
-_table_base_template = '''
+_table_base_template = """
 <table>
     <thead>
         <tr>
@@ -261,11 +260,10 @@ _table_base_template = '''
 {table_rows}
     </tbody>
 </table>
-'''
+"""
 
 
 def _make_html_table_template(table_header, row_templates):
-
     num_columns = len(next(iter(row_templates.values())))
 
     _row_html_template = '        <tr><td>{{}}</td>' + ''.join('<td>{{{}}}</td>' for _ in range(num_columns)) + '</tr>'
@@ -277,7 +275,6 @@ def _make_html_table_template(table_header, row_templates):
 
 
 def _make_str_table_template(table_header, row_templates):
-
     len_title = 0
     for row_title in row_templates.keys():
         if len(row_title) > len_title:

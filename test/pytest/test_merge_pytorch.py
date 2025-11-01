@@ -45,7 +45,7 @@ def test_merge(merge_op, io_type, backend):
         model,
         [input_shape, input_shape],
         default_precision='ap_fixed<32,16>',
-        channels_last_conversion="internal",
+        channels_last_conversion='internal',
         transpose_outputs=False,
     )
     output_dir = str(test_root_path / f'hls4mlprj_merge_pytorch_{merge_op}_{backend}_{io_type}')

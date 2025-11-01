@@ -173,7 +173,6 @@ class VitisBackend(VivadoBackend):
         graph_reports=None,
         simulation_input_data=None,
     ):
-
         nn_config = model.nn_config
         os.makedirs(nn_config['OutputDir'], exist_ok=True)
         stitched_design_dir = os.path.join(nn_config['OutputDir'], nn_config['StitchedProjectName'])
@@ -202,7 +201,7 @@ class VitisBackend(VivadoBackend):
                 model.graphs[-1].config.get_output_dir(), model.graphs[-1].config.get_project_dir()
             )
             annotate_axis_stream_widths(nn_config, last_graph_project_path)
-        with open(nn_config_path, "w") as file:
+        with open(nn_config_path, 'w') as file:
             json.dump(nn_config, file, indent=4)
 
         if sim_stitched_design:
@@ -225,8 +224,8 @@ class VitisBackend(VivadoBackend):
             f'stitch_design={int(stitch_design)}',
             f'sim_design={int(sim_stitched_design)}',
             f'export_design={int(export_stitched_design)}',
-            f"stitch_project_name={nn_config['StitchedProjectName']}",
-            f"original_project_name={nn_config['OriginalProjectName']}",
+            f'stitch_project_name={nn_config["StitchedProjectName"]}',
+            f'original_project_name={nn_config["OriginalProjectName"]}',
             'sim_verilog_file=testbench.v',
         ]
 
@@ -236,7 +235,7 @@ class VitisBackend(VivadoBackend):
             )
             process.communicate()
             if process.returncode != 0:
-                raise Exception(f"Stitching failed for {nn_config['StitchedProjectName']}. See logs for details.")
+                raise Exception(f'Stitching failed for {nn_config["StitchedProjectName"]}. See logs for details.')
 
         stitched_report = {'StitchedDesignReport': {}}
         if stitch_design:

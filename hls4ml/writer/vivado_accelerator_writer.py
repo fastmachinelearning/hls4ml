@@ -10,10 +10,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.vivado_accelerator_config = None
 
     def write_axi_wrapper(self, model):
-        '''Write a top level HLS C++ file to wrap the hls4ml project with AXI interfaces
+        """Write a top level HLS C++ file to wrap the hls4ml project with AXI interfaces
         Args:
             model : The ModelGraph to write the wrapper for
-        '''
+        """
         inp_axi_t, out_axi_t, inp, out = self.vivado_accelerator_config.get_corrected_types()
         indent = '    '
 
@@ -103,7 +103,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f = open(os.path.join(filedir, '../templates/vivado_accelerator/myproject_axi.cpp'))
         fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}_axi.cpp', 'w')
 
-        io_type = model.config.get_config_value("IOType")
+        io_type = model.config.get_config_value('IOType')
 
         for line in f.readlines():
             if 'myproject' in line:
@@ -148,10 +148,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '#pragma HLS INTERFACE axis port=in\n'
                     newline += indent + '#pragma HLS INTERFACE axis port=out\n'
                     newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
-                    if model.config.get_config_value("IOType") == 'io_stream':
+                    if model.config.get_config_value('IOType') == 'io_stream':
                         newline += indent + '#pragma HLS DATAFLOW\n'
             elif '// hls-fpga-machine-learning insert enqueue' in line:
-                io_type = model.config.get_config_value("IOType")
+                io_type = model.config.get_config_value('IOType')
                 if io_type == 'io_parallel':
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN; i++){\n'
@@ -193,7 +193,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '}}\n'
                     newline = newline.format(input_t=inp.type.name)
             elif '// hls-fpga-machine-learning insert dequeue' in line:
-                io_type = model.config.get_config_value("IOType")
+                io_type = model.config.get_config_value('IOType')
                 if io_type == 'io_parallel':
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_OUT; i++){\n'
@@ -234,9 +234,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
         fout.close()
 
     def modify_build_script(self, model):
-        '''
+        """
         Modify the build_prj.tcl and build_lib.sh scripts to add the extra wrapper files and set the top function
-        '''
+        """
         filedir = os.path.dirname(os.path.abspath(__file__))
         oldfile = f'{model.config.get_output_dir()}/build_prj.tcl'
         newfile = f'{model.config.get_output_dir()}/build_prj_axi.tcl'
@@ -359,9 +359,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
         os.rename(newfile, oldfile)
 
     def write_board_script(self, model):
-        '''
+        """
         Write the tcl scripts and kernel sources to create a Vivado IPI project for the VivadoAccelerator
-        '''
+        """
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(
             os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),

@@ -8,7 +8,7 @@ from hls4ml.model.types import Source
 
 
 class GenerateUnrolledDenseResource(OptimizerPass):
-    '''Generates C++ code for unrolled Dense resource'''
+    """Generates C++ code for unrolled Dense resource"""
 
     def match(self, node):
         # Only apply to layers use that use Dense Matrix Multiplication
@@ -137,8 +137,8 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         indent = '    '
 
         # Generate unrolled multiplications
-        mult_code = f'{indent*2}#pragma HLS ALLOCATION operation instances=mul limit={mult_limit - zeros}\n'
-        mult_code += f'{indent*2}MULT: {{{{\n'
+        mult_code = f'{indent * 2}#pragma HLS ALLOCATION operation instances=mul limit={mult_limit - zeros}\n'
+        mult_code += f'{indent * 2}MULT: {{{{\n'
 
         for ir in range(reuse_factor):
             acc_step = 0
@@ -146,11 +146,11 @@ class GenerateUnrolledDenseResource(OptimizerPass):
             w_index = ir
             in_index = ir
 
-            mult_code += f'{indent*3}M{ir}: {{{{\n'
+            mult_code += f'{indent * 3}M{ir}: {{{{\n'
             for _ in range(block_factor):
                 if weights.data.flatten()[w_index] != 0:
                     mult_code += (
-                        f'{indent*4}acc[{out_index}] += '
+                        f'{indent * 4}acc[{out_index}] += '
                         'static_cast<typename CONFIG_T::accum_t>'
                         '(CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::'
                         f'product(data[{in_index}], weights[{w_index}]));\n'
@@ -166,9 +166,9 @@ class GenerateUnrolledDenseResource(OptimizerPass):
                 else:
                     acc_step += 1
 
-            mult_code += f'{indent*3}}}}}\n'
+            mult_code += f'{indent * 3}}}}}\n'
 
-        mult_code += f'{indent*2}}}}}\n'
+        mult_code += f'{indent * 2}}}}}\n'
 
         return mult_code
 
@@ -199,18 +199,18 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         in_index = 0
 
         # Generate unrolled multiplications
-        mult_code = f'{indent*2}#pragma HLS ALLOCATION operation instances=mul limit={mult_limit - zeros}\n'
-        mult_code += f'{indent*2}MULT: {{{{\n'
+        mult_code = f'{indent * 2}#pragma HLS ALLOCATION operation instances=mul limit={mult_limit - zeros}\n'
+        mult_code += f'{indent * 2}MULT: {{{{\n'
 
         for ir in range(reuse_factor):
             w_index = ir
             out_index = outidx[ir]
 
-            mult_code += f'{indent*3}M{ir}: {{{{\n'
+            mult_code += f'{indent * 3}M{ir}: {{{{\n'
             for _ in range(block_factor):
                 if weights.data.flatten()[w_index] != 0:
                     mult_code += (
-                        f'{indent*4}acc[{int(out_index)}] += '
+                        f'{indent * 4}acc[{int(out_index)}] += '
                         'static_cast<typename CONFIG_T::accum_t>'
                         '(CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::'
                         f'product(data[{in_index}], weights[{w_index}]));\n'
@@ -220,13 +220,13 @@ class GenerateUnrolledDenseResource(OptimizerPass):
                 if w_index > n_in * n_out:
                     break
                 out_index += outscale
-            mult_code += f'{indent*3}}}}}\n'
+            mult_code += f'{indent * 3}}}}}\n'
 
             in_index += 1
             if in_index >= n_in:
                 in_index = 0
 
-        mult_code += f'{indent*2}}}}}\n'
+        mult_code += f'{indent * 2}}}}}\n'
 
         return mult_code
 

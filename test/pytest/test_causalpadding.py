@@ -16,7 +16,7 @@ atol = 5e-3
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_causalpadding(io_type, backend):
     model = Sequential()
-    model.add(Conv1D(1, 5, padding="causal", input_shape=(100, 1)))
+    model.add(Conv1D(1, 5, padding='causal', input_shape=(100, 1)))
     model.compile()
 
     data = np.random.randint(0, 10, 100).astype(float)

@@ -195,7 +195,7 @@ def parse_onnx_model(onnx_model):
     constant_layers = all_initializers  # no need to copy it even though we change it
     output_layers = get_out_layer_name(onnx_model.graph)
 
-    print("Output layers: ", output_layers)
+    print('Output layers: ', output_layers)
 
     for i, inp in enumerate(input_layers):
         input_layer = {}
@@ -258,7 +258,7 @@ def parse_onnx_model(onnx_model):
         layer = layer_handlers[node.op_type](node, input_names, input_shapes, onnx_model.graph)
 
         sanitize_layer_name(layer)
-        print(f"Layer name: {layer['name']}, layer type: {layer['class_name']}, current shape: {input_shapes}")
+        print(f'Layer name: {layer["name"]}, layer type: {layer["class_name"]}, current shape: {input_shapes}')
         layer_list.append(layer)
 
     return layer_list, input_layers, output_layers

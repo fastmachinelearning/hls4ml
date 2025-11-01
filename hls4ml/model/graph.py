@@ -440,8 +440,8 @@ class ModelGraph(Serializable):
         input_names = _find_output_variable_names(layer_list, input_layers)
         if input_names != input_layers:
             raise RuntimeError(
-                "Currently only support the case when input variables and input layer names match\n"
-                + f"Input layers = {input_layers}, input_vars = {input_names}"
+                'Currently only support the case when input variables and input layer names match\n'
+                + f'Input layers = {input_layers}, input_vars = {input_names}'
             )
         output_names = _find_output_variable_names(layer_list, output_layers)
 
@@ -649,7 +649,6 @@ class ModelGraph(Serializable):
             raise Exception('Cannot delete a node with multiple inputs/outputs')
 
         if len(outputs) == 1 and len(inputs) == 1:
-
             # Connect inputs -> $outputs
             if node.outputs[0] in self.outputs:
                 msg = f'Remove leaf node {node.name} will connect its input node {inputs[0]} to output, but it already is.'
@@ -805,7 +804,7 @@ class ModelGraph(Serializable):
     def _compile(self):
         lib_name = self.config.backend.compile(self)
         if self._top_function_lib is not None:
-            if platform.system() == "Linux":
+            if platform.system() == 'Linux':
                 libdl_libs = ['libdl.so', 'libdl.so.2']
                 for libdl in libdl_libs:
                     try:
@@ -813,7 +812,7 @@ class ModelGraph(Serializable):
                         break
                     except Exception:
                         continue
-            elif platform.system() == "Darwin":
+            elif platform.system() == 'Darwin':
                 dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
             dlclose_func.argtypes = [ctypes.c_void_p]
@@ -851,7 +850,7 @@ class ModelGraph(Serializable):
             )
 
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist) + n_outputs)]
+        top_function.argtypes = [npc.ndpointer(ctype, flags='C_CONTIGUOUS') for i in range(len(xlist) + n_outputs)]
 
         return top_function, ctype
 
@@ -1162,7 +1161,7 @@ class MultiModelGraph:
 
     def _update_project_config(self, first_graph):
         original_project_name = first_graph.config.get_project_name().partition('_graph')[0]
-        self.config.config['ProjectName'] = f"{original_project_name}_stitched"
+        self.config.config['ProjectName'] = f'{original_project_name}_stitched'
         self.config.config['OriginalProjectName'] = original_project_name
         original_output_dir = first_graph.config.get_output_dir().partition('/graph')[0]
         self.config.config['OutputDir'] = os.path.join(original_output_dir, 'stitched')
@@ -1172,13 +1171,13 @@ class MultiModelGraph:
         return self.graphs[index]
 
     def parse_nn_config(self):
-        nn_config = {"inputs": [], "outputs": []}
+        nn_config = {'inputs': [], 'outputs': []}
         nn_config['OutputDir'] = self.config.config['OutputDir']
         nn_config['StitchedProjectName'] = self.config.config['StitchedProjectName']
         nn_config['OriginalProjectName'] = self.config.config['OriginalProjectName']
 
         # Parse layers (inputs and outputs)
-        for graph, io_type in [(self.graphs[0], "inputs"), (self.graphs[-1], "outputs")]:
+        for graph, io_type in [(self.graphs[0], 'inputs'), (self.graphs[-1], 'outputs')]:
             for layer in getattr(graph, io_type):
                 if layer in graph.output_vars:
                     total_bits = 1
@@ -1275,7 +1274,7 @@ class MultiModelGraph:
         if stitch_design or sim_stitched_design or export_stitched_design:
             failed_graphs = [name for name, report in build_results.items() if report is None]
             if failed_graphs:
-                print(f"Skipping stitching. Build failed for the following subgraphs: {', '.join(failed_graphs)}")
+                print(f'Skipping stitching. Build failed for the following subgraphs: {", ".join(failed_graphs)}')
                 return self.graph_reports
 
             self._replace_logos()
@@ -1435,9 +1434,7 @@ class MultiModelGraph:
             }
 
             if ref_pragmas != current_pragmas:
-                raise ValueError(
-                    f'Pragma mismatch in graph {idx}:\n' f'Expected: {ref_pragmas}\n' f'Found: {current_pragmas}'
-                )
+                raise ValueError(f'Pragma mismatch in graph {idx}:\nExpected: {ref_pragmas}\nFound: {current_pragmas}')
 
     def _make_stamp(self):
         length = 8

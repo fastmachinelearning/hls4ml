@@ -7,7 +7,7 @@ from hls4ml.optimization.dsp_aware_pruning.keras.config import SUPPORTED_LAYERS
 
 
 class hls4mlAttributes:
-    '''
+    """
     A class for storing hls4ml information of a single layer
 
     Args:
@@ -19,7 +19,7 @@ class hls4mlAttributes:
         output_precision (FixedPrecisionType): Layer output precision
         reuse_factor (int): Layer reuse factor
         parallelization_factor (int): Layer parallelization factor - [applicable to io_parallel Conv2D]
-    '''
+    """
 
     def __init__(
         self, n_in, n_out, io_type, strategy, weight_precision, output_precision, reuse_factor, parallelization_factor=1
@@ -47,7 +47,7 @@ class hls4mlAttributes:
 
 
 class OptimizationAttributes:
-    '''
+    """
     A class for storing layer optimization attributes
 
     Args:
@@ -61,7 +61,7 @@ class OptimizationAttributes:
     Notes:
         - In the case of hls4ml, pattern_offset is equivalent to the number of weights processed in parallel
         - The pattern_offset is n_in * n_out / reuse_factor; default case (=1) is equivalent to no unrolling
-    '''
+    """
 
     def __init__(
         self,
@@ -84,7 +84,7 @@ class OptimizationAttributes:
 
 
 class LayerAttributes:
-    '''
+    """
     A class for storing layer information
 
     Args:
@@ -99,7 +99,7 @@ class LayerAttributes:
             pruning or weight sharing, block shape and pattern offset
         args (dict): Additional information,
             e.g. hls4mlAttributes; dictionary so it can be generic enough for different platforms
-    '''
+    """
 
     def __init__(
         self,
@@ -141,7 +141,7 @@ class LayerAttributes:
 
 
 def get_attributes_from_keras_model(model):
-    '''
+    """
     Given a Keras model, builds a dictionary of class attributes
     Additional arguments (e.g. reuse factor), depend on the target hardware platform and are inserted later
     Per-layer pruning sype (structured, pattern etc.), depend on the pruning objective and are inserted later
@@ -151,7 +151,7 @@ def get_attributes_from_keras_model(model):
 
     Returns:
         model_attributes (dict): Each key corresponds to a layer name, values are instances of LayerAttribute
-    '''
+    """
     is_sequential = model.__class__.__name__ == 'Sequential'
     model_attributes = {}
 
@@ -183,7 +183,7 @@ def get_attributes_from_keras_model(model):
 
 
 def get_attributes_from_keras_model_and_hls4ml_config(model, config):
-    '''
+    """
     Given a Keras model and hls4ml configuration, builds a dictionary of class attributes
     Per-layer pruning sype (structured, pruning etc.), depend on the pruning objective and are inserted later
 
@@ -193,7 +193,7 @@ def get_attributes_from_keras_model_and_hls4ml_config(model, config):
 
     Returns:
         model_attributes (dict): Each key corresponds to a layer name, values are LayerAttribute instances
-    '''
+    """
 
     # Extract Keras attributes
     model_attributes = get_attributes_from_keras_model(model)
@@ -230,9 +230,9 @@ def get_attributes_from_keras_model_and_hls4ml_config(model, config):
 
 
 def __get_layer_mult_size(attributes):
-    '''
+    """
     Helper function to calculate layer multiplication size
-    '''
+    """
     if 'Dense' in attributes.layer_type.__name__:
         n_in = np.prod(attributes.input_shape)
         n_out = np.prod(attributes.output_shape)

@@ -7,7 +7,7 @@ from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedTy
 
 
 class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
-    '''
+    """
     Set the Rounding and Saturation mode of the output (and accumulator, if applicable)
     of the layers specific in layer list.
     The layer list is empty by default.
@@ -17,7 +17,7 @@ class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
     To set which mode to use:
     hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(rounding_mode='AP_RND_CONV')
     hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(saturation_mode='AP_SAT')
-    '''
+    """
 
     def __init__(self):
         self.layers = []
@@ -31,9 +31,9 @@ class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
         # check that the type doesn't already contain the rounding mode
         rs_match = False
         if self.rounding_mode is not None:
-            rs_match = rs_match or not (self.rounding_mode in t)
+            rs_match = rs_match or self.rounding_mode not in t
         if self.saturation_mode is not None:
-            rs_match = rs_match or not (self.saturation_mode in t)
+            rs_match = rs_match or self.saturation_mode not in t
         return layer_match and rs_match
 
     def transform(self, model, node):
@@ -84,10 +84,10 @@ def register_qkeras():
 
 
 class QKerasFactorizeAlpha(OptimizerPass):
-    '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
+    """OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
     The weights of the Q{Dense, Conv} layer are scaled to the common data type,
     and an 'ApplyAlpha' layer is inserted to reapply the scale.
-    '''
+    """
 
     def match(self, node):
         q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D', 'Conv2DBatchnorm']
@@ -191,12 +191,12 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
 
 class ExtractTernaryThreshold(OptimizerPass):
-    '''The input value (threshold) at which the output of a a ternary activation
+    """The input value (threshold) at which the output of a a ternary activation
     changes is configurable. This pass extracts that threshold point, inserting
     a BatchNormalization layer to execute the scaling. That BatchNormalization
     layer is then expected to be fused into a BatchNormalizationQuantizedTanh
     layer configured with the correct threshold.
-    '''
+    """
 
     def match(self, node):
         return node.class_name == 'TernaryTanh' and node.get_attr('threshold', None) != 0.5

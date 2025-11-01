@@ -11,7 +11,7 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
 
     layer = {}
 
-    layer["name"] = layer_name
+    layer['name'] = layer_name
 
     layer['inputs'] = input_names
     if 'IOType' in config.keys():

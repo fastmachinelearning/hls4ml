@@ -6,7 +6,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class Repack(Layer):
-    '''Inserted between layers with different packing factors.'''
+    """Inserted between layers with different packing factors."""
 
     def initialize(self):
         shape = self.attributes['target_shape']
@@ -44,7 +44,7 @@ def register_repack_stream(backend):
 
 
 class ReshapeStream(OptimizerPass):
-    '''Repacks stream for Reshape layer'''
+    """Repacks stream for Reshape layer"""
 
     def match(self, node):
         # do not run optimizer pass for a flatten layer (1 output dimension)

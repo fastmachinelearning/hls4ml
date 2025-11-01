@@ -718,7 +718,7 @@ class WeightVariable(Variable):
         elif isinstance(new_precision, (FloatPrecisionType, StandardFloatPrecisionType)):
             self.precision_fmt = '{:.16f}'  # Not ideal, but should be enough for most cases
         else:
-            raise RuntimeError(f"Unexpected new precision type: {new_precision}")
+            raise RuntimeError(f'Unexpected new precision type: {new_precision}')
 
     def serialize_state(self):
         state = super().serialize_state()

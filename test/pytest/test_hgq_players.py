@@ -31,7 +31,6 @@ test_path = Path(__file__).parent
 
 
 def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, dir: str, cond=None):
-
     output_dir = dir + '/hls4ml_prj'
     hls_model = convert_from_keras_model(
         proxy,
@@ -57,9 +56,9 @@ def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, 
         try:
             if cond is None:
                 mismatch_ph = p != h
-                assert (
-                    np.sum(mismatch_ph) == 0
-                ), f"Proxy-HLS4ML mismatch for out {i}: {np.sum(np.any(mismatch_ph, axis=1))} out of {data_len} samples are different. Sample: {p[mismatch_ph].ravel()[:5]} vs {h[mismatch_ph].ravel()[:5]}"  # noqa: E501
+                assert np.sum(mismatch_ph) == 0, (
+                    f'Proxy-HLS4ML mismatch for out {i}: {np.sum(np.any(mismatch_ph, axis=1))} out of {data_len} samples are different. Sample: {p[mismatch_ph].ravel()[:5]} vs {h[mismatch_ph].ravel()[:5]}'  # noqa: E501
+                )
             else:
                 cond(p, h)
         except AssertionError as e:
@@ -134,28 +133,28 @@ def get_data(shape: tuple[int, ...], v: float, max_scale: float):
 @pytest.mark.parametrize(
     'layer',
     [
-        "PConcatenate()",
+        'PConcatenate()',
         "PMaxPool1D(2, padding='same')",
         "PMaxPool1D(4, padding='same')",
         "PMaxPool2D((5,3), padding='same')",
         "PMaxPool1D(2, padding='valid')",
         "PMaxPool2D((2,3), padding='valid')",
-        "Signature(1,6,3)",
+        'Signature(1,6,3)',
         "PAvgPool1D(2, padding='same')",
         "PAvgPool2D((1,2), padding='same')",
         "PAvgPool2D((2,2), padding='same')",
         "PAvgPool1D(2, padding='valid')",
         "PAvgPool2D((1,2), padding='valid')",
         "PAvgPool2D((2,2), padding='valid')",
-        "PFlatten()",
+        'PFlatten()',
     ],
 )
-@pytest.mark.parametrize("N", [1000])
-@pytest.mark.parametrize("rnd_strategy", ['floor', 'standard_round'])
-@pytest.mark.parametrize("io_type", ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize("cover_factor", [1.0])
-@pytest.mark.parametrize("aggressive", [True, False])
-@pytest.mark.parametrize("backend", ['vivado', 'vitis'])
+@pytest.mark.parametrize('N', [1000])
+@pytest.mark.parametrize('rnd_strategy', ['floor', 'standard_round'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('cover_factor', [1.0])
+@pytest.mark.parametrize('aggressive', [True, False])
+@pytest.mark.parametrize('backend', ['vivado', 'vitis'])
 def test_syn_players(layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
     model = create_player_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 15), 7, 1)

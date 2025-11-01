@@ -225,7 +225,7 @@ class NamedTypeConverter(TypeDefinition, TypePrecisionConverter):
 
 class CompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
     def definition_cpp(self):
-        cpp_fmt = 'typedef struct {name} {{' '{index} row_index;' '{index} col_index;' '{precision} weight; }} {name};\n'
+        cpp_fmt = 'typedef struct {name} {{{index} row_index;{index} col_index;{precision} weight; }} {name};\n'
         return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision.definition_cpp())
 
     def convert_precision(self, precision_converter):
@@ -235,7 +235,7 @@ class CompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
 
 class ExponentTypeConverter(TypeDefinition, TypePrecisionConverter):
     def definition_cpp(self):
-        cpp_fmt = 'typedef struct {name} {{' '{sign} sign;' '{precision} weight; }} {name};\n'
+        cpp_fmt = 'typedef struct {name} {{{sign} sign;{precision} weight; }} {name};\n'
         return cpp_fmt.format(name=self.name, precision=self.precision.definition_cpp(), sign=self.sign.definition_cpp())
 
     def convert_precision(self, precision_converter):

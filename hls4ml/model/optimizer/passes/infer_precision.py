@@ -319,7 +319,6 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             bias_precision = node.types['bias_t'].precision
 
             if self._all_supported_types((input_precision, scale_precision, bias_precision)):
-
                 after_scale_signed = scale_precision.signed or input_precision.signed
                 after_scale_width = input_precision.width + scale_precision.width
                 after_scale_integer = input_precision.integer + scale_precision.integer
@@ -595,7 +594,6 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         # For PReLU, set the parameter precision to be the input precision by default;
         # As the parameters are stored as a weight tensor, need to update that precision as well.
         if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'prelu':
-
             in_type = node.get_input_variable().type.precision
             node.attributes['param_t'].precision = in_type
             node.weights['param'].update_precision(node.types['param_t'].precision)

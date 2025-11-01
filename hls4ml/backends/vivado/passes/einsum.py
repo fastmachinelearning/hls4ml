@@ -10,7 +10,7 @@ from .reshaping_templates import transpose_config_template
 # Shared Dense template
 # Einsum template
 
-einsum_config_template = '''
+einsum_config_template = """
 struct config{index} {{
     typedef config{index}_tpose_inp0 tpose_inp0_config;
     typedef config{index}_tpose_inp1 tpose_inp1_config;
@@ -34,7 +34,7 @@ struct config{index} {{
     template <class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};
-'''
+"""
 
 einsum_function_template = 'nnet::einsum<{input0_t}, {input1_t}, {output_t}, {config}>({input0}, {input1}, {output});'
 

@@ -106,7 +106,7 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
         if isinstance(data_reader, KerasModelReader):
             nested_data_reader = KerasWrappedLayerReader(data_reader.model.get_layer(layer['name']).layer)
         else:
-            nested_data_reader = KerasWrappedLayerFileReader(data_reader, f"{layer['name']}/{layer['name']}")
+            nested_data_reader = KerasWrappedLayerFileReader(data_reader, f'{layer["name"]}/{layer["name"]}')
 
         wrapped_layer, layer_output_shape = handler(wrapped_keras_layer, [layer['name']], input_shapes, nested_data_reader)
         wrapped_layer['output_shape'] = layer_output_shape
@@ -136,7 +136,7 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             rnn_backward_layer = temp_layer
             swapped_order = True
             print(
-                f'WARNING: The selected order for forward and backward layers in \"{keras_layer["config"]["name"]}\" '
+                f'WARNING: The selected order for forward and backward layers in "{keras_layer["config"]["name"]}" '
                 f'({keras_layer["class_name"]}) is not supported. Switching to forward layer first, backward layer last.'
             )
     else:
@@ -160,7 +160,6 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
     layer['merge_mode'] = keras_layer['config']['merge_mode']
 
     for direction, rnn_layer in [('forward', rnn_forward_layer), ('backward', rnn_backward_layer)]:
-
         layer[f'{direction}_name'] = rnn_layer['config']['name']
         layer[f'{direction}_class_name'] = rnn_layer['class_name']
         if 'activation' in rnn_layer['config']:

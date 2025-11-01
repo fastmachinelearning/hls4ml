@@ -29,10 +29,10 @@ class QuartusWriter(Writer):
         """
 
         # Take in data from current supported data files
-        if original_path[-3:] == "npy":
+        if original_path[-3:] == 'npy':
             data = np.load(original_path)
         else:
-            raise Exception("Unsupported input/output data files.")
+            raise Exception('Unsupported input/output data files.')
 
         # Faltten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
@@ -40,11 +40,11 @@ class QuartusWriter(Writer):
         def print_data(f):
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    f.write(str(data[i][j]) + " ")
-                f.write("\n")
+                    f.write(str(data[i][j]) + ' ')
+                f.write('\n')
 
         # Print out in dat file
-        with open(project_path, "w") as f:
+        with open(project_path, 'w') as f:
             print_data(f)
 
     def get_max_reuse_factor(self, model):
@@ -63,18 +63,18 @@ class QuartusWriter(Writer):
             layer (Layer): Instance of the layer to which the weights belong
             odir (str): Output directory
         """
-        h_file = open(f"{odir}/firmware/weights/{var.name}.h", "w")
+        h_file = open(f'{odir}/firmware/weights/{var.name}.h', 'w')
 
         # meta data
-        h_file.write(f"//Numpy array shape {var.shape}\n")
-        h_file.write(f"//Min {np.min(var.min):.12f}\n")
-        h_file.write(f"//Max {np.max(var.max):.12f}\n")
-        h_file.write(f"//Number of zeros {var.nzeros}\n")
-        h_file.write("\n")
+        h_file.write(f'//Numpy array shape {var.shape}\n')
+        h_file.write(f'//Min {np.min(var.min):.12f}\n')
+        h_file.write(f'//Max {np.max(var.max):.12f}\n')
+        h_file.write(f'//Number of zeros {var.nzeros}\n')
+        h_file.write('\n')
 
-        h_file.write(f"#ifndef {var.name.upper()}_H_\n")
-        h_file.write(f"#define {var.name.upper()}_H_\n")
-        h_file.write("\n")
+        h_file.write(f'#ifndef {var.name.upper()}_H_\n')
+        h_file.write(f'#define {var.name.upper()}_H_\n')
+        h_file.write('\n')
 
         rf = int(layer.get_attr('reuse_factor', 1))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
@@ -107,16 +107,16 @@ class QuartusWriter(Writer):
             weight_header += 'static '
         else:
             weight_header += 'static const '
-        h_file.write(weight_header + var.definition_cpp() + " = {")
+        h_file.write(weight_header + var.definition_cpp() + ' = {')
 
         # fill c++ array.
         # not including internal brackets for multidimensional case
         sep = ''
         for x in var:
             h_file.write(sep + x)
-            sep = ", "
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+            sep = ', '
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
     def write_project_dir(self, model):
@@ -125,8 +125,8 @@ class QuartusWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        if not os.path.isdir(f"{model.config.get_output_dir()}/firmware/weights"):
-            os.makedirs(f"{model.config.get_output_dir()}/firmware/weights")
+        if not os.path.isdir(f'{model.config.get_output_dir()}/firmware/weights'):
+            os.makedirs(f'{model.config.get_output_dir()}/firmware/weights')
 
     def write_project_cpp(self, model):
         """Write the main architecture source file (myproject.cpp)
@@ -446,7 +446,7 @@ class QuartusWriter(Writer):
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
                     newline += '#include "%s"\n' % include
 
-            elif "// hls-fpga-machine-learning insert layer-config" in line:
+            elif '// hls-fpga-machine-learning insert layer-config' in line:
                 newline = line
                 for layer in model.get_layers():
                     config = layer.get_attr('config_cpp', None)
@@ -475,7 +475,7 @@ class QuartusWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         if len(model.get_output_variables()) != 1:
-            print("WARNING:  The testbench only supports one output variable. Leaving empty testbench")
+            print('WARNING:  The testbench only supports one output variable. Leaving empty testbench')
             return
 
         outvar = model.get_output_variables()[0]
@@ -489,13 +489,13 @@ class QuartusWriter(Writer):
         output_predictions = model.config.get_config_value('OutputPredictions')
 
         if input_data:
-            if input_data[-3:] == "dat":
+            if input_data[-3:] == 'dat':
                 copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
             else:
                 self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
 
         if output_predictions:
-            if output_predictions[-3:] == "dat":
+            if output_predictions[-3:] == 'dat':
                 copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
             else:
                 self.__make_dat_file(
@@ -515,7 +515,7 @@ class QuartusWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
                 newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
@@ -584,7 +584,7 @@ class QuartusWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         if len(model.get_output_variables()) != 1:
-            print("WARNING:  The testbench only supports one output variable. Leaving empty testbench")
+            print('WARNING:  The testbench only supports one output variable. Leaving empty testbench')
             return
 
         outvar = model.get_output_variables()[0]
@@ -601,13 +601,13 @@ class QuartusWriter(Writer):
         output_predictions = model.config.get_config_value('OutputPredictions')
 
         if input_data:
-            if input_data[-3:] == "dat":
+            if input_data[-3:] == 'dat':
                 copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
             else:
                 self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
 
         if output_predictions:
-            if output_predictions[-3:] == "dat":
+            if output_predictions[-3:] == 'dat':
                 copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
             else:
                 self.__make_dat_file(
@@ -628,7 +628,7 @@ class QuartusWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine learning instantiate inputs and outputs' in line:
                 newline = line
@@ -759,7 +759,7 @@ class QuartusWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
@@ -957,7 +957,7 @@ class QuartusWriter(Writer):
             in_val = -8.0 * i / float(table_size)
             real_val = np.exp(in_val) - 1.0
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -982,7 +982,7 @@ class QuartusWriter(Writer):
             real_val = 1.0 / (1 + np.exp(-in_val))
             if real_val >= 0.5:
                 h_file.write(sep + str(real_val))
-                sep = ", "
+                sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1007,7 +1007,7 @@ class QuartusWriter(Writer):
             real_val = np.tanh(in_val)
             if real_val >= 0:
                 h_file.write(sep + str(real_val))
-                sep = ", "
+                sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1024,7 +1024,7 @@ class QuartusWriter(Writer):
             in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
             real_val = np.log(np.exp(in_val) + 1.0)
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1049,7 +1049,7 @@ class QuartusWriter(Writer):
             real_val = in_val / (np.fabs(in_val) + 1.0)
             if real_val >= 0:
                 h_file.write(sep + str(real_val))
-                sep = ", "
+                sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1066,7 +1066,7 @@ class QuartusWriter(Writer):
             in_val = -8.0 * i / float(table_size)
             real_val = 1.0507009873554804934193349852946 * (1.6732632423543772848170429916717 * (np.exp(in_val) - 1.0))
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1112,7 +1112,7 @@ class QuartusWriter(Writer):
             f.set_msb_bits(b)
             real_val = f.exp_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1155,7 +1155,7 @@ class QuartusWriter(Writer):
             f.set_msb_bits(b)
             real_val = f.inv_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1194,7 +1194,7 @@ class QuartusWriter(Writer):
             f.set_msb_bits(uint_to_binary(i, N))
             real_val = f.exp_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1233,7 +1233,7 @@ class QuartusWriter(Writer):
             f.set_msb_bits(uint_to_binary(i, N))
             real_val = f.inv_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1250,7 +1250,7 @@ class QuartusWriter(Writer):
             in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
             real_val = np.exp(in_val)
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -1269,7 +1269,7 @@ class QuartusWriter(Writer):
             if in_val > 0.0:
                 real_val = 1.0 / in_val
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()

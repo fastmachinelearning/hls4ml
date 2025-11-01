@@ -840,7 +840,6 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Einsum)
     def init_einsum(self, layer: Einsum) -> None:
-
         equation = layer.attributes['equation']
         inp0_shape = layer.attributes['inp0_shape']
         inp1_shape = layer.attributes['inp1_shape']

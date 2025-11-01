@@ -3,7 +3,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class GenerateConvStreamingInstructions(OptimizerPass):
-    '''Generates the instructions for streaming implementation of CNNs'''
+    """Generates the instructions for streaming implementation of CNNs"""
 
     def match(self, node):
         is_match = (

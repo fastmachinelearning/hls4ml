@@ -4,7 +4,7 @@ from hls4ml.model.types import Source
 
 
 class GenerateConvIm2col(OptimizerPass):
-    '''Generates tcode for im2col step of 1D/2d convolution'''
+    """Generates tcode for im2col step of 1D/2d convolution"""
 
     # Note, DepthwizeConv1D/2D also matches because it inherits from Conv1D/2D
     def match(self, node):
