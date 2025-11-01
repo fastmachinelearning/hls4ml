@@ -66,7 +66,7 @@ def optimize_keras_model_for_hls4ml(
         cutoff_bad_trials (int): After how many bad trials (performance below threshold),
             should model pruning / weight sharing stop
         directory (string): Directory to store temporary results
-        tuner (str): Tuning algorithm, choose between Bayesian, Hyperband and None
+        tuner (str): Tuning algorithm, choose between Bayesian, Hyperband and Manual
         knapsack_solver (str): Algorithm to solve Knapsack problem when optimizing;
             default usually works well; for very large networks, greedy algorithm might be more suitable
         regularization_range (list): List of suitable hyperparameters for weight decay
