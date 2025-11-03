@@ -26,9 +26,9 @@ class VitisWriter(VivadoWriter):
             copy(srcpath + h, dstpath + h)
 
     def write_board_script_override(self, model):
-        '''
+        """
         Write the tcl scripts and kernel sources to create a Vitis IPI
-        '''
+        """
 
         ###################
         # project.tcl

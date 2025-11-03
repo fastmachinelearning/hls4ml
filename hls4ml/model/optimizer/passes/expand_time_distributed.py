@@ -3,7 +3,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class ExpandTimeDistributed(OptimizerPass):
-    '''Expands TimeDistributed's wrapped layer into the graph and inserts a marker at the end.
+    """Expands TimeDistributed's wrapped layer into the graph and inserts a marker at the end.
 
     For example, the layer defined as:
         TimeDistributed(Dense(...))
@@ -15,7 +15,7 @@ class ExpandTimeDistributed(OptimizerPass):
 
     Handling flattened hierarchy has advantages of exposing the wrapped layer(s) to the optimizers. Backends may choose
     to undo this after all optimizers have been applied on the wrapped layers.
-    '''
+    """
 
     def match(self, node):
         return isinstance(node, TimeDistributed) and not isinstance(node.get_attr('wrapped_layer'), TimeDistributed)

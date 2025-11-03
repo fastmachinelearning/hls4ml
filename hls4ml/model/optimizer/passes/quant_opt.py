@@ -73,7 +73,7 @@ class QuantConstantParameters(OptimizerPass):
 
         node.inputs = [inp for inp in node.inputs if inp]
         if len(node.inputs) != 1:
-            raise RuntimeError("hls4ml only supports constant scale, zeropt, and bitwidth values")
+            raise RuntimeError('hls4ml only supports constant scale, zeropt, and bitwidth values')
 
         return True
 

@@ -65,8 +65,8 @@ def test_dense(backend, io_type):
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=1e-2, atol=0.01)
 
     assert len(model.layers) + 1 == len(hls_model.get_layers())
-    assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
-    assert list(hls_model.get_layers())[1].attributes["class_name"] == model.layers[0]._name
+    assert list(hls_model.get_layers())[0].attributes['class_name'] == 'InputLayer'
+    assert list(hls_model.get_layers())[1].attributes['class_name'] == model.layers[0]._name
     assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ELU'
     assert list(hls_model.get_layers())[0].attributes['input_shape'] == list(model.layers[0].input_shape[1:])
     assert list(hls_model.get_layers())[1].attributes['n_in'] == model.layers[0].input_shape[1:][0]
@@ -78,13 +78,13 @@ def test_dense(backend, io_type):
 # TODO: add ThresholdedReLU test when it can be made to pass
 # https://github.com/fastmachinelearning/hls4ml/issues/376
 @pytest.mark.parametrize(
-    "activation_function",
+    'activation_function',
     [
         Activation(activation='relu', name='relu'),
         LeakyReLU(alpha=1.0),
         ELU(alpha=1.0),
         PReLU(
-            alpha_initializer="zeros",
+            alpha_initializer='zeros',
         ),
         Activation(activation='sigmoid', name='sigmoid'),
     ],
@@ -171,13 +171,13 @@ def test_conv1d(padds, backend, strategy, io_type):
         assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
         assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv1D'
         assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
-        assert list(hls_model.get_layers())[1].attributes["in_width"] == model.layers[0]._batch_input_shape[1]
+        assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[1]
         assert list(hls_model.get_layers())[1].attributes['filt_width'] == model.layers[0].kernel_size[0]
         assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0].input_shape[2]
         assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
         assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[0]
         assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
-        assert list(hls_model.get_layers())[1].attributes["out_width"] == list(model.layers[0].output_shape)[1]
+        assert list(hls_model.get_layers())[1].attributes['out_width'] == list(model.layers[0].output_shape)[1]
 
         out_width = math.ceil(float(model.layers[0]._batch_input_shape[2]) / float(model.layers[0].strides[0]))
         pad_along_width = max(
@@ -321,9 +321,9 @@ def test_conv2d(chans, padds, backend, strategy, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_depthwise2d(backend, io_type):
-    '''
+    """
     Test proper handling of DepthwiseConv2D
-    '''
+    """
     X = np.random.rand(10, 32, 32, 3)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = tf.keras.models.Sequential()
@@ -349,9 +349,9 @@ def test_depthwise2d(backend, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_depthwise1d(backend, io_type):
-    '''
+    """
     Test proper handling of DepthwiseConv1D.
-    '''
+    """
     X = np.random.rand(10, 32, 3)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = tf.keras.models.Sequential()

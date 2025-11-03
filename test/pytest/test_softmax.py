@@ -53,8 +53,8 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
         if backend not in ['Vivado', 'Vitis']:
             pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
         W, I = map(int, input_bits.split(','))  # noqa: E741
-        cfg['LayerName']['softmax']['accum_t'] = f'fixed<{W+3},{I+3}>'
-        cfg['LayerName']['softmax']['inv_inp_t'] = f'fixed<{W+2},{I+2}>'
+        cfg['LayerName']['softmax']['accum_t'] = f'fixed<{W + 3},{I + 3}>'
+        cfg['LayerName']['softmax']['inv_inp_t'] = f'fixed<{W + 2},{I + 2}>'
     inp_layer_name = next(iter(cfg['LayerName'].keys()))
     cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
 

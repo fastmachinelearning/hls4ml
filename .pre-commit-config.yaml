@@ -1,13 +1,12 @@
 exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pytest/test_report/)
 
 repos:
-- repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 25.9.0
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.14.3
   hooks:
-  - id: black
-    language_version: python3
-    args: ['--line-length=125',
-           '--skip-string-normalization']
+    - id: ruff
+      args: [--fix]
+    - id: ruff-format
 
 - repo: https://github.com/tox-dev/pyproject-fmt
   rev: v2.11.0
@@ -29,11 +28,6 @@ repos:
   - id: requirements-txt-fixer
   - id: trailing-whitespace
 
-- repo: https://github.com/PyCQA/isort
-  rev: 7.0.0
-  hooks:
-  - id: isort
-
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.21.0
   hooks:
@@ -47,7 +41,9 @@ repos:
     exclude: docs/conf.py
     additional_dependencies: [flake8-bugbear, flake8-print]
     args: ['--max-line-length=125',  # github viewer width
-           '--extend-ignore=E203,T201',  # E203 is not PEP8 compliant
+           '--extend-ignore=E203,T201,F401',
+           # E203 is not PEP8 compliant
+           # F401 included in ruff (behaves slightly differently for noqa flags)
            '--per-file-ignores=hls4ml/model/optimizer/passes/bit_exact.py:E741',
            # i for #int w/o sign, I for #int w/ sign when massively processing bw conversions
     ]

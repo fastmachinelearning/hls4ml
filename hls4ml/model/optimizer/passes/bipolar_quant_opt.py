@@ -38,7 +38,7 @@ class BipolarQuantConstantParameters(OptimizerPass):
 
         node.inputs = [inp for inp in node.inputs if inp]
         if len(node.inputs) != 1:
-            raise RuntimeError("hls4ml only supports constant scale")
+            raise RuntimeError('hls4ml only supports constant scale')
 
         return True
 
@@ -90,7 +90,6 @@ class FuseBipolarQuantWithConstant(OptimizerPass):
     """
 
     def match(self, node):
-
         # only matches after the other inputs are already folded
         # and scale is unit
         is_match = (

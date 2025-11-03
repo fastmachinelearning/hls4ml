@@ -11,7 +11,7 @@ test_root_path = Path(__file__).parent
 
 # Keras implementation of a custom layer
 class KReverse(tf.keras.layers.Layer):
-    '''Keras implementation of a hypothetical custom layer'''
+    """Keras implementation of a hypothetical custom layer"""
 
     def __init__(self):
         super().__init__()
@@ -26,7 +26,7 @@ class KReverse(tf.keras.layers.Layer):
 
 # hls4ml layer implementation
 class HReverse(hls4ml.model.layers.Layer):
-    '''hls4ml implementation of a hypothetical custom layer'''
+    """hls4ml implementation of a hypothetical custom layer"""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -36,7 +36,7 @@ class HReverse(hls4ml.model.layers.Layer):
 
 # hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
-    '''OptimizerPass to remove consecutive HReverse layers.'''
+    """OptimizerPass to remove consecutive HReverse layers."""
 
     def match(self, node):
         return isinstance(node, HReverse) and isinstance(node.get_input_node(), HReverse)

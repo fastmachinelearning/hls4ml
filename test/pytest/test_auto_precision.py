@@ -258,7 +258,7 @@ def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
 
 
 @pytest.mark.parametrize(
-    "val, expected_width",
+    'val, expected_width',
     [
         (0, 1),
         (-1024, 1),
