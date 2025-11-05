@@ -17,7 +17,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv1D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    if "Quant" in operation:
+    if 'Quant' in operation:
         if class_object.weight_quant.is_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
             scale = class_object.quant_weight().scale.detach().numpy()
@@ -32,8 +32,8 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
                 )
             else:
                 raise Exception(
-                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                    Please used QONNX instead.'''
+                    """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                    Please used QONNX instead."""
                 )
         else:
             layer['weight_data'] = class_object.weight.data.numpy()
@@ -100,7 +100,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    if "Quant" in operation:
+    if 'Quant' in operation:
         if class_object.weight_quant.is_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
             scale = class_object.quant_weight().scale.detach().numpy()
@@ -115,8 +115,8 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
                 )
             else:
                 raise Exception(
-                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                    Please used QONNX instead.'''
+                    """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                    Please used QONNX instead."""
                 )
                 # layer = addQuantizationParameters(layer, class_object.quant_weight(), 'weight')
                 # layer['weight_data'] = class_object.quant_weight().detach().value.numpy()

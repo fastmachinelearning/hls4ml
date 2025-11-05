@@ -55,7 +55,7 @@ def test_rnn(backend, io_type):
     config = config_from_pytorch_model(
         model,
         [(None, 1, 10), (None, 1, 20)],
-        channels_last_conversion="off",
+        channels_last_conversion='off',
         transpose_outputs=False,
         default_precision='fixed<32,16>',
     )

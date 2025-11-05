@@ -95,11 +95,11 @@ def test_quantconv1d(backend, io_type):
     if io_type == 'io_stream':
         x = np.ascontiguousarray(x.permute(0, 2, 1))
         config = config_from_pytorch_model(
-            model, (None, n_in, size_in), channels_last_conversion="internal", transpose_outputs=False
+            model, (None, n_in, size_in), channels_last_conversion='internal', transpose_outputs=False
         )
     else:
         config = config_from_pytorch_model(
-            model, (None, n_in, size_in), channels_last_conversion="full", transpose_outputs=True
+            model, (None, n_in, size_in), channels_last_conversion='full', transpose_outputs=True
         )
 
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_conv1d_{backend}_{io_type}')
@@ -156,11 +156,11 @@ def test_quantconv2d(backend, io_type):
     if io_type == 'io_stream':
         x = np.ascontiguousarray(x.permute(0, 2, 3, 1))
         config = config_from_pytorch_model(
-            model, (None, n_in, size_in_height, size_in_width), channels_last_conversion="internal", transpose_outputs=False
+            model, (None, n_in, size_in_height, size_in_width), channels_last_conversion='internal', transpose_outputs=False
         )
     else:
         config = config_from_pytorch_model(
-            model, (None, n_in, size_in_height, size_in_width), channels_last_conversion="full", transpose_outputs=True
+            model, (None, n_in, size_in_height, size_in_width), channels_last_conversion='full', transpose_outputs=True
         )
 
     output_dir = str(test_root_path / f'hls4mlprj_brevitas_conv2d_{backend}_{io_type}')
@@ -270,7 +270,7 @@ def test_pytorch_upsampling1d(data_1d, io_type, backend):
         model,
         (None, in_feat, in_width),
         default_precision='ap_fixed<16,6>',
-        channels_last_conversion="internal",
+        channels_last_conversion='internal',
         transpose_outputs=False,
     )
     odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_1d_{backend}_{io_type}')
@@ -300,7 +300,7 @@ def test_pytorch_upsampling2d(data_2d, io_type, backend):
         model,
         (in_feat, in_height, in_width),
         default_precision='ap_fixed<16,6>',
-        channels_last_conversion="full",  # With conversion to channels_last
+        channels_last_conversion='full',  # With conversion to channels_last
         transpose_outputs=True,
     )
     odir = str(test_root_path / f'hls4mlprj_pytorch_upsampling_2d_{backend}_{io_type}')
@@ -338,7 +338,7 @@ def test_brevitas_quanteltwiseadd(io_type, backend):
         model,
         [(None, 4, 4), (None, 4, 4)],
         default_precision='ap_fixed<16,6>',
-        channels_last_conversion="off",
+        channels_last_conversion='off',
         transpose_outputs=False,
     )
     odir = str(test_root_path / f'hls4mlprj_brevitas_quanteltwiseadd_{backend}_{io_type}')

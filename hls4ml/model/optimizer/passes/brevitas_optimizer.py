@@ -5,7 +5,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class BrevitasInputOutputOptimizer(OptimizerPass):
-    '''Takes nodes parsed from brevitas and inserts Quant nodes into the model if necessary'''
+    """Takes nodes parsed from brevitas and inserts Quant nodes into the model if necessary"""
 
     def match(self, node):
         if ('output_quantization' in node.attributes.keys() and not len(node.attributes['output_quantization']) == 0) or (
@@ -16,7 +16,6 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
             return False
 
     def transform(self, model, node):
-
         # See if Quant layer needs to be added for the output
         if 'output_quantization' in node.attributes.keys() and not len(node.attributes['output_quantization']) == 0:
             print(node.attributes['output_quantization'])
@@ -39,7 +38,6 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
             node.attributes['output_quantization'] = {}
 
         elif 'input_quantization' in node.attributes.keys() and not len(node.attributes['input_quantization']) == 0:
-
             attributes = {}
 
             # Other attributes
