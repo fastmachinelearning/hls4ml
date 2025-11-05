@@ -13,7 +13,7 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
 
     layer = {}
 
-    layer["name"] = layer_name
+    layer['name'] = layer_name
 
     layer['inputs'] = input_names
     if 'IOType' in config.keys():
@@ -53,8 +53,9 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
     if class_object.dropout > 0:
         raise Exception('hls4ml does not support RNNs with dropout')
 
-    layer['weight_data'] = class_object.weight_ih_l0.data.numpy()
-    layer['recurrent_weight_data'] = class_object.weight_hh_l0.data.numpy()
+    # transpose weight and recurrent weight to match keras order used in the HLS code
+    layer['weight_data'] = class_object.weight_ih_l0.data.numpy().transpose()
+    layer['recurrent_weight_data'] = class_object.weight_hh_l0.data.numpy().transpose()
     layer['bias_data'] = class_object.bias_ih_l0.data.numpy()
     layer['recurrent_bias_data'] = class_object.bias_hh_l0.data.numpy()
 
@@ -92,7 +93,7 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
 
     layer = {}
 
-    layer["name"] = layer_name
+    layer['name'] = layer_name
 
     layer['inputs'] = input_names
     if 'IOType' in config.keys():
@@ -141,8 +142,8 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
             )
         else:
             raise Exception(
-                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead.'''
+                """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                Please used QONNX instead."""
             )
 
     if RNNObject.gate_params.hidden_weight.weight_quant.is_quant_enabled:
@@ -160,8 +161,8 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
             )
         else:
             raise Exception(
-                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead.'''
+                """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                Please used QONNX instead."""
             )
 
     input_bias = RNNObject.gate_params.quant_bias()
@@ -180,8 +181,8 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
             )
         else:
             raise Exception(
-                '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead.'''
+                """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                Please used QONNX instead."""
             )
     else:
         layer['bias_data'] = np.zeros(layer['weight_data'].shape[0])
@@ -198,12 +199,12 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
     if mantissa == 0.5:
         ap_fixed_params = convert_uaq_to_apfixed(acc_bitwdith, acc_scale)
         precision = FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-        layer['accum_t'] = NamedType(layer["name"] + '_accum_t', precision)
+        layer['accum_t'] = NamedType(layer['name'] + '_accum_t', precision)
 
     else:
         raise Exception(
-            '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-            Please used QONNX instead.'''
+            """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+            Please used QONNX instead."""
         )
 
     if RNNObject.cell.output_quant.is_quant_enabled:

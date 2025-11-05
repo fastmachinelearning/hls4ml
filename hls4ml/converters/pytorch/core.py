@@ -1,11 +1,11 @@
+import math
+
 import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, convert_uaq_to_apfixed, pytorch_handler
 from hls4ml.model.quantizers import BrevitasQuantizer
 from hls4ml.model.types import FixedPrecisionType
-
 from hls4ml.utils.einsum_utils import _validate_einsum_expr
-
 
 
 @pytorch_handler('Constant')
@@ -45,7 +45,7 @@ def parse_quantidentity_layer(operation, layer_name, input_names, input_shapes, 
         layer['rounding_mode'] = class_object.act_quant.rounding_mode
 
     else:
-        raise Exception('''QuantIdentify layer without act quant does nothing, please remove from model.''')
+        raise Exception("""QuantIdentify layer without act quant does nothing, please remove from model.""")
     output_shape = input_shapes[0]
 
     return layer, output_shape
@@ -67,7 +67,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     else:
         layer['bias_data'] = None
 
-    if "Quant" in operation:
+    if 'Quant' in operation:
         if class_object.weight_quant.is_quant_enabled:
             width = int(class_object.quant_weight().bit_width)
             scale = class_object.quant_weight().scale.detach().numpy()
@@ -82,8 +82,8 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
                 )
             else:
                 raise Exception(
-                    '''Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                    Please used QONNX instead.'''
+                    """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+                    Please used QONNX instead."""
                 )
         else:
             layer['weight_data'] = class_object.weight.data.numpy()
@@ -147,7 +147,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
     layer['name'] = layer_name
     layer['inputs'] = input_names
 
-    if "Quant" in operation:
+    if 'Quant' in operation:
         layer['class_name'] = operation.split('Quant')[-1]
         layer['activation'] = layer['class_name']
         if class_object.act_quant.is_quant_enabled:
@@ -246,13 +246,52 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
     return layer, [shape for shape in input_shapes[0]]
 
 
+@pytorch_handler('LayerNorm')
+def parse_layernorm_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert 'LayerNorm' in operation
+
+    layer = {}
+
+    layer['class_name'] = 'LayerNormalization'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+
+    in_size = 1
+    for dim in input_shapes[0][1:]:
+        in_size *= dim
+    layer['n_in'] = layer['n_out'] = in_size
+
+    if not ((len(input_shapes[0])) == 3):
+        raise Exception(
+            f'Input shape {input_shapes[0]} is not currently supported for LayerNorm; '
+            'only three-dimensional inputs (including batch dimension) are supported'
+        )
+    layer['seq_len'] = input_shapes[0][-2]
+
+    layer['axis'] = 2
+
+    layer['gamma_data'] = class_object.weight.data.numpy()
+    layer['beta_data'] = class_object.bias.data.numpy()
+
+    if class_object.eps <= 0:
+        raise Exception('epsilon must be positive')
+    layer['epsilon_power_of_10'] = -round(math.log10(class_object.eps))
+    if layer['epsilon_power_of_10'] <= 0:
+        raise Exception('epsilon must be less than 1e-1')
+
+    return layer, [shape for shape in input_shapes[0]]
+
+
 @pytorch_handler('einsum')
 def parse_einsum_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert 'einsum' in operation
 
     layer = {}
 
-    if len(input_names) != 2:
+    if len(input_names) == 1:
+        input_names += input_names
+        input_shapes += input_shapes
+    elif len(input_names) > 2:
         raise Exception('Only einsum operations with two inputs are supported')
     layer['class_name'] = 'Einsum'
     layer['name'] = layer_name

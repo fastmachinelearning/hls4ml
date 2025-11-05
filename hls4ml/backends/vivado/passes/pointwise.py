@@ -65,6 +65,9 @@ def register_pointwise(backend):
 
 class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            if node.class_name == 'Conv1D':
+                return False
         return (
             node.class_name in ('Conv1D', 'Conv2D')
             and node.get_attr('filt_height', 1) == 1
@@ -74,15 +77,11 @@ class OptimizePointwiseConv(OptimizerPass):
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:]  # '1D' or '2D'
         # to remove warning, since these get set again
-        new_attrs = {k: v for k, v in node.attributes.items() if k not in ('trace', 'precision', 'reuse_factor')}
+        new_attrs = node.attributes.attributes.copy()
         pw_node = model.make_node(
             'PointwiseConv' + dim, node.name, new_attrs, node.inputs.copy(), outputs=node.outputs.copy()
         )
         # Set strategy to ensure lowercase string is passed to the template
-        if model.config.is_resource_strategy(pw_node):
-            pw_node.set_attr('strategy', 'resource')
-        else:
-            pw_node.set_attr('strategy', 'latency')
+        pw_node.set_attr('strategy', node.get_attr('strategy'))
         model.replace_node(node, pw_node)
-
         return True

@@ -1,7 +1,7 @@
 import glob
 import os
 from pathlib import Path
-from shutil import copy
+from shutil import copy, copyfile
 
 from hls4ml.writer.vivado_writer import VivadoWriter
 
@@ -26,9 +26,9 @@ class VitisWriter(VivadoWriter):
             copy(srcpath + h, dstpath + h)
 
     def write_board_script_override(self, model):
-        '''
+        """
         Write the tcl scripts and kernel sources to create a Vitis IPI
-        '''
+        """
 
         ###################
         # project.tcl
@@ -48,6 +48,22 @@ class VitisWriter(VivadoWriter):
         with open(prj_tcl_file, 'w') as f:
             f.writelines(prj_tcl_contents)
 
+    def write_build_opts(self, model):
+        filedir = Path(__file__).parent
+
+        # build_opt.tcl
+        srcpath = (filedir / '../templates/vitis/build_opt.tcl').resolve()
+        dstpath = f'{model.config.get_output_dir()}/build_opt.tcl'
+        copyfile(srcpath, dstpath)
+
+    def write_build_prj_override(self, model):
+        filedir = Path(__file__).parent
+
+        # build_prj.tcl
+        srcpath = (filedir / '../templates/vitis/build_prj.tcl').resolve()
+        dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
+        copyfile(srcpath, dstpath)
+
     def write_hls(self, model):
         """
         Write the HLS project. Calls the steps from VivadoWriter, adapted for Vitis
@@ -55,4 +71,6 @@ class VitisWriter(VivadoWriter):
         super().write_hls(model)
         self.write_nnet_utils_overrides(model)
         self.write_board_script_override(model)
+        self.write_build_prj_override(model)
+        self.write_build_opts(model)
         self.write_tar(model)

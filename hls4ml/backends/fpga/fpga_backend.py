@@ -7,13 +7,14 @@ from collections.abc import Iterable
 import numpy as np
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
+from hls4ml.model.attributes import Attribute, ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.layers import (
     GRU,
     LSTM,
     Activation,
     BatchNormalization,
     BatchNormOnnx,
+    Bidirectional,
     Conv,
     Conv1D,
     Conv2D,
@@ -24,6 +25,7 @@ from hls4ml.model.layers import (
     GarNetStack,
     GlobalPooling1D,
     GlobalPooling2D,
+    LayerNormalization,
     MatMul,
     Merge,
     Pooling1D,
@@ -38,10 +40,12 @@ from hls4ml.model.optimizer import model_optimizer
 from hls4ml.model.types import (
     ExponentPrecisionType,
     FixedPrecisionType,
+    FloatPrecisionType,
     IntegerPrecisionType,
     PrecisionType,
     RoundingMode,
     SaturationMode,
+    StandardFloatPrecisionType,
     UnspecifiedPrecisionType,
     XnorPrecisionType,
 )
@@ -68,9 +72,11 @@ class FPGABackend(Backend):
             SimpleRNN,
             LSTM,
             GRU,
+            Bidirectional,
             Dot,
             Conv,
             MatMul,
+            LayerNormalization,
         ]
 
         for layer in accum_layers:
@@ -109,32 +115,37 @@ class FPGABackend(Backend):
         act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
         self.attribute_map[Activation] = act_attrs
 
-        softmax_attrs = self.attribute_map.get(Softmax, [])
-        softmax_attrs.append(
+        softmax_attrs = [
+            Attribute('n_in'),
+            Attribute('activation', value_type=str),
+            Attribute('n_outer', value_type=int, default=1),
+            Attribute('n_inner', value_type=int, default=1),
             ChoiceAttribute(
                 'implementation',
                 ['latency', 'stable', 'argmax', 'legacy'],
                 default='stable',
                 description=descriptions.softmax_implementation,
-            )
-        )
-        softmax_attrs.append(
-            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip)
-        )
-        softmax_attrs.append(
+            ),
+            ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip),
             TypeAttribute(
                 'exp_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
                 description=descriptions.table_type,
-            )
-        )
-        softmax_attrs.append(
+            ),
             TypeAttribute(
                 'inv_table',
                 default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
                 description=descriptions.table_type,
-            )
-        )
+            ),
+            TypeAttribute(
+                'inv_inp',
+                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+            ),
+            TypeAttribute(
+                'accum',
+                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+            ),
+        ]
         self.attribute_map[Softmax] = softmax_attrs
 
     def create_layer_class(self, layer_class):
@@ -226,6 +237,16 @@ class FPGABackend(Backend):
             n_in_recr = layer.get_attr('n_out')
             n_out_recr = n_out
             return n_in, n_out, n_in_recr, n_out_recr
+
+        if 'Bidirectional' in layer.class_name:
+            result = []
+            for d in ['forward', 'backward']:
+                n_in = layer.get_attr('n_in')
+                n_out = layer.get_attr(f'{d}_n_states') * 3
+                n_in_recr = layer.get_attr(f'{d}_n_states')
+                n_out_recr = n_out
+                result.append((n_in, n_out, n_in_recr, n_out_recr))
+            return result
 
         raise Exception(f'Cannot get mult size for layer {layer.name} ({layer.class_name})')
 
@@ -343,16 +364,27 @@ class FPGABackend(Backend):
         if precision.lower() == 'auto':
             return cls._convert_auto_type(precision)
 
+        if precision in ['float', 'double', 'half', 'bfloat16'] or precision.startswith(
+            ('ap_float', 'ac_std_float', 'std_float')
+        ):
+            return cls._convert_standard_float_type(precision)
+
+        if precision.startswith('ac_float'):
+            return cls._convert_ac_float_type(precision)
+
         if precision.startswith('ac_'):
             return cls._convert_ac_type(precision)
-        else:
+
+        if precision.startswith(('ap_', 'fixed', 'ufixed', 'int', 'uint')):  # We parse AP notation even without 'ap_' prefix
             return cls._convert_ap_type(precision)
+
+        raise ValueError(f'Unsupported precision type: {precision}')
 
     @classmethod
     def _convert_ap_type(cls, precision):
-        '''
+        """
         Convert a precision string (e.g. "ap_fixed<16,6>" to the internal FixedPrecisionTypes etc)
-        '''
+        """
         bits = re.search('.+<(.+?)>', precision).group(1).split(',')
         sat_mode = None
         round_mode = None
@@ -361,12 +393,12 @@ class FPGABackend(Backend):
             width = int(bits[0])
             integer = int(bits[1])
             fields = 2
-            signed = not ('u' in precision)
+            signed = 'u' not in precision
         elif 'int' in precision:
             width = int(bits[0])
             integer = width
             fields = 1
-            signed = not ('u' in precision)
+            signed = 'u' not in precision
         if len(bits) > fields:
             round_mode = bits[fields]
         if len(bits) > fields + 1:
@@ -380,9 +412,9 @@ class FPGABackend(Backend):
 
     @classmethod
     def _convert_ac_type(cls, precision):
-        '''
+        """
         Convert a precision string (e.g. "ac_fixed<16,6>" to the internal FixedPrecisionTypes etc)
-        '''
+        """
         bits = re.search('.+<(.+?)>', precision).group(1).split(',')
         signed = True  # default is signed
         sat_mode = None
@@ -417,19 +449,57 @@ class FPGABackend(Backend):
             return IntegerPrecisionType(width, signed)
 
     @classmethod
+    def _convert_standard_float_type(cls, precision):
+        # Some default values
+        if precision == 'float':
+            return StandardFloatPrecisionType(width=32, exponent=8, use_cpp_type=True)
+        if precision == 'double':
+            return StandardFloatPrecisionType(width=64, exponent=11, use_cpp_type=True)
+        if precision == 'half':
+            return StandardFloatPrecisionType(width=16, exponent=5, use_cpp_type=True)
+        if precision == 'bfloat16':
+            return StandardFloatPrecisionType(width=16, exponent=8, use_cpp_type=True)
+
+        # If it is a float type, parse the width and exponent
+        bits = re.search('.+<(.+?)>', precision).group(1).split(',')
+        if len(bits) == 2:
+            width = int(bits[0])
+            exponent = int(bits[1])
+            return StandardFloatPrecisionType(width=width, exponent=exponent, use_cpp_type=False)
+        else:
+            raise ValueError(f'Invalid standard float precision format: {precision}')
+
+    @classmethod
+    def _convert_ac_float_type(cls, precision):
+        # If it is a float type, parse the width and exponent
+        bits = re.search('.+<(.+?)>', precision).group(1).split(',')
+        if len(bits) == 3 or len(bits) == 4:
+            mantissa = int(bits[0])
+            integer = int(bits[1])
+            exponent = int(bits[2])
+            width = mantissa + exponent
+            if len(bits) == 4:
+                round_mode = RoundingMode.from_string(bits[3])
+            else:
+                round_mode = None
+            return FloatPrecisionType(width=width, integer=integer, exponent=exponent, rounding_mode=round_mode)
+        else:
+            raise ValueError(f'Invalid ac_float precision format: {precision}')
+
+    @classmethod
     def _convert_auto_type(cls, precision):
-        '''
+        """
         Convert a "auto" precision string into the UnspecifiedPrecisionType
-        '''
+        """
         return UnspecifiedPrecisionType()
 
     def product_type(self, data_T, weight_T):
-        '''
+        """
         Helper function to determine which product implementation to use during inference
-        '''
-        assert not isinstance(
-            data_T, ExponentPrecisionType
-        ), "Only ExponentPrecisionType (aka 'power of 2') weights are currently supported, not data."
+        """
+        assert not isinstance(data_T, ExponentPrecisionType), (
+            "Only ExponentPrecisionType (aka 'power of 2') weights are currently supported, not data."
+        )
         product = 'mult'
         if isinstance(weight_T, ExponentPrecisionType):
             product = 'weight_exponential'
@@ -758,14 +828,14 @@ class FPGABackend(Backend):
         im2col_matrix = self._compute_conv1d_im2col((in_W, in_C), kernel, stride, (pad_left, pad_right), dilation)
 
         generated_code = (
-            "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public nnet::FillConv1DBuffer<data_T, CONFIG_T> {{\n"
-            "    public:\n"
-            "    static void fill_buffer(\n"
-            "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
-            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
-            "        const unsigned partition\n"
-            "    ) {{\n"
+            'template<class data_T, typename CONFIG_T>\n'
+            'class fill_buffer_{index} : public nnet::FillConv1DBuffer<data_T, CONFIG_T> {{\n'
+            '    public:\n'
+            '    static void fill_buffer(\n'
+            '        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n'
+            '        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_width * CONFIG_T::n_chan],\n'
+            '        const unsigned partition\n'
+            '    ) {{\n'
         ).format(index=layer_idx)
         indent = '    '
 
@@ -888,14 +958,14 @@ class FPGABackend(Backend):
         )
 
         generated_code = (
-            "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public nnet::FillConv2DBuffer<data_T, CONFIG_T> {{\n"
-            "    public:\n"
-            "    static void fill_buffer(\n"
-            "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
-            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
-            "        const unsigned partition\n"
-            "    ) {{\n"
+            'template<class data_T, typename CONFIG_T>\n'
+            'class fill_buffer_{index} : public nnet::FillConv2DBuffer<data_T, CONFIG_T> {{\n'
+            '    public:\n'
+            '    static void fill_buffer(\n'
+            '        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n'
+            '        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n'
+            '        const unsigned partition\n'
+            '    ) {{\n'
         ).format(index=layer_idx)
         indent = '    '
 

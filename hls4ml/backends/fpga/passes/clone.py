@@ -6,12 +6,12 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class Clone(Layer):
-    '''Inserted after the layer whose output is used more than once.'''
+    """Inserted after the layer whose output is used more than once."""
 
     def initialize(self):
         inp = self.get_input_variable()
         for i, out_name in enumerate(self.outputs):
-            self.add_output_variable(inp.shape, inp.dim_names, out_name=out_name, var_name='layer{index}_cpy' + str(i + 1))
+            self.add_output_variable(inp.shape, out_name=out_name, var_name='layer{index}_cpy' + str(i + 1))
 
 
 clone_include_list = ['nnet_utils/nnet_stream.h']
@@ -47,7 +47,7 @@ def register_clone(backend):
 
 
 class CloneOutput(OptimizerPass):
-    '''Clones streams that are used multiple times'''
+    """Clones streams that are used multiple times"""
 
     def match(self, node):
         # We may have already inserted the Clone layer
@@ -70,7 +70,6 @@ class CloneOutput(OptimizerPass):
         return False
 
     def transform(self, model, node):
-
         output_map = node.get_output_use_map()
 
         transformed = False

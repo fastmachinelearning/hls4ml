@@ -6,15 +6,14 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class Repack(Layer):
-    '''Inserted between layers with different packing factors.'''
+    """Inserted between layers with different packing factors."""
 
     def initialize(self):
         shape = self.attributes['target_shape']
         if shape[0] is None:
             shape = shape[1:]
-        dims = [f'N_SIZE_{i}_{self.index}' for i in range(1, len(shape) + 1)]
 
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape)
 
 
 repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
@@ -45,13 +44,13 @@ def register_repack_stream(backend):
 
 
 class ReshapeStream(OptimizerPass):
-    '''Repacks stream for Reshape layer'''
+    """Repacks stream for Reshape layer"""
 
     def match(self, node):
         # do not run optimizer pass for a flatten layer (1 output dimension)
         if not isinstance(node, Reshape):
             return False
-        return len(node.get_output_variable().shape) > 1 or node.name in node.model.outputs
+        return len(node.get_output_variable().shape) > 1 or node.outputs[0] in node.model.outputs
 
     def transform(self, model, node):
         if model.config.get_config_value('IOType') != 'io_stream':

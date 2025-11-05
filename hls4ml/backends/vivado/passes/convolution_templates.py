@@ -61,7 +61,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     template<unsigned K, unsigned S, unsigned W>
     using scale_index = nnet::{scale_index_type}<K, S, W>;
     template<class data_T, class res_T, class CONFIG_T>
-    using conv_kernel = nnet::{conv_fn}<data_T, res_T, CONFIG_T>;
+    using conv_kernel = {conv_fn}<data_T, res_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -90,8 +90,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         else:
             params['scale_index_type'] = 'scale_index_regular'
 
+        namespace = params['namespace']
         if node.model.config.get_config_value('IOType') == 'io_parallel':
-            namespace = params['namespace']
             params['fill_fn'] = f'{namespace}::fill_buffer_{node.index}'
         else:
             params['fill_fn'] = 'nnet::FillConv1DBuffer'
@@ -101,13 +101,16 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
             and node.get_attr('strategy').lower() == 'latency'
             and node.model.config.get_config_value('IOType') == 'io_parallel'
         )
-        if is_pointwise_parallel_latency:
-            params['conv_fn'] = f'pointwise_conv_{node.index}'
+
+        n_partitions = node.attributes['n_partitions']
+
+        if is_pointwise_parallel_latency and n_partitions == 1:
+            params['conv_fn'] = 'nnet::BatchedDenseForConv1D'
         else:
             if node.get_attr('strategy').lower() == 'latency':
-                params['conv_fn'] = 'Conv1DLatency'
+                params['conv_fn'] = 'nnet::Conv1DLatency'
             else:
-                params['conv_fn'] = 'Conv1DResource'
+                params['conv_fn'] = 'nnet::Conv1DResource'
 
         params['min_width'] = node.get_attr('min_width', node.get_attr('in_width'))
         params['instructions'] = node.get_attr('instructions', '0')
@@ -115,11 +118,11 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
-        if is_pointwise_parallel_latency:
-            mult_params['n_in'] = int(
-                node.get_attr('in_width') * node.get_attr('n_chan') * node.get_attr('filt_width') / mult_params['reuse']
+        if is_pointwise_parallel_latency and n_partitions == 1:
+            mult_params['n_in'] = (
+                node.get_attr('in_width') * node.get_attr('n_chan') * node.get_attr('filt_width') // n_partitions
             )
-            mult_params['n_out'] = int(node.get_attr('in_width') * node.get_attr('n_filt') / mult_params['reuse'])
+            mult_params['n_out'] = node.get_attr('in_width') * node.get_attr('n_filt') // n_partitions
         else:
             mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
             mult_params['n_out'] = node.get_attr('n_filt')
@@ -154,10 +157,20 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
                         mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin'
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             mult_params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'distributed_arithmetic':
+            mult_params['dense_function'] = f'{namespace}::dense_da_wrapper_{node.index}'
 
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value('IOType')
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class Conv1DFunctionTemplate(FunctionCallTemplate):
@@ -172,6 +185,14 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value('IOType')
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
@@ -299,10 +320,20 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
                         mult_params['dense_function'] = 'nnet::DenseResource_rf_gt_nin'
         elif node.get_attr('strategy').lower() == 'resource_unrolled':
             mult_params['dense_function'] = f'{namespace}::dense_resource_unrolled_{node.index}'
+        elif node.get_attr('strategy').lower() == 'distributed_arithmetic':
+            mult_params['dense_function'] = f'{namespace}::dense_da_wrapper_{node.index}'
 
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value('IOType')
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class Conv2DFunctionTemplate(FunctionCallTemplate):
@@ -317,6 +348,14 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
         params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
+
+    def match(self, node):
+        if node.get_attr('strategy') == 'distributed_arithmetic':
+            io_type = node.model.config.get_config_value('IOType')
+            if io_type == 'io_parallel':
+                # DA impl use alternate entry point for io_parallel conv
+                return False
+        return super().match(node)
 
 
 class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):

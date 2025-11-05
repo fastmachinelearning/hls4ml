@@ -6,7 +6,7 @@ from hls4ml.converters.utils import parse_data_format
 
 @keras_handler('Flatten')
 def parse_flatten_layer(keras_layer, input_names, input_shapes, data_reader):
-    assert keras_layer["class_name"] == 'Flatten'
+    assert keras_layer['class_name'] == 'Flatten'
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
@@ -19,12 +19,12 @@ def parse_flatten_layer(keras_layer, input_names, input_shapes, data_reader):
 
 @keras_handler('Reshape')
 def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader):
-    assert keras_layer["class_name"] == 'Reshape'
+    assert keras_layer['class_name'] == 'Reshape'
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     layer['target_shape'] = keras_layer['config']['target_shape']
-    output_shape = input_shapes[0][:1] + keras_layer['config']['target_shape']
+    output_shape = input_shapes[0][:1] + list(keras_layer['config']['target_shape'])
 
     return layer, output_shape
 

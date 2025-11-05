@@ -29,15 +29,14 @@ from hls4ml.converters import convert_from_keras_model
 test_path = Path(__file__).parent
 
 
-def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, dir: str, cond=None):
-
+def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, dir: str, cond=None, strategy='latency'):
     output_dir = dir + '/hls4ml_prj'
     hls_model = convert_from_keras_model(
         proxy,
         io_type=io_type,
         output_dir=output_dir,
         backend=backend,
-        hls_config={'Model': {'Precision': 'fixed<1,0>', 'ReuseFactor': 1}},
+        hls_config={'Model': {'Precision': 'fixed<1,0>', 'ReuseFactor': 1, 'Strategy': strategy}},
     )
     hls_model.compile()
 
@@ -56,9 +55,9 @@ def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, 
         try:
             if cond is None:
                 mismatch_ph = p != h
-                assert (
-                    np.sum(mismatch_ph) == 0
-                ), f"Proxy-HLS4ML mismatch for out {i}: {np.sum(np.any(mismatch_ph, axis=1))} out of {data_len} samples are different. Sample: {p[mismatch_ph].ravel()[:5]} vs {h[mismatch_ph].ravel()[:5]}"  # noqa: E501
+                assert np.sum(mismatch_ph) == 0, (
+                    f'Proxy-HLS4ML mismatch for out {i}: {np.sum(np.any(mismatch_ph, axis=1))} out of {data_len} samples are different. Sample: {p[mismatch_ph].ravel()[:5]} vs {h[mismatch_ph].ravel()[:5]}'  # noqa: E501
+                )
             else:
                 cond(p, h)
         except AssertionError as e:
@@ -69,13 +68,21 @@ def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, 
 
 
 def run_model_test(
-    model: keras.Model, cover_factor: float | None, data, io_type: str, backend: str, dir: str, aggressive: bool, cond=None
+    model: keras.Model,
+    cover_factor: float | None,
+    data,
+    io_type: str,
+    backend: str,
+    dir: str,
+    aggressive: bool,
+    cond=None,
+    strategy='latency',
 ):
     data_len = data.shape[0] if isinstance(data, np.ndarray) else data[0].shape[0]
     if cover_factor is not None:
         trace_minmax(model, data, cover_factor=cover_factor, bsz=data_len)
     proxy = to_proxy_model(model, aggressive=aggressive, unary_lut_max_table_size=4096)
-    _run_synth_match_test(proxy, data, io_type, backend, dir, cond=cond)
+    _run_synth_match_test(proxy, data, io_type, backend, dir, cond=cond, strategy=strategy)
 
 
 def create_hlayer_model(layer: str, rnd_strategy: str, io_type: str):
@@ -126,9 +133,9 @@ def get_data(shape: tuple[int, ...], v: float, max_scale: float):
 
 def softmax_cond(proxy, hls):
     match_precent = np.mean(np.argmax(proxy, axis=1) == np.argmax(hls, axis=1))
-    assert (
-        match_precent > 0.90
-    ), f"Proxy-HLS4ML mismatch: {(1-match_precent) * 100}% of samples are different. Sample: {proxy[:5]} vs {hls[:5]}"
+    assert match_precent > 0.90, (
+        f'Proxy-HLS4ML mismatch: {(1 - match_precent) * 100}% of samples are different. Sample: {proxy[:5]} vs {hls[:5]}'
+    )
 
 
 def custom_activation_fn(x):
@@ -138,9 +145,9 @@ def custom_activation_fn(x):
 @pytest.mark.parametrize(
     'layer',
     [
-        "HDense(10)",
-        "HDense(10, use_bias=False)",
-        "HDenseBatchNorm(10)",
+        'HDense(10)',
+        'HDense(10, use_bias=False)',
+        'HDenseBatchNorm(10)',
         "HConv1D(2, 3, padding='same')",
         "HConv1D(2, 3, padding='valid')",
         "HConv1D(2, 3, padding='valid', use_bias=False)",
@@ -153,21 +160,21 @@ def custom_activation_fn(x):
         "HConv2D(2, (3,3), padding='valid', strides=2)",
         "HConv2D(2, (3,3), padding='same', strides=2)",
         "HConv2DBatchNorm(2, (3,3), padding='valid')",
-        "HAdd()",
+        'HAdd()',
         "HActivation('relu')",
         #   "HActivation('leaky_relu')",
         "HActivation('tanh')",
         "HActivation('sigmoid')",
         # "HActivation('softmax')",
-        "HActivation(custom_activation_fn)",
+        'HActivation(custom_activation_fn)',
     ],
 )
-@pytest.mark.parametrize("N", [1000])
-@pytest.mark.parametrize("rnd_strategy", ['standard_round', 'floor'])
-@pytest.mark.parametrize("io_type", ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize("cover_factor", [1.0])
-@pytest.mark.parametrize("aggressive", [True, False])
-@pytest.mark.parametrize("backend", ['vivado', 'vitis'])
+@pytest.mark.parametrize('N', [1000])
+@pytest.mark.parametrize('rnd_strategy', ['standard_round', 'floor'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('cover_factor', [1.0])
+@pytest.mark.parametrize('aggressive', [True, False])
+@pytest.mark.parametrize('backend', ['vivado', 'vitis'])
 def test_syn_hlayers(layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
     model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 16), 7, 1)
@@ -176,3 +183,38 @@ def test_syn_hlayers(layer, N: int, rnd_strategy: str, io_type: str, cover_facto
     path = test_path / f'hls4mlprj_hgq_{layer}_{rnd_strategy}_{io_type}_{aggressive}_{backend}'
 
     run_model_test(model, cover_factor, data, io_type, backend, str(path), aggressive, cond=cond)
+
+
+@pytest.mark.parametrize(
+    'layer',
+    [
+        'HDense(10)',
+        'HDense(10, use_bias=False)',
+        "HConv1D(2, 3, padding='same')",
+        "HConv1D(2, 3, padding='valid')",
+        "HConv2D(2, (3,3), padding='valid')",
+        'HConv2D(2, (3,3), use_bias=False)',
+    ],
+)
+@pytest.mark.parametrize('N', [1000])
+@pytest.mark.parametrize('rnd_strategy', ['floor'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('cover_factor', [1.0])
+@pytest.mark.parametrize('aggressive', [True, False])
+@pytest.mark.parametrize('backend', ['vivado', 'vitis'])
+def test_syn_hlayers_da(layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
+    model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
+    data = get_data((N, 16), 7, 1)
+
+    path = test_path / f'hls4mlprj_hgq_da_{layer}_{rnd_strategy}_{io_type}_{aggressive}_{backend}_distributed_arithmetic'
+
+    run_model_test(
+        model=model,
+        cover_factor=cover_factor,
+        data=data,
+        io_type=io_type,
+        backend=backend,
+        dir=str(path),
+        aggressive=aggressive,
+        strategy='distributed_arithmetic',
+    )

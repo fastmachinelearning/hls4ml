@@ -308,10 +308,11 @@ def optimize_model(model, passes):
     optimization_done = False
     while not optimization_done:
         for opt_name, opt in optimizers.items():
-            if isinstance(opt, ModelOptimizerPass) and opt_name not in applied_passes:
-                res = opt.transform(model)
-                if res:
-                    applied_passes.add(opt_name)
+            if isinstance(opt, ModelOptimizerPass):
+                if opt_name not in applied_passes:
+                    res = opt.transform(model)
+                    if res:
+                        applied_passes.add(opt_name)
                 continue
             for node in model.graph.values():
                 if opt.match(node):

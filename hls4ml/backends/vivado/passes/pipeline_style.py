@@ -15,7 +15,6 @@ class SetPipelineStyle(ModelOptimizerPass):
             self._set_pipeline_style(model, 'auto')
 
         if model.config.pipeline_style is None or model.config.pipeline_style == 'auto':
-
             if self._maybe_set_dataflow_io_stream(model):
                 return True
 
@@ -51,7 +50,8 @@ class SetPipelineStyle(ModelOptimizerPass):
 
     def _maybe_set_dataflow_conv_layers(self, model):
         for layer in model.get_layers():
-            if isinstance(layer, (Conv1D, Conv2D)):
+            if isinstance(layer, (Conv1D, Conv2D)) and layer.attributes['n_partitions'] != 1:
+                # pragma dataflow is having weird behavior if II is supposed to be 1
                 self._set_pipeline_style(model, 'dataflow')
                 return True
 
