@@ -125,7 +125,6 @@ def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, 
 
 @pytorch_handler('Upsample', 'UpsamplingNearest2d', 'UpsamplingBilinear2d')
 def handle_upsample(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-
     assert operation in ['Upsample', 'UpsamplingNearest2d', 'UpsamplingBilinear2d']
     layer = {}
     layer['name'] = layer_name
@@ -207,6 +206,8 @@ def parse_constantpad2d_layer(operation, layer_name, input_names, input_shapes, 
     layer['out_height'] = out_height
     layer['out_width'] = out_width
 
+    layer['data_format'] = 'channels_first'  # Default data format in PyTorch
+
     return layer, output_shape
 
 
@@ -245,5 +246,7 @@ def parse_constantpad1d_layer(operation, layer_name, input_names, input_shapes, 
     layer['n_chan'] = channels
     layer['in_width'] = width
     layer['out_width'] = out_width
+
+    layer['data_format'] = 'channels_first'  # Default data format in PyTorch
 
     return layer, output_shape

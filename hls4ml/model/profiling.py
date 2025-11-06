@@ -95,7 +95,7 @@ def boxplot(data, fmt='longform'):
         medianprops = dict(linestyle='-', color='k')
         f, ax = plt.subplots(1, 1)
         data.reverse()
-        colors = sb.color_palette("Blues", len(data))
+        colors = sb.color_palette('Blues', len(data))
         ax.axvline(
             x=1, color='gray', linestyle='--', linewidth=1, zorder=0, label='x = 1'
         )  # Add vertical line for 1 (2^0) behind the boxes
@@ -122,7 +122,7 @@ def histogram(data, fmt='longform'):
     from matplotlib.ticker import MaxNLocator
 
     n = len(data) if fmt == 'summary' else len(data['weight'].unique())
-    colors = sb.color_palette("husl", n)
+    colors = sb.color_palette('husl', n)
     if fmt == 'longform':
         for i, weight in enumerate(data['weight'].unique()):
             y = array_to_summary(data[data['weight'] == weight]['x'], fmt='histogram')
@@ -172,7 +172,7 @@ def types_boxplot(data, fmt='longform'):
 def types_histogram(data, fmt='longform'):
     ax = plt.gca()
     layers = np.array(ax.get_legend_handles_labels()[1])
-    colors = sb.color_palette("husl", len(layers))
+    colors = sb.color_palette('husl', len(layers))
     ylim = ax.get_ylim()
     for _irow, row in data[data['layer'] != 'model'].iterrows():
         if row['layer'] in layers:
@@ -330,10 +330,10 @@ def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
     _, trace = model.trace(np.ascontiguousarray(X))
 
     if len(trace) == 0:
-        raise RuntimeError("ModelGraph must have tracing on for at least 1 layer (this can be set in its config)")
+        raise RuntimeError('ModelGraph must have tracing on for at least 1 layer (this can be set in its config)')
 
     for layer in trace.keys():
-        print(f"   {layer}")
+        print(f'   {layer}')
 
         if fmt == 'summary':
             y = trace[layer].flatten()
@@ -395,7 +395,7 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
     )
     outputs = dict(zip([layer.name for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], outputs))
     for layer_name, y in outputs.items():
-        print(f"   {layer_name}")
+        print(f'   {layer_name}')
         y = y.flatten()
         y = abs(y[y != 0])
         if len(y) == 0:
@@ -433,7 +433,7 @@ def activations_torch(model, X, fmt='longform', plot='boxplot'):
         lname = layer.__class__.__name__
         layers.append(layer)
         pm = partial_model(*layers)
-        print(f"   {lname}")
+        print(f'   {lname}')
         y = pm(X).flatten().detach().numpy()
         y = abs(y[y != 0])
         if len(y) == 0:
@@ -475,15 +475,15 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     model_present = model is not None
 
     if hls_model_present:
-        before = " (before optimization)"
-        after = " (final / after optimization)"
+        before = ' (before optimization)'
+        after = ' (final / after optimization)'
         hls_model_unoptimized, tmp_output_dir = get_unoptimized_hlsmodel(hls_model)
     else:
-        before = ""
-        after = ""
+        before = ''
+        after = ''
         hls_model_unoptimized, tmp_output_dir = None, None
 
-    print("Profiling weights" + before)
+    print('Profiling weights' + before)
     data = None
 
     if hls_model_present:
@@ -496,7 +496,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
             data = weights_torch(model, fmt='summary', plot=plot)
 
     if data is None:
-        print("Only keras, PyTorch and ModelGraph models " + "can currently be profiled")
+        print('Only keras, PyTorch and ModelGraph models ' + 'can currently be profiled')
 
         if hls_model_present and os.path.exists(tmp_output_dir):
             shutil.rmtree(tmp_output_dir)
@@ -509,11 +509,11 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         t_data = types_hlsmodel(hls_model_unoptimized)
         types_plots[plot](t_data, fmt='summary')
 
-    plt.title("Distribution of (non-zero) weights" + before)
+    plt.title('Distribution of (non-zero) weights' + before)
     plt.tight_layout()
 
     if hls_model_present:
-        print("Profiling weights" + after)
+        print('Profiling weights' + after)
 
         data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
         wph = plots[plot](data, fmt='summary')  # weight plot
@@ -522,11 +522,11 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
             t_data = types_hlsmodel(hls_model)
             types_plots[plot](t_data, fmt='summary')
 
-        plt.title("Distribution of (non-zero) weights" + after)
+        plt.title('Distribution of (non-zero) weights' + after)
         plt.tight_layout()
 
     if X is not None:
-        print("Profiling activations" + before)
+        print('Profiling activations' + before)
         data = None
         if __keras_profiling_enabled__ and isinstance(model, keras.Model):
             data = activations_keras(model, X, fmt='summary', plot=plot)
@@ -538,18 +538,18 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
             if hls_model_present and plot in types_plots:
                 t_data = activation_types_hlsmodel(hls_model_unoptimized)
                 types_plots[plot](t_data, fmt='summary')
-            plt.title("Distribution of (non-zero) activations" + before)
+            plt.title('Distribution of (non-zero) activations' + before)
             plt.tight_layout()
 
         if hls_model_present:
-            print("Profiling activations" + after)
+            print('Profiling activations' + after)
             data = activations_hlsmodel(hls_model, X, fmt='summary', plot=plot)
             aph = plots[plot](data, fmt='summary')
 
             t_data = activation_types_hlsmodel(hls_model)
             types_plots[plot](t_data, fmt='summary')
 
-            plt.title("Distribution of (non-zero) activations (final / after optimization)")
+            plt.title('Distribution of (non-zero) activations (final / after optimization)')
             plt.tight_layout()
 
     if hls_model_present and os.path.exists(tmp_output_dir):
@@ -605,13 +605,13 @@ def get_ymodel_keras(keras_model, X):
             layer.activation = None
             ymodel.update({layer.name: _get_outputs([layer], X, keras_model.input)})
             layer.activation = tmp_activation
-            name = layer.name + f"_{tmp_activation.__name__}"
+            name = layer.name + f'_{tmp_activation.__name__}'
         traced_layers.append(layer)
         layer_names.append(name)
     outputs = _get_outputs(traced_layers, X, keras_model.input)
     for name, output in zip(layer_names, outputs):
         ymodel[name] = output
-    print("Done taking outputs for Keras model.")
+    print('Done taking outputs for Keras model.')
     return ymodel
 
 
@@ -625,7 +625,7 @@ def _norm_diff(ymodel, ysim):
     # ---Bar Plot---
     f, ax = plt.subplots()
     plt.bar(list(diff.keys()), list(diff.values()))
-    plt.title("layer-by-layer output differences")
+    plt.title('layer-by-layer output differences')
     ax.set_ylabel('Norm of difference vector')
     plt.xticks(rotation=90)
     plt.tight_layout()
@@ -666,7 +666,7 @@ def _dist_diff(ymodel, ysim):
     ax.boxplot(list(diff.values()), sym='k+', positions=pos)
 
     # --formatting
-    plt.title("Layer-by-layer distribution of output differences")
+    plt.title('Layer-by-layer distribution of output differences')
     ax.set_xticklabels(list(diff.keys()))
     ax.set_ylabel('Normalized difference')
     ax.set_ylabel('Percent difference.')
@@ -676,7 +676,7 @@ def _dist_diff(ymodel, ysim):
     return f
 
 
-def compare(keras_model, hls_model, X, plot_type="dist_diff"):
+def compare(keras_model, hls_model, X, plot_type='dist_diff'):
     """Compare each layer's output in keras and hls model. Note that the hls_model should not be compiled before using this.
 
     Args:
@@ -698,11 +698,11 @@ def compare(keras_model, hls_model, X, plot_type="dist_diff"):
     ymodel = get_ymodel_keras(keras_model, X)
     _, ysim = hls_model.trace(X)
 
-    print("Plotting difference...")
+    print('Plotting difference...')
     f = plt.figure()
-    if plot_type == "norm_diff":
+    if plot_type == 'norm_diff':
         f = _norm_diff(ymodel, ysim)
-    elif plot_type == "dist_diff":
+    elif plot_type == 'dist_diff':
         f = _dist_diff(ymodel, ysim)
 
     return f

@@ -34,9 +34,9 @@ class QMultiHeadAttentionHandler(QLayerHandler):
         tensor_O, *tensor_attn = out_tensors
 
         node_index: int = tensor_q._keras_history.node_index  # type: ignore
-        assert all(
-            [node_index == inp._keras_history.node_index for inp in layer.input[1:]]
-        ), f'Critical error handling layer {layer.name}'
+        assert all([node_index == inp._keras_history.node_index for inp in layer.input[1:]]), (
+            f'Critical error handling layer {layer.name}'
+        )
         node = layer._inbound_nodes[node_index]
 
         args = node.arguments.args
@@ -151,9 +151,9 @@ class QLinformerAttentionHandler(QMultiHeadAttentionHandler):
         unique_name: str = layer.name
 
         node_index: int = tensor_q._keras_history.node_index  # type: ignore
-        assert all(
-            [node_index == inp._keras_history.node_index for inp in layer.input[1:]]
-        ), f'Critical error handling layer {layer.name}'
+        assert all([node_index == inp._keras_history.node_index for inp in layer.input[1:]]), (
+            f'Critical error handling layer {layer.name}'
+        )
         node = layer._inbound_nodes[node_index]
 
         args = node.arguments.args

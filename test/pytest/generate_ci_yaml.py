@@ -5,10 +5,10 @@ from pathlib import Path
 
 import yaml
 
-'''
+"""
 Create a Gitlab CI yml file with a separate entry for each test_* file
 in the pytests directory to parallelise the CI jobs.
-'''
+"""
 
 template = """
 pytest.{}:

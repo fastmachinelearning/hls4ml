@@ -181,7 +181,6 @@ def get_activation_quantizer(keras_layer, input_names, activation_name='activati
 
 @keras_handler('QActivation')
 def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader):
-
     assert keras_layer['class_name'] == 'QActivation'
 
     layer = get_activation_quantizer(keras_layer, input_names)

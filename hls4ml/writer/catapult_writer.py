@@ -25,28 +25,28 @@ class CatapultWriter(Writer):
             write_txt_file (bool, optional): Write txt files in addition to .h files. Defaults to True.
         """
 
-        h_file = open(f"{odir}/firmware/weights/{var.name}.h", "w")
+        h_file = open(f'{odir}/firmware/weights/{var.name}.h', 'w')
         if write_txt_file:
-            txt_file = open(f"{odir}/firmware/weights/{var.name}.txt", "w")
+            txt_file = open(f'{odir}/firmware/weights/{var.name}.txt', 'w')
 
         # meta data
-        h_file.write(f"//Numpy array shape {var.shape}\n")
-        h_file.write(f"//Min {np.min(var.min):.12f}\n")
-        h_file.write(f"//Max {np.max(var.max):.12f}\n")
-        h_file.write(f"//Number of zeros {var.nzeros}\n")
-        h_file.write("\n")
+        h_file.write(f'//Numpy array shape {var.shape}\n')
+        h_file.write(f'//Min {np.min(var.min):.12f}\n')
+        h_file.write(f'//Max {np.max(var.max):.12f}\n')
+        h_file.write(f'//Number of zeros {var.nzeros}\n')
+        h_file.write('\n')
 
-        h_file.write(f"#ifndef {var.name.upper()}_H_\n")
-        h_file.write(f"#define {var.name.upper()}_H_\n")
-        h_file.write("\n")
+        h_file.write(f'#ifndef {var.name.upper()}_H_\n')
+        h_file.write(f'#define {var.name.upper()}_H_\n')
+        h_file.write('\n')
 
         if write_txt_file:
-            h_file.write("#ifndef __SYNTHESIS__\n")
-            h_file.write("// global extern pointer only - actual array allocated in myproject_test.cpp\n")
-            h_file.write("extern " + var.definition_cpp() + ";\n")
-            h_file.write("#else\n")
+            h_file.write('#ifndef __SYNTHESIS__\n')
+            h_file.write('// global extern pointer only - actual array allocated in myproject_test.cpp\n')
+            h_file.write('extern ' + var.definition_cpp() + ';\n')
+            h_file.write('#else\n')
 
-        h_file.write(var.definition_cpp() + " = {")
+        h_file.write(var.definition_cpp() + ' = {')
 
         # fill c++ array.
         # not including internal brackets for multidimensional case
@@ -55,12 +55,12 @@ class CatapultWriter(Writer):
             h_file.write(sep + x)
             if write_txt_file:
                 txt_file.write(sep + x)
-            sep = ", "
-        h_file.write("};\n")
+            sep = ', '
+        h_file.write('};\n')
         if write_txt_file:
-            h_file.write("#endif\n")
+            h_file.write('#endif\n')
             txt_file.close()
-        h_file.write("\n#endif\n")
+        h_file.write('\n#endif\n')
         h_file.close()
 
     def write_output_dir(self, model):
@@ -69,8 +69,8 @@ class CatapultWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        if not os.path.isdir(f"{model.config.get_output_dir()}/firmware/weights"):
-            os.makedirs(f"{model.config.get_output_dir()}/firmware/weights")
+        if not os.path.isdir(f'{model.config.get_output_dir()}/firmware/weights'):
+            os.makedirs(f'{model.config.get_output_dir()}/firmware/weights')
 
     @staticmethod
     def _make_array_pragma(variable, model):
@@ -104,7 +104,7 @@ class CatapultWriter(Writer):
             return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
 
         elif mode == 'stream':
-            fifo = model.config.get_config_value("FIFO")
+            fifo = model.config.get_config_value('FIFO')
             if fifo is not None:
                 retstr = f'#pragma hls_resource {variable.name}:cns variables="{variable.name}"'
                 retstr += f' map_to_module="{fifo}" // depth="{depth}"'
@@ -132,7 +132,7 @@ class CatapultWriter(Writer):
             factor = 0
 
         if mode == 'stream':
-            fifo = model.config.get_config_value("FIFO")
+            fifo = model.config.get_config_value('FIFO')
             if fifo is not None:
                 return f'// #pragma hls_fifo_depth {depth} {factor}'
             else:
@@ -150,31 +150,31 @@ class CatapultWriter(Writer):
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         fout = open(f'{model.config.get_output_dir()}/firmware/layer_summary.txt', 'w')
-        outstr = ""
-        outstr = outstr + "{}".format("Layer Name").ljust(25)
-        outstr = outstr + "  {}".format("Layer Class").ljust(20)
-        outstr = outstr + "  {}".format("Input Type").ljust(40)
-        outstr = outstr + "  {}".format("Input Shape").ljust(15)
-        outstr = outstr + "  {}".format("Output Type").ljust(40)
-        outstr = outstr + "  {}".format("Output Shape").ljust(15)
+        outstr = ''
+        outstr = outstr + '{}'.format('Layer Name').ljust(25)
+        outstr = outstr + '  {}'.format('Layer Class').ljust(20)
+        outstr = outstr + '  {}'.format('Input Type').ljust(40)
+        outstr = outstr + '  {}'.format('Input Shape').ljust(15)
+        outstr = outstr + '  {}'.format('Output Type').ljust(40)
+        outstr = outstr + '  {}'.format('Output Shape').ljust(15)
         # outstr = outstr + "  {}".format("Weight Type").ljust(24)
         # outstr = outstr + "  {}".format("Bias Type").ljust(24)
-        outstr = outstr + "  {}".format("Filter Shape").ljust(15)
-        outstr = outstr + "  {}".format("Stride").ljust(10)
-        outstr = outstr + "  {}".format("IOType").ljust(15)
-        outstr = outstr + "  {}".format("Reuse").ljust(10)
+        outstr = outstr + '  {}'.format('Filter Shape').ljust(15)
+        outstr = outstr + '  {}'.format('Stride').ljust(10)
+        outstr = outstr + '  {}'.format('IOType').ljust(15)
+        outstr = outstr + '  {}'.format('Reuse').ljust(10)
 
-        fout.write(outstr + "\n")
-        input_shape = ""
-        input_datatype = ""
+        fout.write(outstr + '\n')
+        input_shape = ''
+        input_datatype = ''
         for layer in model.get_layers():
-            datatype = layer.get_output_variable().type.precision.definition_cpp() + " "
-            shape = ""
+            datatype = layer.get_output_variable().type.precision.definition_cpp() + ' '
+            shape = ''
             # layer.get_output_variable().type.precision.width
             # layer.get_output_variable().type.precision.integer
             # layer.get_output_variable().type.precision.sign
             for v in layer.get_output_variable().shape:
-                shape = shape + "[" + str(v) + "]"
+                shape = shape + '[' + str(v) + ']'
 
             if layer.attributes.layer.class_name != 'Input':
                 my_class_name = layer.class_name
@@ -195,33 +195,33 @@ class CatapultWriter(Writer):
                 #        print(weights.type.precision.signed)
                 #    print(weights.data_length)
 
-                filter = ""
+                filter = ''
                 filt_width = layer.get_attr('filt_width')
                 filt_height = layer.get_attr('filt_height')
                 if filt_width is not None:
-                    filter = "[" + str(filt_width) + "]"
+                    filter = '[' + str(filt_width) + ']'
                 if filt_height is not None:
-                    filter = filter + "[" + str(filt_height) + "]"
+                    filter = filter + '[' + str(filt_height) + ']'
 
-                stride = ""
+                stride = ''
                 stride_width = layer.get_attr('stride_width')
                 if stride_width is not None:
                     stride = str(stride_width)
 
-                outstr = ""
-                outstr = outstr + f"{layer.name}".ljust(25)
-                outstr = outstr + f"  {my_class_name}".ljust(20)
-                outstr = outstr + f"  {input_datatype}".ljust(40)
-                outstr = outstr + f"  {input_shape}".ljust(15)
-                outstr = outstr + f"  {datatype}".ljust(40)
-                outstr = outstr + f"  {shape}".ljust(15)
+                outstr = ''
+                outstr = outstr + f'{layer.name}'.ljust(25)
+                outstr = outstr + f'  {my_class_name}'.ljust(20)
+                outstr = outstr + f'  {input_datatype}'.ljust(40)
+                outstr = outstr + f'  {input_shape}'.ljust(15)
+                outstr = outstr + f'  {datatype}'.ljust(40)
+                outstr = outstr + f'  {shape}'.ljust(15)
                 # outstr = outstr + "  {}".format("weight type").ljust(24)
                 # outstr = outstr + "  {}".format("bias type").ljust(24)
-                outstr = outstr + f"  {filter}".ljust(15)
-                outstr = outstr + f"  {stride}".ljust(10)
-                outstr = outstr + "  {}".format(layer.model.config.get_config_value('IOType')).ljust(15)
-                outstr = outstr + f"  {str(layer.model.config.get_reuse_factor(layer))}".ljust(10)
-                fout.write(outstr + "\n")
+                outstr = outstr + f'  {filter}'.ljust(15)
+                outstr = outstr + f'  {stride}'.ljust(10)
+                outstr = outstr + '  {}'.format(layer.model.config.get_config_value('IOType')).ljust(15)
+                outstr = outstr + f'  {str(layer.model.config.get_reuse_factor(layer))}'.ljust(10)
+                fout.write(outstr + '\n')
 
             input_shape = shape
             input_datatype = datatype
@@ -276,7 +276,7 @@ class CatapultWriter(Writer):
                 all_inputs = [i.name for i in model_inputs]
                 all_outputs = [o.name for o in model_outputs]
                 all_brams = [b.name for b in model_brams]
-                io_type = model.config.get_config_value("IOType")
+                io_type = model.config.get_config_value('IOType')
 
                 if io_type == 'io_serial' or io_type == 'io_stream':
                     # Eventually this will be amba.ccs_axi4stream_in and amba.ccs_axi4stream_out
@@ -293,7 +293,7 @@ class CatapultWriter(Writer):
                 all_inputs = [i.name for i in model_inputs]
                 all_outputs = [o.name for o in model_outputs]
                 all_brams = [b.name for b in model_brams]
-                io_type = model.config.get_config_value("IOType")
+                io_type = model.config.get_config_value('IOType')
 
                 if io_type == 'io_parallel':
                     for i in model_inputs:
@@ -318,7 +318,7 @@ class CatapultWriter(Writer):
                     newline += indent + '// #pragma HLS DATAFLOW \n'
 
             elif '// hls-fpga-machine-learning insert layers' in line:
-                io_type = model.config.get_config_value("IOType")
+                io_type = model.config.get_config_value('IOType')
                 newline = line + '\n'
                 for layer in model.get_layers():
                     vars = layer.get_variables()
@@ -455,7 +455,7 @@ class CatapultWriter(Writer):
                         if w.storage.lower() != 'bram':
                             newline += f'#include "weights/{w.name}.h"\n'
 
-            elif "// hls-fpga-machine-learning insert layer-config" in line:
+            elif '// hls-fpga-machine-learning insert layer-config' in line:
                 newline = line
                 for layer in model.get_layers():
                     config = layer.get_attr('config_cpp', None)
@@ -486,10 +486,10 @@ class CatapultWriter(Writer):
         """
 
         # Take in data from current supported data files
-        if original_path[-3:] == "npy":
+        if original_path[-3:] == 'npy':
             data = np.load(original_path)
         else:
-            raise Exception("Unsupported input/output data files.")
+            raise Exception('Unsupported input/output data files.')
 
         # Faltten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
@@ -497,11 +497,11 @@ class CatapultWriter(Writer):
         def print_data(f):
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    f.write(str(data[i][j]) + " ")
-                f.write("\n")
+                    f.write(str(data[i][j]) + ' ')
+                f.write('\n')
 
         # Print out in dat file
-        with open(project_path, "w") as f:
+        with open(project_path, 'w') as f:
             print_data(f)
 
     def write_test_bench(self, model):
@@ -520,13 +520,13 @@ class CatapultWriter(Writer):
         output_predictions = model.config.get_config_value('OutputPredictions')
 
         if input_data:
-            if input_data[-3:] == "dat":
+            if input_data[-3:] == 'dat':
                 copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
             else:
                 self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
 
         if output_predictions:
-            if output_predictions[-3:] == "dat":
+            if output_predictions[-3:] == 'dat':
                 copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
             else:
                 self.__make_dat_file(
@@ -549,13 +549,13 @@ class CatapultWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
             elif '// hls-fpga-machine-learning insert declare weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        newline += w.definition_cpp() + ";\n"
+                        newline += w.definition_cpp() + ';\n'
 
             elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
@@ -668,12 +668,12 @@ class CatapultWriter(Writer):
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
-                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                    newline += f'#include "firmware/weights/{bram.name}.h"\n'
             elif '// hls-fpga-machine-learning insert declare weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        newline += w.definition_cpp() + ";\n"
+                        newline += w.definition_cpp() + ';\n'
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
                 inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
@@ -811,7 +811,7 @@ class CatapultWriter(Writer):
         for h in headers:
             copyfile(srcpath + h, dstpath + h)
 
-        print("Copying NNET files to local firmware directory")
+        print('Copying NNET files to local firmware directory')
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         for pkg in ('ac_types', 'ac_math', 'ac_simutils'):
@@ -826,10 +826,10 @@ class CatapultWriter(Writer):
             if os.path.exists(srcpath):
                 if os.path.exists(dstpath):
                     rmtree(dstpath)
-                print("... copying AC " + pkg + " headers from " + srcpath)
+                print('... copying AC ' + pkg + ' headers from ' + srcpath)
                 copytree(srcpath, dstpath)
             else:
-                print("... skipping copy of " + pkg + " headers - assumed to located in Catapult install tree")
+                print('... skipping copy of ' + pkg + ' headers - assumed to located in Catapult install tree')
 
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
@@ -897,7 +897,7 @@ class CatapultWriter(Writer):
             with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
                 archive.add(model.config.get_output_dir(), recursive=True)
         else:
-            print("Project .tar.gz archive already exists")
+            print('Project .tar.gz archive already exists')
 
     def write_hls(self, model):
         self.write_output_dir(model)

@@ -21,6 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -86,10 +87,6 @@ git_describe_command = [
 ]
 write_to = "hls4ml/_version.py"
 
-[tool.black]
-line-length = 125
-skip-string-normalization = true
-
 [tool.ruff]
 target-version = "py310"
 
@@ -108,10 +105,6 @@ lint.per-file-ignores = { "__init__.py" = [ "F401" ] }
 
 lint.fixable = [ "ALL" ]
 lint.unfixable = [  ]
-
-[tool.isort]
-profile = "black"
-line_length = 125
 
 [tool.check-manifest]
 ignore = [

@@ -24,7 +24,7 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
 
     shape: tuple[int, ...] = tensor.shape[1:]  # type: ignore
     if any([s is None for s in shape]):
-        raise ValueError(f"Tensor {tensor.name} has at least one dimension with no fixed size")
+        raise ValueError(f'Tensor {tensor.name} has at least one dimension with no fixed size')
     k, i, f = internal_q.kif
     k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
     k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
