@@ -43,8 +43,8 @@ def collect_test_functions_from_ast(test_file):
 
     test_funcs = []
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name.startswith("test"):
-            test_funcs.append(f"{test_file}::{node.name}")
+        if isinstance(node, ast.FunctionDef) and node.name.startswith('test'):
+            test_funcs.append(f'{test_file}::{node.name}')
     return test_funcs
 
 
@@ -109,8 +109,8 @@ def generate_test_yaml(test_root='.'):
         needs_examples = uses_example_model(path)
 
         for i, batch in enumerate(batched(test_ids, chunk_size)):
-            job_name = f"{name_base}_part{i}"
-            test_file_args = " ".join(batch).strip().replace("\n", " ")
+            job_name = f'{name_base}_part{i}'
+            test_file_args = ' '.join(batch).strip().replace('\n', ' ')
             diff_yml = yaml.safe_load(template.format(job_name, test_file_args, int(needs_examples)))
             if yml is None:
                 yml = diff_yml
