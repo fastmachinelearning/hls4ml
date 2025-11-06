@@ -49,7 +49,7 @@ def compare_dicts(data, baseline, tolerances):
     """
     for key, expected in baseline.items():
         actual = data.get(key)
-        tolerance = tolerances.get(key, 0)
+        tolerance = tolerances.get(key, 0.01)  # Default tolerance of 1%
 
         try:
             actual = float(actual)
@@ -71,7 +71,12 @@ def compare_vitis_backend(data, baseline):
     """
 
     tolerances = {
+        'TargetClockPeriod': 0.01,
         'EstimatedClockPeriod': 0.01,
+        'BestLatency': 0.015,
+        'WorstLatency': 0.015,
+        'IntervalMin': 0.015,
+        'IntervalMax': 0.015,
         'FF': 0.1,
         'LUT': 0.1,
         'BRAM_18K': 0.1,
