@@ -2,8 +2,11 @@
 # Based on https://github.com/fastmachinelearning/qonnx/blob/
 # 12c96a3ded06beacab08e0f554e4ed014476c0aa/src/qonnx/transformation/channels_last.py
 
+import numpy as np
+
 from hls4ml.model.layers import GRU, LSTM, Concatenate, Dense, Input, LayerNormalization, Reshape, Transpose
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
 from hls4ml.model.types import WeightVariable
 
 
@@ -62,21 +65,27 @@ class ChannelsLastConverter(OptimizerPass):
         elif isinstance(node, LSTM) or isinstance(node, GRU):
             pass
         else:
-            # Transpose weight tensors
-            tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
-            for tensor in tensors:
-                try:
-                    if len(node.get_weights(tensor).shape) == 2:
-                        weights_channels_last = node.get_weights(tensor).data.transpose()
-                        node.get_weights(tensor).data = weights_channels_last
-                    elif len(node.get_weights(tensor).shape) == 3:
-                        weights_channels_last = node.get_weights(tensor).data.transpose([2, 1, 0])
-                        node.get_weights(tensor).data = weights_channels_last
-                    elif len(node.get_weights(tensor).shape) == 4:
-                        weights_channels_last = node.get_weights(tensor).data.transpose([2, 3, 1, 0])
-                        node.get_weights(tensor).data = weights_channels_last
-                except KeyError:
-                    pass
+            if isinstance(node, FixedPointQuantizer):
+                transpose_map = {3: (0, 2, 1), 4: (0, 3, 2, 1), 5: (0, 3, 4, 2, 1)}
+                node.mask_kbi = tuple(
+                    np.transpose(t, transpose_map[t.ndim]) if t.ndim in transpose_map else t for t in node.mask_kbi
+                )
+            else:
+                # Transpose weight tensors
+                tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
+                for tensor in tensors:
+                    try:
+                        if len(node.get_weights(tensor).shape) == 2:
+                            weights_channels_last = node.get_weights(tensor).data.transpose()
+                            node.get_weights(tensor).data = weights_channels_last
+                        elif len(node.get_weights(tensor).shape) == 3:
+                            weights_channels_last = node.get_weights(tensor).data.transpose([2, 1, 0])
+                            node.get_weights(tensor).data = weights_channels_last
+                        elif len(node.get_weights(tensor).shape) == 4:
+                            weights_channels_last = node.get_weights(tensor).data.transpose([2, 3, 1, 0])
+                            node.get_weights(tensor).data = weights_channels_last
+                    except KeyError:
+                        pass
             try:
                 node.set_attr('data_format', 'channels_last')
             except AttributeError:
