@@ -11,8 +11,7 @@ Discovery
 =========
 
 Plugin packages advertise themselves through the ``hls4ml.backends`` Python entry point group. Each
-entry either exposes a subclass of :class:`hls4ml.backends.backend.Backend` or a callable that
-receives ``register_backend`` and ``register_writer`` helpers and performs any setup that is
+entry exposes a callable that receives ``register_backend`` and ``register_writer`` helpers and performs any setup that is
 required. ``hls4ml`` automatically scans for these entry points during ``hls4ml.backends`` import so
 third-party backends become available without additional user configuration.
 

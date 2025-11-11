@@ -1,15 +1,12 @@
 """Utilities for discovering and loading external hls4ml backend plugins."""
 
-from __future__ import annotations
-
-import inspect
 import os
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from importlib import import_module
 from importlib.metadata import entry_points
 from typing import Any
 
-from hls4ml.backends.backend import Backend, register_backend
+from hls4ml.backends.backend import register_backend
 from hls4ml.writer.writers import register_writer
 
 ENTRY_POINT_GROUP = 'hls4ml.backends'
@@ -66,16 +63,6 @@ def _load_env_plugins() -> None:
 
 def _register_plugin_object(name: str, obj: Any) -> None:
     """Interpret the plugin object and register provided backends."""
-
-    if inspect.isclass(obj) and issubclass(obj, Backend):
-        _safe_register_backend(name, obj)
-        return
-
-    if isinstance(obj, Iterable) and not isinstance(obj, (str, bytes)):
-        for item in obj:
-            _register_plugin_object(name, item)
-        return
-
     if callable(obj):
         _invoke_registration_callable(name, obj)
         return
@@ -97,10 +84,3 @@ def _invoke_registration_callable(name: str, func: Callable[..., Any]) -> None:
     except Exception as exc:
         print(f'WARNING: backend plugin callable "{name}" failed: {exc}')
         return
-
-
-def _safe_register_backend(name: str, backend_cls: type[Backend]) -> None:
-    try:
-        register_backend(name, backend_cls)
-    except Exception as exc:
-        print(f'WARNING: failed to register backend "{name}" from plugin: {exc}')
