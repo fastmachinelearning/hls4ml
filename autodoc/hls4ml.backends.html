@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/plugins.html">External Backend and Writer Plugins</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Internals</span></p>
 <ul>
@@ -102,6 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.backend">hls4ml.backends.backend module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.plugin_loader">hls4ml.backends.plugin_loader module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.template">hls4ml.backends.template module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends">Module contents</a></li>
 </ul>
@@ -927,6 +929,20 @@ Defaults to ‘nnet_utils’.</p></li>
 <dd class="field-even"><p><strong>Exception</strong> – If the backend has already been registered.</p>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.plugin_loader">
+<span id="hls4ml-backends-plugin-loader-module"></span><h2>hls4ml.backends.plugin_loader module<a class="headerlink" href="#module-hls4ml.backends.plugin_loader" title="Link to this heading"></a></h2>
+<p>Utilities for discovering and loading external hls4ml backend plugins.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.plugin_loader.load_backend_plugins">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.plugin_loader.</span></span><span class="sig-name descname"><span class="pre">load_backend_plugins</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.backends.plugin_loader.load_backend_plugins" title="Link to this definition"></a></dt>
+<dd><p>Discover and register backend plugins.</p>
+<p>This function loads plugins published via Python entry points under the
+<code class="docutils literal notranslate"><span class="pre">hls4ml.backends</span></code> group as well as modules listed in the
+<code class="docutils literal notranslate"><span class="pre">HLS4ML_BACKEND_PLUGINS</span></code> environment variable. The environment variable
+accepts a separator compatible with <code class="xref py py-data docutils literal notranslate"><span class="pre">os.pathsep</span></code>.</p>
 </dd></dl>
 
 </section>

@@ -27,6 +27,14 @@ hls4ml.backends.backend module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.plugin\_loader module
+-------------------------------------
+
+.. automodule:: hls4ml.backends.plugin_loader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.template module
 -------------------------------
 

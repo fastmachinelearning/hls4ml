@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Model-wise Precision Inference &mdash; hls4ml 1.2.0 documentation</title>
+  <title>External Backend and Writer Plugins &mdash; hls4ml 1.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=f079e67e" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="FIFO Buffer Depth Optimization" href="fifo_depth.html" />
-    <link rel="prev" title="Distributed Arithmetic" href="da.html" /> 
+    <link rel="next" title="Internal representation" href="../ir/ir.html" />
+    <link rel="prev" title="Loading weights from external BRAM" href="bramfactor.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -82,12 +82,17 @@
 <li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="da.html">Distributed Arithmetic</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="plugins.html">External Backend and Writer Plugins</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">External Backend and Writer Plugins</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#discovery">Discovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authoring-a-plugin">Authoring a Plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#packaging-data-files">Packaging Data Files</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Internals</span></p>
 <ul>
@@ -122,9 +127,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Model-wise Precision Inference</li>
+      <li class="breadcrumb-item active">External Backend and Writer Plugins</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/precision.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/plugins.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -132,37 +137,63 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="model-wise-precision-inference">
-<h1>Model-wise Precision Inference<a class="headerlink" href="#model-wise-precision-inference" title="Link to this heading"></a></h1>
-<p>The model-wise precision inference (implemented in <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.BitExact" title="hls4ml.model.optimizer.passes.bit_exact.BitExact"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitExact</span></code></a>) attempts to infer the appropriate configuration for <strong>all</strong> precision in the model. Unlike the automatic precision inference, this pass disregards all user-defined precision, and “trust” only data embedded in the model, i.e., the actual values of the weights and explicit quantizers defined between layers.</p>
-<p>This pass uses modified symbolic interval arithmetic to compute the ranges and the needed quantization steps for all precision in the model graph, with the goal of eliminating any discrepancy between the quantized model and the original model. In the inference process, only the raw weight values and the explicit quantizers (either <code class="docutils literal notranslate"><span class="pre">FixedPointQuantizer</span></code>, or <code class="docutils literal notranslate"><span class="pre">linear/relu</span></code> layers with <code class="docutils literal notranslate"><span class="pre">trusted=True</span></code>) are considered as sources of precision information. All other precision information (e.g., user-defined precision in <code class="docutils literal notranslate"><span class="pre">config_from_*</span></code> functions) will not be used in the inference process.</p>
-<p>Invoking of this pass is configured by the <code class="docutils literal notranslate"><span class="pre">bit_exact</span></code> key in the backend configuration (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>). There are two ways to enable this pass:
-- When converting from <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code> models, this pass is automatically enabled unless <code class="docutils literal notranslate"><span class="pre">bit_exact</span></code> is explicitly set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.
-- For other models, this pass can be enabled by setting <code class="docutils literal notranslate"><span class="pre">bit_exact</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Currently, only <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> sets this key automatically when converting from <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> models. Support for <code class="docutils literal notranslate"><span class="pre">QONNX</span></code> is planned but not yet implemented.</p>
-<p>If the original model is not properly quantized, this pass will lead to huge bitwidths in the model. In this context, properly quantized models are those that have quantizers defined between <strong>all layers with non-trivial arithmetics</strong> (i.e., essentially all layers other than reshape/flatten/transpose/linear-like layers only rearranging elements). The successful application of this pass should result in bit-exact model, i.e., the quantized model should produce the same outputs as the original model for all inputs <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>*<span class="fn-bracket">]</span></a>.</p>
-<p>Not all operator types are supported in this pass. If any unsupported operator is encountered during the inference, this pass will <strong>crash</strong> the conversion process to prevent silent failures. Please consider use <a class="reference external" href="../auto.html">automatic precision inference</a> if your model contains unsupported operators or unquantized components.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Importantly, quantizers <strong>should be used immediately after the inputs</strong>, or the input precision may not be properly inferred. If you are using <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code>, this is automatically taken care of in most cases. If you are using <code class="docutils literal notranslate"><span class="pre">QKeras</span></code>, make sure to put a <code class="docutils literal notranslate"><span class="pre">QActivation</span></code> with <code class="docutils literal notranslate"><span class="pre">quantized_bits</span></code> right after the input layer such that the input precision can be derived.</p>
+  <section id="external-backend-and-writer-plugins">
+<h1>External Backend and Writer Plugins<a class="headerlink" href="#external-backend-and-writer-plugins" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> can discover and load backend implementations from
+external Python packages. This enables specialised flows, such as the AMD AIE backend, to live in
+independent projects that version and iterate at their own cadence while reusing the core
+conversion infrastructure.</p>
+<section id="discovery">
+<h2>Discovery<a class="headerlink" href="#discovery" title="Link to this heading"></a></h2>
+<p>Plugin packages advertise themselves through the <code class="docutils literal notranslate"><span class="pre">hls4ml.backends</span></code> Python entry point group. Each
+entry exposes a callable that receives <code class="docutils literal notranslate"><span class="pre">register_backend</span></code> and <code class="docutils literal notranslate"><span class="pre">register_writer</span></code> helpers and performs any setup that is
+required. <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> automatically scans for these entry points during <code class="docutils literal notranslate"><span class="pre">hls4ml.backends</span></code> import so
+third-party backends become available without additional user configuration.</p>
+<p>In addition to entry points, modules listed in the <code class="docutils literal notranslate"><span class="pre">HLS4ML_BACKEND_PLUGINS</span></code> environment variable
+are imported and treated as registration callables. The variable accepts an <code class="docutils literal notranslate"><span class="pre">os.pathsep</span></code> separated
+list (<code class="docutils literal notranslate"><span class="pre">:</span></code> on Linux/macOS or <code class="docutils literal notranslate"><span class="pre">;</span></code> on Windows):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">HLS4ML_BACKEND_PLUGINS</span><span class="o">=</span>aie4ml.plugin:another_pkg.hls4ml_backend
+</pre></div>
 </div>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id2" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">*</a><span class="fn-bracket">]</span></span>
-<p>While quantized, the original model will still operate on float-point values, so there is a chance that the outputs will not be exactly the same due to float rounding errors in the original model.</p>
-</aside>
-</aside>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>When this functionality is used, one <strong>should not</strong> use the <code class="docutils literal notranslate"><span class="pre">config_from_*</span></code> functions to set the precision in the model. Automatic precision inference and this pass cannot be used simultaneously.</p>
+</section>
+<section id="authoring-a-plugin">
+<h2>Authoring a Plugin<a class="headerlink" href="#authoring-a-plugin" title="Link to this heading"></a></h2>
+<p>A minimal plugin registers both a backend and an accompanying writer. The example below
+shows how the <code class="docutils literal notranslate"><span class="pre">aie4ml</span></code> package exposes its backend via <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> and a <code class="docutils literal notranslate"><span class="pre">register</span></code>
+function:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[project.entry-points.</span><span class="s2">&quot;hls4ml.backends&quot;</span><span class="k">]</span>
+<span class="n">AIE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;aie4ml.plugin:register&quot;</span>
+</pre></div>
 </div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># aie4ml/plugin.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aie4ml.aie_backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">AIEBackend</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aie4ml.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">AIEWriter</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">register_backend</span><span class="p">,</span> <span class="n">register_writer</span><span class="p">):</span>
+    <span class="n">register_writer</span><span class="p">(</span><span class="s1">&#39;AIE&#39;</span><span class="p">,</span> <span class="n">AIEWriter</span><span class="p">)</span>
+    <span class="n">register_backend</span><span class="p">(</span><span class="s1">&#39;AIE&#39;</span><span class="p">,</span> <span class="n">AIEBackend</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When the plugin is installed, <code class="docutils literal notranslate"><span class="pre">hls4ml.backends.get_available_backends()</span></code> will report the new
+backend just like the built-in FPGA toolflows.</p>
+</section>
+<section id="packaging-data-files">
+<h2>Packaging Data Files<a class="headerlink" href="#packaging-data-files" title="Link to this heading"></a></h2>
+<p>Backends often rely on firmware templates or device description files. These assets should be
+packaged alongside the Python sources using the usual <code class="docutils literal notranslate"><span class="pre">setuptools</span></code> mechanisms (<code class="docutils literal notranslate"><span class="pre">package-data</span></code> or
+<code class="docutils literal notranslate"><span class="pre">include-package-data</span></code>) so they are available from the installed distribution.</p>
+<p>For an end-to-end example see the companion <code class="docutils literal notranslate"><span class="pre">aie4ml</span></code> [<a class="reference external" href="https://github.com/dimdano/aie4ml">https://github.com/dimdano/aie4ml</a>] package that ships alongside this project
+as a standalone distribution; it encapsulates the existing AMD AIE backend as an installable plugin
+depending on <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="da.html" class="btn btn-neutral float-left" title="Distributed Arithmetic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="fifo_depth.html" class="btn btn-neutral float-right" title="FIFO Buffer Depth Optimization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="bramfactor.html" class="btn btn-neutral float-left" title="Loading weights from external BRAM" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../ir/ir.html" class="btn btn-neutral float-right" title="Internal representation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
