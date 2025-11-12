@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from hls4ml.model import ModelGraph
@@ -59,6 +61,59 @@ def get_weights_data(data_reader, layer_name, var_name):
         return data[0]
     else:
         return (*data,)
+
+
+def convert_uaq_to_apfixed(bitwidth, scale_factor):
+    """
+    parameters:
+    bitwidth: int
+    scale_factor: float
+    zero_point: float
+
+    return:
+    int_bitwidth: int
+    fract_bitwidth: int
+    """
+    fract_bitwidth = -math.log2(scale_factor)
+    int_bitwidth = bitwidth - fract_bitwidth
+
+    return (fract_bitwidth, int_bitwidth)
+
+
+# embed quantization information into the layer dictionary for a Quant layer
+# so that this layer can be added to the model
+def addQuantizationParameters(layer, quant_object, quant_type, act=False, scale_up=False):
+    if not act:
+        # currently not used, might be use later for non-power-of-2 scales
+        bit_width = int(quant_object.bit_width)
+        signed = quant_object.signed
+        scale = float(quant_object.scale)
+        zeropoint = float(quant_object.zero_point)
+        if signed:
+            narrow = True
+        else:
+            narrow = False
+        rounding_mode = 'ROUND'
+    else:
+        bit_width = int(quant_object.bit_width())
+        signed = quant_object.is_signed
+        scale = float(quant_object.scale())
+        # bit of a hack to make adding operations with QuantEltWiseAdd work
+        if scale_up:
+            scale = 2 ** (math.log2(scale) + 1)
+        zeropoint = float(quant_object.zero_point())
+        narrow = quant_object.is_narrow_range
+        rounding_mode = quant_object.rounding_mode
+
+    layer[f'{quant_type}_quantization'] = {
+        'bit_width': bit_width,
+        'signed': signed,
+        'scale': scale,
+        'zeropoint': zeropoint,
+        'narrow': narrow,
+        'rounding_mode': rounding_mode,
+    }
+    return layer
 
 
 # ----------------------Layer handling--------------------- #
@@ -144,7 +199,7 @@ def parse_pytorch_model(config, verbose=True):
     tracer = CustomFXTracer()
     traced_model = tracer.trace(model)
     # Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Sequential']
+    skip_layers = ['Dropout', 'QuantDropout', 'Sequential']
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
@@ -200,6 +255,10 @@ def parse_pytorch_model(config, verbose=True):
             if pytorch_class not in supported_layers:
                 raise Exception(f'Unsupported layer {pytorch_class}')
 
+            if 'IOType' in config.keys():
+                if 'QuantUpsampl' in pytorch_class and config['IOType'] == 'io_stream':
+                    raise Exception('Quant upsampling layers currently not supported with io_stream')
+
             if layer_counter != 0:
                 input_shapes = [output_shape]  # In case there are multiple inputs
 
@@ -224,7 +283,7 @@ def parse_pytorch_model(config, verbose=True):
 
             # parse info from class object
             input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
-            if pytorch_class in ['RNN', 'GRU', 'LSTM']:
+            if pytorch_class in ['RNN', 'GRU', 'LSTM', 'QuantRNN']:
                 input_shapes = []
                 input_names = []
                 for arg in node.args:
