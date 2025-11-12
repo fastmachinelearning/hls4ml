@@ -53,6 +53,7 @@
     advanced/extension
     advanced/model_optimization
     advanced/bramfactor
+    advanced/plugins
 
 .. toctree::
     :hidden:
