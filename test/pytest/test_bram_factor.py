@@ -13,7 +13,7 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bram_factor(backend, io_type):
-    '''A copy of the test_dense from test_keras_api.py with BramFactor set to 0'''
+    """A copy of the test_dense from test_keras_api.py with BramFactor set to 0"""
     model = tf.keras.models.Sequential()
     model.add(
         Dense(
@@ -38,7 +38,7 @@ def test_bram_factor(backend, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    config["Model"]["BramFactor"] = 0
+    config['Model']['BramFactor'] = 0
     output_dir = str(test_root_path / f'hls4mlprj_bram_factor_{backend}_{io_type}')
 
     hls_model = hls4ml.converters.convert_from_keras_model(

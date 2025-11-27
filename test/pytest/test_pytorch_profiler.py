@@ -49,7 +49,7 @@ test_layers = [
 ]
 
 
-@pytest.mark.parametrize("layers", test_layers)
+@pytest.mark.parametrize('layers', test_layers)
 def test_sequential_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers
@@ -58,7 +58,7 @@ def test_sequential_model(layers):
         assert count_bars_in_figure(wp) == param_count
 
 
-@pytest.mark.parametrize("layers", test_layers)
+@pytest.mark.parametrize('layers', test_layers)
 def test_subclass_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers
@@ -67,7 +67,7 @@ def test_subclass_model(layers):
         assert count_bars_in_figure(wp) == param_count
 
 
-@pytest.mark.parametrize("layers", test_layers)
+@pytest.mark.parametrize('layers', test_layers)
 def test_modulelist_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers
@@ -76,7 +76,7 @@ def test_modulelist_model(layers):
         assert count_bars_in_figure(wp) == param_count
 
 
-@pytest.mark.parametrize("layers", test_layers)
+@pytest.mark.parametrize('layers', test_layers)
 def test_nested_model(layers):
     if __torch_profiling_enabled__:
         param_count, layers = layers

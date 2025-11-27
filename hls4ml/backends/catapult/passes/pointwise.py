@@ -73,7 +73,7 @@ class OptimizePointwiseConv(OptimizerPass):
 
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:]  # '1D' or '2D'
-        new_attrs = {k: v for k, v in node.attributes.items() if k not in ('trace', 'precision', 'reuse_factor')}
+        new_attrs = node.attributes.attributes.copy()
         pw_node = model.make_node(
             'PointwiseConv' + dim, node.name, new_attrs, node.inputs.copy(), outputs=node.outputs.copy()
         )

@@ -127,7 +127,7 @@ class ConstantBatchNormFusion(OptimizerPass):
                         IntegerPrecisionType,
                         FixedPrecisionType,
                     ):
-                        print("Warning:  output type not propagated for constant merge")
+                        print('Warning:  output type not propagated for constant merge')
                     else:
                         signed_prod = const_prec.signed or scale_prec.signed
                         w_prod = const_prec.width + scale_prec.width

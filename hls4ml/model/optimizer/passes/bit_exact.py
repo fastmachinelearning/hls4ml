@@ -26,6 +26,7 @@ from hls4ml.model.layers import (
     Input,
     Layer,
     Merge,
+    ParametrizedActivation,
     Pooling1D,
     Pooling2D,
     Reshape,
@@ -220,8 +221,16 @@ def _produce_kif(layer: Layer) -> KIF_t:
 
 @_produce_kif.register
 def _(layer: Input):
-    k = np.ones(get_output_shape(layer), dtype=np.int16)
-    i = f = np.full(get_output_shape(layer), 126, dtype=np.int16)
+    shape = get_output_shape(layer)
+    if layer.attributes.get('trusted', False):
+        precision: FixedPrecisionType = layer.get_output_variable().type.precision
+        k, i, f = precision.signed, precision.integer - precision.signed, precision.fractional
+        k = np.full(shape, k, dtype=np.int16)
+        i = np.full(shape, i, dtype=np.int16)
+        f = np.full(shape, f, dtype=np.int16)
+    else:
+        k = np.ones(shape, dtype=np.int16)
+        i = f = np.full(shape, 126, dtype=np.int16)
     return k, i, f
 
 
@@ -571,24 +580,48 @@ def _(layer: Activation):
 
     match fn_name:
         case 'linear':
-            return k, i, f
+            pass
         case 'relu':
-            k = np.zeros_like(k)
-            return k, i, f
+            k = np.zeros_like(k, dtype=np.int16)
         case 'tanh':
             i = np.minimum(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            f = np.full_like(f, 126, dtype=np.int16)
         case 'sigmoid':
-            k = np.zeros_like(k)
+            k = np.zeros_like(k, dtype=np.int16)
             i = np.minimum(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            f = np.full_like(f, 126, dtype=np.int16)
         case _:
-            k = np.zeros_like(k)
-            i = np.full_like(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            k = np.ones(k, dtype=np.int16)
+            i = np.full_like(i, 126, dtype=np.int16)
+            f = np.full_like(f, 126, dtype=np.int16)
+    return k, i, f
+
+
+@_produce_kif.register
+def _(layer: ParametrizedActivation):
+    fn_name = layer.attributes['activation'].lower()
+
+    k, i, f = get_input_kifs(layer)[0]
+    p = layer.attributes['activ_param']
+    _k, _i, _f = minimal_kif(np.array(p))
+    match fn_name:
+        case 'leakyrelu':
+            k = k & np.int16(p > 0)
+            i += np.maximum(0, _i - 1)
+            f += np.maximum(0, _f)
+        case 'thresholdedrelu':
+            i = np.maximum(i, _i)
+            f = np.maximum(f, _f)
+            k = k & _k
+        case 'elu':
+            k = k & np.int16(p > 0)
+            f = np.full_like(f, 126, dtype=np.int16)
+            i = np.maximum(i, _i)
+        case _:
+            k = np.ones(k, dtype=np.int16)
+            i = np.full_like(i, 126, dtype=np.int16)
+            f = np.full_like(f, 126, dtype=np.int16)
+    return k, i, f
 
 
 @_produce_kif.register
@@ -605,8 +638,8 @@ def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
     return tuple(int(np.max(a)) for a in arr)
 
 
-def produce_kif(layer: Layer) -> KIF_t:
-    if layer.attributes.get('_produce_kif'):
+def produce_kif(layer: Layer, force_reset=False) -> KIF_t:
+    if layer.attributes.get('_produce_kif') and not force_reset:
         return layer.attributes['_produce_kif']
     kif = _produce_kif(layer)
     layer.attributes['_produce_kif'] = kif
@@ -809,6 +842,15 @@ def _(node: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
     node.attributes['accum_t'].precision.integer += i_add
 
 
+@register_precision.register(ParametrizedActivation)
+def _(node: ParametrizedActivation):
+    default_register_precision(node)
+    param = node.attributes['activ_param']
+    k, i, f = map(int, minimal_kif(np.array(param)))
+    param_t = to_hls4ml_fixed(k, i, f, f'{node.name}_param_t')
+    node.attributes['param_t'] = param_t
+
+
 class BitExact(ModelOptimizerPass):
     """Model-wide bitwidth flow to ensure bit-exactness. Triggered by the presence of FixedPointQuantizer for now.
     On the high level:
@@ -851,7 +893,9 @@ class BitExact(ModelOptimizerPass):
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
                 continue
-            produce_kif(node)  # Shrink FixedPointQuantizer bits when possible to be used in backward flow (requested_kif).
+            produce_kif(
+                node, force_reset=True
+            )  # Shrink FixedPointQuantizer bits when possible to be used in backward flow (requested_kif).
 
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
@@ -860,12 +904,28 @@ class BitExact(ModelOptimizerPass):
             node.attributes['bit_exact_transformed'] = True
 
         for node in model.graph.values():
-            if node.attributes.get('_produce_kif'):
+            if '_produce_kif' in node.attributes:
                 del node.attributes['_produce_kif']
-            if node.attributes.get('_request_kif'):
+            if '_request_kif' in node.attributes:
                 del node.attributes['_request_kif']
 
         return True
+
+
+def get_output_layers_and_quantizers(
+    node: Layer, layers: list | None = None, quantizers: list | None = None
+) -> tuple[list[Layer], list[FixedPointQuantizer]]:
+    layers = layers if layers is not None else []
+    quantizers = quantizers if quantizers is not None else []
+    for _node in get_output_layers(node):
+        if isinstance(_node, FixedPointQuantizer):
+            quantizers.append(_node)
+        elif isinstance(_node, (Reshape, Transpose, Concatenate)):
+            layers.append(_node)
+            get_output_layers_and_quantizers(_node, layers, quantizers)
+        else:
+            raise ValueError(f'Layer {node.name} ({node.class_name}) unexpected input layer chain.')
+    return layers, quantizers
 
 
 class FixInputPrecision(OptimizerPass):
@@ -877,21 +937,17 @@ class FixInputPrecision(OptimizerPass):
         return node.get_output_variable().type.precision.width > 100
 
     def transform(self, model, node: Layer):
-        out_layers: list[FixedPointQuantizer] = get_output_layers(node)  # type: ignore
-        for layer in out_layers:
-            assert isinstance(
-                layer, FixedPointQuantizer
-            ), f'Input {node.name} connected to non-quantizer {layer.name} with non-trivial configuration'
+        layers, out_quantizers = get_output_layers_and_quantizers(node)
 
-        if len(out_layers) == 0:  # Input connected to nothing
+        if len(out_quantizers) == 0:  # Input connected to nothing
             new_type = to_hls4ml_fixed(0, 0, 1, f'{node.name}_t')
             node.get_output_variable().type = new_type
             node.model.config.layer_name_precision[node.name] = str(new_type)
             return False
 
-        sat_modes = [l.SAT for l in out_layers]
+        sat_modes = [l.SAT for l in out_quantizers]
         sat_modes_set = set(sat_modes)
-        rnd_modes = [l.RND for l in out_layers]
+        rnd_modes = [l.RND for l in out_quantizers]
         rnd_modes_set = set(rnd_modes)
         illegal_sat_modes = sat_modes_set - {'WRAP', 'SAT', 'SAT_SYM'}
         illegal_rnd_modes = rnd_modes_set - {'TRN', 'RND'}
@@ -902,7 +958,7 @@ class FixInputPrecision(OptimizerPass):
         if illegal_rnd_modes:
             warn(f'Saturation mode {illegal_rnd_modes} may compromise bit-exactness. Forcing at maximum 24 fractional bits.')
 
-        kifs = [_produce_kif(l) for l in out_layers]
+        kifs = [_produce_kif(l) for l in out_quantizers]
         i = np.max([np.max(i) for _, i, _ in kifs])
         k = np.max([np.max(k) for k, _, _ in kifs])
         if illegal_rnd_modes:
@@ -917,4 +973,15 @@ class FixInputPrecision(OptimizerPass):
             new_type.precision.saturation_mode = 'SAT'
         node.get_output_variable().type = new_type
         node.model.config.layer_name_precision[node.name] = str(new_type)
+        node.attributes['trusted'] = True
+
+        for layer in layers:
+            produce_kif(layer, force_reset=True)
+        for layer in layers:
+            register_precision(layer)
+        for layer in layers:
+            if '_produce_kif' in layer.attributes:
+                del layer.attributes['_produce_kif']
+            if '_request_kif' in layer.attributes:
+                del layer.attributes['_request_kif']
         return False

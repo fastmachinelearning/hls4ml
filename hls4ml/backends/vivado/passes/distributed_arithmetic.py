@@ -17,12 +17,11 @@ if typing.TYPE_CHECKING:
 
 
 def add_kernel_wrapper(index: int, n_in: int, n_out: int):
-
-    wrapper = f'''template <typename inp_t, typename out_t, typename DUMMY> struct dense_da_wrapper_{index} {{
+    wrapper = f"""template <typename inp_t, typename out_t, typename DUMMY> struct dense_da_wrapper_{index} {{
 static void dense(inp_t inp[{n_in}], out_t out[{n_out}], void *weights=nullptr, void *biases=nullptr) {{
     dense_da_{index}(inp, out);
 }}
-}};'''
+}};"""
     return wrapper
 
 
@@ -93,7 +92,7 @@ def _(node: EinsumDense):
 
 
 class DistributedArithmeticCodegen(OptimizerPass):
-    '''Generates C++ code for distributed arithmetic implementation of Dense and Conv1/2D layers'''
+    """Generates C++ code for distributed arithmetic implementation of Dense and Conv1/2D layers"""
 
     def match(self, node):
         if not node.get_attr('strategy', None) == 'distributed_arithmetic':
@@ -116,7 +115,7 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
+        from da4ml.codegen.hls import hls_logic_and_bridge_gen
         from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
 
         kernel: np.ndarray = node.attributes['weight'].data
@@ -136,12 +135,15 @@ class DistributedArithmeticCodegen(OptimizerPass):
         sol = comb_trace(inp, out)
         node.attributes['da_kernel_cost'] = sol.cost
 
-        flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
+        backend = model.config.get_config_value('Backend').lower()
+        assert backend in ('vitis', 'vivado')
+        flavor = 'vitis'
+
         pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
 
-        fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+        fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
-        io_type = node.model.config.get_config_value("IOType")
+        io_type = node.model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
             fn_str += '\n\n' + add_kernel_wrapper(node.index, n_in, n_out)
 
@@ -176,8 +178,8 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
             quantization_lines, replaces = [], []
             for i, (_k, _B, _I) in enumerate(zip(k, B, I)):
                 u = '' if _k else 'u'
-                _src = f'inp[{i}]'
-                _dst = f'inp_q_{i}'
+                _src = f'model_inp[{i}]'
+                _dst = f'model_inp_q_{i}'
                 if _B > 0:
                     var_def = f'ap_{u}fixed<{_B}, {_I}, AP_{node.RND}, AP_{node.SAT}> {_dst} = {_src};'
                 else:
@@ -196,13 +198,13 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
         return True
 
 
-dense_da_stream_template = '''struct config{index} {{
+dense_da_stream_template = """struct config{index} {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned io_type = nnet::io_stream;
     static const unsigned strategy = nnet::distributed_arithmetic;
     constexpr static auto dense_da = nnet::dense_da_{index}<typename {inp_t}::value_type, typename {out_t}::value_type>;
-}};\n'''
+}};\n"""
 
 
 class DALatencyDenseTemplate(OptimizerPass):
@@ -222,7 +224,7 @@ class DALatencyDenseTemplate(OptimizerPass):
         out_name: str = node.get_output_variable().name
 
         # override function_cpp
-        io_type = node.model.config.get_config_value("IOType")
+        io_type = node.model.config.get_config_value('IOType')
         namespace = node.model.config.get_writer_config().get('Namespace', None) or 'nnet'
         if io_type == 'io_parallel':
             fn_name = f'dense_da_{node.index}<{inp_t}, {out_t}>'
@@ -281,14 +283,14 @@ class DALatencyConvTemplate(OptimizerPass):
             return False
         if node.get_attr('implementation') != 'linebuffer':
             return False
-        io_type = node.model.config.get_config_value("IOType")
+        io_type = node.model.config.get_config_value('IOType')
         return io_type == 'io_parallel'
 
     def transform(self, model: 'ModelGraph', node: Layer):
         fmt = node.get_attr('data_format')
-        assert (
-            fmt == 'channels_last'
-        ), f'At layer {node.name}, data_format must be "channels_last" for DA optimization. Got {fmt}.'
+        assert fmt == 'channels_last', (
+            f'At layer {node.name}, data_format must be "channels_last" for DA optimization. Got {fmt}.'
+        )
         inp_t: str = node.get_input_variable().type.name
         out_t: str = node.get_output_variable().type.name
         inp_name: str = node.get_input_variable().name
@@ -335,7 +337,7 @@ class DALatencyConvTemplate(OptimizerPass):
         del node.attributes['bias_t']
 
 
-kernel_fn_template = '''
+kernel_fn_template = """
 template <typename inp_t, typename out_t>
 void einsum_dense{index}_da_kernel(
     inp_t inp_tpose[{inp_tpose}],
@@ -344,11 +346,11 @@ void einsum_dense{index}_da_kernel(
 ) {{
     {fn_call_str}
 }}
-'''
+"""
 
 
 class DistributedArithmeticEinsumCodegen(OptimizerPass):
-    '''Generates C++ code for distributed arithmetic implementation of Dense layers'''
+    """Generates C++ code for distributed arithmetic implementation of Dense layers"""
 
     def match(self, node):
         if not node.get_attr('strategy', None) == 'distributed_arithmetic':
@@ -359,7 +361,7 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.cpp import cpp_logic_and_bridge_gen
+        from da4ml.codegen.hls import hls_logic_and_bridge_gen
         from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
 
         kernel: np.ndarray = node.attributes['weight'].data
@@ -370,6 +372,12 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
         fn_strs = []
         fn_calls = []
 
+        backend = model.config.get_config_value('Backend').lower()
+        assert backend in ('vitis', 'vivado')
+        flavor = 'vitis'
+
+        node.attributes['da_kernel_cost'] = 0.0
+
         for i in range(I):
             _k, _i, _f = (v[i] for v in inp_kifs)
             fn_name = f'einsum_{node.index}_da_{i}_of_{I}'
@@ -379,9 +387,10 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
             out = inp @ kernel[i]
             sol = comb_trace(inp, out)
 
-            flavor = 'vitis' if model.config.get_config_value('Backend').lower() in ('vitis', 'vivado') else 'hlslib'
+            node.attributes['da_kernel_cost'] += sol.cost
+
             pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
-            fn_str, _ = cpp_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+            fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
             fn_strs.append(fn_str)
             fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'

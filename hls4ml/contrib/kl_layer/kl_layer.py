@@ -28,7 +28,7 @@ from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
 # Keras implementation of a KL layer
 class KLLoss(Merge):
-    '''Keras implementation of a KL loss custom layer'''
+    """Keras implementation of a KL loss custom layer"""
 
     @tf_utils.shape_type_conversion
     def build(self, input_shape):
@@ -46,7 +46,7 @@ class KLLoss(Merge):
 
 # hls4ml implementations
 class HKLLoss(hls4ml.model.layers.Layer):
-    '''hls4ml implementation of a KL loss custom layer'''
+    """hls4ml implementation of a KL loss custom layer"""
 
     _expected_attributes = [
         ConfigurableAttribute('table_size', default=1024),
@@ -123,7 +123,7 @@ def parse_klloss_layer(keras_layer, input_names, input_shapes, data_reader):
 
 def main():
     # Register the converter for custom Keras layer
-    hls4ml.converters.register_keras_layer_handler('KLLoss', parse_klloss_layer)
+    hls4ml.converters.register_keras_v2_layer_handler('KLLoss', parse_klloss_layer)
 
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('KLLoss', HKLLoss)

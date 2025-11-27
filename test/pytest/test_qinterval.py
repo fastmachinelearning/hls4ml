@@ -51,7 +51,6 @@ def qint_arr2():
 
 @pytest.mark.parametrize('oprstr', ['__add__', '__sub__', '__mul__', '__matmul__', '__rmatmul__'])
 def test_qinterval_oprs(qint_arr1, qint_arr2, oprstr):
-
     sampled_arr1 = qint_arr1.sample(10000)
     const_arr = qint_arr2.sample()
     applied_symbolic = getattr(qint_arr1, oprstr)(const_arr)
@@ -71,7 +70,6 @@ def test_qinterval_oprs(qint_arr1, qint_arr2, oprstr):
 
 @pytest.mark.parametrize('eq', ['ij,jk->ik', 'ij,kj->ikj'])
 def test_qinterval_einsum(qint_arr1, qint_arr2, eq):
-
     _in, out = eq.split('->', 1)
     in0, in1 = _in.split(',', 1)
     qint_arr1 = qint_arr1[:16, :16]

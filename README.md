@@ -75,7 +75,7 @@ If you use this software in a publication, please cite the software
   title        = {fastmachinelearning/hls4ml},
   year         = 2025,
   publisher    = {Zenodo},
-  version      = {v1.1.0},
+  version      = {v1.2.0},
   doi          = {10.5281/zenodo.1201549},
   url          = {https://github.com/fastmachinelearning/hls4ml}
 }
@@ -123,6 +123,18 @@ Additionally, if you use specific features developed in later papers, please cit
     doi = "10.1088/2632-2153/ac9cb5",
     journal ="Mach. Learn. Sci. Tech.",
     year = "2022"
+}
+```
+Distributed arithmetic:
+```bibtex
+@misc{Sun:2025,
+      title={da4ml: Distributed Arithmetic for Real-time Neural Networks on FPGAs},
+      author={Chang Sun and others},
+      year={2025},
+      eprint={2507.04535},
+      archivePrefix={arXiv},
+      primaryClass={cs.AR},
+      url={https://arxiv.org/abs/2507.04535},
 }
 ```
 binary/ternary networks:

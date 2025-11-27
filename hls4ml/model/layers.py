@@ -1,5 +1,6 @@
 import typing
 from copy import copy
+from warnings import warn
 
 import numpy as np
 
@@ -85,7 +86,7 @@ class Layer(Serializable):
         if name == 'input':
             raise RuntimeError(
                 "No model layer should be named 'input' because that is a reserved;"
-                + "layer name in ModelGraph; Please rename the layer in your model"
+                + 'layer name in ModelGraph; Please rename the layer in your model'
             )
         self.model: 'ModelGraph' = model
         self.name = name
@@ -111,17 +112,18 @@ class Layer(Serializable):
             layer_config = self.model.config.get_layer_config(self)
             for config_key, config_value in layer_config.items():
                 config_key = convert_to_snake_case(config_key)
-                if config_key in self.attributes:
-                    print(
-                        'WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(
-                            config_key, self.name, self.class_name
-                        )
-                    )
                 if config_key.endswith('_t') and isinstance(
                     config_value, str
                 ):  # TODO maybe move this to __setitem__ of AttributeDict?
                     precision = self.model.config.backend.convert_precision_string(config_value)
                     config_value = NamedType(self.name + '_' + config_key, precision)
+                if (old_value := self.attributes.get(config_key, config_value)) != config_value:
+                    warn(
+                        f"Overriding attribute '{config_key}' of layer '{self.name}' ({self.class_name}):"
+                        f'{old_value} -> {config_value}',
+                        UserWarning,
+                        stacklevel=3,
+                    )
                 self.attributes[config_key] = config_value
 
             self.initialize()
@@ -380,7 +382,7 @@ class Input(Layer):
     def initialize(self):
         shape = self.attributes['input_shape']
         if shape[0] is None:
-            raise RuntimeError(f"Unexpectedly have a None in {shape=} of Input layer")
+            raise RuntimeError(f'Unexpectedly have a None in {shape=} of Input layer')
         if self.index == 1:
             default_type_name = 'input_t'
         else:
@@ -462,7 +464,7 @@ class Reshape(Layer):
             if isinstance(shape_node, Constant):
                 target_shape = shape_node.attributes['value'][1:]
             else:
-                raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
+                raise RuntimeError('Reshape for ONNX requires the target shape to be a second input.')
 
         # remove Nones -- Seems to be used by pytorch parser
         if target_shape[0] is None:
@@ -987,12 +989,12 @@ class ParametrizedActivation(Activation):
 
 
 class HardActivation(Activation):
-    '''
+    """
     Implements the hard sigmoid and tanh function in keras and qkeras
     (Default parameters in qkeras are different, so should be configured)
     The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
     hard tanh function is 2 * hard_sigmoid - 1
-    '''
+    """
 
     _expected_attributes = [
         Attribute('slope', value_type=float, default=0.2, configurable=False),
@@ -1036,10 +1038,10 @@ class TernaryTanh(Activation):
 
 
 class BatchNormOnnx(Layer):
-    '''
+    """
     A transient layer formed from ONNX BatchNormalization that gets converted to
     BatchNormalization after the scale and bias are determined
-    '''
+    """
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -1084,8 +1086,8 @@ class BatchNormalization(Layer):
 
 # TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
 class ApplyAlpha(BatchNormalization):
-    '''A custom layer to scale the output of a QDense layer which used 'alpha != 1'
-    Inference computation uses BatchNormalization methods'''
+    """A custom layer to scale the output of a QDense layer which used 'alpha != 1'
+    Inference computation uses BatchNormalization methods"""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -1361,7 +1363,7 @@ class SimpleRNN(Layer):
 
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
-        if "pytorch" in self.attributes.keys():
+        if 'pytorch' in self.attributes.keys():
             self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
@@ -1413,7 +1415,7 @@ class LSTM(Layer):
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
 
-        if "pytorch" in self.attributes.keys():
+        if 'pytorch' in self.attributes.keys():
             self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
         else:
             recurrent_bias = np.zeros(recurrent_weight.shape[1])
@@ -1542,7 +1544,7 @@ class Bidirectional(Layer):
             self.add_weights_variable(name=f'{dir}_bias', var_name=(f'b_{dir[0]}_' + '{index}'))
 
             if self.attributes[f'{dir}_class_name'] == 'LSTM':
-                if "pytorch" in self.attributes.keys():
+                if 'pytorch' in self.attributes.keys():
                     self.add_weights_variable(name=f'{dir}_recurrent_bias', var_name=(f'br_{dir[0]}_' + '{index}'))
                 else:
                     recurrent_bias = np.zeros(recurrent_weight.shape[1])

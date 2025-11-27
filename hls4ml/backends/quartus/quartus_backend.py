@@ -223,9 +223,9 @@ class QuartusBackend(FPGABackend):
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
-            assert (
-                len(layer.get_input_variable().shape) == 1
-            ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            assert len(layer.get_input_variable().shape) == 1, (
+                'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):

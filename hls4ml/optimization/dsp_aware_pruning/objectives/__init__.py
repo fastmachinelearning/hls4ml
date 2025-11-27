@@ -6,23 +6,23 @@ import numpy as np
 from hls4ml.optimization.dsp_aware_pruning.attributes import OptimizationAttributes
 from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
 
-'''
+"""
 Pruning & weight sharing are formulated as an optimization problem, with the aim of minimizing some metric
 Metrics can include: total number of weights, DSP utilization, latency, FLOPs etc.
-'''
+"""
 
 
 class ObjectiveEstimator(ABC):
-    '''
+    """
     Abstract class with methods for estimating the utilization and savings of a certain layer, with respect to some objective
     For each objective, an inherited class is written with the correct implementation of the below methods
     The objectives can be multi-dimensional, e.g. DSPs and BRAM
     Care needs to be taken when optimizing several objectives, especially if conflicting
-    '''
+    """
 
     @abstractmethod
     def is_layer_optimizable(self, layer_attributes):
-        '''
+        """
         For a given layer, checks whether optimizations make sense, with respect to the given objective(s)
         Furthermore, it returns the type of optimization (structured, unstructured etc.)
         Most suitable for minimizing the objective(s).
@@ -43,12 +43,12 @@ class ObjectiveEstimator(ABC):
                 (Vivado doesn't use DSP when precision < 9)
             - Metric = DSP, Layer = Dense, Precision = ap_fixed<16, 6> ->
                 return True, pattern structure, both pruning and weight sharing
-        '''
+        """
         pass
 
     @abstractmethod
     def layer_resources(self, layer_attributes):
-        '''
+        """
         For a given layer, how many units of the metric are used, given a generic weight matrix
 
         Args:
@@ -59,12 +59,12 @@ class ObjectiveEstimator(ABC):
 
         Example:
             Metric = Total weights, Layer = Dense, shape = (4, 4) -> return [16] [regardless of layer sparsity]
-        '''
+        """
         pass
 
     @abstractmethod
     def layer_savings(self, layer_attributes):
-        '''
+        """
         For a given layer, how many units of the metric are saved, when optimizing one structure
         The structure type, alongside its parameters (e.g. block shape) are stored in layer attributes
         For best results, OptimizationAttributes in layer_attribtues should be obtained from is_layer_optimizable
@@ -80,15 +80,15 @@ class ObjectiveEstimator(ABC):
             Metric = Total weights, Layer = Dense, shape = (4, 4):
             - structure_type == unstructured -> return [1]
             - structure_type == structured -> return [4]
-        '''
+        """
         pass
 
 
 class ParameterEstimator(ObjectiveEstimator):
-    '''
+    """
     A class containing objective estimation with the goal of minimizing
     The number of non-zero weights in a layer [corresponds to unstructured pruning]
-    '''
+    """
 
     @classmethod
     def is_layer_optimizable(self, layer_attributes):
