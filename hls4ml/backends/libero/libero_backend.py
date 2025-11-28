@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from hls4ml.backends import FPGABackend
 from hls4ml.model.attributes import ChoiceAttribute
@@ -69,8 +70,8 @@ class LiberoBackend(FPGABackend):
         part='MPF300',
         board='hw_only',
         clock_period=5,
-        clock_uncertainty='27%',
         io_type='io_parallel',
+        smarthls_path=None,
         namespace=None,
         write_weights_txt=True,
         write_tar=False,
@@ -79,11 +80,15 @@ class LiberoBackend(FPGABackend):
         """Create initial configuration of the Libero backend.
 
         Args:
+            fpga_family (str, optional): The FPGA family to be used. Defaults to 'PolarFire'.
             part (str, optional): The FPGA part to be used. Defaults to 'MPF300'.
+            board (str, optional): The target board. Defaults to 'hw_only'.
             clock_period (int, optional): The clock period. Defaults to 5.
-            clock_uncertainty (str, optional): The clock uncertainty. Defaults to 27%.
             io_type (str, optional): Type of implementation used. One of
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            smarthls_path (str, optional): Path to SmartHLS installation (part of Libero installation).
+                For example: /opt/microchip/Libero_SoC_v2024.2/SmartHLS-2024.2/SmartHLS
+                If None, installation path will be inferred from the location of ``shls`` binary. Defaults to None.
             namespace (str, optional): If defined, place all generated code within a namespace. Defaults to None.
             write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
                 Defaults to True.
@@ -92,6 +97,7 @@ class LiberoBackend(FPGABackend):
         Returns:
             dict: initial configuration.
         """
+
         config = {}
 
         config['FPGAFamily'] = fpga_family if fpga_family is not None else 'PolarFire'
@@ -99,6 +105,7 @@ class LiberoBackend(FPGABackend):
         config['Board'] = board if board is not None else 'hw_only'
         config['ClockPeriod'] = clock_period if clock_period is not None else 5
         config['IOType'] = io_type if io_type is not None else 'io_parallel'
+        config['SmartHLSPath'] = self._find_smarthls_path(smarthls_path)
         config['HLSConfig'] = {}
         config['WriterConfig'] = {
             'Namespace': namespace,
@@ -107,6 +114,16 @@ class LiberoBackend(FPGABackend):
         }
 
         return config
+
+    def _find_smarthls_path(self, smarthls_path):
+        if smarthls_path is None:
+            shls_path = subprocess.check_output(['which', 'shls']).decode('utf-8').strip()
+            smarthls_path = Path(shls_path).parent.parent
+        else:
+            if not isinstance(smarthls_path, Path):
+                smarthls_path = Path(smarthls_path)
+
+        return smarthls_path
 
     def _run_shls_cmd(self, cmd_name, cwd, skip=True):
         if skip:

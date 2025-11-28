@@ -169,7 +169,6 @@ class LiberoWriter(Writer):
                 elif '// hls-fpga-machine-learning insert load weights' in line:
                     newline = line
                     if model.config.get_writer_config()['WriteWeightsTxt']:
-
                         newline += '#ifndef __SYNTHESIS__\n'
                         newline += '    static bool loaded_weights = false;\n'
                         newline += '    if (!loaded_weights) {\n'
@@ -421,7 +420,7 @@ class LiberoWriter(Writer):
                             if w.storage.lower() != 'bram':
                                 newline += f'#include "weights/{w.name}.h"\n'
 
-                elif "// hls-fpga-machine-learning insert layer-config" in line:
+                elif '// hls-fpga-machine-learning insert layer-config' in line:
                     newline = line
                     for layer in model.get_layers():
                         config = layer.get_attr('config_cpp', None)
@@ -469,10 +468,10 @@ class LiberoWriter(Writer):
         """
 
         # Take in data from current supported data files
-        if original_path[-3:] == "npy":
+        if original_path[-3:] == 'npy':
             data = np.load(original_path)
         else:
-            raise Exception("Unsupported input/output data files.")
+            raise Exception('Unsupported input/output data files.')
 
         # Flatten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
@@ -480,11 +479,11 @@ class LiberoWriter(Writer):
         def print_data(f):
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    f.write(str(data[i][j]) + " ")
-                f.write("\n")
+                    f.write(str(data[i][j]) + ' ')
+                f.write('\n')
 
         # Print out in dat file
-        with open(project_path, "w") as f:
+        with open(project_path, 'w') as f:
             print_data(f)
 
     def write_test_bench(self, model):
@@ -534,7 +533,7 @@ class LiberoWriter(Writer):
                 elif '// hls-fpga-machine-learning insert bram' in line:
                     newline = line
                     for bram in model_brams:
-                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
                 elif '// hls-fpga-machine-learning insert data' in line:
                     newline = line
@@ -667,7 +666,7 @@ class LiberoWriter(Writer):
                 elif '// hls-fpga-machine-learning insert bram' in line:
                     newline = line
                     for bram in model_brams:
-                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
                 elif '// hls-fpga-machine-learning insert header' in line:
                     dtype = line.split('#', 1)[1].strip()
@@ -751,9 +750,10 @@ class LiberoWriter(Writer):
 
         filedir = Path(__file__).parent
         prj_name = model.config.get_project_name()
+        prj_dir = model.config.get_output_dir()
 
         # project.tcl
-        cfg_tcl_dst = Path(f'{model.config.get_output_dir()}/config.tcl')
+        cfg_tcl_dst = Path(f'{prj_dir}/config.tcl')
         with open(cfg_tcl_dst, 'w') as f:
             f.write('source $env(SHLS_ROOT_DIR)/examples/legup.tcl\n')
             fpga_family = model.config.get_config_value('FPGAFamily')
@@ -764,7 +764,7 @@ class LiberoWriter(Writer):
             f.write(f'set_parameter CLOCK_PERIOD {clock}\n')
 
         # Makefile
-        makefile_dst = Path(f'{model.config.get_output_dir()}/Makefile')
+        makefile_dst = Path(f'{prj_dir}/Makefile')
         with open(makefile_dst, 'w') as f:
             f.write(f'NAME = {prj_name}\n')
             f.write('LOCAL_CONFIG = -legup-config=config.tcl\n')
@@ -775,19 +775,26 @@ class LiberoWriter(Writer):
             f.write('include $(LEVEL)/Makefile.common\n')
 
         # Makefile.compile
-        makefile_dst = Path(f'{model.config.get_output_dir()}/Makefile.compile')
+        makefile_dst = Path(f'{prj_dir}/Makefile.compile')
         with open(makefile_dst, 'w') as f:
+            prj_path = str(Path(f'{prj_dir}').resolve())
+            shls_lib_path = str(model.config.get_config_value('SmartHLSPath') / 'smarthls-library/hls')
+
             f.write(f'NAME = {prj_name}\n')
             f.write('LOCAL_CONFIG = -legup-config=config.tcl\n')
             f.write(f'SRCS = firmware/{prj_name}.cpp {prj_name}_bridge.cpp \n')
             f.write('LEVEL = $(SHLS_ROOT_DIR)/examples\n')
-            f.write('USER_CXX_FLAG = -fPIC\n')
-            f.write('USER_LINK_FLAG = -shared\n')
+            f.write(f'WEIGHTS_DIR="\\"{prj_path}/firmware/weights\\""\n')
+            f.write('USER_CXX_FLAG = -fPIC -D WEIGHTS_DIR="${WEIGHTS_DIR}"\n')
+            f.write(
+                'USER_LINK_FLAG = -shared -D WEIGHTS_DIR="${WEIGHTS_DIR}"'
+                + f' -L{shls_lib_path} -lhls_x86 -Wl,-rpath,{shls_lib_path}\n'
+            )
             f.write('include $(LEVEL)/Makefile.common\n')
 
         # build_lib.sh
         build_lib_src = (filedir / '../templates/libero/build_lib.sh').resolve()
-        build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+        build_lib_dst = Path(f'{prj_dir}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
             for line in src.readlines():
                 line = line.replace('myproject', prj_name)
