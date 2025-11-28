@@ -15,7 +15,6 @@ class SetPipelineStyle(ModelOptimizerPass):
             self._set_pipeline_style(model, 'auto')
 
         if model.config.pipeline_style is None or model.config.pipeline_style == 'auto':
-
             if self._maybe_set_dataflow_io_stream(model):
                 return True
 
