@@ -167,4 +167,5 @@ We gratefully acknowledge previous and current support from the U.S. National Sc
 <img src="https://github.com/fastmachinelearning/hls4ml/assets/4932543/16e77374-9829-40a8-800e-8d12018a7cb3" alt="NSF" width="130"/>
 <img src="https://github.com/fastmachinelearning/hls4ml/assets/4932543/de6ca6ea-4d1c-4c56-9d93-f759914bbbf9" alt="DOE" width="130"/>
 <img src="https://github.com/fastmachinelearning/hls4ml/assets/4932543/7a369971-a381-4bb8-932a-7162b173cbac" alt="ERC" width="130"/>
+<img src="https://github.com/user-attachments/assets/7d8cd75d-e0a8-451e-b52c-6f31fa1b8114" alt="NGT" width="130" />
 </p>
