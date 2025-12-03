@@ -2,7 +2,7 @@ exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pyte
 
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.14.5
+  rev: v0.14.7
   hooks:
     - id: ruff
       args: [--fix]
@@ -29,7 +29,7 @@ repos:
   - id: trailing-whitespace
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.1
+  rev: v3.21.2
   hooks:
   - id: pyupgrade
     args: ["--py310-plus"]
