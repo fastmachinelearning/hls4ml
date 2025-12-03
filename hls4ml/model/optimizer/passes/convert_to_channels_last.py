@@ -66,7 +66,7 @@ class ChannelsLastConverter(OptimizerPass):
             pass
         else:
             if isinstance(node, FixedPointQuantizer):
-                transpose_map = {3: (0, 2, 1), 4: (0, 3, 2, 1), 5: (0, 3, 4, 2, 1)}
+                transpose_map = {3: (0, 2, 1), 4: (0, 2, 3, 1), 5: (0, 2, 3, 4, 1)}
                 node.mask_kbi = tuple(
                     np.transpose(t, transpose_map[t.ndim]) if t.ndim in transpose_map else t for t in node.mask_kbi
                 )
@@ -75,13 +75,14 @@ class ChannelsLastConverter(OptimizerPass):
                 tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
                 for tensor in tensors:
                     try:
-                        if len(node.get_weights(tensor).shape) == 2:
+                        t_shape = node.get_weights(tensor).shape
+                        if len(t_shape) == 2:
                             weights_channels_last = node.get_weights(tensor).data.transpose()
                             node.get_weights(tensor).data = weights_channels_last
-                        elif len(node.get_weights(tensor).shape) == 3:
+                        elif len(t_shape) == 3:
                             weights_channels_last = node.get_weights(tensor).data.transpose([2, 1, 0])
                             node.get_weights(tensor).data = weights_channels_last
-                        elif len(node.get_weights(tensor).shape) == 4:
+                        elif len(t_shape) == 4:
                             weights_channels_last = node.get_weights(tensor).data.transpose([2, 3, 1, 0])
                             node.get_weights(tensor).data = weights_channels_last
                     except KeyError:
