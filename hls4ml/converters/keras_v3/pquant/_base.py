@@ -2,15 +2,56 @@ from collections.abc import Sequence
 from math import prod
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+
 from hls4ml.converters.keras_v3._base import KerasV3LayerHandler, register
 from hls4ml.converters.keras_v3.conv import ConvHandler
 from hls4ml.converters.keras_v3.core import ActivationHandler, DenseHandler
-from hls4ml.converters.keras_v3.hgq2._base import extract_quantizer_config, override_io_tensor_confs
+from hls4ml.converters.keras_v3.hgq2._base import override_io_tensor_confs
 
 if TYPE_CHECKING:
     import pquant
     from keras import KerasTensor
     from keras.src.layers.layer import Layer as Layer
+
+
+def extract_quantizer_config(
+    q, extract_kif, tensor: 'KerasTensor', is_input: bool, overflow_attr: str = 'overflow_mode'
+) -> dict[str, Any]:
+    from keras import ops
+
+    shape: tuple[int, ...] = tensor.shape[1:]  # type: ignore
+    if any([s is None for s in shape]):
+        raise ValueError(f'Tensor {tensor.name} has at least one dimension with no fixed size')
+
+    k, i, f = extract_kif(q)
+    k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
+    k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
+    I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
+
+    k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
+    B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
+    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
+
+    overflow_mode: str = getattr(q, overflow_attr, 'SAT')
+    round_mode: str = q.round_mode
+    if round_mode.startswith('S_'):
+        round_mode = round_mode[2:]
+    fusible = np.unique(k).size == 1 and np.unique(B).size == 1 and np.unique(I).size == 1
+
+    input_keras_tensor_names = tensor.name if is_input else f'{tensor.name}_q'
+    output_keras_tensor_names = f'{tensor.name}_q' if is_input else tensor.name
+    return {
+        'name': q.name,
+        'class_name': 'FixedPointQuantizer',
+        'mask_kbi': (k, B, I),
+        'SAT': overflow_mode,
+        'RND': round_mode,
+        'fusible': fusible,
+        'input_keras_tensor_names': [input_keras_tensor_names],
+        'output_keras_tensor_names': [output_keras_tensor_names],
+        'overrides': {},
+    }
 
 
 def extract_pquant_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> dict[str, Any]:
@@ -22,7 +63,7 @@ def extract_pquant_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) ->
     if q.use_hgq:
         return extract_quantizer_config(q.quantizer.quantizer, lambda q: q.kif, tensor, is_input)
     else:
-        return extract_quantizer_config(q, lambda q: (q.k, q.i, q.f), tensor, is_input)
+        return extract_quantizer_config(q, lambda q: (q.k, q.i, q.f), tensor, is_input, 'overflow')
 
 
 @register
@@ -135,13 +176,13 @@ class PQBatchNormalizationHandler(PQLayerHandler):
 
         conf['use_gamma'] = layer.scale
         if conf['use_gamma']:
-            conf['gamma_data'] = ops.convert_to_numpy(layer.gamma)
+            conf['gamma_data'] = ops.convert_to_numpy(layer.weight_quantizer(layer.gamma))
         else:
             conf['gamma_data'] = 1
 
         conf['use_beta'] = layer.center
         if conf['use_beta']:
-            conf['beta_data'] = ops.convert_to_numpy(layer.beta)
+            conf['beta_data'] = ops.convert_to_numpy(layer.bias_quantizer(layer.beta))
         else:
             conf['beta_data'] = 0
 
