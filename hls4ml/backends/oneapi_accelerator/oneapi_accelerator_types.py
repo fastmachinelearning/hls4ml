@@ -15,13 +15,13 @@ class OneAPIAcceleratorInterfaceVariableDefinition(VariableDefinition):
         # Updated to use streaming beat for restartable streaming kernel.
         # Streaming beat is a wrapper type of the actual type with sideband control signals.
         # Syntax: using BeatT = sycl::ext::intel::experimental::StreamingBeat<DataT, eop, empty>;
-        streaming_beat_t = f"{self.pipe_name}BeatT"
+        streaming_beat_t = f'{self.pipe_name}BeatT'
         lines = (
-            f"{indent}class {self.pipe_id};\n"
-            f"{indent}using {streaming_beat_t} = "
-            f"sycl::ext::intel::experimental::StreamingBeat<{self.type.name}, true, true>;\n"
-            f"{indent}using {self.pipe_name} = sycl::ext::intel::experimental::pipe<"
-            f"{self.pipe_id}, {streaming_beat_t}, {pipe_min_size}, HostPipePropertiesT>;\n"
+            f'{indent}class {self.pipe_id};\n'
+            f'{indent}using {streaming_beat_t} = '
+            f'sycl::ext::intel::experimental::StreamingBeat<{self.type.name}, true, true>;\n'
+            f'{indent}using {self.pipe_name} = sycl::ext::intel::experimental::pipe<'
+            f'{self.pipe_id}, {streaming_beat_t}, {pipe_min_size}, HostPipePropertiesT>;\n'
         )
         return lines
 

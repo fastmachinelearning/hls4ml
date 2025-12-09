@@ -8,7 +8,6 @@ config_filename = 'hls4ml_config.yml'
 
 
 class OneAPIAcceleratorWriter(OneAPIWriter):
-
     def write_project_cpp(self, model):
         """Write the main architecture source file (myproject.cpp)
 
@@ -27,7 +26,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
             model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
             if len(model_brams) != 0:
-                raise NotImplementedError("Weights on the interface is currently not supported")
+                raise NotImplementedError('Weights on the interface is currently not supported')
 
             io_type = model.config.get_config_value('IOType')
             indent = '    '
@@ -53,7 +52,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                 elif '// hls-fpga-machine-learning read in' in line:
                     newline = line
                     if io_type == 'io_parallel':
-                        restartable_kernel_loop = f"bool keep_going = true;\n\n" f"{indent}while (keep_going) {{\n"
+                        restartable_kernel_loop = f'bool keep_going = true;\n\n{indent}while (keep_going) {{\n'
                         newline += indent + restartable_kernel_loop
                         for inp in model_inputs:
                             newline += indent * 2 + f'auto {inp.name}_beat = {inp.pipe_name}::read();\n'
@@ -114,7 +113,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                     if io_type == 'io_parallel':
                         newline = indent + newline
                         for out in model_outputs:
-                            out_beat = f"{out.name}_beat"
+                            out_beat = f'{out.name}_beat'
                             newline += (
                                 indent * 2 + f'typename nnet::ExtractPipeType<{out.pipe_name}>::value_type {out_beat};\n'
                             )
@@ -122,7 +121,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                             newline += indent * 2 + f'{out.pipe_name}::write({out_beat});\n'
                         newline += indent * 2 + '// stops the kernel when the last input seen.\n'
                         newline += indent * 2 + f'keep_going = !{model_inputs[0].name}_beat.eop;\n'
-                        newline += f"{indent}}}\n"
+                        newline += f'{indent}}}\n'
                     # don't need to add anything in io_stream
 
                 # Just copy line
@@ -203,11 +202,11 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         if len(model_brams) != 0:
-            raise NotImplementedError("Weights on the interface is currently not supported")
+            raise NotImplementedError('Weights on the interface is currently not supported')
 
         if len(model_inputs) != 1 or len(model_outputs) != 1:
-            print("The testbench supports only single input arrays and single output arrays.")
-            print("Please modify it before using it.")
+            print('The testbench supports only single input arrays and single output arrays.')
+            print('Please modify it before using it.')
 
         if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
             os.mkdir(f'{model.config.get_output_dir()}/tb_data/')
@@ -216,13 +215,13 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
         output_predictions = model.config.get_config_value('OutputPredictions')
 
         if input_data:
-            if input_data[-3:] == "dat":
+            if input_data[-3:] == 'dat':
                 copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
             else:
                 self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
 
         if output_predictions:
-            if output_predictions[-3:] == "dat":
+            if output_predictions[-3:] == 'dat':
                 copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
             else:
                 self.__make_dat_file(
@@ -244,7 +243,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                 elif '// hls-fpga-machine-learning insert bram' in line:
                     newline = line
                     for bram in model_brams:
-                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
                 elif '// hls-fpga-machine-learning insert runtime contant' in line:
                     newline = line
                     insert_constant_lines = (
@@ -317,7 +316,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                 elif '// hls-fpga-machine-learning insert bram' in line:
                     newline = line
                     for bram in model_brams:
-                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
                 elif '// hls-fpga-machine-learning insert class def' in line:
                     dtype = line.split('#', 1)[1].strip()
