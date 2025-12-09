@@ -93,7 +93,6 @@ def compare_weights(hls_weights, keras_weights, keras_layer):
 @pytest.mark.parametrize('rnn_layer', rnn_layers)
 @pytest.mark.parametrize('return_sequences', [True, False])
 def test_rnn_parsing(rnn_layer, return_sequences):
-
     model = create_model_parsing(rnn_layer, return_sequences)
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')

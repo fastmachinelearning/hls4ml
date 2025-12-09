@@ -1,6 +1,6 @@
-'''
+"""
 This package includes oneAPI-specific templates
-'''
+"""
 
 from hls4ml.backends.template import Template
 

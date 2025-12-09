@@ -42,7 +42,7 @@ def test_backend_config(framework, backend, part, clock_period, clock_unc):
     test_dir = f'hls4mlprj_backend_config_{framework}_{backend}_part_{part}_period_{clock_period}_unc_{unc_str}'
     output_dir = test_root_path / test_dir
 
-    if framework == "keras":
+    if framework == 'keras':
         hls_model = convert_fn(
             model,
             input_shape=(None, 1),  # This serves as a test of handling unexpected values by the backend in keras converer

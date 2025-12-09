@@ -11,7 +11,7 @@ test_root_path = Path(__file__).parent
 
 # Keras implementation of a custom layer
 class KReverse(tf.keras.layers.Layer):
-    '''Keras implementation of a hypothetical custom layer'''
+    """Keras implementation of a hypothetical custom layer"""
 
     def __init__(self):
         super().__init__()
@@ -26,7 +26,7 @@ class KReverse(tf.keras.layers.Layer):
 
 # hls4ml layer implementation
 class HReverse(hls4ml.model.layers.Layer):
-    '''hls4ml implementation of a hypothetical custom layer'''
+    """hls4ml implementation of a hypothetical custom layer"""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -36,7 +36,7 @@ class HReverse(hls4ml.model.layers.Layer):
 
 # hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
-    '''OptimizerPass to remove consecutive HReverse layers.'''
+    """OptimizerPass to remove consecutive HReverse layers."""
 
     def match(self, node):
         return isinstance(node, HReverse) and isinstance(node.get_input_node(), HReverse)
@@ -123,7 +123,7 @@ void reverse(
 @pytest.fixture(scope='session', autouse=True)
 def register_custom_layer():
     # Register the converter for custom Keras layer
-    hls4ml.converters.register_keras_layer_handler('KReverse', parse_reverse_layer)
+    hls4ml.converters.register_keras_v2_layer_handler('KReverse', parse_reverse_layer)
 
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('HReverse', HReverse)

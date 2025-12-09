@@ -16,7 +16,6 @@ config_filename = 'hls4ml_config.yml'
 
 
 class OneAPIWriter(Writer):
-
     def __make_dat_file(self, original_path, project_path):
         """
         Convert other input/output data types into a dat file, which is
@@ -25,10 +24,10 @@ class OneAPIWriter(Writer):
         """
 
         # Take in data from current supported data files
-        if original_path[-3:] == "npy":
+        if original_path[-3:] == 'npy':
             data = np.load(original_path)
         else:
-            raise Exception("Unsupported input/output data files.")
+            raise Exception('Unsupported input/output data files.')
 
         # Faltten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
@@ -36,11 +35,11 @@ class OneAPIWriter(Writer):
         def print_data(f):
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    f.write(str(data[i][j]) + " ")
-                f.write("\n")
+                    f.write(str(data[i][j]) + ' ')
+                f.write('\n')
 
         # Print out in dat file
-        with open(project_path, "w") as f:
+        with open(project_path, 'w') as f:
             print_data(f)
 
     def get_max_reuse_factor(self, model):
@@ -59,30 +58,30 @@ class OneAPIWriter(Writer):
             layer (Layer): Instance of the layer to which the weights belong
             odir (str): Output directory
         """
-        with open(f"{odir}/src/firmware/weights/{var.name}.h", "w") as h_file:
+        with open(f'{odir}/src/firmware/weights/{var.name}.h', 'w') as h_file:
             # meta data
-            h_file.write(f"//Numpy array shape {var.shape}\n")
-            h_file.write(f"//Min {np.min(var.min):.12f}\n")
-            h_file.write(f"//Max {np.max(var.max):.12f}\n")
-            h_file.write(f"//Number of zeros {var.nzeros}\n")
-            h_file.write("\n")
+            h_file.write(f'//Numpy array shape {var.shape}\n')
+            h_file.write(f'//Min {np.min(var.min):.12f}\n')
+            h_file.write(f'//Max {np.max(var.max):.12f}\n')
+            h_file.write(f'//Number of zeros {var.nzeros}\n')
+            h_file.write('\n')
 
-            h_file.write(f"#ifndef {var.name.upper()}_H_\n")
-            h_file.write(f"#define {var.name.upper()}_H_\n")
-            h_file.write("\n")
+            h_file.write(f'#ifndef {var.name.upper()}_H_\n')
+            h_file.write(f'#define {var.name.upper()}_H_\n')
+            h_file.write('\n')
 
             rf = int(layer.get_attr('reuse_factor', 1))
 
-            h_file.write(var.definition_cpp(rf) + " = {{")
+            h_file.write(var.definition_cpp(rf) + ' = {{')
 
             # fill c++ array.
             # not including internal brackets for multidimensional case
             sep = ''
             for x in var:
                 h_file.write(sep + x)
-                sep = ", "
-            h_file.write("}};\n")
-            h_file.write("\n#endif\n")
+                sep = ', '
+            h_file.write('}};\n')
+            h_file.write('\n#endif\n')
 
     def write_project_dir(self, model):
         """Write the base project directory
@@ -90,8 +89,8 @@ class OneAPIWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        if not os.path.isdir(f"{model.config.get_output_dir()}/src/firmware/weights"):
-            os.makedirs(f"{model.config.get_output_dir()}/src/firmware/weights")
+        if not os.path.isdir(f'{model.config.get_output_dir()}/src/firmware/weights'):
+            os.makedirs(f'{model.config.get_output_dir()}/src/firmware/weights')
 
     def write_project_cpp(self, model):
         """Write the main architecture source file (myproject.cpp)
@@ -111,7 +110,7 @@ class OneAPIWriter(Writer):
             model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
             if len(model_brams) != 0:
-                raise NotImplementedError("Weights on the interface is currently not supported")
+                raise NotImplementedError('Weights on the interface is currently not supported')
 
             io_type = model.config.get_config_value('IOType')
             indent = '    '
@@ -297,7 +296,7 @@ class OneAPIWriter(Writer):
                     ):
                         newline += '#include "%s"\n' % include
 
-                elif "// hls-fpga-machine-learning insert layer-config" in line:
+                elif '// hls-fpga-machine-learning insert layer-config' in line:
                     newline = line
                     for layer in model.get_layers():
                         config = layer.get_attr('config_cpp', None)
@@ -338,11 +337,11 @@ class OneAPIWriter(Writer):
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         if len(model_brams) != 0:
-            raise NotImplementedError("Weights on the interface is currently not supported")
+            raise NotImplementedError('Weights on the interface is currently not supported')
 
         if len(model_inputs) != 1 or len(model_outputs) != 1:
-            print("The testbench supports only single input arrays and single output arrays.")
-            print("Please modify it before using it.")
+            print('The testbench supports only single input arrays and single output arrays.')
+            print('Please modify it before using it.')
 
         if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
             os.mkdir(f'{model.config.get_output_dir()}/tb_data/')
@@ -351,13 +350,13 @@ class OneAPIWriter(Writer):
         output_predictions = model.config.get_config_value('OutputPredictions')
 
         if input_data:
-            if input_data[-3:] == "dat":
+            if input_data[-3:] == 'dat':
                 copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
             else:
                 self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
 
         if output_predictions:
-            if output_predictions[-3:] == "dat":
+            if output_predictions[-3:] == 'dat':
                 copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
             else:
                 self.__make_dat_file(
@@ -379,7 +378,7 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning insert bram' in line:
                     newline = line
                     for bram in model_brams:
-                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
                 elif '// hls-fpga-machine-learning insert zero' in line:
                     newline = line
                     inp = model_inputs[0]
@@ -440,7 +439,7 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning insert bram' in line:
                     newline = line
                     for bram in model_brams:
-                        newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
 
                 elif '// hls-fpga-machine-learning insert class def' in line:
                     dtype = line.split('#', 1)[1].strip()
@@ -574,7 +573,7 @@ class OneAPIWriter(Writer):
             in_val = -8.0 * i / float(table_size)
             real_val = np.exp(in_val) - 1.0
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -599,7 +598,7 @@ class OneAPIWriter(Writer):
             real_val = 1.0 / (1 + np.exp(-in_val))
             if real_val >= 0.5:
                 h_file.write(sep + str(real_val))
-                sep = ", "
+                sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -624,7 +623,7 @@ class OneAPIWriter(Writer):
             real_val = np.tanh(in_val)
             if real_val >= 0:
                 h_file.write(sep + str(real_val))
-                sep = ", "
+                sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -641,7 +640,7 @@ class OneAPIWriter(Writer):
             in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
             real_val = np.log(np.exp(in_val) + 1.0)
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -666,7 +665,7 @@ class OneAPIWriter(Writer):
             real_val = in_val / (np.fabs(in_val) + 1.0)
             if real_val >= 0:
                 h_file.write(sep + str(real_val))
-                sep = ", "
+                sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -683,7 +682,7 @@ class OneAPIWriter(Writer):
             in_val = -8.0 * i / float(table_size)
             real_val = 1.0507009873554804934193349852946 * (1.6732632423543772848170429916717 * (np.exp(in_val) - 1.0))
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -729,7 +728,7 @@ class OneAPIWriter(Writer):
             f.set_msb_bits(b)
             real_val = f.exp_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -772,7 +771,7 @@ class OneAPIWriter(Writer):
             f.set_msb_bits(b)
             real_val = f.inv_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -811,7 +810,7 @@ class OneAPIWriter(Writer):
             f.set_msb_bits(uint_to_binary(i, N))
             real_val = f.exp_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -850,7 +849,7 @@ class OneAPIWriter(Writer):
             f.set_msb_bits(uint_to_binary(i, N))
             real_val = f.inv_float()
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -867,7 +866,7 @@ class OneAPIWriter(Writer):
             in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
             real_val = np.exp(in_val)
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()
@@ -886,7 +885,7 @@ class OneAPIWriter(Writer):
             if in_val > 0.0:
                 real_val = 1.0 / in_val
             h_file.write(sep + str(real_val))
-            sep = ", "
+            sep = ', '
 
         h_file.write('};\n')
         h_file.close()

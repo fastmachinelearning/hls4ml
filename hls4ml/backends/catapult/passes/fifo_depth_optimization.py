@@ -82,9 +82,9 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
         if len(data['children']) == 0:
             print(
-                "FIFO depth optimization found no FIFOs implemented using BRAMs in the design, no optimization is possible."
+                'FIFO depth optimization found no FIFOs implemented using BRAMs in the design, no optimization is possible.'
             )
-            print("Consider increasing profiling_fifo_depth.")
+            print('Consider increasing profiling_fifo_depth.')
             return False
 
         n_elem = len(data['children'][0]['children'][0]['children'])

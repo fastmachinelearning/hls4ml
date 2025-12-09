@@ -6,10 +6,10 @@ from hls4ml.model.types import IntegerPrecisionType, XnorPrecisionType
 
 
 class BatchNormalizationQuantizedTanh(Layer):
-    '''Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
+    """Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
     The mean, variance, beta, gamma parameters are folded into the threshold(s) at which the
     sign of the input flips after the quantized (binary or ternary) Tanh activation.
-    '''
+    """
 
     _expected_attributes = [
         Attribute('n_in'),
@@ -69,7 +69,7 @@ class BatchNormalizationQuantizedTanh(Layer):
 
 
 class PointwiseConv1D(Conv1D):
-    '''Optimized Conv1D implementation for 1x1 kernels.'''
+    """Optimized Conv1D implementation for 1x1 kernels."""
 
     def initialize(self):
         # Do noting, values copied
@@ -77,7 +77,7 @@ class PointwiseConv1D(Conv1D):
 
 
 class PointwiseConv2D(Conv2D):
-    '''Optimized Conv2D implementation for 1x1 kernels.'''
+    """Optimized Conv2D implementation for 1x1 kernels."""
 
     def initialize(self):
         # Do noting, values copied
