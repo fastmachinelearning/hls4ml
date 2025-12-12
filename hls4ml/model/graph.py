@@ -913,7 +913,7 @@ class ModelGraph(Serializable):
             return backend.predict(self, x, *args, **kwargs)
 
         return self._predict(x)
-        
+
     def trace(self, x):
         print(f'Recompiling {self.config.get_project_name()} with tracing')
         self.config.trace_output = True
