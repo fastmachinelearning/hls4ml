@@ -873,7 +873,7 @@ class ModelGraph(Serializable):
 
         return int(n_sample)
 
-    def predict(self, x):
+    def _predict(self, x):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
@@ -906,6 +906,14 @@ class ModelGraph(Serializable):
         else:
             return output
 
+    def predict(self, x, *args, **kwargs):
+        backend = self.config.backend
+
+        if hasattr(backend, 'predict') and callable(backend.predict):
+            return backend.predict(self, x, *args, **kwargs)
+
+        return self._predict(x)
+        
     def trace(self, x):
         print(f'Recompiling {self.config.get_project_name()} with tracing')
         self.config.trace_output = True
@@ -1150,7 +1158,7 @@ class MultiModelGraph:
         self.get_output_variables = ModelGraph.get_output_variables.__get__(self, MultiModelGraph)
         self._compute_n_samples = ModelGraph._compute_n_samples.__get__(self, MultiModelGraph)
         self._get_top_function = ModelGraph._get_top_function.__get__(self, MultiModelGraph)
-        self._predict = ModelGraph.predict.__get__(self, MultiModelGraph)
+        self._predict = ModelGraph._predict.__get__(self, MultiModelGraph)
 
     def _initialize_io_attributes(self, graphs):
         self.graph_reports = None
