@@ -28,7 +28,7 @@
     paths:
       - test/pytest/hls4mlprj*.tar.gz
 
-pytest-keras3-only:
+.pytest-keras3-only:
   extends: .pytest
   variables:
     CONDA_ENV: "hls4ml-testing-keras3"

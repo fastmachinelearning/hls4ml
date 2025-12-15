@@ -88,7 +88,7 @@ def generate_test_yaml(test_root='.'):
         name = 'keras3-' + '+'.join(names)
         test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
         batch_need_example_model = int(any([keras3_need_examples[i] for i in batch_idxs]))
-        diff_yml = yaml.safe_load(template.format(name, 'pytest-keras3-only', test_files, batch_need_example_model))
+        diff_yml = yaml.safe_load(template.format(name, '.pytest-keras3-only', test_files, batch_need_example_model))
         yml.update(diff_yml)
 
     return yml
