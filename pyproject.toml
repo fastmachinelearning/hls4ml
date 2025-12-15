@@ -56,7 +56,7 @@ optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [
   "calmjs-parse",
   "onnx>=1.4",
-  "pytest",
+  "pytest<9",
   "pytest-cov",
   "pytest-randomly",
   "qonnx",
