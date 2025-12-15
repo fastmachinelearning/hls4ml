@@ -111,7 +111,8 @@ def make_pquant_handler(base_parse_func, op, op_check=None):
 
 
 parse_pqlinear_layer = make_pquant_handler(parse_linear_layer, 'PQDense', 'PQLinear')
-parse_pqbatchnorm_layer = make_pquant_handler(parse_batchnorm_layer, 'PQBatchNorm2d')
+parse_pqbatchnorm1d_layer = make_pquant_handler(parse_batchnorm_layer, 'PQBatchNorm1d')
+parse_pqbatchnorm2d_layer = make_pquant_handler(parse_batchnorm_layer, 'PQBatchNorm2d')
 parse_pqconv1d_layer = make_pquant_handler(parse_conv1d_layer, 'PQConv1d')
 parse_pqconv2d_layer = make_pquant_handler(parse_conv2d_layer, 'PQConv2d')
 parse_pqpool1d_layer = make_pquant_handler(parse_pooling_layer, 'PQAvgPool1d', 'AvgPool1d')

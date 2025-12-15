@@ -3,10 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from pquant.activations import PQActivation
-from pquant.core.finetuning import TuningConfig
-from pquant.core.utils import get_default_config
-from pquant.layers import PQAvgPool1d, PQAvgPool2d, PQBatchNorm2d, PQConv1d, PQConv2d, PQDense
 
 from hls4ml.converters import convert_from_pytorch_model
 from hls4ml.utils import config_from_pytorch_model
@@ -14,6 +10,10 @@ from hls4ml.utils import config_from_pytorch_model
 os.environ['KERAS_BACKEND'] = 'torch'
 import torch  # noqa: E402
 import torch.nn as nn  # noqa: E402
+from pquant.activations import PQActivation  # noqa: E402
+from pquant.core.finetuning import TuningConfig  # noqa: E402
+from pquant.core.utils import get_default_config  # noqa: E402
+from pquant.layers import PQAvgPool1d, PQAvgPool2d, PQBatchNorm1d, PQBatchNorm2d, PQConv1d, PQConv2d, PQDense  # noqa: E402
 
 test_path = Path(__file__).parent
 
@@ -125,9 +125,9 @@ def get_shape(model: nn.Module, batch_size: int = 1, default_length: int = 32, d
         case PQAvgPool2d():
             # (N, C, H, W)
             return (batch_size, 1, *default_hw)
-        # case PQBatchNorm1d():
-        #    # (N, num_features, L)
-        #    return (batch_size, layer.num_features, *default_length)
+        case PQBatchNorm1d():
+            # (N, num_features, L)
+            return (batch_size, layer.num_features, default_length)
         case PQBatchNorm2d():
             # (N, num_features, H, W)
             return (batch_size, layer.num_features, *default_hw)
@@ -159,6 +159,7 @@ def get_shape(model: nn.Module, batch_size: int = 1, default_length: int = 32, d
         'PQConv2d(2, 3, kernel_size=(3,3), padding=0, bias=False)',
         'PQConv2d(2, 3, kernel_size=(3,3), padding=0, stride=2)',
         'PQConv2d(2, 3, kernel_size=(3,3), padding=1, stride=2)',
+        'PQBatchNorm1d(3)',
         'PQBatchNorm2d(3)',
         'PQAvgPool1d(2, padding=1)',
         'PQAvgPool1d(2, padding=0)',
