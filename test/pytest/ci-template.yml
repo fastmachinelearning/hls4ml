@@ -4,7 +4,7 @@
   tags:
     - k8s-default
   variables:
-    CONDA_ENV: hls4ml-testing
+    CONDA_ENV: "hls4ml-testing"
     EXTRA_DEPS: "[da,testing,testing-keras2,sr,optimization]"
   before_script:
     - eval "$(conda shell.bash hook)"
@@ -31,5 +31,5 @@
 pytest-keras3-only:
   extends: .pytest
   variables:
-    CONDA_ENV: hls4ml-testing-keras3
+    CONDA_ENV: "hls4ml-testing-keras3"
     EXTRA_DEPS: "[da,testing,testing-keras3,sr]"
