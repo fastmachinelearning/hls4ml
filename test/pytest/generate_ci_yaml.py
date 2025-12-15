@@ -76,7 +76,6 @@ def generate_test_yaml(test_root='.'):
         diff_yml = yaml.safe_load(template.format(name, '.pytest', test_file, int(needs_examples)))
         yml.update(diff_yml)
 
- 
     keras3_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in KERAS3_LIST]
     keras3_need_examples = [uses_example_model(path) for path in keras3_paths]
 

@@ -69,9 +69,9 @@ optional-dependencies.testing-keras2 = [
   "tensorflow>=2.8,<=2.14.1",
 ]
 optional-dependencies.testing-keras3 = [
+  "da4ml",
   "hgq2>=0.0.1",
   "keras>=3.10",
-  "da4ml",
   "tensorflow>=2.15",
 ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
