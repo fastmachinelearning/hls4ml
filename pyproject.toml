@@ -41,8 +41,8 @@ optional-dependencies.hgq2 = [ "hgq2>=0.0.1" ]
 optional-dependencies.keras-v3 = [ "keras>=3.10" ]
 optional-dependencies.onnx = [ "onnx>=1.4" ]
 optional-dependencies.optimization = [
-  "keras-tuner==1.1.3",
-  "ortools==9.4.1874",
+  "keras-tuner>=1.4,<1.5",
+  "ortools>=9.8,<9.10",
   "packaging",
 ]
 optional-dependencies.profiling = [ "matplotlib", "pandas", "seaborn" ]
@@ -55,7 +55,6 @@ optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [
   "calmjs-parse",
-  "hgq>=0.2.3",
   "onnx>=1.4",
   "pytest",
   "pytest-cov",
@@ -63,6 +62,17 @@ optional-dependencies.testing = [
   "qonnx",
   "tabulate",
   "torch",
+]
+optional-dependencies.testing-keras2 = [
+  "hgq>=0.2.3",
+  "qkeras",
+  "tensorflow>=2.8,<=2.14.1",
+]
+optional-dependencies.testing-keras3 = [
+  "hgq2>=0.0.1",
+  "keras>=3.10",
+  "da4ml",
+  "tensorflow>=2.15",
 ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
 scripts.hls4ml = "hls4ml.cli:main"
