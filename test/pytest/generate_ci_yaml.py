@@ -12,7 +12,7 @@ in the pytests directory to parallelise the CI jobs.
 
 template = """
 pytest.{}:
-  extends: .pytest
+  extends: {}
   variables:
     PYTESTFILE: {}
     EXAMPLEMODEL: {}
@@ -26,6 +26,7 @@ BLACKLIST = {'test_reduction'}
 
 # Long-running tests will not be bundled with other tests
 LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_api'}
+KERAS3_LIST = {'test_keras_v3_api', 'test_hgq2_mha', 'test_einsum_dense', 'test_qeinsum'}
 
 
 def path_to_name(test_path):
@@ -48,7 +49,7 @@ def uses_example_model(test_filename):
 
 def generate_test_yaml(test_root='.'):
     test_root = Path(test_root)
-    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem not in (BLACKLIST | LONGLIST)]
+    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem not in (BLACKLIST | LONGLIST | KERAS3_LIST)]
     need_example_models = [uses_example_model(path) for path in test_paths]
 
     idxs = list(range(len(need_example_models)))
@@ -61,7 +62,7 @@ def generate_test_yaml(test_root='.'):
         name = '+'.join(names)
         test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
         batch_need_example_model = int(any([need_example_models[i] for i in batch_idxs]))
-        diff_yml = yaml.safe_load(template.format(name, test_files, batch_need_example_model))
+        diff_yml = yaml.safe_load(template.format(name, '.pytest', test_files, batch_need_example_model))
         if yml is None:
             yml = diff_yml
         else:
@@ -72,7 +73,23 @@ def generate_test_yaml(test_root='.'):
         name = path.stem.replace('test_', '')
         test_file = str(path.relative_to(test_root))
         needs_examples = uses_example_model(path)
-        diff_yml = yaml.safe_load(template.format(name, test_file, int(needs_examples)))
+        diff_yml = yaml.safe_load(template.format(name, '.pytest', test_file, int(needs_examples)))
+        yml.update(diff_yml)
+
+ 
+    keras3_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in KERAS3_LIST]
+    keras3_need_examples = [uses_example_model(path) for path in keras3_paths]
+
+    k3_idxs = list(range(len(keras3_need_examples)))
+    k3_idxs = sorted(k3_idxs, key=lambda i: f'{keras3_need_examples[i]}_{path_to_name(keras3_paths[i])}')
+
+    for batch_idxs in batched(k3_idxs, n_test_files_per_yml):
+        batch_paths: list[Path] = [keras3_paths[i] for i in batch_idxs]
+        names = [path_to_name(path) for path in batch_paths]
+        name = 'keras3-' + '+'.join(names)
+        test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
+        batch_need_example_model = int(any([keras3_need_examples[i] for i in batch_idxs]))
+        diff_yml = yaml.safe_load(template.format(name, 'pytest-keras3-only', test_files, batch_need_example_model))
         yml.update(diff_yml)
 
     return yml

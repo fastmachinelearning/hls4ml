@@ -4,8 +4,8 @@
   tags:
     - k8s-default
   variables:
-    CONDA_ENV: hls4ml-testing-keras3
-    EXTRA_DEPS: "[da,testing,testing-keras3,sr,optimization]"
+    CONDA_ENV: hls4ml-testing
+    EXTRA_DEPS: "[da,testing,testing-keras2,sr,optimization]"
   before_script:
     - eval "$(conda shell.bash hook)"
     - conda activate "$CONDA_ENV"
@@ -27,3 +27,9 @@
         path: test/pytest/coverage.xml
     paths:
       - test/pytest/hls4mlprj*.tar.gz
+
+pytest-keras3-only:
+  extends: .pytest
+  variables:
+    CONDA_ENV: hls4ml-testing-keras3
+    EXTRA_DEPS: "[da,testing,testing-keras3,sr]"
