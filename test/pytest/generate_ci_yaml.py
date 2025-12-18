@@ -26,7 +26,7 @@ BLACKLIST = {'test_reduction'}
 
 # Long-running tests will not be bundled with other tests
 LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_api'}
-KERAS3_LIST = {'test_keras_v3_api', 'test_hgq2_mha', 'test_einsum_dense', 'test_qeinsum'}
+KERAS3_LIST = {'test_keras_v3_api', 'test_hgq2_mha', 'test_einsum_dense', 'test_qeinsum', 'test_multiout_onnx'}
 
 
 def path_to_name(test_path):
