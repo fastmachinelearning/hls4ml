@@ -72,6 +72,18 @@ def hls_model(mnist_model, request):
         ('Vitis', 'io_stream', 'resource'),
     ],
     indirect=True,
+    ids=[
+        'Quartus_io_parallel_resource',
+        'Quartus_io_stream_resource',
+        'Vivado_io_parallel_resource',
+        'Vivado_io_parallel_latency',
+        'Vivado_io_stream_latency',
+        'Vivado_io_stream_resource',
+        'Vitis_io_parallel_resource',
+        'Vitis_io_parallel_latency',
+        'Vitis_io_stream_latency',
+        'Vitis_io_stream_resource',
+    ],
 )
 def test_accuracy(mnist_data, mnist_model, hls_model):
     x_train, y_train, x_test, y_test = mnist_data

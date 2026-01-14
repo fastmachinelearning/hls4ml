@@ -54,6 +54,18 @@ def hls_model(keras_model, request):
         ('Catapult', 'io_stream'),
         ('oneAPI', 'io_stream'),
     ],
+    ids=[
+        'vivado_parallel',
+        'vitis_parallel',
+        'quartus_parallel',
+        'catapult_parallel',
+        'oneapi_parallel',
+        'vivado_stream',
+        'vitis_stream',
+        'quartus_stream',
+        'catapult_stream',
+        'oneapi_stream',
+    ],
     indirect=True,
 )
 def test_embedding_accuracy(data, keras_model, hls_model):

@@ -56,6 +56,14 @@ def hls_model(keras_model, request):
         ('io_parallel', 'oneAPI'),
     ],
     indirect=True,
+    ids=[
+        'vivado_stream',
+        'vitis_streamquartus_stream',
+        'oneapi_stream',
+        'vivado_parallel',
+        'vitis_parallelquartus_parallel',
+        'oneapi_parallel',
+    ],
 )
 def test_accuracy(data, keras_model, hls_model):
     X = data

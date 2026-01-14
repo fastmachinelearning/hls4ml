@@ -45,7 +45,12 @@ def hls_model(keras_model, request):
     return hls_model
 
 
-@pytest.mark.parametrize('hls_model', [('io_stream', 'Vivado'), ('io_stream', 'Quartus')], indirect=True)
+@pytest.mark.parametrize(
+    'hls_model',
+    [('io_stream', 'Vivado'), ('io_stream', 'Quartus')],
+    indirect=True,
+    ids=['io_stream_Vivado', 'io_stream_Quartus'],
+)
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model

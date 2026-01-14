@@ -92,7 +92,7 @@ def convert(load_jettagging_model, request):
     return hls_model
 
 
-@pytest.mark.parametrize('convert', ['latency', 'resource'], indirect=True)
+@pytest.mark.parametrize('convert', ['latency', 'resource'], indirect=True, ids=['latency', 'resource'])
 def test_accuracy(convert, load_jettagging_model, get_jettagging_data):
     """
     Test the hls4ml-evaluated accuracy of a 3 hidden layer QKeras model trained on

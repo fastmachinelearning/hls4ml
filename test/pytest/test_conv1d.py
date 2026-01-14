@@ -82,6 +82,22 @@ def hls_model(keras_model, request):
         ('Catapult', 'io_stream', 'resource'),
     ],
     indirect=True,
+    ids=[
+        'Quartus_io_parallel_resource',
+        'Quartus_io_stream_resource',
+        'oneAPI_io_parallel_resource',
+        'oneAPI_io_stream_resource',
+        'Vivado_io_parallel_resource',
+        'Vivado_io_parallel_latency',
+        'Vivado_io_stream_latency',
+        'Vivado_io_stream_resource',
+        'Vitis_io_parallel_resource',
+        'Vitis_io_parallel_latency',
+        'Vitis_io_stream_latency',
+        'Vitis_io_stream_resource',
+        'Catapult_io_stream_latency',
+        'Catapult_io_stream_resource',
+    ],
 )
 def test_accuracy(data, keras_model, hls_model):
     X = data
