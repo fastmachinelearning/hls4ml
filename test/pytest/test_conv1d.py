@@ -27,25 +27,6 @@ def keras_model():
 
 
 @pytest.fixture
-# ~ @pytest.mark.parametrize(
-# ~ 'backend,io_type,strategy',
-# ~ [
-# ~ ('Quartus', 'io_parallel', 'resource'),
-# ~ ('Quartus', 'io_stream', 'resource'),
-# ~ ('oneAPI', 'io_parallel', 'resource'),
-# ~ ('oneAPI', 'io_stream', 'resource'),
-# ~ ('Vivado', 'io_parallel', 'resource'),
-# ~ ('Vivado', 'io_parallel', 'latency'),
-# ~ ('Vivado', 'io_stream', 'latency'),
-# ~ ('Vivado', 'io_stream', 'resource'),
-# ~ ('Vitis', 'io_parallel', 'resource'),
-# ~ ('Vitis', 'io_parallel', 'latency'),
-# ~ ('Vitis', 'io_stream', 'latency'),
-# ~ ('Vitis', 'io_stream', 'resource'),
-# ~ ('Catapult', 'io_stream', 'latency'),
-# ~ ('Catapult', 'io_stream', 'resource'),
-# ~ ],
-# ~ )
 def hls_model(keras_model, request):
     backend, io_type, strategy = request.param
     default_precision = (
