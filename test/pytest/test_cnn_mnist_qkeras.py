@@ -41,22 +41,8 @@ def mnist_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize(
-    'backend,io_type,strategy',
-    [
-        ('Quartus', 'io_parallel', 'resource'),
-        ('Quartus', 'io_stream', 'resource'),
-        ('Vivado', 'io_parallel', 'resource'),
-        ('Vivado', 'io_parallel', 'latency'),
-        ('Vivado', 'io_stream', 'latency'),
-        ('Vivado', 'io_stream', 'resource'),
-        ('Vitis', 'io_parallel', 'resource'),
-        ('Vitis', 'io_parallel', 'latency'),
-        ('Vitis', 'io_stream', 'latency'),
-        ('Vitis', 'io_stream', 'resource'),
-    ],
-)
-def hls_model(mnist_model, backend, io_type, strategy):
+def hls_model(mnist_model, request):
+    backend, io_type, strategy = request.param
     keras_model = mnist_model
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     hls_config['Model']['Strategy'] = strategy
@@ -72,7 +58,7 @@ def hls_model(mnist_model, backend, io_type, strategy):
 
 
 @pytest.mark.parametrize(
-    'backend,io_type,strategy',
+    'hls_model',
     [
         ('Quartus', 'io_parallel', 'resource'),
         ('Quartus', 'io_stream', 'resource'),
@@ -85,6 +71,7 @@ def hls_model(mnist_model, backend, io_type, strategy):
         ('Vitis', 'io_stream', 'latency'),
         ('Vitis', 'io_stream', 'resource'),
     ],
+    indirect=True,
 )
 def test_accuracy(mnist_data, mnist_model, hls_model):
     x_train, y_train, x_test, y_test = mnist_data
