@@ -58,10 +58,12 @@ def hls_model(keras_model, request):
     indirect=True,
     ids=[
         'vivado_stream',
-        'vitis_streamquartus_stream',
+        'vitis_streamq',
+        'quartus_stream',
         'oneapi_stream',
         'vivado_parallel',
-        'vitis_parallelquartus_parallel',
+        'vitis_parallel',
+        'quartus_parallel',
         'oneapi_parallel',
     ],
 )
