@@ -25,9 +25,8 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
-@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def hls_model(keras_model, backend, io_type):
+def hls_model(keras_model, request):
+    backend, io_type = request.param
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, default_precision='ap_fixed<16,6>', granularity='name', backend=backend
     )
@@ -41,8 +40,34 @@ def hls_model(keras_model, backend, io_type):
     return hls_model
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
-@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize(
+    'hls_model',
+    [
+        ('Vivado', 'io_parallel'),
+        ('Vitis', 'io_parallel'),
+        ('Quartus', 'io_parallel'),
+        ('Catapult', 'io_parallel'),
+        ('oneAPI', 'io_parallel'),
+        ('Vivado', 'io_stream'),
+        ('Vitis', 'io_stream'),
+        ('Quartus', 'io_stream'),
+        ('Catapult', 'io_stream'),
+        ('oneAPI', 'io_stream'),
+    ],
+    ids=[
+        'vivado_parallel',
+        'vitis_parallel',
+        'quartus_parallel',
+        'catapult_parallel',
+        'oneapi_parallel',
+        'vivado_stream',
+        'vitis_stream',
+        'quartus_stream',
+        'catapult_stream',
+        'oneapi_stream',
+    ],
+    indirect=True,
+)
 def test_embedding_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model

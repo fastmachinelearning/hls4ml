@@ -28,9 +28,8 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def hls_model(keras_model, backend, io_type):
+def hls_model(keras_model, request):
+    io_type, backend = request.param
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, default_precision='ap_fixed<16,3,AP_RND_CONV,AP_SAT>', granularity='name', backend=backend
     )
@@ -44,8 +43,30 @@ def hls_model(keras_model, backend, io_type):
     return hls_model
 
 
-@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize(
+    'hls_model',
+    [
+        ('io_stream', 'Vivado'),
+        ('io_stream', 'Vitis'),
+        ('io_stream', 'Quartus'),
+        ('io_stream', 'oneAPI'),
+        ('io_parallel', 'Vivado'),
+        ('io_parallel', 'Vitis'),
+        ('io_parallel', 'Quartus'),
+        ('io_parallel', 'oneAPI'),
+    ],
+    indirect=True,
+    ids=[
+        'vivado_stream',
+        'vitis_streamq',
+        'quartus_stream',
+        'oneapi_stream',
+        'vivado_parallel',
+        'vitis_parallel',
+        'quartus_parallel',
+        'oneapi_parallel',
+    ],
+)
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model

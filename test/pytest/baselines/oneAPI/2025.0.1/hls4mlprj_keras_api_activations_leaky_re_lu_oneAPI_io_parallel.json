@@ -1,0 +1,25 @@
+{
+    "report": {
+        "HLS": {
+            "total": {
+                "alut": 2819,
+                "reg": 1124,
+                "ram": 0,
+                "dsp": 0,
+                "mlab": 52
+            },
+            "available": {
+                "alut": "974400",
+                "reg": "1948800",
+                "ram": "7110",
+                "dsp": "4510",
+                "mlab": "24360"
+            }
+        },
+        "Loop": {
+            "worstFrequency": "200.0",
+            "worstII": "1",
+            "worstLatency": "4.0"
+        }
+    }
+}
