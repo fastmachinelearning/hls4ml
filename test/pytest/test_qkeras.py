@@ -70,11 +70,12 @@ def load_jettagging_model():
 
 # TODO - Paramaterize for Quartus (different strategies?)
 @pytest.fixture
-@pytest.mark.parametrize('strategy', ['latency', 'resource'])
-def convert(load_jettagging_model, strategy):
+def convert(load_jettagging_model, request):
     """
     Convert a QKeras model trained on the jet tagging dataset
     """
+
+    strategy = request.param
     model = load_jettagging_model
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
@@ -91,8 +92,8 @@ def convert(load_jettagging_model, strategy):
     return hls_model
 
 
-@pytest.mark.parametrize('strategy', ['latency', 'resource'])
-def test_accuracy(convert, load_jettagging_model, get_jettagging_data, strategy):
+@pytest.mark.parametrize('convert', ['latency', 'resource'], indirect=True, ids=['latency', 'resource'])
+def test_accuracy(convert, load_jettagging_model, get_jettagging_data):
     """
     Test the hls4ml-evaluated accuracy of a 3 hidden layer QKeras model trained on
     the jet tagging dataset. QKeras model accuracy is required to be over 70%, and
