@@ -11,6 +11,8 @@
 
 A package for machine learning inference in FPGAs. We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!
 
+hls4ml is designed for ultra-low-latency inference and has been used in real-time applications such as trigger systems in high-energy physics experiments (including at the Large Hadron Collider).
+
 If you have any questions, comments, or ideas regarding hls4ml or just want to show us how you use hls4ml, don't hesitate to reach us through the [discussions](https://github.com/fastmachinelearning/hls4ml/discussions) tab.
 
 # Documentation & Tutorial
