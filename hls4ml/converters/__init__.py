@@ -152,7 +152,7 @@ def _check_hls_config(config, hls_config):
 
 def _check_model_config(model_config):
     model_config = model_config or {}
-    model_config.setdefault('Precision', 'ap_fixed<16,6>')
+    model_config.setdefault('Precision', 'fixed<16,6>')
     model_config.setdefault('ReuseFactor', 1)
     return model_config
 
