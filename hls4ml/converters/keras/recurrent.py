@@ -1,3 +1,5 @@
+import numpy as np
+
 from hls4ml.converters.keras_v2_to_hls import (
     KerasModelReader,
     KerasNestedFileReader,
@@ -40,6 +42,13 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
     layer['weight_data'], layer['recurrent_weight_data'], layer['bias_data'] = get_weights_data(
         data_reader, layer['name'], ['kernel', 'recurrent_kernel', 'bias']
     )
+
+    if layer['bias_data'] is None:
+        d_out = layer['bias_data'].shape[-1]
+        if 'GRU' in layer['class_name']:
+            layer['bias_data'] = np.zeros((2, d_out), dtype=np.float32)
+        else:
+            layer['bias_data'] = np.zeros((d_out,), dtype=np.float32)
 
     if 'GRU' in layer['class_name']:
         layer['apply_reset_gate'] = 'after' if keras_layer['config']['reset_after'] else 'before'
@@ -97,7 +106,7 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
         if isinstance(data_reader, KerasModelReader):
             nested_data_reader = KerasWrappedLayerReader(data_reader.model.get_layer(layer['name']).layer)
         else:
-            nested_data_reader = KerasWrappedLayerFileReader(data_reader, f"{layer['name']}/{layer['name']}")
+            nested_data_reader = KerasWrappedLayerFileReader(data_reader, f'{layer["name"]}/{layer["name"]}')
 
         wrapped_layer, layer_output_shape = handler(wrapped_keras_layer, [layer['name']], input_shapes, nested_data_reader)
         wrapped_layer['output_shape'] = layer_output_shape
@@ -109,6 +118,8 @@ def parse_time_distributed_layer(keras_layer, input_names, input_shapes, data_re
     output_shape[len(layer_output_shape) - 1 :] = layer_output_shape
     layer['output_shape'] = output_shape[1:]  # Remove the batch dimension
     layer['n_time_steps'] = output_shape[1]
+
+    return layer, output_shape
 
 
 @keras_handler('Bidirectional')
@@ -125,7 +136,7 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             rnn_backward_layer = temp_layer
             swapped_order = True
             print(
-                f'WARNING: The selected order for forward and backward layers in \"{keras_layer["config"]["name"]}\" '
+                f'WARNING: The selected order for forward and backward layers in "{keras_layer["config"]["name"]}" '
                 f'({keras_layer["class_name"]}) is not supported. Switching to forward layer first, backward layer last.'
             )
     else:
@@ -149,7 +160,6 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
     layer['merge_mode'] = keras_layer['config']['merge_mode']
 
     for direction, rnn_layer in [('forward', rnn_forward_layer), ('backward', rnn_backward_layer)]:
-
         layer[f'{direction}_name'] = rnn_layer['config']['name']
         layer[f'{direction}_class_name'] = rnn_layer['class_name']
         if 'activation' in rnn_layer['config']:

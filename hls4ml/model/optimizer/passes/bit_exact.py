@@ -26,6 +26,7 @@ from hls4ml.model.layers import (
     Input,
     Layer,
     Merge,
+    ParametrizedActivation,
     Pooling1D,
     Pooling2D,
     Reshape,
@@ -41,7 +42,7 @@ if typing.TYPE_CHECKING:
     from hls4ml.model import ModelGraph
 
 
-KIF_t = tuple[NDArray[np.int8], NDArray[np.int8], NDArray[np.int8]]
+KIF_t = tuple[NDArray[np.int16], NDArray[np.int16], NDArray[np.int16]]
 rm_cpy = re.compile(r'(?P<name>.+)_cpy\d*')
 
 
@@ -82,9 +83,9 @@ def get_input_shapes(layer: Layer) -> list[tuple[int, ...]]:
 
 
 def _maximum_kif_at_shape(shape: tuple[int, ...]):
-    k = np.ones(shape, dtype=np.int8)
-    i = np.full(shape, 126, dtype=np.int8)
-    f = np.full(shape, 126, dtype=np.int8)
+    k = np.ones(shape, dtype=np.int16)
+    i = np.full(shape, 126, dtype=np.int16)
+    f = np.full(shape, 126, dtype=np.int16)
     return k, i, f
 
 
@@ -104,9 +105,9 @@ def _(layer: FixedPointQuantizer):
         k, i, f = k[0], i[0], f[0]
 
     out_shape = get_output_shape(layer)
-    k = np.broadcast_to(k, out_shape).astype(np.int8)
-    i = np.broadcast_to(i, out_shape).astype(np.int8)
-    f = np.broadcast_to(f, out_shape).astype(np.int8)
+    k = np.broadcast_to(k, out_shape).astype(np.int16)
+    i = np.broadcast_to(i, out_shape).astype(np.int16)
+    f = np.broadcast_to(f, out_shape).astype(np.int16)
 
     if layer.SAT != 'WRAP':
         k[:] = 1
@@ -133,12 +134,36 @@ def _(layer: Reshape):
 @_request_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes.get('activation')
+
+    if layer.attributes.get('trusted', False):
+        result_t = layer.get_output_variable().type.precision
+        if fn_name in ('linear', 'relu'):
+            output_shape = get_output_shape(layer)
+            k, w, f = result_t.signed, result_t.width, result_t.fractional
+            i = w - k - f
+            k = np.full(output_shape, k, dtype=np.int16)
+            i = np.full(output_shape, i, dtype=np.int16)
+            f = np.full(output_shape, f, dtype=np.int16)
+            if result_t.rounding_mode == RoundingMode.RND:
+                f += 1
+            elif result_t.rounding_mode != RoundingMode.TRN:
+                f = np.full(output_shape, 126, dtype=np.int16)
+            if result_t.saturation_mode != SaturationMode.WRAP:
+                k = np.ones(output_shape, dtype=np.int16)
+                i = np.full(output_shape, 126, dtype=np.int16)
+            if fn_name == 'linear':
+                return ((k, i, f),)
+            else:
+                k = np.ones(output_shape, dtype=np.int16)
+                i = np.full(output_shape, 126, dtype=np.int16)
+                return ((k, i, f),)
+
     if fn_name == 'linear':
         return (requested_kif(layer),)
     if fn_name == 'relu':
         _, _, f = requested_kif(layer)
-        k = np.ones(f.shape, dtype=np.int8)
-        i = np.full(f.shape, 126, dtype=np.int8)
+        k = np.ones(f.shape, dtype=np.int16)
+        i = np.full(f.shape, 126, dtype=np.int16)
         return ((k, i, f),)
     inp_shape = get_input_shapes(layer)[0]
     return (_maximum_kif_at_shape(inp_shape),)
@@ -175,8 +200,8 @@ def requested_kif(layer: Layer) -> KIF_t:
     if not out_layers:
         return _maximum_kif_at_shape(out_shape)
 
-    k = np.zeros(out_shape, dtype=np.int8)
-    i = np.full(out_shape, -127, dtype=np.int8)
+    k = np.zeros(out_shape, dtype=np.int16)
+    i = np.full(out_shape, -127, dtype=np.int16)
     f = i.copy()
     for out_layer in out_layers:
         _kif_s = request_kif(out_layer)
@@ -196,8 +221,16 @@ def _produce_kif(layer: Layer) -> KIF_t:
 
 @_produce_kif.register
 def _(layer: Input):
-    k = np.ones(get_output_shape(layer), dtype=np.int8)
-    i = f = np.full(get_output_shape(layer), 126, dtype=np.int8)
+    shape = get_output_shape(layer)
+    if layer.attributes.get('trusted', False):
+        precision: FixedPrecisionType = layer.get_output_variable().type.precision
+        k, i, f = precision.signed, precision.integer - precision.signed, precision.fractional
+        k = np.full(shape, k, dtype=np.int16)
+        i = np.full(shape, i, dtype=np.int16)
+        f = np.full(shape, f, dtype=np.int16)
+    else:
+        k = np.ones(shape, dtype=np.int16)
+        i = f = np.full(shape, 126, dtype=np.int16)
     return k, i, f
 
 
@@ -230,9 +263,9 @@ def _(layer: FixedPointQuantizer):
 
     # Compansate for round-up/downs that may need extra bits for representing (ufixed<2,0> -> ufixed<2,1,RND>, 0.75->1.0)
     if layer.RND != 'TRN':
-        _i += ((lf > f) & (i > li)).astype(np.int8)
+        _i += ((lf > f) & (i > li)).astype(np.int16)
     else:
-        _i += ((lf > f) & (i > li) & k).astype(np.int8)
+        _i += ((lf > f) & (i > li) & k).astype(np.int16)
 
     if layer.SAT in ('SAT', 'SAT_SM'):
         k, i, f = _k, _i, _f
@@ -316,7 +349,7 @@ def _(layer: Merge):
                 k, i, f = k[None], i[None], f[None]
         case _:
             raise NotImplementedError(f'No implementation of Merge for {op}')
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -330,7 +363,7 @@ def _(layer: EinsumDense):
     if _bias is not None:
         qint_out = qint_out + _bias.data
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -341,7 +374,7 @@ def _(layer: Einsum):
     eq = layer.attributes['equation']
     qint_out = einsum(eq, qint_in1, qint_in2)
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -354,7 +387,7 @@ def _(layer: Dense):
     if _bias is not None:
         qint_out = qint_out + _bias.data
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -450,7 +483,7 @@ def _(layer: Conv1D | Conv2D):
     qint_out = qint_in @ kernel
     qint_out = qint_out + bias
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register(Pooling1D)
@@ -463,20 +496,22 @@ def _(layer: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
 
     im2col_shape = *px_shape, ch_in, ch_out  # conv kernel shape
     k_in, i_in, f_in = get_input_kifs(layer)[0]
+    count = np.ones_like(k_in, dtype=np.uint32)
     if isinstance(layer, (Pooling1D, Pooling2D)):
-        k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
-    k_in, i_in, f_in = im2col(im2col_shape, k_in, i_in, f_in)
+        k_in, i_in, f_in, count = pad_arrs(layer, 0, k_in, i_in, f_in, count)
+    k_in, i_in, f_in, count = im2col(im2col_shape, k_in, i_in, f_in, count)
     if isinstance(layer, (Pooling1D, Pooling2D)):
-        k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
+        k_in, i_in, f_in, count = stride_arrs(layer, k_in, i_in, f_in, count)
 
-    k_out = k_in.reshape(*k_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
-    i_out = i_in.reshape(*i_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
-    f_out = f_in.reshape(*f_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int8)
+    k_out = k_in.reshape(*k_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
+    i_out = i_in.reshape(*i_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
+    f_out = f_in.reshape(*f_in.shape[:-1], -1, ch_in).max(axis=-2).astype(np.int16)
+    count = count.reshape(*count.shape[:-1], -1, ch_in).sum(axis=-2)
 
     pool_op = layer.attributes['pool_op']
     if pool_op == 'Average':
-        f_add = minimal_kif(np.array(1 / prod(px_shape)))[2]
-        f_out += int(f_add)
+        f_add = minimal_kif(1 / count)[2]
+        f_out += f_add
 
     if isinstance(layer, (GlobalPooling1D, GlobalPooling2D)):
         k_out, i_out, f_out = k_out[0], i_out[0], f_out[0]
@@ -494,7 +529,7 @@ def _(layer: BatchNormalization):
 
     qint_out = qint_in * scale + bias
     k, i, f = qint_out.to_kif()
-    return k.astype(np.int8), i, f
+    return k.astype(np.int16), i, f
 
 
 @_produce_kif.register
@@ -509,10 +544,10 @@ def _(layer: Softmax):
 
     i_exp, f_exp = I_exp, b_exp - I_exp
     i_inv, f_inv = I_inv, b_inv - I_inv
-    k = np.zeros(out_shape, dtype=np.int8)
+    k = np.zeros(out_shape, dtype=np.int16)
 
-    i = np.full(out_shape, i_exp + i_inv, dtype=np.int8)
-    f = np.full(out_shape, f_exp + f_inv, dtype=np.int8)
+    i = np.full(out_shape, i_exp + i_inv, dtype=np.int16)
+    f = np.full(out_shape, f_exp + f_inv, dtype=np.int16)
 
     return k, i, f
 
@@ -531,37 +566,71 @@ def _(layer: Concatenate):
 @_produce_kif.register
 def _(layer: Activation):
     fn_name = layer.attributes['activation'].lower()
+    if layer.attributes.get('trusted', False):
+        output_shape = get_output_shape(layer)
+        result_t = layer.get_output_variable().type.precision
+        k, w, f = result_t.signed, result_t.width, result_t.fractional
+        i = w - k - f
+        k = np.full(output_shape, k, dtype=np.int16)
+        i = np.full(output_shape, i, dtype=np.int16)
+        f = np.full(output_shape, f, dtype=np.int16)
+        return k, i, f
+
     k, i, f = get_input_kifs(layer)[0]
 
     match fn_name:
         case 'linear':
-            return k, i, f
+            pass
         case 'relu':
-            k = np.zeros_like(k)
-            return k, i, f
+            k = np.zeros_like(k, dtype=np.int16)
         case 'tanh':
             i = np.minimum(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            f = np.full_like(f, 126, dtype=np.int16)
         case 'sigmoid':
-            k = np.zeros_like(k)
+            k = np.zeros_like(k, dtype=np.int16)
             i = np.minimum(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            f = np.full_like(f, 126, dtype=np.int16)
         case _:
-            k = np.zeros_like(k)
-            i = np.full_like(i, 1)
-            f = np.full_like(f, 126)
-            return k, i, f
+            k = np.ones(k, dtype=np.int16)
+            i = np.full_like(i, 126, dtype=np.int16)
+            f = np.full_like(f, 126, dtype=np.int16)
+    return k, i, f
+
+
+@_produce_kif.register
+def _(layer: ParametrizedActivation):
+    fn_name = layer.attributes['activation'].lower()
+
+    k, i, f = get_input_kifs(layer)[0]
+    p = layer.attributes['activ_param']
+    _k, _i, _f = minimal_kif(np.array(p))
+    match fn_name:
+        case 'leakyrelu':
+            k = k & np.int16(p > 0)
+            i += np.maximum(0, _i - 1)
+            f += np.maximum(0, _f)
+        case 'thresholdedrelu':
+            i = np.maximum(i, _i)
+            f = np.maximum(f, _f)
+            k = k & _k
+        case 'elu':
+            k = k & np.int16(p > 0)
+            f = np.full_like(f, 126, dtype=np.int16)
+            i = np.maximum(i, _i)
+        case _:
+            k = np.ones(k, dtype=np.int16)
+            i = np.full_like(i, 126, dtype=np.int16)
+            f = np.full_like(f, 126, dtype=np.int16)
+    return k, i, f
 
 
 @_produce_kif.register
 def _(layer: UnaryLUT):
     k, i, f = minimal_kif(layer.attributes['table'].data)
     shape = get_output_shape(layer)
-    k = np.full(shape, np.max(k), dtype=np.int8)
-    i = np.full(shape, np.max(i), dtype=np.int8)
-    f = np.full(shape, np.max(f), dtype=np.int8)
+    k = np.full(shape, np.max(k), dtype=np.int16)
+    i = np.full(shape, np.max(i), dtype=np.int16)
+    f = np.full(shape, np.max(f), dtype=np.int16)
     return k, i, f
 
 
@@ -569,8 +638,8 @@ def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
     return tuple(int(np.max(a)) for a in arr)
 
 
-def produce_kif(layer: Layer) -> KIF_t:
-    if layer.attributes.get('_produce_kif'):
+def produce_kif(layer: Layer, force_reset=False) -> KIF_t:
+    if layer.attributes.get('_produce_kif') and not force_reset:
         return layer.attributes['_produce_kif']
     kif = _produce_kif(layer)
     layer.attributes['_produce_kif'] = kif
@@ -603,6 +672,10 @@ def requested_by_non_saturating_quantizer(layer: Layer) -> bool:
 
 
 def default_register_precision(layer: Layer):
+    if layer.attributes.get('trusted', False):
+        # Trusted layers have their precision already set
+        return
+
     _pk, _pi, _pf = produce_kif(layer)  # Maximum possible k,i,f output from this layer
     _rk, _ri, _rf = requested_kif(layer)  # Maximum possible k,i,f may be utilized by the next layer
     _oi, _of = np.minimum(_pi, _ri), np.minimum(_pf, _rf)
@@ -769,6 +842,15 @@ def _(node: Pooling1D | Pooling2D | GlobalPooling1D | GlobalPooling2D):
     node.attributes['accum_t'].precision.integer += i_add
 
 
+@register_precision.register(ParametrizedActivation)
+def _(node: ParametrizedActivation):
+    default_register_precision(node)
+    param = node.attributes['activ_param']
+    k, i, f = map(int, minimal_kif(np.array(param)))
+    param_t = to_hls4ml_fixed(k, i, f, f'{node.name}_param_t')
+    node.attributes['param_t'] = param_t
+
+
 class BitExact(ModelOptimizerPass):
     """Model-wide bitwidth flow to ensure bit-exactness. Triggered by the presence of FixedPointQuantizer for now.
     On the high level:
@@ -791,7 +873,11 @@ class BitExact(ModelOptimizerPass):
         return True
 
     def _match(self, model: 'ModelGraph'):
-        return self.has_fixed_quantizer(model)
+        enabled = model.config.config['HLSConfig']['Model'].get('BitExact', None)
+        if enabled is None:
+            # Enable by default if any FixedPointQuantizer is present
+            enabled = self.has_fixed_quantizer(model)
+        return enabled
 
     def transform(self, model: 'ModelGraph'):
         if not self._match(model):
@@ -807,7 +893,9 @@ class BitExact(ModelOptimizerPass):
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
                 continue
-            produce_kif(node)  # Shrink FixedPointQuantizer bits when possible to be used in backward flow (requested_kif).
+            produce_kif(
+                node, force_reset=True
+            )  # Shrink FixedPointQuantizer bits when possible to be used in backward flow (requested_kif).
 
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
@@ -816,12 +904,28 @@ class BitExact(ModelOptimizerPass):
             node.attributes['bit_exact_transformed'] = True
 
         for node in model.graph.values():
-            if node.attributes.get('_produce_kif'):
+            if '_produce_kif' in node.attributes:
                 del node.attributes['_produce_kif']
-            if node.attributes.get('_request_kif'):
+            if '_request_kif' in node.attributes:
                 del node.attributes['_request_kif']
 
         return True
+
+
+def get_output_layers_and_quantizers(
+    node: Layer, layers: list | None = None, quantizers: list | None = None
+) -> tuple[list[Layer], list[FixedPointQuantizer]]:
+    layers = layers if layers is not None else []
+    quantizers = quantizers if quantizers is not None else []
+    for _node in get_output_layers(node):
+        if isinstance(_node, FixedPointQuantizer):
+            quantizers.append(_node)
+        elif isinstance(_node, (Reshape, Transpose, Concatenate)):
+            layers.append(_node)
+            get_output_layers_and_quantizers(_node, layers, quantizers)
+        else:
+            raise ValueError(f'Layer {node.name} ({node.class_name}) unexpected input layer chain.')
+    return layers, quantizers
 
 
 class FixInputPrecision(OptimizerPass):
@@ -833,21 +937,17 @@ class FixInputPrecision(OptimizerPass):
         return node.get_output_variable().type.precision.width > 100
 
     def transform(self, model, node: Layer):
-        out_layers: list[FixedPointQuantizer] = get_output_layers(node)  # type: ignore
-        for layer in out_layers:
-            assert isinstance(
-                layer, FixedPointQuantizer
-            ), f'Input {node.name} connected to non-quantizer {layer.name} with non-trivial configuration'
+        layers, out_quantizers = get_output_layers_and_quantizers(node)
 
-        if len(out_layers) == 0:  # Input connected to nothing
+        if len(out_quantizers) == 0:  # Input connected to nothing
             new_type = to_hls4ml_fixed(0, 0, 1, f'{node.name}_t')
             node.get_output_variable().type = new_type
             node.model.config.layer_name_precision[node.name] = str(new_type)
             return False
 
-        sat_modes = [l.SAT for l in out_layers]
+        sat_modes = [l.SAT for l in out_quantizers]
         sat_modes_set = set(sat_modes)
-        rnd_modes = [l.RND for l in out_layers]
+        rnd_modes = [l.RND for l in out_quantizers]
         rnd_modes_set = set(rnd_modes)
         illegal_sat_modes = sat_modes_set - {'WRAP', 'SAT', 'SAT_SYM'}
         illegal_rnd_modes = rnd_modes_set - {'TRN', 'RND'}
@@ -858,7 +958,7 @@ class FixInputPrecision(OptimizerPass):
         if illegal_rnd_modes:
             warn(f'Saturation mode {illegal_rnd_modes} may compromise bit-exactness. Forcing at maximum 24 fractional bits.')
 
-        kifs = [_produce_kif(l) for l in out_layers]
+        kifs = [_produce_kif(l) for l in out_quantizers]
         i = np.max([np.max(i) for _, i, _ in kifs])
         k = np.max([np.max(k) for k, _, _ in kifs])
         if illegal_rnd_modes:
@@ -873,4 +973,15 @@ class FixInputPrecision(OptimizerPass):
             new_type.precision.saturation_mode = 'SAT'
         node.get_output_variable().type = new_type
         node.model.config.layer_name_precision[node.name] = str(new_type)
+        node.attributes['trusted'] = True
+
+        for layer in layers:
+            produce_kif(layer, force_reset=True)
+        for layer in layers:
+            register_precision(layer)
+        for layer in layers:
+            if '_produce_kif' in layer.attributes:
+                del layer.attributes['_produce_kif']
+            if '_request_kif' in layer.attributes:
+                del layer.attributes['_request_kif']
         return False

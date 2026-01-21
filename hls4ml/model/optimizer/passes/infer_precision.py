@@ -4,6 +4,7 @@ from collections.abc import Iterable
 import numpy as np
 
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
+from hls4ml.model.optimizer.passes.bit_exact import minimal_kif
 from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
@@ -51,7 +52,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['Dense']:
             return self._infer_dense_precision(node, types_to_infer)
 
-        if node_class in ['BatchNormalization', 'ApplyAlpha']:
+        if node_class in ['BatchNormalization', 'ApplyAlpha', 'LayerNormalization']:
             return self._infer_bn_precision(node, types_to_infer)
 
         if node_class in ['Conv1D', 'Conv2D', 'PointwiseConv1D', 'PointwiseConv2D', 'Conv2DBatchnorm']:
@@ -318,7 +319,6 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             bias_precision = node.types['bias_t'].precision
 
             if self._all_supported_types((input_precision, scale_precision, bias_precision)):
-
                 after_scale_signed = scale_precision.signed or input_precision.signed
                 after_scale_width = input_precision.width + scale_precision.width
                 after_scale_integer = input_precision.integer + scale_precision.integer
@@ -573,9 +573,17 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         # For threshold relu, set the parameter precision to be the input precision by default;
         # for other parametrized activations, just allow the default precision to be used.
         # Can override these values in the configuration by explicitly setting them.
-        if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'thresholdedrelu':
-            in_type = node.get_input_variable().type.precision
-            node.attributes['param_t'].precision = in_type
+        if 'param_t' in types_to_infer:
+            if node.get_attr('activation').lower() == 'thresholdedrelu':
+                # For threshold relu, set the parameter precision to be the input precision by default;
+                in_type = node.get_input_variable().type.precision
+                node.attributes['param_t'].precision = in_type
+                inferred_types.append('param_t')
+            else:
+                # find a constant to represent the values
+                param = node.get_attr('activ_param')
+                precision = _get_precision_from_constant(param)
+                node.attributes['param_t'].precision = precision
             inferred_types.append('param_t')
 
         return inferred_types
@@ -586,7 +594,6 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         # For PReLU, set the parameter precision to be the input precision by default;
         # As the parameters are stored as a weight tensor, need to update that precision as well.
         if 'param_t' in types_to_infer and node.get_attr('activation').lower() == 'prelu':
-
             in_type = node.get_input_variable().type.precision
             node.attributes['param_t'].precision = in_type
             node.weights['param'].update_precision(node.types['param_t'].precision)
@@ -594,3 +601,21 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('param_t')
 
         return inferred_types
+
+
+def _get_precision_from_constant(value: int | float, max_width=8):
+    """A utility function to find a fixed type to store the constant
+
+    Arguments:
+        value (int or float): the constant value
+        max_width (int, optional): the maximum fixed width (+ 1 if signed). Defaults to 8
+
+    Returns:
+        FixedPrecisionType: the type to use
+    """
+    if value == 0:
+        return FixedPrecisionType(width=1, integer=1, signed=False)
+
+    signed, integer, fraction = map(int, minimal_kif(np.array(value)))
+    width = min(signed + integer + fraction, signed + max_width)
+    return FixedPrecisionType(width, signed + integer, bool(signed))

@@ -175,7 +175,7 @@ class AttributeDict(MutableMapping):
             self.layer.model.register_output_variable(key, value)
             self.attributes['result_t'] = value.type
             if key in self._expected_attributes and key in self.layer.outputs:
-                key = 'out_' + key
+                key = '__hls4ml_reserved_out_' + key
         elif isinstance(value, WeightVariable):
             self.attributes[key + '_t'] = value.type
 
@@ -229,16 +229,16 @@ class VariableMapping(AttributeMapping):
         super().__init__(attributes, TensorVariable)
 
     def __getitem__(self, key):
-        if 'out_' + key in self.attributes:
-            return self.attributes['out_' + key]
+        if '__hls4ml_reserved_out_' + key in self.attributes:
+            return self.attributes['__hls4ml_reserved_out_' + key]
         else:
             return self.attributes[key]
 
     def __iter__(self):
         precision_keys = [k for k, v in self.attributes.items() if isinstance(v, self.clazz)]
         for key in precision_keys:
-            if key.startswith('out_'):
-                yield key[len('out_') :]
+            if key.startswith('__hls4ml_reserved_out_'):
+                yield key[len('__hls4ml_reserved_out_') :]
             else:
                 yield key
         super().__iter__()

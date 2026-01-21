@@ -7,10 +7,10 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class ApplyWinogradKernelTransformation(OptimizerPass):
-    '''
+    """
     Transforms the weights of a Conv2D kernel to a format suitable for Wingorad convolution
     For further information, refer to Lavin & Gray, 2015 - Fast Algorithms for Convolutional Neural Networks
-    '''
+    """
 
     def match(self, node):
         node_matches = isinstance(node, (Conv1D, Conv2D))

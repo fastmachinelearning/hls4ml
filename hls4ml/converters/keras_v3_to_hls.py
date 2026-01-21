@@ -52,7 +52,7 @@ def get_io_tensors(layer: 'keras.Layer', node_whitelist: set[int] | None = None)
 
 
 def resolve_dependency_relation(model: 'keras.Model'):
-    '''Given a keras model, return the following information:
+    """Given a keras model, return the following information:
         - A list of input tensor names
         - A list of output tensor names
         - A list of (layer_name, input_tensor_names, output_tensor_names) tuples
@@ -70,7 +70,7 @@ def resolve_dependency_relation(model: 'keras.Model'):
                 input tensor names, and a tuple of its output tensor names.
             - tensors (dict[str, KerasTensor]): A dictionary mapping tensor names
                 to KerasTensor objects.
-    '''
+    """
 
     tensors: dict[str, 'KerasTensor'] = {}
     'tensor_name -> KerasTensor'
@@ -97,7 +97,7 @@ def resolve_dependency_relation(model: 'keras.Model'):
 
 
 class UniqueName:
-    '''Helper class to generate unique names for layers, if one being used multiple times.'''
+    """Helper class to generate unique names for layers, if one being used multiple times."""
 
     def __init__(self):
         self.used_names: set[str] = set('input')
@@ -120,7 +120,7 @@ class UniqueName:
 
 
 class KerasV3HandlerDispatcher:
-    '''Dispatcher class to handle different types of keras v3 layers.'''
+    """Dispatcher class to handle different types of keras v3 layers."""
 
     def __init__(self, layer_handlers: dict[str, T_kv3_handler], v2_layer_handlers=None):
         self.registry = layer_handlers
@@ -190,12 +190,9 @@ class KerasV3HandlerDispatcher:
         ret['input_keras_tensor_names'] = input_names
         ret = (ret,)
 
-        recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU', 'Bidirectional']
         activation = getattr(layer, 'activation', None)
-        name = layer.name
-        class_name = layer.__class__.__name__
-        if activation not in (keras.activations.linear, None) and class_name not in recurrent_layers:
-            assert isinstance(activation, FunctionType), f'Activation function for layer {name} is not a function'
+        if activation not in (keras.activations.linear, None):
+            assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
             intermediate_tensor_name = f'{output_names[0]}_activation'
             ret[0]['output_keras_tensor_names'] = (intermediate_tensor_name,)
             act_cls_name = activation.__name__
@@ -211,7 +208,7 @@ class KerasV3HandlerDispatcher:
 
 
 def parse_keras_v3_model(model: 'keras.Model'):
-    '''Parse a keras model into a list of dictionaries, each
+    """Parse a keras model into a list of dictionaries, each
     representing a layer in the HLS model, and a list of input and
     output layer names.
 
@@ -228,7 +225,7 @@ def parse_keras_v3_model(model: 'keras.Model'):
 
     Raises:
         ValueError: If a circular dependency is detected.
-    '''
+    """
 
     assert model.built, 'Model must be built before parsing'
 

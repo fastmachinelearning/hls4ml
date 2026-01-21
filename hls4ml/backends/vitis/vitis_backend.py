@@ -30,6 +30,7 @@ class VitisBackend(VivadoBackend):
             'vitis:validate_resource_unrolled_strategy',
             'vitis:validate_bidirectional_merge_mode',
             'vitis:validate_bidirectional_io_type',
+            'vitis:validate_std_cpp_types',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
 
@@ -63,6 +64,7 @@ class VitisBackend(VivadoBackend):
         namespace=None,
         write_weights_txt=True,
         write_tar=False,
+        write_emulation_constants=False,
         tb_output_stream='both',
         **_,
     ):
@@ -78,6 +80,8 @@ class VitisBackend(VivadoBackend):
             write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
                 Defaults to True.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+            write_emulation_constants (bool, optional): If True, write constants to define.h useful for emulation.
+                Defaults to False.
             tb_output_stream (str, optional): Controls where to write the output. Options are 'stdout', 'file' and 'both'.
                 Defaults to 'both'.
 
@@ -96,6 +100,7 @@ class VitisBackend(VivadoBackend):
             'WriteWeightsTxt': write_weights_txt,
             'WriteTar': write_tar,
             'TBOutputStream': tb_output_stream,
+            'WriteEmulationConstants': write_emulation_constants,
         }
 
         return config
@@ -135,7 +140,7 @@ class VitisBackend(VivadoBackend):
         with open(tcl_path, 'w') as file:
             file.write(build_opts)
 
-        build_command = 'vitis-run --tcl build_prj.tcl'
+        build_command = 'vitis-run --tcl build_prj.tcl --mode hls'
 
         output_dir = model.config.get_output_dir()
         stdout_log = os.path.join(output_dir, 'build_stdout.log')
@@ -168,7 +173,6 @@ class VitisBackend(VivadoBackend):
         graph_reports=None,
         simulation_input_data=None,
     ):
-
         nn_config = model.nn_config
         os.makedirs(nn_config['OutputDir'], exist_ok=True)
         stitched_design_dir = os.path.join(nn_config['OutputDir'], nn_config['StitchedProjectName'])
@@ -197,7 +201,7 @@ class VitisBackend(VivadoBackend):
                 model.graphs[-1].config.get_output_dir(), model.graphs[-1].config.get_project_dir()
             )
             annotate_axis_stream_widths(nn_config, last_graph_project_path)
-        with open(nn_config_path, "w") as file:
+        with open(nn_config_path, 'w') as file:
             json.dump(nn_config, file, indent=4)
 
         if sim_stitched_design:
@@ -220,8 +224,8 @@ class VitisBackend(VivadoBackend):
             f'stitch_design={int(stitch_design)}',
             f'sim_design={int(sim_stitched_design)}',
             f'export_design={int(export_stitched_design)}',
-            f"stitch_project_name={nn_config['StitchedProjectName']}",
-            f"original_project_name={nn_config['OriginalProjectName']}",
+            f'stitch_project_name={nn_config["StitchedProjectName"]}',
+            f'original_project_name={nn_config["OriginalProjectName"]}',
             'sim_verilog_file=testbench.v',
         ]
 
@@ -231,7 +235,7 @@ class VitisBackend(VivadoBackend):
             )
             process.communicate()
             if process.returncode != 0:
-                raise Exception(f"Stitching failed for {nn_config['StitchedProjectName']}. See logs for details.")
+                raise Exception(f'Stitching failed for {nn_config["StitchedProjectName"]}. See logs for details.')
 
         stitched_report = {'StitchedDesignReport': {}}
         if stitch_design:

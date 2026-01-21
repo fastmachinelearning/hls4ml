@@ -127,7 +127,7 @@ def get_layer_handlers():
     return layer_handlers
 
 
-def register_keras_layer_handler(layer_cname, handler_func):
+def register_keras_v2_layer_handler(layer_cname, handler_func):
     """Register a handler function for the given layer class name.
 
     The handler function should have the following signature:

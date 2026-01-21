@@ -79,6 +79,7 @@ class OneAPIBackend(FPGABackend):
             'oneapi:fix_softmax_table_size',
             'infer_precision_types',
             'oneapi:process_fixed_point_quantizer_layer',
+            'oneapi:validate_ac_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -245,9 +246,9 @@ class OneAPIBackend(FPGABackend):
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
-            assert (
-                len(layer.get_input_variable().shape) == 1
-            ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            assert len(layer.get_input_variable().shape) == 1, (
+                'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):

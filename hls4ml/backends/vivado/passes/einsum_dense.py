@@ -7,7 +7,7 @@ from .reshaping_templates import transpose_config_template
 
 # Shared Dense template
 
-dense_config_template = '''struct config{index}_dense : nnet::dense_config {{
+dense_config_template = """struct config{index}_dense : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
@@ -21,11 +21,11 @@ dense_config_template = '''struct config{index}_dense : nnet::dense_config {{
     using kernel = nnet::{dense_function}<data_T, res_T, CONFIG_T>;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
-}};\n'''
+}};\n"""
 
 # EinsumDense template
 
-einsum_dense_config_template = '''
+einsum_dense_config_template = """
 struct config{index} {{
     typedef config{index}_tpose_inp tpose_inp_conf;
     typedef config{index}_tpose_out tpose_out_conf;
@@ -47,7 +47,7 @@ struct config{index} {{
     static const unsigned reuse_factor = {reuse_factor};
     static const unsigned parallelization_factor = {parallelization_factor}; // Only useful when n_inplace > 1
 }};
-'''
+"""
 
 einsum_dense_function_template = 'nnet::einsum_dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 einsum_dense_da_function_template = 'nnet::einsum_dense<{input_t}, {output_t}, {config}>({input}, {output}, {b});'
@@ -72,7 +72,8 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
         else:
             dense_params['nzeros'] = '-1; // Not making sense when kernels are switching'
         dense_params['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision, node.get_weights('weight').type.precision  # type: ignore
+            node.get_input_variable().type.precision,
+            node.get_weights('weight').type.precision,  # type: ignore
         )
 
         dense_params['dense_function'] = 'DenseLatency'  # Latency only for now

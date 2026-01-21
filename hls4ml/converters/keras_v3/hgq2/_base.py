@@ -12,7 +12,8 @@ from hls4ml.converters.keras_v3.merge import MergeHandler
 
 if TYPE_CHECKING:
     import hgq
-    from keras import KerasTensor, Layer
+    from keras import KerasTensor
+    from keras.src.layers.layer import Layer as Layer
 
 
 def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> dict[str, Any]:
@@ -23,15 +24,15 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
 
     shape: tuple[int, ...] = tensor.shape[1:]  # type: ignore
     if any([s is None for s in shape]):
-        raise ValueError(f"Tensor {tensor.name} has at least one dimension with no fixed size")
+        raise ValueError(f'Tensor {tensor.name} has at least one dimension with no fixed size')
     k, i, f = internal_q.kif
     k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
     k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
     I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
 
-    k = np.broadcast_to(k.astype(np.int8), (1,) + shape)  # type: ignore
-    B = np.broadcast_to(B.astype(np.int8), (1,) + shape)  # type: ignore
-    I = np.broadcast_to(I.astype(np.int8), (1,) + shape)  # noqa: E741
+    k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
+    B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
+    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
 
     overflow_mode: str = internal_q.overflow_mode
     round_mode: str = internal_q.round_mode
@@ -108,6 +109,12 @@ class QLayerHandler(KerasV3LayerHandler):
         if hasattr(layer, f'q{key}'):
             return ops.convert_to_numpy(getattr(layer, f'q{key}'))
         return super().load_weight(layer, key)
+
+    def default_class_name(self, layer: 'Layer') -> str:
+        class_name = layer.__class__.__name__
+        if class_name.startswith('Q'):
+            class_name = class_name[1:]
+        return class_name
 
 
 @register

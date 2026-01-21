@@ -20,8 +20,8 @@ example_model_path = (test_root_path / '../../example-models').resolve()
 def mnist_data():
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
     # Scale images to the [0, 1] range
-    x_train = x_train.astype("float32") / 255
-    x_test = x_test.astype("float32") / 255
+    x_train = x_train.astype('float32') / 255
+    x_test = x_test.astype('float32') / 255
     # Make sure images have shape (28, 28, 1)
     x_train = np.expand_dims(x_train, -1)
     x_test = np.expand_dims(x_test, -1)
@@ -41,22 +41,8 @@ def mnist_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize(
-    'backend,io_type,strategy',
-    [
-        ('Quartus', 'io_parallel', 'resource'),
-        ('Quartus', 'io_stream', 'resource'),
-        ('Vivado', 'io_parallel', 'resource'),
-        ('Vivado', 'io_parallel', 'latency'),
-        ('Vivado', 'io_stream', 'latency'),
-        ('Vivado', 'io_stream', 'resource'),
-        ('Vitis', 'io_parallel', 'resource'),
-        ('Vitis', 'io_parallel', 'latency'),
-        ('Vitis', 'io_stream', 'latency'),
-        ('Vitis', 'io_stream', 'resource'),
-    ],
-)
-def hls_model(mnist_model, backend, io_type, strategy):
+def hls_model(mnist_model, request):
+    backend, io_type, strategy = request.param
     keras_model = mnist_model
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     hls_config['Model']['Strategy'] = strategy
@@ -72,7 +58,7 @@ def hls_model(mnist_model, backend, io_type, strategy):
 
 
 @pytest.mark.parametrize(
-    'backend,io_type,strategy',
+    'hls_model',
     [
         ('Quartus', 'io_parallel', 'resource'),
         ('Quartus', 'io_stream', 'resource'),
@@ -84,6 +70,19 @@ def hls_model(mnist_model, backend, io_type, strategy):
         ('Vitis', 'io_parallel', 'latency'),
         ('Vitis', 'io_stream', 'latency'),
         ('Vitis', 'io_stream', 'resource'),
+    ],
+    indirect=True,
+    ids=[
+        'Quartus_io_parallel_resource',
+        'Quartus_io_stream_resource',
+        'Vivado_io_parallel_resource',
+        'Vivado_io_parallel_latency',
+        'Vivado_io_stream_latency',
+        'Vivado_io_stream_resource',
+        'Vitis_io_parallel_resource',
+        'Vitis_io_parallel_latency',
+        'Vitis_io_stream_latency',
+        'Vitis_io_stream_resource',
     ],
 )
 def test_accuracy(mnist_data, mnist_model, hls_model):
