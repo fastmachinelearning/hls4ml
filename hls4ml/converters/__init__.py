@@ -158,14 +158,9 @@ def _check_hls_config(config, hls_config):
 
 
 def _check_model_config(model_config):
-    if model_config is not None:
-        if not all(k in model_config for k in ('Precision', 'ReuseFactor')):
-            raise Exception('Precision and ReuseFactor must be provided in the hls_config')
-    else:
-        model_config = {}
-        model_config['Precision'] = 'ap_fixed<16,6>'
-        model_config['ReuseFactor'] = 1
-
+    model_config = model_config or {}
+    model_config.setdefault('Precision', 'fixed<16,6>')
+    model_config.setdefault('ReuseFactor', 1)
     return model_config
 
 
