@@ -75,3 +75,70 @@ The ``predict`` method will send the input data to the PL and return the output 
 
     nn = NeuralNetworkOverlay('hls4ml_nn.bit', X_test.shape, y_test.shape)
     y_hw, latency, throughput = nn.predict(X_test, profile=True)
+
+
+=================
+CoyoteAccelerator
+=================
+
+The **CoyoteAccelerator** backend of ``hls4ml`` leverages the `Coyote shell <https://github.com/fpgasystems/Coyote>`_ to easily deploy models on PCIe-attached Alveo FPGAs.
+Coyote is an open-source, research shell that facilitates the deployment of applications on FPGAs, as well as the integration of FPGAs into larger computer systems.
+Some of its features include:
+- Multi-tenancy
+- Virtualized memory
+- Optimized data movement
+- Dynamic reconfiguration
+- Automatic work scheduling and memory striping
+- Networking for distributed applications
+
+The list of supported boards is available in the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html>`_
+The current Coyote backend can be used to deploy hls4ml models from both Python and C++. While the focus of the current backend is on the inference,
+it can easily be extended to support dynamic reconfiguration of models, as well as distributed inference across multiple FPGAs.
+
+CoyoteOverlay
+================================
+
+Similar to the VivadoAccelerator backend, the Coyote backend creates a custom **neural network overlay** that interacts with the FPGA.
+This overlay can be used to provide inputs, run inference and retrieve the predictions. Additionally, the overlay provides a utility
+functon to load the model bitstream and driver for some clusters. On others, the users need to manually load the bitstream and driver.
+For guidance, see the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
+
+C++ binary
+================================
+
+Additionally, the Coyote backend generates and compiles a C++ program that can be used to run inference on the FPGA.
+The binary can be found in ``<hls4ml-output-dir>/build/<project-name>_cyt_sw/bin/test`` and when launched, it will
+run inference using the inputs from ``tb_data``. Similar to the Python overlay, the bitstream and driver must be loaded before running the inference.
+
+Example
+======================
+
+Similar to the ``VivadoAccelerator``backend, we first generate a bitstream from a Keras model ``model`` and a config.
+
+.. code-block:: Python
+
+    import hls4ml
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                           hls_config=config,
+                                                           output_dir='hls4ml_prj_coyote',
+                                                           backend='CoyoteAccelerator',
+                                                           board='u55c')
+    hls4ml.build(bitfile=True)
+
+After this command completes, the FPGA must be programmed with the bistream. Additionally, the Coyote driver must be loaded.
+For some platforms, Coyote provides utility functions to load the bitstream and driver. For others, this can be achieved using 
+the Vivado hardware manager and Linux commands. More detail can be found in the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
+
+Finally, we can create a ``CoyoteOverlay`` object, which can be used to run inference on the FPGA. Additionally, the overlay provides a utility
+functon to load the model bitstream and driver for some clusters.
+When running inference, we must provide the input tensor and the shape of the output tensor (to allocate the buffers for the data transfer). 
+Optionally, batch size can be specified..
+The ``predict`` method will send the input data to the FPGA and return the output data ``y_hw``.
+
+.. code-block:: Python
+
+    from hls4ml.backends.coyote_accelerator.coyote_accelerator_overlay import CoyoteOverlay
+
+    overlay = CoyoteOverlay('hls4ml_prj_coyote')
+    y_hw = overlay.predict(x, (1, ), BATCH_SIZE)
