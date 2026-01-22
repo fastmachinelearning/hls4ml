@@ -128,8 +128,6 @@ def convert_from_config(config):
             model = keras_v3_to_hls(yamlConfig)
         else:
             model = keras_v2_to_hls(yamlConfig)
-    else:
-        model = keras_v2_to_hls(yamlConfig)
 
     return model
 

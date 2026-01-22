@@ -27,7 +27,7 @@ n_test_files_per_yml = int(os.environ.get('N_TESTS_PER_YAML', 4))
 BLACKLIST = {'test_reduction'}
 
 # Long-running tests will not be bundled with other tests
-LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_api'}
+LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_api', 'test_keras_v3_profiling'}
 
 # Test files to split by individual test cases
 # Value = chunk size per CI job
