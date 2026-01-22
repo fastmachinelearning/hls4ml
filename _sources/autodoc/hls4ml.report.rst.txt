@@ -12,6 +12,14 @@ hls4ml.report.catapult\_report module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.report.libero\_report module
+-----------------------------------
+
+.. automodule:: hls4ml.report.libero_report
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.report.oneapi\_report module
 -----------------------------------
 

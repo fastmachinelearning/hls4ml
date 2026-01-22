@@ -106,6 +106,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.report package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.catapult_report">hls4ml.report.catapult_report module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.libero_report">hls4ml.report.libero_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.oneapi_report">hls4ml.report.oneapi_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.quartus_report">hls4ml.report.quartus_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.vivado_report">hls4ml.report.vivado_report module</a></li>
@@ -171,6 +172,21 @@
 <dt class="sig sig-object py" id="hls4ml.report.catapult_report.read_catapult_report">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.report.catapult_report.</span></span><span class="sig-name descname"><span class="pre">read_catapult_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hls_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.catapult_report.read_catapult_report" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.report.libero_report">
+<span id="hls4ml-report-libero-report-module"></span><h2>hls4ml.report.libero_report module<a class="headerlink" href="#module-hls4ml.report.libero_report" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.report.libero_report.parse_libero_report">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.report.libero_report.</span></span><span class="sig-name descname"><span class="pre">parse_libero_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.libero_report.parse_libero_report" title="Link to this definition"></a></dt>
+<dd><p>Reads and parses an FPGA synthesis report into a structured dictionary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.report.libero_report.parse_utilization_data">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.report.libero_report.</span></span><span class="sig-name descname"><span class="pre">parse_utilization_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.libero_report.parse_utilization_data" title="Link to this definition"></a></dt>
+<dd><p>Parses ‘Resource Usage’ section.</p>
+</dd></dl>
 
 </section>
 <section id="module-hls4ml.report.oneapi_report">

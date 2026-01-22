@@ -9,6 +9,7 @@ Subpackages
 
    hls4ml.backends.catapult
    hls4ml.backends.fpga
+   hls4ml.backends.libero
    hls4ml.backends.oneapi
    hls4ml.backends.quartus
    hls4ml.backends.symbolic

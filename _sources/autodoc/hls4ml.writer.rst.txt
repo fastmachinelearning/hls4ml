@@ -12,6 +12,14 @@ hls4ml.writer.catapult\_writer module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.writer.libero\_writer module
+-----------------------------------
+
+.. automodule:: hls4ml.writer.libero_writer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.writer.oneapi\_writer module
 -----------------------------------
 
