@@ -153,7 +153,7 @@ class OneAPIWriter(Writer):
                     newline = line
                     if io_type == 'io_stream':  # only need this for io_stream
                         for layer in model.get_layers():
-                            ts = layer.get_attr('tast_sequence_cpp')
+                            ts = layer.get_attr('task_sequence_cpp')
                             if ts:
                                 newline += '    ' + ts + '\n'
 
