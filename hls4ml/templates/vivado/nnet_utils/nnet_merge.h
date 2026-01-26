@@ -9,7 +9,8 @@
 namespace nnet {
 
 struct merge_config {
-    static const unsigned n_elem = 10;
+    static const unsigned n_elem1 = 10;
+    static const unsigned n_elem2 = 10;
     static const unsigned reuse_factor = 1;
 };
 
@@ -37,8 +38,9 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void add(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem], res_T res[CONFIG_T::n_elem]) {
     #pragma HLS PIPELINE
 
-    for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = data1[ii] + data2[ii];
+    const unsigned n_elem = CONFIG_T::n_elem1 > CONFIG_T::n_elem2 ? CONFIG_T::n_elem1 : CONFIG_T::n_elem2;
+    for (int ii = 0; ii < n_elem; ii++) {
+        res[ii] = data1[ii % CONFIG_T::n_elem1] + data2[ii % CONFIG_T::n_elem2];
     }
 }
 
@@ -46,8 +48,9 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void subtract(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem], res_T res[CONFIG_T::n_elem]) {
     #pragma HLS PIPELINE
 
+    const unsigned n_elem = CONFIG_T::n_elem1 > CONFIG_T::n_elem2 ? CONFIG_T::n_elem1 : CONFIG_T::n_elem2;
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = data1[ii] - data2[ii];
+        res[ii] = data1[ii % CONFIG_T::n_elem1] - data2[ii % CONFIG_T::n_elem2];
     }
 }
 
@@ -55,8 +58,9 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void multiply(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem], res_T res[CONFIG_T::n_elem]) {
     #pragma HLS PIPELINE
 
+    const unsigned n_elem = CONFIG_T::n_elem1 > CONFIG_T::n_elem2 ? CONFIG_T::n_elem1 : CONFIG_T::n_elem2;
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = data1[ii] * data2[ii];
+        res[ii] = data1[ii % CONFIG_T::n_elem1] * data2[ii % CONFIG_T::n_elem2];
     }
 }
 
@@ -64,8 +68,9 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void average(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem], res_T res[CONFIG_T::n_elem]) {
     #pragma HLS PIPELINE
 
+    const unsigned n_elem = CONFIG_T::n_elem1 > CONFIG_T::n_elem2 ? CONFIG_T::n_elem1 : CONFIG_T::n_elem2;
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = (data1[ii] + data2[ii]) * ap_ufixed<1, 0>(0.5);
+        res[ii] = (data1[ii % CONFIG_T::n_elem1] + data2[ii % CONFIG_T::n_elem2]) * ap_ufixed<1, 0>(0.5);
     }
 }
 
@@ -73,17 +78,23 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void maximum(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem], res_T res[CONFIG_T::n_elem]) {
     #pragma HLS PIPELINE
 
+    const unsigned n_elem = CONFIG_T::n_elem1 > CONFIG_T::n_elem2 ? CONFIG_T::n_elem1 : CONFIG_T::n_elem2;
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = (data1[ii] > data2[ii]) ? static_cast<res_T>(data1[ii]) : static_cast<res_T>(data2[ii]);
+
+        res[ii] = (data1[ii % CONFIG_T::n_elem1] > data2[ii % CONFIG_T::n_elem2])
+                      ? static_cast<res_T>(data1[ii % CONFIG_T::n_elem1])
+                      : static_cast<res_T>(data2[ii % CONFIG_T::n_elem2]);
     }
 }
 
 template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void minimum(input1_T data1[CONFIG_T::n_elem], input2_T data2[CONFIG_T::n_elem], res_T res[CONFIG_T::n_elem]) {
     #pragma HLS PIPELINE
-
+    const unsigned n_elem = CONFIG_T::n_elem1 > CONFIG_T::n_elem2 ? CONFIG_T::n_elem1 : CONFIG_T::n_elem2;
     for (int ii = 0; ii < CONFIG_T::n_elem; ii++) {
-        res[ii] = (data1[ii] < data2[ii]) ? static_cast<res_T>(data1[ii]) : static_cast<res_T>(data2[ii]);
+        res[ii] = (data1[ii % CONFIG_T::n_elem1] < data2[ii % CONFIG_T::n_elem2])
+                      ? static_cast<res_T>(data1[ii % CONFIG_T::n_elem1])
+                      : static_cast<res_T>(data2[ii % CONFIG_T::n_elem2]);
     }
 }
 
