@@ -242,6 +242,14 @@ class OneAPIWriter(Writer):
                     for out in model_outputs:
                         newline += out.declare_cpp()
 
+               # Insert weights
+                elif '// hls-fpga-machine-learning insert weights' in line:
+                    newline = line
+                    for layer in model.get_layers():
+                        for w in layer.get_weights():
+                            #if w not in model_brams:
+                            newline += f'#include "weights/{w.name}.h"\n'                        
+
                 # Simply copy line, if no inserts are required
                 else:
                     newline = line

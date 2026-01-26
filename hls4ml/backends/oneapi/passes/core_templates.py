@@ -6,6 +6,7 @@ from hls4ml.model.layers import Activation, BatchNormalization, Dense, HardActiv
 # Dense templates
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
+
     static constexpr unsigned n_in = {n_in};
     static constexpr unsigned n_out = {n_out};
     static constexpr unsigned io_type = nnet::{iotype};
@@ -30,13 +31,16 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {weight_t.name} weight_t;
     typedef {index_t.name} index_t;
 
+    static constexpr weight_t weights = {weights};
+    static constexpr bias_t biases = {biases};
+
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
-dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output});'
 dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
-dense_stream_function_template = '{name}.async({w}, {b});'
+dense_stream_function_template = '{name}.async();'
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_stream.h']
 
 
@@ -53,6 +57,9 @@ class DenseConfigTemplate(LayerConfigTemplate):
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
 
+        params['weights'] = node.get_weights('weight').name
+        params['biases'] = node.get_weights('bias').name
+
         return self.template.format(**params)
 
 
@@ -63,8 +70,8 @@ class DenseFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
+        #params['w'] = node.get_weights('weight').name
+        #params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
