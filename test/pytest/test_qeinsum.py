@@ -40,7 +40,10 @@ def test_einsum_dense(backend, io_type, strategy, operation):
     data = np.random.randn(1000, *inp0_shape).astype(np.float32), np.random.randn(1000, *inp1_shape).astype(np.float32)
     eq_name = eq.replace(',', '_').replace('->', '_')
     output_dir = str(test_root_path / f'hls4mlprj_einsum_{eq_name}_{backend}_{io_type}_{strategy}')
-    hls_config = {'Model': {'Precision': 'ap_fixed<1,0>' if backend != 'oneAPI' else 'ac_fixed<2,0>', 'ReuseFactor': 1}, 'Strategy': strategy}
+    hls_config = {
+        'Model': {'Precision': 'ap_fixed<1,0>' if backend != 'oneAPI' else 'ac_fixed<2,0>', 'ReuseFactor': 1},
+        'Strategy': strategy,
+    }
 
     r_keras = trace_minmax(model, data, batch_size=8192, verbose=0, return_results=True)  # type: ignore
 
