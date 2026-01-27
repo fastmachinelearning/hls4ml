@@ -30,15 +30,19 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
     k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
     I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
 
-    k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
-    B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
-    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
+    if np.size(k) != 1:
+        k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
+        B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
+        I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
+    else:
+        k = np.ravel(k).astype(np.int16)
+        B = np.ravel(B).astype(np.int16)
+        I = np.ravel(I).astype(np.int16)  # noqa: E741
 
     overflow_mode: str = internal_q.overflow_mode
     round_mode: str = internal_q.round_mode
     if round_mode.startswith('S_'):
         round_mode = round_mode[2:]
-    fusible = np.unique(k).size == 1 and np.unique(B).size == 1 and np.unique(I).size == 1
 
     input_keras_tensor_names = tensor.name if is_input else f'{tensor.name}_q'
     output_keras_tensor_names = f'{tensor.name}_q' if is_input else tensor.name
@@ -48,7 +52,7 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
         'mask_kbi': (k, B, I),
         'SAT': overflow_mode,
         'RND': round_mode,
-        'fusible': fusible,
+        'fusible': None,
         'input_keras_tensor_names': [input_keras_tensor_names],
         'output_keras_tensor_names': [output_keras_tensor_names],
         'overrides': {},
