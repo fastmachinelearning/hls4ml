@@ -642,6 +642,61 @@ For further information, refer to Lavin &amp; Gray, 2015 - Fast Algorithms for C
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.backends.oneapi.passes.einsum">
+<span id="hls4ml-backends-oneapi-passes-einsum-module"></span><h2>hls4ml.backends.oneapi.passes.einsum module<a class="headerlink" href="#module-hls4ml.backends.oneapi.passes.einsum" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum.EinsumConfigTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum.EinsumConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum.EinsumConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Einsum" title="hls4ml.model.layers.Einsum"><span class="pre">Einsum</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum.EinsumConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum.EinsumFunctionTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum.EinsumFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum.EinsumFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Einsum" title="hls4ml.model.layers.Einsum"><span class="pre">Einsum</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum.EinsumFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.oneapi.passes.einsum_dense">
+<span id="hls4ml-backends-oneapi-passes-einsum-dense-module"></span><h2>hls4ml.backends.oneapi.passes.einsum_dense module<a class="headerlink" href="#module-hls4ml.backends.oneapi.passes.einsum_dense" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseConfigTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseConfigTemplate.dense_config">
+<span class="sig-name descname"><span class="pre">dense_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.EinsumDense" title="hls4ml.model.layers.EinsumDense"><span class="pre">EinsumDense</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseConfigTemplate.dense_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.EinsumDense" title="hls4ml.model.layers.EinsumDense"><span class="pre">EinsumDense</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseFunctionTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.passes.einsum_dense.EinsumDenseFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.backends.oneapi.passes.embedding_templates">
 <span id="hls4ml-backends-oneapi-passes-embedding-templates-module"></span><h2>hls4ml.backends.oneapi.passes.embedding_templates module<a class="headerlink" href="#module-hls4ml.backends.oneapi.passes.embedding_templates" title="Link to this heading"></a></h2>
 <p>These are the stream oneAPI templates for embedding layers. The io_parallel ones are in backends/fpga/passes/embedding.py.</p>

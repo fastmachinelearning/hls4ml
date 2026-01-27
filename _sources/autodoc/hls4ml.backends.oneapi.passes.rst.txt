@@ -44,6 +44,22 @@ hls4ml.backends.oneapi.passes.core\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.oneapi.passes.einsum module
+-------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.einsum
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.oneapi.passes.einsum\_dense module
+--------------------------------------------------
+
+.. automodule:: hls4ml.backends.oneapi.passes.einsum_dense
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.oneapi.passes.embedding\_templates module
 ---------------------------------------------------------
 
