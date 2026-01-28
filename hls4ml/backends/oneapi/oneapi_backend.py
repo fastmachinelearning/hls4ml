@@ -31,8 +31,8 @@ from hls4ml.utils.einsum_utils import parse_einsum
 
 
 class OneAPIBackend(FPGABackend):
-    def __init__(self):
-        super().__init__('oneAPI')
+    def __init__(self, name='oneAPI'):  # the default name should be used in most cases
+        super().__init__(name)
         self._register_layer_attributes()
         self._register_flows()
 
