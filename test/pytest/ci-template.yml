@@ -1,15 +1,18 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.6.2.base
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.6.3.base
   tags:
     - k8s-default
+  variables:
+    CONDA_ENV: "hls4ml-testing"
+    EXTRA_DEPS: "[da,testing,testing-keras2,sr,optimization]"
   before_script:
     - eval "$(conda shell.bash hook)"
-    - conda activate hls4ml-testing
+    - conda activate "$CONDA_ENV"
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
-    - pip install .[da,testing,sr,optimization]
+    - pip install .${EXTRA_DEPS}
 
     # set up vivado_hls command
     - mkdir -p cmd_vivado_${VIVADO_VERSION}
@@ -41,3 +44,9 @@
     paths:
       - test/pytest/hls4mlprj*.tar.gz
       - test/pytest/synthesis_report_*.json
+
+.pytest-keras3-only:
+  extends: .pytest
+  variables:
+    CONDA_ENV: "hls4ml-testing-keras3"
+    EXTRA_DEPS: "[da,testing,testing-keras3,sr]"

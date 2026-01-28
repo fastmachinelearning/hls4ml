@@ -2,7 +2,7 @@ exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pyte
 
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.14.11
+  rev: v0.14.13
   hooks:
     - id: ruff
       args: [--fix]
