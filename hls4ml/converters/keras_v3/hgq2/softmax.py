@@ -4,7 +4,7 @@ from math import prod
 
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
-from ._base import QLayerHandler, register
+from ._base import QLayerHandler
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -39,7 +39,6 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False):
     return FixedPrecisionType(b, I, k, rounding_mode=round_mode, saturation_mode=sat_mode)
 
 
-@register
 class QSoftmaxHandler(QLayerHandler):
     handles = ('hgq.layers.softmax.QSoftmax',)
 

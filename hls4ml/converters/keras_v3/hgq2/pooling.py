@@ -1,8 +1,7 @@
 from ..pooling import PoolingHandler
-from ._base import QLayerHandler, register
+from ._base import QLayerHandler
 
 
-@register
 class QPoolingHandler(PoolingHandler, QLayerHandler):
     handles = (
         'hgq.layers.pooling.QMaxPooling1D',
