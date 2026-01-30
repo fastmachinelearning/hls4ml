@@ -12,6 +12,7 @@ if typing.TYPE_CHECKING:
     import keras
     from keras import KerasTensor
 
+from ..utils.dependency import requires
 from .keras_v3 import layer_handlers as v3_layer_handlers
 
 T_kv3_handler = Callable[
@@ -122,7 +123,16 @@ class UniqueName:
 class KerasV3HandlerDispatcher:
     """Dispatcher class to handle different types of keras v3 layers."""
 
-    def __init__(self, layer_handlers: dict[str, T_kv3_handler], v2_layer_handlers=None):
+    def __init__(
+        self,
+        layer_handlers: dict[str, T_kv3_handler],
+        allow_v2_fallback=False,
+        allow_da_fallback=False,
+        v2_layer_handlers=None,
+    ):
+        pass
+        self.allow_da_fallback = allow_da_fallback
+        self.allow_v2_fallback = allow_v2_fallback
         self.registry = layer_handlers
         self.v2_layer_handlers = v2_layer_handlers or {}
 
@@ -134,13 +144,20 @@ class KerasV3HandlerDispatcher:
         ret = self.v3_call(layer, in_tensors, out_tensors)
         if ret is not None:
             return ret
-        ret = self.v2_call(layer, in_tensors, out_tensors)
+        ret = self.fallback_handler(layer, in_tensors, out_tensors)
         if ret is not None:
             return ret
 
-        raise ValueError(
-            f'Layer {layer.__class__.__module__}.{layer.__class__.__name__} not found in either v3 or v2 handlers'
-        )
+        msg = 'tried:'
+        if self.allow_da_fallback:
+            msg += ' DA Fallback,'
+        if self.allow_v2_fallback:
+            msg += ' V2 Fallback,'
+        msg = msg.rstrip(',')  # remove trailing comma
+        if not self.allow_da_fallback and not self.allow_v2_fallback:
+            msg = '(nothing)'
+
+        raise ValueError(f'Layer {layer.__class__} not found in registry, and no fallback option succeeded. {msg}')
 
     def v3_call(
         self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
@@ -157,11 +174,64 @@ class KerasV3HandlerDispatcher:
             return None
         return handler(layer, inp_tensors, out_tensors)
 
+    def fallback_handler(
+        self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
+    ):
+        if self.allow_da_fallback:
+            try:
+                ret = self.da_call(layer, inp_tensors, out_tensors)
+                print(f'DA handler used for layer {layer.name}')
+                return ret
+            except KeyError:
+                pass  # missing DA handler
+            except ImportError:
+                print('da4ml not installed. Set `allow_da_fallback=False` to disable DA fallback.')
+                pass  # da4ml not installed
+        if self.allow_v2_fallback:
+            ret = self.v2_call(layer, inp_tensors, out_tensors)
+            if ret is not None:
+                print(f'Keras v2 handler used for layer {layer.name}')
+                return ret
+        return None
+
+    @requires('da')
+    def da_call(
+        self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
+    ):
+        import keras
+        from da4ml.converter import trace_model
+        from da4ml.trace import FixedVariableArrayInput, comb_trace
+
+        if len(out_tensors) > 1:
+            n_out = len(out_tensors)
+            cls_name = layer.__class__.__name__
+            raise ValueError(f'DA combinational requires n_out=1, got {n_out=} for layer {layer.name} ({cls_name}).')
+
+        input_shapes: list[list[int]] = [list(t.shape[1:]) for t in inp_tensors]  # type: ignore
+        inp = tuple(FixedVariableArrayInput(tuple(shape)).quantize(1, 32, 32) for shape in input_shapes)
+        _model = keras.Model(inp_tensors, out_tensors)
+        inp, out = trace_model(_model, inputs=inp)
+        comb = comb_trace(inp, out)
+        input_names = [t.name for t in inp_tensors]
+        output_names = [t.name for t in out_tensors]
+
+        return (
+            {
+                'class_name': 'DACombinational',
+                'da_comb_logic': comb,
+                'name': layer.name,
+                'input_keras_tensor_names': input_names,
+                'output_keras_tensor_names': output_names,
+                'original_type': layer.__class__.__name__,
+                'input_shape': [list(t.shape[1:]) for t in inp_tensors],  # type: ignore
+                'output_shape': list(out_tensors[0].shape[1:]),  # type: ignore
+            },
+        )
+
     def v2_call(
         self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
     ):
         # keras v2 handlers fallback
-        print(f'v2 handler used for layer {layer.name}')
 
         import keras
 
@@ -207,13 +277,19 @@ class KerasV3HandlerDispatcher:
         return ret
 
 
-def parse_keras_v3_model(model: 'keras.Model'):
+def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_fallback=True):
     """Parse a keras model into a list of dictionaries, each
     representing a layer in the HLS model, and a list of input and
     output layer names.
 
     Args:
         model: keras.Model
+        allow_da_fallback: Whether to allow fallback to DA combinational logic generation
+            for unsupported layers. Defaults to True.
+        allow_v2_fallback: Whether to allow fallback to keras v2 layer handlers
+            for unsupported layers. Defaults to True. If both this and
+            `allow_da_fallback` are True, DA fallback is attempted first.
+
 
     Returns:
         A tuple containing:
@@ -236,7 +312,9 @@ def parse_keras_v3_model(model: 'keras.Model'):
 
     from .keras_v2_to_hls import layer_handlers as v2_layer_handlers  # Delayed import to avoid circular import
 
-    keras_v3_dispatcher = KerasV3HandlerDispatcher(v3_layer_handlers, v2_layer_handlers)
+    keras_v3_dispatcher = KerasV3HandlerDispatcher(
+        v3_layer_handlers, allow_v2_fallback, allow_da_fallback, v2_layer_handlers
+    )
 
     model_inputs, model_outputs, dependency, tensors = resolve_dependency_relation(model)
 
@@ -290,6 +368,6 @@ def parse_keras_v3_model(model: 'keras.Model'):
     return layer_list, input_layer_names, output_layer_names, batch_output_shapes
 
 
-def keras_v3_to_hls(config):
-    layer_list, input_layers, output_layers, _ = parse_keras_v3_model(config['KerasModel'])
+def keras_v3_to_hls(config, **kwargs):
+    layer_list, input_layers, output_layers, _ = parse_keras_v3_model(config['KerasModel'], **kwargs)
     return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)

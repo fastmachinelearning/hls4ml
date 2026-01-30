@@ -227,7 +227,7 @@ def convert_from_keras_model(
         import keras
 
         if keras.__version__ >= '3.0':
-            return keras_v3_to_hls(config)
+            return keras_v3_to_hls(config, **kwargs)
 
     return keras_v2_to_hls(config)
 
