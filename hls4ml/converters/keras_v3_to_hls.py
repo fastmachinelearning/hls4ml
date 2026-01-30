@@ -369,5 +369,9 @@ def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_
 
 
 def keras_v3_to_hls(config, **kwargs):
-    layer_list, input_layers, output_layers, _ = parse_keras_v3_model(config['KerasModel'], **kwargs)
+    allow_da_fallback = kwargs.get('allow_da_fallback', True)
+    allow_v2_fallback = kwargs.get('allow_v2_fallback', True)
+    layer_list, input_layers, output_layers, _ = parse_keras_v3_model(
+        config['KerasModel'], allow_da_fallback, allow_v2_fallback
+    )
     return ModelGraph.from_layer_list(config, layer_list, input_layers, output_layers)
