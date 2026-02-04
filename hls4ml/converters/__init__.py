@@ -167,6 +167,8 @@ def convert_from_keras_model(
     backend='Vivado',
     hls_config=None,
     bit_exact=None,
+    allow_da_fallback=True,
+    allow_v2_fallback=True,
     **kwargs,
 ):
     """Convert Keras model to hls4ml model based on the provided configuration.
@@ -195,12 +197,17 @@ def convert_from_keras_model(
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
-        kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
         bit_exact (bool, optional): If True, enable model-wise precision propagation
         with **only fixed-point data types**. If None, enable if there is at least one
         FixedPointQuantizer layer in the model (only resulting from converting HGQ1/2
         models for now). By default, None.
+        allow_da_fallback: Whether to allow fallback to DA combinational logic generation
+            for unsupported layers. Only affects keras v3 models. Defaults to True.
+        allow_v2_fallback: Whether to allow fallback to keras v2 layer handlers
+            for unsupported layers. Only affects keras v3 models. Defaults to True. If both this and
+            `allow_da_fallback` are True, DA fallback is attempted first.
 
+        kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'.
 
@@ -227,7 +234,7 @@ def convert_from_keras_model(
         import keras
 
         if keras.__version__ >= '3.0':
-            return keras_v3_to_hls(config, **kwargs)
+            return keras_v3_to_hls(config, allow_da_fallback, allow_v2_fallback)
 
     return keras_v2_to_hls(config)
 
