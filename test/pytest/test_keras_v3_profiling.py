@@ -32,12 +32,14 @@ def test_keras_v3_numerical_profiling_simple_model():
         ]
     )
     model.compile(optimizer='adam', loss='categorical_crossentropy')
+    # Build the model so weights are initialized
+    model.build((None, 10))
 
     # Test profiling weights only
     wp, _, _, _ = numerical(model)
     assert wp is not None
-    # Should have 4 bars (weights and biases for 2 layers)
-    assert count_bars_in_figure(wp) == 4
+    # Should have 2 bars (one per layer, each showing weights and biases combined)
+    assert count_bars_in_figure(wp) == 2
 
 
 @pytest.mark.skipif(not __keras_profiling_enabled__, reason='Keras 3.0 or higher is required')
@@ -51,8 +53,10 @@ def test_keras_v3_numerical_profiling_with_activations():
     )
     model.compile(optimizer='adam', loss='mse')
 
-    # Generate test data
+    # Generate test data and call model to build it
     X_test = np.random.rand(100, 10).astype(np.float32)
+    # Build the model by calling it
+    _ = model(X_test[:1])
 
     # Test profiling with activations
     wp, _, ap, _ = numerical(model, X=X_test)
@@ -72,12 +76,14 @@ def test_keras_v3_numerical_profiling_conv_model():
         ]
     )
     model.compile(optimizer='adam', loss='categorical_crossentropy')
+    # Build the model so weights are initialized
+    model.build((None, 28, 28, 1))
 
     # Test profiling weights
     wp, _, _, _ = numerical(model)
     assert wp is not None
-    # Conv layer has weights and biases, Dense layer has weights and biases = 4 bars
-    assert count_bars_in_figure(wp) == 4
+    # Conv layer has 1 bar, Dense layer has 1 bar = 2 bars total
+    assert count_bars_in_figure(wp) == 2
 
 
 @pytest.mark.skipif(not __keras_profiling_enabled__, reason='Keras 3.0 or higher is required')
@@ -93,14 +99,16 @@ def test_keras_v3_numerical_profiling_with_hls_model():
     )
     model.compile(optimizer='adam', loss='categorical_crossentropy')
 
+    # Generate test data and build the model
+    X_test = np.random.rand(100, 8).astype(np.float32)
+    # Build the model by calling it
+    _ = model(X_test[:1])
+
     # Create hls4ml model
     config = hls4ml.utils.config_from_keras_model(model, granularity='name')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir='/tmp/test_keras_v3_profiling_hls', backend='Vivado'
     )
-
-    # Generate test data
-    X_test = np.random.rand(100, 8).astype(np.float32)
 
     # Test profiling with both models
     wp, wph, ap, aph = numerical(model, hls_model=hls_model, X=X_test)
@@ -123,9 +131,12 @@ def test_keras_v3_numerical_profiling_batch_norm():
         ]
     )
     model.compile(optimizer='adam', loss='categorical_crossentropy')
+    # Build the model so weights are initialized
+    model.build((None, 10))
 
     # Test profiling weights
     wp, _, _, _ = numerical(model)
     assert wp is not None
-    # Dense has 2 (weights, biases), BatchNorm has 2 (gamma, beta), second Dense has 2 = 6 bars
+    # Dense has 1 bar, BatchNorm has 1 bar, second Dense has 1 bar = 3 bars
+    assert count_bars_in_figure(wp) == 3
     assert count_bars_in_figure(wp) == 6
