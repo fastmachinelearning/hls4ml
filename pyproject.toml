@@ -70,6 +70,7 @@ optional-dependencies.testing-keras2 = [
 ]
 optional-dependencies.testing-keras3 = [
   "da4ml",
+  "hgq2>=0.0.1",
   "keras>=3.10",
   "tensorflow>=2.15",
 ]
