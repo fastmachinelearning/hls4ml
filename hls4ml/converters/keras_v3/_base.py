@@ -33,7 +33,16 @@ def maybe_add_attrs(config: dict[str, Any] | DefaultConfig, obj: Any, *attrs: st
             config[attr] = getattr(obj, attr)
 
 
-class KerasV3LayerHandler:
+class KerasV3LayerHandlerMeta(type):
+    def __new__(cls, name, bases, attrs):
+        new_class = super().__new__(cls, name, bases, attrs)
+        if 'handles' in attrs:
+            for handle in attrs['handles']:
+                registry[handle] = new_class()
+        return new_class
+
+
+class KerasV3LayerHandler(metaclass=KerasV3LayerHandlerMeta):
     """Base class for keras v3 layer handlers. Subclass this class to create a handler for a specific layer type."""
 
     handles = ()
@@ -160,26 +169,3 @@ class KerasV3LayerHandler:
         import keras
 
         return keras.ops.convert_to_numpy(getattr(layer, key))
-
-
-def register(cls: type):
-    """Decorator to register a handler for a specific layer class. Suggested to decorate the `KerasV3LayerHandler` class.
-
-    Args:
-        cls: the class to register the handler for.
-
-    Examples:
-        ```python
-        @keras_dispatcher.register
-        class MyLayerHandler(KerasV3LayerHandler):
-            handles = ('my_package.src.submodule.MyLayer', 'MyLayer2')
-
-            def handle(self, layer, inp_tensors, out_tensors):
-                # handler code
-        ```
-    """
-
-    fn = cls()
-    for k in fn.handles:
-        registry[k] = fn
-    return cls

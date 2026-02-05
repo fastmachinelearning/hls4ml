@@ -28,7 +28,7 @@ classifiers = [
 dynamic = [ "version" ]
 dependencies = [ "h5py", "numpy", "pydigitalwavetools==1.1", "pyyaml", "quantizers" ]
 
-optional-dependencies.da = [ "da4ml>=0.4,<0.5" ]
+optional-dependencies.da = [ "da4ml>=0.5.2,<0.6" ]
 optional-dependencies.doc = [
   "sphinx",
   "sphinx-contributors",

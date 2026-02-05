@@ -5,7 +5,7 @@ from math import prod
 
 import numpy as np
 
-from hls4ml.model.layers import Conv1D, Conv2D, Dense, EinsumDense, Layer
+from hls4ml.model.layers import Conv1D, Conv2D, DACombinational, Dense, EinsumDense, Layer
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.optimizer.passes.bit_exact import get_input_layers, get_output_layers, im2col, pad_arrs, stride_arrs
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
@@ -408,3 +408,52 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
         del node.attributes['weight_data']
         del node.attributes['weight']
         del node.attributes['weight_t']
+
+
+class DACombinationalTemplate(OptimizerPass):
+    def match(self, node):
+        return isinstance(node, DACombinational)
+
+    def transform(self, model: 'ModelGraph', node: DACombinational):
+        from da4ml.codegen.hls import hls_logic_and_bridge_gen
+        from da4ml.trace import FixedVariableArrayInput, comb_trace
+
+        io_type = model.config.get_config_value('IOType')
+        if io_type != 'io_parallel':
+            original_type = node.attributes['original_type']
+            raise ValueError(f'DACombinational layer (from {original_type}) only supports io_parallel.')
+
+        if not node.attributes.get('bit_exact_transformed', False):
+            inp_p: FixedPrecisionType = node.get_input_variable().type.precision
+            B, I, s = inp_p.width, inp_p.integer, inp_p.signed
+            i, f = I - s, B - I
+            comb = node.attributes['da_comb_logic']
+            inp = FixedVariableArrayInput(comb.shape[0]).quantize(s, i, f)
+            out = comb(inp)
+            comb = comb_trace(inp, out)
+            node.attributes['da_comb_logic'] = comb
+
+        comb = node.attributes['da_comb_logic']
+
+        backend = model.config.get_config_value('Backend').lower()
+        if backend in ('vitis', 'vivado'):
+            flavor = 'vitis'
+        elif backend == 'oneapi':
+            flavor = 'oneapi'
+        else:
+            raise ValueError(f'Unsupported backend {backend} for DACombinational layer.')
+
+        fn_name = f'da_comblogic_{node.index}'
+        comb_logic, _ = hls_logic_and_bridge_gen(
+            comb, fn_name, flavor=flavor, pragmas=['#pragma HLS INLINE'], print_latency=True
+        )
+        namespace = model.config.get_writer_config().get('Namespace', None) or 'nnet'
+
+        inp_t: str = node.get_input_variable().type.name
+        out_t: str = node.get_output_variable().type.name
+        inp_name: str = node.get_input_variable().name
+        out_name: str = node.get_output_variable().name
+
+        fn_cpp = f'{namespace}::{fn_name}<{inp_t}, {out_t}>({inp_name}, {out_name});'
+        node.attributes['da_codegen'] = Source(comb_logic)
+        node.attributes['function_cpp'] = fn_cpp
