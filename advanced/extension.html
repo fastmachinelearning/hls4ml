@@ -204,7 +204,7 @@ In this case, there a single output with the same shape as the input.</p>
 </div>
 </div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.converters.keras_v3._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">register</span><span class="p">,</span> <span class="n">KerasV3LayerHandler</span>
 
-<span class="nd">@register</span>
+<span class="c1"># Handlers are registered by metaclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">KReverseHandler</span><span class="p">(</span><span class="n">KerasV3LayerHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Keras v3 layer handler for KReverse&#39;&#39;&#39;</span>
 
