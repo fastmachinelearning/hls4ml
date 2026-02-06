@@ -97,16 +97,20 @@ def test_keras_v3_numerical_profiling_with_hls_model():
         ]
     )
     model.compile(optimizer='adam', loss='categorical_crossentropy')
-    # Build the model so weights are initialized
-    model.build((None, 8))
 
-    # Generate test data
+    # Generate test data and call model to build it
     X_test = np.random.rand(100, 8).astype(np.float32)
+    _ = model(X_test[:1])  # Call model to build it
 
     # Create hls4ml model
     config = hls4ml.utils.config_from_keras_model(model, granularity='name')
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=config, output_dir='/tmp/test_keras_v3_profiling_hls', backend='Vivado'
+        model,
+        hls_config=config,
+        output_dir='/tmp/test_keras_v3_profiling_hls',
+        backend='Vivado',
+        allow_da_fallback=True,
+        allow_v2_fallback=True,
     )
 
     # Test profiling with both models
