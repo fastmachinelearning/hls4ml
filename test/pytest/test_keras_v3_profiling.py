@@ -53,10 +53,9 @@ def test_keras_v3_numerical_profiling_with_activations():
     )
     model.compile(optimizer='adam', loss='mse')
 
-    # Generate test data and call model to build it
+    # Generate test data and call model to initialize it
     X_test = np.random.rand(100, 10).astype(np.float32)
-    # Build the model by calling it
-    _ = model(X_test[:1])
+    _ = model(X_test[:1])  # Call model to build it
 
     # Test profiling with activations
     wp, _, ap, _ = numerical(model, X=X_test)
@@ -98,11 +97,11 @@ def test_keras_v3_numerical_profiling_with_hls_model():
         ]
     )
     model.compile(optimizer='adam', loss='categorical_crossentropy')
+    # Build the model so weights are initialized
+    model.build((None, 8))
 
-    # Generate test data and build the model
+    # Generate test data
     X_test = np.random.rand(100, 8).astype(np.float32)
-    # Build the model by calling it
-    _ = model(X_test[:1])
 
     # Create hls4ml model
     config = hls4ml.utils.config_from_keras_model(model, granularity='name')
@@ -139,4 +138,3 @@ def test_keras_v3_numerical_profiling_batch_norm():
     assert wp is not None
     # Dense has 1 bar, BatchNorm has 1 bar, second Dense has 1 bar = 3 bars
     assert count_bars_in_figure(wp) == 3
-    assert count_bars_in_figure(wp) == 6
