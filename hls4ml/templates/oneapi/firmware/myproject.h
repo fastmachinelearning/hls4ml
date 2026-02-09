@@ -3,9 +3,6 @@
 
 #include "defines.h"
 
-// hls-fpga-machine-learning insert weights
-
-
 // This file defines the interface to the kernel
 
 // currently this is fixed
