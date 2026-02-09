@@ -152,11 +152,12 @@ Result:
     }
 }
 template <class data_T, class res_T, typename CONFIG_T>
-void dense_resource(const data_T &data, res_T &res) {
+void dense_resource(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
+                    const typename CONFIG_T::bias_t &biases) {
     if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
-        dense_rf_lt<data_T, res_T, CONFIG_T>(data, res, CONFIG_T::weights, CONFIG_T::biases);
+        dense_rf_lt<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
-        dense_rf_gt<data_T, res_T, CONFIG_T>(data, res, CONFIG_T::weights, CONFIG_T::biases);
+        dense_rf_gt<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
 }
 } // namespace nnet

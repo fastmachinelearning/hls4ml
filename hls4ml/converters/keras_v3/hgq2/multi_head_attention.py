@@ -15,7 +15,7 @@ if typing.TYPE_CHECKING:
 
 @register
 class QMultiHeadAttentionHandler(QLayerHandler):
-    handles = ('hgq.layers.multi_head_attention.QMultiHeadAttention',)
+    handles = ('hgq.layers.attn.mha.QMultiHeadAttention',)
 
     def handle(
         self,
@@ -129,7 +129,7 @@ class QMultiHeadAttentionHandler(QLayerHandler):
 
 @register
 class QLinformerAttentionHandler(QMultiHeadAttentionHandler):
-    handles = ('hgq.layers.linformer_attention.QLinformerAttention',)
+    handles = ('hgq.layers.attn.linformer.QLinformerAttention',)
 
     def handle(
         self,
