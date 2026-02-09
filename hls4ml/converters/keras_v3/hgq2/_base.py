@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from hls4ml.converters.keras_v3._base import KerasV3LayerHandler, register
+from hls4ml.converters.keras_v3._base import KerasV3LayerHandler
 from hls4ml.converters.keras_v3.conv import ConvHandler
 from hls4ml.converters.keras_v3.core import ActivationHandler, DenseHandler
 from hls4ml.converters.keras_v3.einsum_dense import EinsumDenseHandler
@@ -67,7 +67,6 @@ def override_io_tensor_confs(confs: tuple[dict[str, Any], ...], overrides: dict[
         conf['output_keras_tensor_names'] = [overrides.get(name, name) for name in out_tensor_names]
 
 
-@register
 class QLayerHandler(KerasV3LayerHandler):
     def __call__(
         self,
@@ -121,7 +120,6 @@ class QLayerHandler(KerasV3LayerHandler):
         return class_name
 
 
-@register
 class QEinsumDenseHandler(QLayerHandler, EinsumDenseHandler):
     handles = (
         'hgq.layers.core.einsum_dense.QEinsumDense',
@@ -129,7 +127,6 @@ class QEinsumDenseHandler(QLayerHandler, EinsumDenseHandler):
     )
 
 
-@register
 class QStandaloneQuantizerHandler(KerasV3LayerHandler):
     handles = ('hgq.quantizer.quantizer.Quantizer',)
 
@@ -144,7 +141,6 @@ class QStandaloneQuantizerHandler(KerasV3LayerHandler):
         return conf
 
 
-@register
 class QConvHandler(QLayerHandler, ConvHandler):
     handles = (
         'hgq.layers.conv.QConv1D',
@@ -170,7 +166,6 @@ class QConvHandler(QLayerHandler, ConvHandler):
         return conf
 
 
-@register
 class QDenseHandler(QLayerHandler, DenseHandler):
     handles = ('hgq.layers.core.dense.QDense', 'hgq.layers.core.dense.QBatchNormDense')
 
@@ -189,12 +184,10 @@ class QDenseHandler(QLayerHandler, DenseHandler):
         return conf
 
 
-@register
 class QActivationHandler(QLayerHandler, ActivationHandler):
     handles = ('hgq.layers.activation.QActivation',)
 
 
-@register
 class QBatchNormalizationHandler(QLayerHandler):
     handles = ('hgq.layers.batch_normalization.QBatchNormalization',)
 
@@ -220,7 +213,6 @@ class QBatchNormalizationHandler(QLayerHandler):
         }
 
 
-@register
 class QMergeHandler(QLayerHandler, MergeHandler):
     handles = (
         'hgq.layers.ops.merge.QAdd',

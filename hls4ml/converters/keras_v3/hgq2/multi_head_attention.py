@@ -4,7 +4,7 @@ from inspect import Signature
 
 import numpy as np
 
-from ._base import QEinsumDenseHandler, QLayerHandler, register
+from ._base import QEinsumDenseHandler, QLayerHandler
 from .einsum import QEinsumHandler
 from .softmax import QSoftmaxHandler
 
@@ -13,7 +13,6 @@ if typing.TYPE_CHECKING:
     from keras import KerasTensor
 
 
-@register
 class QMultiHeadAttentionHandler(QLayerHandler):
     handles = ('hgq.layers.attn.mha.QMultiHeadAttention',)
 
@@ -127,7 +126,6 @@ class QMultiHeadAttentionHandler(QLayerHandler):
         return configs
 
 
-@register
 class QLinformerAttentionHandler(QMultiHeadAttentionHandler):
     handles = ('hgq.layers.attn.linformer.QLinformerAttention',)
 

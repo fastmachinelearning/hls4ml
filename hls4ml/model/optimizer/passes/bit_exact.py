@@ -18,6 +18,7 @@ from hls4ml.model.layers import (
     Concatenate,
     Conv1D,
     Conv2D,
+    DACombinational,
     Dense,
     Einsum,
     EinsumDense,
@@ -192,6 +193,13 @@ def _(layer: Transpose):
     i = np.transpose(i, inv_perm)
     f = np.transpose(f, inv_perm)
     return ((k, i, f),)
+
+
+@_request_kif.register
+def _(layer: DACombinational):
+    comb = layer.attributes['da_comb_trace']
+    k, i, f = comb.inp_kifs
+    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
 
 
 def requested_kif(layer: Layer) -> KIF_t:
@@ -632,6 +640,18 @@ def _(layer: UnaryLUT):
     i = np.full(shape, np.max(i), dtype=np.int16)
     f = np.full(shape, np.max(f), dtype=np.int16)
     return k, i, f
+
+
+@_produce_kif.register
+def _(layer: DACombinational):
+    from da4ml.trace import FixedVariableArray, comb_trace
+
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    inp = FixedVariableArray.from_kif(k_in, i_in, f_in)
+    out = layer.attributes['da_comb_logic'](inp)
+    comb = comb_trace(inp, out)
+    k, i, f = comb.out_kifs
+    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
 
 
 def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
