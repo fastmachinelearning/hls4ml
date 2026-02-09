@@ -242,7 +242,6 @@ class OneAPIWriter(Writer):
                     for out in model_outputs:
                         newline += out.declare_cpp()
 
-
                 # Simply copy line, if no inserts are required
                 else:
                     newline = line
