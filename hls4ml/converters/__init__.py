@@ -121,8 +121,16 @@ def convert_from_config(config):
         model = onnx_to_hls(yamlConfig)
     elif 'PytorchModel' in yamlConfig:
         model = pytorch_to_hls(yamlConfig)
-    else:
-        model = keras_v2_to_hls(yamlConfig)
+    elif 'KerasModel' in yamlConfig:
+        import keras
+
+        if keras.__version__ >= '3.0':
+            # Get fallback flags from config or use defaults
+            allow_da_fallback = yamlConfig.get('HLSConfig', {}).get('Model', {}).get('AllowDAFallback', True)
+            allow_v2_fallback = yamlConfig.get('HLSConfig', {}).get('Model', {}).get('AllowV2Fallback', True)
+            model = keras_v3_to_hls(yamlConfig, allow_da_fallback, allow_v2_fallback)
+        else:
+            model = keras_v2_to_hls(yamlConfig)
 
     return model
 
