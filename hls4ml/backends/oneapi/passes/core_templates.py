@@ -6,7 +6,6 @@ from hls4ml.model.layers import Activation, BatchNormalization, Dense, HardActiv
 # Dense templates
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
-
     static constexpr unsigned n_in = {n_in};
     static constexpr unsigned n_out = {n_out};
     static constexpr unsigned io_type = nnet::{iotype};
@@ -31,16 +30,13 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {weight_t.name} weight_t;
     typedef {index_t.name} index_t;
 
-    static constexpr weight_t weights = {weights};
-    static constexpr bias_t biases = {biases};
-
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
-dense_stream_function_template = '{name}.async();'
+dense_stream_function_template = '{name}.async({w}, {b});'
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_stream.h']
 
 
@@ -56,9 +52,6 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['product_type'] = get_backend('oneAPI').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
-
-        params['weights'] = node.get_weights('weight').name
-        params['biases'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -199,7 +192,7 @@ hard_activ_config_template = """struct {type}_config{index} : nnet::activ_config
     static constexpr unsigned reuse_factor = {reuse};
 }};\n"""
 
-softmax_config_template_qkeras = """struct {type}_config{index} : nnet::activ_config {{
+softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static constexpr unsigned n_in = {n_in};
     static constexpr unsigned table_size = {table_size};
     static constexpr unsigned io_type = nnet::{iotype};
@@ -207,26 +200,6 @@ softmax_config_template_qkeras = """struct {type}_config{index} : nnet::activ_co
     static constexpr nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;
-}};\n"""
-
-softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_slice = {n_slice};
-    static const unsigned n_outer = {n_outer};
-    static const unsigned n_inner = {n_inner};
-    static const unsigned parallelization_factor = {parallelization_factor};
-    static const unsigned exp_table_size = {exp_table_size};
-    static const unsigned inv_table_size = {inv_table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned axis = {axis};
-    static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
-    static constexpr float exp_scale = {exp_scale};
-    typedef {exp_table_t.name} exp_table_t;
-    typedef {inv_table_t.name} inv_table_t;
-    typedef {accum_t.name} accum_t;
-    typedef {inv_inp_t.name} inv_inp_t;
-    typedef {inp_norm_t_str} inp_norm_t;
 }};\n"""
 
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
@@ -280,68 +253,10 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         super(ActivationConfigTemplate, self).__init__(Softmax)  # Skip ActivationConfigTemplate's __init__
         self.template = softmax_config_template
 
-    def format(self, node):
-        from math import ceil, log2
-
-        params = self._default_config_params(node)
-        params['type'] = node.get_attr('activation')
-        params.setdefault('exp_table_size', params['table_size'])
-        params.setdefault('inv_table_size', params['table_size'])
-        params.setdefault('n_inner', 1)
-        params.setdefault('n_outer', 1)
-        params.setdefault('exp_scale', 1.0)
-        params.setdefault('parallelization_factor', -1)
-
-        n_slice = params['n_in'] // params['n_inner'] // params['n_outer']  # type: ignore
-        params['n_slice'] = n_slice
-
-        if params['accum_t'].name == 'model_default_t':  # type: ignore
-            scale = ceil(log2(n_slice))
-            exp_table_t = node.attributes['exp_table_t'].precision
-            signed, width, integers = exp_table_t.signed, exp_table_t.width, exp_table_t.integer
-            params['accum_t_str'] = f'ac_{"" if signed else "u"}fixed<{width + scale}, {integers + scale}>'
-        else:
-            params['accum_t_str'] = params['accum_t'].name  # type: ignore
-        if params['inv_inp_t'].name == 'model_default_t':  # type: ignore
-            params['inv_inp_t'] = params['exp_table_t']
-
-        if params['implementation'] == 'stable':
-            if 'inp_norm_t' not in params:
-                # Only used in stable (max-normalized) implementation
-                input_t = node.get_input_variable().type.precision
-                width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
-                width, iwidth = width - signed, iwidth - signed
-                if signed:
-                    # Fix table size if too large
-                    exp_table_size = params['inv_table_size']
-                    params['exp_table_size'] = str(min(int(exp_table_size), 2**width))
-                params['inp_norm_t_str'] = f'ac_ufixed<{width}, {iwidth}>'
-            else:
-                params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore
-        else:
-            params['inp_norm_t_str'] = 'ac_fixed<1,0>'
-
-        return self.template.format(**params)
-
-
-class SoftmaxFunctionTemplate(FunctionCallTemplate):
-    def __init__(self):
-        super().__init__(Softmax, include_header=activ_include_list)
-        self.template = activ_function_template
-
-    def format(self, node):
-        params = self._default_function_params(node)
-        use_multidim = node.get_attr('n_inner', 1) > 1 or node.get_attr('n_outer', 1) > 1
-        use_multidim = use_multidim and node.model.config.get_config_value('IOType') == 'io_parallel'
-        params['activation'] = 'softmax' if not use_multidim else 'softmax_multidim'
-        params['config'] = f'softmax_config{node.index}'
-
-        return self.template.format(**params)
-
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, HardActivation), include_header=activ_include_list)
+        super().__init__((Activation, HardActivation, Softmax), include_header=activ_include_list)
         self.template = activ_function_template
 
     def format(self, node):
