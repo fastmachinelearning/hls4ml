@@ -140,12 +140,14 @@ class VitisUnifiedBackend(VitisBackend):
         in_stream_buf_size=128,
         out_stream_buf_size=128,
         xpfmPath='/opt/Xilinx/Vitis/2023.2/base_platforms/' 'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
+        axi_mode="axim",
         **_,
     ):
 
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
 
         config['UnifiedConfig'] = {}
+        config["UnifiedConfig"]["axi_mode"] = axi_mode
         config['UnifiedConfig']["in_stream_buf_Size"] = in_stream_buf_size
         config['UnifiedConfig']["out_stream_buf_Size"] = out_stream_buf_size
         config['UnifiedConfig']['XPFMPath'] = xpfmPath

@@ -1,13 +1,32 @@
 import os
 
+from hls4ml.writer.vitis_unified_writer import VitisUnifiedWriterMeta
+
 # file and directory
 
 
 class VitisUnified_MetaGen:
 
     @classmethod
-    def get_wrapper_file_name(self, model):
-        return f"{model.config.get_project_name()}_dm"
+    def is_axi_stream(self, meta: VitisUnifiedWriterMeta):
+        axi_mode = meta.vitis_unified_config.get_axi_mode()
+        return axi_mode == "axis"
+
+    @classmethod
+    def is_axi_master(self, meta: VitisUnifiedWriterMeta):
+        axi_mode = meta.vitis_unified_config.get_axi_mode()
+        return axi_mode == "axim"
+
+    @classmethod
+    def get_project_name(self, model):
+        return model.config.get_project_name()
+
+    @classmethod
+    def get_wrapper_file_name(self, model, is_axi_master):
+        if is_axi_master:
+            return f"{model.config.get_project_name()}_dm"
+        else:
+            return f"{model.config.get_project_name()}_axis"
 
     @classmethod
     def get_sim_file_name(cls):
@@ -38,7 +57,8 @@ class VitisUnified_MetaGen:
 
     @classmethod
     def get_xo_file_name(self, model):
-        return f"{self.get_top_wrap_func_name(model)}.xo"
+        return f"{self.get_top_wrap_func_name(model, True)}.xo"
+        # todo fix it
 
     @classmethod
     def get_xo_file_path(self, model):
@@ -77,8 +97,11 @@ class VitisUnified_MetaGen:
         return f"{model.config.get_project_name()}"
 
     @classmethod
-    def get_top_wrap_func_name(self, model):
-        return f"{model.config.get_project_name()}_gem"
+    def get_top_wrap_func_name(self, model, is_axi_master):
+        if is_axi_master:
+            return f"{model.config.get_project_name()}_gem"
+        else:
+            return f"{model.config.get_project_name()}_axi"
 
     # it is renamed for stitch layer
     @classmethod

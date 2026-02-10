@@ -1,6 +1,7 @@
 #ifndef NNET_HELPERS_H
 #define NNET_HELPERS_H
 
+#include "ap_axi_sdata.h"
 #include "hls_stream.h"
 #include <algorithm>
 #include <fstream>
@@ -158,6 +159,23 @@ template <class srcType, class dstType, size_t SIZE> void convert_data(hls::stre
         for (size_t j = 0; j < srcType::size; j++) {
             dst[i * srcType::size + j] = dstType(ctype[j]);
         }
+    }
+}
+
+template <class srcType, typename dstType, size_t SIZE>
+void convert_data_axis(srcType *src, hls::stream<hls::axis<float, 0, 0, 0>> &dst) {
+    for (size_t i = 0; i < SIZE; i++) {
+        hls::axis<float, 0, 0, 0> ctype;
+        ctype.data = dstType(src[i]);
+        dst.write(ctype);
+    }
+}
+
+template <typename srcType, class dstType, size_t SIZE>
+void convert_data_axis(hls::stream<hls::axis<float, 0, 0, 0>> &src, dstType *dst) {
+    for (size_t i = 0; i < SIZE; i++) {
+        hls::axis<float, 0, 0, 0> ctype = src.read();
+        dst[i] = dstType(ctype.data);
     }
 }
 

@@ -12,12 +12,13 @@ class VitisUnified_BuildGen:
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/build_lib.sh'))
         fout = open(f"{model.config.get_output_dir()}/build_lib.sh", 'w')
+        is_axi_master = mg.is_axi_master(meta)
 
         for line in fin.readlines():
             if 'myprojectBaseName' in line:
                 line = line.replace('myprojectBaseName', format(model.config.get_project_name()))
             if 'myprojectWrapName' in line:
-                line = line.replace('myprojectWrapName', mg.get_wrapper_file_name(model))
+                line = line.replace('myprojectWrapName', mg.get_wrapper_file_name(model, is_axi_master))
             if 'mystamp' in line:
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
@@ -49,9 +50,9 @@ class VitisUnified_BuildGen:
             if "{OUTDIR}" in line:
                 line = line.replace("{OUTDIR}", model.config.get_output_dir())
             if "{TOP_NAME}" in line:
-                line = line.replace("{TOP_NAME}", mg.get_top_wrap_func_name(model))
+                line = line.replace("{TOP_NAME}", mg.get_top_wrap_func_name(model, mg.is_axi_master(meta)))
             if "{FILE_NAME_WRAP}" in line:
-                line = line.replace("{FILE_NAME_WRAP}", mg.get_wrapper_file_name(model))
+                line = line.replace("{FILE_NAME_WRAP}", mg.get_wrapper_file_name(model, mg.is_axi_master(meta)))
             if "{SIM_FILE_NAME}" in line:
                 line = line.replace("{SIM_FILE_NAME}", mg.get_sim_file_name())
             if "{FILE_NAME_BASE}" in line:

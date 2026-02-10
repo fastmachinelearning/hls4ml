@@ -27,7 +27,7 @@ class VitisUnified_BridgeGen:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
 
             elif 'PROJECT_FILE_NAME' in line:
-                newline = line.replace('PROJECT_FILE_NAME', format(mg.get_wrapper_file_name(model)))
+                newline = line.replace('PROJECT_FILE_NAME', format(mg.get_wrapper_file_name(model, mg.is_axi_master(meta))))
 
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
@@ -57,30 +57,60 @@ class VitisUnified_BridgeGen:
             elif '// hls-fpga-machine-learning insert wrapper' in line:
 
                 # This section will write the calling function to main kernel
-
                 dtype = line.split('#', 1)[1].strip()
                 if dtype == meta.vitis_unified_config.get_input_type():
-                    newline = ''
-                    input_vars = []
-                    input_sizes = []
-                    output_vars = []
-                    otuput_sizes = []
+                    if mg.is_axi_stream(meta):
+                        assert len(model_inputs) == 1
+                        assert len(model_outputs) == 1
+                        inp = model_inputs[0]
+                        out = model_outputs[0]
 
-                    for idx, inp in enumerate(model_inputs):
-                        input_vars.append(mg.get_io_port_name(inp, True, idx))
-                        input_sizes.append(inp.size_cpp())
-                    for idx, out in enumerate(model_outputs):
-                        output_vars.append(mg.get_io_port_name(out, False, idx))
-                        otuput_sizes.append(out.size_cpp())
+                        inp_func = mg.get_io_port_name(inp, True, 0)
+                        inp_stream = inp_func + "_ap"
+                        out_func = mg.get_io_port_name(out, False, 0)
+                        out_stream = out_func + "_ap"
 
-                    inputs_str = ', '.join(input_vars)
-                    outputs_str = ', '.join(output_vars)
+                        # declare source stream
+                        newline = indent + (f"hls::stream<{mg.get_dma_type_name()}> {inp_stream};\n")
+                        # convert data array to source stream
+                        newline += indent + (
+                            f"nnet::convert_data_axis<{dtype},{dtype}, N_IN>(" f"{inp_func}, {inp_stream});\n"
+                        )
+                        # declare destination stream
+                        newline += indent + (
+                            f"hls::stream<{mg.get_dma_type_name()}> " f"{mg.get_io_port_name(out, False, 0)}_ap;\n"
+                        )
+                        # add top function
+                        newline += indent + mg.get_top_wrap_func_name(model, False) + "("
+                        newline += inp_stream + ", "
+                        newline += out_stream + ");\n"
 
-                    newline = ''
-                    newline += indent + mg.get_top_wrap_func_name(model) + "(\n"
-                    newline += indent + inputs_str + ',\n'
-                    newline += indent + outputs_str + ',\n'
-                    newline += indent + "1);\n"  # amount query should be one only
+                        # covert destination stream back to source stream
+                        newline += indent + (
+                            f"nnet::convert_data_axis<{dtype},{dtype}, N_OUT>(" f"{out_stream}, {out_func});\n"
+                        )
+                    else:  # it should be axi master
+                        newline = ''
+                        input_vars = []
+                        input_sizes = []
+                        output_vars = []
+                        otuput_sizes = []
+
+                        for idx, inp in enumerate(model_inputs):
+                            input_vars.append(mg.get_io_port_name(inp, True, idx))
+                            input_sizes.append(inp.size_cpp())
+                        for idx, out in enumerate(model_outputs):
+                            output_vars.append(mg.get_io_port_name(out, False, idx))
+                            otuput_sizes.append(out.size_cpp())
+
+                        inputs_str = ', '.join(input_vars)
+                        outputs_str = ', '.join(output_vars)
+
+                        newline = ''
+                        newline += indent + mg.get_top_wrap_func_name(model, True) + "(\n"
+                        newline += indent + inputs_str + ',\n'
+                        newline += indent + outputs_str + ',\n'
+                        newline += indent + "1);\n"  # amount query should be one only
 
             elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''

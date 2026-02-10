@@ -26,7 +26,7 @@ class VitisUnified_TestGen:
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '// hls-fpga-machine-learning insert include' in line:
-                newline = line + f'#include "firmware/{mg.get_wrapper_file_name(model)}.h"\n'
+                newline = line + f'#include "firmware/{mg.get_wrapper_file_name(model, mg.is_axi_master(meta))}.h"\n'
 
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
@@ -68,7 +68,7 @@ class VitisUnified_TestGen:
 
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
                 all_vars = ' ,'.join(filter(None, [*input_ios, *output_ios, *bram_ios, "1"]))
-                top_level = indent + f'{mg.get_top_wrap_func_name(model)}({all_vars});\n'
+                top_level = indent + f'{mg.get_top_wrap_func_name(model, mg.is_axi_master(meta))}({all_vars});\n'
                 newline += top_level
 
             elif '// hls-fpga-machine-learning insert predictions' in line:

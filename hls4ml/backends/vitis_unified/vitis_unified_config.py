@@ -4,6 +4,11 @@ class VitisUnifiedConfig:
         self.config = config.config
         self.board = self.config.get('UnifiedConfig', {}).get('Board', 'pynq-z2')
 
+        self.axi_mode = self.config["UnifiedConfig"]["axi_mode"]
+
+        if self.axi_mode not in ["axis", "axim"]:
+            raise Exception("AXIMode must be either axis or axim")
+
         # before first and afterlast layer we have the configuratble buffer
         # [platform]<-->[in_steram_bufferSz]<-->[hls]<-->[out_stream_bufferSz]<-->[platform]
         self.in_steram_bufferSz = self.config["UnifiedConfig"]["in_stream_buf_Size"]
@@ -32,6 +37,9 @@ class VitisUnifiedConfig:
 
     def get_board(self):
         return self.board
+
+    def get_axi_mode(self):
+        return self.axi_mode
 
     def get_input_type(self):
         return self.input_type
