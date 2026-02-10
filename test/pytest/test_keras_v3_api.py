@@ -368,7 +368,8 @@ def test_pooling(pooling, padds, chans, backend):
 
     hls_cfg = hls4ml.utils.config_from_keras_model(keras_model)
     output_dir = str(
-        test_root_path / f'hls4mlprj_keras_v3_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
+        test_root_path
+        / f'hls4mlprj_keras_v3_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_cfg, output_dir=output_dir, backend=backend
