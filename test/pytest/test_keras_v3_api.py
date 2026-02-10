@@ -498,7 +498,7 @@ def test_reused_layer(backend, io_type):
     _ = model([inp1, inp1])
 
     hls_config = {'Model': {'Precision': 'ap_fixed<32,8>', 'ReuseFactor': 1}}
-    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_conv1d_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_reused_{backend}_{io_type}')
 
     model_hls = hls4ml.converters.convert_from_keras_model(
         model, backend=backend, io_type=io_type, hls_config=hls_config, output_dir=output_dir
