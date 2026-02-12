@@ -15,7 +15,7 @@ feat = 3
 
 
 @pytest.fixture(scope='module')
-def garnet_models(request):
+def garnet_models(test_case_id):
     x = Input(shape=(vmax, feat))
     n = Input(shape=(1,), dtype='uint16')
     inputs = [x, n]
@@ -40,7 +40,7 @@ def garnet_models(request):
     config['Model']['Precision'] = 'ap_fixed<32,6>'
     config['LayerName']['gar_1']['Precision'] = {'default': 'ap_fixed<32, 6, AP_RND, AP_SAT>', 'result': 'ap_fixed<32, 6>'}
 
-    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / get_test_case_id(request)), part='xc7z020clg400-1')
+    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / test_case_id), part='xc7z020clg400-1')
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
 
@@ -50,7 +50,7 @@ def garnet_models(request):
 
 
 @pytest.fixture(scope='module')
-def garnet_stack_models(request):
+def garnet_stack_models(test_case_id):
     x = Input(shape=(vmax, feat))
     n = Input(shape=(1,), dtype='uint16')
     inputs = [x, n]
@@ -74,7 +74,7 @@ def garnet_stack_models(request):
     config['Model']['Strategy'] = 'Latency'
     config['Model']['Precision'] = 'ap_fixed<32,6>'
     # config should now have precisions specified for ['LayerName']['gar_1']['Precision']['norm', 'aggr', etc.]
-    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / get_test_case_id(request)), part='xc7z020clg400-1')
+    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / test_case_id), part='xc7z020clg400-1')
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
 
