@@ -2,13 +2,12 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import get_pytest_case_id
 from tensorflow.keras.layers import GRU, LSTM, Conv1D, Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
 
 from hls4ml.converters import convert_from_keras_model
 from hls4ml.utils import config_from_keras_model
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 

@@ -2,13 +2,12 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import get_pytest_baseline_name
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 
 import hls4ml
 from hls4ml.contrib.garnet import GarNet, GarNetStack
-
-from conftest import get_pytest_baseline_name
 
 test_root_path = Path(__file__).parent
 
@@ -42,7 +41,9 @@ def garnet_models(request):
     config['Model']['Precision'] = 'ap_fixed<32,6>'
     config['LayerName']['gar_1']['Precision'] = {'default': 'ap_fixed<32, 6, AP_RND, AP_SAT>', 'result': 'ap_fixed<32, 6>'}
 
-    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / get_pytest_baseline_name(request)), part='xc7z020clg400-1')
+    cfg = hls4ml.converters.create_config(
+        output_dir=str(test_root_path / get_pytest_baseline_name(request)), part='xc7z020clg400-1'
+    )
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
 
@@ -76,7 +77,9 @@ def garnet_stack_models(request):
     config['Model']['Strategy'] = 'Latency'
     config['Model']['Precision'] = 'ap_fixed<32,6>'
     # config should now have precisions specified for ['LayerName']['gar_1']['Precision']['norm', 'aggr', etc.]
-    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / get_pytest_baseline_name(request)), part='xc7z020clg400-1')
+    cfg = hls4ml.converters.create_config(
+        output_dir=str(test_root_path / get_pytest_baseline_name(request)), part='xc7z020clg400-1'
+    )
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
 

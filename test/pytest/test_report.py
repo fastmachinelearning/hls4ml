@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-
 from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential

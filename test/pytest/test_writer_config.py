@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-
 from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
@@ -25,7 +24,6 @@ def keras_model():
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
 @pytest.mark.parametrize('namespace', [None, 'test_namespace'])
 def test_namespace(request, keras_model, namespace, io_type, backend):
-    use_namespace = namespace is not None
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
     odir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(

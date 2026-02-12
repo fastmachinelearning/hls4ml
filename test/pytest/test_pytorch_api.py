@@ -3,10 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
-from conftest import get_pytest_case_id
 import torch
 import torch.nn as nn
+from conftest import get_pytest_case_id
 from torch.nn import AvgPool1d, AvgPool2d, MaxPool1d, MaxPool2d
 
 from hls4ml.converters import convert_from_pytorch_model

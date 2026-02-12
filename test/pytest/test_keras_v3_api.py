@@ -8,6 +8,7 @@ import pytest
 if keras.__version__ < '3.0':
     pytest.skip('Keras API tests are only for Keras 3.0 and above', allow_module_level=True)
 
+from conftest import get_pytest_case_id
 from keras.layers import (
     ELU,
     Activation,
@@ -25,8 +26,6 @@ from keras.layers import (
 )
 
 import hls4ml
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 

@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Conv1D
 from tensorflow.keras.models import Sequential

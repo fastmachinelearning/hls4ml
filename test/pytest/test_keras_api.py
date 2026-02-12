@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-
 from conftest import get_pytest_baseline_name, get_pytest_case_id
 from synthesis_helpers import run_synthesis_test
 from tensorflow.keras.layers import (

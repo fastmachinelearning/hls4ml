@@ -3,10 +3,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
+from conftest import get_pytest_case_id
 
 import hls4ml
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 

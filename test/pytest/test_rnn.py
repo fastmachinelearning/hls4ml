@@ -2,11 +2,11 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import get_pytest_case_id
 from keras.layers import GRU, LSTM, Bidirectional, Input, SimpleRNN
 from keras.models import Model, Sequential
 
 import hls4ml
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 

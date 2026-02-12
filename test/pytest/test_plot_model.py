@@ -3,12 +3,11 @@ import os
 from pathlib import Path
 
 import pytest
+from conftest import get_pytest_case_id
 from tensorflow.keras.models import model_from_json
 
 import hls4ml
 from hls4ml.utils.plot import plot_model
-
-from conftest import get_pytest_case_id
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

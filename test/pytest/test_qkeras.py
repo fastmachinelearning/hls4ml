@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import get_pytest_case_id
 from keras.layers import BatchNormalization, Input
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
@@ -25,8 +26,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 import hls4ml
-
-from conftest import get_pytest_case_id
 
 co = {}
 _add_supported_quantized_objects(co)

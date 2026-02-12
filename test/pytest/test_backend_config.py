@@ -4,10 +4,9 @@ import numpy as np
 import pytest
 import tensorflow as tf
 import torch
+from conftest import get_pytest_case_id
 
 import hls4ml
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 
@@ -35,11 +34,6 @@ def test_backend_config(request, framework, backend, part, clock_period, clock_u
         model = torch.nn.Sequential(torch.nn.Linear(1, 2), torch.nn.ReLU())
         config = hls4ml.utils.config_from_pytorch_model(model, input_shape=(None, 1))
         convert_fn = hls4ml.converters.convert_from_pytorch_model
-
-    if clock_unc is not None:
-        unc_str = clock_unc.replace('%', '')
-    else:
-        unc_str = clock_unc
 
     output_dir = test_root_path / get_pytest_case_id(request)
 

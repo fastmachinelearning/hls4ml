@@ -6,13 +6,12 @@ import pytest
 import qonnx.core.onnx_exec as oxe
 import torch
 import torch.nn as nn
+from conftest import get_pytest_case_id
 from qonnx.core.modelwrapper import ModelWrapper
 from qonnx.transformation.gemm_to_matmul import GemmToMatMul
 from qonnx.util.cleanup import cleanup_model
 
 import hls4ml
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 

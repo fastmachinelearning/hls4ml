@@ -6,13 +6,12 @@ from pathlib import Path
 import numpy as np
 import pytest
 import qonnx.core.onnx_exec as oxe
+from conftest import get_pytest_case_id
 from qonnx.core.modelwrapper import ModelWrapper
 from tensorflow.keras.layers import SeparableConv2D
 from tensorflow.keras.models import Sequential
 
 import hls4ml
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../../example-models').resolve()
@@ -111,8 +110,12 @@ def test_value_error(request, backend, profiling_fifo_depth):
     """Test the FIFO depth optimizer with faulty inputs of profiling_fifo_depth to verify that an exception is raised."""
     message = 'The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer.'
     expect_exception(
-        ValueError, message, backend, profiling_fifo_depth, io_type='io_stream',
-        output_dir=str(test_root_path / get_pytest_case_id(request))
+        ValueError,
+        message,
+        backend,
+        profiling_fifo_depth,
+        io_type='io_stream',
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
     )
 
 
@@ -122,8 +125,12 @@ def test_runtime_error(request, backend):
     """Test the FIFO depth optimizer with io_type='io_parallel' to verify that an exception is raised."""
     message = 'To use this optimization you have to set `IOType` field to `io_stream` in the HLS config.'
     expect_exception(
-        RuntimeError, message, backend, profiling_fifo_depth=200_000, io_type='io_parallel',
-        output_dir=str(test_root_path / get_pytest_case_id(request))
+        RuntimeError,
+        message,
+        backend,
+        profiling_fifo_depth=200_000,
+        io_type='io_parallel',
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
     )
 
 
@@ -132,8 +139,10 @@ def test_runtime_error(request, backend):
 def test_successful_execution_of_dummy_keras(request, backend):
     """Test the correct execution of the FIFO depth optimizer."""
     run_fifo_depth_optimization_keras(
-        backend, profiling_fifo_depth=200_000, io_type='io_stream',
-        output_dir=str(test_root_path / get_pytest_case_id(request))
+        backend,
+        profiling_fifo_depth=200_000,
+        io_type='io_stream',
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
     )
 
 
@@ -190,6 +199,9 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
 def test_successful_execution_of_tiny_unet(request, backend):
     """Test the correct execution of the FIFO depth optimizer."""
     run_fifo_depth_optimization_onnx(
-        backend, profiling_fifo_depth=200_000, io_type='io_stream', model=get_branched_model(),
-        output_dir=str(test_root_path / get_pytest_case_id(request))
+        backend,
+        profiling_fifo_depth=200_000,
+        io_type='io_stream',
+        model=get_branched_model(),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
     )

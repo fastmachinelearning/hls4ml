@@ -4,6 +4,7 @@ import HGQ  # noqa: F401
 import numpy as np
 import pytest
 import tensorflow as tf
+from conftest import get_pytest_case_id
 from HGQ import get_default_paq_conf, set_default_paq_conf, trace_minmax
 from HGQ.layers import (  # noqa: F401
     HConv1D,
@@ -22,8 +23,6 @@ from HGQ.proxy import to_proxy_model
 from tensorflow import keras
 
 from hls4ml.converters import convert_from_keras_model
-
-from conftest import get_pytest_case_id
 
 # tf.config.experimental_run_functions_eagerly(True)  # noqa
 
@@ -177,7 +176,9 @@ def custom_activation_fn(x):
 @pytest.mark.parametrize('cover_factor', [1.0])
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
-def test_syn_hlayers(request, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
+def test_syn_hlayers(
+    request, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+):
     model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 16), 7, 1)
 
@@ -204,7 +205,9 @@ def test_syn_hlayers(request, layer, N: int, rnd_strategy: str, io_type: str, co
 @pytest.mark.parametrize('cover_factor', [1.0])
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
-def test_syn_hlayers_da(request, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
+def test_syn_hlayers_da(
+    request, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+):
     model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 16), 7, 1)
 

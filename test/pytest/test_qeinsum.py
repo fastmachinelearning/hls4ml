@@ -3,8 +3,8 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-
 from conftest import get_pytest_case_id
+
 from hls4ml.converters import convert_from_keras_model
 
 try:
@@ -39,7 +39,6 @@ def test_einsum_dense(request, backend, io_type, strategy, operation):
     model = keras.Model(inputs=[inp0, inp1], outputs=out)
 
     data = np.random.randn(1000, *inp0_shape).astype(np.float32), np.random.randn(1000, *inp1_shape).astype(np.float32)
-    eq_name = eq.replace(',', '_').replace('->', '_')
     output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_config = {
         'Model': {'Precision': 'ap_fixed<1,0>' if backend != 'oneAPI' else 'ac_fixed<2,0>', 'ReuseFactor': 1},

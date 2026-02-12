@@ -2,9 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
-from conftest import get_pytest_case_id
 import torch
+from conftest import get_pytest_case_id
 from torch import nn
 
 import hls4ml

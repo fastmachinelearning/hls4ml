@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import numpy as np
-
-from conftest import get_pytest_case_id
 import torch.nn as nn
+from conftest import get_pytest_case_id
 from onnx import TensorProto, helper
 
 from hls4ml.converters import convert_from_onnx_model, convert_from_pytorch_model
@@ -55,18 +54,14 @@ def test_constantpad_1d(request):
     model.eval()
     config_pytorch = config_from_pytorch_model(model, (2, 4), channels_last_conversion='off')
     output_base = test_root_path / get_pytest_case_id(request)
-    hls_model_pytorch = convert_from_pytorch_model(
-        model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch
-    )
+    hls_model_pytorch = convert_from_pytorch_model(model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch)
 
     hls_model_pytorch.compile()
 
     pad1d_onnx = _make_constantpad_onnx_1d()
 
     config_onnx = config_from_onnx_model(pad1d_onnx)
-    hls_model_onnx = convert_from_onnx_model(
-        pad1d_onnx, output_dir=str(output_base / 'onnx'), hls_config=config_onnx
-    )
+    hls_model_onnx = convert_from_onnx_model(pad1d_onnx, output_dir=str(output_base / 'onnx'), hls_config=config_onnx)
 
     hls_model_onnx.compile()
 
@@ -120,18 +115,14 @@ def test_constantpad_2d(request):
     model.eval()
     config_pytorch = config_from_pytorch_model(model, (2, 3, 4), channels_last_conversion='off')
     output_base = test_root_path / get_pytest_case_id(request)
-    hls_model_pytorch = convert_from_pytorch_model(
-        model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch
-    )
+    hls_model_pytorch = convert_from_pytorch_model(model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch)
 
     hls_model_pytorch.compile()
 
     pad2d_onnx = _make_constantpad_onnx_2d()
 
     config_onnx = config_from_onnx_model(pad2d_onnx)
-    hls_model_onnx = convert_from_onnx_model(
-        pad2d_onnx, output_dir=str(output_base / 'onnx'), hls_config=config_onnx
-    )
+    hls_model_onnx = convert_from_onnx_model(pad2d_onnx, output_dir=str(output_base / 'onnx'), hls_config=config_onnx)
 
     hls_model_onnx.compile()
 

@@ -4,9 +4,9 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 import pytest
+from conftest import get_pytest_case_id
 
 import hls4ml
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 

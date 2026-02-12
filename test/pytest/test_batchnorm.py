@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from conftest import get_pytest_case_id
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.models import Sequential
@@ -36,8 +35,6 @@ def model(request):
 def test_batchnorm(request, model, data, backend, io_type):
     default_precision = 'fixed<32, 1>'
 
-    center = model.layers[0].center
-    scale = model.layers[0].scale
     config = hls4ml.utils.config_from_keras_model(
         model, default_precision=default_precision, granularity='name', backend=backend
     )

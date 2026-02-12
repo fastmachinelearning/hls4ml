@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from conftest import get_pytest_case_id
 from qkeras import QActivation, QBatchNormalization, QConv2D, QDense
 from tensorflow.keras.layers import Flatten, Input, MaxPooling2D

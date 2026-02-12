@@ -2,9 +2,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import get_pytest_case_id
 
 import hls4ml
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 
@@ -78,13 +78,6 @@ def test_pysr_luts(data):
 @pytest.mark.parametrize('compiler', ['vivado_hls', 'vitis_hls'])
 def test_sr_backend_config(request, part, clock_period, clock_unc, compiler):
     expr = 'x0**2 + 2.5382*cos_lut(x3) - 0.5'
-
-    if clock_unc is not None:
-        unc_str = clock_unc.replace('%', '')
-    else:
-        unc_str = clock_unc
-
-    compiler_str = compiler.replace('_hls', '')
 
     output_dir = test_root_path / get_pytest_case_id(request)
 

@@ -4,7 +4,6 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-
 from conftest import get_pytest_case_id
 
 import hls4ml

@@ -9,6 +9,7 @@ import pytest
 import qonnx.core.onnx_exec as oxe
 import qonnx.util.cleanup
 import qonnx.util.to_channels_last
+from conftest import get_pytest_case_id
 
 # To conveniently run QONNX inference
 from qonnx.core.modelwrapper import ModelWrapper
@@ -17,8 +18,6 @@ from qonnx.transformation.gemm_to_matmul import GemmToMatMul
 from qonnx.util.cleanup import cleanup_model
 
 import hls4ml
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../example-models').resolve()

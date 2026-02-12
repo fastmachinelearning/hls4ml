@@ -2,10 +2,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
-from conftest import get_pytest_case_id
 import torch
 import torch.nn as nn
+from conftest import get_pytest_case_id
 
 from hls4ml.converters import convert_from_pytorch_model
 from hls4ml.utils.config import config_from_pytorch_model

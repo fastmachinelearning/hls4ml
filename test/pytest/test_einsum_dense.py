@@ -3,10 +3,9 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
+from conftest import get_pytest_case_id
 
 from hls4ml.converters import convert_from_keras_model
-
-from conftest import get_pytest_case_id
 
 if keras.__version__ < '3.0.0':
     pytest.skip('Only keras v3 is supported for now', allow_module_level=True)

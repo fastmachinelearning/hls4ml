@@ -3,11 +3,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
+from conftest import get_pytest_case_id
 
 import hls4ml
 import hls4ml.utils.torch
-
-from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 
