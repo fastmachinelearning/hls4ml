@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_baseline_name
+from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 
@@ -42,7 +42,7 @@ def garnet_models(request):
     config['LayerName']['gar_1']['Precision'] = {'default': 'ap_fixed<32, 6, AP_RND, AP_SAT>', 'result': 'ap_fixed<32, 6>'}
 
     cfg = hls4ml.converters.create_config(
-        output_dir=str(test_root_path / get_pytest_baseline_name(request)), part='xc7z020clg400-1'
+        output_dir=str(test_root_path / get_pytest_case_id(request)), part='xc7z020clg400-1'
     )
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
@@ -78,7 +78,7 @@ def garnet_stack_models(request):
     config['Model']['Precision'] = 'ap_fixed<32,6>'
     # config should now have precisions specified for ['LayerName']['gar_1']['Precision']['norm', 'aggr', etc.]
     cfg = hls4ml.converters.create_config(
-        output_dir=str(test_root_path / get_pytest_baseline_name(request)), part='xc7z020clg400-1'
+        output_dir=str(test_root_path / get_pytest_case_id(request)), part='xc7z020clg400-1'
     )
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
