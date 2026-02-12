@@ -416,6 +416,7 @@ class DACombinationalTemplate(OptimizerPass):
 
     def transform(self, model: 'ModelGraph', node: DACombinational):
         from da4ml.codegen.hls import hls_logic_and_bridge_gen
+        from da4ml.codegen.hls.hls_codegen import get_io_types
         from da4ml.trace import FixedVariableArrayInput, comb_trace
 
         io_type = model.config.get_config_value('IOType')
@@ -444,16 +445,44 @@ class DACombinationalTemplate(OptimizerPass):
             raise ValueError(f'Unsupported backend {backend} for DACombinational layer.')
 
         fn_name = f'da_comblogic_{node.index}'
-        comb_logic, _ = hls_logic_and_bridge_gen(
-            comb, fn_name, flavor=flavor, pragmas=['#pragma HLS INLINE'], print_latency=True
-        )
+
+        out_t: str = node.get_output_variable().type.name
+        inp_name: str = ', '.join(node.inputs)
+        out_name: str = node.get_output_variable().name
         namespace = model.config.get_writer_config().get('Namespace', None) or 'nnet'
 
-        inp_t: str = node.get_input_variable().type.name
-        out_t: str = node.get_output_variable().type.name
-        inp_name: str = node.get_input_variable().name
-        out_name: str = node.get_output_variable().name
+        inp_names = node.inputs
+        inp_types = [model.graph[name].get_output_variable().type.name for name in inp_names]
+        inp_ts = ', '.join(inp_types)
 
-        fn_cpp = f'{namespace}::{fn_name}<{inp_t}, {out_t}>({inp_name}, {out_name});'
+        fn_name_internal = f'{fn_name}_internal' if len(inp_names) > 1 else fn_name
+        _name = fn_name_internal if len(inp_names) > 1 else fn_name
+        comb_logic, _ = hls_logic_and_bridge_gen(
+            comb, _name, flavor=flavor, pragmas=['#pragma HLS INLINE'], print_latency=True
+        )
+
+        # When there's multiple inputs, make a wrapper doing the concatenation and rename the original fn.
+        if len(inp_names) > 1:
+            inp_sizes = [prod(model.graph[name].get_output_variable().shape) for name in inp_names]
+            template_args = ', '.join(f'typename inp{i}_t' for i in range(len(inp_names))) + ', typename out_t'
+            fn_args = ', '.join(f'inp{i}_t inp{i}[{s}]' for i, s in enumerate(inp_sizes)) + f', out_t out[{comb.shape[1]}]'
+            _inp_t_str = get_io_types(comb, 'vitis')[0]
+            forloop = """for (size_t i = {n}; i < {m}; i++) {{
+        inp_buf[i] = inp{i}[i-{n}];}}
+        #pragma HLS UNROLL"""
+            N = [0] + np.cumsum(inp_sizes).tolist()
+            forloops = '\n    '.join(forloop.format(i=i, n=N[i], m=N[i + 1]) for i in range(len(inp_names)))
+            wrapper_fn = f"""template <{template_args}>
+void {fn_name}({fn_args}) {{
+    {_inp_t_str} inp_buf[{comb.shape[0]}];
+    #pragma HLS INLINE
+
+    {forloops}
+
+    {fn_name_internal}<{_inp_t_str}, out_t>(inp_buf, out);
+    }}"""
+            comb_logic = comb_logic + '\n\n' + wrapper_fn
+
+        fn_cpp = f'{namespace}::{fn_name}<{inp_ts}, {out_t}>({inp_name}, {out_name});'
         node.attributes['da_codegen'] = Source(comb_logic)
         node.attributes['function_cpp'] = fn_cpp
