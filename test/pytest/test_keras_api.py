@@ -424,7 +424,7 @@ def test_pooling(request, pooling, padds, chans, backend, synthesis_config):
     hls_cfg = hls4ml.utils.config_from_keras_model(keras_model)
     case_id = get_pytest_case_id(request)
     output_dir = str(test_root_path / case_id)
-    baseline_file_name = f'{get_pytest_baseline_name(request)}.json'
+    baseline_file_name = f'{get_pytest_case_id(request)}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_cfg, output_dir=output_dir, backend=backend

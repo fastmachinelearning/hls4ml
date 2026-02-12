@@ -2,9 +2,8 @@ import os
 
 import pytest
 
-
 # Characters that are problematic in file/directory names
-_PROBLEMATIC_CHARS = ":;=%'\"<>|?*\\"
+_PROBLEMATIC_CHARS = ':;=%\'"<>|?*\\'
 
 
 def _sanitize_test_id(s: str) -> str:
