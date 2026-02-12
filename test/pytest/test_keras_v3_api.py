@@ -26,7 +26,7 @@ from keras.layers import (
 
 import hls4ml
 
-test_root_path = Path('/tmp/tests')
+test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
@@ -57,7 +57,7 @@ def test_dense(backend, io_type):
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_dense_{backend}_{io_type}')
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -105,7 +105,7 @@ def test_activations(activation_function, backend, io_type):
     X_input = np.random.rand(1000, 1)
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_activations_{activation_function.name}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -151,7 +151,7 @@ def test_conv1d(padds, backend, io_type):
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_conv1d_{padds}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -228,7 +228,7 @@ def test_conv2d(chans, padds, backend, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4ml_project_keras_api_conv2d_{backend}_{chans}_{padds}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_conv2d_{backend}_{chans}_{padds}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -311,7 +311,7 @@ def test_depthwise2d(backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<32,12>', backend=backend
     )
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_depthwiseconv2d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -336,7 +336,7 @@ def test_depthwise1d(backend, io_type):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv1d_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_depthwiseconv1d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -368,7 +368,8 @@ def test_pooling(pooling, padds, chans, backend):
 
     hls_cfg = hls4ml.utils.config_from_keras_model(keras_model)
     output_dir = str(
-        test_root_path / f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
+        test_root_path
+        / f'hls4mlprj_keras_v3_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_cfg, output_dir=output_dir, backend=backend
@@ -497,7 +498,7 @@ def test_reused_layer(backend, io_type):
     _ = model([inp1, inp1])
 
     hls_config = {'Model': {'Precision': 'ap_fixed<32,8>', 'ReuseFactor': 1}}
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv1d_{backend}_{io_type}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_v3_api_reused_{backend}_{io_type}')
 
     model_hls = hls4ml.converters.convert_from_keras_model(
         model, backend=backend, io_type=io_type, hls_config=hls_config, output_dir=output_dir
