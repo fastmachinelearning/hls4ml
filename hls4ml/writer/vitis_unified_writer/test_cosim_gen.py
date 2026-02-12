@@ -37,18 +37,28 @@ class VitisUnified_TestGen:
                 # This section will convert the input which stored in vector<float> to the float pointer
                 # the float pointer will point to the start section of for each input for
                 newline = line
-                offset = 0
-                for inputIdx, inp in enumerate(model_inputs):
-                    # input should be float
-                    newline += indent + 'float* {inputPortName} = &in[{startIdx}];\n'.format(
-                        # can not be double because it fix by template
-                        inputPortName=mg.get_io_port_name(inp, True, inputIdx),
-                        startIdx=str(offset),
-                    )
-                    offset += inp.size()
-                # This section will declare float arrays used to store input from output layer
-                for outputIdx, out in enumerate(model_outputs):
-                    newline += indent + f"float {mg.get_io_port_name(out, False, outputIdx)}[{out.size()}];\n"
+                if mg.is_axi_master(meta):
+
+                    offset = 0
+                    for inputIdx, inp in enumerate(model_inputs):
+                        # input should be float
+                        newline += indent + 'float* {inputPortName} = &in[{startIdx}];\n'.format(
+                            # can not be double because it is fixed by template
+                            inputPortName=mg.get_io_port_name(inp, True, inputIdx),
+                            startIdx=str(offset),
+                        )
+                        offset += inp.size()
+                    # This section will declare float arrays used to store input from output layer
+                    for outputIdx, out in enumerate(model_outputs):
+                        newline += indent + f"float {mg.get_io_port_name(out, False, outputIdx)}[{out.size()}];\n"
+                else:
+                    assert len(model_inputs) == 1, "Only support one input for axi stream"
+                    assert len(model_outputs) == 1, "Only support one output for axi stream"
+
+                    newline += 3 * indent + f"hls::stream<{mg.get_dma_type_name()}> inputs;" + "\n"
+                    newline += 3 * indent + "nnet::convert_data_axis<float,float, N_IN>(in, inputs);" + "\n"
+                    newline += 3 * indent + "std::cout << \"input size inputs: \" << inputs.size() << std::endl;\n"
+                    newline += 3 * indent + f"hls::stream<{mg.get_dma_type_name()}> outputs;\n" + "\n"
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
 
@@ -56,18 +66,25 @@ class VitisUnified_TestGen:
 
                 newline = line
 
+                # input argument
                 input_ios = []
                 output_ios = []
                 bram_ios = [b.name for b in model_brams]
+                constant_ios = []
 
-                for inpIdx, inp in enumerate(model_inputs):
-                    input_ios.append(mg.get_io_port_name(inp, True, inpIdx))
+                if mg.is_axi_master(meta):
+                    for inpIdx, inp in enumerate(model_inputs):
+                        input_ios.append(mg.get_io_port_name(inp, True, inpIdx))
 
-                for outIdx, out in enumerate(model_outputs):
-                    output_ios.append(mg.get_io_port_name(out, False, outIdx))
+                    for outIdx, out in enumerate(model_outputs):
+                        output_ios.append(mg.get_io_port_name(out, False, outIdx))
+                    constant_ios.append("1")
+                else:
+                    input_ios.append("inputs")
+                    output_ios.append("outputs")
 
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
-                all_vars = ' ,'.join(filter(None, [*input_ios, *output_ios, *bram_ios, "1"]))
+                all_vars = ' ,'.join(filter(None, [*input_ios, *output_ios, *bram_ios, *constant_ios]))
                 top_level = indent + f'{mg.get_top_wrap_func_name(model, mg.is_axi_master(meta))}({all_vars});\n'
                 newline += top_level
 
@@ -82,26 +99,40 @@ class VitisUnified_TestGen:
                     newline += indent + 'std::cout << std::endl;\n'
             elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
-                for inpIdx, inp in enumerate(model_inputs):
-                    newline += indent + f'float {mg.get_io_port_name(inp, True, inpIdx)}[{str(inp.size())}] = {{}};\n'
 
-                for outIdx, out in enumerate(model_outputs):
-                    newline += indent + f"float {mg.get_io_port_name(out, False, outIdx)}[{str(out.size())}] = {{}};\n"
+                if mg.is_axi_master(meta):
+                    for inpIdx, inp in enumerate(model_inputs):
+                        newline += indent + f'float {mg.get_io_port_name(inp, True, inpIdx)}[{str(inp.size())}] = {{}};\n'
+
+                    for outIdx, out in enumerate(model_outputs):
+                        newline += indent + f"float {mg.get_io_port_name(out, False, outIdx)}[{str(out.size())}] = {{}};\n"
+                else:
+                    newline += 3 * indent + f"hls::stream<{mg.get_dma_type_name()}> inputs;" + "\n"
+                    newline += 3 * indent + "nnet::fill_zero_axi<{dma_type}, N_IN>(inputs, false);\n".format(
+                        dma_type=mg.get_dma_type_name()
+                    )
+                    newline += 3 * indent + "std::cout << \"input size inputs: \" << inputs.size() << std::endl;\n"
+                    newline += 3 * indent + f"hls::stream<{mg.get_dma_type_name()}> outputs;\n" + "\n"
 
             elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
                 if tb_stream != "stdout":  # it can be both or file
-                    for outIdx, out in enumerate(model_outputs):
-                        newline += (
-                            indent
-                            + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'.format(
-                                actualType="float",
-                                cpysize=out.size(),
-                                portName=mg.get_io_port_name(out, False, outIdx),
-                                des="fout",
-                                keepOutput="false",
+                    if mg.is_axi_master(meta):
+                        for outIdx, out in enumerate(model_outputs):
+                            newline += (
+                                indent
+                                + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'.format(
+                                    actualType="float",
+                                    cpysize=out.size(),
+                                    portName=mg.get_io_port_name(out, False, outIdx),
+                                    des="fout",
+                                    keepOutput="false",
+                                )
                             )
+                    else:
+                        newline += indent + 'nnet::print_result_axis<{dma_type}, N_OUT>(outputs, fout, false);\n'.format(
+                            dma_type=mg.get_dma_type_name()
                         )
             elif (
                 '// hls-fpga-machine-learning insert output' in line
@@ -113,15 +144,23 @@ class VitisUnified_TestGen:
                 keep_output = str(tb_stream != "stdout").lower()
 
                 if tb_stream != "file":
-                    for outIdx, out in enumerate(model_outputs):
+                    if mg.is_axi_master(meta):
+                        for outIdx, out in enumerate(model_outputs):
+                            newline += (
+                                indent
+                                + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'.format(
+                                    actualType="float",
+                                    cpysize=out.size(),
+                                    portName=mg.get_io_port_name(out, False, outIdx),
+                                    des="std::cout",
+                                    keepOutput=keep_output,
+                                )
+                            )
+                    else:
                         newline += (
                             indent
-                            + 'nnet::print_result<{actualType}, {cpysize}>({portName}, {des}, {keepOutput});\n'.format(
-                                actualType="float",
-                                cpysize=out.size(),
-                                portName=mg.get_io_port_name(out, False, outIdx),
-                                des="std::cout",
-                                keepOutput=keep_output,
+                            + 'nnet::print_result_axis<{dma_type}, N_OUT>(outputs, std::cout, {keepOutput});\n'.format(
+                                dma_type=mg.get_dma_type_name(), keepOutput=keep_output
                             )
                         )
 

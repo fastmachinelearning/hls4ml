@@ -111,7 +111,7 @@ class VitisUnified_BuildGen:
             if "{PLATFORM_XPFM}" in line:
                 line = line.replace("{PLATFORM_XPFM}", meta.vitis_unified_config.get_XPFMPath())
             if "{KERNEL_XO}" in line:
-                line = line.replace("{KERNEL_XO}", mg.get_xo_file_path(model))
+                line = line.replace("{KERNEL_XO}", mg.get_xo_file_path(model, meta))
             if "{PROJECT_NAME}" in line:
                 line = line.replace("{PROJECT_NAME}", model.config.get_project_name())
 
@@ -137,7 +137,15 @@ class VitisUnified_BuildGen:
                 line = line.replace("{KERNEL_NAME}", mg.get_top_wrap_func_name(model))
             if "{GUI_STATUS}" in line:
                 line = line.replace("{GUI_STATUS}", "true")
-            line = ""
+            if "# hls-fpga-machine-learning insert custom connection" in line:
+                if mg.is_axi_stream(meta):
+                    top_module_name = mg.get_top_wrap_func_name(model, False)
+                    top_mod_inst_name = top_module_name + "_1"
+                    line += "\n"
+                    line += "[connectivity]\n"
+                    line += f"nk={top_module_name}:1:{top_mod_inst_name}\n"
+                    line += f"stream_connect=DMA_MM2S:{top_mod_inst_name}.in\n"
+                    line += f"stream_connect={top_mod_inst_name}.out:DMA_S2MM\n"
             fout.write(line)
 
         fin.close()

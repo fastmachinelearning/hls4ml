@@ -56,13 +56,13 @@ class VitisUnified_MetaGen:
         return os.path.join(vitisWorkingDir, "linker")
 
     @classmethod
-    def get_xo_file_name(self, model):
-        return f"{self.get_top_wrap_func_name(model, True)}.xo"
+    def get_xo_file_name(self, model, meta):
+        return f"{self.get_top_wrap_func_name(model, self.is_axi_master(meta))}.xo"
         # todo fix it
 
     @classmethod
-    def get_xo_file_path(self, model):
-        return os.path.join(self.get_vitis_hls_exec_dir(model), self.get_xo_file_name(model))
+    def get_xo_file_path(self, model, meta):
+        return os.path.join(self.get_vitis_hls_exec_dir(model), self.get_xo_file_name(model, meta))
 
     # naming of variable function helper
 

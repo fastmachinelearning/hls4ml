@@ -1,4 +1,5 @@
 # we inherit it from vitis
+import re
 import zipfile
 
 from hls4ml.backends.vitis.passes.fifo_depth_optimization import (
@@ -36,20 +37,23 @@ def get_vitis_optimized_fifo_depths(model, cus_hls_prj_path=None):
 
     csv_fifo_depth_files = {}
     with open(names_file_path) as names_file:
-        for _ in range(4):
-            next(names_file)
         for line in names_file:
-            layer_name = line.split(',')[1]
-            csv_file_name = line.split(',')[3][:-1]
+            slitted_line = line.split(',')
+            if len(slitted_line[0]) == 0:
+                continue
+            layer_name = slitted_line[1]
+            csv_file_name = slitted_line[3][:-1]
             csv_fifo_depth_files[layer_name] = csv_file_name
 
     optmized_fifo_depths = {}
     for layer_name, file_name in csv_fifo_depth_files.items():
         with open(path_to_zip_file + file_name) as chan_status_file:
             lines = chan_status_file.readlines()
-            optmized_fifo_depths[layer_name[:-4]] = int(
+            cleaned_layer_name = re.sub(r'(_i)?_U$', '', layer_name)
+            optmized_fifo_depths[cleaned_layer_name] = int(
                 lines[-1]
-            )  # remove "_i_U" from the layer name string and keep the last line of the file that contains the max depth
+            )  # remove "_i_U" (axis) or "_U" (axim) from the layer name
+            # string and keep the last line of the file that contains the max depth
 
     return optmized_fifo_depths
 

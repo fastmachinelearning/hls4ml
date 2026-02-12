@@ -5,8 +5,26 @@ class VitisUnified_DriverGen:
 
     @classmethod
     def write_driver(self, meta, model, mg):
+
+        if mg.is_axi_master(meta):
+            self.write_driver_axim(meta, model, mg)
+        else:
+            self.write_driver_axis(meta, model, mg)
+
+    @classmethod
+    def write_driver_axis(self, meta, model, mg):
+
         filedir = os.path.dirname(os.path.abspath(__file__))
-        fin = open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver.py.hls4ml'))
+        with (
+            open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver_axis.py.hls4ml')) as fin,
+            open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w') as fout,
+        ):
+            fout.write(fin.read())
+
+    @classmethod
+    def write_driver_axim(self, meta, model, mg):
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        fin = open(os.path.join(filedir, '../../templates/vitis_unified/driver/pynq/pynq_driver_axim.py.hls4ml'))
         fout = open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w')
 
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
