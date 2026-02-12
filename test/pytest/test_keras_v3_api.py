@@ -27,7 +27,6 @@ from keras.layers import (
 import hls4ml
 
 test_root_path = Path(__file__).parent
-test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
