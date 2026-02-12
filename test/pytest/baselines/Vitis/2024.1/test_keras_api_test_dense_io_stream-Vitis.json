@@ -1,29 +1,7 @@
 {
-    "CSimResults": [
-        [
-            "0",
-            "0"
-        ],
-        [
-            "0",
-            "0"
-        ],
-        [
-            "0",
-            "0"
-        ],
-        [
-            "0",
-            "0"
-        ],
-        [
-            "0",
-            "0"
-        ]
-    ],
     "CSynthesisReport": {
         "TargetClockPeriod": "5.00",
-        "EstimatedClockPeriod": "3.338",
+        "EstimatedClockPeriod": "3.417",
         "BestLatency": "4",
         "WorstLatency": "4",
         "IntervalMin": "4",

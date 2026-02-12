@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-from conftest import get_pytest_baseline_name, get_pytest_case_id
+from conftest import get_pytest_case_id
 from synthesis_helpers import run_synthesis_test
 from tensorflow.keras.layers import (
     ELU,
@@ -56,7 +56,7 @@ def test_dense(request, backend, io_type, synthesis_config):
     config = hls4ml.utils.config_from_keras_model(model)
     case_id = get_pytest_case_id(request)
     output_dir = str(test_root_path / case_id)
-    baseline_file_name = f'{get_pytest_baseline_name(request)}.json'
+    baseline_file_name = f'{get_pytest_case_id(request)}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -109,7 +109,7 @@ def test_activations(request, activation_function, backend, io_type, synthesis_c
     config = hls4ml.utils.config_from_keras_model(model)
     case_id = get_pytest_case_id(request)
     output_dir = str(test_root_path / case_id)
-    baseline_file_name = f'{get_pytest_baseline_name(request)}.json'
+    baseline_file_name = f'{get_pytest_case_id(request)}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -251,7 +251,7 @@ def test_conv2d(request, chans, padds, backend, strategy, io_type, synthesis_con
     config['Model']['Strategy'] = strategy
     case_id = get_pytest_case_id(request)
     output_dir = str(test_root_path / case_id)
-    baseline_file_name = f'{get_pytest_baseline_name(request)}.json'
+    baseline_file_name = f'{get_pytest_case_id(request)}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -358,7 +358,7 @@ def test_depthwise2d(request, backend, io_type, synthesis_config):
     )
     case_id = get_pytest_case_id(request)
     output_dir = str(test_root_path / case_id)
-    baseline_file_name = f'{get_pytest_baseline_name(request)}.json'
+    baseline_file_name = f'{get_pytest_case_id(request)}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -389,7 +389,7 @@ def test_depthwise1d(request, backend, io_type, synthesis_config):
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     case_id = get_pytest_case_id(request)
     output_dir = str(test_root_path / case_id)
-    baseline_file_name = f'{get_pytest_baseline_name(request)}.json'
+    baseline_file_name = f'{get_pytest_case_id(request)}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
