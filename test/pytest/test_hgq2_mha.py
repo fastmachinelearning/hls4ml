@@ -12,6 +12,8 @@ from hgq.utils import trace_minmax
 
 from hls4ml.converters import convert_from_keras_model
 
+from conftest import get_pytest_case_id
+
 # Current hgq2 release rejects the parallelization_factor kwarg that hls4ml passes; skip until supported.
 pytest.skip('Skip until hgq2 supports parallelization_factor in QEinsumDense', allow_module_level=True)
 
@@ -19,7 +21,7 @@ test_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('strategy', ('latency', 'distributed_arithmetic'))
-def test_hgq2_mha(strategy):
+def test_hgq2_mha(request, strategy):
     with QuantizerConfigScope(f0=3, i0=2):
         q = keras.layers.Input((8, 9))
         k = keras.layers.Input((12, 7))
@@ -36,7 +38,7 @@ def test_hgq2_mha(strategy):
 
     model_hls = convert_from_keras_model(
         model,
-        output_dir=str(test_path / f'test_hgq2_mha_{strategy}'),
+        output_dir=str(test_path / get_pytest_case_id(request)),
         io_type='io_parallel',
         hls_config={'Model': {'Precision': 'ap_fixed<1,0>', 'ReuseFactor': 1, 'Strategy': strategy}},
     )

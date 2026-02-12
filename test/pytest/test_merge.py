@@ -7,6 +7,8 @@ from tensorflow.keras.layers import Add, Average, Concatenate, Dot, Input, Maxim
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 
@@ -14,7 +16,7 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('swap_inputs', [True, False])
-def test_merge(merge_layer, io_type, backend, swap_inputs):
+def test_merge(request, merge_layer, io_type, backend, swap_inputs):
     input_shape = (10, 10, 3)
 
     in1 = Input(shape=input_shape, name='inp1')
@@ -27,10 +29,7 @@ def test_merge(merge_layer, io_type, backend, swap_inputs):
     model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
     model.compile()
 
-    output_dir = str(
-        test_root_path
-        / f'hls4mlprj_merge_{"swap_inputs_" if swap_inputs else ""}{merge_layer.__name__.lower()}_{backend}_{io_type}'
-    )
+    output_dir = str(test_root_path / get_pytest_case_id(request))
 
     config = {'Model': {'Precision': 'fixed<32,16>', 'ReuseFactor': 1}, 'LayerName': {'inp2': {'Precision': 'fixed<32,15>'}}}
 
@@ -51,7 +50,7 @@ def test_merge(merge_layer, io_type, backend, swap_inputs):
 @pytest.mark.parametrize('axes', [1])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # No io_stream implementation yet
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_dot(axes, io_type, backend):
+def test_dot(request, axes, io_type, backend):
     # Only 1D implemented
     input_shape = (10,)
 
@@ -63,7 +62,7 @@ def test_dot(axes, io_type, backend):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
-    output_dir = str(test_root_path / f'hls4mlprj_dot_axes_{str(axes)}_{backend}_{io_type}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
@@ -80,7 +79,7 @@ def test_dot(axes, io_type, backend):
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_concatenate1d(io_type, backend):
+def test_concatenate1d(request, io_type, backend):
     input_shape1 = (10,)
     input_shape2 = (8,)
 
@@ -92,7 +91,7 @@ def test_concatenate1d(io_type, backend):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
-    output_dir = str(test_root_path / f'hls4mlprj_concatenate1d_{backend}_{io_type}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
@@ -110,7 +109,7 @@ def test_concatenate1d(io_type, backend):
 @pytest.mark.parametrize('axis', [1, 2])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_concatenate2d(axis, io_type, backend):
+def test_concatenate2d(request, axis, io_type, backend):
     input_shape1 = [10, 3]
     input_shape2 = [10, 4]
 
@@ -125,7 +124,7 @@ def test_concatenate2d(axis, io_type, backend):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
-    output_dir = str(test_root_path / f'hls4mlprj_concatenate2d_axis_{str(axis)}_{io_type}_{backend}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
@@ -143,7 +142,7 @@ def test_concatenate2d(axis, io_type, backend):
 @pytest.mark.parametrize('axis', [1, 2, 3])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_concatenate3d(axis, io_type, backend):
+def test_concatenate3d(request, axis, io_type, backend):
     input_shape1 = [10, 10, 3]
     input_shape2 = [10, 10, 4]
 
@@ -158,7 +157,7 @@ def test_concatenate3d(axis, io_type, backend):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,16>')
-    output_dir = str(test_root_path / f'hls4mlprj_concatenate3d_axis_{str(axis)}_{io_type}_{backend}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

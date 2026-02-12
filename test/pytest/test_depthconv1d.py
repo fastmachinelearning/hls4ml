@@ -6,6 +6,8 @@ import tensorflow as tf
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 padds_options = ['same', 'valid']
@@ -36,7 +38,7 @@ input_size_options = [4]
 )
 @pytest.mark.parametrize('rf', rf_options)
 @pytest.mark.parametrize('input_size', input_size_options)
-def test_depthconv1d(chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, input_size):
+def test_depthconv1d(request, chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, input_size):
     model = tf.keras.models.Sequential()
     input_shape = (16, input_size)
     model.add(
@@ -59,12 +61,7 @@ def test_depthconv1d(chans, padds, strides, kernels, bias, io_type, backend, str
     config['Model']['Strategy'] = strategy
     config['Model']['ReuseFactor'] = rf
 
-    stride_cfg = str(strides).replace(', ', '_').replace('(', '').replace(')', '')
-    kernel_cfg = str(kernels).replace(', ', '_').replace('(', '').replace(')', '')
-    output_dir = str(
-        test_root_path / f'hls4mlprj_depthconv1d_{chans}_strides_{stride_cfg}_kernels_{kernel_cfg}_padding_{padds}_'
-        f'backend_{backend}_io_{io_type}_strategy_{strategy}_rf_{rf}_input_size_{input_size}'
-    )
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

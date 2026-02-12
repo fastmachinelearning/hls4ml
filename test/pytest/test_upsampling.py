@@ -2,6 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+from conftest import get_pytest_case_id
 from tensorflow.keras.layers import UpSampling1D, UpSampling2D
 from tensorflow.keras.models import Sequential
 
@@ -48,7 +50,7 @@ def keras_model_2d():
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('model_type', ['1d', '2d'])
-def test_upsampling(keras_model_1d, keras_model_2d, data_1d, data_2d, model_type, io_type, backend):
+def test_upsampling(request, keras_model_1d, keras_model_2d, data_1d, data_2d, model_type, io_type, backend):
     if model_type == '1d':
         model = keras_model_1d
         data = data_1d
@@ -59,7 +61,7 @@ def test_upsampling(keras_model_1d, keras_model_2d, data_1d, data_2d, model_type
     config = hls4ml.utils.config_from_keras_model(
         model, default_precision='ap_fixed<32,1>', granularity='name', backend=backend
     )
-    odir = str(test_root_path / f'hls4mlprj_upsampling_{model_type}_{backend}_{io_type}')
+    odir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )

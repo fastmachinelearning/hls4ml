@@ -2,6 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+from conftest import get_pytest_case_id
 import torch
 import torch.nn as nn
 
@@ -33,7 +35,7 @@ class GRUNetStream(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_gru(backend, io_type):
+def test_gru(request, backend, io_type):
     model = GRUNet()
     model.eval()
 
@@ -51,7 +53,7 @@ def test_gru(backend, io_type):
         transpose_outputs=False,
         default_precision='fixed<32,16>',
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_gru_{backend}_{io_type}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -64,7 +66,7 @@ def test_gru(backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_gru_stream(backend, io_type):
+def test_gru_stream(request, backend, io_type):
     model = GRUNetStream()
     model.eval()
 
@@ -76,7 +78,7 @@ def test_gru_stream(backend, io_type):
     config = config_from_pytorch_model(
         model, (None, 1, 10), channels_last_conversion='off', transpose_outputs=False, default_precision='fixed<32,16>'
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_gru_{backend}_{io_type}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -109,7 +111,7 @@ class LSTMStream(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_lstm(backend, io_type):
+def test_lstm(request, backend, io_type):
     model = LSTM()
     model.eval()
 
@@ -129,7 +131,7 @@ def test_lstm(backend, io_type):
         transpose_outputs=False,
         default_precision='fixed<32,16>',
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_lstm_{backend}_{io_type}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
 
     hls_model = convert_from_pytorch_model(
         model,
@@ -150,7 +152,7 @@ def test_lstm(backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_lstm_stream(backend, io_type):
+def test_lstm_stream(request, backend, io_type):
     if not (backend in ('Quartus', 'oneAPI') and io_type == 'io_stream'):
         model = LSTMStream()
         model.eval()
@@ -163,7 +165,7 @@ def test_lstm_stream(backend, io_type):
         config = config_from_pytorch_model(
             model, [(None, 1, 10)], channels_last_conversion='off', transpose_outputs=False, default_precision='fixed<32,16>'
         )
-        output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_lstm_{backend}_{io_type}')
+        output_dir = str(test_root_path / get_pytest_case_id(request))
 
         hls_model = convert_from_pytorch_model(
             model,
@@ -192,7 +194,7 @@ class RNN(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_rnn(backend, io_type):
+def test_rnn(request, backend, io_type):
     if not (backend in ('Quartus', 'oneAPI') and io_type == 'io_stream'):
         model = RNN()
         model.eval()
@@ -210,7 +212,7 @@ def test_rnn(backend, io_type):
             transpose_outputs=False,
             default_precision='fixed<32,16>',
         )
-        output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_rnn_{backend}_{io_type}')
+        output_dir = str(test_root_path / get_pytest_case_id(request))
 
         hls_model = convert_from_pytorch_model(
             model,

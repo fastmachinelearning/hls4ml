@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 from tensorflow.keras.models import model_from_json
 
 import hls4ml
+from conftest import get_pytest_case_id
 
 co = {}
 _add_supported_quantized_objects(co)
@@ -47,7 +48,7 @@ def hls_model(mnist_model, request):
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     hls_config['Model']['Strategy'] = strategy
     hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
-    output_dir = str(test_root_path / f'hls4mlprj_cnn_mnist_qkeras_{backend}_{io_type}_{strategy}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type

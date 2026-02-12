@@ -6,6 +6,7 @@ from keras.layers import GRU, LSTM, Bidirectional, Input, SimpleRNN
 from keras.models import Model, Sequential
 
 import hls4ml
+from conftest import get_pytest_case_id
 
 test_root_path = Path(__file__).parent
 
@@ -92,12 +93,11 @@ def compare_weights(hls_weights, keras_weights, keras_layer):
 
 @pytest.mark.parametrize('rnn_layer', rnn_layers)
 @pytest.mark.parametrize('return_sequences', [True, False])
-def test_rnn_parsing(rnn_layer, return_sequences):
+def test_rnn_parsing(request, rnn_layer, return_sequences):
     model = create_model_parsing(rnn_layer, return_sequences)
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
-    prj_name = f'hls4mlprj_rnn_{rnn_layer.__class__.__name__.lower()}_seq_{int(return_sequences)}'
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
 
     hls_layer = list(hls_model.get_layers())[1]  # 0 is input, 1 is the RNN layer
@@ -191,7 +191,7 @@ def create_model_accuracy(rnn_layer, return_sequences):
 )
 @pytest.mark.parametrize('return_sequences', [True, False])
 @pytest.mark.parametrize('static', [True, False])
-def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, static):
+def test_rnn_accuracy(request, rnn_layer, return_sequences, backend, io_type, strategy, static):
     layer_name = rnn_layer.__name__
 
     model, X = create_model_accuracy(rnn_layer, return_sequences)
@@ -202,12 +202,7 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, s
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
-    prj_name = (
-        'hls4mlprj_rnn_accuracy_'
-        + f'{layer_name}_static_{int(static)}_ret_seq_{int(return_sequences)}_'
-        + f'{backend}_{io_type}_{strategy}'
-    )
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / get_pytest_case_id(request))
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type

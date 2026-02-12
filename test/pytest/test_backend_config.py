@@ -7,6 +7,8 @@ import torch
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 
@@ -15,7 +17,7 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('part', ['some_part', None])
 @pytest.mark.parametrize('clock_period', [8, None])
 @pytest.mark.parametrize('clock_unc', ['15%', None])
-def test_backend_config(framework, backend, part, clock_period, clock_unc):
+def test_backend_config(request, framework, backend, part, clock_period, clock_unc):
     if framework == 'keras':
         model = tf.keras.models.Sequential()
         model.add(
@@ -39,8 +41,7 @@ def test_backend_config(framework, backend, part, clock_period, clock_unc):
     else:
         unc_str = clock_unc
 
-    test_dir = f'hls4mlprj_backend_config_{framework}_{backend}_part_{part}_period_{clock_period}_unc_{unc_str}'
-    output_dir = test_root_path / test_dir
+    output_dir = test_root_path / get_pytest_case_id(request)
 
     if framework == 'keras':
         hls_model = convert_fn(

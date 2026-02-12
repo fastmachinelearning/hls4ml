@@ -7,6 +7,8 @@ from tensorflow.keras.models import Sequential
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 in_shape = 18
@@ -50,7 +52,7 @@ def keras_model_1d(request):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_global_pool1d(backend, keras_model_1d, data_1d, io_type):
+def test_global_pool1d(request, backend, keras_model_1d, data_1d, io_type):
     model, model_type, keepdims = keras_model_1d
 
     config = hls4ml.utils.config_from_keras_model(
@@ -61,7 +63,7 @@ def test_global_pool1d(backend, keras_model_1d, data_1d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / f'hls4mlprj_globalplool1d_{backend}_{io_type}_{model_type}_keepdims{keepdims}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         backend=backend,
     )
     hls_model.compile()
@@ -107,7 +109,7 @@ def keras_model_2d(request):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_global_pool2d(backend, keras_model_2d, data_2d, io_type):
+def test_global_pool2d(request, backend, keras_model_2d, data_2d, io_type):
     model, model_type, keepdims = keras_model_2d
 
     config = hls4ml.utils.config_from_keras_model(
@@ -118,7 +120,7 @@ def test_global_pool2d(backend, keras_model_2d, data_2d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / f'hls4mlprj_globalplool2d_{backend}_{io_type}_{model_type}_keepdims{keepdims}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         backend=backend,
     )
     hls_model.compile()

@@ -7,6 +7,8 @@ from tensorflow.keras.layers import Dense
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 
@@ -25,7 +27,7 @@ test_root_path = Path(__file__).parent
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('shape', [(4, 3), (4, 1), (2, 3, 2), (1, 3, 1)])
-def test_multi_dense(backend, strategy, io_type, shape):
+def test_multi_dense(request, backend, strategy, io_type, shape):
     model = tf.keras.models.Sequential()
     model.add(Dense(7, input_shape=shape, activation='relu'))
     model.add(Dense(2, activation='relu'))
@@ -38,8 +40,7 @@ def test_multi_dense(backend, strategy, io_type, shape):
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     config['Model']['Strategy'] = strategy
-    shapestr = '_'.join(str(x) for x in shape)
-    output_dir = str(test_root_path / f'hls4mlprj_multi_dense_{backend}_{strategy}_{io_type}_{shapestr}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type

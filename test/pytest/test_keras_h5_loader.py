@@ -6,11 +6,13 @@ import tensorflow as tf
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-def test_keras_h5_loader(backend):
+def test_keras_h5_loader(request, backend):
     input_shape = (10,)
     model = tf.keras.models.Sequential(
         [
@@ -21,14 +23,15 @@ def test_keras_h5_loader(backend):
 
     hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name')
 
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     config = {
-        'OutputDir': str(test_root_path / f'hls4mlprj_KerasH5_loader_test_{backend}'),
+        'OutputDir': output_dir,
         'ProjectName': f'KerasH5_loader_test_{backend}',
         'Backend': backend,
         'ClockPeriod': 25.0,
         'IOType': 'io_parallel',
         'HLSConfig': hls_config,
-        'KerasH5': str(test_root_path / f'hls4mlprj_KerasH5_loader_test_{backend}/model.h5'),
+        'KerasH5': str(Path(output_dir) / 'model.h5'),
     }
 
     model.save(config['KerasH5'])

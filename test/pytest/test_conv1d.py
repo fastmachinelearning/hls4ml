@@ -2,6 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+from conftest import get_pytest_case_id
 from tensorflow.keras.models import model_from_json
 
 import hls4ml
@@ -55,7 +57,7 @@ def hls_model(keras_model, request):
     }
     hls_config['LayerName']['output_softmax_softmax'] = {'Strategy': 'Stable'}
 
-    output_dir = str(test_root_path / f'hls4mlprj_conv1d_{backend}_{io_type}_{strategy}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, backend=backend, io_type=io_type, output_dir=output_dir
     )

@@ -3,6 +3,31 @@ import os
 import pytest
 
 
+def get_pytest_case_id(request):
+    """
+    Return a unique identifier for the current parametrized test case.
+    Used for generating output directory names that correspond to pytest's test IDs.
+    """
+    callspec = getattr(request.node, 'callspec', None)
+    if callspec is not None:
+        return callspec.id
+
+    node_name = request.node.name
+    if '[' in node_name and node_name.endswith(']'):
+        return node_name.split('[', 1)[1][:-1]
+
+    return node_name
+
+
+def get_pytest_baseline_name(request):
+    """
+    Return a unique identifier for baseline files, including the test name to avoid
+    collisions when different tests produce the same parametrized id (e.g. both
+    test_dense and test_depthwise2d with Vivado/io_stream would yield 'Vivado-io_stream').
+    """
+    return f'{request.node.name}-{get_pytest_case_id(request)}'
+
+
 def str_to_bool(val):
     return str(val).lower() in ('1', 'true')
 

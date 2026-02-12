@@ -3,6 +3,8 @@ import shutil
 from pathlib import Path
 
 import pytest
+
+from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 
@@ -115,7 +117,7 @@ def hls_model_setup(request, backend_configs, tmp_path):
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='model')
 
-    output_dir = str(tmp_path / f'hls4mlprj_report_{backend_config["backend"]}')
+    output_dir = str(tmp_path / get_pytest_case_id(request))
     test_report_dir = test_root_path / f'test_report/{backend_config["backend"]}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(

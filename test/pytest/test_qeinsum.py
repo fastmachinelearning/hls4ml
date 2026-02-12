@@ -4,6 +4,7 @@ import keras
 import numpy as np
 import pytest
 
+from conftest import get_pytest_case_id
 from hls4ml.converters import convert_from_keras_model
 
 try:
@@ -30,7 +31,7 @@ test_root_path = Path(__file__).parent
         ('xabcd,xbcde->xaeb', (2, 4, 8, 16), (4, 8, 16, 3)),
     ],
 )
-def test_einsum_dense(backend, io_type, strategy, operation):
+def test_einsum_dense(request, backend, io_type, strategy, operation):
     eq, inp0_shape, inp1_shape = operation
     inp0 = Input(inp0_shape)
     inp1 = Input(inp1_shape)
@@ -39,7 +40,7 @@ def test_einsum_dense(backend, io_type, strategy, operation):
 
     data = np.random.randn(1000, *inp0_shape).astype(np.float32), np.random.randn(1000, *inp1_shape).astype(np.float32)
     eq_name = eq.replace(',', '_').replace('->', '_')
-    output_dir = str(test_root_path / f'hls4mlprj_einsum_{eq_name}_{backend}_{io_type}_{strategy}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_config = {
         'Model': {'Precision': 'ap_fixed<1,0>' if backend != 'oneAPI' else 'ac_fixed<2,0>', 'ReuseFactor': 1},
         'Strategy': strategy,

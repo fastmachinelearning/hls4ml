@@ -18,6 +18,8 @@ from qonnx.util.cleanup import cleanup_model
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../example-models').resolve()
 
@@ -301,7 +303,7 @@ def bnn_fc_small_qonnx_model_scale_nonunit2(bnn_fc_small_qonnx_model):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_tfc_2w2a(tfc_2w2a_model, backend):
+def test_tfc_2w2a(request, tfc_2w2a_model, backend):
     model = tfc_2w2a_model
 
     ishape = (1, 1, 28, 28)
@@ -314,7 +316,7 @@ def test_tfc_2w2a(tfc_2w2a_model, backend):
     # Convert QONNX model, compile, and run inference
     config = hls4ml.utils.config_from_onnx_model(model, backend=backend, default_precision='fixed<32,16>')
     hls_model = hls4ml.converters.convert_from_onnx_model(
-        model, output_dir=str(test_root_path / f'hls4mlprj_qonnx_tfc-2w2a_{backend}'), backend=backend, hls_config=config
+        model, output_dir=str(test_root_path / get_pytest_case_id(request)), backend=backend, hls_config=config
     )
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
@@ -323,7 +325,7 @@ def test_tfc_2w2a(tfc_2w2a_model, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vitis'])
-def test_cnv_2w2a(cnv_2w2a_model, backend):
+def test_cnv_2w2a(request, cnv_2w2a_model, backend):
     """
     This tests a convolution model. Note:  the batch normalizations weights not quantized, so it is
     difficult to make this match perfectly. It is also a slow test, which is why only Vitis is tested.
@@ -340,7 +342,7 @@ def test_cnv_2w2a(cnv_2w2a_model, backend):
     config = hls4ml.utils.config_from_onnx_model(model, backend=backend, default_precision='fixed<32,6>')
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
-        output_dir=str(test_root_path / f'hls4mlprj_qonnx_cnv-2w2a_{backend}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         io_type='io_stream',
         backend=backend,
         hls_config=config,
@@ -352,7 +354,7 @@ def test_cnv_2w2a(cnv_2w2a_model, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_jet_tagging(jettagging_model, backend):
+def test_jet_tagging(request, jettagging_model, backend):
     model = jettagging_model
 
     # Execute QONNX model inference
@@ -367,7 +369,7 @@ def test_jet_tagging(jettagging_model, backend):
     config = hls4ml.utils.config_from_onnx_model(model, backend=backend, default_precision='fixed<32,16>')
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
-        model, output_dir=str(test_root_path / f'hls4mlprj_qonnx_jettag_{backend}'), backend=backend, hls_config=config
+        model, output_dir=str(test_root_path / get_pytest_case_id(request)), backend=backend, hls_config=config
     )
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
@@ -376,7 +378,7 @@ def test_jet_tagging(jettagging_model, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vitis'])
-def test_sep_conv(sep_conv_model, backend):
+def test_sep_conv(request, sep_conv_model, backend):
     model = sep_conv_model
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
@@ -390,7 +392,7 @@ def test_sep_conv(sep_conv_model, backend):
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
-        output_dir=str(test_root_path / f'hls4mlprj_qonnx_sep_conv_{backend}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         io_type='io_stream',
         backend=backend,
         hls_config=config,
@@ -402,7 +404,7 @@ def test_sep_conv(sep_conv_model, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vitis'])
-def test_branched_model(branched_model, backend):
+def test_branched_model(request, branched_model, backend):
     model = branched_model
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
@@ -415,7 +417,7 @@ def test_branched_model(branched_model, backend):
     )
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
-        output_dir=str(test_root_path / f'hls4mlprj_qonnx_branched_model_{backend}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         io_type='io_stream',
         backend=backend,
         hls_config=config,
@@ -427,7 +429,7 @@ def test_branched_model(branched_model, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vitis'])
-def test_tiny_unet_model(tiny_unet_model, backend):
+def test_tiny_unet_model(request, tiny_unet_model, backend):
     model = tiny_unet_model
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
@@ -441,7 +443,7 @@ def test_tiny_unet_model(tiny_unet_model, backend):
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
-        output_dir=str(test_root_path / f'hls4mlprj_qonnx_tiny_unet_model_{backend}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         io_type='io_stream',
         backend=backend,
         hls_config=config,
@@ -484,7 +486,7 @@ def test_simple_model(model_name, io_type, backend, request):
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         model,
-        output_dir=str(test_root_path / f'hls4mlprj_onnx_{model_name}_{io_type}_{backend}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         io_type=io_type,
         backend=backend,
         hls_config=config,
@@ -520,7 +522,7 @@ def test_bnn(model_name, io_type, backend, strategy, request):
     config['Model']['Strategy'] = strategy
     hls_model = hls4ml.converters.convert_from_onnx_model(
         qonnx_model,
-        output_dir=str(test_root_path / f'hls4mlprj_onnx_{model_name}_{io_type}_{backend}_{strategy}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         io_type=io_type,
         backend=backend,
         hls_config=config,

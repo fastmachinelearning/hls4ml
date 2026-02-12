@@ -7,6 +7,8 @@ import tensorflow as tf
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 
@@ -32,7 +34,7 @@ test_root_path = Path(__file__).parent
         (16, 'pipeline', 'io_parallel', 'resource', None),  # Special case to test Conv layer. Should result in two warnings
     ],
 )
-def test_pipeline_style(capfd, backend, param_group, pipeline_style, io_type, strategy, ii):
+def test_pipeline_style(request, capfd, backend, param_group, pipeline_style, io_type, strategy, ii):
     def _check_top_hls_pragma(model, pragma, ii=None):
         assert model.config.pipeline_style == pragma
 
@@ -61,8 +63,7 @@ def test_pipeline_style(capfd, backend, param_group, pipeline_style, io_type, st
     config['Model']['Strategy'] = strategy
     config['Model']['ReuseFactor'] = 2
 
-    prj_name = f'hls4mlprj_pipeline_style_{backend}_{param_group}'
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

@@ -2,6 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+from conftest import get_pytest_case_id
 from tensorflow import keras
 
 from hls4ml.converters import convert_from_keras_model
@@ -10,7 +12,7 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
-def test_repack_precision(backend: str):
+def test_repack_precision(request, backend: str):
     inp = keras.Input(shape=(3, 3), name='inp')
     out = keras.layers.Reshape((3, 3), name='reshape')(inp)
     out = keras.layers.Conv1D(2, 2, name='conv')(out)
@@ -28,7 +30,7 @@ def test_repack_precision(backend: str):
     model_hls = convert_from_keras_model(
         model,
         backend=backend,
-        output_dir=str(test_root_path / f'hls4mlprj_repack_precision_{backend}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
         hls_config=hls_config,
         io_type='io_stream',
     )
@@ -56,7 +58,7 @@ def test_repack_precision(backend: str):
         ('Catapult', 'Resource'),
     ],
 )
-def test_repack(backend: str, strategy: str):
+def test_repack(request, backend: str, strategy: str):
     inp1 = keras.Input(shape=(4,), name='inp1')
     inp2 = keras.Input(shape=(4,), name='inp2')
     r1 = keras.layers.Reshape((2, 2), name='reshape1')(inp1)
@@ -70,7 +72,7 @@ def test_repack(backend: str, strategy: str):
         io_type='io_stream',
         backend=backend,
         hls_config=hls_config,
-        output_dir=str(test_root_path / f'hls4mlprj_repack_{backend}_{strategy}'),
+        output_dir=str(test_root_path / get_pytest_case_id(request)),
     )
     model_hls.compile()
     inp_data = [

@@ -7,6 +7,8 @@ import torch.nn as nn
 
 import hls4ml
 
+from conftest import get_pytest_case_id
+
 test_root_path = Path(__file__).parent
 
 
@@ -32,7 +34,7 @@ class ConcatModule(nn.Module):
 @pytest.mark.parametrize('merge_op', ['cat', 'add', 'mul', 'sub', 'minimum', 'maximum'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_merge(merge_op, io_type, backend):
+def test_merge(request, merge_op, io_type, backend):
     input_shape = (3, 10, 10)
 
     if merge_op == 'cat':  # Meow!
@@ -48,7 +50,7 @@ def test_merge(merge_op, io_type, backend):
         channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / f'hls4mlprj_merge_pytorch_{merge_op}_{backend}_{io_type}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model,
         hls_config=config,

@@ -2,6 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+from conftest import get_pytest_case_id
 from qkeras import QActivation, QBatchNormalization, QConv2D, QDense
 from tensorflow.keras.layers import Flatten, Input, MaxPooling2D
 from tensorflow.keras.models import Model
@@ -27,7 +29,7 @@ test_root_path = Path(__file__).parent
         ('Vitis', 'io_stream', 'resource'),
     ],
 )
-def test_binary_cnn(backend, io_type, strategy):
+def test_binary_cnn(request, backend, io_type, strategy):
     x_in = Input(shape=(28, 28, 1))
 
     x = QConv2D(
@@ -85,7 +87,7 @@ def test_binary_cnn(backend, io_type, strategy):
         hls_config['LayerName']['conv2d_2']['Implementation'] = 'im2col'
         hls_config['LayerName']['conv2d_3']['Implementation'] = 'im2col'
 
-    output_dir = str(test_root_path / f'hls4mlprj_binary_cnn_{backend}_{io_type}_{strategy}')
+    output_dir = str(test_root_path / get_pytest_case_id(request))
     hls_model = hls4ml.converters.convert_from_keras_model(
         model2,
         hls_config=hls_config,
