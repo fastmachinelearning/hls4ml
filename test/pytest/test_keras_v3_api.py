@@ -8,7 +8,6 @@ import pytest
 if keras.__version__ < '3.0':
     pytest.skip('Keras API tests are only for Keras 3.0 and above', allow_module_level=True)
 
-from conftest import get_pytest_case_id
 from keras.layers import (
     ELU,
     Activation,
@@ -33,7 +32,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_dense(request, backend, io_type):
+def test_dense(test_case_id, backend, io_type):
     model = keras.Sequential(
         [
             Dense(
@@ -59,7 +58,7 @@ def test_dense(request, backend, io_type):
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -95,7 +94,7 @@ def test_dense(request, backend, io_type):
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_activations(request, activation_function, backend, io_type):
+def test_activations(test_case_id, activation_function, backend, io_type):
     model = keras.models.Sequential()
     model.add(Dense(64, input_shape=(1,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
     model.add(activation_function)
@@ -107,7 +106,7 @@ def test_activations(request, activation_function, backend, io_type):
     X_input = np.random.rand(1000, 1)
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -129,7 +128,7 @@ padds_options = ['same', 'valid']
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv1d(request, padds, backend, io_type):
+def test_conv1d(test_case_id, padds, backend, io_type):
     model = keras.models.Sequential()
     input_shape = (10, 128, 4)
     model.add(
@@ -153,7 +152,7 @@ def test_conv1d(request, padds, backend, io_type):
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -207,7 +206,7 @@ padds_options = ['same', 'valid']
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv2d(request, chans, padds, backend, io_type):
+def test_conv2d(test_case_id, chans, padds, backend, io_type):
     input_shape = (32, 32, 3)
     model = keras.Sequential(
         [
@@ -230,7 +229,7 @@ def test_conv2d(request, chans, padds, backend, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -301,7 +300,7 @@ def test_conv2d(request, chans, padds, backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-def test_depthwise2d(request, backend, io_type):
+def test_depthwise2d(test_case_id, backend, io_type):
     """
     Test proper handling of DepthwiseConv2D
     """
@@ -313,7 +312,7 @@ def test_depthwise2d(request, backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<32,12>', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -328,7 +327,7 @@ def test_depthwise2d(request, backend, io_type):
 # Currently only Vivado and Vitis is supported for io_stream.
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_depthwise1d(request, backend, io_type):
+def test_depthwise1d(test_case_id, backend, io_type):
     """
     Test proper handling of DepthwiseConv1D.
     """
@@ -338,7 +337,7 @@ def test_depthwise1d(request, backend, io_type):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -357,7 +356,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
-def test_pooling(request, pooling, padds, chans, backend):
+def test_pooling(test_case_id, pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
     input_shape = (18, 15, 3) if '2D' in pooling.__name__ else (121, 3)
@@ -369,7 +368,7 @@ def test_pooling(request, pooling, padds, chans, backend):
     keras_model.compile()
 
     hls_cfg = hls4ml.utils.config_from_keras_model(keras_model)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_cfg, output_dir=output_dir, backend=backend
     )
@@ -479,7 +478,7 @@ def test_pooling(request, pooling, padds, chans, backend):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_reused_layer(request, backend, io_type):
+def test_reused_layer(test_case_id, backend, io_type):
     inp1 = keras.layers.Input(shape=(10, 10))
     inp2 = keras.layers.Input(shape=(10, 10))
 
@@ -497,7 +496,7 @@ def test_reused_layer(request, backend, io_type):
     _ = model([inp1, inp1])
 
     hls_config = {'Model': {'Precision': 'ap_fixed<32,8>', 'ReuseFactor': 1}}
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     model_hls = hls4ml.converters.convert_from_keras_model(
         model, backend=backend, io_type=io_type, hls_config=hls_config, output_dir=output_dir

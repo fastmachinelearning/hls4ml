@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from qkeras.qconvolutional import QConv2D
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import binary, quantized_bits, quantized_relu, ternary
@@ -34,7 +33,7 @@ def qkeras_model(input_shape):
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_save_load__model(request, io_type, backend):
+def test_save_load__model(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)
 
     keras_model = qkeras_model(input_shape)
@@ -50,7 +49,7 @@ def test_save_load__model(request, io_type, backend):
         if layer.startswith('Softmax'):
             config['LayerName'][layer]['Implementation'] = 'legacy'
 
-    out_dir = test_root_path / get_pytest_case_id(request)
+    out_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model,
@@ -72,7 +71,7 @@ def test_save_load__model(request, io_type, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vitis'])  # Disabling OneAPI for now excessive run time
-def test_save_load_qonnx_model(request, backend):
+def test_save_load_qonnx_model(test_case_id, backend):
     dl_file = str(example_model_path / 'onnx/branched_model_ch_last.onnx')
 
     qonnx_model = ModelWrapper(dl_file)
@@ -89,7 +88,7 @@ def test_save_load_qonnx_model(request, backend):
         if layer.startswith('Softmax'):
             config['LayerName'][layer]['Implementation'] = 'legacy'
 
-    out_dir = test_root_path / get_pytest_case_id(request)
+    out_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         qonnx_model,
@@ -112,7 +111,7 @@ def test_save_load_qonnx_model(request, backend):
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_linking_project(request, io_type, backend):
+def test_linking_project(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)
 
     keras_model = qkeras_model(input_shape)
@@ -128,7 +127,7 @@ def test_linking_project(request, io_type, backend):
         if layer.startswith('Softmax'):
             config['LayerName'][layer]['Implementation'] = 'legacy'
 
-    out_dir = test_root_path / get_pytest_case_id(request)
+    out_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model,

@@ -4,7 +4,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 
 try:
     import keras
@@ -88,7 +87,7 @@ def test_keras_v3_numerical_profiling_conv_model():
 
 @pytest.mark.skipif(not __keras_profiling_enabled__, reason='Keras 3.0 or higher is required')
 @pytest.mark.skip(reason='convert_from_config needs update for Keras v3 model serialization format')
-def test_keras_v3_numerical_profiling_with_hls_model(request):
+def test_keras_v3_numerical_profiling_with_hls_model(test_case_id):
     """Test numerical profiling with both Keras v3 model and hls4ml model."""
     import hls4ml
 
@@ -107,7 +106,7 @@ def test_keras_v3_numerical_profiling_with_hls_model(request):
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
-        output_dir=str(Path(__file__).parent / get_pytest_case_id(request)),
+        output_dir=str(Path(__file__).parent / test_case_id),
         backend='Vivado',
         allow_da_fallback=True,
         allow_v2_fallback=True,

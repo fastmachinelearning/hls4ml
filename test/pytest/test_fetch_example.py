@@ -4,7 +4,6 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 import pytest
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -12,7 +11,7 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_fetch_example_utils(request, backend):
+def test_fetch_example_utils(test_case_id, backend):
     f = io.StringIO()
     with redirect_stdout(f):
         hls4ml.utils.fetch_example_list()
@@ -27,7 +26,7 @@ def test_fetch_example_utils(request, backend):
     config['KerasJson'] = 'qkeras_mnist_cnn.json'
     config['KerasH5']
     config['Backend'] = backend
-    config['OutputDir'] = str(test_root_path / get_pytest_case_id(request))
+    config['OutputDir'] = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.keras_v2_to_hls(config)
     hls_model.compile()  # For now, it is enough if it compiles, we're only testing downloading works as expected

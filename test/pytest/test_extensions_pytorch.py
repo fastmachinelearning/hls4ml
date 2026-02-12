@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
-from conftest import get_pytest_case_id
 
 import hls4ml
 import hls4ml.utils.torch
@@ -131,7 +130,7 @@ def register_custom_layer():
 
 
 @pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
-def test_extensions_pytorch(request, tmp_path, backend_id):
+def test_extensions_pytorch(test_case_id, tmp_path, backend_id):
     # Register the optimization passes (if any)
     backend = hls4ml.backends.get_backend(backend_id)
     ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
@@ -175,7 +174,7 @@ def test_extensions_pytorch(request, tmp_path, backend_id):
     )
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         pmodel,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend_id,
         io_type='io_parallel',
         hls_config=config,

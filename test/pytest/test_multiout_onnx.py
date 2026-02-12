@@ -6,7 +6,6 @@ import pytest
 import qonnx.core.onnx_exec as oxe
 import torch
 import torch.nn as nn
-from conftest import get_pytest_case_id
 from qonnx.core.modelwrapper import ModelWrapper
 from qonnx.transformation.gemm_to_matmul import GemmToMatMul
 from qonnx.util.cleanup import cleanup_model
@@ -56,7 +55,7 @@ def onnx_model(tmp_path):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_multiout_onnx(request, onnx_model, io_type):
+def test_multiout_onnx(test_case_id, onnx_model, io_type):
     X = np.random.rand(1, 16)
     X = (np.round(X * 2**16) * 2**-16).astype(np.float32)
 
@@ -68,7 +67,7 @@ def test_multiout_onnx(request, onnx_model, io_type):
         onnx_model, granularity='name', default_precision='fixed<32, 16>', backend='Vitis'
     )
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         onnx_model,

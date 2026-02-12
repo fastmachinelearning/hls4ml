@@ -3,7 +3,6 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 
 from hls4ml.converters import convert_from_keras_model
 
@@ -33,7 +32,7 @@ test_root_path = Path(__file__).parent
         ('...abcd,bcde->...aeb', (5, 4, 3, 2), (5, 6, 4), 'a'),
     ],
 )
-def test_einsum_dense(request, backend, io_type, strategy, operation):
+def test_einsum_dense(test_case_id, backend, io_type, strategy, operation):
     eq, inp_shape, out_shape, bias_axes = operation
     model = keras.Sequential(
         [Input(inp_shape), EinsumDense(eq, output_shape=out_shape, bias_axes=bias_axes, name='einsum_dense')]
@@ -44,7 +43,7 @@ def test_einsum_dense(request, backend, io_type, strategy, operation):
         layer.bias.assign(keras.ops.convert_to_tensor(np.random.rand(*layer.bias.shape)))
 
     data = np.random.rand(1000, *inp_shape)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_config = {'Model': {'Precision': 'ap_fixed<32,8>', 'ReuseFactor': 1}, 'Strategy': strategy}
     model_hls = convert_from_keras_model(
         model, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type

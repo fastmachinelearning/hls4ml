@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -53,7 +52,7 @@ class Upsample2DModel(nn.Module):
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_pytorch_upsampling1d(request, data_1d, io_type, backend):
+def test_pytorch_upsampling1d(test_case_id, data_1d, io_type, backend):
     model = Upsample1DModel()
 
     config = hls4ml.utils.config_from_pytorch_model(
@@ -63,7 +62,7 @@ def test_pytorch_upsampling1d(request, data_1d, io_type, backend):
         channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
@@ -83,7 +82,7 @@ def test_pytorch_upsampling1d(request, data_1d, io_type, backend):
 
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # Fractional scaling doesn't work with io_stream
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_pytorch_upsampling2d(request, data_2d, io_type, backend):
+def test_pytorch_upsampling2d(test_case_id, data_2d, io_type, backend):
     model = Upsample2DModel()
 
     config = hls4ml.utils.config_from_pytorch_model(
@@ -93,7 +92,7 @@ def test_pytorch_upsampling2d(request, data_2d, io_type, backend):
         channels_last_conversion='full',  # With conversion to channels_last
         transpose_outputs=True,
     )
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )

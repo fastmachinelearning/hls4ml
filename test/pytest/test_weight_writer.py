@@ -4,7 +4,6 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -14,7 +13,7 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('k', [0, 1])
 @pytest.mark.parametrize('i', [4, 8, 10])
 @pytest.mark.parametrize('f', [-2, 0, 2, 7, 14])
-def test_weight_writer(request, k, i, f):
+def test_weight_writer(test_case_id, k, i, f):
     k, b, i = k, k + i + f, k + i
     w = np.array([[np.float32(2.0**-f)]])
     u = '' if k else 'u'
@@ -23,7 +22,7 @@ def test_weight_writer(request, k, i, f):
 
     model = keras.Sequential([keras.layers.Dense(1, input_shape=(1,), name='dense')])
     model.layers[0].kernel.assign(keras.backend.constant(w))
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     model_hls = hls4ml.converters.convert_from_keras_model(
         model, hls_config=hls_config, output_dir=output_dir, write_weights_txt=True

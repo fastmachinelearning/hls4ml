@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Conv1D
 from tensorflow.keras.models import Sequential
 
@@ -15,7 +14,7 @@ atol = 5e-3
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_causalpadding(request, io_type, backend):
+def test_causalpadding(test_case_id, io_type, backend):
     model = Sequential()
     model.add(Conv1D(1, 5, padding='causal', input_shape=(100, 1)))
     model.compile()
@@ -27,7 +26,7 @@ def test_causalpadding(request, io_type, backend):
     config = hls4ml.utils.config_from_keras_model(
         model, default_precision='ap_fixed<32,16>', granularity='name', backend=backend
     )
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )

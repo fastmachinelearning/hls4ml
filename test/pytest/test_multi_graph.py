@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Activation, Dense, GlobalAveragePooling1D, Input
 from tensorflow.keras.models import Model
 
@@ -33,7 +32,7 @@ def create_test_model():
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['model', 'name'])
 @pytest.mark.parametrize('split_layers', [('dense2', 'avg_pool'), ('relu1', 'relu_common')])
-def test_multimodelgraph_predict(request, split_layers, io_type, strategy, granularity):
+def test_multimodelgraph_predict(test_case_id, split_layers, io_type, strategy, granularity):
     """
     Tests the multi-graph splitting and stitching process.
     - Verifies that predictions from the monolithic and multi-graph versions match with the CSimulation.
@@ -48,7 +47,7 @@ def test_multimodelgraph_predict(request, split_layers, io_type, strategy, granu
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity, default_precision='ap_fixed<32,16>')
     config['Model']['Strategy'] = strategy
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     # --- Monolithic HLS conversion (no split) ---
     hls_model_mono = hls4ml.converters.convert_from_keras_model(

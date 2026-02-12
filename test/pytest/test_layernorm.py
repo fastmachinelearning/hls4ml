@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import LayerNormalization
 from tensorflow.keras.models import Sequential
 
@@ -43,13 +42,13 @@ def custom_epsilon_model():
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
-def test_layernorm_parsing(request, custom_epsilon_model, backend):
+def test_layernorm_parsing(test_case_id, custom_epsilon_model, backend):
     custom_config = hls4ml.utils.config_from_keras_model(custom_epsilon_model, granularity='name', backend=backend)
     custom_config['LayerName']['layer_normalization']['Precision']['accum'] = 'ap_fixed<10,4>'
     custom_config['LayerName']['layer_normalization']['table_t'] = 'ap_fixed<12,5>'
     custom_config['LayerName']['layer_normalization']['TableSize'] = 2048
     custom_config['LayerName']['layer_normalization']['TableRangePower2'] = 1
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         custom_epsilon_model, backend=backend, hls_config=custom_config, io_type='io_parallel', output_dir=output_dir
     )
@@ -66,9 +65,9 @@ def test_layernorm_parsing(request, custom_epsilon_model, backend):
 
 # Currently only Vivado/Vitis in io_parallel mode is supported
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
-def test_layernorm_accuracy(request, model, data, backend):
+def test_layernorm_accuracy(test_case_id, model, data, backend):
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, backend=backend, hls_config=config, io_type='io_parallel', output_dir=output_dir
     )

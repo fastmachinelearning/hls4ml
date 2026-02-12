@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.models import Sequential
 
@@ -32,13 +31,13 @@ def model(request):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('model', [True, False], indirect=True)
-def test_batchnorm(request, model, data, backend, io_type):
+def test_batchnorm(test_case_id, model, data, backend, io_type):
     default_precision = 'fixed<32, 1>'
 
     config = hls4ml.utils.config_from_keras_model(
         model, default_precision=default_precision, granularity='name', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, backend=backend, hls_config=config, io_type=io_type, output_dir=output_dir
     )

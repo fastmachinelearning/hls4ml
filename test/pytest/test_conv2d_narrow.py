@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.models import Sequential
 
@@ -39,7 +38,7 @@ def model():
     ],
 )
 @pytest.mark.filterwarnings('error')
-def test_narrow(request, data, model, narrowset, capfd):
+def test_narrow(test_case_id, data, model, narrowset, capfd):
     """
     Check that the implementation does not have leftover data.
     """
@@ -48,7 +47,7 @@ def test_narrow(request, data, model, narrowset, capfd):
     conv = narrowset[2]
     X = data
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy

@@ -6,7 +6,6 @@ import pytest
 if keras.__version__ < '3.0.0':
     pytest.skip('This test requires keras 3.0.0 or higher', allow_module_level=True)
 import numpy as np
-from conftest import get_pytest_case_id
 from hgq.config import QuantizerConfigScope
 from hgq.layers import QMultiHeadAttention
 from hgq.utils import trace_minmax
@@ -20,7 +19,7 @@ test_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('strategy', ('latency', 'distributed_arithmetic'))
-def test_hgq2_mha(request, strategy):
+def test_hgq2_mha(test_case_id, strategy):
     with QuantizerConfigScope(f0=3, i0=2):
         q = keras.layers.Input((8, 9))
         k = keras.layers.Input((12, 7))
@@ -37,7 +36,7 @@ def test_hgq2_mha(request, strategy):
 
     model_hls = convert_from_keras_model(
         model,
-        output_dir=str(test_path / get_pytest_case_id(request)),
+        output_dir=str(test_path / test_case_id),
         io_type='io_parallel',
         hls_config={'Model': {'Precision': 'ap_fixed<1,0>', 'ReuseFactor': 1, 'Strategy': strategy}},
     )

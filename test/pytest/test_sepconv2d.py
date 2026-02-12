@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -37,7 +36,7 @@ input_size_options = [3]
 )
 @pytest.mark.parametrize('rf', rf_options)
 @pytest.mark.parametrize('input_size', input_size_options)
-def test_sepconv2d(request, chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, input_size):
+def test_sepconv2d(test_case_id, chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, input_size):
     model = tf.keras.models.Sequential()
     input_shape = (16, 16, input_size)
     model.add(
@@ -61,7 +60,7 @@ def test_sepconv2d(request, chans, padds, strides, kernels, bias, io_type, backe
     )
     config['Model']['Strategy'] = strategy
     config['Model']['ReuseFactor'] = rf
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

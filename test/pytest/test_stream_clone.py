@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from keras.layers import Add, Dense
 from tensorflow import keras
 
@@ -72,8 +71,8 @@ def data():
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
-def test_multi_clone(request, model_multi_clone, data, backend: str):
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+def test_multi_clone(test_case_id, model_multi_clone, data, backend: str):
+    output_dir = str(test_root_path / test_case_id)
     hls_config = hls4ml.utils.config_from_keras_model(
         model_multi_clone, default_precision='fixed<24,3>', granularity='name', backend=backend
     )
@@ -92,8 +91,8 @@ def test_multi_clone(request, model_multi_clone, data, backend: str):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
-def test_clone_precision_inheritance(request, model_clone_precision_inheritance, data, backend: str):
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+def test_clone_precision_inheritance(test_case_id, model_clone_precision_inheritance, data, backend: str):
+    output_dir = str(test_root_path / test_case_id)
     layer_config = {
         'inp': {'Precision': 'fixed<32,5>'},
         'x': {'Precision': 'fixed<32,5>'},

@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 import tensorflow as tf
 import torch
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -16,7 +15,7 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('part', ['some_part', None])
 @pytest.mark.parametrize('clock_period', [8, None])
 @pytest.mark.parametrize('clock_unc', ['15%', None])
-def test_backend_config(request, framework, backend, part, clock_period, clock_unc):
+def test_backend_config(test_case_id, framework, backend, part, clock_period, clock_unc):
     if framework == 'keras':
         model = tf.keras.models.Sequential()
         model.add(
@@ -35,7 +34,7 @@ def test_backend_config(request, framework, backend, part, clock_period, clock_u
         config = hls4ml.utils.config_from_pytorch_model(model, input_shape=(None, 1))
         convert_fn = hls4ml.converters.convert_from_pytorch_model
 
-    output_dir = test_root_path / get_pytest_case_id(request)
+    output_dir = test_root_path / test_case_id
 
     if framework == 'keras':
         hls_model = convert_fn(

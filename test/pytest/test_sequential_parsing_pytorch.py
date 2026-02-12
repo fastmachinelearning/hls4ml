@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 import torch.nn as nn
-from conftest import get_pytest_case_id
 
 from hls4ml.converters import convert_from_pytorch_model
 from hls4ml.utils.config import config_from_pytorch_model
@@ -55,13 +54,13 @@ class SeqModelNamedLayers(nn.Module):
 @pytest.mark.parametrize('backend', ['Vivado'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 @pytest.mark.parametrize('named_layers', [True, False])
-def test_unnamed_seq(request, backend, io_type, named_layers):
+def test_unnamed_seq(test_case_id, backend, io_type, named_layers):
     if named_layers:
         model = seq_named
     else:
         model = seq_unnamed
     config = config_from_pytorch_model(model, (1, 5, 5))
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -69,12 +68,12 @@ def test_unnamed_seq(request, backend, io_type, named_layers):
 @pytest.mark.parametrize('backend', ['Vivado'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 @pytest.mark.parametrize('named_layers', [True, False])
-def test_named_seq(request, backend, io_type, named_layers):
+def test_named_seq(test_case_id, backend, io_type, named_layers):
     if named_layers:
         model = SeqModelNamedLayers()
     else:
         model = SeqModelUnnamedLayers()
     config = config_from_pytorch_model(model, (1, 5, 5))
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)

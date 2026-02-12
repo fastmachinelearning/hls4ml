@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 
@@ -23,9 +22,9 @@ def keras_model():
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
 @pytest.mark.parametrize('namespace', [None, 'test_namespace'])
-def test_namespace(request, keras_model, namespace, io_type, backend):
+def test_namespace(test_case_id, keras_model, namespace, io_type, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=config, io_type=io_type, output_dir=odir, namespace=namespace, backend=backend
     )
@@ -34,9 +33,9 @@ def test_namespace(request, keras_model, namespace, io_type, backend):
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vitis'])  # Only Vitis is supported
-def test_emulator(request, keras_model, io_type, backend):
+def test_emulator(test_case_id, keras_model, io_type, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=config, io_type=io_type, output_dir=odir, write_emulation_constants=True, backend=backend
     )
@@ -45,9 +44,9 @@ def test_emulator(request, keras_model, io_type, backend):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
 @pytest.mark.parametrize('write_tar', [True, False])
-def test_write_tar(request, keras_model, write_tar, backend):
+def test_write_tar(test_case_id, keras_model, write_tar, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
 
     if os.path.exists(odir + '.tar.gz'):
         os.remove(odir + '.tar.gz')
@@ -63,9 +62,9 @@ def test_write_tar(request, keras_model, write_tar, backend):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
 @pytest.mark.parametrize('write_weights_txt', [True, False])
-def test_write_weights_txt(request, keras_model, write_weights_txt, backend):
+def test_write_weights_txt(test_case_id, keras_model, write_weights_txt, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
 
     if os.path.exists(odir):
         shutil.rmtree(odir)
@@ -82,9 +81,9 @@ def test_write_weights_txt(request, keras_model, write_weights_txt, backend):
 @pytest.mark.skip(reason='Skipping for now as it needs the installation of the compiler.')
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('tb_output_stream', ['stdout', 'file', 'both'])
-def test_tb_output_stream(request, capfd, keras_model, tb_output_stream, backend):
+def test_tb_output_stream(test_case_id, capfd, keras_model, tb_output_stream, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
-    odir = str(test_root_path / get_pytest_case_id(request))
+    odir = str(test_root_path / test_case_id)
     if os.path.exists(odir):
         shutil.rmtree(odir)
 

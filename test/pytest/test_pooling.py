@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import AveragePooling1D, AveragePooling2D, MaxPooling1D, MaxPooling2D
 from tensorflow.keras.models import Sequential
 
@@ -56,7 +55,7 @@ def keras_model_1d(request):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_pool1d(request, backend, keras_model_1d, data_1d, io_type):
+def test_pool1d(test_case_id, backend, keras_model_1d, data_1d, io_type):
     model, model_type, padding, strides = keras_model_1d
 
     config = hls4ml.utils.config_from_keras_model(
@@ -67,7 +66,7 @@ def test_pool1d(request, backend, keras_model_1d, data_1d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend,
     )
     hls_model.compile()
@@ -91,7 +90,7 @@ def test_pool1d(request, backend, keras_model_1d, data_1d, io_type):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_pool1d_stream(request, backend, keras_model_1d, data_1d, io_type):
+def test_pool1d_stream(test_case_id, backend, keras_model_1d, data_1d, io_type):
     model, model_type, padding, _ = keras_model_1d
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,9>', granularity='name')
@@ -100,7 +99,7 @@ def test_pool1d_stream(request, backend, keras_model_1d, data_1d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend,
     )
     hls_model.compile()
@@ -151,7 +150,7 @@ def keras_model_2d(request):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_pool2d(request, backend, keras_model_2d, data_2d, io_type):
+def test_pool2d(test_case_id, backend, keras_model_2d, data_2d, io_type):
     model, model_type, padding, strides = keras_model_2d
 
     config = hls4ml.utils.config_from_keras_model(
@@ -162,7 +161,7 @@ def test_pool2d(request, backend, keras_model_2d, data_2d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend,
     )
     hls_model.compile()
@@ -186,7 +185,7 @@ def test_pool2d(request, backend, keras_model_2d, data_2d, io_type):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_pool2d_stream(request, backend, keras_model_2d, data_2d, io_type):
+def test_pool2d_stream(test_case_id, backend, keras_model_2d, data_2d, io_type):
     model, model_type, padding, _ = keras_model_2d
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,9>', granularity='name')
@@ -195,7 +194,7 @@ def test_pool2d_stream(request, backend, keras_model_2d, data_2d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend,
     )
     hls_model.compile()

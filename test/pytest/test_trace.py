@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Activation, Dense
 
 import hls4ml
@@ -14,7 +13,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('activation', ['relu', None])
-def test_trace(request, backend, activation):
+def test_trace(test_case_id, backend, activation):
     """Test the tracing feature with a simple Keras model."""
     model = tf.keras.models.Sequential()
     model.add(
@@ -44,7 +43,7 @@ def test_trace(request, backend, activation):
     for layer in config['LayerName'].keys():
         config['LayerName'][layer]['Trace'] = True
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
 

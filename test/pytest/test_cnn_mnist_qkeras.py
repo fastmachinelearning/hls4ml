@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-from conftest import get_pytest_case_id
 from qkeras.utils import _add_supported_quantized_objects
 from sklearn.metrics import accuracy_score
 from tensorflow.keras.models import model_from_json
@@ -42,13 +41,13 @@ def mnist_model():
 
 
 @pytest.fixture
-def hls_model(mnist_model, request):
+def hls_model(mnist_model, request, test_case_id):
     backend, io_type, strategy = request.param
     keras_model = mnist_model
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     hls_config['Model']['Strategy'] = strategy
     hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type

@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from keras.layers import BatchNormalization, Input
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
@@ -71,7 +70,7 @@ def load_jettagging_model():
 
 # TODO - Paramaterize for Quartus (different strategies?)
 @pytest.fixture
-def convert(load_jettagging_model, request):
+def convert(load_jettagging_model, request, test_case_id):
     """
     Convert a QKeras model trained on the jet tagging dataset
     """
@@ -86,7 +85,7 @@ def convert(load_jettagging_model, request):
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         part='xcu250-figd2104-2L-e',
     )
     hls_model.compile()
@@ -138,7 +137,7 @@ def randX_100_16():
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_single_dense_activation_exact(request, randX_100_16, bits, alpha, backend, io_type):
+def test_single_dense_activation_exact(test_case_id, randX_100_16, bits, alpha, backend, io_type):
     """
     Test a single Dense -> Activation layer topology for
     bit exactness with number of bits parameter
@@ -160,7 +159,7 @@ def test_single_dense_activation_exact(request, randX_100_16, bits, alpha, backe
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     bit_exact = alpha == 1
     # alpha!=po2 case uses non-fixed-point data types, unsupported by the precision propagation flow
@@ -201,7 +200,7 @@ def randX_100_10():
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_quantizer_special(request, randX_1000_1, quantizer, backend, io_type):
+def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
     Test a single quantizer (tanh or sigmoid) as an Activation function.
     Checks the type inference through the conversion is correct without just
@@ -214,7 +213,7 @@ def test_quantizer_special(request, randX_1000_1, quantizer, backend, io_type):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -240,11 +239,11 @@ def test_quantizer_special(request, randX_1000_1, quantizer, backend, io_type):
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_btnn(request, make_btnn, randX_100_10, backend, io_type):
+def test_btnn(test_case_id, make_btnn, randX_100_10, backend, io_type):
     model, is_xnor, test_no = make_btnn
     X = randX_100_10
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, output_dir=output_dir, hls_config=cfg, backend=backend, io_type=io_type
     )
@@ -283,7 +282,7 @@ def randX_1000_1():
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_quantizer(request, randX_1000_1, quantizer, backend, io_type):
+def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
     Test a single quantizer as an Activation function.
     Checks the type inference through the conversion is correct without just
@@ -296,7 +295,7 @@ def test_quantizer(request, randX_1000_1, quantizer, backend, io_type):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -318,7 +317,7 @@ def test_quantizer(request, randX_1000_1, quantizer, backend, io_type):
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_relu_negative_slope(request, randX_1000_1, quantizer, backend, io_type):
+def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
     Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
     """
@@ -330,7 +329,7 @@ def test_relu_negative_slope(request, randX_1000_1, quantizer, backend, io_type)
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -351,7 +350,7 @@ def test_relu_negative_slope(request, randX_1000_1, quantizer, backend, io_type)
         ('quantized_bits(4, 0, alpha=1)', 'quantized_relu(8, 0)'),
     ],
 )
-def test_qactivation_kwarg(request, randX_100_10, activation_quantizer, weight_quantizer):
+def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, weight_quantizer):
     if activation_quantizer in ['binary']:
         name = 'bnbt_qdense_alpha'
     elif activation_quantizer in ['ternary']:
@@ -373,7 +372,7 @@ def test_qactivation_kwarg(request, randX_100_10, activation_quantizer, weight_q
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
 
-    out_dir = str(test_root_path / get_pytest_case_id(request))
+    out_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=out_dir)
     hls_model.compile()
@@ -399,7 +398,7 @@ def test_qactivation_kwarg(request, randX_100_10, activation_quantizer, weight_q
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_quantizer_parsing(request, randX_100_10, backend, io_type):
+def test_quantizer_parsing(test_case_id, randX_100_10, backend, io_type):
     X = randX_100_10
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = Sequential()
@@ -419,7 +418,7 @@ def test_quantizer_parsing(request, randX_100_10, backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<24,8>', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -438,7 +437,7 @@ def randX_100_8_8_1():
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_qconv2dbn(request, randX_100_8_8_1, backend, io_type):
+def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     """
     Test proper handling of QConv2DBatchnorm.
     """
@@ -462,7 +461,7 @@ def test_qconv2dbn(request, randX_100_8_8_1, backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<24,8>', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -483,7 +482,7 @@ def randX_10_32_32_3():
 # Note, qkeras only supports 2d version of depthwise
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_qdepthwiseconv2d(request, randX_10_32_32_3, backend, io_type):
+def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
     """
     Test proper handling of QDepthwiseConv2D.
     """
@@ -505,7 +504,7 @@ def test_qdepthwiseconv2d(request, randX_10_32_32_3, backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<24,8>', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -520,7 +519,7 @@ def test_qdepthwiseconv2d(request, randX_10_32_32_3, backend, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
-def test_quantised_po2_bit_width(request, backend, io_type, strategy):
+def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
     input_shape = 26
     output_shape = 6
     X = np.random.rand(100, input_shape)
@@ -545,7 +544,7 @@ def test_quantised_po2_bit_width(request, backend, io_type, strategy):
         keras_model, granularity='name', default_precision='ap_fixed<64, 32>', default_reuse_factor=1, backend=backend
     )
     hls_config['Model']['Strategy'] = strategy
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -556,7 +555,7 @@ def test_quantised_po2_bit_width(request, backend, io_type, strategy):
 
 
 @pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
-def test_qsimplernn(request, backend):
+def test_qsimplernn(test_case_id, backend):
     """
     Test proper handling of QSimpleRNN.
     """
@@ -580,7 +579,7 @@ def test_qsimplernn(request, backend):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='ap_fixed<16,1>', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
@@ -591,7 +590,7 @@ def test_qsimplernn(request, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
-def test_qlstm(request, backend):
+def test_qlstm(test_case_id, backend):
     """
     Test proper handling of QLSTM.
     """
@@ -616,7 +615,7 @@ def test_qlstm(request, backend):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='ap_fixed<8,1>', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
@@ -627,7 +626,7 @@ def test_qlstm(request, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
-def test_qgru(request, backend):
+def test_qgru(test_case_id, backend):
     """
     Test proper handling of QGRU.
     """
@@ -653,7 +652,7 @@ def test_qgru(request, backend):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='ap_fixed<8,1>', backend=backend
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
@@ -665,7 +664,7 @@ def test_qgru(request, backend):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_qseparableconv1d(request, backend, io_type):
+def test_qseparableconv1d(test_case_id, backend, io_type):
     """
     Test proper handling of QSeparableConv1D.
     """
@@ -690,7 +689,7 @@ def test_qseparableconv1d(request, backend, io_type):
     # We need <15,4> for the result of depthwise step
     config['LayerName']['qsepconv_1']['Precision']['dw_output'] = 'fixed<15,4>'
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
@@ -711,7 +710,7 @@ def test_qseparableconv1d(request, backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_qseparableconv2d(request, backend, io_type):
+def test_qseparableconv2d(test_case_id, backend, io_type):
     """
     Test proper handling of QSeparableConv2D.
     """
@@ -736,7 +735,7 @@ def test_qseparableconv2d(request, backend, io_type):
     # We need <15,4> for the result of depthwise step
     config['LayerName']['qsepconv_1']['Precision']['dw_output'] = 'fixed<15,4>'
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,

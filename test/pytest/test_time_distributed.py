@@ -4,7 +4,6 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -14,7 +13,7 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 @pytest.mark.parametrize('backend', ['Vitis', 'Vivado'])
 @pytest.mark.parametrize('use_h5', [True, False])
-def test_time_distributed_layer(request, io_type, backend, use_h5):
+def test_time_distributed_layer(test_case_id, io_type, backend, use_h5):
     input_shape = (5, 10, 10, 3)
 
     inputs = keras.layers.Input(shape=input_shape)
@@ -24,7 +23,7 @@ def test_time_distributed_layer(request, io_type, backend, use_h5):
     outputs = keras.layers.TimeDistributed(pool_2d_layer)(conv_outputs)
     keras_model = keras.models.Model(inputs, outputs)
 
-    out_dir = str(test_root_path / get_pytest_case_id(request))
+    out_dir = str(test_root_path / test_case_id)
 
     config = hls4ml.utils.config.create_config(output_dir=out_dir)
 
@@ -53,7 +52,7 @@ def test_time_distributed_layer(request, io_type, backend, use_h5):
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 @pytest.mark.parametrize('backend', ['Vitis', 'Vivado'])
 @pytest.mark.parametrize('use_h5', [True, False])
-def test_time_distributed_layer_lstm(request, io_type, backend, use_h5):
+def test_time_distributed_layer_lstm(test_case_id, io_type, backend, use_h5):
     input_shape = (8, 8)
 
     inputs = keras.layers.Input(shape=input_shape)
@@ -63,7 +62,7 @@ def test_time_distributed_layer_lstm(request, io_type, backend, use_h5):
     outputs = keras.layers.TimeDistributed(dense_layer)(lstm_outputs)
     keras_model = keras.models.Model(inputs, outputs)
 
-    out_dir = str(test_root_path / get_pytest_case_id(request))
+    out_dir = str(test_root_path / test_case_id)
 
     config = hls4ml.utils.config.create_config(output_dir=out_dir)
 
@@ -92,7 +91,7 @@ def test_time_distributed_layer_lstm(request, io_type, backend, use_h5):
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('use_h5', [True, False])
-def test_time_distributed_model(request, io_type, backend, use_h5):
+def test_time_distributed_model(test_case_id, io_type, backend, use_h5):
     input_shape = (5, 10, 10, 3)
 
     model_nested = keras.models.Sequential(
@@ -109,7 +108,7 @@ def test_time_distributed_model(request, io_type, backend, use_h5):
         ]
     )
 
-    out_dir = str(test_root_path / get_pytest_case_id(request))
+    out_dir = str(test_root_path / test_case_id)
 
     config = hls4ml.utils.config.create_config(output_dir=out_dir)
 

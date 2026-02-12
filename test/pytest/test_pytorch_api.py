@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-from conftest import get_pytest_case_id
 from torch.nn import AvgPool1d, AvgPool2d, MaxPool1d, MaxPool2d
 
 from hls4ml.converters import convert_from_pytorch_model
@@ -25,7 +24,7 @@ class LinearModel(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_linear(request, backend, io_type):
+def test_linear(test_case_id, backend, io_type):
     model = LinearModel()
     model.eval()
 
@@ -34,7 +33,7 @@ def test_linear(request, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, (1,))
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -73,10 +72,11 @@ def test_linear(request, backend, io_type):
         nn.Sigmoid(),
         nn.Threshold(threshold=1.0, value=0.0),
     ],
+    ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'prelu', 'sigmoid', 'threshold'],
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_activations(request, activation_function, backend, io_type):
+def test_activations(test_case_id, activation_function, backend, io_type):
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
     model.eval()
 
@@ -86,7 +86,7 @@ def test_activations(request, activation_function, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, (1,))
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
@@ -179,10 +179,11 @@ class SigmoidModel(nn.Module):
         SigmoidModel(),
         ThresholdModel(),
     ],
+    ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'sigmoid', 'threshold'],
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_activation_functionals(request, activation_function, backend, io_type):
+def test_activation_functionals(test_case_id, activation_function, backend, io_type):
     model = activation_function
     model.eval()
 
@@ -191,7 +192,7 @@ def test_activation_functionals(request, activation_function, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, (1,))
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
@@ -216,7 +217,7 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv1d(request, padds, backend, io_type):
+def test_conv1d(test_case_id, padds, backend, io_type):
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -236,7 +237,7 @@ def test_conv1d(request, padds, backend, io_type):
     else:
         config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion='full', transpose_outputs=True)
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
@@ -323,7 +324,7 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv2d(request, padds, backend, io_type):
+def test_conv2d(test_case_id, padds, backend, io_type):
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -346,7 +347,7 @@ def test_conv2d(request, padds, backend, io_type):
             model, (n_in, size_in_height, size_in_width), channels_last_conversion='full', transpose_outputs=True
         )
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -474,10 +475,10 @@ padds_options = [0, 1]
 pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 
-@pytest.mark.parametrize('pooling', pooling_layers)
+@pytest.mark.parametrize('pooling', pooling_layers, ids=['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d'])
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_pooling(request, pooling, padds, backend):
+def test_pooling(test_case_id, pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
     if '2d' in pooling.__name__:
@@ -498,7 +499,7 @@ def test_pooling(request, pooling, padds, backend):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, input_shape_forHLS, transpose_outputs=True)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
@@ -598,7 +599,7 @@ class BatchNormModel(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_bn(request, backend, io_type):
+def test_bn(test_case_id, backend, io_type):
     model = BatchNormModel()
     model.eval()
 
@@ -607,7 +608,7 @@ def test_bn(request, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
     config = config_from_pytorch_model(model, (5,))
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -639,7 +640,7 @@ class SqueezeModel(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_squeeze(request, backend, io_type):
+def test_squeeze(test_case_id, backend, io_type):
     model = SqueezeModel()
     model.eval()
 
@@ -649,7 +650,7 @@ def test_squeeze(request, backend, io_type):
 
     config = config_from_pytorch_model(model, (5,))
     del config['Model']['ChannelsLastConversion']  # We don't want anything touched for this test
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -673,14 +674,14 @@ def test_squeeze(request, backend, io_type):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_flatten(request, backend):
+def test_flatten(test_case_id, backend):
     input = torch.randn(1, 1, 5, 5)
     model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
     pytorch_prediction = model(input).detach().numpy()
     input_shape = (1, 5, 5)
 
     config = config_from_pytorch_model(model, input_shape)
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
@@ -718,7 +719,7 @@ class ModelSkippedLayers(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_skipped_layers(request, backend, io_type):
+def test_skipped_layers(test_case_id, backend, io_type):
     model = ModelSkippedLayers()
     model.eval()
 
@@ -730,7 +731,7 @@ def test_skipped_layers(request, backend, io_type):
         channels_last_conversion='full',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -752,7 +753,7 @@ def test_skipped_layers(request, backend, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # Only io_parallel for now
 @pytest.mark.parametrize('tensor_rank', [2, 3])
-def test_remove_transpose(request, backend, io_type, tensor_rank):
+def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
     class TestModel(nn.Module):
         def __init__(self, tensor_rank):
             super().__init__()
@@ -794,7 +795,7 @@ def test_remove_transpose(request, backend, io_type, tensor_rank):
         default_precision='ap_fixed<32,16>',
         channels_last_conversion='full',  # Crucial for testing if the first Transpose was removed
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -818,7 +819,7 @@ def test_remove_transpose(request, backend, io_type, tensor_rank):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_view(request, backend, io_type):
+def test_view(test_case_id, backend, io_type):
     class TestModel(nn.Module):
         def __init__(self, n_in, n_out, size_in):
             super().__init__()
@@ -853,7 +854,7 @@ def test_view(request, backend, io_type):
     X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
     config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion='internal', transpose_outputs=False)
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -901,7 +902,7 @@ class EinsumSingleInput(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_einsum_outer_product(request, backend, io_type):
+def test_einsum_outer_product(test_case_id, backend, io_type):
     model = EinsumOuterProduct()
     model.eval()
 
@@ -917,7 +918,7 @@ def test_einsum_outer_product(request, backend, io_type):
         channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -930,7 +931,7 @@ def test_einsum_outer_product(request, backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_einsum_batch_matmul(request, backend, io_type):
+def test_einsum_batch_matmul(test_case_id, backend, io_type):
     model = EinsumBatchMatMul()
     model.eval()
 
@@ -946,7 +947,7 @@ def test_einsum_batch_matmul(request, backend, io_type):
         channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -959,7 +960,7 @@ def test_einsum_batch_matmul(request, backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_einsum_single_input(request, backend, io_type):
+def test_einsum_single_input(test_case_id, backend, io_type):
     model = EinsumSingleInput()
     model.eval()
 
@@ -974,7 +975,7 @@ def test_einsum_single_input(request, backend, io_type):
         channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 

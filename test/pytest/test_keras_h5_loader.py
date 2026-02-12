@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -11,7 +10,7 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-def test_keras_h5_loader(request, backend):
+def test_keras_h5_loader(test_case_id, backend):
     input_shape = (10,)
     model = tf.keras.models.Sequential(
         [
@@ -22,7 +21,7 @@ def test_keras_h5_loader(request, backend):
 
     hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name')
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     config = {
         'OutputDir': output_dir,
         'ProjectName': f'KerasH5_loader_test_{backend}',

@@ -4,7 +4,6 @@ import HGQ  # noqa: F401
 import numpy as np
 import pytest
 import tensorflow as tf
-from conftest import get_pytest_case_id
 from HGQ import get_default_paq_conf, set_default_paq_conf, trace_minmax
 from HGQ.layers import (  # noqa: F401
     HConv1D,
@@ -157,12 +156,12 @@ def get_data(shape: tuple[int, ...], v: float, max_scale: float):
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
 def test_syn_players(
-    request, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+    test_case_id, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
 ):
     model = create_player_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 15), 7, 1)
 
-    path = test_path / get_pytest_case_id(request)
+    path = test_path / test_case_id
 
     if 'Signature' in layer:
         q = gfixed(1, 6, 3)

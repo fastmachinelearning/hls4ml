@@ -17,7 +17,7 @@ def _sanitize_test_id(s: str) -> str:
     - remove problematic chars: % ' " < > | ? * \\ etc.
     """
     s = s.replace('.py', '')
-    s = s.replace('test/pytest/', '')
+    s = s.replace('hls4ml/test/pytest/', '')
     s = s.replace('::', '_')
     s = s.replace('/', '_')
     s = s.replace('[', '_')
@@ -27,7 +27,8 @@ def _sanitize_test_id(s: str) -> str:
     return s.strip('_')
 
 
-def get_pytest_case_id(request):
+@pytest.fixture
+def test_case_id(request):
     """
     Return a unique identifier for the current parametrized test case.
     Format: test_file_test_name_param_id (from test_file.py::test_name[param_id]).

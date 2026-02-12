@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 
 import hls4ml
 
@@ -17,12 +16,12 @@ def data():
     return X, y
 
 
-def test_hlssr(request, data):
+def test_hlssr(test_case_id, data):
     expr = 'x0**2 + 2.5382*cos_lut(x3) - 0.5'
 
     lut_functions = {'cos_lut': {'math_func': 'cos', 'range_start': -4, 'range_end': 4, 'table_size': 2048}}
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_symbolic_expression(
         expr,
@@ -76,10 +75,10 @@ def test_pysr_luts(data):
 @pytest.mark.parametrize('clock_period', [8, None])
 @pytest.mark.parametrize('clock_unc', ['15%', None])
 @pytest.mark.parametrize('compiler', ['vivado_hls', 'vitis_hls'])
-def test_sr_backend_config(request, part, clock_period, clock_unc, compiler):
+def test_sr_backend_config(test_case_id, part, clock_period, clock_unc, compiler):
     expr = 'x0**2 + 2.5382*cos_lut(x3) - 0.5'
 
-    output_dir = test_root_path / get_pytest_case_id(request)
+    output_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_symbolic_expression(
         expr,

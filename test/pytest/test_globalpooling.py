@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalMaxPooling1D, GlobalMaxPooling2D
 from tensorflow.keras.models import Sequential
 
@@ -51,7 +50,7 @@ def keras_model_1d(request):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_global_pool1d(request, backend, keras_model_1d, data_1d, io_type):
+def test_global_pool1d(test_case_id, backend, keras_model_1d, data_1d, io_type):
     model, model_type, keepdims = keras_model_1d
 
     config = hls4ml.utils.config_from_keras_model(
@@ -62,7 +61,7 @@ def test_global_pool1d(request, backend, keras_model_1d, data_1d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend,
     )
     hls_model.compile()
@@ -108,7 +107,7 @@ def keras_model_2d(request):
     indirect=True,
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_global_pool2d(request, backend, keras_model_2d, data_2d, io_type):
+def test_global_pool2d(test_case_id, backend, keras_model_2d, data_2d, io_type):
     model, model_type, keepdims = keras_model_2d
 
     config = hls4ml.utils.config_from_keras_model(
@@ -119,7 +118,7 @@ def test_global_pool2d(request, backend, keras_model_2d, data_2d, io_type):
         model,
         hls_config=config,
         io_type=io_type,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend,
     )
     hls_model.compile()

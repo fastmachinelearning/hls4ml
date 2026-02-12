@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Activation, Concatenate, Input, Permute
 from tensorflow.keras.models import Model
 
@@ -29,13 +28,13 @@ def keras_model():
 
 
 @pytest.fixture
-def hls_model(keras_model, request):
+def hls_model(keras_model, request, test_case_id):
     io_type, backend = request.param
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, default_precision='ap_fixed<16,3,AP_RND_CONV,AP_SAT>', granularity='name', backend=backend
     )
     hls_config['LayerName']['relu']['Precision'] = 'ap_ufixed<17,3>'
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, backend=backend, output_dir=output_dir
     )
@@ -95,7 +94,7 @@ def data_highdim():
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
-def test_highdim_permute(request, data_highdim, keras_model_highdim, io_type, backend):
+def test_highdim_permute(test_case_id, data_highdim, keras_model_highdim, io_type, backend):
     X = data_highdim
     model = keras_model_highdim
 
@@ -103,7 +102,7 @@ def test_highdim_permute(request, data_highdim, keras_model_highdim, io_type, ba
         model,
         io_type=io_type,
         backend=backend,
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
     )
     model_hls.compile()
     y_keras = model.predict(X)

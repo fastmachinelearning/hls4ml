@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import torch.nn as nn
-from conftest import get_pytest_case_id
 from onnx import TensorProto, helper
 
 from hls4ml.converters import convert_from_onnx_model, convert_from_pytorch_model
@@ -41,7 +40,7 @@ def _make_constantpad_onnx_1d():
     return model
 
 
-def test_constantpad_1d(request):
+def test_constantpad_1d(test_case_id):
     class Pad1DModel(nn.Module):
         def __init__(self):
             super().__init__()
@@ -53,7 +52,7 @@ def test_constantpad_1d(request):
     model = Pad1DModel()
     model.eval()
     config_pytorch = config_from_pytorch_model(model, (2, 4), channels_last_conversion='off')
-    output_base = test_root_path / get_pytest_case_id(request)
+    output_base = test_root_path / test_case_id
     hls_model_pytorch = convert_from_pytorch_model(model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch)
 
     hls_model_pytorch.compile()
@@ -102,7 +101,7 @@ def _make_constantpad_onnx_2d():
     return model
 
 
-def test_constantpad_2d(request):
+def test_constantpad_2d(test_case_id):
     class Pad2DModel(nn.Module):
         def __init__(self):
             super().__init__()
@@ -114,7 +113,7 @@ def test_constantpad_2d(request):
     model = Pad2DModel()
     model.eval()
     config_pytorch = config_from_pytorch_model(model, (2, 3, 4), channels_last_conversion='off')
-    output_base = test_root_path / get_pytest_case_id(request)
+    output_base = test_root_path / test_case_id
     hls_model_pytorch = convert_from_pytorch_model(model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch)
 
     hls_model_pytorch.compile()

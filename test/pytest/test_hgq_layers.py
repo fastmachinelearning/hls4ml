@@ -4,7 +4,6 @@ import HGQ  # noqa: F401
 import numpy as np
 import pytest
 import tensorflow as tf
-from conftest import get_pytest_case_id
 from HGQ import get_default_paq_conf, set_default_paq_conf, trace_minmax
 from HGQ.layers import (  # noqa: F401
     HConv1D,
@@ -177,13 +176,13 @@ def custom_activation_fn(x):
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
 def test_syn_hlayers(
-    request, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+    test_case_id, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
 ):
     model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 16), 7, 1)
 
     cond = None if 'softmax' not in layer else softmax_cond
-    path = test_path / get_pytest_case_id(request)
+    path = test_path / test_case_id
 
     run_model_test(model, cover_factor, data, io_type, backend, str(path), aggressive, cond=cond)
 
@@ -206,12 +205,12 @@ def test_syn_hlayers(
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
 def test_syn_hlayers_da(
-    request, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+    test_case_id, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
 ):
     model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 16), 7, 1)
 
-    path = test_path / get_pytest_case_id(request)
+    path = test_path / test_case_id
 
     run_model_test(
         model=model,

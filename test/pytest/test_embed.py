@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import Embedding, Input
 from tensorflow.keras.models import Model
 
@@ -26,13 +25,13 @@ def keras_model():
 
 
 @pytest.fixture
-def hls_model(keras_model, request):
+def hls_model(keras_model, request, test_case_id):
     backend, io_type = request.param
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, default_precision='ap_fixed<16,6>', granularity='name', backend=backend
     )
     hls_config['LayerName']['embedding_input']['Precision']['result'] = 'ap_uint<4>'
-    out_dir = str(test_root_path / get_pytest_case_id(request))
+    out_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, backend=backend, hls_config=hls_config, io_type=io_type, output_dir=out_dir
     )

@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from keras.layers import Dense
 from tensorflow import keras
 
@@ -53,8 +52,8 @@ def data_corner_cases():
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_multi_output_nn(request, model, data, backend: str, io_type: str):
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+def test_multi_output_nn(test_case_id, model, data, backend: str, io_type: str):
+    output_dir = str(test_root_path / test_case_id)
     hls_config = {'Model': {'Precision': 'fixed<32,5>', 'ReuseFactor': 1}}
     model_hls = convert_from_keras_model(
         model, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type
@@ -74,7 +73,7 @@ def test_multi_output_nn(request, model, data, backend: str, io_type: str):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])
 def test_multi_output_nn_corner_cases(
-    request, model_corner_cases, data_corner_cases, backend: str, io_type: str, strategy: str
+    test_case_id, model_corner_cases, data_corner_cases, backend: str, io_type: str, strategy: str
 ):
     """Cover corner cases, when:
     - a layer outputs both to the next layer(s) and to the model output
@@ -84,7 +83,7 @@ def test_multi_output_nn_corner_cases(
        - and by layer taking multiple inputs
     - a Flatten layer outputs to the model output in io_stream
     """
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_config = {'Model': {'Precision': 'fixed<32,5>', 'ReuseFactor': 1}, 'Strategy': strategy}
 
     model_hls = convert_from_keras_model(

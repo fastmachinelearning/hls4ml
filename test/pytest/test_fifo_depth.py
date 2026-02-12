@@ -6,7 +6,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import qonnx.core.onnx_exec as oxe
-from conftest import get_pytest_case_id
 from qonnx.core.modelwrapper import ModelWrapper
 from tensorflow.keras.layers import SeparableConv2D
 from tensorflow.keras.models import Sequential
@@ -106,7 +105,7 @@ def expect_exception(error, message, backend, profiling_fifo_depth, io_type, out
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
 @pytest.mark.parametrize('profiling_fifo_depth', [-2, 3.14, 'a'])
-def test_value_error(request, backend, profiling_fifo_depth):
+def test_value_error(test_case_id, backend, profiling_fifo_depth):
     """Test the FIFO depth optimizer with faulty inputs of profiling_fifo_depth to verify that an exception is raised."""
     message = 'The FIFO depth for profiling (profiling_fifo_depth variable) must be a non-negative integer.'
     expect_exception(
@@ -115,13 +114,13 @@ def test_value_error(request, backend, profiling_fifo_depth):
         backend,
         profiling_fifo_depth,
         io_type='io_stream',
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
     )
 
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-def test_runtime_error(request, backend):
+def test_runtime_error(test_case_id, backend):
     """Test the FIFO depth optimizer with io_type='io_parallel' to verify that an exception is raised."""
     message = 'To use this optimization you have to set `IOType` field to `io_stream` in the HLS config.'
     expect_exception(
@@ -130,19 +129,19 @@ def test_runtime_error(request, backend):
         backend,
         profiling_fifo_depth=200_000,
         io_type='io_parallel',
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
     )
 
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution_of_dummy_keras(request, backend):
+def test_successful_execution_of_dummy_keras(test_case_id, backend):
     """Test the correct execution of the FIFO depth optimizer."""
     run_fifo_depth_optimization_keras(
         backend,
         profiling_fifo_depth=200_000,
         io_type='io_stream',
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
     )
 
 
@@ -196,12 +195,12 @@ def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, mod
 
 @pytest.mark.skip(reason='Skipping synthesis tests for now')
 @pytest.mark.parametrize('backend', backend_options)
-def test_successful_execution_of_tiny_unet(request, backend):
+def test_successful_execution_of_tiny_unet(test_case_id, backend):
     """Test the correct execution of the FIFO depth optimizer."""
     run_fifo_depth_optimization_onnx(
         backend,
         profiling_fifo_depth=200_000,
         io_type='io_stream',
         model=get_branched_model(),
-        output_dir=str(test_root_path / get_pytest_case_id(request)),
+        output_dir=str(test_root_path / test_case_id),
     )

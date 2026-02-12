@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from conftest import get_pytest_case_id
 from tensorflow.keras.layers import GRU, LSTM, Conv1D, Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
 
@@ -13,7 +12,7 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('strategy', ['ResourceUnrolled', 'resource_unrolled', 'Resource_Unrolled'])
-def test_resource_unrolled_parsing(request, strategy):
+def test_resource_unrolled_parsing(test_case_id, strategy):
     model = Sequential()
     model.add(
         Dense(8, input_shape=(16,), kernel_initializer='lecun_uniform', bias_initializer='lecun_uniform', name='dense')
@@ -23,7 +22,7 @@ def test_resource_unrolled_parsing(request, strategy):
     config = config_from_keras_model(model, default_precision='ac_fixed<32, 16>', backend='Vitis', default_reuse_factor=8)
     config['Model']['Strategy'] = strategy
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend='Vitis')
 
     # Check if strategy was not overridden
@@ -34,7 +33,7 @@ def test_resource_unrolled_parsing(request, strategy):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('reuse_factor', [1, 2, 4, 8, 16, 32, 48, 64, 96, 192])
 @pytest.mark.parametrize('backend', ['Vitis', 'Vivado'])
-def test_resource_unrolled_dense(request, io_type, reuse_factor, backend):
+def test_resource_unrolled_dense(test_case_id, io_type, reuse_factor, backend):
     input_shape = (16,)
     X = np.random.rand(100, *input_shape)
 
@@ -52,7 +51,7 @@ def test_resource_unrolled_dense(request, io_type, reuse_factor, backend):
     )
     config['Model']['Strategy'] = 'ResourceUnrolled'
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     # Check if strategy was not overridden
@@ -68,7 +67,7 @@ def test_resource_unrolled_dense(request, io_type, reuse_factor, backend):
 @pytest.mark.parametrize('dim', [1, 2])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('reuse_factor', [1, 3, 9, 27, 54, 108])
-def test_resource_unrolled_streaming_conv(request, dim, io_type, reuse_factor):
+def test_resource_unrolled_streaming_conv(test_case_id, dim, io_type, reuse_factor):
     input_shape = (8,) * dim + (3,)
     X = np.random.rand(100, *input_shape)
     conv_class = Conv1D if dim == 1 else Conv2D
@@ -87,7 +86,7 @@ def test_resource_unrolled_streaming_conv(request, dim, io_type, reuse_factor):
     config = config_from_keras_model(model, default_precision='ac_fixed<32, 16>', default_reuse_factor=reuse_factor)
     config['Model']['Strategy'] = 'ResourceUnrolled'
 
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type=io_type)
 
     # Check if strategy was not overridden
@@ -104,7 +103,7 @@ def test_resource_unrolled_streaming_conv(request, dim, io_type, reuse_factor):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('static', [True, False])
 @pytest.mark.parametrize('reuse_factor', [1, 4, 32, 128])  # RF=128 also tests if setting closest RF works well
-def test_resource_unrolled_rnn(request, rnn_layer, backend, io_type, static, reuse_factor):
+def test_resource_unrolled_rnn(test_case_id, rnn_layer, backend, io_type, static, reuse_factor):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
@@ -132,7 +131,7 @@ def test_resource_unrolled_rnn(request, rnn_layer, backend, io_type, static, reu
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = 'ResourceUnrolled'
     hls_config['LayerName'][layer_name]['ReuseFactor'] = reuse_factor
-    output_dir = str(test_root_path / get_pytest_case_id(request))
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_keras_model(
         keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
