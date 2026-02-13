@@ -24,7 +24,7 @@ class VitisUnified_MetaGen:
     @classmethod
     def get_wrapper_file_name(self, model, is_axi_master):
         if is_axi_master:
-            return f"{model.config.get_project_name()}_dm"
+            return f"{model.config.get_project_name()}_axim"
         else:
             return f"{model.config.get_project_name()}_axis"
 
@@ -99,9 +99,8 @@ class VitisUnified_MetaGen:
     @classmethod
     def get_top_wrap_func_name(self, model, is_axi_master):
         if is_axi_master:
-            return f"{model.config.get_project_name()}_gem"
-        else:
-            return f"{model.config.get_project_name()}_axi"
+            return f"{model.config.get_project_name()}_axim"
+        return f"{model.config.get_project_name()}_axis"
 
     # it is renamed for stitch layer
     @classmethod

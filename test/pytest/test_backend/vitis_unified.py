@@ -20,7 +20,11 @@ test_root_path = Path(__file__).parent
 os.environ['XILINX_VITIS'] = "/tools/Xilinx/Vitis/2023.2"
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
 
-XPFM_PATH = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper_2.xsa"
+# vedor = AMD
+XPFM_PATH_CUSTOM = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper_2.xsa"
+XPFM_PATH_VENDOR = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper_2.xsa"
+# XPFM_PATH_VENDOR = "/tools/Xilinx/Vitis/2023.2/base_platforms/" \
+#                    "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
 LOG_STD = True
 
 
@@ -81,7 +85,7 @@ def create_hls_model(model, config, backend, io_type, strategy, granularity, pre
         clock_period='10ns',
         input_type="float",
         output_type="float",
-        xpfmPath=XPFM_PATH,
+        xpfmPath=XPFM_PATH_VENDOR if axi_mode == "axim" else XPFM_PATH_CUSTOM,
         axi_mode=axi_mode,
     )
     hls_model.compile()

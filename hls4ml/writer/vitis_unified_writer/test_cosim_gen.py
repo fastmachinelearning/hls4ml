@@ -38,7 +38,6 @@ class VitisUnified_TestGen:
                 # the float pointer will point to the start section of for each input for
                 newline = line
                 if mg.is_axi_master(meta):
-
                     offset = 0
                     for inputIdx, inp in enumerate(model_inputs):
                         # input should be float

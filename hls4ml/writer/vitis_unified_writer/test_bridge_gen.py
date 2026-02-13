@@ -59,7 +59,29 @@ class VitisUnified_BridgeGen:
                 # This section will write the calling function to main kernel
                 dtype = line.split('#', 1)[1].strip()
                 if dtype == meta.vitis_unified_config.get_input_type():
-                    if mg.is_axi_stream(meta):
+                    if mg.is_axi_master(meta):
+                        newline = ''
+                        input_vars = []
+                        input_sizes = []
+                        output_vars = []
+                        otuput_sizes = []
+
+                        for idx, inp in enumerate(model_inputs):
+                            input_vars.append(mg.get_io_port_name(inp, True, idx))
+                            input_sizes.append(inp.size_cpp())
+                        for idx, out in enumerate(model_outputs):
+                            output_vars.append(mg.get_io_port_name(out, False, idx))
+                            otuput_sizes.append(out.size_cpp())
+
+                        inputs_str = ', '.join(input_vars)
+                        outputs_str = ', '.join(output_vars)
+
+                        newline = ''
+                        newline += indent + mg.get_top_wrap_func_name(model, True) + "(\n"
+                        newline += indent + inputs_str + ',\n'
+                        newline += indent + outputs_str + ',\n'
+                        newline += indent + "1);\n"  # amount query should be one only
+                    else:  # it should be axi stream
                         assert len(model_inputs) == 1
                         assert len(model_outputs) == 1
                         inp = model_inputs[0]
@@ -89,28 +111,6 @@ class VitisUnified_BridgeGen:
                         newline += indent + (
                             f"nnet::convert_data_axis<{dtype},{dtype}, N_OUT>(" f"{out_stream}, {out_func});\n"
                         )
-                    else:  # it should be axi master
-                        newline = ''
-                        input_vars = []
-                        input_sizes = []
-                        output_vars = []
-                        otuput_sizes = []
-
-                        for idx, inp in enumerate(model_inputs):
-                            input_vars.append(mg.get_io_port_name(inp, True, idx))
-                            input_sizes.append(inp.size_cpp())
-                        for idx, out in enumerate(model_outputs):
-                            output_vars.append(mg.get_io_port_name(out, False, idx))
-                            otuput_sizes.append(out.size_cpp())
-
-                        inputs_str = ', '.join(input_vars)
-                        outputs_str = ', '.join(output_vars)
-
-                        newline = ''
-                        newline += indent + mg.get_top_wrap_func_name(model, True) + "(\n"
-                        newline += indent + inputs_str + ',\n'
-                        newline += indent + outputs_str + ',\n'
-                        newline += indent + "1);\n"  # amount query should be one only
 
             elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
@@ -127,7 +127,6 @@ class VitisUnified_BridgeGen:
 
             elif '// hls-fpga-machine-learning insert namespace' in line:
                 newline = ''
-
                 namespace = model.config.get_writer_config().get('Namespace', None)
                 if namespace is not None:
                     newline += indent + f'using namespace {namespace};\n'

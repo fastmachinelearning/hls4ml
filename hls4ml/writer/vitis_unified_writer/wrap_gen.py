@@ -26,10 +26,10 @@ class VitisUnified_WrapperGen:
 
     @classmethod
     def write_wrapper(self, meta: VitisUnifiedWriterMeta, model, mg):
-        if mg.is_axi_stream:
-            VitisUnified_WrapperGen.write_wrapper_axis(meta, model, mg)
-        else:
+        if mg.is_axi_master(meta):
             VitisUnified_WrapperGen.write_wrapper_axim(meta, model, mg)
+        else:
+            VitisUnified_WrapperGen.write_wrapper_axis(meta, model, mg)
 
     @classmethod
     def write_wrapper_axis(self, meta: VitisUnifiedWriterMeta, model, mg):
@@ -44,13 +44,14 @@ class VitisUnified_WrapperGen:
         indent = '      '
 
         # start write myproject_axis.cpp
+
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_axis.cpp'))
         fout = open(f'{model.config.get_output_dir()}/firmware/{mg.get_project_name(model)}_axis.cpp', 'w')
 
         for line in fin.readlines():
-            if 'myproject_axi' in line:
-                newline = line.replace('myproject_axi', mg.get_top_wrap_func_name(model, False))
+            if 'MY_PROJECT_TOP_FUNC' in line:
+                newline = line.replace('MY_PROJECT_TOP_FUNC', mg.get_top_wrap_func_name(model, False))
             elif '// hls-fpga-machine-learning insert include' in line:
                 newline = f'#include "{mg.get_project_name(model)}_axis.h"\n'
             elif '// hls-fpga-machine-learning insert interface' in line:
@@ -103,7 +104,7 @@ class VitisUnified_WrapperGen:
                 newline = line
             fout.write(newline)
 
-        # start write myproject_dm.h
+        # start write myproject_axis.h
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_axis.h'))
@@ -116,8 +117,8 @@ class VitisUnified_WrapperGen:
             elif '// hls-fpga-machine-learning insert include' in line:
                 newline = f'#include "{model.config.get_project_name()}.h"\n'
                 newline += '#include "ap_axi_sdata.h"\n'
-            elif 'myproject_axi' in line:
-                newline = line.replace('myproject_axi', mg.get_top_wrap_func_name(model, False))
+            elif 'MY_PROJECT_TOP_FUNC' in line:
+                newline = line.replace('MY_PROJECT_TOP_FUNC', mg.get_top_wrap_func_name(model, False))
             elif '// hls-fpga-machine-learning insert definitions' in line:
                 newline = ''
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
@@ -136,11 +137,11 @@ class VitisUnified_WrapperGen:
         inp_gmem_t, out_gmem_t, inps, outs = meta.vitis_unified_config.get_corrected_types()
         indent = '      '
 
-        # start write myproject_dm.cpp
+        # start write myproject_axim.cpp
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_dm.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/firmware/myproject_dm.cpp', 'w')
+        fin = open(os.path.join(filedir, f'../../templates/vitis_unified/{mg.get_project_name(model)}_axim.cpp'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/{mg.get_wrapper_file_name(model, True)}.cpp', 'w')
 
         for line in fin.readlines():
 
@@ -227,11 +228,11 @@ class VitisUnified_WrapperGen:
         fin.close()
         fout.close()
 
-        # start write myproject_dm.h
+        # start write myproject_axim.h
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_dm.h'))
-        fout = open(f'{model.config.get_output_dir()}/firmware/myproject_dm.h', 'w')
+        fin = open(os.path.join(filedir, '../../templates/vitis_unified/myproject_axim.h'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/{mg.get_wrapper_file_name(model, True)}.h', 'w')
 
         for line in fin.readlines():
 
