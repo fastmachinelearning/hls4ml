@@ -35,7 +35,7 @@ def load_cnn_model():
     return model
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def convert_mlp(test_case_id, load_mlp_model):
     model = load_mlp_model
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='vitis')
@@ -49,7 +49,7 @@ def convert_mlp(test_case_id, load_mlp_model):
     return hls_model
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def convert_cnn(test_case_id, load_cnn_model):
     model = load_cnn_model
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='vitis')

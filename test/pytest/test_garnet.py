@@ -14,7 +14,7 @@ vmax = 16
 feat = 3
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def garnet_models(test_case_id):
     x = Input(shape=(vmax, feat))
     n = Input(shape=(1,), dtype='uint16')
@@ -49,7 +49,7 @@ def garnet_models(test_case_id):
     return model, hls_model
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def garnet_stack_models(test_case_id):
     x = Input(shape=(vmax, feat))
     n = Input(shape=(1,), dtype='uint16')

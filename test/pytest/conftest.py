@@ -17,7 +17,7 @@ def _sanitize_test_id(s: str) -> str:
     - remove problematic chars: % ' " < > | ? * \\ etc.
     """
     s = s.replace('.py', '')
-    s = s.replace('hls4ml/test/pytest/', '')
+    s = s.replace('test/pytest/', '')
     s = s.replace('::', '_')
     s = s.replace('/', '_')
     s = s.replace('[', '_')
