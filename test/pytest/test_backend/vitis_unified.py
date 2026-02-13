@@ -21,8 +21,8 @@ os.environ['XILINX_VITIS'] = "/tools/Xilinx/Vitis/2023.2"
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
 
 # vedor = AMD
-XPFM_PATH_CUSTOM = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper_2.xsa"
-XPFM_PATH_VENDOR = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper_2.xsa"
+XPFM_PATH_CUSTOM = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper.xsa"
+XPFM_PATH_VENDOR = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper.xsa"
 # XPFM_PATH_VENDOR = "/tools/Xilinx/Vitis/2023.2/base_platforms/" \
 #                    "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
 LOG_STD = True
@@ -150,7 +150,7 @@ def test_backend_predict(io_type, strategy, granularity, amt_query, axi_mode):
     assert checkEqual(y_hls4ml_unified, y_hls4ml), "the result from vitis unified and vitis are not equal!"
 
 
-# test_backend_predict("io_stream", 'latency', 'name', 10, "axis")
+# test_backend_predict("io_stream", 'latency', 'name', 10, "axim")
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])
@@ -201,7 +201,7 @@ def test_co_simulation(io_type, strategy, granularity, amt_query, axi_mode):
     assert np.allclose(bridge_result, cosim_result, rtol=0.0, atol=1e-4), "the result from bridge and cosim are not equal!"
 
 
-# test_co_simulation("io_stream", 'latency', 'name', 10, 'axis')
+# test_co_simulation("io_stream", 'latency', 'name', 10, 'axim')
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])
@@ -245,7 +245,7 @@ def test_fifo_depth(io_type, strategy, granularity, amt_query, axi_mode):
     assert os.path.exists(fifodepth_result_path), "the fifo_depth file is not exist"
 
 
-# test_fifo_depth("io_stream", 'latency', 'name', 10, "axis")
+# test_fifo_depth("io_stream", 'latency', 'name', 10, "axim")
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])
