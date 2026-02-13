@@ -38,7 +38,7 @@ def model():
     ],
 )
 @pytest.mark.filterwarnings('error')
-def test_narrow(data, model, narrowset, capfd):
+def test_narrow(test_case_id, data, model, narrowset, capfd):
     """
     Check that the implementation does not have leftover data.
     """
@@ -47,7 +47,7 @@ def test_narrow(data, model, narrowset, capfd):
     conv = narrowset[2]
     X = data
 
-    output_dir = str(test_root_path / f'hls4mlprj_conv1d_narrow_{io_type}_{strategy}_{conv}')
+    output_dir = str(test_root_path / test_case_id)
 
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy
