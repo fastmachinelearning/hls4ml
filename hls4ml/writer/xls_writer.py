@@ -137,7 +137,8 @@ class XLSWriter(Writer):
                 newline += indent + prev_var + '\n'
 
             elif '// hls-fpga-machine-learning top function input' in line:
-                newline = indent + f'x: {layer.get_attr("out_type")}'
+                # TODO: check layer.class_name == 'Input' instead of taking layers[0]?
+                newline = indent + f'x: {layers[0].get_attr("out_type")}'
                 for dim in list(layers[0].get_output_variable().get_shape()):
                     newline += f'[{dim[0]}]'
                 newline += '\n'
