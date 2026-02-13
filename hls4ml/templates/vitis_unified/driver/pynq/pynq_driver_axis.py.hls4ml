@@ -11,13 +11,12 @@ import re
 import time
 
 
-class DmaIp:
+class HLS4ML_IP:
 
-    def __init__(self, dma, intr):
+    def __init__(self, dma):
         self.dma  = dma
-        self.intr = intr
 
-    def transfer(self, input_buffer, output_buffer, profile = True):
+    def transfer(self, input_buffer, output_buffer, intr, profile = True):
 
         # flush the buffer first
         input_buffer.flush()
@@ -33,7 +32,7 @@ class DmaIp:
             self.dma.sendchannel.transfer(input_buffer)
 
             # Wait for complete
-            await self.intr.wait()
+            await intr.wait()
 
             # print porfile data
             if profile:

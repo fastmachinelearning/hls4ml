@@ -1,16 +1,16 @@
-# import the library
 import os
 import re
 import subprocess
 import time
-
+import asyncio
 import numpy as np
+
 from pynq import DefaultIP  # import the ip connector library for extension
 from pynq import Overlay  # import the overlay
 from pynq import allocate  # import for CMA (contingeous memory allocation)
+from pynq import Interrupt
 
-
-class MyDfxCtrl(DefaultIP):
+class HLS4ML_IP(DefaultIP):
     def __init__(self, description):
         super().__init__(description=description)
 
@@ -59,13 +59,6 @@ class MyDfxCtrl(DefaultIP):
         self.write(self.REG_ADDR_ISR, 0x01)
         print("clear ap_done interrupt successful")
 
-    def prepare_intr(self):
-        print("prepare your interrupt")
-        self.enable_gie()
-        self.enable_done_intr()
-        self.clear_done_status()
-        print("----------------------")
-
     def set_single_bit(self, addr, idx):
         self.write(addr, 1 << idx)
 
@@ -96,3 +89,56 @@ class MyDfxCtrl(DefaultIP):
     def set_amt_query(self, val):
         print(f"amount of queries will be set to: {val} at address: {hex(self.REG_ADDR_AMT_QUERY)}")
         self.write(self.REG_ADDR_AMT_QUERY, val)
+
+    def prepare_intr(self):
+        print("prepare your interrupt")
+        self.enable_gie()
+        self.enable_done_intr()
+        self.clear_done_status()
+        print("----------------------")
+
+    def build_event_and_run(self, intr, profile):
+
+        async def wait_for_acc():
+            print("starting the accelerator")
+            if profile:
+                t_start = time.perf_counter()
+
+            # Start receive (PL → PS)
+            # Start send (PS → PL)
+            self.ctrl_start()
+
+            # Wait for complete
+            await intr.wait()
+
+            # print porfile data
+            if profile:
+                t_end = time.perf_counter()
+                print(f"Accelerator execution time: \
+                      {(t_end - t_start) * 1e3:.3f} ms")
+
+            print("accelerator has finished")
+
+        # get event loop from asyncio
+        loop = asyncio.get_event_loop()
+
+        # build task
+        task = loop.create_task(wait_for_acc())
+        loop.run_until_complete(task)
+
+    def transfer(self, input_buffer, output_buffer, intr, profile = True):
+
+        # flush the buffer first
+        input_buffer.flush()
+
+        # prepare the data
+        self.set_input(0, input_buffer)
+        self.set_output(0, output_buffer)
+        self.set_amt_query(input_buffer.shape[0])
+        self.prepare_intr()
+
+        # run
+        self.build_event_and_run(intr, profile)
+
+        # invalidate the output buffer
+        output_buffer.invalidate()
