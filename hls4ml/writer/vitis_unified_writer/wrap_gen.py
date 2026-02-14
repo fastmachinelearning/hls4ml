@@ -2,8 +2,6 @@ import os
 
 from .meta import VitisUnifiedWriterMeta
 
-# main function
-
 
 class VitisUnified_WrapperGen:
 

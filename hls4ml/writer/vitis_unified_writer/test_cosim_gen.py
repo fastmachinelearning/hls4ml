@@ -61,7 +61,7 @@ class VitisUnified_TestGen:
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
 
-                # This function will invoke the <Project_name>_dm.cpp which is the wrapper of the system
+                # This function will invoke the <Project_name>_axim{m/s}.cpp which is the wrapper of the system
 
                 newline = line
 

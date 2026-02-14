@@ -65,8 +65,6 @@ def execute_cosim_to_profile_fifos(model):
         csim=False,
         synth=True,
         cosim=False,
-        validation=False,
-        export=False,
         vsynth=False,
         fifo_opt=True,
         bitfile=False,

@@ -59,8 +59,6 @@ class VitisUnifiedBackend(VitisBackend):
         csim=False,
         synth=False,
         cosim=False,
-        validation=False,
-        export=False,
         vsynth=False,
         fifo_opt=False,
         bitfile=False,
@@ -71,15 +69,6 @@ class VitisUnifiedBackend(VitisBackend):
             found = os.system('command -v vitis > /dev/null')
             if found != 0:
                 raise Exception('Vitis installation not found. Make sure "vitis" is on PATH.')
-
-        if csim:
-            raise Exception("Current Vitis Unified not support csim. Please set csim=False to run Vitis Unified.")
-        if validation:
-            raise Exception(
-                "Current Vitis Unified not support validation. Please set validation=False to run Vitis Unified."
-            )
-        if export:
-            raise Exception("Current Vitis Unified not support export. Please set export=False to run Vitis Unified.")
 
         output_dir = model.config.get_output_dir()
 
@@ -92,7 +81,6 @@ class VitisUnifiedBackend(VitisBackend):
         util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir unifiedPrj"
 
         # command for each configuration
-
         package_cmd = util_command.format(op="package", configPath=hls_config_file)
         package_cwd = mg.get_vitis_hls_dir(model)
         cosim_cmd = util_command.format(op="cosim", configPath=hls_config_file)
@@ -116,7 +104,6 @@ class VitisUnifiedBackend(VitisBackend):
             self.prepare_sim_config_file(model, False)
             self.run_term_command(model, "cosim", cosim_cmd, log_to_stdout, cosim_cwd)
 
-        # if bitfile
         if bitfile:
             self.run_term_command(model, "kerlink", kerlink_cmd, log_to_stdout, kerlink_cwd)
 

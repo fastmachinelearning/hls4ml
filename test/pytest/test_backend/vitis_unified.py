@@ -21,10 +21,14 @@ os.environ['XILINX_VITIS'] = "/tools/Xilinx/Vitis/2023.2"
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
 
 # vedor = AMD
-XPFM_PATH_CUSTOM = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper.xsa"
-XPFM_PATH_VENDOR = "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper.xsa"
-# XPFM_PATH_VENDOR = "/tools/Xilinx/Vitis/2023.2/base_platforms/" \
-#                    "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
+XPFM_PATH_CUSTOM = (
+    "/tools/Xilinx/Vitis/2023.2/base_platforms/" "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
+)
+XPFM_PATH_VENDOR = (
+    "/tools/Xilinx/Vitis/2023.2/base_platforms/" "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
+)
+
+
 LOG_STD = True
 
 
@@ -125,7 +129,7 @@ def predict_hls_model(hls_model, input_data):
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('amt_query', [10])
-@pytest.mark.parametrize('axi_mode', ['axis'])
+@pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_backend_predict(io_type, strategy, granularity, amt_query, axi_mode):
     create_io_file_dir()
     # create and load data set
@@ -157,7 +161,7 @@ def test_backend_predict(io_type, strategy, granularity, amt_query, axi_mode):
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('amt_query', [10])
-@pytest.mark.parametrize('axi_mode', ['axis'])
+@pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_co_simulation(io_type, strategy, granularity, amt_query, axi_mode):
     create_io_file_dir()
     # create and load data set
@@ -208,7 +212,57 @@ def test_co_simulation(io_type, strategy, granularity, amt_query, axi_mode):
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('amt_query', [10])
-@pytest.mark.parametrize('axi_mode', ['axis'])
+@pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
+def test_csim_simulation(io_type, strategy, granularity, amt_query, axi_mode):
+    create_io_file_dir()
+    # create and load data set
+    create_simple_testcase(inputShape=(amt_query, 4, 4, 1), fileName="inputCsim.npy")
+    input_data = np.load(test_root_path / "input_file" / "inputCsim.npy")
+    # create and load model
+    model_name = "simpleSkipCsim.keras"
+    create_simple_unet(modelName=model_name)
+    model = load_model(test_root_path / "input_file" / model_name)
+    # config the keras model
+    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    # predict it first
+    vitis_unified_model = create_hls_model(
+        model, config, "VitisUnified", io_type, strategy, granularity, "precsim", axi_mode
+    )
+    y_hls4ml_unified = predict_hls_model(vitis_unified_model, input_data)
+    np.save(test_root_path / "output_file" / "outputCsim.npy", y_hls4ml_unified)
+
+    input_data_tb = str(test_root_path / "input_file" / "inputCsim.npy")
+    output_data_tb = str(test_root_path / "output_file" / "outputCsim.npy")
+
+    # create hls4ml model
+    vitis_unified_model_cosim = create_hls_model4_cosim(
+        model, config, "VitisUnified", io_type, strategy, granularity, input_data_tb, output_data_tb, "csim", axi_mode
+    )
+    # do csim
+    vitis_unified_model_cosim.compile()
+    vitis_unified_model_cosim.build(synth=True, csim=True, log_to_stdout=LOG_STD)
+
+    bridge_result_path = (
+        gen_prj_dir("VitisUnified", io_type, strategy, granularity, "csim", axi_mode) + "/tb_data/tb_output_predictions.dat"
+    )
+    cosim_result_path = (
+        gen_prj_dir("VitisUnified", io_type, strategy, granularity, "csim", axi_mode) + "/tb_data/csim_results.log"
+    )
+
+    bridge_result = np.loadtxt(bridge_result_path)
+    cosim_result = np.loadtxt(cosim_result_path)
+
+    assert np.allclose(bridge_result, cosim_result, rtol=0.0, atol=1e-4), "the result from bridge and cosim are not equal!"
+
+
+# test_csim_simulation("io_stream", 'latency', 'name', 10, 'axim')
+
+
+@pytest.mark.parametrize('io_type', ['io_stream'])
+@pytest.mark.parametrize('strategy', ['latency'])
+@pytest.mark.parametrize('granularity', ['name'])
+@pytest.mark.parametrize('amt_query', [10])
+@pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_fifo_depth(io_type, strategy, granularity, amt_query, axi_mode):
     create_io_file_dir()
     # create and load data set
@@ -252,7 +306,7 @@ def test_fifo_depth(io_type, strategy, granularity, amt_query, axi_mode):
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('amt_query', [10000])
-@pytest.mark.parametrize('axi_mode', ['axis'])
+@pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_gen_unified(io_type, strategy, granularity, amt_query, axi_mode):
     create_io_file_dir()
     # create and load data set
@@ -276,4 +330,4 @@ def test_gen_unified(io_type, strategy, granularity, amt_query, axi_mode):
     vitis_unified_model.build(synth=True, bitfile=True, log_to_stdout=LOG_STD)
 
 
-test_gen_unified("io_stream", 'latency', 'name', 10000, 'axis')
+# test_gen_unified("io_stream", 'latency', 'name', 10000, 'axis')

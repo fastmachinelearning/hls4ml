@@ -58,7 +58,6 @@ class VitisUnified_MetaGen:
     @classmethod
     def get_xo_file_name(self, model, meta):
         return f"{self.get_top_wrap_func_name(model, self.is_axi_master(meta))}.xo"
-        # todo fix it
 
     @classmethod
     def get_xo_file_path(self, model, meta):
@@ -66,7 +65,7 @@ class VitisUnified_MetaGen:
 
     # naming of variable function helper
 
-    # FOR GMEM WRAPPER
+    # FOR AXIM WRAPPER
 
     @classmethod
     def get_io_port_name(self, tensorVar, isInput: bool, idx: int):
