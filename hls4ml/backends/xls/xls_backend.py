@@ -56,6 +56,7 @@ class XLSBackend(FPGABackend):
         init_flow: str = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         optimization_passes = [
+            'xls:fix_softmax_table_size',
             'infer_precision_types',
         ]
         optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)

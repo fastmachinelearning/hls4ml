@@ -47,7 +47,7 @@ class BuildTables(OptimizerPass):
                     base = -(table_size - i)                
                 return base * 2**exp
         
-        table_size = dict(node.attributes)['table_size']
+        table_size = int(node.get_attr('table_size'))
         exp_table = []
         inv_table = []
 
