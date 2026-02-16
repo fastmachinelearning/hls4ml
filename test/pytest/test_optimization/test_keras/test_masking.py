@@ -9,7 +9,7 @@ from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
 from hls4ml.optimization.dsp_aware_pruning.keras.masking import get_model_masks
 from hls4ml.optimization.dsp_aware_pruning.objectives import ParameterEstimator
 
-'''
+"""
 In all the tests, an artifical network with one Dense/Conv2D layer and pre-determined weights is created
 Then, the tests assert zeros occur in the correct places, based on the masking structure (unstructured, block etc.)
 Furthermore, tests assert the masks are binary, so only zeros and ones occur
@@ -18,7 +18,7 @@ Masking is such that:
         * zero_params > sparsity * total_params
 Since the targetted objective is ParameterEstimator, weight sharing is not suitable [does not decrease the number of weights]
 Therefore, all the test verify offsets are zero
-'''
+"""
 sparsity = 0.33
 local_masking = [True, False]
 dense_layers = [Dense, QDense]

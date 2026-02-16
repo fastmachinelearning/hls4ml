@@ -458,20 +458,33 @@ void prelu(const data_T &data, const typename CONFIG_T::param_t &alpha, res_T &r
     }
 }
 
+template <class data_T, class res_T>
+inline typename std::enable_if<(!std::is_same<res_T, ac_int<1, false>>::value), res_T>::type binary_cast(data_T data) {
+    return static_cast<res_T>(data);
+}
+
+// should choose this via function overloading
+template <class data_T, class res_T>
+inline typename std::enable_if<(std::is_same<res_T, ac_int<1, false>>::value), res_T>::type binary_cast(data_T data) {
+    return (data > 0) ? static_cast<res_T>(data) : static_cast<res_T>(0);
+}
+
 // *************************************************
 //       Binary TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void binary_tanh(const data_T &data, res_T &res) {
+    using cache_T = ac_int<2, true>;
+
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         auto datareg = data[ii];
-        typename res_T::value_type cache;
-        if (datareg > 0)
+        cache_T cache;
+        if (datareg >= 0)
             cache = 1;
         else
             cache = -1;
 
-        res[ii] = cache;
+        res[ii] = binary_cast<cache_T, typename res_T::value_type>(cache);
     }
 }
 

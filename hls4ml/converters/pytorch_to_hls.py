@@ -224,7 +224,7 @@ def parse_pytorch_model(config, verbose=True):
 
             # parse info from class object
             input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
-            if pytorch_class in ["RNN", "GRU", "LSTM"]:
+            if pytorch_class in ['RNN', 'GRU', 'LSTM']:
                 input_shapes = []
                 input_names = []
                 for arg in node.args:
@@ -237,14 +237,29 @@ def parse_pytorch_model(config, verbose=True):
                         input_names.append(inputs_map.get(str(arg), str(arg)))
 
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
-            elif "getitem" in node.args[0].name:
-                for tmp_node in traced_model.nodes:
-                    if tmp_node.name == node.args[0].name:
-                        if "getitem" in tmp_node.args[0].name:
-                            raise Exception('Nested getitem calles not resolved at the moment.')
-                        input_names = [inputs_map.get(str(tmp_node.args[0]), str(tmp_node.args[0]))]
-                        input_shapes = [output_shapes[str(tmp_node.args[0])]]
-                        node.args = [tmp_node.args[0]]
+            elif 'getitem' in node.args[0].name:
+
+                def resolve_getitem_source(node_name, visited=None):
+                    """Recursively resolve nested getitem calls to find the actual source node."""
+                    if visited is None:
+                        visited = set()
+
+                    if node_name in visited:
+                        raise Exception(f'Circular reference detected in getitem chain: {node_name}')
+                    visited.add(node_name)
+
+                    for tmp_node in traced_model.nodes:
+                        if tmp_node.name == node_name:
+                            if 'getitem' in tmp_node.args[0].name:
+                                return resolve_getitem_source(tmp_node.args[0].name, visited)
+                            else:
+                                return tmp_node.args[0]
+                    raise Exception(f'Could not find source node for getitem: {node_name}')
+
+                source_node = resolve_getitem_source(node.args[0].name)
+                input_names = [inputs_map.get(str(source_node), str(source_node))]
+                input_shapes = [output_shapes[str(source_node)]]
+                node.args = [source_node]
             else:
                 input_shapes = [output_shapes[str(i)] for i in node.args]
             # for Conv layers
@@ -290,7 +305,6 @@ def parse_pytorch_model(config, verbose=True):
                 output_shapes[layer['name']] = output_shape
 
             else:
-
                 input_layer['class_name'] = 'InputLayer'
                 input_layer['input_shape'] = list(input_shapes[n_inputs][1:])
                 layer_list.insert(n_inputs, input_layer)
@@ -314,7 +328,7 @@ def parse_pytorch_model(config, verbose=True):
                 operation = layer_name_map[operation]
 
             # only a limited number of functions are supported
-            if operation == "getitem":
+            if operation == 'getitem':
                 continue
             if operation not in supported_layers:
                 raise Exception(f'Unsupported function {operation}')

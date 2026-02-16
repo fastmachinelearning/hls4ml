@@ -9,7 +9,7 @@ from hls4ml.utils.einsum_utils import EinsumRecipe, parse_einsum
 
 
 def _minimal_f(array: np.ndarray):
-    _low, _high = np.full(array.shape, -32, dtype=np.int8), np.full(array.shape, 32, dtype=np.int8)
+    _low, _high = np.full(array.shape, -32, dtype=np.int16), np.full(array.shape, 32, dtype=np.int16)
     while np.any(_low < _high - 1):
         _mid = (_low + _high) // 2
         scaled = array * 2.0**_mid
@@ -32,7 +32,7 @@ def minimal_kif(array: np.ndarray):
     """
     f = _minimal_f(array)
     with np.errstate(divide='ignore', invalid='ignore'):
-        i = np.ceil(np.log2(np.maximum(array + 2.0**-f, -array))).astype(np.int8)
+        i = np.ceil(np.log2(np.maximum(array + 2.0**-f, -array))).astype(np.int16)
     k = array < 0
     null_mask = array == 0
     i, f = np.where(null_mask, 0, i), np.where(null_mask, 0, f)
@@ -49,13 +49,13 @@ class _QIntervalArray:
 
     def _validate(self):
         with np.errstate(divide='ignore', invalid='ignore'):
-            assert np.all(self.min <= self.max), "min must be less than or equal to max"
+            assert np.all(self.min <= self.max), 'min must be less than or equal to max'
             if not np.all((self.max % self.delta == 0) | ((self.max == 0) & (self.delta == 0))):
-                warn("max is not a multiple of delta. Bit-exactness may be compromised.")
+                warn('max is not a multiple of delta. Bit-exactness may be compromised.')
                 self.delta = 2.0 ** np.round(np.log2(self.delta))
                 self.max = np.round(self.max / self.delta) * self.delta
             if not np.all((self.min % self.delta == 0) | ((self.min == 0) & (self.delta == 0))):
-                warn("min is not a multiple of delta. Bit-exactness may be compromised.")
+                warn('min is not a multiple of delta. Bit-exactness may be compromised.')
                 self.delta = 2.0 ** np.round(np.log2(self.delta))
                 self.min = np.round(self.min / self.delta) * self.delta
 
@@ -234,10 +234,10 @@ class QIntervalArray(_QIntervalArray):
         return v
 
     def to_kif(self):
-        f = -np.log2(self.delta).astype(np.int8)
+        f = -np.log2(self.delta).astype(np.int16)
 
         with np.errstate(divide='ignore', invalid='ignore'):
-            i = np.ceil(np.log2(np.maximum(self.max + 2.0**-f, -self.min))).astype(np.int8)
+            i = np.ceil(np.log2(np.maximum(self.max + 2.0**-f, -self.min))).astype(np.int16)
         k = self.min < 0
         null_mask = (self.max == 0) & (self.min == 0)
         i, f = np.where(null_mask, 0, i), np.where(null_mask, 0, f)

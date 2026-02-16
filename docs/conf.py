@@ -70,6 +70,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx_contributors',
     'sphinx_github_changelog',
+    'sphinx_tabs.tabs',
 ]
 
 # Note: to build locally, you will need to set the SPHINX_GITHUB_CHANGELOG_TOKEN
@@ -99,11 +100,11 @@ html_static_path = []
 
 # -- Extension configuration -------------------------------------------------
 html_show_sourcelink = False
-html_logo = "img/hls4ml_logo_navbar.png"
+html_logo = 'img/hls4ml_logo_navbar.png'
 
 html_theme_options = {
     'canonical_url': '',
-    'analytics_id': '',  #  Provided by Google in your dashboard
+    'analytics_id': '',  # Provided by Google in your dashboard
     'logo_only': True,
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
@@ -120,7 +121,7 @@ html_theme_options = {
 html_context = {
     'display_github': True,  # Integrate GitHub
     'github_user': 'fastmachinelearning',  # Username
-    'github_repo': "hls4ml",  # Repo name
+    'github_repo': 'hls4ml',  # Repo name
     'github_version': 'main',  # Version
     'conf_py_path': '/docs/',  # Path in the checkout to the docs root
 }

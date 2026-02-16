@@ -1,16 +1,35 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.6.1.base
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.6.3.base
   tags:
     - k8s-default
+  variables:
+    CONDA_ENV: "hls4ml-testing"
+    EXTRA_DEPS: "[da,testing,testing-keras2,sr,optimization]"
   before_script:
     - eval "$(conda shell.bash hook)"
-    - conda activate hls4ml-testing
-    - source /opt/intel/oneapi/setvars.sh --force
+    - conda activate "$CONDA_ENV"
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
-    - pip install .[da,testing,sr,optimization]
+    - pip install .${EXTRA_DEPS}
+
+    # set up vivado_hls command
+    - mkdir -p cmd_vivado_${VIVADO_VERSION}
+    - echo '#!/bin/bash' > cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - echo "apptainer exec --cleanenv --env LANG=C,LC_ALL=C /cvmfs/projects.cern.ch/hls4ml/vivado/${VIVADO_VERSION} vivado_hls \"\$@\"" >> cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - chmod +x cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - export PATH=$PWD/cmd_vivado_${VIVADO_VERSION}:$PATH
+
+    # set up vitis-run command
+    - mkdir -p cmd_vitis_${VITIS_VERSION}
+    - echo '#!/bin/bash' > cmd_vitis_${VITIS_VERSION}/vitis-run
+    - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vitis/${VITIS_VERSION} vitis-run \"\$@\"" >> cmd_vitis_${VITIS_VERSION}/vitis-run
+    - chmod +x cmd_vitis_${VITIS_VERSION}/vitis-run
+    - export PATH=$PWD/cmd_vitis_${VITIS_VERSION}:$PATH
+
+    # Load Intel oneAPI environment variables
+    - source /opt/intel/oneapi/setvars.sh --force
   script:
     - cd test/pytest
     - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
@@ -23,4 +42,11 @@
         coverage_format: cobertura
         path: test/pytest/coverage.xml
     paths:
-      - test/pytest/hls4mlprj*.tar.gz
+      - test/pytest/*.tar.gz
+      - test/pytest/synthesis_report_*.json
+
+.pytest-keras3-only:
+  extends: .pytest
+  variables:
+    CONDA_ENV: "hls4ml-testing-keras3"
+    EXTRA_DEPS: "[da,testing,testing-keras3,sr]"

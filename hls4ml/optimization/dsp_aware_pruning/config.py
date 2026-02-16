@@ -1,6 +1,6 @@
 from enum import Enum
 
-'''
+"""
 A list of currently supported structures when optimizing (pruning, weight sharing)
 For more information, see attributes.py
 
@@ -37,7 +37,7 @@ For more information, see attributes.py
     - Description: Zeroes out or quantizes all the weights in a block of size (w, h)
     - Supports: All rank-2 (e.g. Dense, but not Conv2D) layers in SUPPORTED_LAYERS (hls4ml.optimization.keras)
 
-'''
+"""
 
 
 class SUPPORTED_STRUCTURES(Enum):

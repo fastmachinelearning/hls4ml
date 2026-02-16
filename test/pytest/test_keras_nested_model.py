@@ -128,15 +128,14 @@ def randX_20_15():
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_nested_model(randX_20_15, backend, io_type):
+def test_nested_model(test_case_id, randX_20_15, backend, io_type):
     n_in = 15
     input_shape = (n_in,)
     keras_model = make_nested_model(input_shape)
     keras_model.compile(optimizer='adam', loss='mae')
 
     config = hls4ml.utils.config_from_keras_model(keras_model, default_precision='fixed<24,12>')
-    prj_name = f'hls4mlprj_nested_model_{backend}_{io_type}'
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
@@ -151,15 +150,14 @@ def test_nested_model(randX_20_15, backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_sub_nested_model(randX_20_15, backend, io_type):
+def test_sub_nested_model(test_case_id, randX_20_15, backend, io_type):
     n_in = 15
     input_shape = (n_in,)
     keras_model = make_sub_nested_model(input_shape)
     keras_model.compile(optimizer='adam', loss='mae')
 
     config = hls4ml.utils.config_from_keras_model(keras_model, default_precision='fixed<24,12>')
-    prj_name = f'hls4mlprj_sub_nested_model_{backend}_{io_type}'
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

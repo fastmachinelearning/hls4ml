@@ -7,11 +7,25 @@ import numpy as np
 from hls4ml.backends import FPGABackend
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
-from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
+from hls4ml.model.layers import (
+    GRU,
+    LSTM,
+    Activation,
+    Conv1D,
+    Conv2D,
+    Dense,
+    Einsum,
+    EinsumDense,
+    Embedding,
+    Layer,
+    SimpleRNN,
+    Softmax,
+)
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_oneapi_report
 from hls4ml.utils import attribute_descriptions as descriptions
+from hls4ml.utils.einsum_utils import parse_einsum
 
 # from hls4ml.report import parse_oneapi_report
 
@@ -68,7 +82,6 @@ class OneAPIBackend(FPGABackend):
             'oneapi:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
             'oneapi:xnor_pooling',
-            'oneapi:generate_conv_im2col',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -79,6 +92,8 @@ class OneAPIBackend(FPGABackend):
             'oneapi:skip_softmax',
             'oneapi:fix_softmax_table_size',
             'infer_precision_types',
+            'oneapi:process_fixed_point_quantizer_layer',
+            'oneapi:validate_ac_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -104,7 +119,6 @@ class OneAPIBackend(FPGABackend):
             + optimization_passes
             + writer_passes
             + ['oneapi:inplace_stream_flatten', 'oneapi:reshape_stream']  # not needed
-            + ['oneapi:process_fixed_point_quantizer_layer']  # not yet supported
         ]
 
         if len(extras) > 0:
@@ -174,17 +188,9 @@ class OneAPIBackend(FPGABackend):
             Path: Returns the name of the compiled library.
         """
         outdir = Path(Path.cwd(), model.config.get_output_dir())
-        builddir = outdir / 'build'
-        builddir.mkdir(exist_ok=True)
-        try:
-            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
-        except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
-        subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
-        subprocess.run('make lib', shell=True, cwd=builddir, check=True)
+        self.build(model, build_type='lib', run=False)
 
-        lib_name = builddir / f'lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
-        return lib_name
+        return outdir / f'build/lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
@@ -208,7 +214,9 @@ class OneAPIBackend(FPGABackend):
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
-        if run and build_type in ('fpga_emu', 'fpga_sim', 'fpga'):
+        if run:
+            if build_type not in ('fpga_emu', 'fpga_sim', 'fpga'):
+                raise ValueError('Running is only supported for fpga_emu, fpga_sim, or fpga builds')
             executable = builddir / f'{model.config.get_project_name()}.{build_type}'
             subprocess.run(f'{str(executable)}', shell=True, cwd=builddir, check=True)
 
@@ -252,9 +260,9 @@ class OneAPIBackend(FPGABackend):
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
-            assert (
-                len(layer.get_input_variable().shape) == 1
-            ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            assert len(layer.get_input_variable().shape) == 1, (
+                'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
@@ -399,3 +407,107 @@ class OneAPIBackend(FPGABackend):
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
         # TODO - Consider setting and using RF
+
+    @layer_optimizer(EinsumDense)
+    def init_einsum_dense(self, layer: EinsumDense) -> None:
+        kernel: np.ndarray = layer.attributes['weight_data']
+        bias: np.ndarray | None = layer.attributes['bias_data']
+        equation = layer.attributes['equation']
+        inp_shape = layer.attributes['inp_shape']
+        out_shape = layer.attributes['out_shape']
+
+        kernel_shape = kernel.shape
+        recipe = parse_einsum(equation, inp_shape, kernel_shape)
+        assert not any(recipe['direct_sum_axis']), (
+            'Do not put direct sum indices (e.g., only appears in one of the operands) in the equation.'
+            'Use explicit addition operator before instead.'
+        )
+        inp_tpose_idxs, ker_tpose_idxs = recipe['in_transpose_idxs']
+        out_tpose_idxs = recipe['out_transpose_idxs']
+
+        # Pre-transpose kernel (and bias) to save a transpose in cpp. Shouldn't matter for latency strategy though.
+        # hls4ml dense acts like i,ij->j
+        # parser assumes ij,j->i, so we need to transpose the kernel to match
+        kernel = kernel.transpose(ker_tpose_idxs)
+        kernel = kernel.reshape(recipe['I'], recipe['L1'], recipe['C']).transpose(0, 2, 1)
+
+        def to_original_kernel(tkernel: np.ndarray) -> np.ndarray:
+            _kernel = tkernel.transpose(0, 2, 1)
+            _kernel = _kernel.reshape(tuple(kernel_shape[i] for i in ker_tpose_idxs))
+            return _kernel.transpose(np.argsort(ker_tpose_idxs))
+
+        # TODO: for weight in bram mode (resource), broadcasting bias here shall be avoided.
+        if bias is not None:
+            bias = np.broadcast_to(bias, out_shape).transpose(np.argsort(out_tpose_idxs))
+        else:
+            # The automatically created bias is just the last dimension of the output shape
+            # Which is too small in general for einsum dense.
+            # The transpose is just to match the shape in case of have real bias, no real effect.
+            bias = np.zeros(out_shape).transpose(np.argsort(out_tpose_idxs))
+
+        layer.attributes['weight_data'] = kernel
+        layer.attributes['to_original_kernel'] = to_original_kernel
+        layer.attributes['bias_data'] = bias
+        layer.attributes['inp_tpose_idxs'] = inp_tpose_idxs
+        layer.attributes['out_tpose_idxs'] = out_tpose_idxs
+        layer.attributes['out_interpert_shape'] = recipe['out_interpert_shape']
+        layer.attributes['n_free_data'] = recipe['L0']
+        layer.attributes['n_free_kernel'] = recipe['L1']
+        layer.attributes['n_inplace'] = recipe['I']
+        layer.attributes['n_contract'] = recipe['C']
+        pf = layer.attributes.get('parallelization_factor', recipe['L0'])
+        layer.attributes['parallelization_factor'] = pf
+
+        layer.add_weights(compression=layer.model.config.get_compression(layer))
+        layer.add_bias()
+
+        strategy: str | None = layer.model.config.get_strategy(layer)
+        if not strategy:
+            layer.set_attr('strategy', 'latency')
+            return
+        if strategy in ('latency', 'resource', 'distributed_arithmetic'):
+            layer.set_attr('strategy', strategy)
+            return
+        warn(f'Invalid strategy "{strategy}" for EinsumDense layer "{layer.name}". Using "latency" strategy instead.')
+        layer.set_attr('strategy', 'latency')
+
+    @layer_optimizer(Einsum)
+    def init_einsum(self, layer: Einsum) -> None:
+        equation = layer.attributes['equation']
+        inp0_shape = layer.attributes['inp0_shape']
+        inp1_shape = layer.attributes['inp1_shape']
+
+        recipe = parse_einsum(equation, inp0_shape, inp1_shape)
+        assert not any(recipe['direct_sum_axis']), (
+            'Do not put direct sum indices (e.g., only appears in one of the operands) in the equation.'
+            'Use explicit addition operator before instead.'
+        )
+        inp0_tpose_idxs, inp1_tpose_idxs = recipe['in_transpose_idxs']
+        out_tpose_idxs = recipe['out_transpose_idxs']
+
+        layer.attributes.update(recipe)
+        layer.attributes['n_free0'] = recipe['L0']
+        layer.attributes['n_free1'] = recipe['L1']
+        layer.attributes['n_inplace'] = recipe['I']
+        layer.attributes['n_contract'] = recipe['C']
+        layer.attributes['out_interpert_shape'] = recipe['out_interpert_shape']
+
+        layer.attributes['inp0_tpose_idxs'] = inp0_tpose_idxs
+        layer.attributes['inp1_tpose_idxs'] = inp1_tpose_idxs
+        layer.attributes['out_tpose_idxs'] = out_tpose_idxs
+
+        pf = layer.attributes.get('parallelization_factor', recipe['L0'])
+        layer.attributes['parallelization_factor'] = pf
+
+        strategy: str | None = layer.model.config.get_strategy(layer)
+        if not strategy:
+            layer.set_attr('strategy', 'latency')
+            return
+        if strategy.lower() == 'resource':
+            layer.set_attr('strategy', 'resource')
+            return
+        if strategy.lower() in ('latency', 'distributed_arithmetic'):
+            layer.set_attr('strategy', 'latency')
+            return
+        warn(f'Invalid strategy "{strategy}" for Einsum layer "{layer.name}". Using "latency" strategy instead.')
+        layer.set_attr('strategy', 'latency')

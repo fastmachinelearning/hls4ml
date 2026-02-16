@@ -16,9 +16,9 @@ _add_supported_quantized_objects(co)
 
 
 class HyperOptimizationModel(kt.HyperModel):
-    '''
+    """
     Helper class for Keras Tuner
-    '''
+    """
 
     def __init__(self, model, attributes, optimizer, loss_fn, validation_metric, regularization_range):
         """Create new instance of HyperOptimizationModel
@@ -111,7 +111,7 @@ def build_optimizable_model(
     tuner='Bayesian',
     regularization_range=default_regularization_range,
 ):
-    '''
+    """
     Function identifying optimizable layers and adding a regularization loss
 
     Notes:
@@ -141,7 +141,7 @@ def build_optimizable_model(
 
     Returns:
         keras.Model: Model prepared for optimization
-    '''
+    """
     # User provided manual hyper-parameters for regularisation loss
     # TODO - Maybe we could extend this to be hyper-parameters per layer? or layer-type?
     # Currently, the same (manually-set) hyper-parameter is set for every layer
@@ -237,7 +237,7 @@ def build_optimizable_model(
 
 
 def remove_custom_regularizers(model):
-    '''
+    """
     Helper function to remove custom regularizers (DenseRegularizer & Conv2DRegularizer)
     This makes it possible to load the model in a different environment without hls4ml installed
 
@@ -246,7 +246,7 @@ def remove_custom_regularizers(model):
 
     Returns:
         keras.Model: Model without custom regularizers
-    '''
+    """
     weights = model.get_weights()
     for layer in model.layers:
         if hasattr(layer, 'kernel_regularizer'):

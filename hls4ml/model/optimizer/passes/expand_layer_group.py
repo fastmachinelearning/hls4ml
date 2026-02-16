@@ -3,7 +3,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class ExpandLayerGroup(OptimizerPass):
-    '''Expands LayerGroup (a nested model) into the parent model.'''
+    """Expands LayerGroup (a nested model) into the parent model."""
 
     def match(self, node):
         return isinstance(node, LayerGroup)

@@ -17,6 +17,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Sequential
 
 import hls4ml
+from hls4ml.model.optimizer.passes.infer_precision import _get_precision_from_constant
 
 test_root_path = Path(__file__).parent
 
@@ -120,7 +121,9 @@ def keras_model_sepconv2d():
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('model_type', ['conv1d', 'conv2d'])
-def test_auto_precision_conv(keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend):
+def test_auto_precision_conv(
+    test_case_id, keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend
+):
     if model_type == 'conv1d':
         model = keras_model_conv1d
         data = data_2d
@@ -151,7 +154,7 @@ def test_auto_precision_conv(keras_model_conv1d, keras_model_conv2d, data_2d, da
         },
     }
 
-    odir = str(test_root_path / f'hls4mlprj_auto_{model_type}_{backend}_{io_type}')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
@@ -169,7 +172,7 @@ def test_auto_precision_conv(keras_model_conv1d, keras_model_conv2d, data_2d, da
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No SeparableConv1D/2D in Quartus
 @pytest.mark.parametrize('model_type', ['sepconv1d', 'sepconv2d'])
 def test_auto_precision_sepconv(
-    keras_model_sepconv1d, keras_model_sepconv2d, data_2d, data_3d, model_type, io_type, backend
+    test_case_id, keras_model_sepconv1d, keras_model_sepconv2d, data_2d, data_3d, model_type, io_type, backend
 ):
     if model_type == 'sepconv1d':
         model = keras_model_sepconv1d
@@ -200,7 +203,7 @@ def test_auto_precision_sepconv(
             },
         },
     }
-    odir = str(test_root_path / f'hls4mlprj_auto_{model_type}_{backend}_{io_type}')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
@@ -216,7 +219,7 @@ def test_auto_precision_sepconv(
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
+def test_auto_precision_dense(test_case_id, keras_model_dense, data_1d, io_type, backend):
     model = keras_model_dense
     data = data_1d
 
@@ -242,7 +245,7 @@ def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
             },
         },
     }
-    odir = str(test_root_path / f'hls4mlprj_auto_dense_{backend}_{io_type}')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
@@ -254,3 +257,31 @@ def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
     y_keras = model.predict(data).flatten()
     y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_keras, y_hls, rtol=2e-2, atol=5e-2, verbose=True)
+
+
+@pytest.mark.parametrize(
+    'val, expected_width',
+    [
+        (0, 1),
+        (-1024, 1),
+        (1024, 1),
+        (0.03125, 1),
+        (-0.03125, 1),
+        (1.25, 3),
+        (-1.25, 4),
+        (1.1, 8),
+        (-1.1, 9),
+    ],
+)
+def test_precision_from_constant_unit(val, expected_width):
+    """Test determining precision needed for a constant."""
+    max_width = 8
+    fp = _get_precision_from_constant(val, max_width)
+
+    assert fp.min <= val <= fp.max
+    assert fp.width == expected_width
+    assert fp.signed == (val < 0)
+
+    quantum = 2.0**-fp.fractional
+    if expected_width < max_width:
+        assert val % quantum == 0

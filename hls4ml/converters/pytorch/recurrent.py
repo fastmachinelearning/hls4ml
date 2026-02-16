@@ -11,7 +11,7 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
 
     layer = {}
 
-    layer["name"] = layer_name
+    layer['name'] = layer_name
 
     layer['inputs'] = input_names
     if 'IOType' in config.keys():
@@ -51,8 +51,9 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
     if class_object.dropout > 0:
         raise Exception('hls4ml does not support RNNs with dropout')
 
-    layer['weight_data'] = class_object.weight_ih_l0.data.numpy()
-    layer['recurrent_weight_data'] = class_object.weight_hh_l0.data.numpy()
+    # transpose weight and recurrent weight to match keras order used in the HLS code
+    layer['weight_data'] = class_object.weight_ih_l0.data.numpy().transpose()
+    layer['recurrent_weight_data'] = class_object.weight_hh_l0.data.numpy().transpose()
     layer['bias_data'] = class_object.bias_ih_l0.data.numpy()
     layer['recurrent_bias_data'] = class_object.bias_hh_l0.data.numpy()
 

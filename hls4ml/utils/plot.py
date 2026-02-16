@@ -58,10 +58,10 @@ def model_to_dot(
         if 'IPython.core.magics.namespace' in sys.modules:
             # We don't raise an exception here in order to avoid crashing notebook
             # tests where graphviz is not available.
-            print('Failed to import pydot. You must install pydot' ' and graphviz for `pydotprint` to work.')
+            print('Failed to import pydot. You must install pydot and graphviz for `pydotprint` to work.')
             return
         else:
-            raise ImportError('Failed to import pydot. You must install pydot' ' and graphviz for `pydotprint` to work.')
+            raise ImportError('Failed to import pydot. You must install pydot and graphviz for `pydotprint` to work.')
 
     if subgraph:
         dot = pydot.Cluster(style='dashed', graph_name=model.name)

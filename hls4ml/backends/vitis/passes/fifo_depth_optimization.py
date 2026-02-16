@@ -144,7 +144,6 @@ def set_optimized_fifo_depths(model, optimized_fifo_depths):
     for output_variable in model.output_vars.values():
         if 'StreamVariable' in str(type(output_variable)):
             if output_variable.pragma:
-
                 if output_variable.name not in optimized_fifo_depths.keys():
                     continue
 

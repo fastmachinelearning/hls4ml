@@ -8,7 +8,7 @@ def parse_conv_layer(node, input_names, input_shapes, graph):
     layer = {}
     layer['name'] = node.name
     if node.domain != 'qonnx.custom_op.channels_last':
-        raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
+        raise RuntimeError('Please convert the model to channels-last format with qonnx-to-channels-last')
     layer['data_format'] = 'channels_last'  # QONNX needs to be channels-last.
     layer['inputs'] = input_names
     layer['outputs'] = node.output
@@ -35,7 +35,7 @@ def parse_conv_layer(node, input_names, input_shapes, graph):
 
     layer['n_dim'] = len(input_shapes[0]) - 2  # 2 comes from channels and batch dimentions
     if layer['n_dim'] not in (1, 2):
-        raise ValueError("Only 1D and 2D convolutions are supported")
+        raise ValueError('Only 1D and 2D convolutions are supported')
     layer['class_name'] = 'Conv'
 
     # set some values needed later

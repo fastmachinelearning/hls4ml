@@ -57,7 +57,7 @@ I/O Types
 
 io_parallel
 ^^^^^^^^^^^
-In this processing style, data is passed in parallel between the layers. Conceptually this corresponds to the C/C++ array where all elements can be accessed ay any time. This style allows for maximum parallelism and is well suited for MLP networks and small CNNs which aim for lowest latency. Due to the impact of parallel processing on resource utilization on FPGAs, the synthesis may fail for larger networks.
+In this processing style, data is passed in parallel between the layers. Conceptually this corresponds to the C/C++ array where all elements can be accessed at any time. This style allows for maximum parallelism and is well suited for MLP networks and small CNNs which aim for lowest latency. Due to the impact of parallel processing on resource utilization on FPGAs, the synthesis may fail for larger networks.
 
 io_stream
 ^^^^^^^^^

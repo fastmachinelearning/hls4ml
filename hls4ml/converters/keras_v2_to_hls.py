@@ -127,7 +127,7 @@ def get_layer_handlers():
     return layer_handlers
 
 
-def register_keras_layer_handler(layer_cname, handler_func):
+def register_keras_v2_layer_handler(layer_cname, handler_func):
     """Register a handler function for the given layer class name.
 
     The handler function should have the following signature:
@@ -241,7 +241,7 @@ def parse_keras_model(model_arch, reader):
         'HGQ>UnaryLUT',
     ]
     # Recurrent layers
-    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU']
+    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU', 'Bidirectional']
     # All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 

@@ -1,6 +1,6 @@
-'''
+"""
 This package includes oneAPI-specific templates
-'''
+"""
 
 from hls4ml.backends.template import Template
 
@@ -46,7 +46,7 @@ class TaskSequenceTemplate(Template):
         else:
             name = layer_class.__name__.lower()
         name += '_task_sequence_template'
-        super().__init__(name, layer_class, 'tast_sequence_cpp')
+        super().__init__(name, layer_class, 'task_sequence_cpp')
 
     def _default_function_params(self, layer):
         params = self._default_params(layer)

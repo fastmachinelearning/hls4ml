@@ -16,12 +16,12 @@ def data():
     return X, y
 
 
-def test_hlssr(data):
+def test_hlssr(test_case_id, data):
     expr = 'x0**2 + 2.5382*cos_lut(x3) - 0.5'
 
     lut_functions = {'cos_lut': {'math_func': 'cos', 'range_start': -4, 'range_end': 4, 'table_size': 2048}}
 
-    output_dir = str(test_root_path / 'hls4mlprj_sr')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_symbolic_expression(
         expr,
@@ -75,19 +75,10 @@ def test_pysr_luts(data):
 @pytest.mark.parametrize('clock_period', [8, None])
 @pytest.mark.parametrize('clock_unc', ['15%', None])
 @pytest.mark.parametrize('compiler', ['vivado_hls', 'vitis_hls'])
-def test_sr_backend_config(part, clock_period, clock_unc, compiler):
-
+def test_sr_backend_config(test_case_id, part, clock_period, clock_unc, compiler):
     expr = 'x0**2 + 2.5382*cos_lut(x3) - 0.5'
 
-    if clock_unc is not None:
-        unc_str = clock_unc.replace('%', '')
-    else:
-        unc_str = clock_unc
-
-    compiler_str = compiler.replace('_hls', '')
-
-    test_dir = f'hls4mlprj_sr_backend_config_part_{part}_period_{clock_period}_unc_{unc_str}_{compiler_str}'
-    output_dir = test_root_path / test_dir
+    output_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_symbolic_expression(
         expr,

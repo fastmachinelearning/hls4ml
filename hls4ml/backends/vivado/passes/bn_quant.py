@@ -82,9 +82,6 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
         if 'ternary' in node.get_attr('activation'):
             quantize = 3
         attrs = {
-            'name': bn_layer.get_attr('name'),
-            'original_name': bn_layer.get_attr('name'),
-            'class_name': 'BatchNormalizationQuantizedTanh',
             'n_in': bn_layer.get_attr('n_in'),
             'n_out': bn_layer.get_attr('n_in'),
             'n_filt': bn_layer.get_attr('n_filt'),

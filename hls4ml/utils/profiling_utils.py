@@ -47,7 +47,6 @@ torch_process_layer_map = defaultdict(
 
 
 class WeightsTorch:
-
     def __init__(self, model: torch.nn.Module, fmt: str = 'longform', plot: str = 'boxplot') -> None:
         self.model = model
         self.fmt = fmt
@@ -58,13 +57,13 @@ class WeightsTorch:
     def _find_layers(self, model, module_name):
         for name, module in model.named_children():
             if isinstance(module, (torch.nn.Sequential, torch.nn.ModuleList)):
-                self._find_layers(module, module_name + "." + name)
+                self._find_layers(module, module_name + '.' + name)
             elif isinstance(module, (torch.nn.Module)) and self._is_parameterized(module):
                 if len(list(module.named_children())) != 0:
                     # custom nn.Module, continue search
-                    self._find_layers(module, module_name + "." + name)
+                    self._find_layers(module, module_name + '.' + name)
                 else:
-                    self._register_layer(module_name + "." + name)
+                    self._register_layer(module_name + '.' + name)
 
     def _is_registered(self, name: str) -> bool:
         return name in self.registered_layers

@@ -7,7 +7,7 @@ recurrent_include_list = ['nnet_utils/nnet_recurrent.h', 'nnet_utils/nnet_recurr
 ################################################
 # Shared Matrix Multiplication Template (Dense)
 ################################################
-recr_mult_config_template = '''struct config{index}_mult : nnet::dense_config {{
+recr_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
 
@@ -26,23 +26,23 @@ recr_mult_config_template = '''struct config{index}_mult : nnet::dense_config {{
 
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
-}};\n'''
+}};\n"""
 
 ################################################
 # Shared Activation Template
 ################################################
-activ_config_template = '''struct {type}_config{index} : nnet::activ_config {{
+activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     typedef {table_t.name} table_t;
-}};\n'''
+}};\n"""
 
 ################################################
 # GRU Template
 ################################################
-gru_config_template = '''struct config{index} : nnet::gru_config {{
+gru_config_template = """struct config{index} : nnet::gru_config {{
     static const unsigned n_in  = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned n_units = {n_units};
@@ -68,7 +68,7 @@ gru_config_template = '''struct config{index} : nnet::gru_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned pytorch_order = {pytorch};
     static const bool store_weights_in_bram = false;
-}};\n'''
+}};\n"""
 
 gru_function_template = 'nnet::gru<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
 gru_function_initial_state_template = (

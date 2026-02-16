@@ -3,16 +3,22 @@ import os
 
 import yaml
 
-from hls4ml.converters.keras_v2_to_hls import KerasFileReader  # noqa: F401
-from hls4ml.converters.keras_v2_to_hls import KerasModelReader  # noqa: F401
-from hls4ml.converters.keras_v2_to_hls import KerasReader  # noqa: F401
-from hls4ml.converters.keras_v2_to_hls import get_supported_keras_layers  # noqa: F401
-from hls4ml.converters.keras_v2_to_hls import parse_keras_model  # noqa: F401
-from hls4ml.converters.keras_v2_to_hls import keras_v2_to_hls, register_keras_layer_handler
+from hls4ml.converters.keras_v2_to_hls import (
+    KerasFileReader,  # noqa: F401
+    KerasModelReader,  # noqa: F401
+    KerasReader,  # noqa: F401
+    get_supported_keras_layers,  # noqa: F401
+    keras_v2_to_hls,
+    parse_keras_model,  # noqa: F401
+    register_keras_v2_layer_handler,
+)
 from hls4ml.converters.keras_v3_to_hls import keras_v3_to_hls, parse_keras_v3_model  # noqa: F401
-from hls4ml.converters.onnx_to_hls import get_supported_onnx_layers  # noqa: F401
-from hls4ml.converters.onnx_to_hls import parse_onnx_model  # noqa: F401
-from hls4ml.converters.onnx_to_hls import onnx_to_hls, register_onnx_layer_handler
+from hls4ml.converters.onnx_to_hls import (
+    get_supported_onnx_layers,  # noqa: F401
+    onnx_to_hls,
+    parse_onnx_model,  # noqa: F401
+    register_onnx_layer_handler,
+)
 from hls4ml.converters.pytorch_to_hls import (  # noqa: F401
     get_supported_pytorch_layers,
     pytorch_to_hls,
@@ -41,7 +47,7 @@ for model_type in model_types:
                 if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
                     for layer in func.handles:  # type: ignore
                         if model_type == 'keras':
-                            register_keras_layer_handler(layer, func)
+                            register_keras_v2_layer_handler(layer, func)
                         elif model_type == 'pytorch':
                             register_pytorch_layer_handler(layer, func)
                         elif model_type == 'onnx':
@@ -115,8 +121,16 @@ def convert_from_config(config):
         model = onnx_to_hls(yamlConfig)
     elif 'PytorchModel' in yamlConfig:
         model = pytorch_to_hls(yamlConfig)
-    else:
-        model = keras_v2_to_hls(yamlConfig)
+    elif 'KerasModel' in yamlConfig:
+        import keras
+
+        if keras.__version__ >= '3.0':
+            # Get fallback flags from config or use defaults
+            allow_da_fallback = yamlConfig.get('HLSConfig', {}).get('Model', {}).get('AllowDAFallback', True)
+            allow_v2_fallback = yamlConfig.get('HLSConfig', {}).get('Model', {}).get('AllowV2Fallback', True)
+            model = keras_v3_to_hls(yamlConfig, allow_da_fallback, allow_v2_fallback)
+        else:
+            model = keras_v2_to_hls(yamlConfig)
 
     return model
 
@@ -145,14 +159,9 @@ def _check_hls_config(config, hls_config):
 
 
 def _check_model_config(model_config):
-    if model_config is not None:
-        if not all(k in model_config for k in ('Precision', 'ReuseFactor')):
-            raise Exception('Precision and ReuseFactor must be provided in the hls_config')
-    else:
-        model_config = {}
-        model_config['Precision'] = 'ap_fixed<16,6>'
-        model_config['ReuseFactor'] = 1
-
+    model_config = model_config or {}
+    model_config.setdefault('Precision', 'fixed<16,6>')
+    model_config.setdefault('ReuseFactor', 1)
     return model_config
 
 
@@ -165,6 +174,9 @@ def convert_from_keras_model(
     output_data_tb=None,
     backend='Vivado',
     hls_config=None,
+    bit_exact=None,
+    allow_da_fallback=True,
+    allow_v2_fallback=True,
     **kwargs,
 ):
     """Convert Keras model to hls4ml model based on the provided configuration.
@@ -193,8 +205,17 @@ def convert_from_keras_model(
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
-        kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
+        bit_exact (bool, optional): If True, enable model-wise precision propagation
+        with **only fixed-point data types**. If None, enable if there is at least one
+        FixedPointQuantizer layer in the model (only resulting from converting HGQ1/2
+        models for now). By default, None.
+        allow_da_fallback: Whether to allow fallback to DA combinational logic generation
+            for unsupported layers. Only affects keras v3 models. Defaults to True.
+        allow_v2_fallback: Whether to allow fallback to keras v2 layer handlers
+            for unsupported layers. Only affects keras v3 models. Defaults to True. If both this and
+            `allow_da_fallback` are True, DA fallback is attempted first.
 
+        kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'.
 
@@ -214,13 +235,14 @@ def convert_from_keras_model(
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
+    config['HLSConfig']['Model']['BitExact'] = bit_exact
 
     _check_hls_config(config, hls_config)
     if 'KerasModel' in config:
         import keras
 
         if keras.__version__ >= '3.0':
-            return keras_v3_to_hls(config)
+            return keras_v3_to_hls(config, allow_da_fallback, allow_v2_fallback)
 
     return keras_v2_to_hls(config)
 
@@ -306,6 +328,7 @@ def convert_from_onnx_model(
     output_data_tb=None,
     backend='Vivado',
     hls_config=None,
+    bit_exact=None,
     **kwargs,
 ):
     """Convert Keras model to hls4ml model based on the provided configuration.
@@ -335,6 +358,10 @@ def convert_from_onnx_model(
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
         kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
+        bit_exact (bool, optional): If True, enable model-wise precision propagation
+        with **only fixed-point data types**. If None, enable if there is at least one
+        FixedPointQuantizer layer in the model (only resulting from converting HGQ1/2
+        models for now). By default, None.
 
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'.

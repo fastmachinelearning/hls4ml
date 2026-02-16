@@ -251,7 +251,7 @@ class CatapultBackend(FPGABackend):
         ccs_args = f'"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation}'
         ccs_args += f' export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile} ran_frame={ran_frame}'
         ccs_args += f' sw_opt={sw_opt} power={power} da={da} vhdl={vhdl} verilog={verilog} bup={bup}"'
-        ccs_invoke = catapult_exe + ' -product ultra -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
+        ccs_invoke = catapult_exe + " -product ultra -shell -f build_prj.tcl -eval 'set ::argv " + ccs_args + "'"
         print(ccs_invoke)
         os.system(ccs_invoke)
         os.chdir(curr_dir)
@@ -455,9 +455,9 @@ class CatapultBackend(FPGABackend):
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
-            assert (
-                len(layer.get_input_variable().shape) == 1
-            ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            assert len(layer.get_input_variable().shape) == 1, (
+                'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):

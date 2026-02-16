@@ -105,7 +105,7 @@ def backend_configs():
 
 
 @pytest.fixture
-def hls_model_setup(request, backend_configs, tmp_path):
+def hls_model_setup(request, test_case_id, backend_configs, tmp_path):
     """Fixture to create, write, and copy the report files of the HLS model
     for a given backend."""
     backend_config = backend_configs[request.param]
@@ -115,7 +115,7 @@ def hls_model_setup(request, backend_configs, tmp_path):
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='model')
 
-    output_dir = str(tmp_path / f'hls4mlprj_report_{backend_config["backend"]}')
+    output_dir = str(tmp_path / test_case_id)
     test_report_dir = test_root_path / f'test_report/{backend_config["backend"]}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
@@ -131,12 +131,12 @@ def hls_model_setup(request, backend_configs, tmp_path):
     # to actually generate the reports (using Vivado 2020.1 or oneAPI 2025.0)
     # hls_model.build(**(backend_config['build']))
 
-    backend_config["copy_func"](output_dir, test_report_dir)
+    backend_config['copy_func'](output_dir, test_report_dir)
 
     yield output_dir, backend_config
 
 
-@pytest.mark.parametrize("hls_model_setup", ['Vivado', 'oneAPI'], indirect=True)
+@pytest.mark.parametrize('hls_model_setup', ['Vivado', 'oneAPI'], indirect=True)
 def test_report(hls_model_setup, capsys):
     """Tests that the report parsing and printing functions work for different backends."""
     output_dir, backend_config = hls_model_setup

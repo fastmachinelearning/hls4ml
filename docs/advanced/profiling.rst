@@ -2,7 +2,7 @@
 Profiling
 =========
 
-In the ``hls4ml`` configuration file, it is possible to specify the model ``Precision`` and ``ReuseFactor`` with fine granularity.
+In the ``hls4ml`` configuration file, it is possible to specify the model ``Precision`` and ``ReuseFactor`` with up to layer-wise granularity.
 
 Using a low precision can help reduce the FPGA resource usage of a model, but may result in loss of model performance if chosen inappropriately. The profiling tools in ``hls4ml`` help you to decide the appropriate model precision.
 

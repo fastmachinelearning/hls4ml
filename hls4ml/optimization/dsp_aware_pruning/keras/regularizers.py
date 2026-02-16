@@ -6,7 +6,7 @@ from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
 
 @tf.keras.utils.register_keras_serializable(name='DenseRegularizer')
 class DenseRegularizer(tf.keras.regularizers.Regularizer):
-    '''
+    """
     A flexible regularizer for Dense layers, simultaneously penalizing high values and variance
 
     Args:
@@ -36,7 +36,7 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
             They likely use less than one BRAM block (e.g. if the BRAM width is 36 bit and weight width is 16)
             In that case, we need to group several patterns together,
             So the entire block of patterns can be removed, thus saving DSP and BRAM
-    '''
+    """
 
     def __init__(
         self,
@@ -148,7 +148,7 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
 
 @tf.keras.utils.register_keras_serializable(name='Conv2DRegularizer')
 class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
-    '''
+    """
     A flexible regularizer for Conv2D layers, simultaneously performing pruning and clustering
 
     Args:
@@ -169,7 +169,7 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
             (group weights of dimensionality filt_width x filt_height x n_chan)
         - structure_type = pattern: regularization on groups of every n-th weight in flattened array
             (e.g. grouping by reuse factor in hls4ml)
-    '''
+    """
 
     def __init__(
         self,

@@ -6,7 +6,7 @@ from hls4ml.utils.dependency import requires
 
 
 def parse_quartus_report(hls_dir, write_to_file=True):
-    '''
+    """
     Parse a report from a given Quartus project as a dictionary.
 
     Args:
@@ -16,7 +16,7 @@ def parse_quartus_report(hls_dir, write_to_file=True):
     Returns:
         results (dict): The report dictionary, containing latency, resource usage etc.
 
-    '''
+    """
     if not os.path.exists(hls_dir):
         print(f'Path {hls_dir} does not exist. Exiting.')
         return
@@ -31,19 +31,19 @@ def parse_quartus_report(hls_dir, write_to_file=True):
     results = _find_reports(rpt_dir)
     print(results)
     if write_to_file:
-        print("Here")
-        f = open(hls_dir + '/' 'synthesis-report.txt', 'w')
+        print('Here')
+        f = open(hls_dir + '/synthesis-report.txt', 'w')
         f.write('HLS Synthesis Latency & Resource Usage Report')
         for key in results:
             f.write(str(key) + ':' + str(results[key]) + '\n')
-        print("There")
+        print('There')
         print(f'Saved latency & resource usage summary to {hls_dir}/synthesis-report.txt')
     return results
 
 
 @requires('quartus-report')
 def read_quartus_report(hls_dir, open_browser=False):
-    '''
+    """
     Parse and print the Quartus report to print the report. Optionally open a browser.
 
     Args:
@@ -52,7 +52,7 @@ def read_quartus_report(hls_dir, open_browser=False):
 
     Returns:
         None
-    '''
+    """
     from tabulate import tabulate
 
     report = parse_quartus_report(hls_dir)
@@ -73,7 +73,7 @@ def read_quartus_report(hls_dir, open_browser=False):
 
 
 def _find_project_dir(hls_dir):
-    '''
+    """
     Finds the synthesis folder from the HLS project directory
 
     Args:
@@ -81,7 +81,7 @@ def _find_project_dir(hls_dir):
 
     Returns:
         project_dir (string): Synthesis folder within HLS project directory
-    '''
+    """
     top_func_name = None
 
     with open(hls_dir + '/build_lib.sh') as f:
@@ -94,7 +94,7 @@ def _find_project_dir(hls_dir):
 
 @requires('quartus-report')
 def read_js_object(js_script):
-    '''
+    """
     Reads the JavaScript file and return a dictionary of variables definded in the script.
 
     Args:
@@ -102,7 +102,7 @@ def read_js_object(js_script):
 
     Returns:
         Dictionary of variables defines in script
-    '''
+    """
     from calmjs.parse import asttypes, es5
 
     def visit(node):
@@ -110,7 +110,7 @@ def read_js_object(js_script):
             d = {}
             for child in node:
                 if not isinstance(child, asttypes.VarStatement):
-                    raise ValueError("All statements should be var statements")
+                    raise ValueError('All statements should be var statements')
                 key, val = visit(child)
                 d[key] = val
             return d
@@ -133,7 +133,7 @@ def read_js_object(js_script):
                 elif isinstance(node.left, asttypes.Number) and isinstance(node.right, asttypes.Number):
                     return visit(node.left) + visit(node.right)
                 else:
-                    raise ValueError("Cannot + on anything other than two literals")
+                    raise ValueError('Cannot + on anything other than two literals')
             else:
                 raise ValueError("Cannot do operator '%s'" % node.op)
 
@@ -144,20 +144,20 @@ def read_js_object(js_script):
         elif isinstance(node, asttypes.Null):
             return None
         elif isinstance(node, asttypes.Boolean):
-            if str(node) == "false":
+            if str(node) == 'false':
                 return False
             else:
                 return True
         elif isinstance(node, asttypes.Identifier):
             return node.value
         else:
-            raise Exception("Unhandled node: %r" % node)
+            raise Exception('Unhandled node: %r' % node)
 
     return visit(es5(js_script))
 
 
 def _read_quartus_file(filename):
-    '''
+    """
     Reads results (clock frequency, resource usage) obtained through FPGA synthesis (full Quartus compilation)
 
     Args:
@@ -165,14 +165,14 @@ def _read_quartus_file(filename):
 
     Returns:
         results (dict): Resource usage obtained through Quartus Compile
-    '''
+    """
 
     with open(filename) as dataFile:
         quartus_data = dataFile.read()
         quartus_data = read_js_object(quartus_data)
 
     results = {}
-    if quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] != "TBD":
+    if quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] != 'TBD':
         results['Clock'] = quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock']
         results['Quartus ALM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['alm']
         results['Quartus REG'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['reg']
@@ -188,7 +188,7 @@ def _read_quartus_file(filename):
 
 
 def _read_hls_file(filename):
-    '''
+    """
     Reads HLS resource estimate obtained through HLS synthesis
 
     Args:
@@ -196,7 +196,7 @@ def _read_hls_file(filename):
 
     Returns:
         results (dict): Resource usage obtained through HLS Estimation
-    '''
+    """
     with open(filename) as dataFile:
         report_data = dataFile.read()
         report_data = report_data[: report_data.rfind('var fileJSON')]
@@ -220,7 +220,7 @@ def _read_hls_file(filename):
 
 
 def _read_verification_file(filename):
-    '''
+    """
     Reads verification data (latency, initiation interval) obtained through simulation
 
     Args:
@@ -228,7 +228,7 @@ def _read_verification_file(filename):
 
     Returns:
         results (dict): Verification data obtained from simulation
-    '''
+    """
     results = {}
     if os.path.isfile(filename):
         with open(filename) as dataFile:
@@ -238,12 +238,12 @@ def _read_verification_file(filename):
         try:
             results['Number of Invoations'] = verification_data['verifJSON']['functions'][0]['data'][0]
 
-            latency = verification_data['verifJSON']['functions'][0]['data'][1].split(",")
+            latency = verification_data['verifJSON']['functions'][0]['data'][1].split(',')
             results['Latency (MIN)'] = latency[0]
             results['Latency (MAX)'] = latency[1]
             results['Latency (AVG)'] = latency[2]
 
-            ii = verification_data['verifJSON']['functions'][0]['data'][2].split(",")
+            ii = verification_data['verifJSON']['functions'][0]['data'][2].split(',')
             results['ii (MIN)'] = ii[0]
             results['ii (MAX)'] = ii[1]
             results['ii (AVG)'] = ii[2]

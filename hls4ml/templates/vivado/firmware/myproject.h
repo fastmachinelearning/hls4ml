@@ -14,6 +14,8 @@ void myproject(
     // hls-fpga-machine-learning insert header
 );
 
+// hls-fpga-machine-learning insert emulator-defines
+
 // hls-fpga-machine-learning insert namespace-end
 
 #endif

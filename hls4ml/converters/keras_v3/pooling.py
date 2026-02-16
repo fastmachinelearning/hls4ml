@@ -1,7 +1,7 @@
 import typing
 from collections.abc import Sequence
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 from .conv import gen_conv_config
 
 if typing.TYPE_CHECKING:
@@ -10,7 +10,6 @@ if typing.TYPE_CHECKING:
     from keras.src.layers.pooling.base_pooling import BasePooling
 
 
-@register
 class PoolingHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.pooling.max_pooling1d.MaxPooling1D',

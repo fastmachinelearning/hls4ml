@@ -12,6 +12,7 @@ from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
     GRU,
     LSTM,
+    Bidirectional,
     Conv1D,
     Conv2D,
     Dense,
@@ -23,6 +24,7 @@ from hls4ml.model.layers import (
     GarNet,
     GarNetStack,
     Layer,
+    LayerNormalization,
     Pooling1D,
     Pooling2D,
     SeparableConv1D,
@@ -31,7 +33,7 @@ from hls4ml.model.layers import (
     TimeDistributed,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, PackedType, RoundingMode, SaturationMode
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.einsum_utils import parse_einsum
@@ -45,15 +47,29 @@ class VivadoBackend(FPGABackend):
 
     def _register_layer_attributes(self):
         # Add RNN-specific attributes, recurrent_reuse_factor and static implementation
-        rnn_layers = [
-            SimpleRNN,
-            LSTM,
-            GRU,
-        ]
+        rnn_layers = [SimpleRNN, LSTM, GRU]
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(
+                ConfigurableAttribute('static', value_type=bool, default=True, description=descriptions.recurrent_static)
+            )
+            attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
+            self.attribute_map[layer] = attrs
+
+        bidir_rnn_layers = [Bidirectional]
+        for layer in bidir_rnn_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('forward_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(ConfigurableAttribute('backward_reuse_factor', default=1, description=descriptions.reuse_factor))
+            attrs.append(
+                ConfigurableAttribute('forward_recurrent_reuse_factor', default=1, description=descriptions.reuse_factor)
+            )
+            attrs.append(
+                ConfigurableAttribute('backward_recurrent_reuse_factor', default=1, description=descriptions.reuse_factor)
+            )
             attrs.append(
                 ConfigurableAttribute('static', value_type=bool, default=True, description=descriptions.recurrent_static)
             )
@@ -82,6 +98,32 @@ class VivadoBackend(FPGABackend):
                     choices=['LineBuffer', 'Encoded'],
                     default='LineBuffer',
                     description=descriptions.conv_implementation,
+                )
+            )
+            self.attribute_map[layer] = attrs
+
+        # Add LayerNorm attributes
+        ln_layers = [LayerNormalization]
+        for layer in ln_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('table_range_power2', default=0, description=descriptions.table_range_power2))
+            attrs.append(ConfigurableAttribute('table_size', default=4096, description=descriptions.table_size))
+            attrs.append(
+                TypeAttribute(
+                    'table',
+                    default=FixedPrecisionType(
+                        8, 5, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                    ),
+                    description=descriptions.table_type,
+                )
+            )
+            attrs.append(
+                TypeAttribute(
+                    'accum',
+                    default=FixedPrecisionType(
+                        14, 4, signed=True, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                    ),
+                    description=descriptions.accum_type,
                 )
             )
             self.attribute_map[layer] = attrs
@@ -141,11 +183,11 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
             'vivado:generate_conv_im2col',
-            'vivado:generate_pointwise_conv1_d',
             'vivado:generate_unrolled_dense_resource',
             'vivado:set_pipeline_style',
             'vivado:d_a_latency_dense_template',
             'vivado:d_a_latency_conv_template',
+            'vivado:d_a_combinational_template',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -317,7 +359,7 @@ class VivadoBackend(FPGABackend):
             else:
                 self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 layer.set_attr('strategy', 'resource_unrolled')
-        elif layer.model.config.get_strategy(layer).lower() == 'distributed_arithmetic':
+        elif layer.model.config.get_strategy(layer).lower() in ('distributed_arithmetic', 'da'):
             rf = layer.get_attr('reuse_factor')
             if rf != 1:
                 raise Exception(f'Layer {layer.name} has rf = {rf} != 1, but has strategy = "distributed_arithmetic".')
@@ -359,7 +401,7 @@ class VivadoBackend(FPGABackend):
             else:
                 self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 layer.set_attr('strategy', 'resource_unrolled')
-        elif layer.model.config.get_strategy(layer).lower() == 'distributed_arithmetic':
+        elif layer.model.config.get_strategy(layer).lower() in ('distributed_arithmetic', 'da'):
             rf = layer.get_attr('reuse_factor')
             if rf != 1:
                 raise Exception(f'Layer {layer.name} has rf = {rf} != 1, but has strategy = "distributed_arithmetic".')
@@ -373,12 +415,6 @@ class VivadoBackend(FPGABackend):
         user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
         layer_pf = layer.get_attr('parallelization_factor', None)
         chosen_pf = user_pf or layer_pf or 1
-        if user_pf is not None and layer_pf is not None:
-            if user_pf != layer_pf:
-                warn(
-                    f'For layer {layer.name}, parallelization factor of {layer_pf} is defined in the proxy-model, but is overridden by the user to {user_pf}.'  # noqa: E501
-                )
-
         valid_pf = self.get_valid_conv_partition_splits(1, out_width)
         if chosen_pf not in valid_pf:
             closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
@@ -485,7 +521,7 @@ class VivadoBackend(FPGABackend):
             else:
                 self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
                 layer.set_attr('strategy', 'resource_unrolled')
-        elif layer.model.config.get_strategy(layer).lower() == 'distributed_arithmetic':
+        elif layer.model.config.get_strategy(layer).lower() in ('distributed_arithmetic', 'da'):
             rf = layer.get_attr('reuse_factor')
             if rf != 1:
                 raise Exception(f'Layer {layer.name} has rf = {rf} != 1, but has strategy = "distributed_arithmetic".')
@@ -672,6 +708,45 @@ class VivadoBackend(FPGABackend):
             loop_mode = 'off'
         layer.set_attr('time_step_loop_parallelism', loop_mode)
 
+    @layer_optimizer(Bidirectional)
+    def init_bidirectional(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+
+        for i, d in enumerate(['forward', 'backward']):
+            layer.set_attr(f'{d}_reuse_factor', reuse_factor)
+            layer.set_attr(f'{d}_recurrent_reuse_factor', reuse_factor)
+
+            if layer.model.config.is_resource_strategy(layer):
+                n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)[i]
+                self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor')
+                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor')
+                layer.set_attr('strategy', 'resource')
+
+            elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+                use_resource_instead = False
+                if layer.get_attr('reuse_factor', 1) == 1:
+                    print(
+                        f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name} ({d})". '
+                        'Using "resource" strategy instead.'
+                    )
+                use_resource_instead = True
+
+                n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)[i]
+                if use_resource_instead:
+                    self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor')
+                    self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor')
+                    layer.set_attr('strategy', 'resource')
+                else:
+                    self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor', include_max_rf=False)
+                    self.set_closest_reuse_factor(
+                        layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor', include_max_rf=False
+                    )
+                    layer.set_attr('strategy', 'resource_unrolled')
+            else:
+                layer.set_attr('strategy', 'latency')
+
+        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
+
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):
         reuse_factor = layer.attributes['reuse_factor']
@@ -766,7 +841,6 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Einsum)
     def init_einsum(self, layer: Einsum) -> None:
-
         equation = layer.attributes['equation']
         inp0_shape = layer.attributes['inp0_shape']
         inp1_shape = layer.attributes['inp1_shape']

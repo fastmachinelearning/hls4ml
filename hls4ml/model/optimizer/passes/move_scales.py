@@ -1,9 +1,9 @@
-'''
+"""
 This file includes optimizations related to moving the ApplyAphas across MatMul and Conv nodes.
 
 TODO:  Check that biases are properly handled. (Attempt to do it via Merge)
 
-'''
+"""
 
 import warnings
 
@@ -17,13 +17,13 @@ _attrs_not_to_copy = ['trace', 'precision', 'scale', 'bias', 'scale_data', 'bias
 
 
 class ScaleDownMatMul(OptimizerPass):
-    '''Shift an ApplyAlpha below a MatMul'''
+    """Shift an ApplyAlpha below a MatMul"""
 
     def match(self, node):
-        '''
+        """
         Check to see if we have a MatMul with at least one input ApplyAlpha.
         Note, if both are this optimizer runs twice.
-        '''
+        """
         is_match = (
             isinstance(node, MatMul)
             and len(node.inputs) == 2
@@ -106,11 +106,11 @@ class ScaleDownMatMul(OptimizerPass):
 
 
 class ScaleDownAdd(OptimizerPass):
-    '''Shift an identical ApplyAlpha below a Merge (Add)'''
+    """Shift an identical ApplyAlpha below a Merge (Add)"""
 
     def match(self, node):
-        '''Check to see if we have an add with two ApplyAlphas with identical scale'''
-        is_match = isinstance(node, Merge) and len(node.inputs) == 2 and node.attributes["op"] == "add"
+        """Check to see if we have an add with two ApplyAlphas with identical scale"""
+        is_match = isinstance(node, Merge) and len(node.inputs) == 2 and node.attributes['op'] == 'add'
         if is_match:
             in0 = node.get_input_node(node.inputs[0])
             in1 = node.get_input_node(node.inputs[1])
@@ -150,13 +150,13 @@ class ScaleDownAdd(OptimizerPass):
 
 
 class BiasDownAdd(OptimizerPass):
-    '''Shift a ApplyAlpha with only bias below a Merge (Add)'''
+    """Shift a ApplyAlpha with only bias below a Merge (Add)"""
 
     def match(self, node):
-        '''Match if there is only one ApplyAlpha. If there are two, if the scale of both is 0, they would
+        """Match if there is only one ApplyAlpha. If there are two, if the scale of both is 0, they would
         match the ScaleDownAdd, so this optimizer does not need to handle that case.
-        '''
-        is_match = isinstance(node, Merge) and len(node.inputs) == 2 and node.attributes["op"] == "add"
+        """
+        is_match = isinstance(node, Merge) and len(node.inputs) == 2 and node.attributes['op'] == 'add'
         if is_match:
             in0 = node.get_input_node(node.inputs[0])
             in1 = node.get_input_node(node.inputs[1])
@@ -185,10 +185,10 @@ class BiasDownAdd(OptimizerPass):
 
 
 class ScaleDownConv(OptimizerPass):
-    '''Shift an ApplyAlpha on a Conv with 2-3 inputs'''
+    """Shift an ApplyAlpha on a Conv with 2-3 inputs"""
 
     def match(self, node):
-        '''Shift an ApplyAlpha from the Weight'''
+        """Shift an ApplyAlpha from the Weight"""
         is_match = (
             isinstance(node, Conv)
             and len(node.inputs) > 1
@@ -210,9 +210,9 @@ class ScaleDownConv(OptimizerPass):
         aa2 = isinstance(in2, ApplyAlpha) if len(node.inputs) == 3 else False
 
         if not isinstance(in1, (Constant, ApplyAlpha)):
-            raise RuntimeError("The weight node needs to be ApplyAlpha or Constant")
+            raise RuntimeError('The weight node needs to be ApplyAlpha or Constant')
         if len(node.inputs) == 3 and not isinstance(in2, (Constant, ApplyAlpha)):
-            raise RuntimeError("The bias node needs to be ApplyAlpha or Constant")
+            raise RuntimeError('The bias node needs to be ApplyAlpha or Constant')
 
         scale0 = in0.weights['scale'].data_unquantized if aa0 else None
         bias0 = in0.weights['bias'].data_unquantized if aa0 else None

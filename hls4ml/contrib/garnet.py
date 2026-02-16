@@ -64,22 +64,22 @@ class GarNet(keras.layers.Layer):
         if self._quantize_transforms:
             self._input_feature_transform = NamedQDense(
                 n_propagate,
-                kernel_quantizer="quantized_bits(%i,%i,0,alpha=1)" % (self._total_bits, self._int_bits),
-                bias_quantizer="quantized_bits(%i,%i,0,alpha=1)" % (self._total_bits, self._int_bits),
+                kernel_quantizer='quantized_bits(%i,%i,0,alpha=1)' % (self._total_bits, self._int_bits),
+                bias_quantizer='quantized_bits(%i,%i,0,alpha=1)' % (self._total_bits, self._int_bits),
                 name='FLR',
             )
             self._output_feature_transform = NamedQDense(
                 n_filters,
-                kernel_quantizer="quantized_bits(%i,%i,0,alpha=1)" % (self._total_bits, self._int_bits),
+                kernel_quantizer='quantized_bits(%i,%i,0,alpha=1)' % (self._total_bits, self._int_bits),
                 name='Fout',
             )
-            if self._output_activation is None or self._output_activation == "linear":
+            if self._output_activation is None or self._output_activation == 'linear':
                 self._output_activation_transform = QActivation(
-                    "quantized_bits(%i, %i)" % (self._total_bits, self._int_bits)
+                    'quantized_bits(%i, %i)' % (self._total_bits, self._int_bits)
                 )
             else:
                 self._output_activation_transform = QActivation(
-                    "quantized_%s(%i, %i)" % (self._output_activation, self._total_bits, self._int_bits)
+                    'quantized_%s(%i, %i)' % (self._output_activation, self._total_bits, self._int_bits)
                 )
         else:
             self._input_feature_transform = NamedDense(n_propagate, name='FLR')
@@ -303,21 +303,21 @@ class GarNetStack(GarNet):
             if self._quantize_transforms is not None:
                 input_feature_transform = NamedQDense(
                     p,
-                    kernel_quantizer="quantized_bits(%i,%i,0,alpha=1)" % (self._total_bits, self._int_bits),
-                    bias_quantizer="quantized_bits(%i,%i,0,alpha=1)" % (self._total_bits, self._int_bits),
+                    kernel_quantizer='quantized_bits(%i,%i,0,alpha=1)' % (self._total_bits, self._int_bits),
+                    bias_quantizer='quantized_bits(%i,%i,0,alpha=1)' % (self._total_bits, self._int_bits),
                     name=('FLR%d' % it),
                 )
                 output_feature_transform = NamedQDense(
                     f,
-                    kernel_quantizer="quantized_bits(%i,%i,0,alpha=1)" % (self._total_bits, self._int_bits),
+                    kernel_quantizer='quantized_bits(%i,%i,0,alpha=1)' % (self._total_bits, self._int_bits),
                     name=('Fout%d' % it),
                 )
 
-                if self._output_activation is None or self._output_activation == "linear":
-                    output_activation_transform = QActivation("quantized_bits(%i, %i)" % (self._total_bits, self._int_bits))
+                if self._output_activation is None or self._output_activation == 'linear':
+                    output_activation_transform = QActivation('quantized_bits(%i, %i)' % (self._total_bits, self._int_bits))
                 else:
                     output_activation_transform = QActivation(
-                        "quantized_%s(%i, %i)" % (self._output_activation, self._total_bits, self._int_bits)
+                        'quantized_%s(%i, %i)' % (self._output_activation, self._total_bits, self._int_bits)
                     )
             else:
                 input_feature_transform = NamedDense(p, name=('FLR%d' % it))

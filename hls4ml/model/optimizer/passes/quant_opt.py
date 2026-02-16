@@ -73,7 +73,7 @@ class QuantConstantParameters(OptimizerPass):
 
         node.inputs = [inp for inp in node.inputs if inp]
         if len(node.inputs) != 1:
-            raise RuntimeError("hls4ml only supports constant scale, zeropt, and bitwidth values")
+            raise RuntimeError('hls4ml only supports constant scale, zeropt, and bitwidth values')
 
         return True
 
@@ -83,7 +83,7 @@ class QuantToActivation(OptimizerPass):
     This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a a 1:1 transformation of
     a Quant to an Activation.
 
-    As an optimization, this is not called when the input is constant.
+    This is not called when the input is constant.
     """
 
     def match(self, node):
@@ -148,7 +148,7 @@ class QuantToActivation(OptimizerPass):
 
 class FuseQuantWithConstant(OptimizerPass):
     """
-    This is for the case when scale is a positive power of 2 and zeropt is 0.
+    This is for the case when scale is a positive power of 2 and zeropt is 0, and when the input is a constant.
     """
 
     def match(self, node):
@@ -207,7 +207,7 @@ class FuseQuantWithConstant(OptimizerPass):
 class QuantToAlphaActivationAlpha(OptimizerPass):
     """
     This is for the case when scale is not power-of-2 or zeropt is not 0. It is a a 1:3 transformation of
-    a Quant to an ApplyAlpha (to scale), Activatio, ApplyAlpho (to rescale).
+    a Quant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to rescale).
 
     NOTE:  It needs to be scheduled after QuantToActivation (or we need to make the match criteria stricter)
     """
@@ -294,6 +294,8 @@ class ConstQuantToConstAlpha(OptimizerPass):
     a Quant to an ApplyAlpha (to scale), Activation, ApplyAlpho (to unscale), but an input
     consts allows for optimization, so the ApplyAlpha (to scale), Activation are
     optimized away right away.
+
+    NOTE:  It needs to be scheduled after FuseQuantWithConstant (or we need to make the match criteria stricter)
     """
 
     def match(self, node):
@@ -302,10 +304,6 @@ class ConstQuantToConstAlpha(OptimizerPass):
             isinstance(node, Quant) and len(node.inputs) == 1 and isinstance(node.get_input_node(node.inputs[0]), Constant)
         )
 
-        if is_match:  # to make sure this is a quant node with inputs
-            scale = node.get_attr('scale')
-            bias = node.get_attr('zeropt')
-            is_match = is_match and ((scale != np.ones_like(scale)).any() or (bias != np.zeros_like(bias)).any())
         return is_match
 
     def transform(self, model, node):

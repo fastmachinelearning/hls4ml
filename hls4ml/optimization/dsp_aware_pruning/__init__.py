@@ -33,7 +33,7 @@ def optimize_keras_model_for_hls4ml(
     knapsack_solver='CBC_MIP',
     regularization_range=default_regularization_range,
 ):
-    '''
+    """
     Top-level function for optimizing a Keras model, given hls4ml config and a hardware objective(s)
 
     Args:
@@ -66,14 +66,14 @@ def optimize_keras_model_for_hls4ml(
         cutoff_bad_trials (int): After how many bad trials (performance below threshold),
             should model pruning / weight sharing stop
         directory (string): Directory to store temporary results
-        tuner (str): Tuning algorithm, choose between Bayesian, Hyperband and None
+        tuner (str): Tuning algorithm, choose between Bayesian, Hyperband and Manual
         knapsack_solver (str): Algorithm to solve Knapsack problem when optimizing;
             default usually works well; for very large networks, greedy algorithm might be more suitable
         regularization_range (list): List of suitable hyperparameters for weight decay
 
     Returns:
         keras.Model: Optimized model
-    '''
+    """
 
     # Extract model attributes
     model_attributes = get_attributes_from_keras_model_and_hls4ml_config(keras_model, hls_config)

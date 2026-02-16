@@ -871,6 +871,7 @@ PReLUActLoop:
 //       Binary TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void binary_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+    using cache_T = ac_int<2, true>;
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         //#pragma HLS PIPELINE
@@ -881,11 +882,14 @@ PReLUActLoop:
 
     PReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
-            //#pragma HLS UNROLL
-            if (in_data[j] > 0)
-                out_data[j] = (typename res_T::value_type)1;
+            cache_T cache;
+
+            if (in_data[j] >= 0)
+                cache = 1;
             else
-                out_data[j] = (typename res_T::value_type) - 1;
+                cache = -1;
+
+            out_data[j] = binary_cast<cache_T, typename res_T::value_type>(cache);
         }
         res.write(out_data);
     }

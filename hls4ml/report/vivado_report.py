@@ -464,7 +464,7 @@ _table_base_template = """
 </table>
 """
 
-_row_base_template = "        <tr><td>{row_title}</td><td>{{{row_key}}}</td>"
+_row_base_template = '        <tr><td>{row_title}</td><td>{{{row_key}}}</td>'
 
 
 def _make_html_table_template(table_header, row_templates):
@@ -717,7 +717,7 @@ def aggregate_graph_reports(graph_reports):
             if k == 'DSP':
                 final_report[k] += float(report.get('DSP48E', '0'))
 
-    final_report['EstimatedClockPeriod'] = f"{final_report['EstimatedClockPeriod']:.3f}"
+    final_report['EstimatedClockPeriod'] = f'{final_report["EstimatedClockPeriod"]:.3f}'
     for k in keys_to_sum:
         final_report[k] = str(final_report[k])
 

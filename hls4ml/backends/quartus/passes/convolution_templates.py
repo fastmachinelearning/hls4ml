@@ -4,7 +4,7 @@ from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm
 
 # TODO - Dilation rate ?
 
-''' Shared mutliplication config '''
+""" Shared mutliplication config """
 conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
@@ -28,7 +28,7 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
-''' 1D Conv '''
+""" 1D Conv """
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned in_width = {in_width};
     static const unsigned n_chan = {n_chan};
@@ -103,7 +103,7 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
 
-''' 2D Conv '''
+""" 2D Conv """
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned in_height = {in_height};
     static const unsigned in_width = {in_width};

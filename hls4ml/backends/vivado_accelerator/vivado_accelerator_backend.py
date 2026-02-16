@@ -52,7 +52,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
                 try:
                     os.system('vivado -mode batch -source design.tcl')
                 except Exception:
-                    print("Something went wrong, check the Vivado logs")
+                    print('Something went wrong, check the Vivado logs')
                 os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
@@ -73,16 +73,16 @@ class VivadoAcceleratorBackend(VivadoBackend):
         try:
             os.system('vivado -mode batch -source design.tcl')
         except Exception:
-            print("Something went wrong, check the Vivado logs")
+            print('Something went wrong, check the Vivado logs')
         project_name = model.config.get_project_name()
         ip_repo_path = abs_path_dir + '/' + project_name + '_prj' + '/solution1/impl/ip'
         os.makedirs('xclbin_files', exist_ok=True)
         os.chdir(abs_path_dir + '/xclbin_files')
         # TODO Add other platforms
         vitis_cmd = (
-            "v++ -t hw --platform "
+            'v++ -t hw --platform '
             + platform
-            + " --link ../xo_files/"
+            + ' --link ../xo_files/'
             + project_name
             + "_kernel.xo -o'"
             + project_name
@@ -92,7 +92,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         try:
             os.system(vitis_cmd)
         except Exception:
-            print("Something went wrong, check the Vitis/Vivado logs")
+            print('Something went wrong, check the Vitis/Vivado logs')
         os.chdir(curr_dir)
 
     def create_initial_config(
@@ -108,7 +108,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         output_type='float',
         platform='xilinx_u250_xdma_201830_2',
     ):
-        '''
+        """
         Create initial accelerator config with default parameters
 
         Args:
@@ -129,7 +129,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
 
         Returns:
             populated config
-        '''
+        """
         board = board if board is not None else 'pynq-z2'
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
         config['AcceleratorConfig'] = {}

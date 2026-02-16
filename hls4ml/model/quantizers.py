@@ -67,9 +67,9 @@ class BinaryQuantizer(Quantizer):
         ones = np.ones_like(data)
         quant_data = data
         if self.bits == 1:
-            quant_data = np.where(data > 0, ones, zeros).astype('int')
+            quant_data = np.where(data >= 0, ones, zeros).astype('int')
         if self.bits == 2:
-            quant_data = np.where(data > 0, ones, -ones)
+            quant_data = np.where(data >= 0, ones, -ones)
         return quant_data
 
     def serialize_state(self):

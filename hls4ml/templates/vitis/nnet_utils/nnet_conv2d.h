@@ -45,7 +45,13 @@ void conv_2d_cl(
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     // Inlining helps reduce latency, but may also cause timing issues in some cases, use carefully.
-    //#pragma HLS INLINE recursive
+    // But without inlining Vitis HLS doesn't respect the parallelization factor config ¯\_(ツ)_/
+    // Vitis2025.1 hangs in RTL simulation with this, though
+
+    #pragma HLS INLINE recursive
+
+    // #pragma HLS PIPELINE II = CONFIG_T::reuse_factor * CONFIG_T::n_partitions
+    // ↑ This makes II=2 in for all n_partitions > 1, no matter what the actual II should be
 
     if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {
         conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
@@ -60,9 +66,14 @@ void pointwise_conv_2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width *
                           typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
                           typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     assert(CONFIG_T::filt_width == 1);
-
     // Inlining helps reduce latency, but may also cause timing issues in some cases, use carefully.
-    //#pragma HLS INLINE recursive
+    // But without inlining Vitis HLS doesn't respect the parallelization factor config ¯\_(ツ)_/
+    // Vitis2025.1 hangs in RTL simulation with this, though
+
+    #pragma HLS INLINE recursive
+
+    // #pragma HLS PIPELINE II = CONFIG_T::reuse_factor * CONFIG_T::n_partitions
+    // ↑ This makes II=2 in for all n_partitions > 1, no matter what the actual II should be
 
     // Nothing special to be done for io_parallel implementation
     if (CONFIG_T::strategy == nnet::latency || CONFIG_T::strategy == nnet::distributed_arithmetic) {

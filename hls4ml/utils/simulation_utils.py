@@ -11,7 +11,7 @@ def parse_component_xml(component_xml_path):
     Parse the component.xml from the generated Vivado IP and return a dict of the port metadata.
     """
     if not os.path.exists(component_xml_path):
-        raise FileNotFoundError(f"component.xml not found at {component_xml_path}")
+        raise FileNotFoundError(f'component.xml not found at {component_xml_path}')
 
     tree = ET.parse(component_xml_path)
     root = tree.getroot()
@@ -52,12 +52,12 @@ def annotate_axis_stream_widths(nn_config, vivado_project_path):
     for layer in nn_config.get('outputs', []):
         batch = layer['batch_size']
         # find the TDATA port (case-insensitive)
-        port, info = next(((p, i) for p, i in port_dict.items() if p.lower() == f"{layer['name']}_tdata"), (None, None))
+        port, info = next(((p, i) for p, i in port_dict.items() if p.lower() == f'{layer["name"]}_tdata'), (None, None))
         if port is None:
             raise KeyError(f"No TDATA port for '{layer['name']}' in {component_xml_path}")
         w = info['width']
         if w % batch:
-            raise ValueError(f"Bus width ({w}) not divisible by No of output elements ({batch})")
+            raise ValueError(f'Bus width ({w}) not divisible by No of output elements ({batch})')
         layer.update({'axis_bus_width': w, 'axis_element_width': w // batch})
 
 
@@ -109,7 +109,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write('    //------------------------------------------------------------------------\n')
 
             for layer in nn_config['inputs']:
-                name = layer["name"]
+                name = layer['name']
                 total_bits = layer['integer_bits'] + layer['fractional_bits']
                 batch_size = layer['batch_size']
                 f.write(f'    reg  [{(total_bits * batch_size) - 1}:0] {name}_tdata;\n')
@@ -124,7 +124,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write('    //------------------------------------------------------------------------\n')
 
             for layer in nn_config['outputs']:
-                name = layer["name"]
+                name = layer['name']
                 total_bits = layer['integer_bits'] + layer['fractional_bits']
                 batch_size = layer['batch_size']
                 axis_bus_width = layer['axis_bus_width']
@@ -140,7 +140,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write('    //------------------------------------------------------------------------\n')
 
             for layer in nn_config['inputs']:
-                name = layer["name"]
+                name = layer['name']
                 total_bits = layer['integer_bits'] + layer['fractional_bits']
                 batch_size = layer['batch_size']
                 for idx in range(batch_size):
@@ -155,7 +155,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             f.write('    //------------------------------------------------------------------------\n')
 
             for layer in nn_config['outputs']:
-                name = layer["name"]
+                name = layer['name']
                 total_bits = layer['integer_bits'] + layer['fractional_bits']
                 batch_size = layer['batch_size']
                 for idx in range(batch_size):
@@ -176,7 +176,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
 
         # Connect input interfaces
         for layer in nn_config['inputs']:
-            name = layer["name"]
+            name = layer['name']
             batch_size = layer['batch_size']
             if pragma == 'stream':
                 f.write(f'        .{name}_tdata({name}_tdata),\n')
@@ -189,7 +189,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
 
         # Connect output interfaces (all but last have trailing comma)
         for layer in nn_config['outputs'][:-1]:
-            name = layer["name"]
+            name = layer['name']
             batch_size = layer['batch_size']
             if pragma == 'stream':
                 f.write(f'        .{name}_tdata({name}_tdata),\n')
@@ -202,7 +202,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
 
         # Last output interface (no trailing comma)
         last_output_layer = nn_config['outputs'][-1]
-        name = last_output_layer["name"]
+        name = last_output_layer['name']
         batch_size = last_output_layer['batch_size']
         if pragma == 'stream':
             f.write(f'        .{name}_tdata({name}_tdata),\n')
@@ -334,12 +334,12 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         # Sending first pattern of inputs (all zeroes)
         # ----------------------------------------------------------------------
         for layer in nn_config['inputs']:
-            i_bits = layer["integer_bits"]
-            f_bits = layer["fractional_bits"]
+            i_bits = layer['integer_bits']
+            f_bits = layer['fractional_bits']
             total_bits = i_bits + f_bits
             batch_size = layer['batch_size']
-            fifo_depth = layer["fifo_depth"]
-            name = layer["name"]
+            fifo_depth = layer['fifo_depth']
+            name = layer['name']
             f.write(f'        // Sending first patern of inputs for {name}\n')
             if pragma == 'stream':
                 f.write(f'        {name}_tvalid = 1;\n')
@@ -379,13 +379,13 @@ def write_verilog_testbench(nn_config, testbench_output_path):
         # Sending second pattern of inputs (read from file)
         # ----------------------------------------------------------------------
         for layer in nn_config['inputs']:
-            i_bits = layer["integer_bits"]
-            f_bits = layer["fractional_bits"]
+            i_bits = layer['integer_bits']
+            f_bits = layer['fractional_bits']
             total_bits = i_bits + f_bits
             batch_size = layer['batch_size']
-            fifo_depth = layer["fifo_depth"]
-            name = layer["name"]
-            input_file = f"{name}_input_data.txt"
+            fifo_depth = layer['fifo_depth']
+            name = layer['name']
+            input_file = f'{name}_input_data.txt'
             f.write(f'        // Sending second pattern of inputs for {name}\n')
             if pragma == 'stream':
                 f.write(f'        {name}_tvalid = 1;\n')
@@ -435,16 +435,16 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             i_bits = layer['integer_bits']
             f_bits = layer['fractional_bits']
             total_bits = i_bits + f_bits
-            layer_name = layer["name"]
-            batch_size = layer["batch_size"]
+            layer_name = layer['name']
+            batch_size = layer['batch_size']
 
             f.write(f'    //Output capture for {layer_name}\n')
             f.write(f'    integer idx_{i};\n')
             if pragma == 'stream':
-                f.write(f'    reg signed [{total_bits-1}:0] fixed_val_{i};\n')
+                f.write(f'    reg signed [{total_bits - 1}:0] fixed_val_{i};\n')
                 f.write(f'    real real_val_{i};\n')
             else:
-                f.write(f'    reg signed [{total_bits-1}:0] fixed_val_{i};\n')
+                f.write(f'    reg signed [{total_bits - 1}:0] fixed_val_{i};\n')
                 f.write(f'    real real_val_{i};\n')
             f.write('    always @(posedge ap_clk) begin\n')
             if pragma == 'stream':
@@ -523,10 +523,10 @@ def prepare_tb_inputs(simulation_input_data, input_layers):
     elif isinstance(simulation_input_data, (list, tuple)):
         data_list = list(simulation_input_data)
     else:
-        raise TypeError(f"simulation_input_data must be None, ndarray or list/tuple, got {type(simulation_input_data)}")
+        raise TypeError(f'simulation_input_data must be None, ndarray or list/tuple, got {type(simulation_input_data)}')
 
     if len(data_list) != len(input_layers):
-        raise ValueError(f"Expected {len(input_layers)} input arrays, got {len(data_list)}.")
+        raise ValueError(f'Expected {len(input_layers)} input arrays, got {len(data_list)}.')
 
     reshaped = []
     for data, layer in zip(data_list, input_layers):
@@ -553,7 +553,7 @@ def read_testbench_log(testbench_log_path, outputs):
             header = next(reader)
             required_columns = {'output_name', 'value', 'index'}
             if not required_columns.issubset(set(header)):
-                print("Error: Missing required columns in the CSV file.")
+                print('Error: Missing required columns in the CSV file.')
                 return {}
 
             col_index = {col: idx for idx, col in enumerate(header)}
@@ -572,7 +572,7 @@ def read_testbench_log(testbench_log_path, outputs):
                     output_data[output_name].append((index, float(value)))
 
             if best_latency is None or worst_latency is None:
-                print("Error: BestLatency or WorstLatency not found.")
+                print('Error: BestLatency or WorstLatency not found.')
                 return {}
             sim_dict = {'BestLatency': best_latency, 'WorstLatency': worst_latency, 'BehavSimResults': []}
             ordered_output_names = [entry['name'] for entry in outputs]
@@ -596,8 +596,8 @@ def read_testbench_log(testbench_log_path, outputs):
             return sim_dict
 
     except (KeyError, IndexError, ValueError) as e:
-        print(f"Error: Issue with CSV file format or data: {e}")
+        print(f'Error: Issue with CSV file format or data: {e}')
         return {}
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f'An unexpected error occurred: {e}')
         return {}

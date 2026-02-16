@@ -37,17 +37,17 @@ def model():
         ('io_parallel', 'latency', 'LineBuffer'),
     ],
 )
-@pytest.mark.filterwarnings("error")
-def test_narrow(data, model, narrowset, capfd):
-    '''
+@pytest.mark.filterwarnings('error')
+def test_narrow(test_case_id, data, model, narrowset, capfd):
+    """
     Check that the implementation does not have leftover data.
-    '''
+    """
     io_type = narrowset[0]
     strategy = narrowset[1]
     conv = narrowset[2]
     X = data
 
-    output_dir = str(test_root_path / f'hls4mlprj_conv1d_narrow_{io_type}_{strategy}_{conv}')
+    output_dir = str(test_root_path / test_case_id)
 
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy
@@ -61,5 +61,5 @@ def test_narrow(data, model, narrowset, capfd):
     y_hls4ml = hls_model.predict(X)
 
     out, _ = capfd.readouterr()
-    assert "leftover data" not in out
+    assert 'leftover data' not in out
     np.testing.assert_allclose(y_keras.ravel(), y_hls4ml.ravel(), atol=0.05)

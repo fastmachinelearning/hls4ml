@@ -13,6 +13,7 @@
 #ifndef __INTELFPGA_COMPILER__
 
 #include "ac_fixed.h"
+#include "ac_float.h"
 #include "ac_int.h"
 #define hls_register
 
@@ -24,6 +25,7 @@ template <typename T> using stream_out = nnet::stream<T>;
 #else
 
 #include "HLS/ac_fixed.h"
+#include "HLS/ac_float.h"
 #include "HLS/ac_int.h"
 #include "HLS/hls.h"
 

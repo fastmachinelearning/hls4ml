@@ -6,7 +6,7 @@ from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_last_layer_wit
 
 
 def reduce_model(model):
-    '''
+    """
     Function for removing zero neurons & filters from a model and rewiring the model graph
     This function is built on top of Keras Surgeon available at: https://github.com/BenWhetton/keras-surgeon
     Keras Surgeon is no longer under active development and does not work for TensorFlow 2.3+ and QKeras
@@ -20,7 +20,7 @@ def reduce_model(model):
     Returns:
         reduced (keras.model): Modified model, with redundant structures removed
 
-    '''
+    """
     try:
         from kerassurgeon import Surgeon
     except ModuleNotFoundError:

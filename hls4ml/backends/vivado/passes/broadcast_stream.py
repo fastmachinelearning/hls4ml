@@ -6,14 +6,13 @@ from hls4ml.model.optimizer import OptimizerPass
 
 
 class Broadcast(Layer):
-    '''Inserted between layers for broadcasting.'''
+    """Inserted between layers for broadcasting."""
 
     def initialize(self):
         shape = self.attributes['target_shape']
         if shape[0] is None:
             shape = shape[1:]
-        dims = [f'N_SIZE_{i}_{self.index}' for i in range(1, len(shape) + 1)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape)
 
 
 broadcast_function_template = 'nnet::broadcast_stream<{input_t}, {output_t}, {config}>({input}, {output});'

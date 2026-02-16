@@ -262,7 +262,7 @@ class ActivationFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
-        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
+        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
 
         return self.template.format(**params)
 
@@ -276,7 +276,7 @@ class ParametrizedActivationFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['activation'] = node._get_act_function_name()
         params['param'] = node.get_attr('activ_param', 1.0)
-        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
+        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
 
         return self.template.format(**params)
 
@@ -290,7 +290,7 @@ class PReLUFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
         params['param'] = node.get_weights('param').name
-        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
+        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
 
         return self.template.format(**params)
 
@@ -303,7 +303,7 @@ class ActivationTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
-        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
+        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
         return self.template.format(**params)
 
 
@@ -315,7 +315,7 @@ class ParametrizedActivationTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node._get_act_function_name()
-        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
+        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
         return self.template.format(**params)
 
 

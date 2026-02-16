@@ -67,12 +67,12 @@ def _filter_name(model_name):
 
 
 def _load_example_data(model_name):
-    print("Downloading input & output example files ...")
+    print('Downloading input & output example files ...')
 
     filtered_name = _filter_name(model_name)
 
-    input_file_name = filtered_name + "_input.dat"
-    output_file_name = filtered_name + "_output.dat"
+    input_file_name = filtered_name + '_input.dat'
+    output_file_name = filtered_name + '_output.dat'
 
     link_to_input = f'https://raw.githubusercontent.com/{ORGANIZATION}/example-models/{BRANCH}/data/' + input_file_name
     link_to_output = f'https://raw.githubusercontent.com/{ORGANIZATION}/example-models/{BRANCH}/data/' + output_file_name
@@ -82,11 +82,11 @@ def _load_example_data(model_name):
 
 
 def _load_example_config(model_name):
-    print("Downloading configuration files ...")
+    print('Downloading configuration files ...')
 
     filtered_name = _filter_name(model_name)
 
-    config_name = filtered_name + "_config.yml"
+    config_name = filtered_name + '_config.yml'
 
     link_to_config = f'https://raw.githubusercontent.com/{ORGANIZATION}/example-models/{BRANCH}/config-files/' + config_name
 
@@ -144,7 +144,7 @@ def fetch_example_model(model_name, backend='Vivado'):
     download_link_model = download_link + model_type + '/' + model_name
 
     # Download the example model
-    print("Downloading example model files ...")
+    print('Downloading example model files ...')
     urlretrieve(
         download_link_model,
         model_name,
@@ -162,7 +162,7 @@ def fetch_example_model(model_name, backend='Vivado'):
 
     # If the model is a keras model then have to download its weight file as well
     if model_type == 'keras' and '.json' in model_name:
-        model_weight_name = model_name[:-5] + "_weights.h5"
+        model_weight_name = model_name[:-5] + '_weights.h5'
 
         download_link_weight = download_link + model_type + '/' + model_weight_name
         urlretrieve(download_link_weight, model_weight_name)

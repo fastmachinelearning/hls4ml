@@ -1,6 +1,8 @@
 #ifndef NNET_PRINTF_H_
 #define NNET_PRINTF_H_
 
+namespace nnet {
+
 #ifdef __SYCL_DEVICE_ONLY__
 #define CL_CONSTANT __attribute__((opencl_constant))
 #else
@@ -15,4 +17,5 @@ using namespace sycl;
         ext::oneapi::experimental::printf(_format, ##__VA_ARGS__);                                                          \
     }
 
+} // namespace nnet
 #endif
