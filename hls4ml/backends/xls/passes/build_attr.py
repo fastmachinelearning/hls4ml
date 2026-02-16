@@ -171,27 +171,24 @@ class XLSAttrBuilder:
             func_call_str = f'activations::relu<{self.node.get_attr("out_nb")}>'
 
         elif self.node.class_name == 'Softmax':
-            implementation = dict(self.node.attributes).get('implementation', 'stable')
-            if implementation == 'stable':
+            implementation = self.node.attributes.get('implementation', 'stable')
+            params = [self.node.get_attr(x) for x in ('in_nb', 'in_en', 'in_bu', 'out_nb', 'out_en', 'out_bu')]
+            if implementation in ['stable', 'latency']:
                 table_size = dict(self.node.attributes)['table_size']
                 exp_width = self.node.get_layer_precision()['softmax_exp_table_t'].precision.width
                 exp_frac = exp_width - self.node.get_layer_precision()['softmax_exp_table_t'].precision.integer
                 inv_width = self.node.get_layer_precision()['softmax_inv_table_t'].precision.width
                 inv_frac = inv_width - self.node.get_layer_precision()['softmax_inv_table_t'].precision.integer
 
-                func_call_str = (
-                    f"lookup_tables::softmax_stable<"
-                    f"{self.node.get_attr('in_nb')}, {self.node.get_attr('in_en')}, {self.node.get_attr('in_bu')}, "
-                    f" {self.node.get_attr('out_nb')}, {self.node.get_attr('out_en')}, {self.node.get_attr('out_bu')}, "
-                    f"u32:{exp_width}, u32:1, u32:{exp_frac}, "
-                    f"u32:{inv_width}, u32:1, u32:{inv_frac}, "
-                    f"u32:{table_size}>"
-                )
-            elif implementation == 'latency':
-                table_size = dict(self.node.attributes)['table_size']
-                func_call_str = f'lookup_tables::softmax_latency<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}, u32:{table_size}>'
+                func_name = f'lookup_tables::softmax_{implementation}'
+                params += [f'u32:{x}' for x in (exp_width, 1, exp_frac, inv_width, 1, inv_frac, table_size)]
             elif implementation == 'argmax':
-                func_call_str = f'activations::argmax<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
+                func_name = 'activations::argmax'
+            # TODO: support implementation == 'legacy'
+            else:
+                raise ValueError(f'Unknown softmax implementation {implementation}')
+            params_str = ', '.join(params)
+            func_call_str = f'{func_name}<{params_str}>'
         return func_call_str
     
     
