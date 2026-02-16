@@ -40,7 +40,7 @@ def _make_constantpad_onnx_1d():
     return model
 
 
-def test_constantpad_1d():
+def test_constantpad_1d(test_case_id):
     class Pad1DModel(nn.Module):
         def __init__(self):
             super().__init__()
@@ -52,18 +52,15 @@ def test_constantpad_1d():
     model = Pad1DModel()
     model.eval()
     config_pytorch = config_from_pytorch_model(model, (2, 4), channels_last_conversion='off')
-    hls_model_pytorch = convert_from_pytorch_model(
-        model, output_dir=str(test_root_path / 'hls4mlprj_constpad_1d/pytorch'), hls_config=config_pytorch
-    )
+    output_base = test_root_path / test_case_id
+    hls_model_pytorch = convert_from_pytorch_model(model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch)
 
     hls_model_pytorch.compile()
 
     pad1d_onnx = _make_constantpad_onnx_1d()
 
     config_onnx = config_from_onnx_model(pad1d_onnx)
-    hls_model_onnx = convert_from_onnx_model(
-        pad1d_onnx, output_dir=str(test_root_path / 'hls4mlprj_constpad_1d/onnx'), hls_config=config_onnx
-    )
+    hls_model_onnx = convert_from_onnx_model(pad1d_onnx, output_dir=str(output_base / 'onnx'), hls_config=config_onnx)
 
     hls_model_onnx.compile()
 
@@ -104,7 +101,7 @@ def _make_constantpad_onnx_2d():
     return model
 
 
-def test_constantpad_2d():
+def test_constantpad_2d(test_case_id):
     class Pad2DModel(nn.Module):
         def __init__(self):
             super().__init__()
@@ -116,18 +113,15 @@ def test_constantpad_2d():
     model = Pad2DModel()
     model.eval()
     config_pytorch = config_from_pytorch_model(model, (2, 3, 4), channels_last_conversion='off')
-    hls_model_pytorch = convert_from_pytorch_model(
-        model, output_dir=str(test_root_path / 'hls4mlprj_constpad_2d/pytorch'), hls_config=config_pytorch
-    )
+    output_base = test_root_path / test_case_id
+    hls_model_pytorch = convert_from_pytorch_model(model, output_dir=str(output_base / 'pytorch'), hls_config=config_pytorch)
 
     hls_model_pytorch.compile()
 
     pad2d_onnx = _make_constantpad_onnx_2d()
 
     config_onnx = config_from_onnx_model(pad2d_onnx)
-    hls_model_onnx = convert_from_onnx_model(
-        pad2d_onnx, output_dir=str(test_root_path / 'hls4mlprj_constpad_2d/onnx'), hls_config=config_onnx
-    )
+    hls_model_onnx = convert_from_onnx_model(pad2d_onnx, output_dir=str(output_base / 'onnx'), hls_config=config_onnx)
 
     hls_model_onnx.compile()
 
