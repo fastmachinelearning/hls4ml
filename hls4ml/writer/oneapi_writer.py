@@ -971,13 +971,11 @@ class OneAPIWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-
-        if model.config.get_writer_config().get('WriteTar', False):
-            tar_path = model.config.get_output_dir() + '.tar.gz'
-            if os.path.exists(tar_path):
-                os.remove(tar_path)
-            with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
-                archive.add(model.config.get_output_dir(), recursive=True)
+        tar_path = model.config.get_output_dir() + '.tar.gz'
+        if os.path.exists(tar_path):
+            os.remove(tar_path)
+        with tarfile.open(tar_path, mode='w:gz') as archive:
+            archive.add(model.config.get_output_dir(), recursive=True)
 
     def write_hls(self, model):
         self.write_project_dir(model)
@@ -993,4 +991,6 @@ class OneAPIWriter(Writer):
         self.write_activation_tables(model)
         self.write_generated_code(model)
         self.write_yml(model)
-        self.write_tar(model)
+        write_tar = model.config.get_writer_config().get('WriteTar', False)
+        if write_tar:
+            self.write_tar(model)
