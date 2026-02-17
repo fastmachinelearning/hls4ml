@@ -405,12 +405,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
         )
 
     def write_new_tar(self, model):
-        write_tar = model.config.get_writer_config().get('WriteTar', False)
-        if write_tar:
-            tarfile = model.config.get_output_dir() + '.tar.gz'
-            if os.path.exists(tarfile):
-                os.remove(tarfile)
-            super().write_tar(model)
+        tarfile = model.config.get_output_dir() + '.tar.gz'
+        if os.path.exists(tarfile):
+            os.remove(tarfile)
+        super().write_tar(model)
 
     def write_hls(self, model):
         """
@@ -428,4 +426,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)
-        self.write_new_tar(model)
+        write_tar = model.config.get_writer_config().get('WriteTar', False)
+        if write_tar:
+            self.write_new_tar(model)
