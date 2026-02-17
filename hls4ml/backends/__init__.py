@@ -15,6 +15,7 @@ from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
 
 from hls4ml.backends.vitis_unified.vitis_unified_backend import VitisUnifiedBackend  # isort: skip
 
+
 def _register_builtin_backends():
     register_backend('Vivado', VivadoBackend)
     register_backend('VivadoAccelerator', VivadoAcceleratorBackend)

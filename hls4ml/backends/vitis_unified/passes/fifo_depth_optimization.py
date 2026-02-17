@@ -73,7 +73,6 @@ def execute_cosim_to_profile_fifos(model):
 
 
 class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
-
     def __init__(self):
         self.profiling_fifo_depth = 100_000
 
@@ -106,7 +105,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
         initial_fifo_depths = initialize_large_fifos(model, self.profiling_fifo_depth)
         execute_cosim_to_profile_fifos(model)
-        optimized_fifo_depths = get_vitis_optimized_fifo_depths(model, cus_hls_prj_path=hlsPrjPath + "/hls")
+        optimized_fifo_depths = get_vitis_optimized_fifo_depths(model, cus_hls_prj_path=hlsPrjPath + '/hls')
         generate_depths_file(model, initial_fifo_depths, optimized_fifo_depths)
         set_optimized_fifo_depths(model, optimized_fifo_depths)
 

@@ -30,46 +30,46 @@ class VitisUnifiedBackend(VitisBackend):
             found = os.system('command -v v++ > /dev/null')
             if found != 0:
                 raise Exception('Vitis installation not found. Make sure "vitis" is on PATH.')
-            
+
             found = os.system('command -v vitis-run > /dev/null')
             if found != 0:
                 raise Exception('Vitis installation not found. Make sure "vitis-run" is on PATH.')
 
         output_dir = model.config.get_output_dir()
 
-        hls_config_file = os.path.join(output_dir, "hls_kernel_config.cfg")
+        hls_config_file = os.path.join(output_dir, 'hls_kernel_config.cfg')
         # build command
-        csynth_cmd = ("v++ -c --mode hls --config {configPath} --work_dir vitis_unified_project").format(
+        csynth_cmd = ('v++ -c --mode hls --config {configPath} --work_dir vitis_unified_project').format(
             configPath=hls_config_file
         )
         # util template (used in csim/cosim/package)
-        util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir vitis_unified_project"
+        util_command = 'vitis-run --mode hls --{op} --config {configPath} --work_dir vitis_unified_project'
 
         # command for each configuration
         vitis_hls_dir = model.config.backend.writer.get_vitis_hls_dir(model)
-        package_cmd = util_command.format(op="package", configPath=hls_config_file)
-        cosim_cmd = util_command.format(op="cosim", configPath=hls_config_file)
-        csim_cmd = util_command.format(op="csim", configPath=hls_config_file)
+        package_cmd = util_command.format(op='package', configPath=hls_config_file)
+        cosim_cmd = util_command.format(op='cosim', configPath=hls_config_file)
+        csim_cmd = util_command.format(op='csim', configPath=hls_config_file)
 
-        kerlink_cmd = "./link_system.sh"
+        kerlink_cmd = './link_system.sh'
         kerlink_cwd = model.config.backend.writer.get_vitis_linker_dir(model)
 
         commands = []
         if synth:
             self.prepare_sim_config_file(model, True)
-            commands.append(("csynth", csynth_cmd, vitis_hls_dir))
-            commands.append(("package", package_cmd, vitis_hls_dir))
+            commands.append(('csynth', csynth_cmd, vitis_hls_dir))
+            commands.append(('package', package_cmd, vitis_hls_dir))
 
         if csim:
             self.prepare_sim_config_file(model, True)
-            commands.append(("csim", csim_cmd, vitis_hls_dir))
+            commands.append(('csim', csim_cmd, vitis_hls_dir))
 
         if cosim or fifo_opt:
             self.prepare_sim_config_file(model, False)
-            commands.append(("cosim", cosim_cmd, vitis_hls_dir))
+            commands.append(('cosim', cosim_cmd, vitis_hls_dir))
 
         if bitfile:
-            commands.append(("kerlink", kerlink_cmd, kerlink_cwd))
+            commands.append(('kerlink', kerlink_cmd, kerlink_cwd))
 
         for task_name, command, cwd in commands:
             stdout_log = os.path.join(output_dir, f'{task_name}_stdout.log')
@@ -78,7 +78,9 @@ class VitisUnifiedBackend(VitisBackend):
             stderr_target = None if log_to_stdout else open(stderr_log, 'w')
 
             try:
-                process = subprocess.Popen(command, shell=True, cwd=cwd, stdout=stdout_target, stderr=stderr_target, text=True)
+                process = subprocess.Popen(
+                    command, shell=True, cwd=cwd, stdout=stdout_target, stderr=stderr_target, text=True
+                )
                 process.communicate()
 
                 if process.returncode != 0:
@@ -89,9 +91,9 @@ class VitisUnifiedBackend(VitisBackend):
                     stderr_target.close()
 
     def prepare_sim_config_file(self, model, is_csim):
-        suffix = "csim" if is_csim else "cosim"
-        src = f"{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg"
-        des = f"{model.config.get_output_dir()}/hls_kernel_config.cfg"
+        suffix = 'csim' if is_csim else 'cosim'
+        src = f'{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg'
+        des = f'{model.config.get_output_dir()}/hls_kernel_config.cfg'
         copy2(src, des)
         return des
 
@@ -107,29 +109,29 @@ class VitisUnifiedBackend(VitisBackend):
         output_type='float',
         in_stream_buf_size=128,
         out_stream_buf_size=128,
-        xpfmPath='/opt/Xilinx/Vitis/2023.2/base_platforms/' 'xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
-        axi_mode="axim",
+        xpfmPath='/opt/Xilinx/Vitis/2023.2/base_platforms/xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
+        axi_mode='axim',
         **_,
     ):
 
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
 
         config['VitisUnifiedConfig'] = {}
-        config["VitisUnifiedConfig"]["axi_mode"] = axi_mode
-        config['VitisUnifiedConfig']["in_stream_buf_size"] = in_stream_buf_size
-        config['VitisUnifiedConfig']["out_stream_buf_size"] = out_stream_buf_size
+        config['VitisUnifiedConfig']['axi_mode'] = axi_mode
+        config['VitisUnifiedConfig']['in_stream_buf_size'] = in_stream_buf_size
+        config['VitisUnifiedConfig']['out_stream_buf_size'] = out_stream_buf_size
         config['VitisUnifiedConfig']['XPFMPath'] = xpfmPath
         config['VitisUnifiedConfig']['Board'] = board
         config['VitisUnifiedConfig']['Driver'] = driver
         config['VitisUnifiedConfig']['InputDtype'] = input_type  # float, double or ap_fixed<a,b>
         config['VitisUnifiedConfig']['OutputDtype'] = output_type  # float, double or ap_fixed<a,b>
 
-        if io_type != "io_stream":
-            raise Exception("io_type must be io_stream")
-        if input_type not in ["double", "float"]:
-            raise Exception("input_type must be float or double")
-        if output_type not in ["double", "float"]:
-            raise Exception("output_type must be float or double")
+        if io_type != 'io_stream':
+            raise Exception('io_type must be io_stream')
+        if input_type not in ['double', 'float']:
+            raise Exception('input_type must be float or double')
+        if output_type not in ['double', 'float']:
+            raise Exception('output_type must be float or double')
 
         return config
 
