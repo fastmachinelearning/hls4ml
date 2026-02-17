@@ -1,4 +1,4 @@
-v++ -l -t hw --platform {PLATFORM_XPFM} {KERNEL_XO} --config buildConfig.cfg -o {PROJECT_NAME}.xclbin --save-temps
+v++ -l -t hw --platform {PLATFORM_XPFM} {KERNEL_XO} --config link_system.cfg -o {PROJECT_NAME}.xclbin --save-temps
 [ -f ../../export/system.bit ] && rm -f ../../export/system.bit
 [ -f ../../export/system.hwh ] && rm -f ../../export/system.hwh
 

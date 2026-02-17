@@ -2,26 +2,26 @@ class VitisUnifiedConfig:
 
     def __init__(self, config, model_inputs, model_outputs):
         self.config = config.config
-        self.board = self.config.get('UnifiedConfig', {}).get('Board', 'pynq-z2')
+        self.board = self.config.get('VitisUnifiedConfig', {}).get('Board', 'pynq-z2')
 
-        self.axi_mode = self.config["UnifiedConfig"]["axi_mode"]
+        self.axi_mode = self.config["VitisUnifiedConfig"]["axi_mode"]
 
         if self.axi_mode not in ["axis", "axim"]:
             raise Exception("AXIMode must be either axis or axim")
 
         # before first and afterlast layer we have the configuratble buffer
         # [platform]<-->[in_steram_bufferSz]<-->[hls]<-->[out_stream_bufferSz]<-->[platform]
-        self.in_steram_bufferSz = self.config["UnifiedConfig"]["in_stream_buf_Size"]
-        self.out_stream_bufferSz = self.config["UnifiedConfig"]["out_stream_buf_Size"]
+        self.in_steram_bufferSz = self.config["VitisUnifiedConfig"]["in_stream_buf_size"]
+        self.out_stream_bufferSz = self.config["VitisUnifiedConfig"]["out_stream_buf_size"]
 
         # the path to the generated platform
-        self.XPFMPath = self.config["UnifiedConfig"]["XPFMPath"]
+        self.XPFMPath = self.config["VitisUnifiedConfig"]["XPFMPath"]
 
-        self.driver = self.config['UnifiedConfig']['Driver']
+        self.driver = self.config['VitisUnifiedConfig']['Driver']
 
         # c++ type for input and output of the hls kernel it must be str (float/double)
-        self.input_type = self.config['UnifiedConfig']['InputDtype']
-        self.output_type = self.config['UnifiedConfig']['OutputDtype']
+        self.input_type = self.config['VitisUnifiedConfig']['InputDtype']
+        self.output_type = self.config['VitisUnifiedConfig']['OutputDtype']
 
         assert self.input_type == self.output_type, "Input and Output data types must be the same type different"
         assert len(model_inputs) >= 1, "Only models with at least one input tensor are currently supported by VitisUnified"

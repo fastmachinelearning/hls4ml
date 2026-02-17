@@ -102,7 +102,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         if not (model.config.get_config_value('IOType') == 'io_stream'):
             raise RuntimeError('To use this optimization you have to set `IOType` field to `io_stream` in the HLS config.')
 
-        hlsPrjPath = model.config.backend.writer.mg.get_vitis_hls_exec_dir(model)
+        hlsPrjPath = model.config.backend.writer.get_vitis_hls_exec_dir(model)
 
         initial_fifo_depths = initialize_large_fifos(model, self.profiling_fifo_depth)
         execute_cosim_to_profile_fifos(model)

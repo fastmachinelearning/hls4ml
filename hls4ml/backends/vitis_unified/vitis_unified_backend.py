@@ -5,7 +5,6 @@ from shutil import copy2
 
 from hls4ml.backends import VitisBackend, VivadoBackend
 from hls4ml.model.flow import register_flow
-from hls4ml.writer.vitis_unified_writer.meta_gen import VitisUnified_MetaGen as mg
 
 
 class VitisUnifiedBackend(VitisBackend):
@@ -13,44 +12,6 @@ class VitisUnifiedBackend(VitisBackend):
         super(VivadoBackend, self).__init__(name='VitisUnified')
         self._register_layer_attributes()
         self._register_flows()
-
-    def run_term_command(self, model, taskName: str, command: str, logStdOut: bool, cwd):
-
-        print("-------------------------------------------------------")
-        print(f"start running task : {taskName}")
-        print(f"    with command: {command}")
-        print("-------------------------------------------------------")
-
-        output_dir = model.config.get_output_dir()
-
-        out_log_path = os.path.join(output_dir, f'{taskName}_out.log')
-        err_log_path = os.path.join(output_dir, f'{taskName}_err.log')
-        out_target = None if logStdOut else open(out_log_path, 'w')
-        err_target = None if logStdOut else open(err_log_path, 'w')
-
-        try:
-            runningProcess = subprocess.Popen(command, shell=True, cwd=cwd, stdout=out_target, stderr=err_target, text=True)
-            runningProcess.communicate()
-            if runningProcess.returncode != 0:
-                raise Exception(
-                    f'Package failed for {taskName} for project {model.config.get_project_name()}. See logs for details.'
-                )
-
-            stdout, stderr = runningProcess.communicate()
-            print(f"stdout: {stdout}")
-            print(f"stderr: {stderr}")
-
-            print(f"task {taskName} finished")
-
-        except Exception as e:
-            print(f"task {taskName} failed")
-            print(e)
-            raise e
-        finally:
-            if out_target:
-                out_target.close()
-            if err_target:
-                err_target.close()
 
     def build(
         self,
@@ -66,46 +27,66 @@ class VitisUnifiedBackend(VitisBackend):
     ):
         # it builds and return vivado reports
         if 'linux' in sys.platform:
-            found = os.system('command -v vitis > /dev/null')
+            found = os.system('command -v v++ > /dev/null')
             if found != 0:
                 raise Exception('Vitis installation not found. Make sure "vitis" is on PATH.')
+            
+            found = os.system('command -v vitis-run > /dev/null')
+            if found != 0:
+                raise Exception('Vitis installation not found. Make sure "vitis-run" is on PATH.')
 
         output_dir = model.config.get_output_dir()
 
         hls_config_file = os.path.join(output_dir, "hls_kernel_config.cfg")
         # build command
-        csynth_cmd = ("v++ -c --mode hls --config {configPath} --work_dir unifiedPrj").format(configPath=hls_config_file)
-        csynth_cwd = mg.get_vitis_hls_dir(model)
-
+        csynth_cmd = ("v++ -c --mode hls --config {configPath} --work_dir vitis_unified_project").format(
+            configPath=hls_config_file
+        )
         # util template (used in csim/cosim/package)
-        util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir unifiedPrj"
+        util_command = "vitis-run --mode hls --{op} --config {configPath} --work_dir vitis_unified_project"
 
         # command for each configuration
+        vitis_hls_dir = model.config.backend.writer.get_vitis_hls_dir(model)
         package_cmd = util_command.format(op="package", configPath=hls_config_file)
-        package_cwd = mg.get_vitis_hls_dir(model)
         cosim_cmd = util_command.format(op="cosim", configPath=hls_config_file)
-        cosim_cwd = mg.get_vitis_hls_dir(model)
         csim_cmd = util_command.format(op="csim", configPath=hls_config_file)
-        csim_cwd = mg.get_vitis_hls_dir(model)
 
-        kerlink_cmd = "./buildAcc.sh"
-        kerlink_cwd = mg.get_vitis_linker_dir(model)
+        kerlink_cmd = "./link_system.sh"
+        kerlink_cwd = model.config.backend.writer.get_vitis_linker_dir(model)
 
+        commands = []
         if synth:
             self.prepare_sim_config_file(model, True)
-            self.run_term_command(model, "csynth", csynth_cmd, log_to_stdout, csynth_cwd)
-            self.run_term_command(model, "package", package_cmd, log_to_stdout, package_cwd)
+            commands.append(("csynth", csynth_cmd, vitis_hls_dir))
+            commands.append(("package", package_cmd, vitis_hls_dir))
 
         if csim:
             self.prepare_sim_config_file(model, True)
-            self.run_term_command(model, "csim", csim_cmd, log_to_stdout, csim_cwd)
+            commands.append(("csim", csim_cmd, vitis_hls_dir))
 
         if cosim or fifo_opt:
             self.prepare_sim_config_file(model, False)
-            self.run_term_command(model, "cosim", cosim_cmd, log_to_stdout, cosim_cwd)
+            commands.append(("cosim", cosim_cmd, vitis_hls_dir))
 
         if bitfile:
-            self.run_term_command(model, "kerlink", kerlink_cmd, log_to_stdout, kerlink_cwd)
+            commands.append(("kerlink", kerlink_cmd, kerlink_cwd))
+
+        for task_name, command, cwd in commands:
+            stdout_log = os.path.join(output_dir, f'{task_name}_stdout.log')
+            stderr_log = os.path.join(output_dir, f'{task_name}_stderr.log')
+            stdout_target = None if log_to_stdout else open(stdout_log, 'w')
+            stderr_target = None if log_to_stdout else open(stderr_log, 'w')
+
+            try:
+                process = subprocess.Popen(command, shell=True, cwd=cwd, stdout=stdout_target, stderr=stderr_target, text=True)
+                process.communicate()
+
+                if process.returncode != 0:
+                    raise Exception(f'Build failed for {model.config.get_project_name()} during task "{task_name}".')
+            finally:
+                if not log_to_stdout:
+                    stdout_target.close()
+                    stderr_target.close()
 
     def prepare_sim_config_file(self, model, is_csim):
         suffix = "csim" if is_csim else "cosim"
@@ -133,15 +114,15 @@ class VitisUnifiedBackend(VitisBackend):
 
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
 
-        config['UnifiedConfig'] = {}
-        config["UnifiedConfig"]["axi_mode"] = axi_mode
-        config['UnifiedConfig']["in_stream_buf_Size"] = in_stream_buf_size
-        config['UnifiedConfig']["out_stream_buf_Size"] = out_stream_buf_size
-        config['UnifiedConfig']['XPFMPath'] = xpfmPath
-        config['UnifiedConfig']['Board'] = board
-        config['UnifiedConfig']['Driver'] = driver
-        config['UnifiedConfig']['InputDtype'] = input_type  # float, double or ap_fixed<a,b>
-        config['UnifiedConfig']['OutputDtype'] = output_type  # float, double or ap_fixed<a,b>
+        config['VitisUnifiedConfig'] = {}
+        config["VitisUnifiedConfig"]["axi_mode"] = axi_mode
+        config['VitisUnifiedConfig']["in_stream_buf_size"] = in_stream_buf_size
+        config['VitisUnifiedConfig']["out_stream_buf_size"] = out_stream_buf_size
+        config['VitisUnifiedConfig']['XPFMPath'] = xpfmPath
+        config['VitisUnifiedConfig']['Board'] = board
+        config['VitisUnifiedConfig']['Driver'] = driver
+        config['VitisUnifiedConfig']['InputDtype'] = input_type  # float, double or ap_fixed<a,b>
+        config['VitisUnifiedConfig']['OutputDtype'] = output_type  # float, double or ap_fixed<a,b>
 
         if io_type != "io_stream":
             raise Exception("io_type must be io_stream")

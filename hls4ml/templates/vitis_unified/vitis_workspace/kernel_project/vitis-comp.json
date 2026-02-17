@@ -4,6 +4,6 @@
   "configuration": {
     "componentType": "HLS",
     "configFiles": ["{CONFIG_FILE}"],
-    "work_dir": "unifiedPrj"
+    "work_dir": "vitis_unified_project"
   }
 }

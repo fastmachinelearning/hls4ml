@@ -13,18 +13,16 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Model, load_model
 
 import hls4ml
-import hls4ml.model
 
 test_root_path = Path(__file__).parent
+INPUT_DIR = test_root_path / "input_file"
+OUTPUT_DIR = test_root_path / "output_file"
 
 os.environ['XILINX_VITIS'] = "/tools/Xilinx/Vitis/2023.2"
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
 
-# vedor = AMD
-XPFM_PATH_CUSTOM = (
-    "/tools/Xilinx/Vitis/2023.2/base_platforms/" "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
-)
-XPFM_PATH_VENDOR = (
+# vendor = AMD
+XPFM_PATH = (
     "/tools/Xilinx/Vitis/2023.2/base_platforms/" "xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm"
 )
 
@@ -33,27 +31,17 @@ LOG_STD = True
 
 
 def create_io_file_dir():
-    os.makedirs(test_root_path / "input_file", exist_ok=True)
-    os.makedirs(test_root_path / "output_file", exist_ok=True)
+    os.makedirs(INPUT_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-def checkEqual(a, b):
-
-    equal = np.array_equal(a, b)
-    if equal:
-        print("Test pass both are equal \U0001f642")
-    else:
-        print("Test Fail both are not equal \U0001f62c")
-    return equal
+def init_simple_testcase(input_shape=(4, 4, 1), file_name="X.npy"):
+    n_in = np.random.rand(*input_shape).astype(np.float32)
+    os.makedirs(INPUT_DIR, exist_ok=True)
+    np.save(INPUT_DIR / file_name, n_in)
 
 
-def create_simple_testcase(inputShape=(4, 4, 1), fileName="inputX.npy"):
-    n_in = np.random.rand(*inputShape).astype(np.float32)
-    os.makedirs(test_root_path / "input_file", exist_ok=True)
-    np.save(test_root_path / "input_file" / fileName, n_in)
-
-
-def create_simple_unet(input_shape=(4, 4, 1), modelName="simpleSkip.keras"):
+def init_simple_unet(input_shape=(4, 4, 1), model_name="simple_skip.keras"):
     inputs = Input(input_shape)
     # Encoder
     c1 = Conv2D(2, (3, 3), activation='relu', padding='same')(inputs)
@@ -68,7 +56,7 @@ def create_simple_unet(input_shape=(4, 4, 1), modelName="simpleSkip.keras"):
     outputs = Conv2D(1, (1, 1), activation='sigmoid')(c2)
     model = Model(inputs, outputs)
     model.compile(optimizer='adam', loss='binary_crossentropy')
-    model.save(test_root_path / "input_file" / modelName)
+    model.save(INPUT_DIR / model_name)
 
 
 def gen_prj_dir(backend, io_type, strategy, granularity, prefix, axi_mode):
@@ -89,7 +77,7 @@ def create_hls_model(model, config, backend, io_type, strategy, granularity, pre
         clock_period='10ns',
         input_type="float",
         output_type="float",
-        xpfmPath=XPFM_PATH_VENDOR if axi_mode == "axim" else XPFM_PATH_CUSTOM,
+        xpfmPath=XPFM_PATH,
         axi_mode=axi_mode,
     )
     hls_model.compile()
@@ -125,22 +113,25 @@ def predict_hls_model(hls_model, input_data):
     return y_hls4ml
 
 
+def prepare_test_case(amt_query, input_file, model_file, granularity):
+    create_io_file_dir()
+    init_simple_testcase(input_shape=(amt_query, 4, 4, 1), file_name=input_file)
+    input_data = np.load(INPUT_DIR / input_file)
+    init_simple_unet(model_name=model_file)
+    model = load_model(INPUT_DIR / model_file)
+    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    return input_data, model, config
+
+
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('amt_query', [10])
 @pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_backend_predict(io_type, strategy, granularity, amt_query, axi_mode):
-    create_io_file_dir()
-    # create and load data set
-    create_simple_testcase(inputShape=(amt_query, 4, 4, 1), fileName="inputX.npy")
-    input_data = np.load(test_root_path / "input_file" / "inputX.npy")
-    # create and load model
-    model_name = "simpleSkip.keras"
-    create_simple_unet(modelName=model_name)
-    model = load_model(test_root_path / "input_file" / model_name)
-    # config the keras model
-    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    input_data, model, config = prepare_test_case(
+        amt_query=amt_query, input_file="X.npy", model_file="simple_skip.keras", granularity=granularity
+    )
 
     # create hls4ml model
     vitis_unified_model = create_hls_model(model, config, "VitisUnified", io_type, strategy, granularity, "bridge", axi_mode)
@@ -151,7 +142,7 @@ def test_backend_predict(io_type, strategy, granularity, amt_query, axi_mode):
     y_hls4ml_unified = predict_hls_model(vitis_unified_model, input_data)
     y_hls4ml = predict_hls_model(vitis_model, input_data)
 
-    assert checkEqual(y_hls4ml_unified, y_hls4ml), "the result from vitis unified and vitis are not equal!"
+    np.testing.assert_array_equal(y_hls4ml_unified, y_hls4ml)
 
 
 # test_backend_predict("io_stream", 'latency', 'name', 10, "axim")
@@ -163,26 +154,19 @@ def test_backend_predict(io_type, strategy, granularity, amt_query, axi_mode):
 @pytest.mark.parametrize('amt_query', [10])
 @pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_co_simulation(io_type, strategy, granularity, amt_query, axi_mode):
-    create_io_file_dir()
-    # create and load data set
-    create_simple_testcase(inputShape=(amt_query, 4, 4, 1), fileName="inputCosim.npy")
-    input_data = np.load(test_root_path / "input_file" / "inputCosim.npy")
-    # create and load model
-    model_name = "simpleSkipCosim.keras"
-    create_simple_unet(modelName=model_name)
-    model = load_model(test_root_path / "input_file" / model_name)
-    # config the keras model
-    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    input_data, model, config = prepare_test_case(
+        amt_query=amt_query, input_file="cosim_X.npy", model_file="cosim_simple_skip.keras", granularity=granularity
+    )
 
     # predict it first
     vitis_unified_model = create_hls_model(
         model, config, "VitisUnified", io_type, strategy, granularity, "precosim", axi_mode
     )
     y_hls4ml_unified = predict_hls_model(vitis_unified_model, input_data)
-    np.save(test_root_path / "output_file" / "outputCosim.npy", y_hls4ml_unified)
+    np.save(OUTPUT_DIR / "YCosim.npy", y_hls4ml_unified)
 
-    input_data_tb = str(test_root_path / "input_file" / "inputCosim.npy")
-    output_data_tb = str(test_root_path / "output_file" / "outputCosim.npy")
+    input_data_tb = str(INPUT_DIR / "cosim_X.npy")
+    output_data_tb = str(OUTPUT_DIR / "cosim_Y.npy")
 
     # create hls4ml model
     vitis_unified_model_cosim = create_hls_model4_cosim(
@@ -214,25 +198,18 @@ def test_co_simulation(io_type, strategy, granularity, amt_query, axi_mode):
 @pytest.mark.parametrize('amt_query', [10])
 @pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_csim_simulation(io_type, strategy, granularity, amt_query, axi_mode):
-    create_io_file_dir()
-    # create and load data set
-    create_simple_testcase(inputShape=(amt_query, 4, 4, 1), fileName="inputCsim.npy")
-    input_data = np.load(test_root_path / "input_file" / "inputCsim.npy")
-    # create and load model
-    model_name = "simpleSkipCsim.keras"
-    create_simple_unet(modelName=model_name)
-    model = load_model(test_root_path / "input_file" / model_name)
-    # config the keras model
-    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    input_data, model, config = prepare_test_case(
+        amt_query=amt_query, input_file="csim_X.npy", model_file="csim_simple_skip.keras", granularity=granularity
+    )
     # predict it first
     vitis_unified_model = create_hls_model(
         model, config, "VitisUnified", io_type, strategy, granularity, "precsim", axi_mode
     )
     y_hls4ml_unified = predict_hls_model(vitis_unified_model, input_data)
-    np.save(test_root_path / "output_file" / "outputCsim.npy", y_hls4ml_unified)
+    np.save(OUTPUT_DIR / "csim_Y.npy", y_hls4ml_unified)
 
-    input_data_tb = str(test_root_path / "input_file" / "inputCsim.npy")
-    output_data_tb = str(test_root_path / "output_file" / "outputCsim.npy")
+    input_data_tb = str(INPUT_DIR / "csim_X.npy")
+    output_data_tb = str(OUTPUT_DIR / "csim_Y.npy")
 
     # create hls4ml model
     vitis_unified_model_cosim = create_hls_model4_cosim(
@@ -264,26 +241,19 @@ def test_csim_simulation(io_type, strategy, granularity, amt_query, axi_mode):
 @pytest.mark.parametrize('amt_query', [10])
 @pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_fifo_depth(io_type, strategy, granularity, amt_query, axi_mode):
-    create_io_file_dir()
-    # create and load data set
-    create_simple_testcase(inputShape=(amt_query, 4, 4, 1), fileName="inputFifoDepth.npy")
-    input_data = np.load(test_root_path / "input_file" / "inputFifoDepth.npy")
-    # create and load model
-    model_name = "simpleSkipFifoDepth.keras"
-    create_simple_unet(modelName=model_name)
-    model = load_model(test_root_path / "input_file" / model_name)
-    # config the keras model
-    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    input_data, model, config = prepare_test_case(
+        amt_query=amt_query, input_file="fifo_depth_X.npy", model_file="fifo_depth_simple_skip.keras", granularity=granularity
+    )
 
     # predict it first
     vitis_unified_model = create_hls_model(
         model, config, "VitisUnified", io_type, strategy, granularity, "fifodepth", axi_mode
     )
     y_hls4ml_unified = predict_hls_model(vitis_unified_model, input_data)
-    np.save(test_root_path / "output_file" / "outputFifoDepth.npy", y_hls4ml_unified)
+    np.save(OUTPUT_DIR / "fifo_depth_Y.npy", y_hls4ml_unified)
 
-    input_data_tb = str(test_root_path / "input_file" / "inputFifoDepth.npy")
-    output_data_tb = str(test_root_path / "output_file" / "outputFifoDepth.npy")
+    input_data_tb = str(INPUT_DIR / "fifo_depth_X.npy")
+    output_data_tb = str(OUTPUT_DIR / "fifo_depth_Y.npy")
 
     # create hls4ml model
     config['Flows'] = ['vitisunified:fifo_depth_optimization']
@@ -308,23 +278,16 @@ def test_fifo_depth(io_type, strategy, granularity, amt_query, axi_mode):
 @pytest.mark.parametrize('amt_query', [10000])
 @pytest.mark.parametrize('axi_mode', ['axis', 'axim'])
 def test_gen_unified(io_type, strategy, granularity, amt_query, axi_mode):
-    create_io_file_dir()
-    # create and load data set
-    create_simple_testcase(inputShape=(amt_query, 4, 4, 1), fileName="inputGenbit.npy")
-    input_data = np.load(test_root_path / "input_file" / "inputGenbit.npy")
-    # create and load model
-    model_name = "simpleSkipGenBit.keras"
-    create_simple_unet(modelName=model_name)
-    model = load_model(test_root_path / "input_file" / model_name)
-    # config the keras model
-    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    input_data, model, config = prepare_test_case(
+        amt_query=amt_query, input_file="gen_bit_X.npy", model_file="gen_bit_simple_skip.keras", granularity=granularity
+    )
 
     # predict it first
     vitis_unified_model = create_hls_model(
         model, config, "VitisUnified", io_type, strategy, granularity, "gen_unified", axi_mode
     )
     y_hls4ml_unified = predict_hls_model(vitis_unified_model, input_data)
-    np.save(test_root_path / "output_file" / "outputGenbit.npy", y_hls4ml_unified)
+    np.save(OUTPUT_DIR / "gen_bit_Y.npy", y_hls4ml_unified)
 
     vitis_unified_model.compile()
     vitis_unified_model.build(synth=True, bitfile=True, log_to_stdout=LOG_STD)
