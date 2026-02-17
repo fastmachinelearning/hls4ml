@@ -114,4 +114,6 @@ class SymbolicExpressionWriter(VivadoWriter):
         self.write_nnet_utils(model)
         self.write_generated_code(model)
         self.write_yml(model)
-        self.write_tar(model)
+        write_tar = model.config.get_writer_config().get('WriteTar', False)
+        if write_tar:
+            self.write_tar(model)

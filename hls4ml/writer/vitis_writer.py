@@ -73,4 +73,6 @@ class VitisWriter(VivadoWriter):
         self.write_board_script_override(model)
         self.write_build_prj_override(model)
         self.write_build_opts(model)
-        self.write_tar(model)
+        write_tar = model.config.get_writer_config().get('WriteTar', False)
+        if write_tar:
+            self.write_tar(model)
