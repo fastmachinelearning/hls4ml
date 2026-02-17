@@ -630,18 +630,14 @@ class VitisUnifiedWriter(VitisWriter):
                     if tb_stream != 'stdout':
                         if self._is_axi_master():
                             for output_idx, out in enumerate(model_outputs):
-                                newline += (
-                                    indent
-                                    + (
-                                        'nnet::print_result<{actual_type}, {copy_size}>('
-                                        '{port_name}, {dest}, {keep_output});\n'
-                                    ).format(
-                                        actual_type='float',
-                                        copy_size=out.size(),
-                                        port_name=self._get_io_port_name(out, False, output_idx),
-                                        dest='fout',
-                                        keep_output='false',
-                                    )
+                                newline += indent + (
+                                    'nnet::print_result<{actual_type}, {copy_size}>({port_name}, {dest}, {keep_output});\n'
+                                ).format(
+                                    actual_type='float',
+                                    copy_size=out.size(),
+                                    port_name=self._get_io_port_name(out, False, output_idx),
+                                    dest='fout',
+                                    keep_output='false',
                                 )
                         else:
                             newline += (
@@ -657,26 +653,19 @@ class VitisUnifiedWriter(VitisWriter):
                     if tb_stream != 'file':
                         if self._is_axi_master():
                             for output_idx, out in enumerate(model_outputs):
-                                newline += (
-                                    indent
-                                    + (
-                                        'nnet::print_result<{actual_type}, {copy_size}>('
-                                        '{port_name}, {dest}, {keep_output});\n'
-                                    ).format(
-                                        actual_type='float',
-                                        copy_size=out.size(),
-                                        port_name=self._get_io_port_name(out, False, output_idx),
-                                        dest='std::cout',
-                                        keep_output=keep_output,
-                                    )
+                                newline += indent + (
+                                    'nnet::print_result<{actual_type}, {copy_size}>({port_name}, {dest}, {keep_output});\n'
+                                ).format(
+                                    actual_type='float',
+                                    copy_size=out.size(),
+                                    port_name=self._get_io_port_name(out, False, output_idx),
+                                    dest='std::cout',
+                                    keep_output=keep_output,
                                 )
                         else:
-                            newline += (
-                                indent
-                                + (
-                                    f'nnet::print_result_axis<{self._get_dma_type_name()}, N_OUT>('
-                                    f'outputs, std::cout, {keep_output});\n'
-                                )
+                            newline += indent + (
+                                f'nnet::print_result_axis<{self._get_dma_type_name()}, N_OUT>('
+                                f'outputs, std::cout, {keep_output});\n'
                             )
                 elif '// hls-fpga-machine-learning insert namespace' in line:
                     newline = ''
