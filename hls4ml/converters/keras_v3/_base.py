@@ -129,8 +129,9 @@ class KerasV3LayerHandler(metaclass=KerasV3LayerHandlerMeta):
         return layer.__class__.__name__
 
     def maybe_get_activation_config(self, layer, out_tensors):
-        import keras
         import inspect
+
+        import keras
 
         activation = getattr(layer, 'activation', None)
         name = layer.name
