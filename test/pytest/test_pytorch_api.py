@@ -24,7 +24,7 @@ class LinearModel(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_linear(backend, io_type):
+def test_linear(test_case_id, backend, io_type):
     model = LinearModel()
     model.eval()
 
@@ -33,7 +33,7 @@ def test_linear(backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, (1,))
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_linear_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -52,8 +52,8 @@ def test_linear(backend, io_type):
         nNodes += 1
 
     assert nNodes - 1 == len(hls_model.get_layers())
-    assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
-    assert list(hls_model.get_layers())[1].attributes["class_name"] == "Dense"
+    assert list(hls_model.get_layers())[0].attributes['class_name'] == 'InputLayer'
+    assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Dense'
     assert list(hls_model.get_layers())[0].attributes['input_shape'] == [1]
     assert list(hls_model.get_layers())[1].attributes['n_in'] == 1
     assert list(hls_model.get_layers())[1].attributes['n_out'] == 1
@@ -61,7 +61,7 @@ def test_linear(backend, io_type):
 
 # TODO: add ThresholdedReLU test when it can be made to pass
 @pytest.mark.parametrize(
-    "activation_function",
+    'activation_function',
     [
         nn.Softmax(dim=-1),
         nn.ReLU(),
@@ -72,10 +72,11 @@ def test_linear(backend, io_type):
         nn.Sigmoid(),
         nn.Threshold(threshold=1.0, value=0.0),
     ],
+    ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'prelu', 'sigmoid', 'threshold'],
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_activations(activation_function, backend, io_type):
+def test_activations(test_case_id, activation_function, backend, io_type):
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
     model.eval()
 
@@ -85,9 +86,7 @@ def test_activations(activation_function, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, (1,))
-    output_dir = str(
-        test_root_path / f'hls4mlprj_pytorch_api_activations_{activation_function.__class__.__name__}_{backend}_{io_type}'
-    )
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
@@ -170,7 +169,7 @@ class SigmoidModel(nn.Module):
 
 
 @pytest.mark.parametrize(
-    "activation_function",
+    'activation_function',
     [
         SoftmaxModel(),
         ReLuModel(),
@@ -180,10 +179,11 @@ class SigmoidModel(nn.Module):
         SigmoidModel(),
         ThresholdModel(),
     ],
+    ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'sigmoid', 'threshold'],
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_activation_functionals(activation_function, backend, io_type):
+def test_activation_functionals(test_case_id, activation_function, backend, io_type):
     model = activation_function
     model.eval()
 
@@ -192,8 +192,7 @@ def test_activation_functionals(activation_function, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, (1,))
-    fn_name = activation_function.__class__.__name__
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_{fn_name}_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
@@ -218,7 +217,7 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv1d(padds, backend, io_type):
+def test_conv1d(test_case_id, padds, backend, io_type):
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -233,12 +232,12 @@ def test_conv1d(padds, backend, io_type):
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
         config = config_from_pytorch_model(
-            model, (n_in, size_in), channels_last_conversion="internal", transpose_outputs=False
+            model, (n_in, size_in), channels_last_conversion='internal', transpose_outputs=False
         )
     else:
-        config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion="full", transpose_outputs=True)
+        config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion='full', transpose_outputs=True)
 
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv1d_{padds}_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
 
@@ -257,7 +256,7 @@ def test_conv1d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         # Vivado inserts and additional layer for 'same' padding in io_stream
-        if (backend == "Vivado" or backend == "Vitis") and padds == 1:
+        if (backend == 'Vivado' or backend == 'Vitis') and padds == 1:
             assert nNodes == len(hls_model.get_layers())
         else:
             assert nNodes - 1 == len(hls_model.get_layers())
@@ -284,28 +283,28 @@ def test_conv1d(padds, backend, io_type):
     # if not (backend == 'Vivado' and io_type == 'io_stream' and padds == 1):
     conv_index = 2
     act_index = 3
-    if io_type == "io_stream" and not ((backend == "Vivado" or backend == "Vitis") and padds == 1):
+    if io_type == 'io_stream' and not ((backend == 'Vivado' or backend == 'Vitis') and padds == 1):
         conv_index = 1
         act_index = 2
     assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
     assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv1D'
     assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__.lower()
-    if io_type == "io_stream" and (backend == "Vivado" or backend == "Vitis") and padds == 1:
-        assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in + 2
+    if io_type == 'io_stream' and (backend == 'Vivado' or backend == 'Vitis') and padds == 1:
+        assert list(hls_model.get_layers())[conv_index].attributes['in_width'] == size_in + 2
     else:
-        assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in
+        assert list(hls_model.get_layers())[conv_index].attributes['in_width'] == size_in
     assert list(hls_model.get_layers())[conv_index].attributes['filt_width'] == class_object_conv.kernel_size[0]
     assert list(hls_model.get_layers())[conv_index].attributes['n_chan'] == class_object_conv.in_channels
     assert list(hls_model.get_layers())[conv_index].attributes['n_filt'] == class_object_conv.out_channels
     assert list(hls_model.get_layers())[conv_index].attributes['stride_width'] == class_object_conv.stride[0]
     padding = padds
-    if io_type == "io_stream" and (backend == "Vivado" or backend == "Vitis") and padds == 1:
+    if io_type == 'io_stream' and (backend == 'Vivado' or backend == 'Vitis') and padds == 1:
         padding = 1
         padds = 0
 
     assert padding == class_object_conv.padding[0]
     assert list(hls_model.get_layers())[conv_index].attributes['data_format'] == 'channels_last'
-    assert list(hls_model.get_layers())[conv_index].attributes["out_width"] == out_width
+    assert list(hls_model.get_layers())[conv_index].attributes['out_width'] == out_width
 
     pad_along_width = max((out_width - 1) * class_object_conv.stride[0] + class_object_conv.kernel_size[0] - size_in, 0)
     pad_left = pad_along_width // 2
@@ -325,7 +324,7 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv2d(padds, backend, io_type):
+def test_conv2d(test_case_id, padds, backend, io_type):
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -341,14 +340,14 @@ def test_conv2d(padds, backend, io_type):
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 3, 1))
         config = config_from_pytorch_model(
-            model, (n_in, size_in_height, size_in_width), channels_last_conversion="internal", transpose_outputs=False
+            model, (n_in, size_in_height, size_in_width), channels_last_conversion='internal', transpose_outputs=False
         )
     else:
         config = config_from_pytorch_model(
-            model, (n_in, size_in_height, size_in_width), channels_last_conversion="full", transpose_outputs=True
+            model, (n_in, size_in_height, size_in_width), channels_last_conversion='full', transpose_outputs=True
         )
 
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv2d_{padds}_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -428,7 +427,7 @@ def test_conv2d(padds, backend, io_type):
         # Vivado inserts and additional layer for 'same' padding in io_stream
         conv_index = 2
         act_index = 3
-        if io_type == "io_stream":
+        if io_type == 'io_stream':
             conv_index = 1
             act_index = 2
         assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
@@ -436,8 +435,8 @@ def test_conv2d(padds, backend, io_type):
         assert (
             list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__.lower()
         )
-        assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in_width
-        assert list(hls_model.get_layers())[conv_index].attributes["in_height"] == size_in_height
+        assert list(hls_model.get_layers())[conv_index].attributes['in_width'] == size_in_width
+        assert list(hls_model.get_layers())[conv_index].attributes['in_height'] == size_in_height
         assert list(hls_model.get_layers())[conv_index].attributes['filt_width'] == class_object_conv.kernel_size[1]
         assert list(hls_model.get_layers())[conv_index].attributes['filt_height'] == class_object_conv.kernel_size[0]
         assert list(hls_model.get_layers())[conv_index].attributes['n_chan'] == class_object_conv.in_channels
@@ -476,10 +475,10 @@ padds_options = [0, 1]
 pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 
-@pytest.mark.parametrize('pooling', pooling_layers)
+@pytest.mark.parametrize('pooling', pooling_layers, ids=['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d'])
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_pooling(pooling, padds, backend):
+def test_pooling(test_case_id, pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
     if '2d' in pooling.__name__:
@@ -500,7 +499,7 @@ def test_pooling(pooling, padds, backend):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model, input_shape_forHLS, transpose_outputs=True)
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_pooling_{pooling.__name__}_padds_{padds}_backend_{backend}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
@@ -517,7 +516,7 @@ def test_pooling(pooling, padds, backend):
     children = {c[0]: c[1] for c in model.named_children()}
     class_object_pool = children[poolNode.target]
 
-    if "Max" in pooling.__name__:
+    if 'Max' in pooling.__name__:
         out_height = int(
             math.floor(
                 float(size_in_height + 2 * padds - class_object_pool.dilation * (class_object_pool.kernel_size - 1) - 1)
@@ -561,7 +560,7 @@ def test_pooling(pooling, padds, backend):
     # Verify correct parsing of layer
     hls_pool = list(hls_model.get_layers())[-2]
     if '2d' in pooling.__name__:
-        assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
+        assert hls_pool.attributes['name'] == '_' + poolNode.name.split('_')[-1]
         assert hls_pool.attributes['class_name'][-2] == str(2)
         assert hls_pool.attributes['stride_height'] == class_object_pool.stride
         assert hls_pool.attributes['stride_width'] == class_object_pool.stride
@@ -570,15 +569,15 @@ def test_pooling(pooling, padds, backend):
         assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
     elif '1d' in pooling.__name__:
-        if "Max" in pooling.__name__:
-            assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
+        if 'Max' in pooling.__name__:
+            assert hls_pool.attributes['name'] == '_' + poolNode.name.split('_')[-1]
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride
             assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
         else:
-            assert hls_pool.attributes['name'] == "_" + poolNode.name.split("_")[-1]
+            assert hls_pool.attributes['name'] == '_' + poolNode.name.split('_')[-1]
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size[0]
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride[0]
@@ -600,7 +599,7 @@ class BatchNormModel(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_bn(backend, io_type):
+def test_bn(test_case_id, backend, io_type):
     model = BatchNormModel()
     model.eval()
 
@@ -609,7 +608,7 @@ def test_bn(backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
     config = config_from_pytorch_model(model, (5,))
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_bn_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -641,7 +640,7 @@ class SqueezeModel(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_squeeze(backend, io_type):
+def test_squeeze(test_case_id, backend, io_type):
     model = SqueezeModel()
     model.eval()
 
@@ -651,7 +650,7 @@ def test_squeeze(backend, io_type):
 
     config = config_from_pytorch_model(model, (5,))
     del config['Model']['ChannelsLastConversion']  # We don't want anything touched for this test
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_squeeze_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -675,14 +674,14 @@ def test_squeeze(backend, io_type):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_flatten(backend):
+def test_flatten(test_case_id, backend):
     input = torch.randn(1, 1, 5, 5)
     model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
     pytorch_prediction = model(input).detach().numpy()
     input_shape = (1, 5, 5)
 
     config = config_from_pytorch_model(model, input_shape)
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_flatten_backend_{backend}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
@@ -720,7 +719,7 @@ class ModelSkippedLayers(nn.Module):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_skipped_layers(backend, io_type):
+def test_skipped_layers(test_case_id, backend, io_type):
     model = ModelSkippedLayers()
     model.eval()
 
@@ -729,10 +728,10 @@ def test_skipped_layers(backend, io_type):
         model,
         input_shape,
         default_precision='ap_fixed<32,16>',
-        channels_last_conversion="full",
+        channels_last_conversion='full',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_skipped_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -754,7 +753,7 @@ def test_skipped_layers(backend, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # Only io_parallel for now
 @pytest.mark.parametrize('tensor_rank', [2, 3])
-def test_remove_transpose(backend, io_type, tensor_rank):
+def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
     class TestModel(nn.Module):
         def __init__(self, tensor_rank):
             super().__init__()
@@ -794,9 +793,9 @@ def test_remove_transpose(backend, io_type, tensor_rank):
         model,
         input_shape,
         default_precision='ap_fixed<32,16>',
-        channels_last_conversion="full",  # Crucial for testing if the first Transpose was removed
+        channels_last_conversion='full',  # Crucial for testing if the first Transpose was removed
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_transpose_nop_{tensor_rank}d_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -820,8 +819,7 @@ def test_remove_transpose(backend, io_type, tensor_rank):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_view(backend, io_type):
-
+def test_view(test_case_id, backend, io_type):
     class TestModel(nn.Module):
         def __init__(self, n_in, n_out, size_in):
             super().__init__()
@@ -854,9 +852,9 @@ def test_view(backend, io_type):
 
     # X_input is channels last
     X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-    config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion="internal", transpose_outputs=False)
+    config = config_from_pytorch_model(model, (n_in, size_in), channels_last_conversion='internal', transpose_outputs=False)
 
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_view_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(
         model,
         hls_config=config,
@@ -899,13 +897,12 @@ class EinsumSingleInput(nn.Module):
     def forward(self, x):
         """using torch einsum to get the dot product"""
         out = self.linear(x)
-        return torch.einsum("ij,ij->i", out, out)
+        return torch.einsum('ij,ij->i', out, out)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_einsum_outer_product(backend, io_type):
-
+def test_einsum_outer_product(test_case_id, backend, io_type):
     model = EinsumOuterProduct()
     model.eval()
 
@@ -918,10 +915,10 @@ def test_einsum_outer_product(backend, io_type):
         model,
         [(None, 4), (None, 5)],
         default_precision='ap_fixed<16,6>',
-        channels_last_conversion="internal",
+        channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_einsum_outer_product_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -934,8 +931,7 @@ def test_einsum_outer_product(backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_einsum_batch_matmul(backend, io_type):
-
+def test_einsum_batch_matmul(test_case_id, backend, io_type):
     model = EinsumBatchMatMul()
     model.eval()
 
@@ -948,10 +944,10 @@ def test_einsum_batch_matmul(backend, io_type):
         model,
         [(None, 2, 5), (None, 5, 4)],
         default_precision='ap_fixed<16,6>',
-        channels_last_conversion="internal",
+        channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_einsum_batch_matmul_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
@@ -964,8 +960,7 @@ def test_einsum_batch_matmul(backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-def test_einsum_single_input(backend, io_type):
-
+def test_einsum_single_input(test_case_id, backend, io_type):
     model = EinsumSingleInput()
     model.eval()
 
@@ -976,11 +971,11 @@ def test_einsum_single_input(backend, io_type):
     config = config_from_pytorch_model(
         model,
         [(None, 8)],
-        default_precision='ap_fixed<16,6>',
-        channels_last_conversion="internal",
+        default_precision='ap_fixed<32,12>',
+        channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / f'hls4mlprj_pytorch_einsum_single_input_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 

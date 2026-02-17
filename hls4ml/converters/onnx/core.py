@@ -96,16 +96,16 @@ def parse_batchnorm_layer(node, input_names, input_shapes, graph):
         layer['n_filt'] = -1
     elif len(input_shapes[0]) > 2:
         if node.domain != 'qonnx.custom_op.channels_last':
-            raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
+            raise RuntimeError('Please convert the model to channels-last format with qonnx-to-channels-last')
         layer['data_format'] = 'channels_last'  # QONNX needs to be channels-last.
         layer['n_filt'] = input_shapes[0][-1]
     else:
-        raise RuntimeError(f"Unexpected input shape: {input_shapes[0]}")
+        raise RuntimeError(f'Unexpected input shape: {input_shapes[0]}')
 
     return layer
 
 
-@onnx_handler('Quant')
+@onnx_handler('Quant', 'IntQuant')
 def parse_quant_layer(node, input_names, input_shapes, graph):
     layer = {}
 
@@ -119,4 +119,15 @@ def parse_quant_layer(node, input_names, input_shapes, graph):
     layer['rounding_mode'] = get_onnx_attribute(node, 'rounding_mode')
     layer['signed'] = bool(get_onnx_attribute(node, 'signed'))
 
+    return layer
+
+
+@onnx_handler('BipolarQuant')
+def parse_bipolar_quant_layer(node, input_names, input_shapes, graph):
+    layer = {}
+
+    layer['class_name'] = 'BipolarQuant'
+    layer['name'] = node.name
+    layer['inputs'] = input_names
+    layer['outputs'] = list(node.output)
     return layer

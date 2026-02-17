@@ -12,7 +12,7 @@ test_root_path = Path(__file__).parent
 
 # PyTorch implementation of a custom layer
 class TReverse(hls4ml.utils.torch.HLS4MLModule):
-    '''PyTorch implementation of a hypothetical custom layer'''
+    """PyTorch implementation of a hypothetical custom layer"""
 
     def __init__(self):
         super().__init__()
@@ -24,7 +24,7 @@ class TReverse(hls4ml.utils.torch.HLS4MLModule):
 # hls4ml layer implementation
 # Note that the `Torch` suffix is added here to avoid clashes with other tests and not mandatory
 class HReverseTorch(hls4ml.model.layers.Layer):
-    '''hls4ml implementation of a hypothetical custom layer'''
+    """hls4ml implementation of a hypothetical custom layer"""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -34,7 +34,7 @@ class HReverseTorch(hls4ml.model.layers.Layer):
 
 # hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
-    '''OptimizerPass to remove consecutive HReverseTorch layers.'''
+    """OptimizerPass to remove consecutive HReverseTorch layers."""
 
     def match(self, node):
         return isinstance(node, HReverseTorch) and isinstance(node.get_input_node(), HReverseTorch)
@@ -130,7 +130,7 @@ def register_custom_layer():
 
 
 @pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
-def test_extensions_pytorch(tmp_path, backend_id):
+def test_extensions_pytorch(test_case_id, tmp_path, backend_id):
     # Register the optimization passes (if any)
     backend = hls4ml.backends.get_backend(backend_id)
     ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
@@ -174,7 +174,7 @@ def test_extensions_pytorch(tmp_path, backend_id):
     )
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         pmodel,
-        output_dir=str(test_root_path / f'hls4mlprj_extensions_torch_{backend_id}'),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend_id,
         io_type='io_parallel',
         hls_config=config,

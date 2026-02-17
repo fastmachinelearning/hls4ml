@@ -22,7 +22,7 @@ def get_model_masks(
     hessians=None,
     knapsack_solver='CBC_MIP',
 ):
-    '''
+    """
     Function calculating a binary mask for all optimizable layers
     Entries equal to one correspond to the weight being updated during the training
     Entries equal to zero correspond to the weight being frozen during the training
@@ -60,7 +60,7 @@ def get_model_masks(
 
         - masks (dict): Layer-wise dictionary of binary tensors
         - offsets (dict): Layer-wise dictionary of offsets for every weight
-    '''
+    """
 
     if metric not in SUPPORTED_METRICS:
         raise Exception('Unknown metric for ranking weights')
@@ -82,10 +82,10 @@ def get_model_masks(
 
 
 def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric, gradients, hessians, knapsack_solver):
-    '''
+    """
     Function calculating a layer-wise binary mask for all optimizable layers
     This function performs layer-wise masking, so all layers have the same sparsity (with respect to the objective)
-    '''
+    """
     masks = {}
     offsets = {}
 
@@ -413,11 +413,11 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
 
 
 def __get_masks_global(keras_model, model_attributes, sparsity, objective, metric, gradients, hessians, knapsack_solver):
-    '''
+    """
     Function calculating a layer-wise binary mask for all optimizable layers
     Global masking, with layers of different sparsity; masks are calculated by solving a Knapsack problem
     Most of the logic remains similar to local masking; comments describing implementation are given in the function above
-    '''
+    """
     groups = []
     total_resources = []
 
@@ -783,9 +783,9 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
 
 
 class __WeightGroups__:
-    '''
+    """
     A helper class containing information about a group of weights
-    '''
+    """
 
     def __init__(self, value, resources, layer_position, structure_type=None, layer_name=None, optimization_type=None):
         self.value = value

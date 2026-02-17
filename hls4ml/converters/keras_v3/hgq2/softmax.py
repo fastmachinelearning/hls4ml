@@ -4,7 +4,7 @@ from math import prod
 
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
-from ._base import QLayerHandler, register
+from ._base import QLayerHandler
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -39,7 +39,6 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False):
     return FixedPrecisionType(b, I, k, rounding_mode=round_mode, saturation_mode=sat_mode)
 
 
-@register
 class QSoftmaxHandler(QLayerHandler):
     handles = ('hgq.layers.softmax.QSoftmax',)
 
@@ -93,12 +92,12 @@ class QSoftmaxHandler(QLayerHandler):
             parallelization_factor = n_outer * n_inner
 
         if len(in_tensors) == 2:
-            raise NotImplementedError("Masked softmax not supported yet")
+            raise NotImplementedError('Masked softmax not supported yet')
             class_name = 'MaskedSoftmax'
         elif len(in_tensors) == 1:
             class_name = 'Softmax'
         else:
-            raise ValueError(f"Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}")
+            raise ValueError(f'Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}')
 
         config = {}
         config.update(self.default_config)

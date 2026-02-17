@@ -27,26 +27,8 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize(
-    'backend,io_type,strategy',
-    [
-        ('Quartus', 'io_parallel', 'resource'),
-        ('Quartus', 'io_stream', 'resource'),
-        ('oneAPI', 'io_parallel', 'resource'),
-        ('oneAPI', 'io_stream', 'resource'),
-        ('Vivado', 'io_parallel', 'resource'),
-        ('Vivado', 'io_parallel', 'latency'),
-        ('Vivado', 'io_stream', 'latency'),
-        ('Vivado', 'io_stream', 'resource'),
-        ('Vitis', 'io_parallel', 'resource'),
-        ('Vitis', 'io_parallel', 'latency'),
-        ('Vitis', 'io_stream', 'latency'),
-        ('Vitis', 'io_stream', 'resource'),
-        ('Catapult', 'io_stream', 'latency'),
-        ('Catapult', 'io_stream', 'resource'),
-    ],
-)
-def hls_model(keras_model, backend, io_type, strategy):
+def hls_model(keras_model, request, test_case_id):
+    backend, io_type, strategy = request.param
     default_precision = (
         'ap_fixed<16,3,AP_RND_CONV,AP_SAT>' if backend == 'Vivado' else 'ac_fixed<16,3,true,AC_RND_CONV,AC_SAT>'
     )
@@ -73,7 +55,7 @@ def hls_model(keras_model, backend, io_type, strategy):
     }
     hls_config['LayerName']['output_softmax_softmax'] = {'Strategy': 'Stable'}
 
-    output_dir = str(test_root_path / f'hls4mlprj_conv1d_{backend}_{io_type}_{strategy}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, backend=backend, io_type=io_type, output_dir=output_dir
     )
@@ -82,7 +64,7 @@ def hls_model(keras_model, backend, io_type, strategy):
 
 
 @pytest.mark.parametrize(
-    'backend,io_type,strategy',
+    'hls_model',
     [
         ('Quartus', 'io_parallel', 'resource'),
         ('Quartus', 'io_stream', 'resource'),
@@ -98,6 +80,23 @@ def hls_model(keras_model, backend, io_type, strategy):
         ('Vitis', 'io_stream', 'resource'),
         ('Catapult', 'io_stream', 'latency'),
         ('Catapult', 'io_stream', 'resource'),
+    ],
+    indirect=True,
+    ids=[
+        'Quartus_io_parallel_resource',
+        'Quartus_io_stream_resource',
+        'oneAPI_io_parallel_resource',
+        'oneAPI_io_stream_resource',
+        'Vivado_io_parallel_resource',
+        'Vivado_io_parallel_latency',
+        'Vivado_io_stream_latency',
+        'Vivado_io_stream_resource',
+        'Vitis_io_parallel_resource',
+        'Vitis_io_parallel_latency',
+        'Vitis_io_stream_latency',
+        'Vitis_io_stream_resource',
+        'Catapult_io_stream_latency',
+        'Catapult_io_stream_resource',
     ],
 )
 def test_accuracy(data, keras_model, hls_model):

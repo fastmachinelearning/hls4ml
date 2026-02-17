@@ -1,6 +1,5 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-
 requires = [ "setuptools>=61", "setuptools-scm>=8" ]
 
 [project]
@@ -21,18 +20,19 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dynamic = [ "version" ]
 dependencies = [ "h5py", "numpy", "pydigitalwavetools==1.1", "pyyaml", "quantizers" ]
-
-optional-dependencies.da = [ "da4ml>=0.2.1,<=0.4" ]
+optional-dependencies.da = [ "da4ml>=0.5.2,<0.6" ]
 optional-dependencies.doc = [
   "sphinx",
   "sphinx-contributors",
   "sphinx-github-changelog",
   "sphinx-rtd-theme",
+  "sphinx-tabs",
 ]
 optional-dependencies.hgq = [ "hgq>=0.2.3" ]
 optional-dependencies.hgq2 = [ "hgq2>=0.0.1" ]
@@ -53,7 +53,6 @@ optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [
   "calmjs-parse",
-  "hgq>=0.2.3",
   "onnx>=1.4",
   "pytest",
   "pytest-cov",
@@ -61,6 +60,17 @@ optional-dependencies.testing = [
   "qonnx",
   "tabulate",
   "torch",
+]
+optional-dependencies.testing-keras2 = [
+  "hgq>=0.2.3",
+  "qkeras",
+  "tensorflow>=2.8,<=2.14.1",
+]
+optional-dependencies.testing-keras3 = [
+  "da4ml",
+  "hgq2>=0.0.1",
+  "keras>=3.10",
+  "tensorflow>=2.15",
 ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
 scripts.hls4ml = "hls4ml.cli:main"
@@ -71,7 +81,6 @@ packages = [ "hls4ml" ]
 include-package-data = true
 
 [tool.setuptools_scm]
-
 version_scheme = "release-branch-semver"
 git_describe_command = [
   "git",
@@ -85,18 +94,12 @@ git_describe_command = [
 ]
 write_to = "hls4ml/_version.py"
 
-[tool.black]
-line-length = 125
-skip-string-normalization = true
-
 [tool.ruff]
 target-version = "py310"
-
 line-length = 125
 indent-width = 4
 include = [ "hls4ml/**/*.py", "tests/**/*.py" ]
 exclude = [ "hls4ml/_version.py", "hls4ml/templates/**" ]
-
 format.quote-style = "single"
 format.skip-magic-trailing-comma = false
 format.docstring-code-line-length = 125
@@ -104,13 +107,8 @@ format.docstring-code-format = true
 lint.select = [ "E", "F", "F401", "I", "W" ]
 lint.ignore = [ "E741" ]
 lint.per-file-ignores = { "__init__.py" = [ "F401" ] }
-
 lint.fixable = [ "ALL" ]
-lint.unfixable = [  ]
-
-[tool.isort]
-profile = "black"
-line_length = 125
+lint.unfixable = []
 
 [tool.check-manifest]
 ignore = [

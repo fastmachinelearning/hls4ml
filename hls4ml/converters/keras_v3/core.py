@@ -5,14 +5,13 @@ from math import prod
 
 import numpy as np
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     import keras
     from keras import KerasTensor
 
 
-@register
 class DenseHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.core.dense.Dense',)
 
@@ -36,7 +35,6 @@ class DenseHandler(KerasV3LayerHandler):
         return config
 
 
-@register
 class InputHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.core.input_layer.InputLayer',)
 
@@ -50,7 +48,6 @@ class InputHandler(KerasV3LayerHandler):
         return config
 
 
-@register
 class ActivationHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.activation.Activation',)
 
@@ -89,7 +86,6 @@ class ActivationHandler(KerasV3LayerHandler):
         return (config,)
 
 
-@register
 class ReLUHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.activations.leaky_relu.LeakyReLU',
@@ -99,31 +95,43 @@ class ReLUHandler(KerasV3LayerHandler):
 
     def handle(
         self,
-        layer: 'keras.layers.ReLU',
+        layer: 'keras.layers.ReLU|keras.layers.PReLU|keras.layers.LeakyReLU',
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
         config = {}
         config.update(self.default_config)
 
-        if layer.__class__.__name__ == 'ReLU':
-            config['class_name'] = 'Activation'
-            config['activation'] = 'relu'
-            return config
-
         if layer.__class__.__name__ == 'PReLU':
             config['class_name'] = 'PReLU'
             config['param_data'] = np.array(layer.alpha)
             config['activation'] = 'prelu'
-        else:
-            config['class_name'] = 'LeakyReLU'
-            config['activ_param'] = float(layer.negative_slope)
-            config['activation'] = 'leaky_relu'
+
+        if layer.__class__.__name__ in ('ReLU', 'LeakyReLU'):
+            if layer.__class__.__name__ == 'ReLU':
+                assert layer.max_value in (None, float('inf')), 'Only ReLU with max_value=None or inf is supported'
+
+            negative_slope = float(layer.negative_slope)
+            threshold = float(layer.threshold) if hasattr(layer, 'threshold') else 0.0
+            if threshold != 0.0 and negative_slope != 0.0:
+                raise NotImplementedError(f'layer {layer.name}: ReLU must has threshold=0 or negative_slope=0')
+
+            if negative_slope == 0.0 and threshold == 0.0:
+                config['class_name'] = 'Activation'
+                config['activation'] = 'relu'
+
+            if negative_slope != 0.0:
+                config['class_name'] = 'LeakyReLU'
+                config['activ_param'] = float(layer.negative_slope)
+                config['activation'] = 'leakyrelu'
+            elif negative_slope == 0.0:
+                config['class_name'] = 'ThresholdedReLU'
+                config['activ_param'] = float(layer.threshold)
+                config['activation'] = 'thresholdedrelu'
 
         return (config,)
 
 
-@register
 class SoftmaxHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.softmax.Softmax',)
 
@@ -156,7 +164,6 @@ class SoftmaxHandler(KerasV3LayerHandler):
         return (config,)
 
 
-@register
 class EluHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.elu.ELU',)
 
@@ -177,7 +184,6 @@ class EluHandler(KerasV3LayerHandler):
         return (config,)
 
 
-@register
 class ReshapeHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.reshaping.reshape.Reshape', 'keras.src.layers.reshaping.flatten.Flatten')
 
@@ -193,7 +199,6 @@ class ReshapeHandler(KerasV3LayerHandler):
         }
 
 
-@register
 class PermuteHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.reshaping.permute.Permute',)
 
@@ -207,7 +212,6 @@ class PermuteHandler(KerasV3LayerHandler):
         return config
 
 
-@register
 class NoOp(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.preprocessing.image_preprocessing.random_brightness.RandomBrightness',

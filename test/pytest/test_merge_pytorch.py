@@ -32,7 +32,7 @@ class ConcatModule(nn.Module):
 @pytest.mark.parametrize('merge_op', ['cat', 'add', 'mul', 'sub', 'minimum', 'maximum'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_merge(merge_op, io_type, backend):
+def test_merge(test_case_id, merge_op, io_type, backend):
     input_shape = (3, 10, 10)
 
     if merge_op == 'cat':  # Meow!
@@ -45,10 +45,10 @@ def test_merge(merge_op, io_type, backend):
         model,
         [input_shape, input_shape],
         default_precision='ap_fixed<32,16>',
-        channels_last_conversion="internal",
+        channels_last_conversion='internal',
         transpose_outputs=False,
     )
-    output_dir = str(test_root_path / f'hls4mlprj_merge_pytorch_{merge_op}_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model,
         hls_config=config,

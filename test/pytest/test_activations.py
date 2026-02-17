@@ -34,9 +34,22 @@ test_root_path = Path(__file__).parent
         # Result is likely to be different when |x| > 1 (see TF/Theano docs)
         (Activation('hard_sigmoid'), 'hard_sigmoid'),
     ],
+    ids=[
+        'relu',
+        'leaky_relu',
+        'leaky_relu_act',
+        'threshold_relu',
+        'elu',
+        'selu',
+        'prelu',
+        'softplus',
+        'softsign',
+        'tanh',
+        'sigmoid',
+        'hard_sigmoid',
+    ],
 )
-def test_activations(backend, activation, name, shape, io_type):
-
+def test_activations(test_case_id, backend, activation, name, shape, io_type):
     if name == 'prelu' and shape == (8, 8, 3):
         return
     # Subtract 0.5 to include negative values
@@ -47,7 +60,7 @@ def test_activations(backend, activation, name, shape, io_type):
     keras_model = Model(inputs=input, outputs=activation)
 
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / 'hls4mlprj_activations_{}_{}_{}_{}').format(backend, io_type, str(shape), name)
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, output_dir=output_dir, backend=backend

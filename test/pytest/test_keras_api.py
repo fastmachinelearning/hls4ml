@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
+from synthesis_helpers import run_synthesis_test
 from tensorflow.keras.layers import (
     ELU,
     Activation,
@@ -27,7 +28,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_dense(backend, io_type):
+def test_dense(test_case_id, backend, io_type, synthesis_config):
     model = tf.keras.models.Sequential()
     model.add(
         Dense(
@@ -52,7 +53,8 @@ def test_dense(backend, io_type):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
+    baseline_file_name = f'{test_case_id}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
@@ -65,8 +67,8 @@ def test_dense(backend, io_type):
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=1e-2, atol=0.01)
 
     assert len(model.layers) + 1 == len(hls_model.get_layers())
-    assert list(hls_model.get_layers())[0].attributes['class_name'] == "InputLayer"
-    assert list(hls_model.get_layers())[1].attributes["class_name"] == model.layers[0]._name
+    assert list(hls_model.get_layers())[0].attributes['class_name'] == 'InputLayer'
+    assert list(hls_model.get_layers())[1].attributes['class_name'] == model.layers[0]._name
     assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ELU'
     assert list(hls_model.get_layers())[0].attributes['input_shape'] == list(model.layers[0].input_shape[1:])
     assert list(hls_model.get_layers())[1].attributes['n_in'] == model.layers[0].input_shape[1:][0]
@@ -74,25 +76,28 @@ def test_dense(backend, io_type):
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
 
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+
 
 # TODO: add ThresholdedReLU test when it can be made to pass
 # https://github.com/fastmachinelearning/hls4ml/issues/376
 @pytest.mark.parametrize(
-    "activation_function",
+    'activation_function',
     [
         Activation(activation='relu', name='relu'),
         LeakyReLU(alpha=1.0),
         ELU(alpha=1.0),
         PReLU(
-            alpha_initializer="zeros",
+            alpha_initializer='zeros',
         ),
         Activation(activation='sigmoid', name='sigmoid'),
     ],
+    ids=['relu', 'leaky_relu', 'elu', 'prelu', 'sigmoid'],
 )
 # ThresholdedReLU(theta=1.0)])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_activations(activation_function, backend, io_type):
+def test_activations(test_case_id, activation_function, backend, io_type, synthesis_config):
     model = tf.keras.models.Sequential()
     model.add(Dense(64, input_shape=(1,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
     model.add(activation_function)
@@ -101,7 +106,9 @@ def test_activations(activation_function, backend, io_type):
     X_input = np.random.rand(100, 1)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_activations_{activation_function.name}_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
+    baseline_file_name = f'{test_case_id}.json'
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -113,6 +120,8 @@ def test_activations(activation_function, backend, io_type):
     assert len(model.layers) + 1 == len(hls_model.get_layers())
 
     assert list(hls_model.get_layers())[2].attributes['class_name'] == activation_function.__class__.__name__
+
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
 
 
 padds_options = ['same', 'valid']
@@ -131,7 +140,7 @@ padds_options = ['same', 'valid']
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv1d(padds, backend, strategy, io_type):
+def test_conv1d(test_case_id, padds, backend, strategy, io_type, synthesis_config):
     model = tf.keras.models.Sequential()
     input_shape = (10, 128, 4)
     model.add(
@@ -155,7 +164,8 @@ def test_conv1d(padds, backend, strategy, io_type):
 
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv1d_{padds}_{backend}_{strategy}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -171,13 +181,13 @@ def test_conv1d(padds, backend, strategy, io_type):
         assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
         assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv1D'
         assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
-        assert list(hls_model.get_layers())[1].attributes["in_width"] == model.layers[0]._batch_input_shape[1]
+        assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[1]
         assert list(hls_model.get_layers())[1].attributes['filt_width'] == model.layers[0].kernel_size[0]
         assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0].input_shape[2]
         assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
         assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[0]
         assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
-        assert list(hls_model.get_layers())[1].attributes["out_width"] == list(model.layers[0].output_shape)[1]
+        assert list(hls_model.get_layers())[1].attributes['out_width'] == list(model.layers[0].output_shape)[1]
 
         out_width = math.ceil(float(model.layers[0]._batch_input_shape[2]) / float(model.layers[0].strides[0]))
         pad_along_width = max(
@@ -215,7 +225,7 @@ padds_options = ['same', 'valid']
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv2d(chans, padds, backend, strategy, io_type):
+def test_conv2d(test_case_id, chans, padds, backend, strategy, io_type, synthesis_config):
     model = tf.keras.models.Sequential()
     input_shape = (28, 28, 3)
     model.add(
@@ -237,7 +247,9 @@ def test_conv2d(chans, padds, backend, strategy, io_type):
 
     config = hls4ml.utils.config_from_keras_model(model)
     config['Model']['Strategy'] = strategy
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_conv2d_{backend}_{strategy}_{chans}_{padds}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
+    baseline_file_name = f'{test_case_id}.json'
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -316,14 +328,22 @@ def test_conv2d(chans, padds, backend, strategy, io_type):
         assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
         assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
 
+    if backend == 'Vitis' and strategy == 'Resource' and io_type == 'io_parallel' and padds == 'same':
+        run_synthesis_test(
+            config=synthesis_config,
+            hls_model=hls_model,
+            baseline_file_name=baseline_file_name,
+            backend=backend,
+        )
+
 
 # Currently only Vivado and Vitis is supported for io_stream.
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_depthwise2d(backend, io_type):
-    '''
+def test_depthwise2d(test_case_id, backend, io_type, synthesis_config):
+    """
     Test proper handling of DepthwiseConv2D
-    '''
+    """
     X = np.random.rand(10, 32, 32, 3)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = tf.keras.models.Sequential()
@@ -333,7 +353,9 @@ def test_depthwise2d(backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<32,12>', backend=backend
     )
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
+    baseline_file_name = f'{test_case_id}.json'
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -344,14 +366,16 @@ def test_depthwise2d(backend, io_type):
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+
 
 # Currently only Vivado and Vitis is supported for io_stream.
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_depthwise1d(backend, io_type):
-    '''
+def test_depthwise1d(test_case_id, backend, io_type, synthesis_config):
+    """
     Test proper handling of DepthwiseConv1D.
-    '''
+    """
     X = np.random.rand(10, 32, 3)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     model = tf.keras.models.Sequential()
@@ -359,7 +383,9 @@ def test_depthwise1d(backend, io_type):
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv1d_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
+    baseline_file_name = f'{test_case_id}.json'
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
@@ -370,15 +396,19 @@ def test_depthwise1d(backend, io_type):
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+
 
 pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D]
 
 
-@pytest.mark.parametrize('pooling', pooling_layers)
+@pytest.mark.parametrize(
+    'pooling', pooling_layers, ids=['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
+)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def test_pooling(pooling, padds, chans, backend):
+def test_pooling(test_case_id, pooling, padds, chans, backend, synthesis_config):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
     input_shape = (18, 15, 3) if '2D' in pooling.__name__ else (121, 3)
@@ -389,9 +419,9 @@ def test_pooling(pooling, padds, chans, backend):
     keras_model.compile()
 
     hls_cfg = hls4ml.utils.config_from_keras_model(keras_model)
-    output_dir = str(
-        test_root_path / f'hls4mlprj_keras_api_pooling_{pooling.__name__}_channels_{chans}_padds_{padds}_backend_{backend}'
-    )
+    output_dir = str(test_root_path / test_case_id)
+    baseline_file_name = f'{test_case_id}.json'
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_cfg, output_dir=output_dir, backend=backend
     )
@@ -495,3 +525,5 @@ def test_pooling(pooling, padds, chans, backend):
             assert hls_pool.attributes['n_out'] == out_valid
             assert hls_pool.attributes['pad_left'] == 0
             assert hls_pool.attributes['pad_right'] == 0
+
+    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)

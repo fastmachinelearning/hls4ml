@@ -90,15 +90,13 @@ def compare_weights(hls_weights, keras_weights, keras_layer):
             comparison(hls_weights[4 * i : 4 * (i + 1)], keras_weights[3 * i : 3 * (i + 1)], inner_layer.__class__.__name__)
 
 
-@pytest.mark.parametrize('rnn_layer', rnn_layers)
+@pytest.mark.parametrize('rnn_layer', rnn_layers, ids=['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
 @pytest.mark.parametrize('return_sequences', [True, False])
-def test_rnn_parsing(rnn_layer, return_sequences):
-
+def test_rnn_parsing(test_case_id, rnn_layer, return_sequences):
     model = create_model_parsing(rnn_layer, return_sequences)
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
-    prj_name = f'hls4mlprj_rnn_{rnn_layer.__class__.__name__.lower()}_seq_{int(return_sequences)}'
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
 
     hls_layer = list(hls_model.get_layers())[1]  # 0 is input, 1 is the RNN layer
@@ -189,10 +187,40 @@ def create_model_accuracy(rnn_layer, return_sequences):
         (Bidirectional, 'Vitis', 'io_parallel', 'resource'),
         (Bidirectional, 'Vitis', 'io_parallel', 'latency'),
     ],
+    ids=[
+        'SimpleRNN-Quartus-io_parallel-resource',
+        'SimpleRNN-oneAPI-io_parallel-resource',
+        'LSTM-Vivado-io_parallel-resource',
+        'LSTM-Vivado-io_parallel-latency',
+        'LSTM-Vitis-io_parallel-resource',
+        'LSTM-Vitis-io_parallel-latency',
+        'LSTM-Quartus-io_parallel-resource',
+        'LSTM-oneAPI-io_parallel-resource',
+        'LSTM-Vivado-io_stream-resource',
+        'LSTM-Vivado-io_stream-latency',
+        'LSTM-Vitis-io_stream-resource',
+        'LSTM-Vitis-io_stream-latency',
+        'GRU-Vivado-io_parallel-resource',
+        'GRU-Vivado-io_parallel-latency',
+        'GRU-Vitis-io_parallel-resource',
+        'GRU-Vitis-io_parallel-latency',
+        'GRU-Quartus-io_parallel-resource',
+        'GRU-oneAPI-io_parallel-resource',
+        'GRU-Vivado-io_stream-resource',
+        'GRU-Vivado-io_stream-latency',
+        'GRU-Vitis-io_stream-resource',
+        'GRU-Vitis-io_stream-latency',
+        'GRU-Quartus-io_stream-resource',
+        'GRU-oneAPI-io_stream-resource',
+        'Bidirectional-Vivado-io_parallel-resource',
+        'Bidirectional-Vivado-io_parallel-latency',
+        'Bidirectional-Vitis-io_parallel-resource',
+        'Bidirectional-Vitis-io_parallel-latency',
+    ],
 )
 @pytest.mark.parametrize('return_sequences', [True, False])
 @pytest.mark.parametrize('static', [True, False])
-def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, static):
+def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_type, strategy, static):
     layer_name = rnn_layer.__name__
 
     model, X = create_model_accuracy(rnn_layer, return_sequences)
@@ -203,12 +231,7 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, s
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
-    prj_name = (
-        'hls4mlprj_rnn_accuracy_'
-        + f'{layer_name}_static_{int(static)}_ret_seq_{int(return_sequences)}_'
-        + f'{backend}_{io_type}_{strategy}'
-    )
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type

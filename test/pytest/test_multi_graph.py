@@ -32,7 +32,7 @@ def create_test_model():
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['model', 'name'])
 @pytest.mark.parametrize('split_layers', [('dense2', 'avg_pool'), ('relu1', 'relu_common')])
-def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
+def test_multimodelgraph_predict(test_case_id, split_layers, io_type, strategy, granularity):
     """
     Tests the multi-graph splitting and stitching process.
     - Verifies that predictions from the monolithic and multi-graph versions match with the CSimulation.
@@ -47,7 +47,7 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity, default_precision='ap_fixed<32,16>')
     config['Model']['Strategy'] = strategy
 
-    output_dir = str(test_root_path / f"hls4mlprj_{granularity}_{'_'.join(split_layers)}_{io_type}_{strategy}")
+    output_dir = str(test_root_path / test_case_id)
 
     # --- Monolithic HLS conversion (no split) ---
     hls_model_mono = hls4ml.converters.convert_from_keras_model(
@@ -62,7 +62,7 @@ def test_multimodelgraph_predict(split_layers, io_type, strategy, granularity):
     pred_multi = hls_model_multi.predict(X_input)
 
     assert hasattr(hls_model_multi, 'graphs'), "Multi-model graph missing 'graphs' attribute."
-    assert len(hls_model_multi.graphs) == 3, f"Expected 3 subgraphs, got {len(hls_model_multi.graphs)}"
+    assert len(hls_model_multi.graphs) == 3, f'Expected 3 subgraphs, got {len(hls_model_multi.graphs)}'
 
     for mono_out, multi_out in zip(pred_mono, pred_multi):
         np.testing.assert_allclose(multi_out, mono_out, rtol=0, atol=1e-5)

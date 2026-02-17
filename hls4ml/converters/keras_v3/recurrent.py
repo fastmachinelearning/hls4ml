@@ -3,7 +3,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     import keras
@@ -12,7 +12,6 @@ if typing.TYPE_CHECKING:
 rnn_layers = ('SimpleRNN', 'LSTM', 'GRU')
 
 
-@register
 class RecurentHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.rnn.simple_rnn.SimpleRNN',
@@ -72,7 +71,6 @@ class RecurentHandler(KerasV3LayerHandler):
         return (_config,)
 
 
-@register
 class BidirectionalHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.rnn.bidirectional.Bidirectional',)
 
@@ -88,7 +86,7 @@ class BidirectionalHandler(KerasV3LayerHandler):
             rnn_forward_layer = layer.backward_layer
             rnn_backward_layer = layer.forward_layer
             print(
-                f'WARNING: The selected order for forward and backward layers in \"{layer.name}\" '
+                f'WARNING: The selected order for forward and backward layers in "{layer.name}" '
                 f'({layer.__class__.__name__}) is not supported. Switching to forward layer first, backward layer last.'
             )
         else:
@@ -114,7 +112,6 @@ class BidirectionalHandler(KerasV3LayerHandler):
         config['merge_mode'] = layer.merge_mode
 
         for direction, rnn_layer in [('forward', rnn_forward_layer), ('backward', rnn_backward_layer)]:
-
             config[f'{direction}_name'] = rnn_layer.name
             config[f'{direction}_class_name'] = rnn_layer.__class__.__name__
             if hasattr(rnn_layer, 'activation'):

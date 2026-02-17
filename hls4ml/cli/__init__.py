@@ -325,5 +325,5 @@ def _report_quartus(args, extra_args):
         hls4ml.report.read_quartus_report(args.project, quartus_args.open_browser)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

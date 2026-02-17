@@ -2,14 +2,13 @@ import typing
 from collections.abc import Sequence
 from typing import Any
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     from keras import KerasTensor
     from keras.src.layers.merging.base_merge import Merge
 
 
-@register
 class MergeHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.merging.add.Add',
@@ -39,7 +38,8 @@ class MergeHandler(KerasV3LayerHandler):
         match cls_name:
             case 'Concatenate':
                 rank = len(output_shape)
-                class_name = f'Concatenate{rank}d'
+                class_name = 'Concatenate'
+                op = f'Concatenate{rank}d'
                 config['axis'] = layer.axis
             case 'Dot':
                 msg = (
