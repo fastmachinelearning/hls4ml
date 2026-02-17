@@ -42,7 +42,7 @@ def test_emulator(test_case_id, keras_model, io_type, backend):
     hls_model.compile()  # It's enough that the model compiles
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult'])  # No Quartus for now
 @pytest.mark.parametrize('write_tar', [True, False])
 def test_write_tar(test_case_id, keras_model, write_tar, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
