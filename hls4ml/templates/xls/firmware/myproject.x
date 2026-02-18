@@ -5,9 +5,6 @@
 // hls-fpga-machine-learning debugging
 
 
-// hls-fpga-machine-learning insert dimensions
-
-
 // ****************************************
 // NETWORK INSTANTIATION
 // ****************************************

@@ -285,7 +285,7 @@ class XLSBackend(FPGABackend):
 
         # Extract dimensions
         n_samples: int = model._compute_n_samples(x)
-        n_inputs: int = list(layers[0].get_output_variable().get_shape())[0][1] # Get input dimensions
+        n_inputs: int = layers[0].get_output_variable().shape[0] # Get input dimensions
         n_outputs: int = len(model.get_output_variables())
 
         # Extract type

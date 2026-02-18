@@ -83,21 +83,14 @@ class XLSWriter(Writer):
                         seen_libs.append(lib)
                         newline += f'import nnet_utils.{lib};\n'
 
-            elif '// hls-fpga-machine-learning insert dimensions' in line:
-                newline = line
-                for layer in layers:
-                    if layer.get_attr("write_dims"):
-                        for dim in list(layer.get_output_variable().get_shape()):
-                            newline += f'const {dim[0]} = u32:{dim[1]};\n'
-
             elif '// hls-fpga-machine-learning architecture arguments' in line:
                 newline = ''
                 weighted_layers_count = 0
                 for i, layer in enumerate(layers):
                     if layer.class_name == 'Input':
                         newline += indent + f'x: {layer.get_attr("out_type")}'
-                        for dim in list(layer.get_output_variable().get_shape()):
-                            newline += f'[{dim[0]}]'
+                        for dim in layer.get_output_variable().shape:
+                            newline += f'[{dim}]'
                         newline += ',\n'
                     elif layer.get_attr("write_weights"):
                         # weights arguments
@@ -118,8 +111,8 @@ class XLSWriter(Writer):
             elif '// hls-fpga-machine-learning output' in line:
                 last_layer_type = layers[-1].get_attr("out_type")
                 newline = indent + f'{last_layer_type}'
-                for dim in list(layers[-1].get_output_variable().get_shape()):
-                    newline += f'[{dim[0]}]'
+                for dim in layers[-1].get_output_variable().shape:
+                    newline += f'[{dim}]'
                 newline += '\n'
 
             elif '// hls-fpga-machine-learning insert layers' in line:
@@ -139,8 +132,8 @@ class XLSWriter(Writer):
             elif '// hls-fpga-machine-learning top function input' in line:
                 # TODO: check layer.class_name == 'Input' instead of taking layers[0]?
                 newline = indent + f'x: {layers[0].get_attr("out_type")}'
-                for dim in list(layers[0].get_output_variable().get_shape()):
-                    newline += f'[{dim[0]}]'
+                for dim in layers[0].get_output_variable().shape:
+                    newline += f'[{dim}]'
                 newline += '\n'
 
             elif '// hls-fpga-machine-learning load weights' in line:

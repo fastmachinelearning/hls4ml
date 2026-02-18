@@ -25,10 +25,7 @@ class XLSAttrBuilder:
         write_dims (bool):    the layer dimensions should be explicitly written in the project file
         write_func (bool):    the layer has a corresponding function call that should be explicitly written
                               as part of the NN architecture in the project file
-        func_call (str):      the corresponding layer DSLX function call 
-
-        in_dim_key, out_dim_key (str): the variable name containing the layer dimensions (that goes in and out the layer)
-        in_dim_val, out_dim_val (int): the value of each layer dimension (that goes in and out the layer)
+        func_call (str):      the corresponding layer DSLX function call
 
         fxp_weights (np.ndarray): already quantized weight matrix
         fxp_bias (np.ndarray):    already quantized bias vector
@@ -74,24 +71,7 @@ class XLSAttrBuilder:
     @attach_to_node()
     def write_func(self) -> bool:
         return self.node.class_name in ['Dense', 'Activation', 'Softmax', 'Conv2D']
-    
-    
-    @attach_to_node()
-    def in_dim_key(self, k: str) -> str:
-        return k
-    
-    @attach_to_node()
-    def in_dim_val(self, v: int) -> int:
-        return v
-    
-    @attach_to_node()
-    def out_dim_key(self, k: str) -> str:
-        return k
-    
-    @attach_to_node()
-    def out_dim_val(self, v: int) -> int:
-        return v
-    
+
     @attach_to_node()
     def fxp_weights(self, weights, out_dim: int, in_dim: int) -> NDArray[NDArray[np.int_]]:
         #TODO: check which element in the precision array should we take Currently we assume the precision of weights is the first elem.
@@ -225,13 +205,11 @@ class BuildAttr(OptimizerPass):
         return False
 
     def transform(self, model: ModelGraph, node: Layer) -> Literal[False]:        
-        prev_out_dim_key = ''
-        prev_out_dim_val = -1
+        prev_out_dim = -1
         prev_layer_precision = None
 
         for layer in model.get_layers():
-            curr_out_dim_key: str = list(layer.get_output_variable().get_shape())[0][0]
-            curr_out_dim_val: int = list(layer.get_output_variable().get_shape())[0][1]
+            curr_out_dim: int = layer.get_output_variable().shape[0]
 
             curr_weights = layer.get_weights()
             curr_prec: dict = layer.get_layer_precision()
@@ -242,10 +220,6 @@ class BuildAttr(OptimizerPass):
                 .write_dims()
                 .write_weights()
                 .write_func()
-                .in_dim_key(prev_out_dim_key)
-                .in_dim_val(prev_out_dim_val)
-                .out_dim_key(curr_out_dim_key)
-                .out_dim_val(curr_out_dim_val)
                 .in_nb(prev_layer_precision)
                 .in_en()
                 .in_bu(prev_layer_precision)
@@ -254,14 +228,12 @@ class BuildAttr(OptimizerPass):
                 .out_bu(curr_prec)
                 .in_type()
                 .out_type()
-                .fxp_weights(curr_weights, out_dim=curr_out_dim_val, in_dim=prev_out_dim_val)
+                .fxp_weights(curr_weights, out_dim=curr_out_dim, in_dim=prev_out_dim)
                 .fxp_bias(curr_weights)
                 .func_call()
-
             )
 
-            prev_out_dim_key = curr_out_dim_key
-            prev_out_dim_val = curr_out_dim_val
+            prev_out_dim = curr_out_dim
             prev_layer_precision = curr_prec
 
         return False
