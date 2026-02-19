@@ -201,9 +201,11 @@ class VitisUnifiedWriter(VitisWriter):
             xsa_basename = os.path.basename(self.vitis_unified_config.get_platform_output_path())
             local_tcl_dir = os.path.join('..', board, 'tcl_scripts')
             local_xsa_path = os.path.join('..', board, 'tcl_scripts', 'output', xsa_basename)
-            platform_generator_block = f'''if [ ! -f "{local_xsa_path}" ] || [ "{local_tcl_dir}/{tcl_name}" -nt "{local_xsa_path}" ]; then
+            platform_generator_block = f'''if [ ! -f "{local_xsa_path}" ] || \\
+   [ "{local_tcl_dir}/{tcl_name}" -nt "{local_xsa_path}" ]; then
   echo "Generating platform from {tcl_name}..."
-  (cd "{local_tcl_dir}" && vivado -mode batch -source "{tcl_name}") || {{ echo "ERROR: Platform generation failed"; exit 1; }}
+  (cd "{local_tcl_dir}" && vivado -mode batch -source "{tcl_name}") || \\
+    {{ echo "ERROR: Platform generation failed"; exit 1; }}
 fi
 '''
             platform_path_for_vpp = local_xsa_path
