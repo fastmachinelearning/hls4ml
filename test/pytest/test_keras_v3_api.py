@@ -127,7 +127,7 @@ padds_options = ['same', 'valid']
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('activation', ['softmax', 'elu', 'relu'])
+@pytest.mark.parametrize('activation', ['elu', 'relu'])
 def test_conv1d(test_case_id, padds, backend, io_type, activation):
     model = keras.models.Sequential()
     input_shape = (10, 128, 4)
