@@ -109,19 +109,28 @@ class VitisUnifiedBackend(VitisBackend):
         output_type='float',
         in_stream_buf_size=128,
         out_stream_buf_size=128,
-        xpfmPath='/opt/Xilinx/Vitis/2023.2/base_platforms/xilinx_zcu102_base_202320_1/xilinx_zcu102_base_202320_1.xpfm',
-        axi_mode='axim',
+        axi_mode='axi_master',
         **_,
     ):
+        supported_boards_path = os.path.join(
+            os.path.dirname(__file__), 'supported_boards.json'
+        )
+        if os.path.exists(supported_boards_path):
+            import json
+            with open(supported_boards_path) as f:
+                supported_boards = json.load(f)
+            if board in supported_boards:
+                part = part or supported_boards[board]['part']
+        if part is None:
+            part = 'xczu9eg-ffvb1156-2-e'
 
         config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
 
         config['VitisUnifiedConfig'] = {}
+        config['VitisUnifiedConfig']['Board'] = board
         config['VitisUnifiedConfig']['axi_mode'] = axi_mode
         config['VitisUnifiedConfig']['in_stream_buf_size'] = in_stream_buf_size
         config['VitisUnifiedConfig']['out_stream_buf_size'] = out_stream_buf_size
-        config['VitisUnifiedConfig']['XPFMPath'] = xpfmPath
-        config['VitisUnifiedConfig']['Board'] = board
         config['VitisUnifiedConfig']['Driver'] = driver
         config['VitisUnifiedConfig']['InputDtype'] = input_type  # float, double or ap_fixed<a,b>
         config['VitisUnifiedConfig']['OutputDtype'] = output_type  # float, double or ap_fixed<a,b>

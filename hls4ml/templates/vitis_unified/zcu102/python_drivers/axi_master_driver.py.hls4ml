@@ -15,7 +15,7 @@ class HLS4ML_IP(DefaultIP):
         super().__init__(description=description)
 
         self.REG_ADDR_AP_CTRL = 0x00
-        self.REG_ADDR_AMT_QUERY = VAL
+        self.REG_ADDR_BATCH_SIZE = VAL
 
         self.REG_ADDR_GIE = 0x04
         self.REG_ADDR_IER = 0x08

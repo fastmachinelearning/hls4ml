@@ -1,6 +1,7 @@
 import os
 import stat
 from pathlib import Path
+from shutil import copyfile, copytree, rmtree
 
 from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
 from hls4ml.writer.vitis_writer import VitisWriter
@@ -20,6 +21,10 @@ class VitisUnifiedWriter(VitisWriter):
 
     def write_tar(self, model):
         super().write_tar(model)
+
+    def write_board_script_override(self, model):
+        """No-op: Vitis Unified uses vitis-comp.json and hls_kernel_config, not project.tcl."""
+        pass
 
     # ===== Public helpers used by backend/passes =====
     def get_vitis_unified_working_directory(self, model):
@@ -41,16 +46,16 @@ class VitisUnifiedWriter(VitisWriter):
         )
 
     def _is_axi_stream(self):
-        return self.vitis_unified_config.get_axi_mode() == 'axis'
+        return self.vitis_unified_config.get_axi_mode() == 'axi_stream'
 
     def _is_axi_master(self):
-        return self.vitis_unified_config.get_axi_mode() == 'axim'
+        return self.vitis_unified_config.get_axi_mode() == 'axi_master'
 
     def _get_project_name(self, model):
         return model.config.get_project_name()
 
     def _get_wrapper_file_name(self, model, is_axi_master):
-        suffix = 'axim' if is_axi_master else 'axis'
+        suffix = 'axi_master' if is_axi_master else 'axi_stream'
         return f'{self._get_project_name(model)}_{suffix}'
 
     def _get_sim_file_name(self):
@@ -60,8 +65,9 @@ class VitisUnifiedWriter(VitisWriter):
         return self._get_wrapper_file_name(model, is_axi_master)
 
     def _get_xo_file_path(self, model):
+        """Path to .xo relative to system_link (for link_system.sh)."""
         xo_name = f'{self._get_top_wrap_func_name(model, self._is_axi_master())}.xo'
-        return os.path.join(self.get_vitis_hls_exec_dir(model), xo_name)
+        return os.path.join('..', model.config.get_project_name(), 'vitis_unified_project', xo_name)
 
     def _get_io_port_name(self, tensor_var, is_input, idx):
         direction = 'in' if is_input else 'out'
@@ -79,9 +85,9 @@ class VitisUnifiedWriter(VitisWriter):
         return [f'{indent}{hex(start_addr + index * stride)}' for index in range(size)]
 
     def _gen_io_signature(self, indent, input_type, output_type, inputs, outputs):
-        input_ptrs = [f'{indent} {input_type}* {self._get_io_port_name(inp, True, idx)}' for idx, inp in enumerate(inputs)]
+        input_ptrs = [f'{indent}{input_type}* {self._get_io_port_name(inp, True, idx)}' for idx, inp in enumerate(inputs)]
         output_ptrs = [
-            f'{indent} {output_type}* {self._get_io_port_name(out, False, idx)}' for idx, out in enumerate(outputs)
+            f'{indent}{output_type}* {self._get_io_port_name(out, False, idx)}' for idx, out in enumerate(outputs)
         ]
         return ', '.join(input_ptrs) + ',\n' + ', '.join(output_ptrs) + '\n'
 
@@ -171,16 +177,51 @@ class VitisUnifiedWriter(VitisWriter):
 
     def _write_linker_dir(self, model):
         os.makedirs(self.get_vitis_linker_dir(model), exist_ok=True)
+        # Copy board platform files (tcl_scripts, etc.) when using platform generator
+        platform_generator_tcl = self.vitis_unified_config.get_platform_generator_tcl()
+        if platform_generator_tcl:
+            self._copy_board_platform_files(model)
+
+    def _copy_board_platform_files(self, model):
+        """Copy board folder (tcl_scripts, python_drivers, etc.) to vitis_workspace for local use."""
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        board = self.vitis_unified_config.get_board()
+        src = os.path.join(filedir, '../templates/vitis_unified', board)
+        dst = os.path.join(model.config.get_output_dir(), 'vitis_workspace', board)
+        if os.path.isdir(src):
+            copytree(src, dst, dirs_exist_ok=True)
 
     def _write_linker_launcher(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
+        platform_generator_tcl = self.vitis_unified_config.get_platform_generator_tcl()
+        if platform_generator_tcl:
+            # Use local copy in vitis_workspace (relative to system_link)
+            board = self.vitis_unified_config.get_board()
+            tcl_name = os.path.basename(platform_generator_tcl)
+            xsa_basename = os.path.basename(self.vitis_unified_config.get_platform_output_path())
+            local_tcl_dir = os.path.join('..', board, 'tcl_scripts')
+            local_xsa_path = os.path.join('..', board, 'tcl_scripts', 'output', xsa_basename)
+            platform_generator_block = f'''if [ ! -f "{local_xsa_path}" ] || [ "{local_tcl_dir}/{tcl_name}" -nt "{local_xsa_path}" ]; then
+  echo "Generating platform from {tcl_name}..."
+  (cd "{local_tcl_dir}" && vivado -mode batch -source "{tcl_name}") || {{ echo "ERROR: Platform generation failed"; exit 1; }}
+fi
+'''
+            platform_path_for_vpp = local_xsa_path
+        else:
+            platform_generator_block = ''
+            platform_path_for_vpp = self.vitis_unified_config.get_platform_path()
+
         with (
             open(os.path.join(filedir, '../templates/vitis_unified/vitis_workspace/system_link/link_system.sh')) as fin,
             open(f'{self.get_vitis_linker_dir(model)}/link_system.sh', 'w') as fout,
         ):
             for line in fin.readlines():
+                if '{XSA_GENERATOR_BLOCK}' in line:
+                    line = line.replace('{XSA_GENERATOR_BLOCK}', platform_generator_block)
+                if '{PLATFORM_PATH}' in line:
+                    line = line.replace('{PLATFORM_PATH}', platform_path_for_vpp)
                 if '{PLATFORM_XPFM}' in line:
-                    line = line.replace('{PLATFORM_XPFM}', self.vitis_unified_config.get_XPFMPath())
+                    line = line.replace('{PLATFORM_XPFM}', self.vitis_unified_config.get_platform_path())
                 if '{KERNEL_XO}' in line:
                     line = line.replace('{KERNEL_XO}', self._get_xo_file_path(model))
                 if '{PROJECT_NAME}' in line:
@@ -209,8 +250,8 @@ class VitisUnifiedWriter(VitisWriter):
                     line += '\n'
                     line += '[connectivity]\n'
                     line += f'nk={top_module_name}:1:{top_mod_inst_name}\n'
-                    line += f'stream_connect=DMA_MM2S:{top_mod_inst_name}.in\n'
-                    line += f'stream_connect={top_mod_inst_name}.out:DMA_S2MM\n'
+                    line += f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
+                    line += f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
                 fout.write(line)
 
     # ===== Bridge generation =====
@@ -315,75 +356,50 @@ class VitisUnifiedWriter(VitisWriter):
             )
 
         inp, out = inputs[0], outputs[0]
-        indent = '      '
+        indent = '    '
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axis.cpp')) as fin,
-            open(f'{model.config.get_output_dir()}/firmware/{self._get_project_name(model)}_axis.cpp', 'w') as fout,
+            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_stream.cpp')) as fin,
+            open(f'{model.config.get_output_dir()}/firmware/{self._get_project_name(model)}_axi_stream.cpp', 'w') as fout,
         ):
             for line in fin.readlines():
                 if 'MY_PROJECT_TOP_FUNC' in line:
                     newline = line.replace('MY_PROJECT_TOP_FUNC', self._get_top_wrap_func_name(model, False))
+                elif 'MY_PROJECT(' in line:
+                    newline = line.replace('MY_PROJECT', self._get_project_name(model))
                 elif '// hls-fpga-machine-learning insert include' in line:
-                    newline = f'#include "{self._get_project_name(model)}_axis.h"\n'
+                    newline = f'#include "{self._get_project_name(model)}_axi_stream.h"\n'
                 elif '// hls-fpga-machine-learning insert interface' in line:
                     newline = (
                         indent
-                        + '#pragma HLS INTERFACE axis port=in\n'
+                        + '#pragma HLS INTERFACE axis port=axi_input_stream\n'
                         + indent
-                        + '#pragma HLS INTERFACE axis port=out\n'
+                        + '#pragma HLS INTERFACE axis port=axi_output_stream\n'
                         + indent
                         + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
-                        + indent
-                        + '#pragma HLS DATAFLOW\n'
                     )
-                elif '// hls-fpga-machine-learning insert local vars' in line:
+                elif '// hls-fpga-machine-learning insert stream decl' in line:
+                    in_depth = model.get_input_variables()[0].pragma[1]
+                    out_depth = model.get_output_variables()[0].pragma[1]
                     newline = ''
-                    newline += indent + 'bool is_last = false;\n'
-                    newline += indent + f'hls::stream<{inp.type.name}> in_local("input_1");\n'
-                    newline += indent + f'hls::stream<{out.type.name}> out_local("output_1");\n\n'
-                    newline += indent + '#pragma HLS STREAM variable=in_local depth={}\n'.format(
-                        model.get_input_variables()[0].pragma[1]
-                    )
-                    newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'.format(
-                        model.get_output_variables()[0].pragma[1]
-                    )
-                elif '// hls-fpga-machine-learning insert enqueue' in line:
-                    newline = ''
-                    newline += indent + '/// enqueue input data\n'
-                    newline += indent + f'{self._get_dma_type_name()} tmp;\n'
-                    newline += indent + 'for(unsigned i = 0; i < N_IN / {input_t}::size; ++i) {{\n'
-                    newline += indent + indent + '{input_t} ctype;\n'
-                    newline += indent + indent + 'for(unsigned j = 0; j < {input_t}::size; j++) {{\n'
-                    newline += indent + indent + indent + 'in.read(tmp);\n'
-                    newline += indent + indent + indent + 'ctype[j] = tmp.data;\n'
-                    newline += indent + indent + indent + 'is_last = tmp.last;\n'
-                    newline += indent + indent + '}\n'
-                    newline += indent + indent + 'in_local.write(ctype);\n'
-                    newline += indent + '}\n'
-                    newline += indent + 'tmp.last = 0;\n'
-                    newline = newline.format(input_t=inp.type.name)
-                elif '// hls-fpga-machine-learning insert call' in line:
-                    newline = indent + f'{self._get_project_name(model)}(in_local, out_local);\n'
-                elif '// hls-fpga-machine-learning insert dequeue' in line:
-                    newline = ''
-                    newline += indent + 'for(unsigned i = 0; i < N_OUT / {result_t}::size; ++i) {{\n'
-                    newline += indent + indent + '{result_t} ctype = out_local.read();\n'
-                    newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
-                    newline += indent + indent + indent + f'tmp.data = ({inp_gmem_t}) (ctype[j]);\n'
-                    newline += indent + indent + indent + 'if(is_last) {tmp.last = (((i+1)*(j+1))==N_OUT);}\n'
-                    newline += indent + indent + indent + 'out.write(tmp);\n'
-                    newline += indent + indent + '}\n'
-                    newline += indent + '}\n'
-                    newline = newline.format(result_t=out.type.name)
+                    newline += indent + f'static hls::stream<{inp.type.name}> model_input_stream("model_input");\n'
+                    newline += indent + f'static hls::stream<{out.type.name}> model_output_stream("model_output");\n\n'
+                    newline += indent + f'#pragma HLS STREAM variable=model_input_stream depth={in_depth}\n'
+                    newline += indent + f'#pragma HLS STREAM variable=model_output_stream depth={out_depth}\n'
+                elif 'INPUT_LAYER_TYPE' in line:
+                    newline = line.replace('INPUT_LAYER_TYPE', inp.type.name)
+                elif 'OUTPUT_LAYER_TYPE' in line:
+                    newline = line.replace('OUTPUT_LAYER_TYPE', out.type.name)
+                elif 'OUTPUT_GMEM_TYPE' in line:
+                    newline = line.replace('OUTPUT_GMEM_TYPE', out_gmem_t)
                 else:
                     newline = line
                 fout.write(newline)
 
         with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axis.h')) as fin,
-            open(f'{model.config.get_output_dir()}/firmware/{self._get_project_name(model)}_axis.h', 'w') as fout,
+            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_stream.h')) as fin,
+            open(f'{model.config.get_output_dir()}/firmware/{self._get_project_name(model)}_axi_stream.h', 'w') as fout,
         ):
             for line in fin.readlines():
                 if 'MYPROJECT' in line:
@@ -403,11 +419,11 @@ class VitisUnifiedWriter(VitisWriter):
 
     def _write_wrapper_axim(self, model):
         inp_gmem_t, out_gmem_t, inputs, outputs = self.vitis_unified_config.get_corrected_types()
-        indent = '      '
+        indent = '    '
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         with (
-            open(os.path.join(filedir, f'../templates/vitis_unified/{self._get_project_name(model)}_axim.cpp')) as fin,
+            open(os.path.join(filedir, f'../templates/vitis_unified/{self._get_project_name(model)}_axi_master.cpp')) as fin,
             open(f'{model.config.get_output_dir()}/firmware/{self._get_wrapper_file_name(model, True)}.cpp', 'w') as fout,
         ):
             for line in fin.readlines():
@@ -422,59 +438,102 @@ class VitisUnifiedWriter(VitisWriter):
                 elif '// vitis-unified-wrapper-io' in line:
                     line = self._gen_io_signature(indent, inp_gmem_t, out_gmem_t, inputs, outputs) + '\n'
                 elif '// vitis-unified-wrapper-interface' in line:
+                    line = ''
                     for input_idx, inp in enumerate(inputs):
                         line += (
-                            f'#pragma HLS INTERFACE m_axi     port={self._get_io_port_name(inp, True, input_idx)} '
-                            f'bundle = gmem_in{input_idx} depth={inp.size()}\n'
+                            f'{indent}#pragma HLS INTERFACE m_axi port={self._get_io_port_name(inp, True, input_idx)} '
+                            f'bundle=gmem_in{input_idx} depth={inp.size()}\n'
                         )
                     for output_idx, out in enumerate(outputs):
                         line += (
-                            f'#pragma HLS INTERFACE m_axi     port={self._get_io_port_name(out, False, output_idx)} '
-                            f'bundle = gmem_out{output_idx} depth={out.size()}\n'
+                            f'{indent}#pragma HLS INTERFACE m_axi port={self._get_io_port_name(out, False, output_idx)} '
+                            f'bundle=gmem_out{output_idx} depth={out.size()}\n'
                         )
+                    line += (
+                        f'{indent}#pragma HLS INTERFACE s_axilite port=batch_size bundle=control\n'
+                        f'{indent}#pragma HLS INTERFACE s_axilite port=return bundle=control\n'
+                    )
                 elif '// vitis-unified-wrapper-stream-dec' in line:
+                    line = ''
                     for input_idx, inp in enumerate(inputs):
                         line += (
-                            f'{indent} static hls::stream<{inp.type.name}> '
+                            f'{indent}static hls::stream<{inp.type.name}> '
                             f'{self._get_local_stream_name(inp, True, input_idx)};\n'
                         )
                     for output_idx, out in enumerate(outputs):
                         line += (
-                            f'{indent} static hls::stream<{out.type.name}> '
+                            f'{indent}static hls::stream<{out.type.name}> '
                             f'{self._get_local_stream_name(out, False, output_idx)};\n'
                         )
                 elif '// vitis-unified-wrapper-stream-config' in line:
+                    line = ''
                     for input_idx, inp in enumerate(inputs):
                         line += (
-                            f'#pragma HLS STREAM variable={self._get_local_stream_name(inp, True, input_idx)} '
+                            f'{indent}#pragma HLS STREAM variable={self._get_local_stream_name(inp, True, input_idx)} '
                             f'depth=STREAM_BUF_IN_SZ\n'
                         )
                     for output_idx, out in enumerate(outputs):
                         line += (
-                            f'#pragma HLS STREAM variable={self._get_local_stream_name(out, False, output_idx)} '
+                            f'{indent}#pragma HLS STREAM variable={self._get_local_stream_name(out, False, output_idx)} '
                             f'depth=STREAM_BUF_OUT_SZ\n'
                         )
                 elif '// vitis-unified-wrapper-load' in line:
+                    line = ''
                     for input_idx, inp in enumerate(inputs):
                         line += (
-                            f'load_input({self._get_io_port_name(inp, True, input_idx)}, '
-                            f'{self._get_local_stream_name(inp, True, input_idx)}, amtQuery, {inp.size()});\n'
+                            f'{indent}load_input({self._get_io_port_name(inp, True, input_idx)}, '
+                            f'{self._get_local_stream_name(inp, True, input_idx)}, batch_size, {inp.size()});\n'
                         )
-                elif '// vitis-unified-wrapper-compute' in line:
+                elif '// vitis-unified-wrapper-compute-signature' in line:
+                    sig_parts = []
+                    for idx, inp in enumerate(inputs):
+                        sig_parts.append(
+                            f'hls::stream<{inp.type.name}>& '
+                            f'{self._get_local_stream_name(inp, True, idx)}'
+                        )
+                    for idx, out in enumerate(outputs):
+                        sig_parts.append(
+                            f'hls::stream<{out.type.name}>& '
+                            f'{self._get_local_stream_name(out, False, idx)}'
+                        )
+                    sig_parts.append('int batch_size')
+                    line = line.replace(
+                        '// vitis-unified-wrapper-compute-signature',
+                        ', '.join(sig_parts)
+                    )
+                elif '// vitis-unified-wrapper-compute-body' in line:
                     pool_list = [self._get_local_stream_name(inp, True, idx) for idx, inp in enumerate(inputs)]
-                    pool_list.extend(self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs))
-                    joined_io = f',\n{indent}{indent}{indent}'.join(pool_list)
-                    line += f'{indent} {self._get_project_name(model)}({joined_io});\n'
+                    pool_list.extend(
+                        [self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)]
+                    )
+                    joined_io = ', '.join(pool_list)
+                    # Template already provides for-loop body indent; only add the call
+                    line = line.replace(
+                        '// vitis-unified-wrapper-compute-body',
+                        f'{self._get_project_name(model)}({joined_io});'
+                    )
+                elif '// vitis-unified-wrapper-compute-call-args' in line:
+                    pool_list = [self._get_local_stream_name(inp, True, idx) for idx, inp in enumerate(inputs)]
+                    pool_list.extend(
+                        [self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)]
+                    )
+                    pool_list.append('batch_size')
+                    joined_args = ', '.join(pool_list)
+                    line = line.replace(
+                        '// vitis-unified-wrapper-compute-call-args',
+                        joined_args
+                    )
                 elif '// vitis-unified-wrapper-store' in line:
+                    line = ''
                     for output_idx, out in enumerate(outputs):
                         line += (
-                            f'store_result({self._get_io_port_name(out, False, output_idx)}, '
-                            f'{self._get_local_stream_name(out, False, output_idx)}, amtQuery, {out.size()});\n'
+                            f'{indent}store_result({self._get_io_port_name(out, False, output_idx)}, '
+                            f'{self._get_local_stream_name(out, False, output_idx)}, batch_size, {out.size()});\n'
                         )
                 fout.write(line)
 
         with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axim.h')) as fin,
+            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_master.h')) as fin,
             open(f'{model.config.get_output_dir()}/firmware/{self._get_wrapper_file_name(model, True)}.h', 'w') as fout,
         ):
             for line in fin.readlines():
@@ -491,35 +550,37 @@ class VitisUnifiedWriter(VitisWriter):
     # ===== Driver generation =====
     def write_driver(self, model):
         if self._is_axi_master():
-            self._write_driver_axim(model)
+            self._write_driver_axi_master(model)
         else:
-            self._write_driver_axis(model)
+            self._write_driver_axi_stream(model)
 
-    def _write_driver_axis(self, model):
-        filedir = os.path.dirname(os.path.abspath(__file__))
+    def _write_driver_axi_stream(self, model):
+        driver_template_path = self.vitis_unified_config.get_driver_template_path()
+        driver_file = self.vitis_unified_config.get_driver_file()
         with (
-            open(os.path.join(filedir, '../templates/vitis_unified/driver/pynq/pynq_driver_axis.py.hls4ml')) as fin,
-            open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w') as fout,
+            open(driver_template_path) as fin,
+            open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
         ):
             fout.write(fin.read())
 
-    def _write_driver_axim(self, model):
-        filedir = os.path.dirname(os.path.abspath(__file__))
+    def _write_driver_axi_master(self, model):
+        driver_template_path = self.vitis_unified_config.get_driver_template_path()
+        driver_file = self.vitis_unified_config.get_driver_file()
         with (
-            open(os.path.join(filedir, '../templates/vitis_unified/driver/pynq/pynq_driver_axim.py.hls4ml')) as fin,
-            open(f'{model.config.get_output_dir()}/export/pynq_driver.py', 'w') as fout,
+            open(driver_template_path) as fin,
+            open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
         ):
             _, _, inputs, outputs = self.vitis_unified_config.get_corrected_types()
             stride_in_ptr_addr = 4 * 3
             stride_out_ptr_addr = 4 * 3
             start_in_ptr_addr = 0x10
             start_out_ptr_addr = start_in_ptr_addr + stride_in_ptr_addr * len(inputs)
-            start_amt_query_addr = start_out_ptr_addr + stride_out_ptr_addr * len(outputs)
+            start_batch_size_addr = start_out_ptr_addr + stride_out_ptr_addr * len(outputs)
             indent = ' ' * 12
 
             for line in fin.readlines():
-                if 'REG_ADDR_AMT_QUERY' in line:
-                    line = line.replace('VAL', str(hex(start_amt_query_addr)))
+                if 'REG_ADDR_BATCH_SIZE' in line:
+                    line = line.replace('VAL', str(hex(start_batch_size_addr)))
                 if '# hls-driver-input-dbg-name' in line:
                     names = [f'{indent}"{self._get_io_port_name(inp, True, idx)}"' for idx, inp in enumerate(inputs)]
                     line += ',\n'.join(names) + '\n'
