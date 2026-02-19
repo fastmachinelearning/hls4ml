@@ -129,6 +129,8 @@ class KerasV3LayerHandler(metaclass=KerasV3LayerHandlerMeta):
         return layer.__class__.__name__
 
     def maybe_get_activation_config(self, layer, out_tensors):
+        import inspect
+
         import keras
 
         activation = getattr(layer, 'activation', None)
@@ -139,12 +141,31 @@ class KerasV3LayerHandler(metaclass=KerasV3LayerHandlerMeta):
             intermediate_tensor_name = f'{out_tensors[0].name}_activation'
             act_cls_name = activation.__name__
             act_config = {
-                'class_name': 'Activation',
                 'activation': act_cls_name,
                 'name': f'{name}_{act_cls_name}',
                 'input_keras_tensor_names': [intermediate_tensor_name],
                 'output_keras_tensor_names': [out_tensors[0].name],
             }
+
+            # Check activation type & update parameters
+            match activation:
+                case keras.activations.softmax:
+                    class_name = 'Softmax'
+                    act_config['axis'] = -1
+                case keras.activations.hard_sigmoid:
+                    class_name = 'HardActivation'
+                case keras.activations.leaky_relu:
+                    class_name = 'LeakyReLU'
+                    signature = inspect.signature(keras.activations.leaky_relu)
+                    act_config['activ_param'] = signature.parameters['negative_slope'].default
+                case keras.activations.elu:
+                    class_name = 'ELU'
+                    signature = inspect.signature(keras.activations.elu)
+                    act_config['activ_param'] = signature.parameters['alpha'].default
+                case _:
+                    class_name = 'Activation'
+            act_config['class_name'] = class_name
+
             return act_config, intermediate_tensor_name
         return None, None
 
