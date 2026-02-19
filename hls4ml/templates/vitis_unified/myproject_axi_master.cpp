@@ -1,7 +1,7 @@
+#include "MY_PROJECT_DM_INC.h"
 #include <hls_stream.h>
 #include <iostream>
 #include <stdint.h>
-#include "MY_PROJECT_DM_INC.h"
 
 #define STREAM_BUF_IN_SZ VAL
 #define STREAM_BUF_OUT_SZ VAL
@@ -40,7 +40,7 @@ mem_wr:
 // vitis-unified-wrapper-compute-func
 void compute(// vitis-unified-wrapper-compute-signature) {
     for (int q = 0; q < batch_size; q++) {
-        // vitis-unified-wrapper-compute-body
+    // vitis-unified-wrapper-compute-body
     }
 }
 
@@ -53,7 +53,6 @@ void MY_PROJECT_TOP_FUNC(
     // vitis-unified-wrapper-interface
 
     // vitis-unified-wrapper-stream-dec
-
 
     // vitis-unified-wrapper-stream-config
 

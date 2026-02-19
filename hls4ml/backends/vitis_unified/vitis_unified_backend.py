@@ -112,11 +112,10 @@ class VitisUnifiedBackend(VitisBackend):
         axi_mode='axi_master',
         **_,
     ):
-        supported_boards_path = os.path.join(
-            os.path.dirname(__file__), 'supported_boards.json'
-        )
+        supported_boards_path = os.path.join(os.path.dirname(__file__), 'supported_boards.json')
         if os.path.exists(supported_boards_path):
             import json
+
             with open(supported_boards_path) as f:
                 supported_boards = json.load(f)
             if board in supported_boards:

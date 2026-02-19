@@ -1,7 +1,7 @@
 import os
 import stat
 from pathlib import Path
-from shutil import copyfile, copytree, rmtree
+from shutil import copytree
 
 from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
 from hls4ml.writer.vitis_writer import VitisWriter
@@ -487,42 +487,25 @@ fi
                 elif '// vitis-unified-wrapper-compute-signature' in line:
                     sig_parts = []
                     for idx, inp in enumerate(inputs):
-                        sig_parts.append(
-                            f'hls::stream<{inp.type.name}>& '
-                            f'{self._get_local_stream_name(inp, True, idx)}'
-                        )
+                        sig_parts.append(f'hls::stream<{inp.type.name}>& {self._get_local_stream_name(inp, True, idx)}')
                     for idx, out in enumerate(outputs):
-                        sig_parts.append(
-                            f'hls::stream<{out.type.name}>& '
-                            f'{self._get_local_stream_name(out, False, idx)}'
-                        )
+                        sig_parts.append(f'hls::stream<{out.type.name}>& {self._get_local_stream_name(out, False, idx)}')
                     sig_parts.append('int batch_size')
-                    line = line.replace(
-                        '// vitis-unified-wrapper-compute-signature',
-                        ', '.join(sig_parts)
-                    )
+                    line = line.replace('// vitis-unified-wrapper-compute-signature', ', '.join(sig_parts))
                 elif '// vitis-unified-wrapper-compute-body' in line:
                     pool_list = [self._get_local_stream_name(inp, True, idx) for idx, inp in enumerate(inputs)]
-                    pool_list.extend(
-                        [self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)]
-                    )
+                    pool_list.extend([self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)])
                     joined_io = ', '.join(pool_list)
                     # Template already provides for-loop body indent; only add the call
                     line = line.replace(
-                        '// vitis-unified-wrapper-compute-body',
-                        f'{self._get_project_name(model)}({joined_io});'
+                        '// vitis-unified-wrapper-compute-body', f'{self._get_project_name(model)}({joined_io});'
                     )
                 elif '// vitis-unified-wrapper-compute-call-args' in line:
                     pool_list = [self._get_local_stream_name(inp, True, idx) for idx, inp in enumerate(inputs)]
-                    pool_list.extend(
-                        [self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)]
-                    )
+                    pool_list.extend([self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)])
                     pool_list.append('batch_size')
                     joined_args = ', '.join(pool_list)
-                    line = line.replace(
-                        '// vitis-unified-wrapper-compute-call-args',
-                        joined_args
-                    )
+                    line = line.replace('// vitis-unified-wrapper-compute-call-args', joined_args)
                 elif '// vitis-unified-wrapper-store' in line:
                     line = ''
                     for output_idx, out in enumerate(outputs):

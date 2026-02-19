@@ -1,7 +1,6 @@
 // hls-fpga-machine-learning insert include
 
-void load_input(hls::stream<dma_data_packet>& axi_input_stream,
-               hls::stream<INPUT_LAYER_TYPE>& model_input_stream) {
+void load_input(hls::stream<dma_data_packet> &axi_input_stream, hls::stream<INPUT_LAYER_TYPE> &model_input_stream) {
 load_input_loop:
     dma_data_packet axi_packet;
     for (unsigned chunk_idx = 0; chunk_idx < N_IN / INPUT_LAYER_TYPE::size; ++chunk_idx) {
@@ -14,8 +13,7 @@ load_input_loop:
     }
 }
 
-void store_result(hls::stream<OUTPUT_LAYER_TYPE>& model_output_stream,
-                 hls::stream<dma_data_packet>& axi_output_stream) {
+void store_result(hls::stream<OUTPUT_LAYER_TYPE> &model_output_stream, hls::stream<dma_data_packet> &axi_output_stream) {
 store_result_loop:
     dma_data_packet axi_packet;
     for (unsigned chunk_idx = 0; chunk_idx < N_OUT / OUTPUT_LAYER_TYPE::size; ++chunk_idx) {
@@ -28,8 +26,7 @@ store_result_loop:
     }
 }
 
-void MY_PROJECT_TOP_FUNC(hls::stream<dma_data_packet>& axi_input_stream,
-                         hls::stream<dma_data_packet>& axi_output_stream) {
+void MY_PROJECT_TOP_FUNC(hls::stream<dma_data_packet> &axi_input_stream, hls::stream<dma_data_packet> &axi_output_stream) {
 
     // hls-fpga-machine-learning insert interface
 

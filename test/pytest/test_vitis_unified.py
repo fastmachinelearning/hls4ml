@@ -16,7 +16,7 @@ import hls4ml
 
 test_root_path = Path(__file__).parent
 
-os.environ['XILINX_VITIS'] = "/opt/Xilinx/Vitis/2023.2"
+os.environ['XILINX_VITIS'] = '/opt/Xilinx/Vitis/2023.2'
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
 
 
@@ -232,14 +232,13 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
     )
     vitis_unified_model.compile()
     vitis_unified_model.build(synth=True, bitfile=True, log_to_stdout=True)
-    
+
     export_dir = os.path.join(output_dir, 'export')
     driver_file = 'axi_stream_driver.py' if axi_mode == 'axi_stream' else 'axi_master_driver.py'
     expected_files = {driver_file, 'system.bit', 'system.hwh'}
     exported_files = set(os.listdir(export_dir))
-    assert expected_files.issubset(exported_files), f"Missing files in export: {expected_files - exported_files}"
+    assert expected_files.issubset(exported_files), f'Missing files in export: {expected_files - exported_files}'
     final_reports_dir = os.path.join(output_dir, 'final_reports')
-    assert os.path.isdir(final_reports_dir), f"final_reports directory does not exist: {final_reports_dir}"
+    assert os.path.isdir(final_reports_dir), f'final_reports directory does not exist: {final_reports_dir}'
     rpt_files = [f for f in os.listdir(final_reports_dir) if f.endswith('.rpt')]
-    assert len(rpt_files) > 0, f"No .rpt files found in final_reports directory: {final_reports_dir}"
-    
+    assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'

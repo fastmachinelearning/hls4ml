@@ -32,7 +32,8 @@ class VitisUnifiedConfig:
 
         tcl_rel = mode_config.get('platform_generator_tcl') or (
             board_info.get('platform_generator_tcl', {}).get(self.axi_mode)
-            if isinstance(board_info.get('platform_generator_tcl'), dict) else board_info.get('platform_generator_tcl')
+            if isinstance(board_info.get('platform_generator_tcl'), dict)
+            else board_info.get('platform_generator_tcl')
         )
 
         if tcl_rel:
@@ -47,14 +48,14 @@ class VitisUnifiedConfig:
                 out_path = out_rel
             self._platform_output_path = os.path.abspath(out_path)
             self._platform_path = self._platform_output_path
-        elif mode_config.get('platform_file') or (board_info.get('platform_file') and board_info['platform_file'].get(self.axi_mode)):
+        elif mode_config.get('platform_file') or (
+            board_info.get('platform_file') and board_info['platform_file'].get(self.axi_mode)
+        ):
             self._platform_path = self._get_xpfm_path_from_board()
             self._platform_generator_tcl = None
             self._platform_output_path = None
         else:
-            raise Exception(
-                f'Board "{self.board}" has no platform for axi_mode "{self.axi_mode}" in supported_boards.json.'
-            )
+            raise Exception(f'Board "{self.board}" has no platform for axi_mode "{self.axi_mode}" in supported_boards.json.')
 
         self.driver = self.config['VitisUnifiedConfig']['Driver']
 
@@ -81,9 +82,7 @@ class VitisUnifiedConfig:
         else:
             platform_file = board_info.get('platform_file')
             if not platform_file:
-                raise Exception(
-                    f'No platform_file definition for board "{self.board}" in supported_boards.json'
-                )
+                raise Exception(f'No platform_file definition for board "{self.board}" in supported_boards.json')
             platform_rel = platform_file.get(self.axi_mode) if isinstance(platform_file, dict) else platform_file
         if not platform_rel:
             raise Exception(

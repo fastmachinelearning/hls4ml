@@ -6,6 +6,5 @@
 
 // hls-fpga-machine-learning insert definitions
 
-void MY_PROJECT_TOP_FUNC(hls::stream<dma_data_packet>& axi_input_stream,
-                         hls::stream<dma_data_packet>& axi_output_stream);
+void MY_PROJECT_TOP_FUNC(hls::stream<dma_data_packet> &axi_input_stream, hls::stream<dma_data_packet> &axi_output_stream);
 #endif
