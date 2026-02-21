@@ -7,7 +7,6 @@ sdist/
 *.egg-info/
 vivado_prj
 .vscode
-.idea
 my-hls-test
 *.tar.gz
 docs/_build
@@ -15,6 +14,4 @@ docs/autodoc/*
 hls4mlprj_*
 *~
 *.ipynb_checkpoints/
-
-test/pytest/test_backend/input_file/*
-test/pytest/test_backend/output_file/*
+*.bak

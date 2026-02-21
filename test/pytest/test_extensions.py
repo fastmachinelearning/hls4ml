@@ -11,7 +11,7 @@ test_root_path = Path(__file__).parent
 
 # Keras implementation of a custom layer
 class KReverse(tf.keras.layers.Layer):
-    '''Keras implementation of a hypothetical custom layer'''
+    """Keras implementation of a hypothetical custom layer"""
 
     def __init__(self):
         super().__init__()
@@ -26,7 +26,7 @@ class KReverse(tf.keras.layers.Layer):
 
 # hls4ml layer implementation
 class HReverse(hls4ml.model.layers.Layer):
-    '''hls4ml implementation of a hypothetical custom layer'''
+    """hls4ml implementation of a hypothetical custom layer"""
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -36,7 +36,7 @@ class HReverse(hls4ml.model.layers.Layer):
 
 # hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
-    '''OptimizerPass to remove consecutive HReverse layers.'''
+    """OptimizerPass to remove consecutive HReverse layers."""
 
     def match(self, node):
         return isinstance(node, HReverse) and isinstance(node.get_input_node(), HReverse)
@@ -123,14 +123,14 @@ void reverse(
 @pytest.fixture(scope='session', autouse=True)
 def register_custom_layer():
     # Register the converter for custom Keras layer
-    hls4ml.converters.register_keras_layer_handler('KReverse', parse_reverse_layer)
+    hls4ml.converters.register_keras_v2_layer_handler('KReverse', parse_reverse_layer)
 
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('HReverse', HReverse)
 
 
 @pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
-def test_extensions(tmp_path, backend_id):
+def test_extensions(test_case_id, tmp_path, backend_id):
     # Register the optimization passes (if any)
     backend = hls4ml.backends.get_backend(backend_id)
     ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
@@ -165,7 +165,7 @@ def test_extensions(tmp_path, backend_id):
 
     hmodel = hls4ml.converters.convert_from_keras_model(
         kmodel,
-        output_dir=str(test_root_path / f'hls4mlprj_extensions_{backend_id}'),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend_id,
         io_type='io_parallel',
         hls_config={'Model': {'Precision': 'ap_int<6>', 'ReuseFactor': 1}},

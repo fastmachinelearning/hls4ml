@@ -27,13 +27,12 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize('io_type', ['io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult'])
-def hls_model(keras_model, backend, io_type):
+def hls_model(keras_model, request, test_case_id):
+    io_type, backend = request.param
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, default_precision='ap_int<6>', granularity='name', backend=backend
     )
-    output_dir = str(test_root_path / f'hls4mlprj_clone_flatten_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model,
         hls_config=hls_config,
@@ -46,8 +45,12 @@ def hls_model(keras_model, backend, io_type):
     return hls_model
 
 
-@pytest.mark.parametrize('io_type', ['io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize(
+    'hls_model',
+    [('io_stream', 'Vivado'), ('io_stream', 'Quartus')],
+    indirect=True,
+    ids=['io_stream_Vivado', 'io_stream_Quartus'],
+)
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model

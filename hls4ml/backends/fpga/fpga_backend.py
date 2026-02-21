@@ -382,9 +382,9 @@ class FPGABackend(Backend):
 
     @classmethod
     def _convert_ap_type(cls, precision):
-        '''
+        """
         Convert a precision string (e.g. "ap_fixed<16,6>" to the internal FixedPrecisionTypes etc)
-        '''
+        """
         bits = re.search('.+<(.+?)>', precision).group(1).split(',')
         sat_mode = None
         round_mode = None
@@ -393,12 +393,12 @@ class FPGABackend(Backend):
             width = int(bits[0])
             integer = int(bits[1])
             fields = 2
-            signed = not ('u' in precision)
+            signed = 'u' not in precision
         elif 'int' in precision:
             width = int(bits[0])
             integer = width
             fields = 1
-            signed = not ('u' in precision)
+            signed = 'u' not in precision
         if len(bits) > fields:
             round_mode = bits[fields]
         if len(bits) > fields + 1:
@@ -412,9 +412,9 @@ class FPGABackend(Backend):
 
     @classmethod
     def _convert_ac_type(cls, precision):
-        '''
+        """
         Convert a precision string (e.g. "ac_fixed<16,6>" to the internal FixedPrecisionTypes etc)
-        '''
+        """
         bits = re.search('.+<(.+?)>', precision).group(1).split(',')
         signed = True  # default is signed
         sat_mode = None
@@ -488,18 +488,18 @@ class FPGABackend(Backend):
 
     @classmethod
     def _convert_auto_type(cls, precision):
-        '''
+        """
         Convert a "auto" precision string into the UnspecifiedPrecisionType
-        '''
+        """
         return UnspecifiedPrecisionType()
 
     def product_type(self, data_T, weight_T):
-        '''
+        """
         Helper function to determine which product implementation to use during inference
-        '''
-        assert not isinstance(
-            data_T, ExponentPrecisionType
-        ), "Only ExponentPrecisionType (aka 'power of 2') weights are currently supported, not data."
+        """
+        assert not isinstance(data_T, ExponentPrecisionType), (
+            "Only ExponentPrecisionType (aka 'power of 2') weights are currently supported, not data."
+        )
         product = 'mult'
         if isinstance(weight_T, ExponentPrecisionType):
             product = 'weight_exponential'
@@ -828,14 +828,14 @@ class FPGABackend(Backend):
         im2col_matrix = self._compute_conv1d_im2col((in_W, in_C), kernel, stride, (pad_left, pad_right), dilation)
 
         generated_code = (
-            "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public nnet::FillConv1DBuffer<data_T, CONFIG_T> {{\n"
-            "    public:\n"
-            "    static void fill_buffer(\n"
-            "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
-            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
-            "        const unsigned partition\n"
-            "    ) {{\n"
+            'template<class data_T, typename CONFIG_T>\n'
+            'class fill_buffer_{index} : public nnet::FillConv1DBuffer<data_T, CONFIG_T> {{\n'
+            '    public:\n'
+            '    static void fill_buffer(\n'
+            '        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n'
+            '        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_width * CONFIG_T::n_chan],\n'
+            '        const unsigned partition\n'
+            '    ) {{\n'
         ).format(index=layer_idx)
         indent = '    '
 
@@ -958,14 +958,14 @@ class FPGABackend(Backend):
         )
 
         generated_code = (
-            "template<class data_T, typename CONFIG_T>\n"
-            "class fill_buffer_{index} : public nnet::FillConv2DBuffer<data_T, CONFIG_T> {{\n"
-            "    public:\n"
-            "    static void fill_buffer(\n"
-            "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
-            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
-            "        const unsigned partition\n"
-            "    ) {{\n"
+            'template<class data_T, typename CONFIG_T>\n'
+            'class fill_buffer_{index} : public nnet::FillConv2DBuffer<data_T, CONFIG_T> {{\n'
+            '    public:\n'
+            '    static void fill_buffer(\n'
+            '        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n'
+            '        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n'
+            '        const unsigned partition\n'
+            '    ) {{\n'
         ).format(index=layer_idx)
         indent = '    '
 

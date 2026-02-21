@@ -270,7 +270,7 @@ class FixedPrecisionType(PrecisionType):
 
     @property
     def max(self):
-        return 2.0 ** (self.integer - 1) - 2.0**-self.fractional
+        return 2.0 ** (self.integer - self.signed) - 2.0**-self.fractional
 
 
 class XnorPrecisionType(PrecisionType):
@@ -665,6 +665,17 @@ class InplaceTensorVariable(TensorVariable):
         return cls(tv, input_var)
 
 
+class StructWrapperVariable(TensorVariable):
+    def __init__(self, tv):
+        self.__dict__.update(tv.__dict__)
+        self.struct_name = tv.type.name[:-1] + 'array_t'
+
+    @classmethod
+    def deserialize(cls, state):
+        tv = TensorVariable.deserialize(state)
+        return cls(tv)
+
+
 class WeightVariable(Variable):
     """Class representing a tensor containing the weights of a layer.
 
@@ -718,7 +729,7 @@ class WeightVariable(Variable):
         elif isinstance(new_precision, (FloatPrecisionType, StandardFloatPrecisionType)):
             self.precision_fmt = '{:.16f}'  # Not ideal, but should be enough for most cases
         else:
-            raise RuntimeError(f"Unexpected new precision type: {new_precision}")
+            raise RuntimeError(f'Unexpected new precision type: {new_precision}')
 
     def serialize_state(self):
         state = super().serialize_state()

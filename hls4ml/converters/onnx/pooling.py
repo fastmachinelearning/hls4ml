@@ -12,7 +12,7 @@ def parse_pool_layer(node, input_names, input_shapes, graph):
     layer['inputs'] = input_names
     layer['outputs'] = list(node.output)
     if node.domain != 'qonnx.custom_op.channels_last':
-        raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
+        raise RuntimeError('Please convert the model to channels-last format with qonnx-to-channels-last')
     layer['class_name'] = node.op_type
     layer['data_format'] = 'channels_last'  # Default QONNX
 
