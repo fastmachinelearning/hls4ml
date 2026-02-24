@@ -1,3 +1,5 @@
+from math import ceil, log2
+
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
@@ -192,14 +194,24 @@ hard_activ_config_template = """struct {type}_config{index} : nnet::activ_config
     static constexpr unsigned reuse_factor = {reuse};
 }};\n"""
 
+
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
-    static constexpr unsigned n_in = {n_in};
-    static constexpr unsigned table_size = {table_size};
-    static constexpr unsigned io_type = nnet::{iotype};
-    static constexpr unsigned reuse_factor = {reuse};
-    static constexpr nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
+    static const unsigned n_in = {n_in};
+    static const unsigned n_slice = {n_slice};
+    static const unsigned n_outer = {n_outer};
+    static const unsigned n_inner = {n_inner};
+    static const unsigned parallelization_factor = {parallelization_factor};
+    static const unsigned exp_table_size = {exp_table_size};
+    static const unsigned inv_table_size = {inv_table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned axis = {axis};
+    static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
+    static constexpr float exp_scale = {exp_scale};
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;
+    //typedef {accum_t.name} accum_t;
+    //typedef {inp_norm_t_str} inp_norm_t;
 }};\n"""
 
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
@@ -253,6 +265,48 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         super(ActivationConfigTemplate, self).__init__(Softmax)  # Skip ActivationConfigTemplate's __init__
         self.template = softmax_config_template
 
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['type'] = node.get_attr('activation')
+        params.setdefault('exp_table_size', params['table_size'])
+        params.setdefault('inv_table_size', params['table_size'])
+        params.setdefault('n_inner', 1)
+        params.setdefault('n_outer', 1)
+        params.setdefault('exp_scale', 1.0)
+        params.setdefault('parallelization_factor', -1)
+
+        n_slice = params['n_in'] // params['n_inner'] // params['n_outer']  # type: ignore
+        params['n_slice'] = n_slice
+
+        if params['accum_t'].name == 'model_default_t':  # type: ignore
+            scale = ceil(log2(n_slice))
+            exp_table_t = node.attributes['exp_table_t'].precision
+            signed, width, integers = exp_table_t.signed, exp_table_t.width, exp_table_t.integer
+            params['accum_t_str'] = f'ac_fixed<{width + scale}, {integers + scale}, {"true" if signed else "false"}>'
+        else:
+            params['accum_t_str'] = params['accum_t'].name  # type: ignore
+        if params['inv_inp_t'].name == 'model_default_t':  # type: ignore
+            params['inv_inp_t'] = params['exp_table_t']
+
+        if params['implementation'] == 'stable':
+            if 'inp_norm_t' not in params:
+                # Only used in stable (max-normalized) implementation
+                input_t = node.get_input_variable().type.precision
+                width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
+                width, iwidth = width - signed, iwidth - signed
+                if signed:
+                    # Fix table size if too large
+                    exp_table_size = params['inv_table_size']
+                    params['exp_table_size'] = str(min(int(exp_table_size), 2**width))
+                params['inp_norm_t_str'] = f'ac_fixed<{width}, {iwidth}, false>'
+            else:
+                params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore
+        else:
+            params['inp_norm_t_str'] = 'ac_fixed<2,0>'
+
+        return self.template.format(**params)
+
+
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -262,7 +316,7 @@ class ActivationFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
-        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
 
         return self.template.format(**params)
 
@@ -276,7 +330,7 @@ class ParametrizedActivationFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['activation'] = node._get_act_function_name()
         params['param'] = node.get_attr('activ_param', 1.0)
-        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
 
         return self.template.format(**params)
 
@@ -290,7 +344,7 @@ class PReLUFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
         params['param'] = node.get_weights('param').name
-        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
 
         return self.template.format(**params)
 
@@ -303,7 +357,7 @@ class ActivationTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
-        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
         return self.template.format(**params)
 
 
@@ -315,7 +369,7 @@ class ParametrizedActivationTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node._get_act_function_name()
-        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
+        params['config'] = f"{node.get_attr('activation')}_config{node.index}"
         return self.template.format(**params)
 
 
