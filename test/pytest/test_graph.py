@@ -7,13 +7,11 @@ import tensorflow as tf
 import hls4ml
 
 test_root_path = Path(__file__).parent
-
-
 w = np.array([2])
 b = np.array([1])
 
 
-def base_model(output_dir='hls4mlprj_graph_base_model', iotype='io_parallel'):
+def base_model(output_dir='graph_base_model', iotype='io_parallel'):
     layers = [
         {'class_name': 'Input', 'name': 'layer0_input', 'input_shape': [1]},
         {'class_name': 'Dense', 'name': 'layer0', 'n_in': 1, 'n_out': 1, 'weight_data': w, 'bias_data': b},
@@ -28,7 +26,7 @@ def base_model(output_dir='hls4mlprj_graph_base_model', iotype='io_parallel'):
     return model
 
 
-def branch_model(output_dir='hls4mlprj_graph_branch_model', iotype='io_parallel'):
+def branch_model(output_dir='graph_branch_model', iotype='io_parallel'):
     layers = [
         {'class_name': 'Input', 'name': 'layer0_input0', 'input_shape': [1], 'inputs': 'input'},
         {'class_name': 'Input', 'name': 'layer0_input1', 'input_shape': [1], 'inputs': 'input'},
@@ -83,20 +81,30 @@ graph_ops = {'insert': do_insert, 'remove': do_remove, 'replace': do_replace, 'n
 @pytest.mark.parametrize(
     'parameters',
     [
-        (base_model, 'nop', None, [3], False),  # 0
-        (base_model, 'insert', ('layer0_input', None), [7], False),  # 1
-        (base_model, 'insert', ('layer0', None), [7], False),  # 2
-        (base_model, 'insert', ('layer1', None), [7], False),  # 3
-        (base_model, 'remove', 'layer0', [1], False),  # 4
-        (base_model, 'remove', 'layer1', [1], False),  # 5
-        (base_model, 'replace', 'layer0', [3], False),  # 6
+        (base_model, 'nop', None, [3], False),
+        (base_model, 'insert', ('layer0_input', None), [7], False),
+        (base_model, 'insert', ('layer0', None), [7], False),
+        (base_model, 'insert', ('layer1', None), [7], False),
+        (base_model, 'remove', 'layer0', [1], False),
+        (base_model, 'remove', 'layer1', [1], False),
+        (base_model, 'replace', 'layer0', [3], False),
         (base_model, 'replace', 'layer1', [3], False),
     ],
-)  # 7
+    ids=[
+        'nop',
+        'insert_layer0_input',
+        'insert_layer0',
+        'insert_layer1',
+        'remove_layer0',
+        'remove_layer1',
+        'replace_layer0',
+        'replace_layer1',
+    ],
+)
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
-def test_graph_manipulation(parameters, iotype):
+def test_graph_manipulation(test_case_id, parameters, iotype):
     model, op, node, expected, skip_layers_check = parameters[0], parameters[1], parameters[2], parameters[3], parameters[4]
-    odir = str(test_root_path / f'hls4mlprj_graph_{model.__name__}_{op}_{node}')
+    odir = str(test_root_path / test_case_id)
     model = model(odir, iotype)
     original_layers = np.array([layer.name for layer in list(model.get_layers())])
     model, expected_layers = graph_ops[op](model, node, original_layers)
@@ -115,8 +123,8 @@ def test_graph_manipulation(parameters, iotype):
 
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('batch', [1, 100])
-def test_graph_branch(iotype, batch):
-    odir = str(test_root_path / f'hls4mlprj_graph_branch_model_{iotype}_batch{batch}')
+def test_graph_branch(test_case_id, iotype, batch):
+    odir = str(test_root_path / test_case_id)
     model = branch_model(odir, iotype)
     model.compile()
     hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file=f'{odir}/model.png')
@@ -129,7 +137,7 @@ def test_graph_branch(iotype, batch):
 
 
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
-def test_final_reshape(iotype):
+def test_final_reshape(test_case_id, iotype):
     """Test case for a model with a Reshape as the final layer"""
     inputs = tf.keras.layers.Input(shape=(1, 1, 1))  # 1 input pixel
     conv = tf.keras.layers.Conv2D(6, 1)  # 6 filters, 1x1 kernel
@@ -140,7 +148,7 @@ def test_final_reshape(iotype):
 
     # create the ModelGraph
     config = hls4ml.utils.config_from_keras_model(model, granularity='model')
-    odir = str(test_root_path / f'hls4mlprj_graph_final_reshape_{iotype}')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, output_dir=odir, backend='Vivado', io_type=iotype, hls_config=config
     )
@@ -165,8 +173,9 @@ def test_final_reshape(iotype):
         (((1, 1, 2), (3, 4, 2)), tf.keras.layers.Add),
         (((3, 4, 2), (1, 1, 2)), tf.keras.layers.Add),
     ],
+    ids=['Concatenate-223-221', 'Concatenate-221-223', 'Add-223-221', 'Add-221-223', 'Add-112-342', 'Add-342-112'],
 )
-def test_broadcast_stream(shapes, layer):
+def test_broadcast_stream(test_case_id, shapes, layer):
     """Test case for stream broadcast before Add but not before Concatenate"""
     input1 = tf.keras.layers.Input(shape=shapes[0])
     input2 = tf.keras.layers.Input(shape=shapes[1])
@@ -176,14 +185,7 @@ def test_broadcast_stream(shapes, layer):
 
     # create the ModelGraph
     config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
-    odir = str(
-        test_root_path
-        / 'hls4mlprj_graph_broadcast_shapes_{}_{}_stream_{}'.format(
-            str(shapes[0]).replace(' ', '').replace(',', '_').replace('(', '').replace(')', ''),
-            str(shapes[1]).replace(' ', '').replace(',', '_').replace('(', '').replace(')', ''),
-            layer.__name__.lower(),
-        )
-    )
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, output_dir=odir, backend='Vivado', io_type='io_stream', hls_config=config
     )
@@ -198,7 +200,7 @@ def test_broadcast_stream(shapes, layer):
 
 
 @pytest.mark.parametrize('batch', [1, 32])
-def test_multiple_outputs(batch):
+def test_multiple_outputs(test_case_id, batch):
     """Test case for multiple outputs"""
     input1 = tf.keras.layers.Input(shape=(10,))
     inputs = [input1]
@@ -209,7 +211,7 @@ def test_multiple_outputs(batch):
 
     # create the ModelGraph
     config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
-    odir = str(test_root_path / 'hls4mlprj_graph_multiple_outputs')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, output_dir=odir, backend='Vivado', io_type='io_parallel', hls_config=config
     )

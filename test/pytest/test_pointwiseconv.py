@@ -39,7 +39,7 @@ strides2d_options = [(1, 1), (2, 2)]
         ('Catapult', 'io_stream', 'resource', 1),
     ],
 )
-def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, rf):
+def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, strategy, rf):
     model = tf.keras.models.Sequential()
     input_shape = (28, 3)
     model.add(
@@ -65,9 +65,7 @@ def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, rf):
     config['Model']['Strategy'] = strategy
     config['LayerName']['pointwise1d']['ReuseFactor'] = rf
 
-    output_dir = str(
-        test_root_path / f'hls4mlprj_pointwise1d_{chans}_{strides[0]}_{padds}_{backend}_{io_type}_{strategy}_rf{rf}'
-    )
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
@@ -98,7 +96,7 @@ def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, rf):
         ('Catapult', 'io_stream', 'resource'),
     ],
 )
-def test_pointwiseconv2d(chans, padds, strides, backend, io_type, strategy):
+def test_pointwiseconv2d(test_case_id, chans, padds, strides, backend, io_type, strategy):
     model = tf.keras.models.Sequential()
     input_shape = (28, 28, 3)
     model.add(
@@ -123,10 +121,7 @@ def test_pointwiseconv2d(chans, padds, strides, backend, io_type, strategy):
 
     config = hls4ml.utils.config_from_keras_model(model, default_precision=default_precision)
     config['Model']['Strategy'] = strategy
-    stride_cfg = str(strides).replace(', ', '_').replace('(', '').replace(')', '')
-    output_dir = str(
-        test_root_path / f'hls4mlprj_pointwise2d_{chans}_strides_{stride_cfg}_{padds}_padding_{backend}_{io_type}_{strategy}'
-    )
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
@@ -141,7 +136,7 @@ def test_pointwiseconv2d(chans, padds, strides, backend, io_type, strategy):
 
 
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
-def test_pointwise_config(strategy):
+def test_pointwise_config(test_case_id, strategy):
     model = tf.keras.models.Sequential()
     input_shape = (8, 8, 3)
     model.add(
@@ -160,7 +155,7 @@ def test_pointwise_config(strategy):
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     config['Model']['Strategy'] = strategy
     config['LayerName']['conv2d_1x1']['Strategy'] = strategy  # Will fail if the strategy is not lowercase
-    output_dir = str(test_root_path / f'hls4mlprj_pointwise2d_config_{strategy}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     # Model will fail to compile if strategy was set incorrectly

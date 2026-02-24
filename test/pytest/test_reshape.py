@@ -22,7 +22,7 @@ def randX_20_10():
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_reshape_parallel(randX_20_10, backend, io_type):
+def test_reshape_parallel(test_case_id, randX_20_10, backend, io_type):
     model = tf.keras.models.Sequential(
         [
             tf.keras.layers.Input(shape=(10,)),
@@ -33,8 +33,7 @@ def test_reshape_parallel(randX_20_10, backend, io_type):
     )
     model.compile(optimizer='adam', loss='mse')
     config = hls4ml.utils.config_from_keras_model(model, default_precision='fixed<32,16>')
-    prj_name = f'hls4mlprj_reshape_{backend}_{io_type}'
-    output_dir = str(test_root_path / prj_name)
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

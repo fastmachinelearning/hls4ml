@@ -27,12 +27,12 @@ def keras_model():
 
 
 @pytest.fixture
-def hls_model(keras_model, request):
+def hls_model(keras_model, request, test_case_id):
     io_type, backend = request.param
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, default_precision='ap_int<6>', granularity='name', backend=backend
     )
-    output_dir = str(test_root_path / f'hls4mlprj_clone_flatten_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model,
         hls_config=hls_config,
