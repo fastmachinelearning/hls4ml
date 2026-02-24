@@ -42,7 +42,7 @@
         coverage_format: cobertura
         path: test/pytest/coverage.xml
     paths:
-      - test/pytest/hls4mlprj*.tar.gz
+      - test/pytest/*.tar.gz
       - test/pytest/synthesis_report_*.json
 
 .pytest-keras3-only:
