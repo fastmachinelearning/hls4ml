@@ -76,7 +76,7 @@ class CoyoteAcceleratorBackend(VitisBackend):
         self,
         model,
         device: str = 'u55c',
-        aclk_freq: float = 200,
+        aclk_freq: float = 250,
         reset: bool = False,
         csim: bool = True,
         synth: bool = True,
@@ -95,7 +95,7 @@ class CoyoteAcceleratorBackend(VitisBackend):
         Args:
             model (ModelGraph): hls4ml model to synthesize
             device (str, optional): Target Alveo FPGA card; currently supported u55c, u280 and u250
-            aclk_freq (float, optional): AXI-Clock frequency
+            aclk_freq (float, optional): System/shell clock frequency
             reset (bool, optional): Reset HLS project, if a previous one is found
             csim (bool, optional): Run C-Simulation of the HLS project
             synth (bool, optional): Run HLS synthesis
