@@ -100,6 +100,7 @@ class HLS4ML_IP(DefaultIP):
     def build_event_and_run(self, intr, profile):
 
         async def wait_for_acc():
+            exec_time = 0
             print("starting the accelerator")
             if profile:
                 t_start = time.perf_counter()
@@ -114,17 +115,20 @@ class HLS4ML_IP(DefaultIP):
             # print porfile data
             if profile:
                 t_end = time.perf_counter()
+                exec_time = t_end - t_start
                 print(f"Accelerator execution time: \
-                      {(t_end - t_start) * 1e3:.3f} ms")
+                      {(exec_time) * 1e3:.3f} ms")
 
             print("accelerator has finished")
+            return exec_time
 
         # get event loop from asyncio
         loop = asyncio.get_event_loop()
 
         # build task
         task = loop.create_task(wait_for_acc())
-        loop.run_until_complete(task)
+        # run and return whatever inside the wait_for_acc return
+        return loop.run_until_complete(task)
 
     def transfer(self, input_buffer, output_buffer, intr, profile = True):
 
@@ -137,8 +141,11 @@ class HLS4ML_IP(DefaultIP):
         self.set_amt_query(input_buffer.shape[0])
         self.prepare_intr()
 
-        # run
-        self.build_event_and_run(intr, profile)
+        # run and get the profile data
+        exec_time = self.build_event_and_run(intr, profile)
 
         # invalidate the output buffer
         output_buffer.invalidate()
+
+        # it will return 0 if the profile is not enable
+        return exec_time

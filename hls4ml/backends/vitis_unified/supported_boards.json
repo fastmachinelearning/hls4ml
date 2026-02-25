@@ -9,9 +9,31 @@
       "platform_output": "zcu102/tcl_scripts/output/zcu102_axi_stream_platform.xsa"
     },
     "python_drivers": {
-      "axi_stream": "axi_stream_driver.py",
-      "axi_master": "axi_master_driver.py"
+      "is_shared_driver": true,
+      "axi_stream" : "axi_stream_driver.py",
+      "axi_master" : "axi_master_driver.py",
+      "main_driver": "main_driver.py"
+    },
+    "c_drivers": {}
+  },
+
+  "kv260": {
+    "part": "sk-kv260-g",
+    "axi_master": {
+      "platform_generator_tcl": "kv260/tcl_scripts/create_xsa.tcl",
+      "platform_output": "kv260/tcl_scripts/output/kv260_axi_all_platform.xsa"
+    },
+    "axi_stream": {
+      "platform_generator_tcl": "kv260/tcl_scripts/create_xsa.tcl",
+      "platform_output": "kv260/tcl_scripts/output/kv260_axi_all_platform.xsa"
+    },
+    "python_drivers": {
+      "is_shared_driver": true,
+      "axi_stream" : "axi_stream_driver.py",
+      "axi_master" : "axi_master_driver.py",
+      "main_driver": "main_driver.py"
     },
     "c_drivers": {}
   }
+
 }

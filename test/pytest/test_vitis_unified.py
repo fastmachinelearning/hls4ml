@@ -16,8 +16,10 @@ import hls4ml
 
 test_root_path = Path(__file__).parent
 
-os.environ['XILINX_VITIS'] = '/opt/Xilinx/Vitis/2023.2'
-os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
+# os.environ['XILINX_VITIS'] = '/opt/Xilinx/Vitis/2023.2'
+os.environ['XILINX_VITIS'] = '/tools/Xilinx/Vitis/2023.2'
+os.environ['XILINX_VIVADO'] = '/tools/Xilinx/Vivado/2023.2'
+os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['XILINX_VIVADO'] + '/bin:' + os.environ['PATH']
 
 
 @pytest.fixture(scope='module')
@@ -36,15 +38,35 @@ def simple_unet():
     return model
 
 
-def _vitis_unified_convert_kwargs(io_type, axi_mode, **extra):
+# def _vitis_unified_convert_kwargs(io_type, axi_mode, **extra):
+#     """Shared backend kwargs for VitisUnified conversion.
+#     Platform is resolved from supported_boards.json by board + axi_mode.
+#     """
+#     return {
+#         'backend': 'VitisUnified',
+#         'io_type': io_type,
+#         'board': 'zcu102',
+#         'part': 'xczu9eg-ffvb1156-2-e',
+#         'clock_period': '10ns',
+#         'input_type': 'float',
+#         'output_type': 'float',
+#         'axi_mode': axi_mode,
+#         **extra,
+#     }
+
+part_map = {'zcu102': 'xczu9eg-ffvb1156-2-e', 'kv260': 'xck26-sfvc784-2LV-c'}
+
+
+def _vitis_unified_convert_kwargs(io_type, axi_mode, board='zcu102', **extra):
     """Shared backend kwargs for VitisUnified conversion.
     Platform is resolved from supported_boards.json by board + axi_mode.
     """
+    part = part_map[board]
     return {
         'backend': 'VitisUnified',
         'io_type': io_type,
-        'board': 'zcu102',
-        'part': 'xczu9eg-ffvb1156-2-e',
+        'board': board,
+        'part': part,
         'clock_period': '10ns',
         'input_type': 'float',
         'output_type': 'float',
@@ -217,7 +239,9 @@ def test_fifo_depth(test_case_id, simple_unet, tmp_path, io_type, strategy, gran
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, axi_mode):
+# @pytest.mark.parametrize('board', ['zcu102', 'kv260'])
+@pytest.mark.parametrize('board', ['kv260'])
+def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, axi_mode, board):
     model = simple_unet
 
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
@@ -228,7 +252,7 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
         model,
         hls_config=config,
         output_dir=output_dir,
-        **_vitis_unified_convert_kwargs(io_type, axi_mode),
+        **_vitis_unified_convert_kwargs(io_type, axi_mode, board),
     )
     vitis_unified_model.compile()
     vitis_unified_model.build(synth=True, bitfile=True, log_to_stdout=True)
@@ -242,3 +266,6 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
     assert os.path.isdir(final_reports_dir), f'final_reports directory does not exist: {final_reports_dir}'
     rpt_files = [f for f in os.listdir(final_reports_dir) if f.endswith('.rpt')]
     assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'
+
+
+# test_gen_unified("hls4mlprj_kv260_axi_stream", simple_unet(), 'io_stream', 'latency', 'name', 'axi_stream')

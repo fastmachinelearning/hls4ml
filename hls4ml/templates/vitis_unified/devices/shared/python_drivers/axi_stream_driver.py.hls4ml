@@ -22,6 +22,7 @@ class HLS4ML_IP:
         input_buffer.flush()
 
         async def wait_for_acc():
+            exec_time = 0
             print("starting the accelerator")
             # Start receive (PL → PS)
             if profile:
@@ -42,11 +43,15 @@ class HLS4ML_IP:
 
 
             print("accelerator has finished")
+            return exec_time
 
         # get event loop from asyncio
         loop = asyncio.get_event_loop()
         task = loop.create_task(wait_for_acc())
         # loop until end
-        loop.run_until_complete(task)
+        exec_time = loop.run_until_complete(task)
         # invalidate the output buffer
         output_buffer.invalidate()
+
+        # it will return 0 if the profile is not enable
+        return exec_time
