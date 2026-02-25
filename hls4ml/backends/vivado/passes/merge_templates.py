@@ -5,6 +5,7 @@ from hls4ml.model.layers import Concatenate, Dot, Merge
 # Merge templates
 
 merge_config_template = """struct config{index} : nnet::merge_config {{
+    static const unsigned n_elem = {n_elem};
     static const unsigned n_elem1 = {n_elem1};
     static const unsigned n_elem2 = {n_elem2};
     static const unsigned reuse_factor = {reuse};
@@ -24,7 +25,10 @@ class MergeConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
         params['n_elem1'] = node.get_input_variable(node.inputs[0]).size_cpp()
         params['n_elem2'] = node.get_input_variable(node.inputs[1]).size_cpp()
-
+        params['n_elem'] = max(params['n_elem1'], params['n_elem2'])
+        io_type = node.model.config.get_config_value('IOType')
+        if io_type != 'io_parallel':
+            assert params['n_elem1'] == params['n_elem2'], 'broadcasting merge not supported non-io_parallel'
         return self.template.format(**params)
 
 
