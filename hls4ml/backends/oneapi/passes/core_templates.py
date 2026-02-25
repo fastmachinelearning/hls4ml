@@ -211,6 +211,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;
     typedef {accum_t.name} accum_t;
+    typedef {inv_inp_t.name} inv_inp_t;
     typedef {inp_norm_t_str} inp_norm_t;
 }};\n"""
 
