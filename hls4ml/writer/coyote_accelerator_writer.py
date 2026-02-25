@@ -3,7 +3,7 @@ import stat
 import glob
 import numpy as np
 from pathlib import Path
-from shutil import copyfile, copytree, move
+from shutil import copyfile, copytree, move, rmtree
 
 from hls4ml.writer.vitis_writer import VitisWriter
 
@@ -511,11 +511,10 @@ class CoyoteAcceleratorWriter(VitisWriter):
             model (ModelGraph): the hls4ml model
         """
 
-        import shutil
         if os.path.exists(model.config.get_output_dir() + '/Coyote'):
-            shutil.rmtree(model.config.get_output_dir() + '/Coyote')
+            rmtree(model.config.get_output_dir() + '/Coyote')
         if os.path.exists(model.config.get_output_dir() + '/src'):
-            shutil.rmtree(model.config.get_output_dir() + '/src')
+            rmtree(model.config.get_output_dir() + '/src')
 
         # General hls4ml write proces, inherited from Vitis Writer
         self.write_project_dir(model)
