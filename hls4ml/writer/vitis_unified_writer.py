@@ -198,7 +198,7 @@ class VitisUnifiedWriter(VitisWriter):
         """Copy board folder (tcl_scripts, python_drivers, etc.) to vitis_workspace for local use."""
         filedir = os.path.dirname(os.path.abspath(__file__))
         board = self.vitis_unified_config.get_board()
-        src = os.path.join(filedir, '../templates/vitis_unified/devices', board)
+        src = os.path.join(filedir, '../templates/vitis_unified', board)
         dst = os.path.join(model.config.get_output_dir(), 'vitis_workspace', board)
         if os.path.isdir(src):
             copytree(src, dst, dirs_exist_ok=True)

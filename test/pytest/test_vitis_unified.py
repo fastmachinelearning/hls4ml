@@ -15,10 +15,13 @@ from tensorflow.keras.models import Model
 import hls4ml
 
 test_root_path = Path(__file__).parent
-
+# 1. For who installed the xilinx tool chain in /opt
 # os.environ['XILINX_VITIS'] = '/opt/Xilinx/Vitis/2023.2'
+
+# 2. For who installed the xilinx tool chain in /tools (both vitis and vivado are mandatory)
 os.environ['XILINX_VITIS'] = '/tools/Xilinx/Vitis/2023.2'
 os.environ['XILINX_VIVADO'] = '/tools/Xilinx/Vivado/2023.2'
+
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['XILINX_VIVADO'] + '/bin:' + os.environ['PATH']
 
 
@@ -37,22 +40,6 @@ def simple_unet():
     model.compile(optimizer='adam', loss='binary_crossentropy')
     return model
 
-
-# def _vitis_unified_convert_kwargs(io_type, axi_mode, **extra):
-#     """Shared backend kwargs for VitisUnified conversion.
-#     Platform is resolved from supported_boards.json by board + axi_mode.
-#     """
-#     return {
-#         'backend': 'VitisUnified',
-#         'io_type': io_type,
-#         'board': 'zcu102',
-#         'part': 'xczu9eg-ffvb1156-2-e',
-#         'clock_period': '10ns',
-#         'input_type': 'float',
-#         'output_type': 'float',
-#         'axi_mode': axi_mode,
-#         **extra,
-#     }
 
 part_map = {'zcu102': 'xczu9eg-ffvb1156-2-e', 'kv260': 'xck26-sfvc784-2LV-c'}
 
@@ -246,6 +233,7 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
 
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
     config['Model']['Strategy'] = strategy
+    test_case_id = test_case_id
     output_dir = str(test_root_path / test_case_id)
 
     vitis_unified_model = hls4ml.converters.convert_from_keras_model(
@@ -259,13 +247,10 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
 
     export_dir = os.path.join(output_dir, 'export')
     driver_file = 'axi_stream_driver.py' if axi_mode == 'axi_stream' else 'axi_master_driver.py'
-    expected_files = {driver_file, 'system.bit', 'system.hwh'}
+    expected_files = {driver_file, 'system.bit', 'system.hwh', 'driver.py'}
     exported_files = set(os.listdir(export_dir))
     assert expected_files.issubset(exported_files), f'Missing files in export: {expected_files - exported_files}'
     final_reports_dir = os.path.join(output_dir, 'final_reports')
     assert os.path.isdir(final_reports_dir), f'final_reports directory does not exist: {final_reports_dir}'
     rpt_files = [f for f in os.listdir(final_reports_dir) if f.endswith('.rpt')]
     assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'
-
-
-# test_gen_unified("hls4mlprj_kv260_axi_stream", simple_unet(), 'io_stream', 'latency', 'name', 'axi_stream')

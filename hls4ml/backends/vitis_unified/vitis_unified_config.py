@@ -58,6 +58,7 @@ class VitisUnifiedConfig:
             raise Exception(f'Board "{self.board}" has no platform for axi_mode "{self.axi_mode}" in supported_boards.json.')
 
         self.driver = self.config['VitisUnifiedConfig']['Driver']
+        assert self.driver == 'python', 'we currently only support python drivers'
 
         # c++ type for input and output of the hls kernel it must be str (float/double)
         self.input_type = self.config['VitisUnifiedConfig']['InputDtype']
@@ -103,48 +104,34 @@ class VitisUnifiedConfig:
     def get_part(self):
         return self.get_board_info()['part']
 
+    # ip driver generation
+    def get_ip_driver_prefix(self):
+        """Return driver prefix for current board and axi_mode."""
+        return 'axi_master_driver' if self.axi_mode == 'axi_master' else 'axi_stream_driver'
+
     def get_ip_driver_file(self):
-        """Return driver filename for current board and axi_mode (from supported_boards)."""
-        board_info = self.get_board_info()
-        drivers = board_info.get('python_drivers' if self.driver == 'python' else 'c_drivers', {})
-        return drivers.get(self.axi_mode)
+        """Return driver filename for current setting"""
+        return f'{self.get_ip_driver_prefix()}.py'
 
     def get_ip_driver_template_path(self):
-        """Return absolute path to driver template for current board and axi_mode.
+        """Return absolute path to driver template for current settings.
 
-        Derives path from python_drivers in supported_boards: {board}/python_drivers/{driver_file}.hls4ml
+        Derives path from python_drivers in supported_boards: python_drivers/{driver_file}.hls4ml
         """
-        board_info = self.get_board_info()
-        py_driver_info = board_info.get('python_drivers', {})
-        driver_file = py_driver_info.get(self.axi_mode)
-        if not driver_file:
-            raise Exception(
-                f'No python_driver for axi_mode "{self.axi_mode}" in supported_boards.json for board "{self.board}"'
-            )
-        # the is_shared_driver parameter enables user to select the provided soc' shared driver
-        device_folder_name = 'shared' if py_driver_info.get('is_shared_driver', False) else self.board
-        template_rel = f'devices/{device_folder_name}/python_drivers/{driver_file}.hls4ml'
+        template_rel = f'python_drivers/{self.get_ip_driver_prefix()}.py.hls4ml'
         return os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified', template_rel)
 
+    # main driver generation
     def get_main_driver_file(self):
-        """Return main driver filename for current board (from supported_boards)."""
-        board_info = self.get_board_info()
-        drivers = board_info.get('python_drivers' if self.driver == 'python' else 'c_drivers', {})
-        return drivers.get('main_driver')
+        """Return main driver filename for current settings"""
+        return 'driver.py'
 
     def get_main_driver_template_path(self):
         """Return absolute path to main driver template for current board.
 
         Derives path from python_drivers in supported_boards: {board}/python_drivers/{driver_file}.hls4ml
         """
-        board_info = self.get_board_info()
-        py_driver_info = board_info.get('python_drivers', {})
-        driver_file = py_driver_info.get('main_driver')
-        if not driver_file:
-            raise Exception(f'No python_driver for main wrapper in supported_boards.json for board "{self.board}"')
-        # the is_shared_driver parameter enables user to select the provided soc' shared driver
-        device_folder_name = 'shared' if py_driver_info.get('is_shared_driver', False) else self.board
-        template_rel = f'devices/{device_folder_name}/python_drivers/{driver_file}.hls4ml'
+        template_rel = 'python_drivers/driver.py.hls4ml'
         return os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified', template_rel)
 
     def get_corrected_types(self):
