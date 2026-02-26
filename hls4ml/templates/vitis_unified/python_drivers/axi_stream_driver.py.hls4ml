@@ -43,7 +43,7 @@ class HLS4ML_IP:
 
 
             print("accelerator has finished")
-            return exec_time
+            return exec_time if profile else None
 
         # get event loop from asyncio
         loop = asyncio.get_event_loop()
