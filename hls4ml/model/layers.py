@@ -418,8 +418,8 @@ class Constant(Layer):
 
 class Quant(Layer):  # The QONNX quantization layer
     """
-    This is a QONNX quantization layer. Optimizations should convert it
-    before HLS is produced.
+    This is a QONNX quantization layer. Can also be inserted in direct brevitas parsing.
+    Optimizations should convert it before HLS is produced.
     """
 
     _expected_attributes = [
@@ -495,6 +495,8 @@ class Dense(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        Attribute('input_quantization', value_type=dict, default={}),
+        Attribute('output_quantization', value_type=dict, default={}),
     ]
 
     def initialize(self):
@@ -537,6 +539,8 @@ class Conv1D(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        Attribute('input_quantization', value_type=dict, default={}),
+        Attribute('output_quantization', value_type=dict, default={}),
     ]
 
     def initialize(self):
@@ -642,6 +646,8 @@ class Conv2D(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        Attribute('input_quantization', value_type=dict, default={}),
+        Attribute('output_quantization', value_type=dict, default={}),
     ]
 
     def initialize(self):

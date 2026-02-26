@@ -123,9 +123,24 @@ def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, 
     return layer, output_shape
 
 
-@pytorch_handler('Upsample', 'UpsamplingNearest2d', 'UpsamplingBilinear2d')
+@pytorch_handler(
+    'Upsample',
+    'UpsamplingNearest2d',
+    'UpsamplingBilinear2d',
+    'QuantUpsample',
+    'QuantUpsamplingNearest2d',
+    'QuantUpsamplingBilinear2d',
+)
 def handle_upsample(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-    assert operation in ['Upsample', 'UpsamplingNearest2d', 'UpsamplingBilinear2d']
+    assert operation in [
+        'Upsample',
+        'UpsamplingNearest2d',
+        'UpsamplingBilinear2d',
+        'QuantUpsample',
+        'QuantUpsamplingNearest2d',
+        'QuantUpsamplingBilinear2d',
+    ]
+
     layer = {}
     layer['name'] = layer_name
     layer['inputs'] = input_names
