@@ -262,4 +262,4 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
     assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'
 
 
-test_gen_unified('axi_stream_debug_2', simple_unet(), 'io_stream', 'latency', 'name', 10, 'axi_stream', 'kv260')
+test_gen_unified('axi_stream_debug_4', simple_unet(), 'io_stream', 'latency', 'name', 10, 'axi_stream', 'kv260')

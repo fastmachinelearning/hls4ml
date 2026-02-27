@@ -24,6 +24,11 @@ class NeuralNetworkOverlay(Overlay):
         self.input_buffer = allocate(shape=x_shape, dtype=dtype)
         self.output_buffer = allocate(shape=y_shape, dtype=dtype)
 
+    def calculate_performance(self, N, execution_time):
+        rate = N / execution_time if execution_time > 0 else float('inf')
+        print(
+            f"Processed elements: {N}, Execution time: {execution_time:.4f} seconds, Performance rate: {rate:.2f} inferences/second")
+        return rate
 
     def predict(self, X, debug=False, profile=False, encode=None, decode=None):
         """
@@ -67,7 +72,7 @@ class NeuralNetworkOverlay(Overlay):
         # exec_time will valid only when the profile is enabled
         if decode is not None:
             self.output_buffer = decode(self.output_buffer)
-
         if profile:
-            return self.output_buffer, exec_time
+            performance = self.calculate_performance(len(X), exec_time)
+            return self.output_buffer, exec_time, performance
         return self.output_buffer

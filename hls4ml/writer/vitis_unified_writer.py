@@ -396,11 +396,14 @@ fi
                 elif '// hls-fpga-machine-learning insert stream decl' in line:
                     in_depth = model.get_input_variables()[0].pragma[1]
                     out_depth = model.get_output_variables()[0].pragma[1]
+                    tlast_depth = self.vitis_unified_config.get_in_stream_buf_size()
                     newline = ''
                     newline += indent + f'static hls::stream<{inp.type.name}> model_input_stream("model_input");\n'
                     newline += indent + f'static hls::stream<{out.type.name}> model_output_stream("model_output");\n\n'
+                    newline += indent + 'static hls::stream<bool> model_tlast_stream("model_tlast");\n\n'
                     newline += indent + f'#pragma HLS STREAM variable=model_input_stream depth={in_depth}\n'
                     newline += indent + f'#pragma HLS STREAM variable=model_output_stream depth={out_depth}\n'
+                    newline += indent + f'#pragma HLS STREAM variable=model_tlast_stream depth={tlast_depth}\n'
                 elif 'INPUT_LAYER_TYPE' in line:
                     newline = line.replace('INPUT_LAYER_TYPE', inp.type.name)
                 elif 'OUTPUT_LAYER_TYPE' in line:
