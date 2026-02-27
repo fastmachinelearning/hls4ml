@@ -5,6 +5,7 @@ from . import (
     hgq2,  # noqa: F401
     merge,  # noqa: F401
     pooling,  # noqa: F401
+    pquant,  # noqa: F401
     recurrent,  # noqa: F401
 )
 from ._base import registry as layer_handlers
