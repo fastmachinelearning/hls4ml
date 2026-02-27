@@ -426,4 +426,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)
-        self.write_new_tar(model)
+        write_tar = model.config.get_writer_config().get('WriteTar', False)
+        if write_tar:
+            self.write_new_tar(model)
