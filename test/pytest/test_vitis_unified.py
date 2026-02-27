@@ -25,7 +25,7 @@ os.environ['XILINX_VIVADO'] = '/tools/Xilinx/Vivado/2023.2'
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['XILINX_VIVADO'] + '/bin:' + os.environ['PATH']
 
 
-@pytest.fixture(scope='module')
+# @pytest.fixture(scope='module')
 def simple_unet():
     """Simple U-Net model for Vitis Unified tests."""
     inputs = Input((4, 4, 1))
@@ -225,11 +225,13 @@ def test_fifo_depth(test_case_id, simple_unet, tmp_path, io_type, strategy, gran
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
+@pytest.mark.parametrize('batch_size', [10])
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
 # @pytest.mark.parametrize('board', ['zcu102', 'kv260'])
 @pytest.mark.parametrize('board', ['kv260'])
-def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, axi_mode, board):
+def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, batch_size, axi_mode, board):
     model = simple_unet
+    X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
 
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
     config['Model']['Strategy'] = strategy
@@ -243,6 +245,10 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
         **_vitis_unified_convert_kwargs(io_type, axi_mode, board),
     )
     vitis_unified_model.compile()
+    # predict and save for hardware comparison purpose
+    y_pred = vitis_unified_model.predict(X_input)
+    np.save(os.path.join(output_dir, 'x_input.npy'), X_input)
+    np.save(os.path.join(output_dir, 'y_pred_sw.npy'), y_pred)
     vitis_unified_model.build(synth=True, bitfile=True, log_to_stdout=True)
 
     export_dir = os.path.join(output_dir, 'export')
@@ -254,3 +260,6 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
     assert os.path.isdir(final_reports_dir), f'final_reports directory does not exist: {final_reports_dir}'
     rpt_files = [f for f in os.listdir(final_reports_dir) if f.endswith('.rpt')]
     assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'
+
+
+test_gen_unified('axi_stream_debug', simple_unet(), 'io_stream', 'latency', 'name', 10, 'axi_stream', 'kv260')

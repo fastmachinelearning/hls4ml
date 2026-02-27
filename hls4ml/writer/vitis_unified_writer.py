@@ -604,32 +604,14 @@ fi
     def _write_main_driver(self, model):
         driver_template_path = self.vitis_unified_config.get_main_driver_template_path()
         driver_file = self.vitis_unified_config.get_main_driver_file()
-        indent = '        '
         with (
             open(driver_template_path) as fin,
             open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
         ):
             for line in fin.readlines():
-                newline = line
-                if '# hls-fpga-machine-learning insert import' in line:
-                    newline = f'import {self.vitis_unified_config.get_ip_driver_file()[:-3]}\n'
-                elif '# hls-fpga-machine-learning insert interrupt pin' in line:
-                    newline = '{INDENT}my_interrupt = Interrupt("{PIN_NAME}")\n'.format(
-                        INDENT=indent, PIN_NAME=self._get_interrupt_pin_name(model, self._is_axi_master())
-                    )
-                elif '# hls-fpga-machine-learning insert ip' in line:
-                    if self._is_axi_master():
-                        newline = '{INDENT}ip = self.{IP_NAME}\n'.format(
-                            INDENT=indent, IP_NAME=self._get_wrap_ip_name(model, True)
-                        )
-                    else:
-                        newline = '{INDENT}dma = self.{IP_NAME}\n'.format(
-                            INDENT=indent, IP_NAME=self._get_wrap_ip_name(model, True)
-                        )
-                        newline += '{INDENT}ip = {DRIVER_FILE_NAME}.HLS4ML_IP(dma)\n'.format(
-                            INDENT=indent, DRIVER_FILE_NAME=self.vitis_unified_config.get_ip_driver_file()[:-3]
-                        )
-                fout.write(newline)
+                if '<TOP_WRAPPER_NAME>' in line:
+                    line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, self._is_axi_master()))
+                fout.write(line)
 
     # ===== Test generation =====
     def write_wrapper_test(self, model):

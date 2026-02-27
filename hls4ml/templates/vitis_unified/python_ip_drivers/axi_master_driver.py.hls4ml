@@ -87,8 +87,8 @@ class HLS4ML_IP(DefaultIP):
         self.write(self.REG_ADDR_OUT_PTRs[idx] + 4, 0)
 
     def set_amt_query(self, val):
-        print(f"amount of queries will be set to: {val} at address: {hex(self.REG_ADDR_AMT_QUERY)}")
-        self.write(self.REG_ADDR_AMT_QUERY, val)
+        print(f"amount of queries will be set to: {val} at address: {hex(self.REG_ADDR_BATCH_SIZE)}")
+        self.write(self.REG_ADDR_BATCH_SIZE, val)
 
     def prepare_intr(self):
         print("prepare your interrupt")

@@ -116,9 +116,9 @@ class VitisUnifiedConfig:
     def get_ip_driver_template_path(self):
         """Return absolute path to driver template for current settings.
 
-        Derives path from python_drivers in supported_boards: python_drivers/{driver_file}.hls4ml
+        Derives path from python_drivers in supported_boards: python_ip_drivers/{driver_file}.hls4ml
         """
-        template_rel = f'python_drivers/{self.get_ip_driver_prefix()}.py.hls4ml'
+        template_rel = f'python_ip_drivers/{self.get_ip_driver_prefix()}.py.hls4ml'
         return os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified', template_rel)
 
     # main driver generation
@@ -131,7 +131,13 @@ class VitisUnifiedConfig:
 
         Derives path from python_drivers in supported_boards: {board}/python_drivers/{driver_file}.hls4ml
         """
-        template_rel = 'python_drivers/driver.py.hls4ml'
+        board_info = self.get_board_info()
+        driver_file = board_info.get('python_drivers', {}).get(self.axi_mode)
+        if not driver_file:
+            raise Exception(
+                f'No python_driver for axi_mode "{self.axi_mode}" in supported_boards.json for board "{self.board}"'
+            )
+        template_rel = f'{self.board}/python_drivers/{driver_file}.hls4ml'
         return os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified', template_rel)
 
     def get_corrected_types(self):
