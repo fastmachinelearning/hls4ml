@@ -13,13 +13,13 @@ load_input_loop:
         }
         model_input_stream.write(input_chunk);
     }
-    axi_packet.last = 0;
 }
 
 void store_result(hls::stream<OUTPUT_LAYER_TYPE> &model_output_stream, hls::stream<dma_data_packet> &axi_output_stream,
                   bool &is_last) {
 store_result_loop:
     dma_data_packet axi_packet;
+    axi_packet.keep = -1;
     for (unsigned chunk_idx = 0; chunk_idx < N_OUT / OUTPUT_LAYER_TYPE::size; ++chunk_idx) {
         OUTPUT_LAYER_TYPE output_chunk = model_output_stream.read();
         for (unsigned elem_idx = 0; elem_idx < OUTPUT_LAYER_TYPE::size; elem_idx++) {
@@ -36,11 +36,10 @@ void MY_PROJECT_TOP_FUNC(hls::stream<dma_data_packet> &axi_input_stream, hls::st
 
     // hls-fpga-machine-learning insert interface
 
-    // hls-fpga-machine-learning insert stream decl
-
     #pragma HLS DATAFLOW
-
     bool is_last = false;
+
+    // hls-fpga-machine-learning insert stream decl
 
     load_input(axi_input_stream, model_input_stream, is_last);
     MY_PROJECT(model_input_stream, model_output_stream);
