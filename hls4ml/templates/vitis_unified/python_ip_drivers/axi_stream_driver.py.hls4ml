@@ -38,6 +38,7 @@ class HLS4ML_IP:
             # print porfile data
             if profile:
                 t_end = time.perf_counter()
+                exec_time = t_end - t_start
                 print(f"Accelerator execution time: \
                       {(t_end - t_start) * 1e3:.3f} ms")
 
