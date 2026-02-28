@@ -22,7 +22,8 @@
       "platform_output": "kv260/tcl_scripts/output/kv260_axi_all_platform.xsa"
     },
     "axi_stream": {
-      "platform_file": "/media/tanawin/tanawin1701e/project8/kv260plateform/xsaFile/vitis_design_wrapper.xsa"
+      "platform_generator_tcl": "kv260/tcl_scripts/create_xsa.tcl",
+      "platform_output": "kv260/tcl_scripts/output/kv260_axi_all_platform.xsa"
     },
     "python_drivers": {
       "axi_stream": "axi_stream_driver_wrapper.py",

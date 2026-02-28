@@ -77,5 +77,5 @@ class NeuralNetworkOverlay(Overlay):
 
         if profile:
             performance = self.calculate_performance(len(X), exec_time)
-            return self.output_buffer, exec_time
+            return self.output_buffer, exec_time, performance
         return self.output_buffer

@@ -25,7 +25,7 @@ os.environ['XILINX_VIVADO'] = '/tools/Xilinx/Vivado/2023.2'
 os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['XILINX_VIVADO'] + '/bin:' + os.environ['PATH']
 
 
-# @pytest.fixture(scope='module')
+@pytest.fixture(scope='module')
 def simple_unet():
     """Simple U-Net model for Vitis Unified tests."""
     inputs = Input((4, 4, 1))
@@ -262,4 +262,4 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
     assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'
 
 
-test_gen_unified('axi_stream_debug_4', simple_unet(), 'io_stream', 'latency', 'name', 10, 'axi_stream', 'kv260')
+# test_gen_unified('axi_stream_debug_4', simple_unet(), 'io_stream', 'latency', 'name', 10, 'axi_stream', 'kv260')

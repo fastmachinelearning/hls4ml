@@ -40,7 +40,6 @@ void MY_PROJECT_TOP_FUNC(hls::stream<dma_data_packet> &axi_input_stream, hls::st
     // hls-fpga-machine-learning insert interface
 
     #pragma HLS DATAFLOW
-    bool is_last = false;
 
     // hls-fpga-machine-learning insert stream decl
 
