@@ -64,11 +64,14 @@ class VitisWriter(VivadoWriter):
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
 
-    def write_hls(self, model):
+    def write_hls(self, model, is_multigraph=False):
         """
         Write the HLS project. Calls the steps from VivadoWriter, adapted for Vitis
         """
-        super().write_hls(model)
+        if is_multigraph:
+            super().write_hls(model, is_multigraph=True)
+            return
+        super().write_hls(model, is_multigraph=False)
         self.write_nnet_utils_overrides(model)
         self.write_board_script_override(model)
         self.write_build_prj_override(model)
