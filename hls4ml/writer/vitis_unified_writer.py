@@ -65,10 +65,7 @@ class VitisUnifiedWriter(VitisWriter):
         return self._get_wrapper_file_name(model, is_axi_master)
 
     def _get_wrap_ip_name(self, model, is_axi_master):
-        if is_axi_master:
-            return f'{self._get_top_wrap_func_name(model, is_axi_master)}_1'
-        else:
-            return 'axi_dma_0'
+        return f'{self._get_top_wrap_func_name(model, is_axi_master)}_1'
 
     def _get_interrupt_pin_name(self, model, is_axi_master):
         if is_axi_master:
@@ -558,17 +555,22 @@ fi
             self._write_ip_driver_axi_stream(model)
 
     def _write_ip_driver_axi_stream(self, model):
-        driver_template_path = self.vitis_unified_config.get_ip_driver_template_path()
-        driver_file = self.vitis_unified_config.get_ip_driver_file()
+        driver_template_path = self.vitis_unified_config.get_driver_template_path()
+        driver_file = self.vitis_unified_config.get_driver_file()
         with (
             open(driver_template_path) as fin,
             open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
         ):
-            fout.write(fin.read())
+            for line in fin.readlines():
+                if '<TOP_WRAPPER_NAME>' in line:
+                    line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, False))
+                if '<TOP_NAME>' in line:
+                    line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, False))
+                fout.write(line)
 
     def _write_ip_driver_axi_master(self, model):
-        driver_template_path = self.vitis_unified_config.get_ip_driver_template_path()
-        driver_file = self.vitis_unified_config.get_ip_driver_file()
+        driver_template_path = self.vitis_unified_config.get_driver_template_path()
+        driver_file = self.vitis_unified_config.get_driver_file()
         with (
             open(driver_template_path) as fin,
             open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
@@ -600,8 +602,10 @@ fi
                         ',\n'.join(self._gen_hex_addr_list(start_out_ptr_addr, stride_out_ptr_addr, len(outputs), indent))
                         + '\n'
                     )
+                if '<TOP_WRAPPER_NAME>' in line:
+                    line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, True))
                 if '<TOP_NAME>' in line:
-                    line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, self._is_axi_master()))
+                    line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, True))
                 fout.write(line)
 
     def _write_main_driver(self, model):

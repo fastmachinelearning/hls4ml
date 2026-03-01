@@ -107,39 +107,21 @@ class VitisUnifiedConfig:
     def get_part(self):
         return self.get_board_info()['part']
 
-    # ip driver generation
-    def get_ip_driver_prefix(self):
-        """Return driver prefix for current board and axi_mode."""
-        return 'axi_master_driver' if self.axi_mode == 'axi_master' else 'axi_stream_driver'
-
-    def get_ip_driver_file(self):
-        """Return driver filename for current setting"""
-        return f'{self.get_ip_driver_prefix()}.py'
-
-    def get_ip_driver_template_path(self):
-        """Return absolute path to driver template for current settings.
-
-        Derives path from python_drivers in supported_boards: python_ip_drivers/{driver_file}.hls4ml
-        """
-        template_rel = f'python_ip_drivers/{self.get_ip_driver_prefix()}.py.hls4ml'
-        return os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified', template_rel)
-
     # main driver generation
-    def get_main_driver_file(self):
-        """Return main driver filename for current settings"""
-        return 'driver.py'
-
-    def get_main_driver_template_path(self):
-        """Return absolute path to main driver template for current board.
-
-        Derives path from python_drivers in supported_boards: {board}/python_drivers/{driver_file}.hls4ml
-        """
+    def get_driver_file(self):
+        """Return driver filename for current settings"""
         board_info = self.get_board_info()
         driver_file = board_info.get('python_drivers', {}).get(self.axi_mode)
         if not driver_file:
             raise Exception(
                 f'No python_driver for axi_mode "{self.axi_mode}" in supported_boards.json for board "{self.board}"'
             )
+
+    def get_driver_template_path(self):
+        """Return absolute path to main driver template for current board.
+        Derives path from python_drivers in supported_boards: {board}/python_drivers/{driver_file}.hls4ml
+        """
+        driver_file = self.get_driver_file()
         template_rel = f'{self.board}/python_drivers/{driver_file}.hls4ml'
         return os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified', template_rel)
 

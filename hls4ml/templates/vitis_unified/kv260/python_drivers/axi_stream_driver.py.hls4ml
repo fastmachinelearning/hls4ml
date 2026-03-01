@@ -7,7 +7,7 @@ from pynq import DefaultIP   # import the ip connector library for extension
 from pynq import Interrupt
 from pynq import PL
 
-import axi_master_driver
+import axi_stream_driver
 import asyncio
 import numpy as np
 import os
@@ -23,13 +23,6 @@ class NeuralNetworkOverlay(Overlay):
         super().__init__(bitfile_name, dtbo=None, download=True, ignore_version=False, device=None)
         self.input_buffer = allocate(shape=x_shape, dtype=dtype)
         self.output_buffer = allocate(shape=y_shape, dtype=dtype)
-
-
-    def calculate_performance(self, N, execution_time):
-        rate = N / execution_time if execution_time > 0 else float('inf')
-        print(
-            f"Processed elements: {N}, Execution time: {execution_time:.4f} seconds, Performance rate: {rate:.2f} inferences/second")
-        return rate
 
 
     def predict(self, X, debug=False, profile=False, encode=None, decode=None):
@@ -60,12 +53,12 @@ class NeuralNetworkOverlay(Overlay):
                   the namesake parameter.
         """
 
-        # reset the PL
         PL.reset()
-        # set interrupt controller
-        my_interrupt = Interrupt("myproject_axi_master_1/interrupt")
-        # hls-fpga-machine-learning insert ip
-        ip = self.<TOP_WRAPPER_NAME>
+        my_interrupt = Interrupt("axi_dma_0/s2mm_introut")
+
+        dma = self.axi_dma_0
+        ip = axi_stream_driver.HLS4ML_IP(dma)
+
 
         if encode is not None:
             X = encode(X)
@@ -76,6 +69,65 @@ class NeuralNetworkOverlay(Overlay):
             self.output_buffer = decode(self.output_buffer)
 
         if profile:
-            performance = self.calculate_performance(len(X), exec_time)
-            return self.output_buffer, exec_time, performance
+            return self.output_buffer, exec_time
         return self.output_buffer
+
+
+from pynq import Overlay     # import the overlay
+from pynq import allocate    # import for CMA (contingeous memory allocation)
+from pynq import DefaultIP   # import the ip connector library for extension
+from pynq import Interrupt
+from pynq import PL
+import asyncio
+import numpy as np
+import os
+import subprocess
+import re
+import time
+
+
+class HLS4ML_IP:
+
+    def __init__(self, dma):
+        self.dma  = dma
+
+    def transfer(self, input_buffer, output_buffer, intr, profile = True):
+
+        # flush the buffer first
+        input_buffer.flush()
+
+        async def wait_for_acc():
+            exec_time = 0
+            print("starting the accelerator")
+            # Start receive (PL → PS)
+            if profile:
+                t_start = time.perf_counter()
+            self.dma.recvchannel.transfer(output_buffer)
+
+            # Start send (PS → PL)
+            self.dma.sendchannel.transfer(input_buffer)
+
+            # Wait for complete
+            await intr.wait()
+
+            # print porfile data
+            if profile:
+                t_end = time.perf_counter()
+                exec_time = t_end - t_start
+                print(f"Accelerator execution time: \
+                      {(t_end - t_start) * 1e3:.3f} ms")
+
+
+            print("accelerator has finished")
+            return exec_time if profile else None
+
+        # get event loop from asyncio
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(wait_for_acc())
+        # loop until end
+        exec_time = loop.run_until_complete(task)
+        # invalidate the output buffer
+        output_buffer.invalidate()
+
+        # it will return 0 if the profile is not enable
+        return exec_time
