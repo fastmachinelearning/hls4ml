@@ -54,7 +54,7 @@ class NeuralNetworkOverlay(Overlay):
         # reset the PL
         PL.reset()
         # set interrupt controller
-        my_interrupt = Interrupt("myproject_axi_master_1/interrupt")
+        my_interrupt = Interrupt("<TOP_WRAPPER_NAME>/interrupt")
         ip = self.<TOP_WRAPPER_NAME>
 
         if encode is not None:

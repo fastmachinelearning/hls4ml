@@ -88,13 +88,19 @@ class HLS4ML_IP(DefaultIP):
         print(f"amount of queries will be set to: {val} at address: {hex(self.REG_ADDR_BATCH_SIZE)}")
         self.write(self.REG_ADDR_BATCH_SIZE, val)
 
+    def ctrl_start(self):
+        # auto_restart + ap_start
+        self.write(0x00, (1 << 7) | (1 << 0))
+
     def transfer(self, input_buffer, output_buffer, intr, profile = True):
 
         # check availability of dma
         assert self.dma is not None, "dma is not assigned"
         # flush the buffer first
         input_buffer.flush()
+        # initialize the batch tracker and ip control
         self.set_amt_query(input_buffer.shape[0])
+        self.ctrl_start()
 
         async def wait_for_acc():
             exec_time = 0
@@ -128,6 +134,5 @@ class HLS4ML_IP(DefaultIP):
         exec_time = loop.run_until_complete(task)
         # invalidate the output buffer
         output_buffer.invalidate()
-
         # it will return 0 if the profile is not enable
         return exec_time
