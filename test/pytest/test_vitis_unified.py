@@ -253,7 +253,7 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
 
     export_dir = os.path.join(output_dir, 'export')
     driver_file = 'axi_stream_driver.py' if axi_mode == 'axi_stream' else 'axi_master_driver.py'
-    expected_files = {driver_file, 'system.bit', 'system.hwh', 'driver.py'}
+    expected_files = {driver_file, 'system.bit', 'system.hwh'}
     exported_files = set(os.listdir(export_dir))
     assert expected_files.issubset(exported_files), f'Missing files in export: {expected_files - exported_files}'
     final_reports_dir = os.path.join(output_dir, 'final_reports')

@@ -546,15 +546,13 @@ fi
 
     # ===== Driver generation =====
     def write_driver(self, model):
-        # write the main driver wrapper
-        self._write_main_driver(model)
         # write the ip driver
         if self._is_axi_master():
-            self._write_ip_driver_axi_master(model)
+            self._write_driver_axi_master(model)
         else:
-            self._write_ip_driver_axi_stream(model)
+            self._write_driver_axi_stream(model)
 
-    def _write_ip_driver_axi_stream(self, model):
+    def _write_driver_axi_stream(self, model):
         driver_template_path = self.vitis_unified_config.get_driver_template_path()
         driver_file = self.vitis_unified_config.get_driver_file()
         with (
@@ -568,7 +566,7 @@ fi
                     line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, False))
                 fout.write(line)
 
-    def _write_ip_driver_axi_master(self, model):
+    def _write_driver_axi_master(self, model):
         driver_template_path = self.vitis_unified_config.get_driver_template_path()
         driver_file = self.vitis_unified_config.get_driver_file()
         with (
@@ -606,18 +604,6 @@ fi
                     line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, True))
                 if '<TOP_NAME>' in line:
                     line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, True))
-                fout.write(line)
-
-    def _write_main_driver(self, model):
-        driver_template_path = self.vitis_unified_config.get_main_driver_template_path()
-        driver_file = self.vitis_unified_config.get_main_driver_file()
-        with (
-            open(driver_template_path) as fin,
-            open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if '<TOP_WRAPPER_NAME>' in line:
-                    line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, self._is_axi_master()))
                 fout.write(line)
 
     # ===== Test generation =====

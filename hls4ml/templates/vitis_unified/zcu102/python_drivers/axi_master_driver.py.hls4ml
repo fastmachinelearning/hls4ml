@@ -14,7 +14,6 @@ import subprocess
 import re
 import time
 
-
 class NeuralNetworkOverlay(Overlay):
     def __init__(
         self, bitfile_name, x_shape, y_shape, dtype=np.float32, dtbo=None, download=True, ignore_version=False, device=None
@@ -52,13 +51,11 @@ class NeuralNetworkOverlay(Overlay):
                   the namesake parameter.
         """
 
+        # reset the PL
         PL.reset()
-        my_interrupt = Interrupt("axi_dma_0/s2mm_introut")
-
-        dma = self.axi_dma_0
+        # set interrupt controller
+        my_interrupt = Interrupt("myproject_axi_master_1/interrupt")
         ip = self.<TOP_WRAPPER_NAME>
-        ip.assign_dma(dma)
-
 
         if encode is not None:
             X = encode(X)
@@ -73,39 +70,103 @@ class NeuralNetworkOverlay(Overlay):
         return self.output_buffer
 
 class HLS4ML_IP(DefaultIP):
-
     def __init__(self, description):
-        super().__init__(description)
-        self.dma  = None
-        self.REG_ADDR_BATCH_SIZE = 0x10
+        super().__init__(description=description)
+
+        self.REG_ADDR_AP_CTRL = 0x00
+        self.REG_ADDR_BATCH_SIZE = VAL
+
+        self.REG_ADDR_GIE = 0x04
+        self.REG_ADDR_IER = 0x08
+        self.REG_ADDR_ISR = 0x0C
+
+        self.INP_PORT_NAMEs = [
+            # hls-driver-input-dbg-name
+        ]
+
+        self.REG_ADDR_INP_PTRs = [
+            # hls-driver-input-ptr
+        ]
+
+        self.OUT_PORT_NAMEs = [
+            # hls-driver-output-dbg-name
+        ]
+
+        self.REG_ADDR_OUT_PTRs = [
+            # hls-driver-output-ptr
+        ]
 
     bindto = ['xilinx.com:hls:<TOP_NAME>:1.0']
 
-    def assign_dma(self, dma):
-        self.dma = dma
+    def enable_gie(self):
+        print("global interrupt enable register")
+        self.write(self.REG_ADDR_GIE, 0x01)
+        print("enable gie successful")
+
+    def disable_gie(self):
+        print("global interrupt enable register")
+        self.write(self.REG_ADDR_GIE, 0x01)
+        print("disable gie successful")
+
+    def enable_done_intr(self):
+        print("ap_done interrupt enable register")
+        self.write(self.REG_ADDR_IER, 0x01)
+        print("enable ap_done interrupt successful")
+
+    def clear_done_status(self):
+        print("ap_done register clear")
+        self.write(self.REG_ADDR_ISR, 0x01)
+        print("clear ap_done interrupt successful")
+
+    def set_single_bit(self, addr, idx):
+        self.write(addr, 1 << idx)
+
+    def ctrl_start(self):
+        self.write(0x00, 0x01)  # ap_start = 1
+
+    def wait_until_done(self):
+        while (self.read(0x00) & 0x2) == 0:  # Wait for ap_done
+            time.sleep(0.001)
+
+    def set_input(self, idx, buffer):
+
+        print(
+            f"input {self.INP_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}"
+        )
+        self.write(self.REG_ADDR_INP_PTRs[idx], buffer.physical_address)
+        self.write(self.REG_ADDR_INP_PTRs[idx] + 4, 0)
+        buffer.flush()
+
+    def set_output(self, idx, buffer):
+
+        print(
+            f"output {self.OUT_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}"
+        )
+        self.write(self.REG_ADDR_OUT_PTRs[idx], buffer.physical_address)
+        self.write(self.REG_ADDR_OUT_PTRs[idx] + 4, 0)
 
     def set_amt_query(self, val):
         print(f"amount of queries will be set to: {val} at address: {hex(self.REG_ADDR_BATCH_SIZE)}")
         self.write(self.REG_ADDR_BATCH_SIZE, val)
 
-    def transfer(self, input_buffer, output_buffer, intr, profile = True):
+    def prepare_intr(self):
+        print("prepare your interrupt")
+        self.enable_gie()
+        self.enable_done_intr()
+        self.clear_done_status()
+        print("----------------------")
 
-        # check availability of dma
-        assert self.dma is not None, "dma is not assigned"
-        # flush the buffer first
-        input_buffer.flush()
-        self.set_amt_query(input_buffer.shape[0])
+    def build_event_and_run(self, intr, profile):
 
         async def wait_for_acc():
             exec_time = 0
             print("starting the accelerator")
-            # Start receive (PL → PS)
             if profile:
                 t_start = time.perf_counter()
-            self.dma.recvchannel.transfer(output_buffer)
 
+            # Start receive (PL → PS)
             # Start send (PS → PL)
-            self.dma.sendchannel.transfer(input_buffer)
+            self.ctrl_start()
 
             # Wait for complete
             await intr.wait()
@@ -115,17 +176,30 @@ class HLS4ML_IP(DefaultIP):
                 t_end = time.perf_counter()
                 exec_time = t_end - t_start
                 print(f"Accelerator execution time: \
-                      {(t_end - t_start) * 1e3:.3f} ms")
-
+                      {(exec_time) * 1e3:.3f} ms")
 
             print("accelerator has finished")
+
             return exec_time if profile else None
 
         # get event loop from asyncio
         loop = asyncio.get_event_loop()
+        # build task
         task = loop.create_task(wait_for_acc())
-        # loop until end
-        exec_time = loop.run_until_complete(task)
+        # run and return whatever inside the wait_for_acc return
+        return loop.run_until_complete(task)
+
+    def transfer(self, input_buffer, output_buffer, intr, profile = True):
+
+        # flush the buffer first
+        input_buffer.flush()
+        # prepare the data
+        self.set_input(0, input_buffer)
+        self.set_output(0, output_buffer)
+        self.set_amt_query(input_buffer.shape[0])
+        self.prepare_intr()
+        # run and get the profile data
+        exec_time = self.build_event_and_run(intr, profile)
         # invalidate the output buffer
         output_buffer.invalidate()
         # it will return 0 if the profile is not enable

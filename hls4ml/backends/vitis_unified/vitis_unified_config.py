@@ -111,11 +111,12 @@ class VitisUnifiedConfig:
     def get_driver_file(self):
         """Return driver filename for current settings"""
         board_info = self.get_board_info()
-        driver_file = board_info.get('python_drivers', {}).get(self.axi_mode)
+        driver_file = board_info.get(self.axi_mode, {}).get('python_driver')
         if not driver_file:
             raise Exception(
                 f'No python_driver for axi_mode "{self.axi_mode}" in supported_boards.json for board "{self.board}"'
             )
+        return driver_file
 
     def get_driver_template_path(self):
         """Return absolute path to main driver template for current board.

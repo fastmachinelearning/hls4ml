@@ -7,14 +7,12 @@ from pynq import DefaultIP   # import the ip connector library for extension
 from pynq import Interrupt
 from pynq import PL
 
-import axi_master_driver
 import asyncio
 import numpy as np
 import os
 import subprocess
 import re
 import time
-
 
 class NeuralNetworkOverlay(Overlay):
     def __init__(
@@ -56,8 +54,7 @@ class NeuralNetworkOverlay(Overlay):
         # reset the PL
         PL.reset()
         # set interrupt controller
-        my_interrupt = Interrupt("myproject_axi_master_1/interrupt")
-        # hls-fpga-machine-learning insert ip
+        my_interrupt = Interrupt("<TOP_WRAPPER_NAME>/interrupt")
         ip = self.<TOP_WRAPPER_NAME>
 
         if encode is not None:
@@ -71,18 +68,6 @@ class NeuralNetworkOverlay(Overlay):
         if profile:
             return self.output_buffer, exec_time
         return self.output_buffer
-
-import os
-import re
-import subprocess
-import time
-import asyncio
-import numpy as np
-
-from pynq import DefaultIP  # import the ip connector library for extension
-from pynq import Overlay  # import the overlay
-from pynq import allocate  # import for CMA (contingeous memory allocation)
-from pynq import Interrupt
 
 class HLS4ML_IP(DefaultIP):
     def __init__(self, description):
@@ -199,7 +184,6 @@ class HLS4ML_IP(DefaultIP):
 
         # get event loop from asyncio
         loop = asyncio.get_event_loop()
-
         # build task
         task = loop.create_task(wait_for_acc())
         # run and return whatever inside the wait_for_acc return
@@ -209,18 +193,14 @@ class HLS4ML_IP(DefaultIP):
 
         # flush the buffer first
         input_buffer.flush()
-
         # prepare the data
         self.set_input(0, input_buffer)
         self.set_output(0, output_buffer)
         self.set_amt_query(input_buffer.shape[0])
         self.prepare_intr()
-
         # run and get the profile data
         exec_time = self.build_event_and_run(intr, profile)
-
         # invalidate the output buffer
         output_buffer.invalidate()
-
         # it will return 0 if the profile is not enable
         return exec_time
