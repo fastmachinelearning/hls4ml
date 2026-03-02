@@ -24,9 +24,6 @@ class VitisUnifiedConfig:
         # [platform]<-->[in_stream_buf_size]<-->[hls]<-->[out_stream_buf_size]<-->[platform]
         self.in_stream_buf_size = self.config['VitisUnifiedConfig']['in_stream_buf_size']
         self.out_stream_buf_size = self.config['VitisUnifiedConfig']['out_stream_buf_size']
-        # axi stream tlast buffer size
-        self.stream_tlast_buf_size = self.config['VitisUnifiedConfig']['stream_tlast_buf_size']
-
         # Platform is resolved from supported_boards.json based on board + axi_mode
         board_info = self.supported_boards.get(self.board, {})
         mode_config = board_info.get(self.axi_mode, {})
@@ -149,9 +146,6 @@ class VitisUnifiedConfig:
 
     def get_out_stream_buf_size(self):
         return self.out_stream_buf_size
-
-    def get_stream_tlast_buf_size(self):
-        return self.stream_tlast_buf_size
 
     def get_XPFMPath(self):
         return self._platform_path

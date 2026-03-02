@@ -327,7 +327,7 @@ fi
                             )
                             newline += indent + f'hls::stream<{self._get_dma_type_name()}> {out_stream};\n'
                             newline += indent + self._get_top_wrap_func_name(model, False) + '('
-                            newline += inp_stream + ', ' + out_stream + ');\n'
+                            newline += inp_stream + ', ' + out_stream + ', 1);\n'
                             newline += (
                                 indent + f'nnet::convert_data_axis<{dtype},{dtype}, N_OUT>({out_stream}, {out_func});\n'
                             )
@@ -388,19 +388,18 @@ fi
                         + indent
                         + '#pragma HLS INTERFACE axis port=axi_output_stream\n'
                         + indent
-                        + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
+                        + '#pragma HLS INTERFACE s_axilite port=return bundle=control\n'
+                        + indent
+                        + '#pragma HLS INTERFACE s_axilite port=batch_size bundle=control\n'
                     )
                 elif '// hls-fpga-machine-learning insert stream decl' in line:
                     in_depth = model.get_input_variables()[0].pragma[1]
                     out_depth = model.get_output_variables()[0].pragma[1]
-                    tlast_depth = self.vitis_unified_config.get_stream_tlast_buf_size()
                     newline = ''
                     newline += indent + f'static hls::stream<{inp.type.name}> model_input_stream("model_input");\n'
                     newline += indent + f'static hls::stream<{out.type.name}> model_output_stream("model_output");\n\n'
-                    newline += indent + 'static hls::stream<bool> model_tlast_stream("model_tlast");\n\n'
                     newline += indent + f'#pragma HLS STREAM variable=model_input_stream depth={in_depth}\n'
                     newline += indent + f'#pragma HLS STREAM variable=model_output_stream depth={out_depth}\n'
-                    newline += indent + f'#pragma HLS STREAM variable=model_tlast_stream depth={tlast_depth}\n'
                 elif 'INPUT_LAYER_TYPE' in line:
                     newline = line.replace('INPUT_LAYER_TYPE', inp.type.name)
                 elif 'OUTPUT_LAYER_TYPE' in line:
@@ -663,6 +662,7 @@ fi
                     else:
                         input_ios.append('inputs')
                         output_ios.append('outputs')
+                        constant_ios.append('1')
 
                     all_vars = ' ,'.join(filter(None, [*input_ios, *output_ios, *bram_ios, *constant_ios]))
                     top_level = indent + f'{self._get_top_wrap_func_name(model, self._is_axi_master())}({all_vars});\n'
