@@ -884,6 +884,8 @@ class LiberoWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
+        if not self.should_write_tar(model):
+            return
         tar_path = Path(model.config.get_output_dir() + '.tar.gz')
         tar_path.unlink(missing_ok=True)
         with tarfile.open(tar_path, mode='w:gz') as archive:
@@ -903,7 +905,5 @@ class LiberoWriter(Writer):
         self.write_nnet_utils(model)
         self.write_generated_code(model)
         self.write_yml(model)
-        write_tar = model.config.get_writer_config().get('WriteTar', False)
-        if write_tar:
-            self.write_tar(model)
+        self.write_tar(model)
         print('Done')
