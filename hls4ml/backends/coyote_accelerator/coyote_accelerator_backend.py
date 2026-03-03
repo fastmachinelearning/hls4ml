@@ -35,6 +35,15 @@ class CoyoteAcceleratorBackend(VitisBackend):
         ip_flow_requirements = get_flow('vitis:ip').requires.copy()
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
+        ###
+        # Register the fifo depth optimization flow which is different from the one for vivado
+        fifo_depth_opt_passes = [
+            'coyoteaccelerator:fifo_depth_optimization'
+        ] + writer_passes  # After optimization, a new project will be written
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)
+        ###
+
     def compile(self, model):
         """
         Compiles the hls4ml model for software emulation
@@ -67,6 +76,7 @@ class CoyoteAcceleratorBackend(VitisBackend):
         self,
         model,
         device: str = 'u55c',
+        aclk_freq: float = 250,
         reset: bool = False,
         csim: bool = True,
         synth: bool = True,
@@ -85,6 +95,7 @@ class CoyoteAcceleratorBackend(VitisBackend):
         Args:
             model (ModelGraph): hls4ml model to synthesize
             device (str, optional): Target Alveo FPGA card; currently supported u55c, u280 and u250
+            aclk_freq (float, optional): System/shell clock frequency
             reset (bool, optional): Reset HLS project, if a previous one is found
             csim (bool, optional): Run C-Simulation of the HLS project
             synth (bool, optional): Run HLS synthesis
@@ -115,6 +126,7 @@ class CoyoteAcceleratorBackend(VitisBackend):
             f'cmake ../../  '
             f'-DFLOW=hw '
             f'-DFDEV_NAME={device} '
+            f'-DACLK_F={aclk_freq} '
             f'-DBUILD_OPT={int(timing_opt)} '
             f'-DEN_HLS_RESET={int(reset)} '
             f'-DEN_HLS_CSIM={int(csim)} '

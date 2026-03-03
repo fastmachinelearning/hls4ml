@@ -3,7 +3,7 @@ import stat
 import glob
 import numpy as np
 from pathlib import Path
-from shutil import copyfile, copytree, move
+from shutil import copyfile, copytree, move, rmtree
 
 from hls4ml.writer.vitis_writer import VitisWriter
 
@@ -18,12 +18,13 @@ class CoyoteAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model
         """
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        srcpath = os.path.join(filedir, '../contrib/Coyote/')
-        dstpath = f'{model.config.get_output_dir()}/Coyote'
-        copytree(srcpath, dstpath)
+        if not os.path.exists(f'{model.config.get_output_dir()}/Coyote'):
+            filedir = os.path.dirname(os.path.abspath(__file__))
+            srcpath = os.path.join(filedir, '../contrib/Coyote/')
+            dstpath = f'{model.config.get_output_dir()}/Coyote'
+            copytree(srcpath, dstpath)
 
-    def restructure_dir(self, model):  
+    def restructure_dir(self, model):
         """
         Simply moves around some files; these files were generated from the Vitis backend
         For a cleaner integration with the rest of the Coyote library, these are
@@ -501,7 +502,7 @@ class CoyoteAcceleratorWriter(VitisWriter):
         f.close()
         fout.close()
 
-    def write_hls(self, model):    
+    def write_hls(self, model):
         """
         Write the HLS project. Most of the functionality inherited from VitisWriter;
         some additional functionality added for Coyote specifically.
@@ -509,6 +510,12 @@ class CoyoteAcceleratorWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model
         """
+
+        if os.path.exists(model.config.get_output_dir() + '/Coyote'):
+            rmtree(model.config.get_output_dir() + '/Coyote')
+        if os.path.exists(model.config.get_output_dir() + '/src'):
+            rmtree(model.config.get_output_dir() + '/src')
+
         # General hls4ml write proces, inherited from Vitis Writer
         self.write_project_dir(model)
         self.write_project_cpp(model)
@@ -520,7 +527,7 @@ class CoyoteAcceleratorWriter(VitisWriter):
         self.write_nnet_utils(model)
         self.write_nnet_utils_overrides(model)
         self.write_generated_code(model)
-        
+
         # Coyote-specific writes, implemented in this file
         self.write_coyote(model)
         self.write_model_wrapper(model)
@@ -529,5 +536,5 @@ class CoyoteAcceleratorWriter(VitisWriter):
         self.write_build_script(model)
         self.restructure_dir(model)
         self.write_yml(model)
-        
+
         print('Done')
