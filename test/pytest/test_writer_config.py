@@ -67,6 +67,7 @@ def test_write_tar(test_case_id, keras_model, write_tar, backend):
         ('false', False),
         ('1', True),
     ],
+    ids=['write_tar_env_false', 'write_tar_env_true'],
 )
 def test_write_tar_env_override(test_case_id, keras_model, backend, monkeypatch, env_write_tar, expected_tar):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
