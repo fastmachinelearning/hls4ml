@@ -257,7 +257,8 @@ if {$opt(bitfile)} {
         set ip_repo_path ${abs_path_dir}/${project_name}_prj/solution1/impl/ip
         file mkdir xclbin_files
         cd xclbin_files
-        if {[catch {exec v++ -t hw --platform $platform --link ../xo_files/${project_name}_kernel.xo -o ${project_name}_kernel.xclbin --user_ip_repo_paths $ip_repo_path >@ stdout} err]} {
+        if {[catch {exec v++ -t hw --platform $platform --link ../xo_files/${project_name}_kernel.xo -o \
+            ${project_name}_kernel.xclbin --user_ip_repo_paths $ip_repo_path >@ stdout} err]} {
             puts "ERROR: Something went wrong running v++. Check the Vitis/Vivado logs."
             cd $abs_path_dir
             exit 1
