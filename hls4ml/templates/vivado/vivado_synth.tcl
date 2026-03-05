@@ -33,6 +33,8 @@ proc dump_statistics { outputDir reportBase stage_name} {
   set BIOB 0
   set DSPs 0
   set TotPower 0
+  set DynamicPower 0
+  set StaticPower 0
   set design_slack 0
   set design_req 0
   set design_delay 0
@@ -50,6 +52,8 @@ proc dump_statistics { outputDir reportBase stage_name} {
   regexp --  {\s*DSPs\s*\|\s*([^[:blank:]]+)} $util_rpt ignore DSPs
   set power_rpt [report_power -return_string]
   regexp --  {\s*Total On-Chip Power \(W\)\s*\|\s*([^[:blank:]]+)} $power_rpt ignore TotPower
+  regexp --  {\s*Dynamic \(W\)\s*\|\s*([^[:blank:]]+)} $power_rpt ignore DynamicPower
+  regexp --  {\s*Device Static \(W\)\s*\|\s*([^[:blank:]]+)} $power_rpt ignore StaticPower
   set Timing_Paths [get_timing_paths -max_paths 1 -nworst 1 -setup]
   if { [expr {$Timing_Paths == ""}] } {
     set design_slack 0
@@ -96,6 +100,8 @@ proc dump_statistics { outputDir reportBase stage_name} {
   puts $ofile_json "    \"XILINX_IOPIN\": \"$BIOB\","
   puts $ofile_json "    \"XILINX_DSPS\": \"$DSPs\","
   puts $ofile_json "    \"XILINX_POWER\": \"$TotPower\","
+  puts $ofile_json "    \"XILINX_POWER_DYNAMIC\": \"$DynamicPower\","
+  puts $ofile_json "    \"XILINX_POWER_STATIC\": \"$StaticPower\","
   puts $ofile_json "    \"XILINX_CLOCK_SLACK\": \"$design_slack\""
   puts $ofile_json "  \}"
   puts $ofile_json "\}"
