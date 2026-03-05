@@ -68,27 +68,7 @@ proc dump_statistics { outputDir reportBase stage_name} {
   if { [expr {$design_req == ""}] } {
     set design_req 0
   }
-#   set design_delay [expr {$design_req - $design_slack}]
-#   file delete -force $reportXml
-#   set ofile_report [open $reportXml w]
-#   puts $ofile_report "<?xml version=\"1.0\"?>"
-#   puts $ofile_report "<document>"
-#   puts $ofile_report "  <application>"
-#   puts $ofile_report "    <section stringID=\"XILINX_SYNTHESIS_SUMMARY\">"
-#   puts $ofile_report "      <item stringID=\"XILINX_SLICE\" value=\"$Slice\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_SLICE_REGISTERS\" value=\"$SliceRegisters\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_SLICE_LUTS\" value=\"$SliceLUTs\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_BLOCK_RAMFIFO\" value=\"$BRAMFIFO\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_DRAM\" value=\"$DRAM\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_IOPIN\" value=\"$BIOB\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_DSPS\" value=\"$DSPs\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_POWER\" value=\"$TotPower\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_DESIGN_DELAY\" value=\"$design_delay\"/>"
-#   puts $ofile_report "      <item stringID=\"XILINX_CLOCK_SLACK\" value=\"$design_slack\"/>"
-#   puts $ofile_report "    </section>"
-#   puts $ofile_report "  </application>"
-#   puts $ofile_report "</document>"
-#   close $ofile_report
+  
   set ofile_json [open $reportJson w]
   puts $ofile_json "\{"
   puts $ofile_json "  \"XILINX_SYNTHESIS_SUMMARY\": \{"
