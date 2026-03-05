@@ -102,7 +102,8 @@ proc add_vcd_instructions_tcl {} {
 # Generate RTL simulation JSON report from transaction file (latency and II in clock cycles)
 proc generate_rtl_sim_report { project_name } {
     set transaction_file ${project_name}_prj/solution1/sim/verilog/${project_name}.performance.result.transaction.xml
-    set report_json rtl_sim_${project_name}_report.json
+    file mkdir vivado_reports
+    set report_json vivado_reports/rtl_sim_${project_name}_report.json
     if {![file exists $transaction_file]} {
         puts "WARNING: Transaction file not found: $transaction_file (skipping RTL sim report)"
         return

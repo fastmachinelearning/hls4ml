@@ -243,10 +243,41 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f = open(oldfile)
         fout = open(newfile, 'w')
 
+        bitfile_block = '''
+if {$opt(bitfile)} {
+    puts "***** BITFILE / XCLBIN GENERATION *****"
+    set time_start [clock clicks -milliseconds]
+    set abs_path_dir [file normalize [pwd]]
+    if {[string match "alveo*" $board]} {
+        file mkdir xo_files
+        if {[catch {exec vivado -mode batch -source design.tcl >@ stdout} err]} {
+            puts "ERROR: Something went wrong running design.tcl. Check the Vivado logs."
+            exit 1
+        }
+        set ip_repo_path ${abs_path_dir}/${project_name}_prj/solution1/impl/ip
+        file mkdir xclbin_files
+        cd xclbin_files
+        if {[catch {exec v++ -t hw --platform $platform --link ../xo_files/${project_name}_kernel.xo -o ${project_name}_kernel.xclbin --user_ip_repo_paths $ip_repo_path >@ stdout} err]} {
+            puts "ERROR: Something went wrong running v++. Check the Vitis/Vivado logs."
+            cd $abs_path_dir
+            exit 1
+        }
+        cd $abs_path_dir
+    } else {
+        if {[catch {exec vivado -mode batch -source design.tcl >@ stdout} err]} {
+            puts "ERROR: Something went wrong running design.tcl. Check the Vivado logs."
+            exit 1
+        }
+    }
+    set time_end [clock clicks -milliseconds]
+    report_time "BITFILE / XCLBIN GENERATION" $time_start $time_end
+}
+
+'''
         for line in f.readlines():
             if 'set_top' in line:
                 newline = line[:-1] + '_axi\n'  # remove the newline from the line end and append _axi for the new top
-                newline += f'add_files firmware/{model.config.get_project_name()}_axi.cpp -cflags "-std=c++0x"\n'
+                newline += f'add_files firmware/{model.config.get_project_name()}_axi.cpp -cflags $common_cflags\n'
             elif f'{model.config.get_project_name()}_cosim' in line:
                 newline = line.replace(
                     f'{model.config.get_project_name()}_cosim',
@@ -254,6 +285,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 )
             elif '${project_name}.tcl' in line:
                 newline = line.replace('${project_name}.tcl', '${project_name}_axi.tcl')
+            elif line.strip() == 'exit':
+                newline = bitfile_block + line
             else:
                 newline = line
             fout.write(newline)
@@ -358,14 +391,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         fout.close()
         os.rename(newfile, oldfile)
 
-    def write_build_prj_override(self, model):
-        """Overwrite build_prj.tcl with VivadoAccelerator template (includes bitfile generation)."""
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        copyfile(
-            os.path.join(filedir, '../templates/vivado_accelerator/build_prj.tcl'),
-            f'{model.config.get_output_dir()}/build_prj.tcl',
-        )
-
     def write_build_opt_override(self, model):
         """Overwrite build_opt.tcl with VivadoAccelerator template (includes bitfile option)."""
         filedir = os.path.dirname(os.path.abspath(__file__))
@@ -443,7 +468,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         )
         super().write_hls(model)
         self.write_board_script(model)
-        self.write_build_prj_override(model)
         self.write_build_opt_override(model)
         self.write_driver(model)
         self.write_wrapper_test(model)

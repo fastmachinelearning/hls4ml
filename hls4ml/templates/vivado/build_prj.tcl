@@ -4,6 +4,8 @@
 
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
+# Vivado makefiles treat DEBUG as compiler flags; drop shell DEBUG=release, etc.
+if {[info exists ::env(DEBUG)]} { unset ::env(DEBUG) }
 source [file join $tcldir build_opt.tcl]
 
 proc remove_recursive_log_wave {} {
@@ -100,9 +102,11 @@ proc add_vcd_instructions_tcl {} {
 }
 
 # Generate RTL simulation JSON report from transaction file (latency and II in clock cycles)
-proc generate_rtl_sim_report { project_name } {
-    set transaction_file ${project_name}_prj/solution1/sim/verilog/${project_name}.performance.result.transaction.xml
-    set report_json rtl_sim_${project_name}_report.json
+# top_name: top function name (for VivadoAccelerator use ${project_name}_axi, otherwise ${project_name})
+proc generate_rtl_sim_report { top_name project_name } {
+    set transaction_file ${project_name}_prj/solution1/sim/verilog/${top_name}.performance.result.transaction.xml
+    file mkdir vivado_reports
+    set report_json vivado_reports/rtl_sim_${project_name}_report.json
     if {![file exists $transaction_file]} {
         puts "WARNING: Transaction file not found: $transaction_file (skipping RTL sim report)"
         return
@@ -218,9 +222,10 @@ if {$opt(reset)} {
 } else {
     open_project ${project_name}_prj
 }
+set common_cflags "-std=c++0x -DHLS_NO_XIL_FPO_LIB"
 set_top ${project_name}
-add_files firmware/${project_name}.cpp -cflags "-std=c++0x"
-add_files -tb ${project_name}_test.cpp -cflags "-std=c++0x"
+add_files firmware/${project_name}.cpp -cflags $common_cflags
+add_files -tb ${project_name}_test.cpp -cflags $common_cflags
 add_files -tb firmware/weights
 add_files -tb tb_data
 if {$opt(reset)} {
@@ -256,7 +261,7 @@ if {$opt(synth)} {
 if {$opt(cosim)} {
     puts "***** C/RTL SIMULATION *****"
     # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
-    add_files -tb ${project_name}_test.cpp -cflags "-std=c++0x -DRTL_SIM"
+    add_files -tb ${project_name}_test.cpp -cflags "$common_cflags -DRTL_SIM"
     set time_start [clock clicks -milliseconds]
 
     cosim_design -trace_level all -setup
@@ -278,11 +283,11 @@ if {$opt(cosim)} {
     set time_end [clock clicks -milliseconds]
     puts "INFO:"
     if {[string equal "$backend" "vivadoaccelerator"]} {
-        set report_path [generate_rtl_sim_report ${project_name}_axi]
+        set report_path [generate_rtl_sim_report ${project_name}_axi $project_name]
         puts [read [open $report_path r]]
         #puts [read [open ${project_name}_prj/solution1/sim/report/${project_name}_axi_cosim.rpt r]]
     } else {
-        set report_path [generate_rtl_sim_report ${project_name}]
+        set report_path [generate_rtl_sim_report ${project_name} $project_name]
         puts [read [open $report_path r]]
         # puts [read [open ${project_name}_prj/solution1/sim/report/${project_name}_cosim.rpt r]]
     }
