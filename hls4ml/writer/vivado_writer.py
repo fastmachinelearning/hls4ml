@@ -984,6 +984,11 @@ class VivadoWriter(Writer):
         dstpath = f'{model.config.get_output_dir()}/vivado_synth.tcl'
         copyfile(srcpath, dstpath)
 
+        # statistics.tcl
+        srcpath = (filedir / '../templates/vivado/statistics.tcl').resolve()
+        dstpath = f'{model.config.get_output_dir()}/statistics.tcl'
+        copyfile(srcpath, dstpath)
+
         # build_lib.sh
         build_lib_src = (filedir / '../templates/vivado/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()

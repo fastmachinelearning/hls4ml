@@ -11,7 +11,7 @@ my-hls-test
 *.tar.gz
 docs/_build
 docs/autodoc/*
-hls4mlprj_*
+test/pytest/*_test_*
 *~
 *.ipynb_checkpoints/
 *.bak
