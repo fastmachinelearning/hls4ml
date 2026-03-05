@@ -68,7 +68,7 @@ proc dump_statistics { outputDir reportBase stage_name} {
   if { [expr {$design_req == ""}] } {
     set design_req 0
   }
-  
+
   set ofile_json [open $reportJson w]
   puts $ofile_json "\{"
   puts $ofile_json "  \"XILINX_SYNTHESIS_SUMMARY\": \{"

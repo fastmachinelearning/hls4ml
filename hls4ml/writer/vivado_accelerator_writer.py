@@ -243,7 +243,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f = open(oldfile)
         fout = open(newfile, 'w')
 
-        bitfile_block = '''
+        bitfile_block = """
 if {$opt(bitfile)} {
     puts "***** BITFILE / XCLBIN GENERATION *****"
     set time_start [clock clicks -milliseconds]
@@ -273,7 +273,7 @@ if {$opt(bitfile)} {
     report_time "BITFILE / XCLBIN GENERATION" $time_start $time_end
 }
 
-'''
+"""
         for line in f.readlines():
             if 'set_top' in line:
                 newline = line[:-1] + '_axi\n'  # remove the newline from the line end and append _axi for the new top
@@ -433,10 +433,10 @@ if {$opt(bitfile)} {
         f.write('variable maximum_size\n')
         f.write('set maximum_size {}\n'.format(model.config.get_config_value('MaximumSize', '4096')))
         f.write('variable board\n')
-        f.write('set board "{}"\n'.format(self.vivado_accelerator_config.get_board()))
+        f.write(f'set board "{self.vivado_accelerator_config.get_board()}"\n')
         if self.vivado_accelerator_config.get_board().startswith('alveo'):
             f.write('variable platform\n')
-            f.write('set platform "{}"\n'.format(self.vivado_accelerator_config.get_platform()))
+            f.write(f'set platform "{self.vivado_accelerator_config.get_platform()}"\n')
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write(f'set bit_width_hls_output {in_bit}\n')

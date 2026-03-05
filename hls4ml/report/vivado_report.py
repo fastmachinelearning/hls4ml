@@ -32,7 +32,6 @@ PATHS = {
     'timing_summary_system': ('{hls_dir}', 'vivado_reports', 'post_route_timing_summary_system.rpt'),
     'power_rpt_vivado': ('{hls_dir}', 'vivado_reports', 'post_route_power.rpt'),
     'power_rpt_system': ('{hls_dir}', 'vivado_reports', 'post_route_power_system.rpt'),
-
 }
 
 # Synthesis report (csynth.rpt)
@@ -124,7 +123,7 @@ def read_vivado_report(hls_dir, full_report=False):
 def _parse_project_script(path):
     prj_dir = None
     top_func_name = None
-    backend_name = "vivado"
+    backend_name = 'vivado'
 
     project_path = _path('project_tcl', hls_dir=path)
 
@@ -282,9 +281,7 @@ def _parse_vivado_synth_report(hls_dir):
 
 def _parse_transaction_file(sln_dir, solution, rtl, top_func_name):
     """Parse transaction file for detailed latency/interval stats. Returns dict to merge into CosimReport."""
-    transaction_file = _path(
-        'transaction_file', sln_dir=sln_dir, solution=solution, rtl=rtl.lower(), top=top_func_name
-    )
+    transaction_file = _path('transaction_file', sln_dir=sln_dir, solution=solution, rtl=rtl.lower(), top=top_func_name)
     if not os.path.isfile(transaction_file):
         return None
     cosim_transactions = {
@@ -306,12 +303,8 @@ def _parse_transaction_file(sln_dir, solution, rtl, top_func_name):
                     cosim_transactions['InitiationInterval']['avg'] += float(
                         (int(result[TX_INTERVAL_IDX]) - cosim_transactions['InitiationInterval']['avg']) / i
                     )
-                cosim_transactions['Latency']['min'] = min(
-                    int(result[TX_LATENCY_IDX]), cosim_transactions['Latency']['min']
-                )
-                cosim_transactions['Latency']['max'] = max(
-                    int(result[TX_LATENCY_IDX]), cosim_transactions['Latency']['max']
-                )
+                cosim_transactions['Latency']['min'] = min(int(result[TX_LATENCY_IDX]), cosim_transactions['Latency']['min'])
+                cosim_transactions['Latency']['max'] = max(int(result[TX_LATENCY_IDX]), cosim_transactions['Latency']['max'])
                 cosim_transactions['Latency']['avg'] += float(
                     (int(result[TX_LATENCY_IDX]) - cosim_transactions['Latency']['avg']) / i
                 )
@@ -336,10 +329,7 @@ def _parse_implementation_report(hls_dir, is_vivado_accelerator):
     with open(post_route_util_file) as f:
         for line in f.readlines():
             if re.search(r'\(top\)', line):
-                results = [
-                    _get_abs_and_percentage_values(elem)
-                    for elem in line.replace('|', '').split()[UTIL_SKIP_CELLS:]
-                ]
+                results = [_get_abs_and_percentage_values(elem) for elem in line.replace('|', '').split()[UTIL_SKIP_CELLS:]]
                 implementation_report['TotLUTs'] = results[UTIL_COL_TOTLUTS][0]
                 implementation_report['TotLUTs%'] = results[UTIL_COL_TOTLUTS][1]
                 implementation_report['LogicLUTs'] = results[UTIL_COL_LOGICLUTS][0]
@@ -425,7 +415,7 @@ def parse_vivado_report(hls_dir):
     if os.path.isfile(_path('project_tcl', hls_dir=hls_dir)):
         prj_dir, top_func_name, backend_name = _parse_project_script(hls_dir)
     else:
-        prj_dir, top_func_name, backend_name = None, None, "vivado"
+        prj_dir, top_func_name, backend_name = None, None, 'vivado'
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -440,7 +430,7 @@ def parse_vivado_report(hls_dir):
     if len(solutions) > 1:
         print(f'WARNING: Found {len(solutions)} solution(s) in {sln_dir}. Using the first solution.')
 
-    is_vivado_accelerator = "vivadoaccelerator" == backend_name
+    is_vivado_accelerator = 'vivadoaccelerator' == backend_name
 
     solution = solutions[0]
     report = {}
