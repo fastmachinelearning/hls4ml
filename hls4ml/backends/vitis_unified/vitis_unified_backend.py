@@ -109,7 +109,6 @@ class VitisUnifiedBackend(VitisBackend):
         output_type='float',
         in_stream_buf_size=128,
         out_stream_buf_size=128,
-        stream_tlast_buf_size=16,
         axi_mode='axi_master',
         **_,
     ):
@@ -131,7 +130,6 @@ class VitisUnifiedBackend(VitisBackend):
         config['VitisUnifiedConfig']['axi_mode'] = axi_mode
         config['VitisUnifiedConfig']['in_stream_buf_size'] = in_stream_buf_size
         config['VitisUnifiedConfig']['out_stream_buf_size'] = out_stream_buf_size
-        config['VitisUnifiedConfig']['stream_tlast_buf_size'] = stream_tlast_buf_size
 
         config['VitisUnifiedConfig']['Driver'] = driver
         config['VitisUnifiedConfig']['InputDtype'] = input_type  # float, double or ap_fixed<a,b>
