@@ -400,6 +400,13 @@ fi
                     newline += indent + f'static hls::stream<{out.type.name}> model_output_stream("model_output");\n\n'
                     newline += indent + f'#pragma HLS STREAM variable=model_input_stream depth={in_depth}\n'
                     newline += indent + f'#pragma HLS STREAM variable=model_output_stream depth={out_depth}\n'
+                elif '// hls-fpga-machine-learning insert stream parameter' in line:
+                    newline = line.replace(
+                        '// hls-fpga-machine-learning insert stream parameter',
+                        f'hls::stream<{inp.type.name}> &model_input_stream, '
+                        f'hls::stream<{out.type.name}> &model_output_stream',
+                    )
+
                 elif 'INPUT_LAYER_TYPE' in line:
                     newline = line.replace('INPUT_LAYER_TYPE', inp.type.name)
                 elif 'OUTPUT_LAYER_TYPE' in line:
