@@ -358,6 +358,22 @@ class VivadoAcceleratorWriter(VivadoWriter):
         fout.close()
         os.rename(newfile, oldfile)
 
+    def write_build_prj_override(self, model):
+        """Overwrite build_prj.tcl with VivadoAccelerator template (includes bitfile generation)."""
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        copyfile(
+            os.path.join(filedir, '../templates/vivado_accelerator/build_prj.tcl'),
+            f'{model.config.get_output_dir()}/build_prj.tcl',
+        )
+
+    def write_build_opt_override(self, model):
+        """Overwrite build_opt.tcl with VivadoAccelerator template (includes bitfile option)."""
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        copyfile(
+            os.path.join(filedir, '../templates/vivado_accelerator/build_opt.tcl'),
+            f'{model.config.get_output_dir()}/build_opt.tcl',
+        )
+
     def write_board_script(self, model):
         """
         Write the tcl scripts and kernel sources to create a Vivado IPI project for the VivadoAccelerator
@@ -391,6 +407,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
         f.write('variable maximum_size\n')
         f.write('set maximum_size {}\n'.format(model.config.get_config_value('MaximumSize', '4096')))
+        f.write('variable board\n')
+        f.write('set board "{}"\n'.format(self.vivado_accelerator_config.get_board()))
+        if self.vivado_accelerator_config.get_board().startswith('alveo'):
+            f.write('variable platform\n')
+            f.write('set platform "{}"\n'.format(self.vivado_accelerator_config.get_platform()))
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write(f'set bit_width_hls_output {in_bit}\n')
@@ -422,6 +443,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
         )
         super().write_hls(model)
         self.write_board_script(model)
+        self.write_build_prj_override(model)
+        self.write_build_opt_override(model)
         self.write_driver(model)
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
