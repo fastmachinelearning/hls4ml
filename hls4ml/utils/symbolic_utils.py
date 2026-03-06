@@ -1,3 +1,4 @@
+import os
 import subprocess
 import tempfile
 
@@ -166,8 +167,20 @@ def generate_operator_complexity(
                 hls_libs_path=hls_libs_path,
             )
             hls_model.write()
+            build_opts = (
+                'array set opt {\n'
+                '    reset      1\n'
+                '    csim       0\n'
+                '    synth      1\n'
+                '    cosim      0\n'
+                '    validation 0\n'
+                '    export     0\n'
+                '}\n'
+            )
+            with open(os.path.join(tmp_dir, 'build_opt.tcl'), 'w') as f:
+                f.write(build_opts)
             subprocess.run(
-                ['vivado_hls', '-f', 'build_prj.tcl', '"reset=1 synth=1 csim=0 cosim=0 validation=0 export=0"'],
+                ['vivado_hls', '-f', 'build_prj.tcl'],
                 cwd=tmp_dir,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
@@ -196,8 +209,20 @@ def generate_operator_complexity(
                 hls_libs_path=hls_libs_path,
             )
             hls_model.write()
+            build_opts = (
+                'array set opt {\n'
+                '    reset      1\n'
+                '    csim       0\n'
+                '    synth      1\n'
+                '    cosim      0\n'
+                '    validation 0\n'
+                '    export     0\n'
+                '}\n'
+            )
+            with open(os.path.join(tmp_dir, 'build_opt.tcl'), 'w') as f:
+                f.write(build_opts)
             subprocess.run(
-                ['vivado_hls', '-f', 'build_prj.tcl', '"reset=1 synth=1 csim=0 cosim=0 validation=0 export=0"'],
+                ['vivado_hls', '-f', 'build_prj.tcl'],
                 cwd=tmp_dir,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
