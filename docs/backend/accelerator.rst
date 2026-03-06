@@ -78,10 +78,10 @@ The ``predict`` method will send the input data to the PL and return the output 
 
 
 =================
-CoyoteAccelerator
+Coyote
 =================
 
-The **CoyoteAccelerator** backend of ``hls4ml`` leverages the `Coyote shell <https://github.com/fpgasystems/Coyote>`_ to easily deploy models on PCIe-attached Alveo FPGAs.
+The **Coyote** backend of ``hls4ml`` leverages the `Coyote shell <https://github.com/fpgasystems/Coyote>`_ to easily deploy models on PCIe-attached Alveo FPGAs.
 Coyote is an open-source, research shell that facilitates the deployment of applications on FPGAs, as well as the integration of FPGAs into larger computer systems.
 Some of its features include:
 - Multi-tenancy
@@ -103,6 +103,8 @@ This overlay can be used to provide inputs, run inference and retrieve the predi
 functon to load the model bitstream and driver for some clusters. On others, the users need to manually load the bitstream and driver.
 For guidance, see the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
 
+.. note:: To use the Coyote backend, hls4ml must be cloned with submodules using ``git clone --recurse-submodules``.
+
 C++ binary
 ================================
 
@@ -122,9 +124,9 @@ Similar to the ``VivadoAccelerator``backend, we first generate a bitstream from 
     hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                            hls_config=config,
                                                            output_dir='hls4ml_prj_coyote',
-                                                           backend='CoyoteAccelerator',
+                                                           backend='Coyote',
                                                            board='u55c')
-    hls4ml.build(bitfile=True)
+    hls_model.build(bitfile=True)
 
 After this command completes, the FPGA must be programmed with the bistream. Additionally, the Coyote driver must be loaded.
 For some platforms, Coyote provides utility functions to load the bitstream and driver. For others, this can be achieved using 
@@ -138,7 +140,7 @@ The ``predict`` method will send the input data to the FPGA and return the outpu
 
 .. code-block:: Python
 
-    from hls4ml.backends.coyote_accelerator.coyote_accelerator_overlay import CoyoteOverlay
+    from hls4ml.backends.coyote.coyote_overlay import CoyoteOverlay
 
     overlay = CoyoteOverlay('hls4ml_prj_coyote')
     y_hw = overlay.predict(x, (1, ), BATCH_SIZE)

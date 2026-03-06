@@ -3,9 +3,9 @@ import subprocess
 from hls4ml.model.flow import get_flow, register_flow
 from hls4ml.backends import VitisBackend, VivadoBackend
 
-class CoyoteAcceleratorBackend(VitisBackend):
+class CoyoteBackend(VitisBackend):
     """
-    The CoyoteAccelerator backend, which deploys hls4ml models on a PCIe-attached Alveo FPGA
+    The Coyote backend, which deploys hls4ml models on a PCIe-attached Alveo FPGA
     Underneath it uses the Coyote shell: https://github.com/fpgasystems/Coyote,
     which offers high-performance data movement, networking capabilities, multi-tenancy,
     partial reconfiguration etc. This backend has some similarities with the VitisAccelerator
@@ -24,12 +24,12 @@ class CoyoteAcceleratorBackend(VitisBackend):
     """
 
     def __init__(self):
-        super(VivadoBackend, self).__init__(name='CoyoteAccelerator')
+        super(VivadoBackend, self).__init__(name='Coyote')
         self._register_layer_attributes()
         self._register_flows()
 
     def _register_flows(self):
-        writer_passes = ['make_stamp', 'coyoteaccelerator:write_hls']
+        writer_passes = ['make_stamp', 'coyote:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=['vitis:ip'], backend=self.name)
 
         ip_flow_requirements = get_flow('vitis:ip').requires.copy()
@@ -38,7 +38,7 @@ class CoyoteAcceleratorBackend(VitisBackend):
         ###
         # Register the fifo depth optimization flow which is different from the one for vivado
         fifo_depth_opt_passes = [
-            'coyoteaccelerator:fifo_depth_optimization'
+            'coyote:fifo_depth_optimization'
         ] + writer_passes  # After optimization, a new project will be written
 
         register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)

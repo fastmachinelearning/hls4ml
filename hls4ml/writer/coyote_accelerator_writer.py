@@ -7,7 +7,7 @@ from shutil import copyfile, copytree, move, rmtree
 
 from hls4ml.writer.vitis_writer import VitisWriter
 
-class CoyoteAcceleratorWriter(VitisWriter):
+class CoyoteWriter(VitisWriter):
     def __init__(self):
         super().__init__()
 
@@ -200,7 +200,7 @@ class CoyoteAcceleratorWriter(VitisWriter):
             copyfile(srcpath + h, dstpath + h)
 
         # Coyote accelerator-specific overvwrites
-        srcpath = os.path.join(filedir, '../templates/coyote_accelerator/nnet_utils/')
+        srcpath = os.path.join(filedir, '../templates/coyote/nnet_utils/')
         dstpath = f'{model.config.get_output_dir()}/firmware/nnet_utils/'
         headers = [os.path.basename(h) for h in glob.glob(srcpath + '*.h')]
         for h in headers:
@@ -218,7 +218,7 @@ class CoyoteAcceleratorWriter(VitisWriter):
         filedir = Path(__file__).parent
         
         # build_lib.sh
-        build_lib_src = (filedir / '../templates/coyote_accelerator/build_lib.sh').resolve()
+        build_lib_src = (filedir / '../templates/coyote/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
             for line in src.readlines():
@@ -229,7 +229,7 @@ class CoyoteAcceleratorWriter(VitisWriter):
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
         # CMakeLists.txt
-        cmake_src = os.path.join(filedir, '../templates/coyote_accelerator/CMakeLists.txt')
+        cmake_src = os.path.join(filedir, '../templates/coyote/CMakeLists.txt')
         cmake_dst = f'{model.config.get_output_dir()}/CMakeLists.txt'
         with open(cmake_src) as src, open(cmake_dst, 'w') as dst:
             for line in src.readlines():
@@ -256,18 +256,18 @@ class CoyoteAcceleratorWriter(VitisWriter):
             os.makedirs(f'{model.config.get_output_dir()}/src/hls/model_wrapper')
         
         # model_wrapper.h
-        srcpath = (filedir / '../templates/coyote_accelerator/model_wrapper.hpp').resolve()
+        srcpath = (filedir / '../templates/coyote/model_wrapper.hpp').resolve()
         dstpath = f'{model.config.get_output_dir()}/src/hls/model_wrapper/model_wrapper.hpp'
         copyfile(srcpath, dstpath)
 
         # model_wrapper.cpp
-        f = open(os.path.join(filedir, '../templates/coyote_accelerator/model_wrapper.cpp'))
+        f = open(os.path.join(filedir, '../templates/coyote/model_wrapper.cpp'))
         fout = open(f'{model.config.get_output_dir()}/src/hls/model_wrapper/model_wrapper.cpp', 'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         if len(model_inputs) > 1 or len(model_outputs) > 1:
-            raise RuntimeError('CoyoteAccelerator backend currently only supports one input and one output')
+            raise RuntimeError('Coyote backend currently only supports one input and one output')
 
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
@@ -310,12 +310,12 @@ class CoyoteAcceleratorWriter(VitisWriter):
         fout.close()
 
         # vfpga_top.svh
-        srcpath = (filedir / '../templates/coyote_accelerator/vfpga_top.svh').resolve()
+        srcpath = (filedir / '../templates/coyote/vfpga_top.svh').resolve()
         dstpath = f'{model.config.get_output_dir()}/src/vfpga_top.svh'
         copyfile(srcpath, dstpath)
 
         # init_ip.tcl for any additional IPs that may be needed for the model (e.g., ILA for debugging) --- UNUSED FOR NOW
-        # srcpath = (filedir / '../templates/coyote_accelerator/init_ip.tcl').resolve()
+        # srcpath = (filedir / '../templates/coyote/init_ip.tcl').resolve()
         # dstpath = f'{model.config.get_output_dir()}/src/init_ip.tcl'
 
         copyfile(srcpath, dstpath)
@@ -336,13 +336,13 @@ class CoyoteAcceleratorWriter(VitisWriter):
             os.makedirs(f'{model.config.get_output_dir()}/src/')
 
         # myproject_host.cpp
-        f = open(os.path.join(filedir, '../templates/coyote_accelerator/myproject_host.cpp'))
+        f = open(os.path.join(filedir, '../templates/coyote/myproject_host.cpp'))
         fout = open(f'{model.config.get_output_dir()}/src/{model.config.get_project_name()}_host.cpp', 'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         if len(model_inputs) > 1 or len(model_outputs) > 1:
-            raise RuntimeError('CoyoteAccelerator backend currently only supports one input and one output')
+            raise RuntimeError('Coyote backend currently only supports one input and one output')
 
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
@@ -363,12 +363,12 @@ class CoyoteAcceleratorWriter(VitisWriter):
         fout.close()
 
         # host_libs.hpp
-        srcpath = os.path.join(filedir, '../templates/coyote_accelerator/host_libs.hpp')
+        srcpath = os.path.join(filedir, '../templates/coyote/host_libs.hpp')
         dstpath = f'{model.config.get_output_dir()}/src/host_libs.hpp'
         copyfile(srcpath, dstpath)
 
         # host_libs.cpp
-        srcpath = os.path.join(filedir, '../templates/coyote_accelerator/host_libs.cpp')
+        srcpath = os.path.join(filedir, '../templates/coyote/host_libs.cpp')
         dstpath = f'{model.config.get_output_dir()}/src/host_libs.cpp'
         copyfile(srcpath, dstpath)
 
@@ -431,13 +431,13 @@ class CoyoteAcceleratorWriter(VitisWriter):
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
         
-        f = open(os.path.join(filedir, '../templates/coyote_accelerator/myproject_test.cpp'))
+        f = open(os.path.join(filedir, '../templates/coyote/myproject_test.cpp'))
         fout = open(f'{model.config.get_output_dir()}/src/{model.config.get_project_name()}_test.cpp', 'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         if len(model_inputs) > 1 or len(model_outputs) > 1:
-            raise RuntimeError('CoyoteAccelerator backend currently only supports one input and one output')
+            raise RuntimeError('Coyote backend currently only supports one input and one output')
 
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))

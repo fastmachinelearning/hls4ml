@@ -7,7 +7,7 @@
 
 // Coyote uses so-called vFPGAs: individual applications running in parallel on the FPGA
 // Users can deploy multiple vFPGAs on the same hardware, each with its own application
-// For now, the CoyoteAccelerator only supports a single vFPGA, though future extensions
+// For now, the Coyote only supports a single vFPGA, though future extensions
 // could easily allow multiple parallel instance of hls4ml models
 #define DEFAULT_VFPGA_ID 0
 

@@ -7,7 +7,7 @@ import numpy as np
 class CoyoteOverlay:
     """
     CoyoteOverlay class, similar to NeuralNetworkOverlay for the VivadoAccelerator backend
-    This class can be used to run model inference on the FPGA with the CoyoteAccelerator backend
+    This class can be used to run model inference on the FPGA with the Coyote backend
     """
     def __init__(self, path: str, project_name: str = 'myproject'):
         """
@@ -37,7 +37,7 @@ class CoyoteOverlay:
 
         self.coyote_lib.free_model_inference.argtypes = [ctypes.POINTER(ctypes.c_void_p)]
         
-    def program_hacc_fpga(self):
+    def program_ethz_hacc_fpga(self):
         """
         Utility function for loading the Coyote-hls4ml bitstream and driver
         on the ETH Zurich Heteregenous Accelerate Compute Cluster (HACC)
