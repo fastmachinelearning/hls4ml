@@ -36,3 +36,20 @@ class ResizeRemoveConstants(OptimizerPass):
         # Clean all the '' inputs
         node.inputs = list(filter(None, node.inputs))
         return True
+
+
+class AdjustResizeInputPrecision(OptimizerPass):
+    """
+    This optimizer makes sure that the input data type of a Resize layer matches the output data type of the previous layer.
+    """
+
+    def match(self, node):
+        is_match = isinstance(node, Resize) and not (
+            node.get_input_node().types['result_t'].precision == node.get_output_variable().type.precision
+        )
+        return is_match
+
+    def transform(self, model, node):
+        node.get_output_variable().type.precision = node.get_input_node().types['result_t'].precision
+
+        return True
