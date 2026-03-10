@@ -100,15 +100,8 @@ template <class data_T, class res_T, typename CONFIG_T> void sigmoid(const data_
 enum class softmax_implementation { latency = 0, legacy = 1, stable = 2, argmax = 3 };
 
 template <class data_T, typename CONFIG_T> inline unsigned softmax_stable_idx_from_real_val(const data_T x) {
-    // Number of address bits for table
-    static constexpr int N = ceillog2<CONFIG_T::table_size>::val;
-
-    // Slice the top N bits of the input
-    [[intel::fpga_register]] ac_int<N, false> y = x.template slc<N>(x.width - N - 1);
-    // If x is the most negative value, the slice will be 0, so we need to set the 0-th bit to ensure correctness
-    if (x != 0 && y == 0)
-        y[0] = 1;
-    return y.to_uint();
+    // Extract the lower 'width' bits of x
+    return x.template slc<data_T::width>(0).to_uint();
 }
 
 template <class data_T, typename CONFIG_T> inline unsigned softmax_latency_idx_from_real_val(const data_T x) {
@@ -121,7 +114,6 @@ template <class data_T, typename CONFIG_T> inline unsigned softmax_latency_idx_f
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(const data_T &data, res_T &res) {
-// Look-up tables
 #include "activation_tables/exp_table.tb"
 #include "activation_tables/invert_table.tb"
 
@@ -130,29 +122,34 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     [[intel::fpga_register]] auto x_max =
         reduce<typename data_T::value_type, CONFIG_T::n_in, Op_max<typename data_T::value_type>>(data.data(), op_max);
 
-    // For the diffs, use the same type as the input but force rounding and saturation
-    [[intel::fpga_register]] ac_fixed<data_T::value_type::width, data_T::value_type::i_width, true, AC_RND, AC_SAT>
-        d_xi_xmax[CONFIG_T::n_in];
+    // Normalize inputs: d = x_max - x
+    [[intel::fpga_register]] typename CONFIG_T::inp_norm_t d_xi_xmax[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        d_xi_xmax[i] = data[i] - x_max;
+        // HGQ stable: d = x_max - data
+        d_xi_xmax[i] = x_max - data[i];
     }
 
-    // Calculate all the e^x's
+    // Exponentials
     [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = exp_table[softmax_stable_idx_from_real_val<typename data_T::value_type, CONFIG_T>(d_xi_xmax[i])];
+        unsigned idx = softmax_stable_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T>(d_xi_xmax[i]);
+        exp_res[i] = exp_table[idx];
     }
 
-    // Explicitly sum previously calculated exponentials with an adder tree
-    Op_add<typename CONFIG_T::exp_table_t> op_add;
-    [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_sum =
-        reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+    // Sum of Exponentials
+    Op_add<typename CONFIG_T::accum_t> op_add;
+    [[intel::fpga_register]] typename CONFIG_T::accum_t exp_sum =
+        reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
-    // Multiply previously calculated exponetials with the reciprocal of the sum
-    [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-        invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
+    // Reciprocal of Sum
+    typename CONFIG_T::inv_inp_t exp_sum_cast = exp_sum;
+    unsigned inv_idx = softmax_stable_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T>(exp_sum_cast);
+
+    [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[inv_idx];
+
+    // Final Multiplication
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         res[i] = exp_res[i] * inv_exp_sum;
@@ -265,6 +262,45 @@ template <class data_T, class res_T, typename CONFIG_T> inline void softmax(cons
     }
 }
 
+// *************************************************
+//       Multidimensional Softmax
+// *************************************************
+
+// Helper to remap the config for the core softmax function
+template <class CONFIG_T> struct softmax_multidim_slice_config : CONFIG_T {
+    static constexpr unsigned n_in = CONFIG_T::n_slice;
+};
+
+template <class data_T, class res_T, typename CONFIG_T> inline void softmax_multidim(const data_T &data, res_T &res) {
+    using buffer_data_t = std::array<typename data_T::value_type, CONFIG_T::n_slice>;
+    using buffer_res_t = std::array<typename res_T::value_type, CONFIG_T::n_slice>;
+    using slice_config = softmax_multidim_slice_config<CONFIG_T>;
+
+    #pragma unroll
+    for (unsigned i = 0; i < CONFIG_T::n_outer; i++) {
+        #pragma unroll
+        for (unsigned k = 0; k < CONFIG_T::n_inner; k++) {
+
+            [[intel::fpga_register]] buffer_data_t buffer_in;
+            [[intel::fpga_register]] buffer_res_t buffer_out;
+
+            // Gather Phase
+            #pragma unroll
+            for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
+                unsigned idx = (i * CONFIG_T::n_slice * CONFIG_T::n_inner) + (j * CONFIG_T::n_inner) + k;
+                buffer_in[j] = data[idx];
+            }
+
+            nnet::softmax<buffer_data_t, buffer_res_t, slice_config>(buffer_in, buffer_out);
+
+            #pragma unroll
+            for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
+                unsigned idx = (i * CONFIG_T::n_slice * CONFIG_T::n_inner) + (j * CONFIG_T::n_inner) + k;
+                res[idx] = buffer_out[j];
+            }
+        }
+    }
+}
 // *************************************************
 //       TanH Activation
 // *************************************************
