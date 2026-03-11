@@ -43,6 +43,7 @@ optional-dependencies.optimization = [
   "ortools==9.4.1874",
   "packaging",
 ]
+optional-dependencies.pquant-ml = [ "pquant-ml>=0.0.1" ]
 optional-dependencies.profiling = [ "matplotlib", "pandas", "seaborn" ]
 optional-dependencies.qkeras = [
   "qkeras",

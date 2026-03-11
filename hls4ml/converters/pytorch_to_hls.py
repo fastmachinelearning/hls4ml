@@ -274,20 +274,41 @@ def parse_pytorch_model(config, verbose=True):
                 pytorch_class, layer_name, input_names, input_shapes, node, class_object, reader, config
             )
 
-            if verbose:
-                print(
-                    'Layer name: {}, layer type: {}, input shape: {}'.format(
-                        layer['name'],
-                        layer['class_name'],
-                        input_shapes,
+            if isinstance(layer, dict):
+                if verbose:
+                    print(
+                        'Layer name: {}, layer type: {}, input shape: {}'.format(
+                            layer['name'],
+                            layer['class_name'],
+                            input_shapes,
+                        )
                     )
-                )
-            layer_list.append(layer)
+                layer_list.append(layer)
 
-            assert output_shape is not None
-            output_shapes[layer['name']] = output_shape
+                assert output_shape is not None
+                output_shapes[layer['name']] = output_shape
 
-            layer_counter += 1
+                layer_counter += 1
+
+            else:
+                for idx, (lay, out_shape) in enumerate(zip(layer, output_shape)):
+                    if verbose:
+                        print(
+                            'Layer name: {}, layer type: {}, input shape: {}'.format(
+                                lay['name'],
+                                lay['class_name'],
+                                input_shapes,
+                            )
+                        )
+                    layer_list.append(lay)
+
+                    if idx < len(layer) - 1:
+                        inputs_map[lay['name']] = inputs_map.get(layer[idx + 1]['name'], layer[idx + 1]['name'])
+
+                    assert out_shape is not None
+                    output_shapes[lay['name']] = out_shape
+
+                    layer_counter += 1
 
         if node.op == 'placeholder':
             # 'placeholder' indicates an input layer. Multiple inputs are supported
