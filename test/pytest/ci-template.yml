@@ -15,6 +15,8 @@
     - pip install .${EXTRA_DEPS}
 
     # set up vivado_hls command
+    # TODO: For VivadoAccelerator full synthesis (vsynth/bitfile), export/provide the full Vivado toolchain (`vivado`),
+    # not only `vivado_hls`.
     - mkdir -p cmd_vivado_${VIVADO_VERSION}
     - echo '#!/bin/bash' > cmd_vivado_${VIVADO_VERSION}/vivado_hls
     - echo "apptainer exec --cleanenv --env LANG=C,LC_ALL=C /cvmfs/projects.cern.ch/hls4ml/vivado/${VIVADO_VERSION} vivado_hls \"\$@\"" >> cmd_vivado_${VIVADO_VERSION}/vivado_hls
