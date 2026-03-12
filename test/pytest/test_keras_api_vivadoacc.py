@@ -12,9 +12,11 @@ from tensorflow.keras.layers import (
 import hls4ml
 
 test_root_path = Path(__file__).parent
+VIVADOACC_BOARD = 'pynq-z2'
+VIVADOACC_PART = 'xc7z020clg400-1'
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'VivadoAccelerator'])
+@pytest.mark.parametrize('backend', ['VivadoAccelerator'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_dense(test_case_id, backend, io_type, synthesis_config):
     model = tf.keras.models.Sequential()
@@ -45,7 +47,13 @@ def test_dense(test_case_id, backend, io_type, synthesis_config):
     baseline_file_name = f'{test_case_id}.json'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        backend=backend,
+        io_type=io_type,
+        board=VIVADOACC_BOARD,
+        part=VIVADOACC_PART,
     )
 
     hls_model.compile()
@@ -64,4 +72,9 @@ def test_dense(test_case_id, backend, io_type, synthesis_config):
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
 
-    run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+    run_synthesis_test(
+        config=synthesis_config,
+        hls_model=hls_model,
+        baseline_file_name=baseline_file_name,
+        backend=backend,
+    )
