@@ -193,6 +193,7 @@ def _build_vivado(args, extra_args):
         action='store_true',
     )
     vivado_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
+    vivado_parser.add_argument('--fifo-opt', help='Optimize FIFO usage', action='store_true', default=False)
 
     if args.list_options:
         vivado_parser.print_help()
@@ -207,6 +208,7 @@ def _build_vivado(args, extra_args):
     validation = int(vivado_args.validation)
     export = int(vivado_args.export)
     vsynth = int(vivado_args.vivado_synthesis)
+    fifo_opt = int(vivado_args.fifo_opt)
     if vivado_args.all:
         csim = synth = cosim = validation = export = vsynth = 1
 
@@ -217,21 +219,23 @@ def _build_vivado(args, extra_args):
             print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
             sys.exit(1)
 
-    os.system(
-        (
-            'cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-            'validation={validation} export={export} vsynth={vsynth}"'
-        ).format(
-            dir=args.project,
-            reset=reset,
-            csim=csim,
-            synth=synth,
-            cosim=cosim,
-            validation=validation,
-            export=export,
-            vsynth=vsynth,
-        )
+    build_opts = (
+        'array set opt {\n'
+        f'    reset      {reset}\n'
+        f'    csim       {csim}\n'
+        f'    synth      {synth}\n'
+        f'    cosim      {cosim}\n'
+        f'    validation {validation}\n'
+        f'    export     {export}\n'
+        f'    vsynth     {vsynth}\n'
+        f'    fifo_opt   {fifo_opt}\n'
+        '}\n'
     )
+    tcl_path = os.path.join(args.project, 'build_opt.tcl')
+    with open(tcl_path, 'w') as f:
+        f.write(build_opts)
+
+    os.system(f'cd {args.project} && vivado_hls -f build_prj.tcl')
 
 
 def _build_quartus(args, extra_args):
