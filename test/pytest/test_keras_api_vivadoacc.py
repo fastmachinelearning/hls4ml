@@ -12,8 +12,8 @@ from tensorflow.keras.layers import (
 import hls4ml
 
 test_root_path = Path(__file__).parent
-VIVADOACC_BOARD = 'pynq-z2'
-VIVADOACC_PART = 'xc7z020clg400-1'
+VIVADOACC_BOARD = 'zcu102'
+VIVADOACC_PART = 'xczu9eg-ffvb1156-2-e'
 
 
 @pytest.mark.parametrize('backend', ['VivadoAccelerator'])
