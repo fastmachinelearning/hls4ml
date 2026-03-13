@@ -1,34 +1,34 @@
 {
     "CSynthesisReport": {
         "TargetClockPeriod": "5.00",
-        "EstimatedClockPeriod": "4.367",
-        "BestLatency": "24",
-        "WorstLatency": "24",
-        "IntervalMin": "25",
-        "IntervalMax": "25",
+        "EstimatedClockPeriod": "4.349",
+        "BestLatency": "11",
+        "WorstLatency": "11",
+        "IntervalMin": "12",
+        "IntervalMax": "12",
         "BRAM_18K": "1",
         "DSP": "2",
-        "FF": "2282",
-        "LUT": "2089",
+        "FF": "622",
+        "LUT": "1947",
         "URAM": "0",
-        "AvailableBRAM_18K": "280",
-        "AvailableDSP": "220",
-        "AvailableFF": "106400",
-        "AvailableLUT": "53200",
+        "AvailableBRAM_18K": "1824",
+        "AvailableDSP": "2520",
+        "AvailableFF": "548160",
+        "AvailableLUT": "274080",
         "AvailableURAM": "0"
     },
     "VivadoSynthReport": {
-        "LUT": "71",
-        "FF": "159",
+        "LUT": "47",
+        "FF": "35",
         "BRAM_18K": "0.5",
         "DSP48E": "2"
     },
     "TimingReport": {
-        "WNS": 1.16,
+        "WNS": 3.988,
         "TNS": 0.0,
-        "WHS": 0.012,
+        "WHS": 0.01,
         "THS": 0.0,
-        "WPWS": 3.75,
+        "WPWS": 3.5,
         "TPWS": 0.0
     }
 }
