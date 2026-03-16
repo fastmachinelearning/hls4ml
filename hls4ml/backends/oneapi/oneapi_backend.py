@@ -19,7 +19,6 @@ from hls4ml.model.layers import (
     Embedding,
     Layer,
     SimpleRNN,
-    Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
@@ -256,13 +255,6 @@ class OneAPIBackend(FPGABackend):
             layer.set_attr('activation', 'dense_tanh')
         if layer.get_attr('recurrent_activation') == 'tanh':
             layer.set_attr('recurrent_activation', 'dense_tanh')
-
-    @layer_optimizer(Softmax)
-    def init_softmax(self, layer):
-        if layer.model.config.get_config_value('IOType') == 'io_parallel':
-            assert len(layer.get_input_variable().shape) == 1, (
-                'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
-            )
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
