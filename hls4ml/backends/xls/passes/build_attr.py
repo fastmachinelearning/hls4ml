@@ -1,11 +1,17 @@
 # Typing imports
-from __future__ import annotations # makes all annotations into strings
-from typing import List, Literal, Any, Optional, Callable, TYPE_CHECKING
+from __future__ import annotations  # makes all annotations into strings
+
+from typing import Literal, Optional, Callable, TYPE_CHECKING
+
 from numpy.typing import NDArray
+
+from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTensorVariable, XLSArrayType, XLSIntegerType, \
+    XLSArray, XLSFixedPointType
+from hls4ml.model.types import FixedPrecisionType
+
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
     from hls4ml.model.layers import Layer
-
 
 from hls4ml.model.optimizer import OptimizerPass
 
@@ -18,182 +24,227 @@ class XLSAttrBuilder:
     """A helper class that sets XLS specific attributes for the layers of the original ModelGraph.
     In doing so, we simplify the process of creating new optimization passes 
     and constructing the writer class. 
-    The new attributes must be accessed with '.get_attr(...)'
+    The new attributes must be accessed with .get_attr(...)
 
     New attributes:
-        write_weights (bool): the layer contains weights that should be explicitly defined in the project file
-        write_dims (bool):    the layer dimensions should be explicitly written in the project file
-        write_func (bool):    the layer has a corresponding function call that should be explicitly written
-                              as part of the NN architecture in the project file
-        func_call (str):      the corresponding layer DSLX function call
-
-        fxp_weights (np.ndarray): already quantized weight matrix
-        fxp_bias (np.ndarray):    already quantized bias vector
-
-        in_nb, in_en, in_bu (str): parameters used for fixed point computation in DSLX
-                                   the parameters of the input vector 
-                                   number of bits (width), is negative, binary unsigned exponent (frac bits)
-        out_nb, out_en, out_bu (str): parameters used for fixed point computation in DSLX
-                                      the parameters of the output vector 
-                                      number of bits (width), is negative, binary unsigned exponent (frac bits)
+        - xls_module_name (str):                  DSLX module name (e.g. layer_4) used for the layer
+        - xls_input_variable(XLSTensorVariable):  XLS representation of input shape and precision
+        - xls_output_variable(XLSTensorVariable): XLS representation of output shape and precision
+        - xls_weights(XLSArray):                  Weights converted to XLS array
+        - xls_bias(XLSArray):                     Bias converted to XLS array
+        - xls_func_call(XLSFunctionCall):         Function used for transformation, e.g. softmax_stable or conv2d
 
     Args:
-        node (Layer): A layer of the model graph
+        - node (Layer): A layer of the model graph
     """
 
     def __init__(self, node) -> None:
         self.node = node
 
     @staticmethod
-    def attach_to_node(attr_name: Optional[str] = None) :
+    def attach_to_node(attr_name: Optional[str] = None):
         """A decorator-factory to easily chain 'set_attr' commands to the node.
         It calls the provided function. This eliminates a lot of boiler plate code.
         All the added attributes can be chained in one call since the wrapped function returns self.
         """
+
         def decorator(fn) -> Callable:
             name = attr_name or fn.__name__
+
             @wraps(fn)
             def wrapped(self, *args, **kwargs):
                 val = fn(self, *args, **kwargs)
+                assert name not in self.node.attributes, f"Duplicate attribute: '{name}'"
                 self.node.set_attr(name, val)
                 return self
+
             return wrapped
+
         return decorator
-    
-    @attach_to_node()
-    def write_weights(self) -> bool:
-        return self.node.class_name in ['Dense', 'Conv2D']
 
     @attach_to_node()
-    def write_dims(self) -> bool:
-        return self.node.class_name in ['Input', 'Dense', 'Conv2D']
-    
-    @attach_to_node()
-    def write_func(self) -> bool:
-        return self.node.class_name in ['Dense', 'Activation', 'Softmax', 'Conv2D']
+    def xls_weights(self) -> XLSConst | None:
+        weights = self.node.get_weights()
+        if not weights:
+            return None
 
-    @attach_to_node()
-    def fxp_weights(self, weights, out_dim: int, in_dim: int) -> NDArray[NDArray[np.int_]]:
-        #TODO: check which element in the precision array should we take Currently we assume the precision of weights is the first elem.
-        # has weights
-        if len(weights) >= 1:
-            width = int(self.node.get_attr('in_nb').split(':', 1)[1])
-            frac = int(self.node.get_attr('in_bu').split(':', 1)[1])
-            # Conv
-            if self.node.class_name == 'Conv2D':
+        input_var = self.node.get_input_variable()
+        output_var = self.node.get_output_variable()
+
+        assert len(input_var.shape) == 1, f'Unsupported input shape for {self.node.class_name}: {input_var.shape}'
+        assert len(output_var.shape) == 1, f'Unsupported output shape for {self.node.class_name}: {output_var.shape}'
+        in_dim: int = input_var.shape[0]
+        out_dim: int = output_var.shape[0]
+
+        precision: FixedPrecisionType = input_var.type.precision
+        width = precision.width
+        frac = precision.fractional
+
+        match self.node.class_name:
+            case 'Conv2D':
                 n_chan = self.node.get_attr('n_chan')
                 filt_height = self.node.get_attr('filt_height')
                 filt_width = self.node.get_attr('filt_width')
                 n_filt = self.node.get_attr('n_filt')
                 mat = np.array(list(list(weights)[0])).reshape(filt_height, filt_width, n_chan, n_filt)
-                mat_T = np.transpose(mat, (3, 2, 0, 1))   # in Keras the weights are transposed
-                fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
-                return fxp_w 
-            
-            # Dense
-            elif self.node.class_name == 'Dense':
+                mat_T = np.transpose(mat, (3, 2, 0, 1))  # in Keras the weights are transposed
+                fxp_w: NDArray[np.int_] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
+            case 'Dense':
                 mat = np.array(list(list(weights)[0])).reshape(in_dim, out_dim)
-                mat_T = mat.T   # in Keras the weights are transposed
-                fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
-                return fxp_w 
-        return np.array([])
-    
-    @attach_to_node()
-    def fxp_bias(self, weights) -> NDArray[np.int_]:
-        #TODO: check which element in the precision array should we take Currently we assume the precision of weights is the first elem.
-        # has bias
-        if len(weights) >= 2:
-            width = int(self.node.get_attr('in_nb').split(':', 1)[1])
-            frac = int(self.node.get_attr('in_bu').split(':', 1)[1])
-            fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
-            return fxp_b
-        return np.array([])
-    
-    @attach_to_node()
-    def in_nb(self, prev_layer_precision: dict | None) -> str: # TODO: right now we only care about the first defined type in the list
-        if prev_layer_precision:
-            for _, type_var in prev_layer_precision.items():
-                return f'u32:{type_var.precision.width}'
-        return ''
-    
-    @attach_to_node()
-    def in_en(self) -> Literal['u32:1']:
-        return 'u32:1'
-    
-    @attach_to_node()
-    def in_bu(self, prev_layer_precision: dict | None) -> str:
-        if prev_layer_precision:
-            for _, type_var in prev_layer_precision.items():
-                return f'u32:{type_var.precision.width - type_var.precision.integer}'
-        return ''
-    
-    @attach_to_node()
-    def out_nb(self, layer_precision: dict) -> str:
-        if layer_precision.get('result_t', False):
-            width = layer_precision['result_t'].precision.width
-            return f'u32:{width}'
-        for _, type_var in layer_precision.items():
-            return f'u32:{type_var.precision.width}'
-        return ''
-    
-    @attach_to_node()
-    def out_en(self) -> Literal['u32:1']:
-        return 'u32:1'
+                mat_T = mat.T  # in Keras the weights are transposed
+                fxp_w: NDArray[np.int_] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
+                # fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat, signed=True, n_word=width, n_frac=frac).raw()
+            case _:
+                raise ValueError(f'Unsupported weights for layer {self.node.class_name}')
+        shape = mat_T.shape
+        xls_raw_array = XLSArray(
+            array_type=XLSArrayType(
+                element_type=XLSIntegerType(width, signed=True),
+                shape=mat_T.shape),
+            array=fxp_w)
+        xls_precision = XLSFixedPointType.from_precision(precision)
+        xls_fixed_point_array = XLSFunctionCall(
+            name=f'fixed_point_util::make_fixed_points_{len(shape)}d',
+            params=[xls_precision.binary_exponent],
+            args=[xls_raw_array]
+        )
+        return XLSConst(
+            name='WEIGHTS',
+            value=xls_fixed_point_array,
+            type=XLSArrayType(element_type=xls_precision, shape=shape)
+        )
 
     @attach_to_node()
-    def out_bu(self, layer_precision) -> str:
-        if layer_precision.get('result_t', False):
-            width = layer_precision['result_t'].precision.width
-            integer = layer_precision['result_t'].precision.integer
-            return f'u32:{width - integer}'
-        for _, type_var in layer_precision.items():
-            return f'u32:{type_var.precision.width - type_var.precision.integer}'
-        return ''
-    
-    @attach_to_node()
-    def in_type(self) -> str:
-        return f'sN[{self.node.get_attr("in_nb")}]'
-    
-    @attach_to_node()
-    def out_type(self) -> str:
-        return f'sN[{self.node.get_attr("out_nb")}]'
+    def xls_bias(self) -> XLSConst | None:
+        # TODO: check which element in the precision array should we take
+        #  Currently we assume the precision of weights is the first elem.
+        weights = self.node.get_weights()
+        if not weights or len(weights) < 2:
+            return None
+
+        # get_weights() returns [weights,bias]
+        assert len(weights) == 2, f'len(weights)={len(weights)}, expected 2'
+
+        precision: FixedPrecisionType = self.node.get_input_variable().type.precision
+        width = precision.width
+        frac = precision.fractional
+        fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
+        shape = fxp_b.shape
+        xls_raw_array = XLSArray(
+            array_type=XLSArrayType(element_type=XLSIntegerType(width, signed=True), shape=shape),
+            array=fxp_b
+        )
+        xls_precision = XLSFixedPointType.from_precision(precision)
+        xls_fixed_point_array = XLSFunctionCall(
+            name=f'fixed_point_util::make_fixed_points_{len(shape)}d',
+            params=[xls_precision.binary_exponent],
+            args=[xls_raw_array]
+        )
+        return XLSConst(
+            name='BIAS',
+            value=xls_fixed_point_array,
+            type=XLSArrayType(element_type=xls_precision, shape=shape)
+        )
 
     @attach_to_node()
-    def func_call(self) -> str:
-        func_call_str = ''
-        if self.node.class_name == 'Dense':
-            func_call_str = f'fc::dense<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
-        
-        elif self.node.class_name == 'Conv2D':
-            func_call_str = f'conv2d::conv2d_latency<{self.node.get_attr("in_nb")}, {self.node.get_attr("in_en")}, {self.node.get_attr("in_bu")}, {self.node.get_attr("out_nb")}, {self.node.get_attr("out_en")}, {self.node.get_attr("out_bu")}>'
+    def xls_module_name(self) -> str:
+        return f'layer_{self.node.index}'
 
-        elif self.node.class_name == 'Activation':
-            func_call_str = f'activations::relu<{self.node.get_attr("out_nb")}>'
+    @attach_to_node()
+    def xls_output_variable(self) -> XLSTensorVariable:
+        return XLSTensorVariable.from_tensor_variable(name='OUTPUT', var=self.node.get_output_variable())
 
-        elif self.node.class_name == 'Softmax':
-            implementation = self.node.attributes.get('implementation', 'stable')
-            params = [self.node.get_attr(x) for x in ('in_nb', 'in_en', 'in_bu', 'out_nb', 'out_en', 'out_bu')]
-            if implementation in ['stable', 'latency']:
-                table_size = dict(self.node.attributes)['table_size']
-                exp_width = self.node.get_layer_precision()['softmax_exp_table_t'].precision.width
-                exp_frac = exp_width - self.node.get_layer_precision()['softmax_exp_table_t'].precision.integer
-                inv_width = self.node.get_layer_precision()['softmax_inv_table_t'].precision.width
-                inv_frac = inv_width - self.node.get_layer_precision()['softmax_inv_table_t'].precision.integer
+    @attach_to_node()
+    def xls_input_variable(self, prev_layer: Layer | None) -> XLSTensorVariable:
+        if not prev_layer:
+            assert self.node.class_name == 'Input', \
+                f'Unexpected class name for Layer {self.node.name}: {self.node.class_name}'
+            assert self.node.get_input_variable() is None, \
+                f'Input layer {self.node.name} should not have input variable'
+            # Input and output are the same
+            return XLSTensorVariable.from_tensor_variable(
+                name='INPUT',
+                var=self.node.get_output_variable()
+            )
 
-                func_name = f'lookup_tables::softmax_{implementation}'
-                params += [f'u32:{x}' for x in (exp_width, 1, exp_frac, inv_width, 1, inv_frac, table_size)]
-            elif implementation == 'argmax':
-                func_name = 'activations::argmax'
-            # TODO: support implementation == 'legacy'
-            else:
-                raise ValueError(f'Unknown softmax implementation {implementation}')
-            params_str = ', '.join(params)
-            func_call_str = f'{func_name}<{params_str}>'
-        return func_call_str
-    
-    
+        # Import values from the previous layer, e.g.:
+        # pub const INPUT_NUM_BITS = layer_1::OUTPUT_NUM_BUTS;
+        prev_name = prev_layer.get_attr('xls_module_name')
+        prev_var: XLSTensorVariable = prev_layer.get_attr('xls_output_variable')
+
+        def qualified_name(xls_const: XLSConst):
+            return f'{prev_name}::{xls_const.name}'
+
+        return XLSTensorVariable(
+            name='INPUT',
+            num_bits=qualified_name(prev_var.num_bits),
+            binary_exponent=qualified_name(prev_var.binary_exponent),
+            shape=tuple(map(qualified_name, prev_var.shape)),
+        )
+
+    @attach_to_node()
+    def xls_func_call(self) -> XLSFunctionCall | str:
+        name = None
+        out_var = self.node.get_attr('xls_output_variable')
+        params = []
+        args = ['x']
+
+        params_out = [out_var.num_bits.name, out_var.binary_exponent.name]
+        params_rounding = ['ROUNDING_MODE', 'OVERFLOW_MODE']
+
+        match self.node.class_name:
+
+            # Input layer -> identity transformation
+            case 'Input':
+                return 'x'
+
+            case 'Dense':
+                name = f'dense::dense'
+                args += ['WEIGHTS', 'BIAS']
+                params = params_out + params_rounding
+
+            case 'Conv2D':
+                name = f'conv2d::conv2d_latency'
+                args += ['WEIGHTS', 'BIAS']
+                params = params_out + params_rounding
+
+            case 'Activation':
+                func_name = self.node.get_attr('activation').lower()
+                name = f'activations::{func_name}'
+                match func_name:
+                    case 'relu':
+                        params = []
+                    case _:
+                        raise ValueError(f'Unknown activation function {func_name}')
+
+            case 'ParametrizedActivation':
+                func_name = self.node.get_attr('activation').lower()
+                name = f'activations::{func_name}'
+                # TODO add extra parameters/arguments
+
+            case 'Softmax':
+                implementation = self.node.attributes.get('implementation', 'stable')
+                params = params_out
+                if implementation == 'stable':
+                    name = f'activations::softmax_{implementation}'
+                    params += params_rounding
+                    args += ['EXP_NEG_TABLE', 'INV_TABLE']
+                elif implementation == 'latency':
+                    name = f'activations::softmax_{implementation}'
+                    params += params_rounding
+                    args += ['EXP_TABLE', 'INV_TABLE']
+                elif implementation == 'argmax':
+                    name = 'activations::argmax'
+                # TODO: support implementation == 'legacy'
+                else:
+                    raise ValueError(f'Unknown softmax implementation {implementation}')
+            case _:
+                raise ValueError(f'Unknown layer type: {self.node.class_name}')
+        return XLSFunctionCall(name=name, params=params, args=args)
+
+
 class BuildAttr(OptimizerPass):
-    """Builds the XLS specific attributes for all layers.
+    """Builds the XLS-specific attributes for all layers.
     """
 
     def match(self, node: Layer) -> bool:
@@ -201,37 +252,22 @@ class BuildAttr(OptimizerPass):
             return True
         return False
 
-    def transform(self, model: ModelGraph, node: Layer) -> Literal[False]:        
-        prev_out_dim = -1
-        prev_layer_precision = None
-
+    def transform(self, model: ModelGraph, node: Layer) -> Literal[False]:
+        prev_layer = None
         for layer in model.get_layers():
-            curr_out_dim: int = layer.get_output_variable().shape[0]
+            try:
+                # uses the builder to add all the attributes
+                (XLSAttrBuilder(layer)
+                 .xls_module_name()
+                 .xls_input_variable(prev_layer)
+                 .xls_output_variable()
+                 .xls_weights()
+                 .xls_bias()
+                 .xls_func_call()
+                 )
+            except Exception as e:
+                raise ValueError(f'Failed to build XLS attributes for layer {layer.name}: {e}')
 
-            curr_weights = layer.get_weights()
-            curr_prec: dict = layer.get_layer_precision()
-
-            # uses the builder to add all the attributes
-            b = XLSAttrBuilder(layer)
-            (b
-                .write_dims()
-                .write_weights()
-                .write_func()
-                .in_nb(prev_layer_precision)
-                .in_en()
-                .in_bu(prev_layer_precision)
-                .out_nb(curr_prec)
-                .out_en()
-                .out_bu(curr_prec)
-                .in_type()
-                .out_type()
-                .fxp_weights(curr_weights, out_dim=curr_out_dim, in_dim=prev_out_dim)
-                .fxp_bias(curr_weights)
-                .func_call()
-            )
-
-            prev_out_dim = curr_out_dim
-            prev_layer_precision = curr_prec
+            prev_layer = layer
 
         return False
-

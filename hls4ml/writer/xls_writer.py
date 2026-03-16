@@ -1,6 +1,15 @@
 # Typing imports
-from __future__ import annotations # makes all annotations into strings
-from typing import List, Any, TYPE_CHECKING
+from __future__ import annotations  # makes all annotations into strings
+
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any, TYPE_CHECKING
+
+from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTypeAlias, XLSImport, XLSFunctionDefinition, \
+    XLSTensorVariable
+from hls4ml.model.layers import Layer
+from hls4ml.model.types import FixedPrecisionType
+
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
 
@@ -8,31 +17,54 @@ import os
 from shutil import copyfile, copytree, rmtree
 from hls4ml.writer.writers import Writer
 
+XLS_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / 'templates/xls'
+INDENT = ' ' * 4
+
+
+def firmware_dir(model: ModelGraph):
+    return Path(model.config.get_output_dir()) / "firmware"
+
+
+def reports_dir(model: ModelGraph):
+    return Path(model.config.get_output_dir()) / "reports"
+
+
+def append_line(line: str, x: Any) -> str:
+    return line + f'{x}\n'
+
+
+def append_lines(s: str, *xs: Any) -> str:
+    # Allow append_lines(s, [1,2,3]) as well as append_lines(s, 1,2,3)
+    if len(xs) == 1 and isinstance(xs[0], Iterable) and not isinstance(xs[0], (str, bytes)):
+        xs = tuple(xs[0])
+
+    for x in xs:
+        s = append_line(s, x)
+    return s
 
 
 class XLSWriter(Writer):
-    
+
     def _write_weights(self, layer, weights):
         """A recursive function to write weights of any number of dimensions. 
 
         It uses the function call stack to close paranthesis. 
         """
-        indent = '    '
-        
+
         if len(weights.shape) == 1:
-            newline = indent + indent + '['
+            line = INDENT + INDENT + '['
             for idx_col, w in enumerate(weights):
-                newline += f'{layer.get_attr("in_type")}:{w}'
+                line = f'{layer.get_attr("in_type")}:{w}'
                 if idx_col < len(weights) - 1:
-                    newline += ','
-            newline += '],\n'
-            return newline
-        
-        newline = indent + '[\n'
+                    line += ','
+            line += '],\n'
+            return line
+
+        line = INDENT + '[\n'
         for idx in range(len(weights)):
-            newline += self._write_weights(layer, weights[idx])
-        newline += indent + '],\n'
-        return newline
+            line += self._write_weights(layer, weights[idx])
+        line += INDENT + '],\n'
+        return line
 
     def write_project_dir(self, model: ModelGraph) -> None:
         """Write the base project directory
@@ -40,20 +72,20 @@ class XLSWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        if not os.path.isdir(f"{model.config.get_output_dir()}/firmware"):
-            os.makedirs(f"{model.config.get_output_dir()}/firmware")
 
-        if not os.path.isdir(f"{model.config.get_output_dir()}/reports"):
-            os.makedirs(f"{model.config.get_output_dir()}/reports")
+        firmware = firmware_dir(model)
+        if not os.path.isdir(firmware):
+            os.makedirs(firmware)
 
+        reports = reports_dir(model)
+        if not os.path.isdir(reports):
+            os.makedirs(reports)
 
     def write_build_script(self, model: ModelGraph) -> None:
         # build_prj.tcl
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        srcpath = os.path.join(filedir, '../templates/xls/build_prj.tcl')
+        srcpath = XLS_TEMPLATE_DIR / 'build_prj.tcl'
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
-
 
     def write_project_dslx(self, model: ModelGraph) -> None:
         """Write the main architecture source file (myproject.x)
@@ -61,178 +93,113 @@ class XLSWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        f = open(os.path.join(filedir, '../templates/xls/firmware/myproject.x'))
-        fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}.x', 'w')
+        output_path = firmware_dir(model) / f'{model.config.get_project_name()}.x'
 
         layers = list(model.get_layers())
-        indent = '    '
         last_layer_dim_key = ''
-        for line in f.readlines():
-            # Add headers to weights and biases
-            if 'myproject' in line:
-                newline = line.replace('myproject', model.config.get_project_name())
+        with open(output_path, 'w') as f:
+            for line in open(XLS_TEMPLATE_DIR / 'firmware/myproject.x'):
+                # Add headers to weights and biases
+                if 'myproject' in line:
+                    line = line.replace('myproject', model.config.get_project_name())
 
-            elif '// hls-fpga-machine-learning imports' in line:
-                newline = line
-                seen_libs = []
-                for layer in layers:
-                    lib = layer.get_attr('func_call').split('::', 1)[0]
-                    if lib and lib not in seen_libs:
-                        seen_libs.append(lib)
-                        newline += f'import nnet_utils.{lib};\n'
+                elif '// hls-fpga-machine-learning insert imports' in line:
+                    input_type = None
+                    output_type = None
+                    for layer in layers:
+                        layer_module_name = layer.get_attr('xls_module_name')
+                        input_var = layer.get_attr('xls_input_variable')
+                        output_var = layer.get_attr('xls_output_variable')
 
-            elif '// hls-fpga-machine-learning architecture arguments' in line:
-                newline = ''
-                weighted_layers_count = 0
-                for i, layer in enumerate(layers):
-                    if layer.class_name == 'Input':
-                        newline += indent + f'x: {layer.get_attr("out_type")}'
-                        for dim in layer.get_output_variable().shape:
-                            newline += f'[{dim}]'
-                        newline += ',\n'
-                    elif layer.get_attr("write_weights"):
-                        # weights arguments
-                        newline += indent + f'w{i}: {layer.get_attr("in_type")}'
-                        for w_dim in reversed(layer.get_attr("fxp_weights").shape):
-                            newline += f'[u32:{w_dim}]'
-                        newline += ',\n'
-                        # bias argument
-                        newline += indent + f'b{i}: {layer.get_attr("in_type")}'
-                        for b_dim in layer.get_attr("fxp_bias").shape:
-                            newline += f'[u32:{b_dim}]'
-                        if weighted_layers_count < len([layer for layer in layers if layer.get_attr("write_weights")]) - 1:
-                            newline += ',\n'
-                            weighted_layers_count += 1
-                        else:
-                            newline += '\n'
+                        input_type = input_type or f'{layer_module_name}::{input_var.type_alias.name}'
+                        output_type = f'{layer_module_name}::{output_var.type_alias.name}'
+                        line = append_line(line, XLSImport(layer_module_name))
+                    line = append_lines(line,
+                                        XLSTypeAlias(name='InputType', type=input_type),
+                                        XLSTypeAlias(name='OutputType', type=output_type))
 
-            elif '// hls-fpga-machine-learning output' in line:
-                last_layer_type = layers[-1].get_attr("out_type")
-                newline = indent + f'{last_layer_type}'
-                for dim in layers[-1].get_output_variable().shape:
-                    newline += f'[{dim}]'
-                newline += '\n'
+                elif '// hls-fpga-machine-learning insert layers' in line:
+                    prev_var = 'x'
+                    for layer in layers:
+                        layer_module_name = layer.get_attr('xls_module_name')
+                        var = f'z{layer.index}'
+                        line = append_line(line, INDENT + f'let {var} = {layer_module_name}::transform({prev_var});')
+                        prev_var = var
 
-            elif '// hls-fpga-machine-learning insert layers' in line:
-                newline = line
-                prev_var = 'x'
-                for i, layer in enumerate(layers):
-                    if layer.get_attr('write_func'):
-                        if layer.get_attr('write_weights'):
-                            newline += indent + f'let z{i} = {layer.get_attr("func_call")}({prev_var}, w{i}, b{i});\n'
-                            prev_var = f'z{i}'
-                        else:
-                            newline += indent + f'let z{i} = {layer.get_attr("func_call")}({prev_var});\n'
-                            prev_var = f'z{i}'
+                    line = append_line(line, INDENT + prev_var + '\n')
 
-                newline += indent + prev_var + '\n'
+                elif '// hls-fpga-machine-learning insert call inlined weights' in line:
+                    line = INDENT + INDENT
+                    weighted_layers_count = 0
+                    for i, layer in enumerate(layers):
+                        if layer.class_name == 'Input':
+                            line += 'x,'
+                        elif layer.get_attr("write_weights"):
+                            line += f'w{i}, b{i}'
+                            if weighted_layers_count < len(
+                                    [layer for layer in layers if layer.get_attr("write_weights")]) - 1:
+                                line += ', '
+                                weighted_layers_count += 1
+                    line += '\n'
 
-            elif '// hls-fpga-machine-learning top function input' in line:
-                # TODO: check layer.class_name == 'Input' instead of taking layers[0]?
-                newline = indent + f'x: {layers[0].get_attr("out_type")}'
-                for dim in layers[0].get_output_variable().shape:
-                    newline += f'[{dim}]'
-                newline += '\n'
+                else:
+                    pass
 
-            elif '// hls-fpga-machine-learning load weights' in line:
-                newline = line
-                for i, layer in enumerate(layers):
-                    if layer.get_attr("write_weights"):
-                        # Weights
-                        newline += indent + f'let w{i} = {layer.get_attr("in_type")}'
-                        for w_dim in reversed(layer.get_attr("fxp_weights").shape):
-                            newline += f'[u32:{w_dim}]'
-                        newline += ':\n'
-                        newline += indent + '[\n'
-                        for idx in range(len(layer.get_attr("fxp_weights"))):
-                            newline += self._write_weights(layer, layer.get_attr("fxp_weights")[idx])
-                        newline += indent + '];\n'
-                        # Bias
-                        newline += indent + f'let b{i} = {layer.get_attr("in_type")}[u32:{layer.get_attr("fxp_bias").shape[0]}]:[\n'
-                        newline += indent + indent
-                        for b in layer.get_attr("fxp_bias"):
-                            newline += f'{layer.get_attr("in_type")}:{b},'
-                        newline += '\n' + indent + '];\n'
+                f.write(line)
 
-            elif '// hls-fpga-machine-learning call inlined weights' in line:
-                newline = indent + indent
-                weighted_layers_count = 0
-                for i, layer in enumerate(layers):
-                    if layer.class_name == 'Input':
-                        newline += 'x,'
-                    elif layer.get_attr("write_weights"):
-                        newline += f'w{i}, b{i}'
-                        if weighted_layers_count < len([layer for layer in layers if layer.get_attr("write_weights")]) - 1:
-                            newline += ', '
-                            weighted_layers_count += 1
-                newline += '\n'
+    def write_layers(self, model: ModelGraph):
+        prev_layer = None
+        for layer in model.get_layers():
+            self.write_layer(model, layer, prev_layer)
+            prev_layer = layer
 
-            # Just copy line
-            else:
-                newline = line
+    def write_layer(self, model: ModelGraph, layer: Layer, prev_layer: Layer | None):
+        layer_module_name = layer.get_attr('xls_module_name')
+        with open(firmware_dir(model) / f'{layer_module_name}.x', 'w') as f:
+            for line in open(XLS_TEMPLATE_DIR / 'firmware/layer.x'):
+                if '// hls-fpga-machine-learning insert imports' in line:
+                    imports = []
+                    func_call = layer.get_attr('xls_func_call')
+                    if isinstance(func_call, XLSFunctionCall) and func_call.namespace is not None:
+                        imports.append(XLSImport(name=f'nnet_utils.{func_call.namespace}'))
+                    if layer.get_attr('lookup_tables'):
+                        imports.append(XLSImport(name='nnet_utils.lookup_table'))
+                    if prev_layer is not None:
+                        imports.append(XLSImport(name=prev_layer.get_attr('xls_module_name')))
+                    line = append_lines(line, imports)
 
-            fout.write(newline)
+                elif '// hls-fpga-machine-learning insert types' in line:
+                    line = append_lines(line, layer.get_attr('xls_input_variable').definitions())
+                    line += '\n'
+                    line = append_lines(line, layer.get_attr('xls_output_variable').definitions())
+                    line += '\n'
+                    precision = layer.get_output_variable().type.precision
+                    assert isinstance(precision, FixedPrecisionType)
+                    line = append_line(line, XLSConst(
+                        name='ROUNDING_MODE',
+                        value=f'RoundingMode::{precision.rounding_mode}'))
+                    line = append_line(line, XLSConst(
+                        name='OVERFLOW_MODE',
+                        value=f'OverflowMode::{precision.saturation_mode}'))
 
-        f.close()
-        fout.close()
 
-    #TODO: modify with actual table types
-    def write_lookup_tables(self, model: ModelGraph) -> None:
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        f = open(os.path.join(filedir, '../templates/xls/firmware/nnet_utils/lookup_tables.x'))
-        fout = open(f'{model.config.get_output_dir()}/firmware/nnet_utils/lookup_tables.x', 'w')
-
-        layers = list(model.get_layers())
-        indent = '    '
-        elems_per_line = 8
-        for line in f.readlines():
-
-            if '// hls-fpga-machine-learning insert exponent table' in line:
-                newline = line
-                for layer in layers:
-                    if layer.get_attr('write_table'):
-                        # Get types
-                        exp_width = layer.get_layer_precision()['softmax_exp_table_t'].precision.width
-
-                        newline += f'pub const EXP_TABLE = sN[{exp_width}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
-                        newline += indent
-                        for i, elem in enumerate(layer.get_attr("exp_table_xls")):
-                            newline += f'sN[{exp_width}]:{elem}'
-                            if i < len(layer.get_attr("exp_table_xls")) - 1:
-                                newline += ','
-                            if (i+1) % elems_per_line == 0:
-                                newline += '\n'
-                                if i < len(layer.get_attr("inv_table_xls")) - 1:
-                                    newline += indent
-                        newline += '];\n'
-
-            elif '// hls-fpga-machine-learning insert inversion table' in line:
-                newline = line
-                for layer in layers:
-                    if layer.get_attr('write_table'):
-                        # Get types
-                        inv_width = layer.get_layer_precision()['softmax_inv_table_t'].precision.width
-
-                        newline += f'pub const INV_TABLE = sN[{inv_width}][u32:{dict(layer.attributes)["table_size"]}]:[\n'
-                        newline += indent
-                        for i, elem in enumerate(layer.get_attr("inv_table_xls")):
-                            newline += f'sN[{inv_width}]:{elem}'
-                            if i < len(layer.get_attr("inv_table_xls")) - 1:
-                                newline += ', '
-                            if (i+1) % elems_per_line == 0:
-                                newline += '\n' 
-                                if i < len(layer.get_attr("inv_table_xls")) - 1:
-                                    newline += indent
-                        newline += '];\n'
-            else:
-                newline = line
-            fout.write(newline)
-
-        f.close()
-        fout.close()
+                elif '// hls-fpga-machine-learning insert weights' in line:
+                    weights = layer.get_attr('xls_weights')
+                    if weights:
+                        line = append_line(line, weights)
+                    bias = layer.get_attr('xls_bias')
+                    if bias:
+                        line = append_lines(line, '\n', bias)
+                elif '// hls-fpga-machine-learning insert lookup tables' in line:
+                    for table in layer.get_attr('lookup_tables', []):
+                        line = append_line(line, table)
+                        line += '\n'
+                elif '// hls-fpga-machine-learning insert function call' in line:
+                    func_call: XLSFunctionCall = layer.get_attr('xls_func_call')
+                    line = append_line(line, INDENT + str(func_call))
+                else:
+                    pass
+                f.write(line)
 
     def write_nnet_utils(self, model: ModelGraph) -> None:
         """Copy the nnet_utils, AP types headers to the project output directory
@@ -240,33 +207,16 @@ class XLSWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-
-        # nnet_utils
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        srcpath = os.path.join(filedir, '../templates/xls/firmware/nnet_utils/')
-        dstpath = f'{model.config.get_output_dir()}/firmware/nnet_utils/'
-
-        if os.path.exists(dstpath):
-            rmtree(dstpath)
-
-        copytree(srcpath, dstpath)
-
-        # ap_types
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        srcpath = os.path.join(filedir, '../templates/xls/firmware/ap_types/')
-        dstpath = f'{model.config.get_output_dir()}/firmware/ap_types/'
-
-        if os.path.exists(dstpath):
-            rmtree(dstpath)
-
-        copytree(srcpath, dstpath)
+        for dirname in 'nnet_utils', 'ap_types':
+            srcpath = XLS_TEMPLATE_DIR / 'firmware' / dirname
+            dstpath = firmware_dir(model) / dirname
+            if os.path.exists(dstpath):
+                rmtree(dstpath)
+            copytree(srcpath, dstpath)
 
     def write_hls(self, model: ModelGraph) -> None:
-
         self.write_project_dir(model)
         self.write_build_script(model)
         self.write_project_dslx(model)
+        self.write_layers(model)
         self.write_nnet_utils(model)
-        self.write_lookup_tables(model)

@@ -1,0 +1,32 @@
+# conda env create -f hls4ml-dev-keras3.yml
+name: hls4ml-dev-keras3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.16
+  - notebook==6.4.12
+  - jupyter_contrib_nbextensions
+  - jupyterhub
+  - jupyter-book
+  - jsonschema-with-format-nongpl
+  - pydot==1.4.2
+  - graphviz==7.1.0
+  - scikit-learn==1.2.2
+  - tensorflow
+  - keras=3.10
+  - tensorflow-datasets==4.8.3
+  - webcolors
+  - widgetsnbextension==3.6.0
+  - pip==23.0.1
+  - pip:
+      - conifer==1.5
+      - pysr==0.16.3
+      - xgboost==1.7.5
+      - zstd
+      - tensorflow-model-optimization
+      - fxpmath
+      # - hls4ml[profiling,optimization,sr,HGQ,qkeras]==1.2.0
+      # hls4ml from sources:
+      # Keras v2:
+#      - -e .[profiling,optimization,sr,hgq,qkeras,testing]
+      - -e .[profiling,optimization,sr,hgq2,da4ml,testing]

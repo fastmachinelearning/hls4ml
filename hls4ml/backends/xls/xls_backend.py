@@ -1,7 +1,8 @@
 # Typing imports
-from __future__ import annotations # makes all annotations into strings
+from __future__ import annotations  # makes all annotations into strings
 from typing import List, Any, TYPE_CHECKING
 from numpy.typing import NDArray
+
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
     from hls4ml.model.layers import Layer
@@ -25,6 +26,7 @@ from hls4ml.model.layers import (
     Softmax
 )
 from hls4ml.report import parse_xls_report
+
 
 class XLSBackend(FPGABackend):
     def __init__(self) -> None:
@@ -56,7 +58,8 @@ class XLSBackend(FPGABackend):
         init_flow: str = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         optimization_passes = [
-            'xls:fix_softmax_table_size',
+            # TODO: we fix table sizes in BuildTables, it should be merged into fix_softmax_table_size.
+            # 'xls:fix_softmax_table_size',
             'infer_precision_types',
         ]
         optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
@@ -64,34 +67,30 @@ class XLSBackend(FPGABackend):
         xls_attributes = [
             'xls:build_attr',
         ]
-        xls_attributes_flow: str = register_flow('specific_attributes', xls_attributes, requires=[optimization_flow], backend=self.name)
+        xls_attributes_flow: str = register_flow('specific_attributes', xls_attributes, requires=[optimization_flow],
+                                                 backend=self.name)
 
         xls_build_graph_ir = [
             'xls:build_tables',
         ]
-        xls_build_graph_ir_flow: str = register_flow('build_tables_ir', xls_build_graph_ir, requires=[xls_attributes_flow], backend=self.name)
+        xls_build_graph_ir_flow: str = register_flow('build_tables_ir', xls_build_graph_ir,
+                                                     requires=[xls_attributes_flow], backend=self.name)
 
-        xls_optimization_passes = [
-            'xls:merge_dense_relu',
-        ]
-        xls_optimization_passes_flow: str = register_flow('merge_dense_relu_layers', xls_optimization_passes, requires=[xls_attributes_flow], backend=self.name)
-
-        writer_passes = ['make_stamp', 'xls:write_hls'] 
-        self._writer_flow = register_flow('write', writer_passes, requires=['xls:ip'], backend=self.name) 
+        writer_passes = ['make_stamp', 'xls:write_hls']
+        self._writer_flow = register_flow('write', writer_passes, requires=['xls:ip'], backend=self.name)
 
         all_passes: list = get_backend_passes(self.name)
 
-        #TODO: what is this extras structure here
+        # TODO: what is this extras structure here
         extras = [
-            # Ideally this should be empty
+            # Ideally, this should be empty
             opt_pass
             for opt_pass in all_passes
             if opt_pass
-            not in initializers
-            + writer_passes
-            + optimization_passes
-            + xls_attributes
-            + xls_optimization_passes
+               not in initializers
+               + writer_passes
+               + optimization_passes
+               + xls_attributes
         ]
 
         if len(extras) > 0:
@@ -104,7 +103,6 @@ class XLSBackend(FPGABackend):
             optimization_flow,
             xls_attributes_flow,
             xls_build_graph_ir_flow,
-            xls_optimization_passes_flow,
         ]
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
@@ -114,20 +112,20 @@ class XLSBackend(FPGABackend):
 
     def get_writer_flow(self) -> str:
         return self._writer_flow
-    
+
     def create_initial_config(
-        self,
-        part='xcu250-figd2104-2L-e',
-        clock_period=5,
-        clock_uncertainty='12.5%',
-        io_type='io_parallel',
-        namespace=None,
-        write_weights_txt=True,
-        write_tar=False,
-        tb_output_stream='both',
-        **_,
+            self,
+            part='xcu250-figd2104-2L-e',
+            clock_period=5,
+            clock_uncertainty='12.5%',
+            io_type='io_parallel',
+            namespace=None,
+            write_weights_txt=True,
+            write_tar=False,
+            tb_output_stream='both',
+            **_,
     ) -> dict[str, Any]:
-        """Create initial configuration of the Vivado backend.
+        """Create an initial configuration of the XLS backend.
 
         Args:
             part (str, optional): The FPGA part to be used. Defaults to 'xcvu13p-flga2577-2-e'.
@@ -158,16 +156,17 @@ class XLSBackend(FPGABackend):
             'WriteTar': write_tar,
             'TBOutputStream': tb_output_stream,
         }
-        #TODO: update to a better way to access the bazel-vin project
+        # TODO: update to a better way to access the bazel-bin project
         config['xls_bazel_bin_path'] = '$HOME/xls/bazel-bin'
 
         return config
-    
+
     def _get_backend_exec_path(self, model: ModelGraph) -> str:
         if 'linux' in sys.platform:
             path: str = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
             if os.path.isdir(path) == 0:
-                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
+                raise Exception(
+                    'XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
         return path
 
     def compile(self, model: ModelGraph) -> None:
@@ -180,7 +179,7 @@ class XLSBackend(FPGABackend):
 
         ## Generate IR
         with open(f'{kernel_name}.ir', 'w') as ir_file:
-            gen_cmd = [ 
+            gen_cmd = [
                 f'{path}/xls/dslx/ir_convert/ir_converter_main',
                 f'--top={kernel_name}',
                 f'{kernel_name}.x'
@@ -188,7 +187,7 @@ class XLSBackend(FPGABackend):
             subprocess.run(gen_cmd, check=True, stdout=ir_file)
         ## Optimize IR
         with open(f'{kernel_name}.opt.ir', 'w') as opt_file:
-            opt_cmd = [ 
+            opt_cmd = [
                 f'{path}/xls/tools/opt_main',
                 f'{kernel_name}.ir'
             ]
@@ -198,13 +197,18 @@ class XLSBackend(FPGABackend):
 
     def predict(self, model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> list[NDArray[np.floating]]:
 
-        def _interpret_input(model: ModelGraph, 
-                             path: str, 
-                             x_list: NDArray[np.floating], 
-                             n_samples: int, 
-                             n_inputs: int, 
-                             input_width: int, 
+        def _interpret_input(model: ModelGraph,
+                             path: str,
+                             x_list: NDArray[np.floating],
+                             n_samples: int,
+                             n_inputs: int,
+                             input_width: int,
                              input_frac: int) -> CompletedProcess[str]:
+            def to_xls_number(x: np.int_) -> str:
+                # Input type is FixedPoint, which in IR reduces to 1-tuple, e.g. (bits[16]:123)
+                # TODO: make top-level function accept integers, sN[N]?
+                return f'(bits[{input_width}]:{x})'
+
             newline = ''
             for i in range(n_samples):
                 if n_inputs == 1:
@@ -212,26 +216,23 @@ class XLSBackend(FPGABackend):
                 else:
                     inp = [np.asarray(xj) for xj in x_list[i]]
                 newline += '['
-                fxp_x: list[NDArray[np.int_]] = Fxp(inp, signed=True, n_word=input_width, n_frac=input_frac).raw() 
+                fxp_x: list[NDArray[np.int_]] = Fxp(inp, signed=True, n_word=input_width, n_frac=input_frac).raw()
                 if n_inputs == 1:
-                    newline += f'bits[{input_width}]:{fxp_x[0][0]}'
+                    newline += to_xls_number(fxp_x[0][0])
                 else:
-                    for i, inp in enumerate(fxp_x):
-                        newline += f'bits[{input_width}]:{inp}'
-                        if i < len(fxp_x) - 1:
-                            newline += ','
+                    newline += ','.join(map(to_xls_number, fxp_x))
                 newline += ']\n'
 
             # run command
-            interpret_cmd = [ 
+            interpret_cmd = [
                 f'{path}/xls/tools/eval_ir_main',
                 f'firmware/{model.config.get_project_name()}.opt.ir',
                 f'--input_file=-'
             ]
             result = subprocess.run(
                 interpret_cmd,
-                input=newline,        
-                text=True,             
+                input=newline,
+                text=True,
                 check=True,
                 stdout=subprocess.PIPE,
             )
@@ -260,17 +261,19 @@ class XLSBackend(FPGABackend):
 
             return rows
 
-        def _go_to_original_type(rows: list, 
-                                 n_samples: int, 
-                                 n_outputs: int, 
-                                 python_input_type: np.dtype[np.floating], 
+        def _go_to_original_type(rows: list,
+                                 n_samples: int,
+                                 n_outputs: int,
+                                 python_input_type: np.dtype[np.floating],
                                  scale) -> list[NDArray[np.floating]]:
             output = np.array(rows, dtype=np.int32)
             output = output.astype(python_input_type) / scale
-            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
+            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in
+                      range(n_outputs)]
             return output
 
-        def _correct_dims(results_floats: list[NDArray[np.floating]], n_samples: int, n_outputs: int) -> list[NDArray[np.floating]]:
+        def _correct_dims(results_floats: list[NDArray[np.floating]], n_samples: int, n_outputs: int) -> list[
+            NDArray[np.floating]]:
             if n_samples == 1 and n_outputs == 1:
                 return result_floats[0][0]
             elif n_outputs == 1:
@@ -285,24 +288,25 @@ class XLSBackend(FPGABackend):
 
         # Extract dimensions
         n_samples: int = model._compute_n_samples(x)
-        n_inputs: int = layers[0].get_output_variable().shape[0] # Get input dimensions
+        n_inputs: int = layers[0].get_output_variable().shape[0]  # Get input dimensions
         n_outputs: int = len(model.get_output_variables())
 
         # Extract type
         input_width: int = list(layers[0].get_layer_precision().items())[0][1].precision.width
         input_frac: int = input_width - list(layers[0].get_layer_precision().items())[0][1].precision.integer
-        output_width: int = list(layers[len(layers)-1].get_layer_precision().items())[0][1].precision.width
-        output_frac: int = output_width - list(layers[len(layers)-1].get_layer_precision().items())[0][1].precision.integer
+        output_width: int = list(layers[len(layers) - 1].get_layer_precision().items())[0][1].precision.width
+        output_frac: int = output_width - list(layers[len(layers) - 1].get_layer_precision().items())[0][
+            1].precision.integer
 
         # extract python type (float/double)
         if isinstance(x, np.ndarray):
             python_input_type: np.dtype[np.floating] = x[0].dtype
         else:
-            python_input_type: np.dtype[np.floating]  = x.dtype
-        
+            python_input_type: np.dtype[np.floating] = x.dtype
+
         if n_samples == 1 and n_inputs == 1 and isinstance(x, np.floating):
             x_list: NDArray[np.floating] = np.array([x], dtype=x.dtype)
-        elif isinstance(x, np.ndarray): 
+        elif isinstance(x, np.ndarray):
             x_list: NDArray[np.floating] = x
 
         # Change dirs
@@ -313,22 +317,21 @@ class XLSBackend(FPGABackend):
         result = _interpret_input(model, path, x_list, n_samples, n_inputs, input_width, input_frac)
         os.chdir(curr_dir)
         result_formatted = _format_output(result)
-        result_floats: list[NDArray[np.floating]] = _go_to_original_type(result_formatted, 
-            n_samples, 
-            n_outputs, 
-            python_input_type, 
-            scale=2 ** output_frac
-        )
+        result_floats: list[NDArray[np.floating]] = _go_to_original_type(result_formatted,
+                                                                         n_samples,
+                                                                         n_outputs,
+                                                                         python_input_type,
+                                                                         scale=2 ** output_frac
+                                                                         )
         result_corrected_dims: list[NDArray[np.floating]] = _correct_dims(result_floats, n_samples, n_outputs)
         return result_corrected_dims
-
 
     def build(
             self,
             model: ModelGraph,
             reset: bool = True,
             pr: bool = False,
-        ) -> dict:
+    ) -> dict:
         """ Builds the RTL (SystemVerilog) code and uses Vivado to return the resource utilization.
 
         Args:
@@ -337,14 +340,15 @@ class XLSBackend(FPGABackend):
             clk_period (int):  clock period in nanoseconds (e.g., 5 ns => 1,000 / 5 = 200 MHz)
             pr (bool): place and route option
         """
-        
+
         if 'linux' in sys.platform:
             path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
             if os.path.isdir(path) == 0:
-                raise Exception('XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
-            
+                raise Exception(
+                    'XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
+
         def build_flags() -> str:
-            flags = f'--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps={model.config.get_config_value("ClockPeriod")*1000} '
+            flags = f'--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps={model.config.get_config_value("ClockPeriod") * 1000} '
             if reset:
                 flags += '--reset=reset'
             return flags
@@ -372,7 +376,7 @@ class XLSBackend(FPGABackend):
         codegen_flags: str = build_flags()
         with open(f'{kernel_name}.sv', 'w') as synth_file:
             flags = shlex.split(codegen_flags)
-            synth_cmd = [ 
+            synth_cmd = [
                 f'{path}/xls/tools/codegen_main',
                 *flags,
                 f'{kernel_name}.opt.ir',

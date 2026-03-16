@@ -1,0 +1,20 @@
+import std;
+import fixed_point;
+import ap_types.fixed_point_util;
+
+type FixedPoint = fixed_point::FixedPoint;
+type RoundingMode = fixed_point_util::RoundingMode;
+type OverflowMode = fixed_point_util::OverflowMode;
+
+// hls-fpga-machine-learning insert imports
+
+// hls-fpga-machine-learning insert types
+
+// hls-fpga-machine-learning insert weights
+
+// hls-fpga-machine-learning insert lookup tables
+
+
+pub fn transform(x: InputType) -> OutputType {
+    // hls-fpga-machine-learning insert function call  
+}

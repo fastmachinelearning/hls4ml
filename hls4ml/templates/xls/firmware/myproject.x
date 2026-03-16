@@ -1,32 +1,12 @@
+import fixed_point as fp;
+import ap_types.fixed_point_util as fp_util;
 
-// hls-fpga-machine-learning imports
+// hls-fpga-machine-learning insert imports
 
 
 // hls-fpga-machine-learning debugging
 
 
-// ****************************************
-// NETWORK INSTANTIATION
-// ****************************************
-pub fn myproject_architecture(
-    // hls-fpga-machine-learning architecture arguments
-    ) ->
-    // hls-fpga-machine-learning output
-    {
-
+pub fn myproject(x: InputType) -> OutputType {
     // hls-fpga-machine-learning insert layers
-}
-
-
-pub fn myproject(
-    // hls-fpga-machine-learning top function input
-    )-> 
-    // hls-fpga-machine-learning output
-    {
-
-    // hls-fpga-machine-learning load weights
-    
-    myproject_architecture(
-        // hls-fpga-machine-learning call inlined weights
-    )
 }
