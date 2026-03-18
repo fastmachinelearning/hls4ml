@@ -98,6 +98,11 @@ class XLSArrayType:
         return elt, shape
 
     @property
+    def rank(self):
+        _, shape = self.as_multidimensional()
+        return len(shape)
+
+    @property
     def innermost_element_type(self):
         """Returns: inner element type, for example:
 
@@ -253,6 +258,31 @@ class XLSImport:
     def __str__(self):
         as_alias = f' as {self.alias}' if self.alias else ''
         return f'import {self.name}{as_alias};'
+
+
+class XLSFunctionDefinition:
+    def __init__(self, name, params, args, output_type, body):
+        self.name = name
+        self.params = params or []
+        self.args = args or []
+        self.output_type = output_type or '()'
+        self.body = body or ''
+
+    def __str__(self):
+        if isinstance(self.params, str):
+            params = self.params
+        else:
+            params = ', '.join(map(str, self.params))
+        if params:
+            params = f'<{params}>'
+        if isinstance(self.args, str):
+            args = self.args
+        else:
+            args = ', '.join(map(str, self.args))
+        return f'''pub fn {self.name}{params}({args})
+    -> {self.output_type} {{
+    {self.body}
+}}'''
 
 
 class XLSTensorVariable:

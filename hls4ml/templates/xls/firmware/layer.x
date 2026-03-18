@@ -15,6 +15,10 @@ type OverflowMode = fixed_point_util::OverflowMode;
 // hls-fpga-machine-learning insert lookup tables
 
 
+// hls-fpga-machine-learning insert helpers for different input ranks
+
+
+// Top-level function
 pub fn transform(x: InputType) -> OutputType {
-    // hls-fpga-machine-learning insert function call  
+    // hls-fpga-machine-learning insert top-level function call
 }

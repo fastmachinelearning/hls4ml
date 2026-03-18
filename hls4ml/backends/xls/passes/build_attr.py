@@ -71,8 +71,6 @@ class XLSAttrBuilder:
         input_var = self.node.get_input_variable()
         output_var = self.node.get_output_variable()
 
-        assert len(input_var.shape) == 1, f'Unsupported input shape for {self.node.class_name}: {input_var.shape}'
-        assert len(output_var.shape) == 1, f'Unsupported output shape for {self.node.class_name}: {output_var.shape}'
         in_dim: int = input_var.shape[0]
         out_dim: int = output_var.shape[0]
 
@@ -183,6 +181,16 @@ class XLSAttrBuilder:
         )
 
     @attach_to_node()
+    def xls_min_input_rank(self) -> int:
+        """Minimally required rank of the input tensor.
+         Input tensor can have a higher rank if it consists of multiple batches."""
+        match self.node.class_name:
+            case 'Conv2D':
+                return 3
+            case _:
+                return 1
+
+    @attach_to_node()
     def xls_func_call(self) -> XLSFunctionCall | str:
         name = None
         out_var = self.node.get_attr('xls_output_variable')
@@ -259,6 +267,7 @@ class BuildAttr(OptimizerPass):
                 # uses the builder to add all the attributes
                 (XLSAttrBuilder(layer)
                  .xls_module_name()
+                 .xls_min_input_rank()
                  .xls_input_variable(prev_layer)
                  .xls_output_variable()
                  .xls_weights()

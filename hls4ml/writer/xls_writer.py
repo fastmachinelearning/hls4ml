@@ -155,6 +155,8 @@ class XLSWriter(Writer):
 
     def write_layer(self, model: ModelGraph, layer: Layer, prev_layer: Layer | None):
         layer_module_name = layer.get_attr('xls_module_name')
+        input_var: XLSTensorVariable = layer.get_attr('xls_input_variable')
+        output_var: XLSTensorVariable = layer.get_attr('xls_output_variable')
         with open(firmware_dir(model) / f'{layer_module_name}.x', 'w') as f:
             for line in open(XLS_TEMPLATE_DIR / 'firmware/layer.x'):
                 if '// hls-fpga-machine-learning insert imports' in line:
@@ -169,9 +171,9 @@ class XLSWriter(Writer):
                     line = append_lines(line, imports)
 
                 elif '// hls-fpga-machine-learning insert types' in line:
-                    line = append_lines(line, layer.get_attr('xls_input_variable').definitions())
+                    line = append_lines(line, input_var.definitions())
                     line += '\n'
-                    line = append_lines(line, layer.get_attr('xls_output_variable').definitions())
+                    line = append_lines(line, output_var.definitions())
                     line += '\n'
                     precision = layer.get_output_variable().type.precision
                     assert isinstance(precision, FixedPrecisionType)
@@ -182,7 +184,6 @@ class XLSWriter(Writer):
                         name='OVERFLOW_MODE',
                         value=f'OverflowMode::{precision.saturation_mode}'))
 
-
                 elif '// hls-fpga-machine-learning insert weights' in line:
                     weights = layer.get_attr('xls_weights')
                     if weights:
@@ -190,13 +191,48 @@ class XLSWriter(Writer):
                     bias = layer.get_attr('xls_bias')
                     if bias:
                         line = append_lines(line, '\n', bias)
+
                 elif '// hls-fpga-machine-learning insert lookup tables' in line:
                     for table in layer.get_attr('lookup_tables', []):
                         line = append_line(line, table)
                         line += '\n'
-                elif '// hls-fpga-machine-learning insert function call' in line:
-                    func_call: XLSFunctionCall = layer.get_attr('xls_func_call')
-                    line = append_line(line, INDENT + str(func_call))
+
+                elif '// hls-fpga-machine-learning insert helpers for different input ranks' in line:
+                    """
+                    Generate helper functions for the case of higher-rank input data, for example:
+                        transform_1d(x) -> softmax(x)
+                        transform_2d(x) -> map(transform_1d, x)
+                        transform_3d(x) -> map(transform_2d, x)
+                        // top-level function:
+                        transform(x) -> transform_3d(x)
+                    """
+                    min_input_rank = layer.get_attr('xls_min_input_rank')
+                    input_rank = len(input_var.shape)
+                    for rank in range(min_input_rank, input_rank + 1):
+                        input_type = input_var.type_alias.type
+                        output_type = output_var.type_alias.type
+                        # Get inner type
+                        for k in range(input_rank - rank):
+                            input_type = input_type.element_type
+                            output_type = output_type.element_type
+                        assert input_type.rank == rank, f'Input rank mismatch: expected {rank}, got {input_type.rank}'
+
+                        name = f'transform_{rank}d'
+                        params = []
+                        args = f'x: {input_type}'
+                        if rank == min_input_rank:
+                            body = layer.get_attr('xls_func_call')
+                        else:
+                            body = XLSFunctionCall(name='map', params=[], args=['x', f'transform_{rank - 1}d'])
+
+                        line = append_line(line, XLSFunctionDefinition(
+                            name=name, params=params, args=args, output_type=output_type, body=body
+                        ))
+
+                elif '// hls-fpga-machine-learning insert top-level function call' in line:
+                    input_rank = len(input_var.shape)
+                    line = append_line(line, INDENT + str(
+                        XLSFunctionCall(name=f'transform_{input_rank}d', params=[], args=['x'])))
                 else:
                     pass
                 f.write(line)
