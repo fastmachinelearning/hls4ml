@@ -47,7 +47,7 @@ class XLSFixedPointType:
     def precision(self):
         return FixedPrecisionType(
             width=self.num_bits,
-            integer=self.num_bits - self.binary_exponent,
+            integer=self.num_bits + self.binary_exponent,
             signed=True)
 
     def __str__(self):
