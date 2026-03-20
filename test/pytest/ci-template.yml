@@ -14,11 +14,14 @@
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
     - pip install .${EXTRA_DEPS}
 
-    # set up vivado_hls command
+    # set up Vivado commands
     - mkdir -p cmd_vivado_${VIVADO_VERSION}
     - echo '#!/bin/bash' > cmd_vivado_${VIVADO_VERSION}/vivado_hls
     - echo "apptainer exec --cleanenv --env LANG=C,LC_ALL=C /cvmfs/projects.cern.ch/hls4ml/vivado/${VIVADO_VERSION} vivado_hls \"\$@\"" >> cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - echo '#!/bin/bash' > cmd_vivado_${VIVADO_VERSION}/vivado
+    - echo "apptainer exec --cleanenv --env LANG=C,LC_ALL=C /cvmfs/projects.cern.ch/hls4ml/vivado/${VIVADO_VERSION} vivado \"\$@\"" >> cmd_vivado_${VIVADO_VERSION}/vivado
     - chmod +x cmd_vivado_${VIVADO_VERSION}/vivado_hls
+    - chmod +x cmd_vivado_${VIVADO_VERSION}/vivado
     - export PATH=$PWD/cmd_vivado_${VIVADO_VERSION}:$PATH
 
     # set up vitis-run command
