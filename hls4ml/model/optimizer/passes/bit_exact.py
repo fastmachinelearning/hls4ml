@@ -197,9 +197,17 @@ def _(layer: Transpose):
 
 @_request_kif.register
 def _(layer: DACombinational):
-    comb = layer.attributes['da_comb_trace']
+    comb = layer.attributes['da_comb_logic']
     k, i, f = comb.inp_kifs
-    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+    inp_shapes = get_input_shapes(layer)
+    kk, ii, ff = [], [], []
+    bias = 0
+    for shape in inp_shapes:
+        size = prod(shape)
+        kk.append(k[bias : bias + size].reshape(shape).astype(np.int16))
+        ii.append(i[bias : bias + size].reshape(shape).astype(np.int16))
+        ff.append(f[bias : bias + size].reshape(shape).astype(np.int16))
+    return tuple(zip(kk, ii, ff))
 
 
 def requested_kif(layer: Layer) -> KIF_t:
@@ -646,12 +654,15 @@ def _(layer: UnaryLUT):
 def _(layer: DACombinational):
     from da4ml.trace import FixedVariableArray, comb_trace
 
-    k_in, i_in, f_in = get_input_kifs(layer)[0]
-    inp = FixedVariableArray.from_kif(k_in, i_in, f_in)
-    out = layer.attributes['da_comb_logic'](inp)
+    kifs = [np.array(kif).reshape(3, -1) for kif in get_input_kifs(layer)]
+    kif = np.concatenate(kifs, axis=1)
+    inp = FixedVariableArray.from_kif(*kif)
+    out = layer.attributes['da_comb_logic'](inp.ravel())
     comb = comb_trace(inp, out)
     k, i, f = comb.out_kifs
-    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+    shape = get_output_shape(layer)
+
+    return (k.astype(np.int16).reshape(shape), i.astype(np.int16).reshape(shape), f.astype(np.int16).reshape(shape))
 
 
 def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
