@@ -78,12 +78,12 @@ If you use this software in a publication, please cite the software
   title        = {fastmachinelearning/hls4ml},
   year         = 2025,
   publisher    = {Zenodo},
-  version      = {v1.2.0},
+  version      = {v1.3.0},
   doi          = {10.5281/zenodo.1201549},
   url          = {https://github.com/fastmachinelearning/hls4ml}
 }
 ```
-and first publication:
+the first publication:
 ```bibtex
 @article{Duarte:2018ite,
     author = "Duarte, Javier and others",
@@ -100,6 +100,20 @@ and first publication:
     year = "2018"
 }
 ```
+and the latest overview paper:
+```bibtex
+@article{Schulte:2025mai,
+    author = "Schulte, Jan-Frederik and others",
+    title = "{hls4ml: A Flexible, Open-Source Platform for Deep Learning Acceleration on Reconfigurable Hardware}",
+    eprint = "2512.01463",
+    archivePrefix = "arXiv",
+    primaryClass = "cs.AR",
+    reportNumber = "FERMILAB-PUB-25-0890-CSAID-ETD-PPD",
+    month = "12",
+    year = "2025"
+}
+```
+
 Additionally, if you use specific features developed in later papers, please cite those as well. For example, CNNs:
 ```bibtex
 @article{Aarrestad:2021zos,
