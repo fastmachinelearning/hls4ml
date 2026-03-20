@@ -1,30 +1,25 @@
 # Typing imports
 from __future__ import annotations  # makes all annotations into strings
-from typing import List, Any, TYPE_CHECKING
-from numpy.typing import NDArray
+
+from pathlib import Path
+from typing import Any, TYPE_CHECKING
+
+import xls
+from numpy.typing import NDArray, ArrayLike
+
+from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
-    from hls4ml.model.layers import Layer
-    from subprocess import CompletedProcess
 
 import os, sys
-import re
 import subprocess, shlex
 import numpy as np
 from warnings import warn
-from fxpmath import Fxp
 
 from hls4ml.backends import FPGABackend
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.optimizer import get_backend_passes
 from hls4ml.model.flow import register_flow
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
-from hls4ml.model.layers import (
-    Dense,
-    Layer,
-    Activation,
-    Softmax
-)
 from hls4ml.report import parse_xls_report
 
 
@@ -195,136 +190,106 @@ class XLSBackend(FPGABackend):
 
         os.chdir(curr_dir)
 
-    def predict(self, model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> list[NDArray[np.floating]]:
+    @classmethod
+    def float_to_significand(cls, x: np.floating[Any] | NDArray[np.floating[Any]],
+                             precision: FixedPrecisionType) -> int:
+        assert precision.signed, 'Only signed types are supported'
 
-        def _interpret_input(model: ModelGraph,
-                             path: str,
-                             x_list: NDArray[np.floating],
-                             n_samples: int,
-                             n_inputs: int,
-                             input_width: int,
-                             input_frac: int) -> CompletedProcess[str]:
-            def to_xls_number(x: np.int_) -> str:
-                # Input type is FixedPoint, which in IR reduces to 1-tuple, e.g. (bits[16]:123)
-                # TODO: make top-level function accept integers, sN[N]?
-                return f'(bits[{input_width}]:{x})'
+        width = precision.width
+        frac = precision.fractional
+        scale = 2 ** frac
+        # TODO support different saturation and rounding modes
+        significand = np.round(x * scale).astype(np.int64)
+        n = 2 ** width
+        shift = 2 ** (width - 1)
+        return (significand + shift) % n - shift
 
-            newline = ''
-            for i in range(n_samples):
-                if n_inputs == 1:
-                    inp = [np.asarray(x_list[i])]
-                else:
-                    inp = [np.asarray(xj) for xj in x_list[i]]
-                newline += '['
-                fxp_x: list[NDArray[np.int_]] = Fxp(inp, signed=True, n_word=input_width, n_frac=input_frac).raw()
-                if n_inputs == 1:
-                    newline += to_xls_number(fxp_x[0][0])
-                else:
-                    newline += ','.join(map(to_xls_number, fxp_x))
-                newline += ']\n'
-
-            # run command
-            interpret_cmd = [
-                f'{path}/xls/tools/eval_ir_main',
-                f'firmware/{model.config.get_project_name()}.opt.ir',
-                f'--input_file=-'
-            ]
-            result = subprocess.run(
-                interpret_cmd,
-                input=newline,
-                text=True,
-                check=True,
-                stdout=subprocess.PIPE,
-            )
-            return result
-
-        def _format_output(result: CompletedProcess[str]) -> list:
-            hex_pat = re.compile(r"0x([0-9A-Fa-f]+)")
-            output_type_pat = re.compile(r"bits\[(\d+)\]")
-
-            # process output
-            rows = []
-            for line in result.stdout.splitlines():
-                raw_outputs = hex_pat.findall(line)
-                m = output_type_pat.search(line)
-                output_width = int(m.group(1))
-                if not raw_outputs:
-                    continue
-                int_outputs = [int(o, output_width) for o in raw_outputs]
-
-                # signed interpretation w/ 2's complement
-                sign_bit = 1 << (output_width - 1)
-                full_mask = 1 << output_width
-                sint_output = [(v - full_mask) if (v & sign_bit) else v for v in int_outputs]
-
-                rows.append([sint_output])
-
-            return rows
-
-        def _go_to_original_type(rows: list,
-                                 n_samples: int,
-                                 n_outputs: int,
-                                 python_input_type: np.dtype[np.floating],
-                                 scale) -> list[NDArray[np.floating]]:
-            output = np.array(rows, dtype=np.int32)
-            output = output.astype(python_input_type) / scale
-            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in
-                      range(n_outputs)]
-            return output
-
-        def _correct_dims(results_floats: list[NDArray[np.floating]], n_samples: int, n_outputs: int) -> list[
-            NDArray[np.floating]]:
-            if n_samples == 1 and n_outputs == 1:
-                return result_floats[0][0]
-            elif n_outputs == 1:
-                return result_floats[0]
-            elif n_samples == 1:
-                return [output_i[0] for output_i in result_floats]
-            else:
-                return result_floats
-
-        path: str = self._get_backend_exec_path(model)
-        layers: list[Layer] = list(model.get_layers())
-
-        # Extract dimensions
-        n_samples: int = model._compute_n_samples(x)
-        n_inputs: int = layers[0].get_output_variable().shape[0]  # Get input dimensions
-        n_outputs: int = len(model.get_output_variables())
-
-        # Extract type
-        input_width: int = list(layers[0].get_layer_precision().items())[0][1].precision.width
-        input_frac: int = input_width - list(layers[0].get_layer_precision().items())[0][1].precision.integer
-        output_width: int = list(layers[len(layers) - 1].get_layer_precision().items())[0][1].precision.width
-        output_frac: int = output_width - list(layers[len(layers) - 1].get_layer_precision().items())[0][
-            1].precision.integer
-
-        # extract python type (float/double)
-        if isinstance(x, np.ndarray):
-            python_input_type: np.dtype[np.floating] = x[0].dtype
+    # TODO: move to utils and use in other places instead of fxpmath
+    @staticmethod
+    def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]],
+                         precision: FixedPrecisionType) -> xls.Value:
+        if np.isscalar(x):
+            significand = cls.float_to_significand(x, precision)
+            # Input type in DSLX is FixedPoint, which in IR reduces to 1-tuple, e.g. (bits[16]:123)
+            # TODO: change top-level input type to integers sN[N] and remove make_tuple
+            bits = xls.Value.make_sbits(bit_count=precision.width, val=significand)
+            return xls.Value.make_tuple((bits,))
+        elif isinstance(x, tuple):
+            return xls.Value.make_tuple(tuple(XLSBackend._float_to_xls_ir(item, precision) for item in x))
         else:
-            python_input_type: np.dtype[np.floating] = x.dtype
+            return xls.Value.make_array([XLSBackend._float_to_xls_ir(item, precision) for item in x])
 
-        if n_samples == 1 and n_inputs == 1 and isinstance(x, np.floating):
-            x_list: NDArray[np.floating] = np.array([x], dtype=x.dtype)
-        elif isinstance(x, np.ndarray):
-            x_list: NDArray[np.floating] = x
+    @staticmethod
+    def _xls_ir_to_float(x: xls.Value, precision: FixedPrecisionType,
+                         dtype: np.typing.DTypeLike) -> ArrayLike:
+        match x.get_kind():
+            case xls.c_api.ValueKind.TUPLE:
+                # DSLX FixedPoint -> IR 1-tuple (bits[N])
+                if x.get_element_count() == 1 and x.get_element(0).get_kind() == xls.c_api.ValueKind.BITS:
+                    return x.get_element(0).get_bits().to_int64() / (2 ** precision.fractional)
+                else:
+                    return tuple(
+                        XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)
+                        for i in range(x.get_element_count()))
+            case xls.c_api.ValueKind.ARRAY:
+                return np.asarray([
+                    XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)
+                    for i in range(x.get_element_count())
+                ], dtype=dtype)
+            case _:
+                raise ValueError(f'Unexpected output type: {x.get_kind()}')
 
-        # Change dirs
-        curr_dir = os.getcwd()
-        os.chdir(f'{model.config.get_output_dir()}')
+    # TODO call it in compile() and save to model attribute
+    @staticmethod
+    def _get_top_function(model: ModelGraph):
+        project_dir = model.config.get_output_dir()
+        project_name = model.config.get_project_name()
+        ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
+        ir_text = open(ir_path, 'r').read()
+        pkg = xls.Package.parse_ir(ir_text)
+        fn = pkg.get_function(f'__{project_name}__{project_name}')
+        jit = fn.to_jit()
 
-        # Result processing pipeling
-        result = _interpret_input(model, path, x_list, n_samples, n_inputs, input_width, input_frac)
-        os.chdir(curr_dir)
-        result_formatted = _format_output(result)
-        result_floats: list[NDArray[np.floating]] = _go_to_original_type(result_formatted,
-                                                                         n_samples,
-                                                                         n_outputs,
-                                                                         python_input_type,
-                                                                         scale=2 ** output_frac
-                                                                         )
-        result_corrected_dims: list[NDArray[np.floating]] = _correct_dims(result_floats, n_samples, n_outputs)
-        return result_corrected_dims
+        input_vars = model.get_input_variables()
+        output_vars = model.get_output_variables()
+
+        def top_function(*args):
+            assert len(args) == len(input_vars), f'Expected {len(input_vars)} inputs, got {len(args)}'
+            ir_input = [
+                XLSBackend._float_to_xls_ir(x, var.type.precision)
+                for x, var in zip(args, input_vars)
+            ]
+            ir_output = jit.run(ir_input)
+            if len(output_vars) == 1:
+                return XLSBackend._xls_ir_to_float(ir_output, output_vars[0].type.precision,
+                                                   dtype=np.asarray(args[0]).dtype)
+            else:
+                raise ValueError(f'Only one output variable is supported, got {len(output_vars)}')
+
+        return top_function
+
+    def predict(self, model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> list[NDArray[np.floating]]:
+        top_function = self._get_top_function(model)
+        n_samples = model._compute_n_samples(x)
+        n_inputs = len(model.get_input_variables())
+        n_outputs = len(model.get_output_variables())
+
+        output = []
+        if n_samples == 1 and n_inputs == 1:
+            if np.isscalar(x):
+                x = [x]
+            if np.isscalar(x[0]):
+                x = [x]
+
+        for i in range(n_samples):
+            if n_inputs == 1:
+                inp = [np.asarray(x[i])]
+            else:
+                inp = [np.asarray(xj[i]) for xj in x]
+            predictions = top_function(*inp)
+            output.append(predictions)
+
+        return np.asarray(output)
 
     def build(
             self,
