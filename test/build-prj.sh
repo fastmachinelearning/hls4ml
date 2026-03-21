@@ -7,13 +7,14 @@ hlsver=2020.1
 hlscommand=vivado_hls
 parallel=1
 
-csim="csim=0"
-synth="synth=0"
-cosim="cosim=0"
-validation="validation=0"
-vsynth="vsynth=0"
-export="export=0"
-reset="reset=0"
+csim=0
+synth=0
+cosim=0
+validation=0
+vsynth=0
+export=0
+reset=0
+fifo_opt=0
 
 function print_usage {
    echo "Usage: `basename $0` [OPTION]"
@@ -52,10 +53,29 @@ function print_usage {
 function run_hls {
    hlscommand=$1
    dir=$2
-   opt=$3
-   echo "Building project in ${dir} with options: ${opt}"
+   reset=$3
+   csim=$4
+   synth=$5
+   cosim=$6
+   validation=$7
+   vsynth=$8
+   export=$9
+   fifo_opt=${10}
+   echo "Building project in ${dir} with options: reset=${reset} csim=${csim} synth=${synth} cosim=${cosim} validation=${validation} vsynth=${vsynth} export=${export} fifo_opt=${fifo_opt}"
    cd ${dir}
-   cmd="\"${hlscommand}\" -f build_prj.tcl \"${opt}\" &> build_prj.log"
+   cat > build_opt.tcl << EOF
+array set opt {
+    reset      ${reset}
+    csim       ${csim}
+    synth      ${synth}
+    cosim      ${cosim}
+    validation ${validation}
+    export     ${export}
+    vsynth     ${vsynth}
+    fifo_opt   ${fifo_opt}
+}
+EOF
+   cmd="\"${hlscommand}\" -f build_prj.tcl &> build_prj.log"
    eval ${cmd}
    if [ $? -eq 1 ]; then
       touch BUILD_FAILED
@@ -69,7 +89,7 @@ function check_status {
    cd ${dir}
    if [ -f BUILD_FAILED ]; then
       echo ""
-      echo "Building project ${dir} (${opt}) failed. Log:"
+      echo "Building project ${dir} failed. Log:"
       cat build_prj.log
       echo ""
       failed=1
@@ -87,19 +107,19 @@ while getopts ":d:i:v:p:csrtlenah" opt; do
       ;;
    p) parallel=$OPTARG
       ;;
-   c) csim="csim=1"
+   c) csim=1
       ;;
-   s) synth="synth=1"
+   s) synth=1
       ;;
-   r) cosim="cosim=1"
+   r) cosim=1
       ;;
-   t) validation="validation=1"
+   t) validation=1
       ;;
-   l) vsynth="vsynth=1"
+   l) vsynth=1
       ;;
-   e) export="export=1"
+   e) export=1
       ;;
-   n) reset="reset=1"
+   n) reset=1
       ;;
    a) hlstool='Vitis'
       hlscommand='vitis_hls'
@@ -135,27 +155,25 @@ done
 
 source ${hlsdir}/${hlstool}/${hlsver}/settings64.sh
 
-opt="${reset} ${csim} ${synth} ${cosim} ${validation} ${vsynth} ${export}"
-
 if [ "${parallel}" -gt 1 ]; then
    # Run in parallel
    (
    for dir in *-${hlstool}-${hlsver}/ ; do
       ((n=n%parallel)); ((n++==0)) && wait
-      run_hls "${hlscommand}" "${dir}" "${opt}" &
+      run_hls "${hlscommand}" "${dir}" "${reset}" "${csim}" "${synth}" "${cosim}" "${validation}" "${vsynth}" "${export}" "${fifo_opt}" &
    done
    wait
    )
 else
    # Run sequentially
    for dir in *-${hlstool}-${hlsver}/ ; do
-      run_hls "${hlscommand}" "${dir}" "${opt}"
+      run_hls "${hlscommand}" "${dir}" "${reset}" "${csim}" "${synth}" "${cosim}" "${validation}" "${vsynth}" "${export}" "${fifo_opt}"
    done
 fi
 
 # Check for build errors
 for dir in *-${hlstool}-${hlsver}/ ; do
-   check_status "${dir}" "${opt}"
+   check_status "${dir}"
 done
 
 #cd "${rundir}"
