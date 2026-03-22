@@ -2,14 +2,13 @@ import typing
 from collections.abc import Sequence
 
 from ..einsum_dense import strip_batch_dim
-from ._base import QLayerHandler, register
+from ._base import QLayerHandler
 
 if typing.TYPE_CHECKING:
     import hgq
     from keras import KerasTensor
 
 
-@register
 class QEinsumHandler(QLayerHandler):
     handles = ('hgq.layers.ops.einsum.QEinsum',)
 

@@ -2,14 +2,13 @@ import typing
 from collections.abc import Sequence
 from typing import Any
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     from keras import KerasTensor
     from keras.src.layers.merging.base_merge import Merge
 
 
-@register
 class MergeHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.merging.add.Add',

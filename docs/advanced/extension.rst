@@ -81,7 +81,7 @@ In this case, there a single output with the same shape as the input.
 
             from hls4ml.converters.keras_v3._base import register, KerasV3LayerHandler
 
-            @register
+            # Handlers are registered by metaclass
             class KReverseHandler(KerasV3LayerHandler):
                 '''Keras v3 layer handler for KReverse'''
 

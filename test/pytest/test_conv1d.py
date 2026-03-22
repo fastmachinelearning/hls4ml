@@ -27,7 +27,7 @@ def keras_model():
 
 
 @pytest.fixture
-def hls_model(keras_model, request):
+def hls_model(keras_model, request, test_case_id):
     backend, io_type, strategy = request.param
     default_precision = (
         'ap_fixed<16,3,AP_RND_CONV,AP_SAT>' if backend == 'Vivado' else 'ac_fixed<16,3,true,AC_RND_CONV,AC_SAT>'
@@ -55,7 +55,7 @@ def hls_model(keras_model, request):
     }
     hls_config['LayerName']['output_softmax_softmax'] = {'Strategy': 'Stable'}
 
-    output_dir = str(test_root_path / f'hls4mlprj_conv1d_{backend}_{io_type}_{strategy}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, backend=backend, io_type=io_type, output_dir=output_dir
     )

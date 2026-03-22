@@ -27,7 +27,7 @@ test_root_path = Path(__file__).parent
         ('Vitis', 'io_stream', 'resource'),
     ],
 )
-def test_binary_cnn(backend, io_type, strategy):
+def test_binary_cnn(test_case_id, backend, io_type, strategy):
     x_in = Input(shape=(28, 28, 1))
 
     x = QConv2D(
@@ -85,7 +85,7 @@ def test_binary_cnn(backend, io_type, strategy):
         hls_config['LayerName']['conv2d_2']['Implementation'] = 'im2col'
         hls_config['LayerName']['conv2d_3']['Implementation'] = 'im2col'
 
-    output_dir = str(test_root_path / f'hls4mlprj_binary_cnn_{backend}_{io_type}_{strategy}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model2,
         hls_config=hls_config,

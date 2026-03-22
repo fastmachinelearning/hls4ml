@@ -187,6 +187,7 @@ class VivadoBackend(FPGABackend):
             'vivado:set_pipeline_style',
             'vivado:d_a_latency_dense_template',
             'vivado:d_a_latency_conv_template',
+            'vivado:d_a_combinational_template',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 

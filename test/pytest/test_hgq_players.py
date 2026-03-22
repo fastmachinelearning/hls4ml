@@ -31,7 +31,7 @@ test_path = Path(__file__).parent
 
 
 def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, dir: str, cond=None):
-    output_dir = dir + '/hls4ml_prj'
+    output_dir = dir
     hls_model = convert_from_keras_model(
         proxy,
         io_type=io_type,
@@ -155,11 +155,13 @@ def get_data(shape: tuple[int, ...], v: float, max_scale: float):
 @pytest.mark.parametrize('cover_factor', [1.0])
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
-def test_syn_players(layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
+def test_syn_players(
+    test_case_id, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+):
     model = create_player_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 15), 7, 1)
 
-    path = test_path / f'hls4mlprj_hgq_{layer}_{rnd_strategy}_{io_type}_{aggressive}_{backend}'
+    path = test_path / test_case_id
 
     if 'Signature' in layer:
         q = gfixed(1, 6, 3)

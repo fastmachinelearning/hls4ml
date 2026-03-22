@@ -1776,6 +1776,12 @@ class Einsum(Layer):
         self.add_output_variable(list(out_shape))
 
 
+class DACombinational(Layer):
+    def initialize(self):
+        shape = self.attributes['output_shape']
+        self.add_output_variable(shape)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1853,6 +1859,7 @@ layer_map = {
     'Einsum': Einsum,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
+    'DACombinational': DACombinational,
 }
 
 

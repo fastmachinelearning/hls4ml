@@ -1,7 +1,7 @@
 import typing
 from collections.abc import Sequence
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     import keras
@@ -41,7 +41,6 @@ def strip_batch_dim(equation: str, einsum_dense: bool = True):
     return f'{inp0},{inp1}->{out}'
 
 
-@register
 class EinsumDenseHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.core.einsum_dense.EinsumDense',)
 

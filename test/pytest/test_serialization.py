@@ -33,7 +33,7 @@ def qkeras_model(input_shape):
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_save_load__model(io_type, backend):
+def test_save_load__model(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)
 
     keras_model = qkeras_model(input_shape)
@@ -49,7 +49,7 @@ def test_save_load__model(io_type, backend):
         if layer.startswith('Softmax'):
             config['LayerName'][layer]['Implementation'] = 'legacy'
 
-    out_dir = test_root_path / f'hls4mlprj_serialization_qkeras_{io_type}_{backend}'
+    out_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model,
@@ -71,7 +71,7 @@ def test_save_load__model(io_type, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vitis'])  # Disabling OneAPI for now excessive run time
-def test_save_load_qonnx_model(backend):
+def test_save_load_qonnx_model(test_case_id, backend):
     dl_file = str(example_model_path / 'onnx/branched_model_ch_last.onnx')
 
     qonnx_model = ModelWrapper(dl_file)
@@ -88,7 +88,7 @@ def test_save_load_qonnx_model(backend):
         if layer.startswith('Softmax'):
             config['LayerName'][layer]['Implementation'] = 'legacy'
 
-    out_dir = test_root_path / f'hls4mlprj_serialization_onnx_{backend}'
+    out_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_onnx_model(
         qonnx_model,
@@ -111,7 +111,7 @@ def test_save_load_qonnx_model(backend):
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_linking_project(io_type, backend):
+def test_linking_project(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)
 
     keras_model = qkeras_model(input_shape)
@@ -127,7 +127,7 @@ def test_linking_project(io_type, backend):
         if layer.startswith('Softmax'):
             config['LayerName'][layer]['Implementation'] = 'legacy'
 
-    out_dir = test_root_path / f'hls4mlprj_link_project_{io_type}_{backend}'
+    out_dir = test_root_path / test_case_id
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model,
