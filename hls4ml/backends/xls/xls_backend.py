@@ -56,6 +56,7 @@ class XLSBackend(FPGABackend):
         optimization_passes = [
             # TODO: we fix table sizes in BuildTables, it should be merged into fix_softmax_table_size.
             # 'xls:fix_softmax_table_size',
+            'xls:skip_softmax',
             'infer_precision_types',
         ]
         optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
