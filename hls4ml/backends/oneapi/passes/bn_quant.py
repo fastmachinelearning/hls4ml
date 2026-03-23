@@ -33,7 +33,7 @@ batchnorm_quantized_tanh_function_template = (
 bn_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
 batchnorm_quantized_tanh_task_sequence_template = (
-    'task_sequence<nnet::normalize_{quantize}_tanh_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::normalize_{quantize}_tanh_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 
 batchnorm_quantized_tanh_stream_function_template = '{name}.async({threshold});'

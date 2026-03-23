@@ -47,7 +47,7 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
         self._default_flow = register_flow('accel', None, requires=accel_flow_requirements, backend=self.name)
 
     def create_initial_config(
-        self, part, clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
+        self, part, clock_period=5, hyperopt_handshake=False, io_type='io_parallel', max_parallel=10, write_tar=False, **_
     ):
         """Create initial configuration of the oneAPI backend.
 
@@ -57,11 +57,12 @@ class OneAPIAcceleratorBackend(OneAPIBackend):
             hyperopt_handshake (bool, optional): Should hyper-optimized handshaking be used? Defaults to False
             io_type (str, optional): Type of implementation used. One of
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            max_parallel(int, optional): The maximum invocations (events) processed in parallel, io_stream only.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
 
         Returns:
             dict: initial configuration.
         """
-        config = super().create_initial_config(part, clock_period, hyperopt_handshake, io_type, write_tar, **_)
+        config = super().create_initial_config(part, clock_period, hyperopt_handshake, io_type, max_parallel, write_tar, **_)
         config['UseOneAPIBSP'] = True
         return config

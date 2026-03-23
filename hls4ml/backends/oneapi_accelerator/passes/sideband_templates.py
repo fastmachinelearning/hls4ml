@@ -9,12 +9,13 @@ from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 sideband_config_template = """struct config{index} : nnet::sideband_config {{
     static constexpr unsigned n_in = {n_in};
 }};\n"""
-sideband_stream_function_template = '{name}.async();'
+sideband_extract_stream_function_template = '{name}.async();'
 sideband_extract_task_sequence_template = (
-    'task_sequence<nnet::extract_sideband_stream<{input_pipe}, {output_pipe}, {skip_pipe}, {config}>> {name};'
+    'task_sequence<nnet::extract_sideband_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
+sideband_merge_stream_function_template = '{name}.async(keep_going, count);'
 sideband_merge_task_sequence_template = (
-    'task_sequence<nnet::merge_sideband_stream<{input_pipe}, {output_pipe}, {skip_pipe}, {config}>> {name};'
+    'task_sequence<nnet::merge_sideband_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 sideband_include_list = ['nnet_utils/nnet_stream_beat.h']
 
@@ -39,10 +40,20 @@ class SidebandFunctionTemplate(FunctionCallTemplate):
         return ''
 
 
-class SidebandStreamFunctionTemplate(StreamFunctionCallTemplate):
+class SidebandExtractionStreamFunctionTemplate(StreamFunctionCallTemplate):
     def __init__(self):
-        super().__init__((SidebandExtraction, SidebandMerging))
-        self.template = sideband_stream_function_template
+        super().__init__(SidebandExtraction)
+        self.template = sideband_extract_stream_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        return self.template.format(**params)
+
+
+class SidebandMergeStreamFunctionTemplate(StreamFunctionCallTemplate):
+    def __init__(self):
+        super().__init__(SidebandMerging)
+        self.template = sideband_merge_stream_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -56,7 +67,6 @@ class SidebandExtractionTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['skip_pipe'] = node.get_output_variable('sideband').pipe_name
         return self.template.format(**params)
 
 
@@ -67,5 +77,4 @@ class SidebandMergeTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['skip_pipe'] = node.get_input_variable('sideband').pipe_name
         return self.template.format(**params)

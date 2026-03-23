@@ -1,6 +1,7 @@
 import os
 from shutil import copyfile
 
+from hls4ml.backends.oneapi_accelerator.oneapi_accelerator_layers import SidebandExtraction, SidebandMerging
 from hls4ml.utils.string_utils import convert_to_pascal_case
 from hls4ml.writer.oneapi_writer import OneAPIWriter
 
@@ -31,12 +32,25 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
             io_type = model.config.get_config_value('IOType')
             indent = '    '
 
+            sideband_extraction_layer_names = []
+
             for line in f.readlines():
                 # Add headers to weights and biases
                 if 'myproject' in line:
                     newline = line.replace('myproject', project_name)
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
+
+                # defines
+                elif '// hls-fpga-machine-learning variables' in line:
+                    newline = line
+                    if io_type == 'io_stream':
+                        newline += (
+                            indent
+                            + 'const uint32_t MAX_INVOCATIONS = '
+                            + f'{model.config.get_config_value("MaxParallelInvocations")};\n'
+                        )
+                        newline += indent + 'uint32_t count = 0;\n'
 
                 # oneAPI pipes need to be declared and passed as template parameters
                 elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
@@ -51,9 +65,9 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                 # Read in inputs
                 elif '// hls-fpga-machine-learning read in' in line:
                     newline = line
+                    restartable_kernel_loop = f'bool keep_going = true;\n\n{indent}while (keep_going) {{\n'
+                    newline += indent + restartable_kernel_loop
                     if io_type == 'io_parallel':
-                        restartable_kernel_loop = f'bool keep_going = true;\n\n{indent}while (keep_going) {{\n'
-                        newline += indent + restartable_kernel_loop
                         for inp in model_inputs:
                             newline += indent * 2 + f'auto {inp.name}_beat = {inp.pipe_name}::read();\n'
                             newline += indent * 2 + f'auto {inp.name} = {inp.name}_beat.data;\n'
@@ -80,10 +94,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
 
                 # Neural net instantiation
                 elif '// hls-fpga-machine-learning insert layers' in line:
-                    if io_type == 'io_parallel':
-                        newline = indent + line + '\n'
-                    else:
-                        newline = line + '\n'
+                    newline = indent + line + '\n'
                     for layer in model.get_layers():
                         if io_type != 'io_stream':
                             vars = layer.get_variables()
@@ -97,8 +108,19 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                             if io_type == 'io_parallel'
                             else layer.get_attr('stream_function_cpp')
                         )
+                        # keep track of sideband extraction layers
+                        # Note, currently support only one in model
+                        if isinstance(layer, SidebandExtraction):
+                            sideband_extraction_layer_names.append(layer.name)
                         if func:
-                            newline += (indent * 2 if io_type == 'io_parallel' else indent) + func + '\n'
+                            if isinstance(layer, SidebandMerging):
+                                # need to get the sideband
+                                if len(sideband_extraction_layer_names) != 1:
+                                    raise RuntimeError(
+                                        'If model has a SidebandMergin layer, it needs exactly one SidebandExtraction layer'
+                                    )
+                                newline += indent * 2 + f'keep_going = {sideband_extraction_layer_names[0]}.get();\n'
+                            newline += indent * 2 + func + '\n'
                             if model.config.trace_output and layer.get_attr('trace', False):
                                 newline += '#ifndef HLS_SYNTHESIS\n'
                                 for var in vars:
@@ -109,9 +131,8 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
 
                 # Write the output
                 elif '// hls-fpga-machine-learning return' in line:
-                    newline = line
+                    newline = indent + line
                     if io_type == 'io_parallel':
-                        newline = indent + newline
                         for out in model_outputs:
                             out_beat = f'{out.name}_beat'
                             newline += (
@@ -121,8 +142,15 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                             newline += indent * 2 + f'{out.pipe_name}::write({out_beat});\n'
                         newline += indent * 2 + '// stops the kernel when the last input seen.\n'
                         newline += indent * 2 + f'keep_going = !{model_inputs[0].name}_beat.eop;\n'
-                        newline += f'{indent}}}\n'
-                    # don't need to add anything in io_stream
+                    else:
+                        newline += indent * 2 + 'if (count >= MAX_INVOCATIONS-1) {\n'
+                        for layer in model.get_layers():
+                            if layer.get_attr('stream_function_cpp') and not isinstance(layer, SidebandExtraction):
+                                newline += indent * 3 + f'{layer.name}.get();\n'
+                        newline += indent * 2 + '} else {\n'
+                        newline += indent * 3 + 'count++;\n'
+                        newline += indent * 2 + '}\n'
+                    newline += f'{indent}}}\n'
 
                 # Just copy line
                 else:

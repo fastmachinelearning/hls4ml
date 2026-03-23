@@ -5,7 +5,9 @@ These are the stream oneAPI templates for embedding layers. The io_parallel ones
 from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.model.layers import Embedding
 
-embed_task_sequence_template = 'task_sequence<nnet::embedding_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+embed_task_sequence_template = (
+    'task_sequence<nnet::embedding_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
+)
 embed_stream_function_template = '{name}.async({e});'
 
 

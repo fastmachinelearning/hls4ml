@@ -1,6 +1,5 @@
-from hls4ml.model.attributes import Attribute, TypeAttribute
+from hls4ml.model.attributes import Attribute
 from hls4ml.model.layers import Layer, register_layer
-from hls4ml.model.types import IntegerPrecisionType
 
 SIDEBAND_SHAPE = 2
 
@@ -8,22 +7,11 @@ SIDEBAND_SHAPE = 2
 class SidebandExtraction(Layer):
     """This layer extract the sideband and sends it to a different strem"""
 
-    _expected_attributes = [Attribute('n_in'), TypeAttribute('sideband_t', description='The type of the sidbands')]
+    _expected_attributes = [Attribute('n_in')]
 
     def initialize(self):
         inp = self.get_input_variable()
         self.set_attr('n_in', inp.size())
-
-        # I think the order of these must be as stated because they each set the result_t type.
-        # We want the second one to be the actual result_t.
-        self.add_output_variable(
-            SIDEBAND_SHAPE,
-            out_name='sideband',
-            var_name='sideband_out',
-            type_name='sideband_t',
-            precision=IntegerPrecisionType(1, False),
-        )
-        self.set_attr('sideband_t', self.get_attr('sideband').type)  # need to manually set this, unlike result_t
         self.add_output_variable(inp.shape, precision=inp.type.precision)
 
 

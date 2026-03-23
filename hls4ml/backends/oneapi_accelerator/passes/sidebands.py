@@ -37,7 +37,7 @@ class ExtractSideband(OptimizerPass):
             f'{node.name}_extract_sb',
             attributes,
             inputs=[node.outputs[0]],
-            outputs=[f'{node.name}_extract_sb', 'sideband'],
+            outputs=[f'{node.name}_extract_sb'],
         )
         model.insert_node(new_node)
         return True
@@ -63,8 +63,6 @@ class MergeSideband(OptimizerPass):
 
         if len(inputs) != 1:
             raise RuntimeError('Unsupported number of outputs found')
-
-        inputs.append('sideband')
 
         new_name = f'{node.name}_merge_sb'
         new_node = model.make_node(SidebandMerging, new_name, attributes, inputs=inputs)

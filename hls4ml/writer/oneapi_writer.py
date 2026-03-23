@@ -122,6 +122,16 @@ class OneAPIWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # defines
+                elif '// hls-fpga-machine-learning variables' in line:
+                    newline = line
+                    if io_type == 'io_stream':
+                        newline += (
+                            indent
+                            + 'const uint32_t MAX_INVOCATIONS = '
+                            + f'{model.config.get_config_value("MaxParallelInvocations")};\n'
+                        )
+
                 # oneAPI pipes need to be declared and passed as template parameters
                 elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
                     newline = line

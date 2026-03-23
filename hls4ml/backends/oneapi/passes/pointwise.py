@@ -24,11 +24,13 @@ pointwise_conv2d_function_template = (
 )
 
 pointwise_conv1d_task_sequence_template = (
-    'task_sequence<nnet::pintwise_conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::pintwise_conv_1d_{data_format}_stream'
+    '<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 
 pointwise_conv2d_task_sequence_template = (
-    'task_sequence<nnet::pintwise_conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::pintwise_conv_2d_{data_format}_stream'
+    '<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 
 pointwise_conv_stream_function_template = '{name}.async({w}, {b});'
