@@ -6,7 +6,7 @@ from typing import Literal, Optional, Callable, TYPE_CHECKING
 from numpy.typing import NDArray
 
 from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTensorVariable, XLSArrayType, XLSIntegerType, \
-    XLSArray, XLSFixedPointType
+    XLSArray, XLSFixedPointType, float_to_significand
 from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
@@ -17,7 +17,6 @@ from hls4ml.model.optimizer import OptimizerPass
 
 from functools import wraps
 import numpy as np
-from fxpmath import Fxp
 
 
 class XLSAttrBuilder:
@@ -86,12 +85,9 @@ class XLSAttrBuilder:
                 n_filt = self.node.get_attr('n_filt')
                 mat = np.array(list(list(weights)[0])).reshape(filt_height, filt_width, n_chan, n_filt)
                 mat_T = np.transpose(mat, (3, 2, 0, 1))  # in Keras the weights are transposed
-                fxp_w: NDArray[np.int_] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
             case 'Dense':
                 mat = np.array(list(list(weights)[0])).reshape(in_dim, out_dim)
                 mat_T = mat.T  # in Keras the weights are transposed
-                fxp_w: NDArray[np.int_] = Fxp(mat_T, signed=True, n_word=width, n_frac=frac).raw()
-                # fxp_w: NDArray[NDArray[np.int_]] = Fxp(mat, signed=True, n_word=width, n_frac=frac).raw()
             case _:
                 raise ValueError(f'Unsupported weights for layer {self.node.class_name}')
         shape = mat_T.shape
@@ -99,7 +95,7 @@ class XLSAttrBuilder:
             array_type=XLSArrayType(
                 element_type=XLSIntegerType(width, signed=True),
                 shape=mat_T.shape),
-            array=fxp_w)
+            array=float_to_significand(mat_T, precision))
         xls_precision = XLSFixedPointType.from_precision(precision)
         xls_fixed_point_array = XLSFunctionCall(
             name=f'fixed_point_util::make_fixed_points_{len(shape)}d',
@@ -126,11 +122,11 @@ class XLSAttrBuilder:
         precision: FixedPrecisionType = self.node.get_input_variable().type.precision
         width = precision.width
         frac = precision.fractional
-        fxp_b: NDArray[np.int_] = Fxp(list(list(weights)[1]), signed=True, n_word=width, n_frac=frac).raw()
-        shape = fxp_b.shape
+        raw_bias = float_to_significand(list(list(weights)[1]), precision)
+        shape = raw_bias.shape
         xls_raw_array = XLSArray(
             array_type=XLSArrayType(element_type=XLSIntegerType(width, signed=True), shape=shape),
-            array=fxp_b
+            array=raw_bias
         )
         xls_precision = XLSFixedPointType.from_precision(precision)
         xls_fixed_point_array = XLSFunctionCall(

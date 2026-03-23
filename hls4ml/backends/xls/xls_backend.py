@@ -7,6 +7,7 @@ from typing import Any, TYPE_CHECKING
 import xls
 from numpy.typing import NDArray, ArrayLike
 
+from hls4ml.backends.xls.xls_types import float_to_significand
 from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
@@ -190,26 +191,12 @@ class XLSBackend(FPGABackend):
 
         os.chdir(curr_dir)
 
-    @classmethod
-    def float_to_significand(cls, x: np.floating[Any] | NDArray[np.floating[Any]],
-                             precision: FixedPrecisionType) -> int:
-        assert precision.signed, 'Only signed types are supported'
-
-        width = precision.width
-        frac = precision.fractional
-        scale = 2 ** frac
-        # TODO support different saturation and rounding modes
-        significand = np.round(x * scale).astype(np.int64)
-        n = 2 ** width
-        shift = 2 ** (width - 1)
-        return (significand + shift) % n - shift
-
     # TODO: move to utils and use in other places instead of fxpmath
     @staticmethod
     def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]],
                          precision: FixedPrecisionType) -> xls.Value:
         if np.isscalar(x):
-            significand = cls.float_to_significand(x, precision)
+            significand = float_to_significand(x, precision)
             # Input type in DSLX is FixedPoint, which in IR reduces to 1-tuple, e.g. (bits[16]:123)
             # TODO: change top-level input type to integers sN[N] and remove make_tuple
             bits = xls.Value.make_sbits(bit_count=precision.width, val=significand)

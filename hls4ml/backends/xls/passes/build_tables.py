@@ -6,7 +6,7 @@ from typing import Literal, Callable, TYPE_CHECKING, Any
 from copy import copy
 
 from hls4ml.backends.xls.xls_types import XLSArray, XLSArrayType, XLSFixedPointType, XLSFunctionCall, XLSConst, \
-    XLSLookupTable, XLSFixedPoint
+    XLSLookupTable, XLSFixedPoint, float_to_significand
 from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 from hls4ml.model.optimizer import OptimizerPass
 
 import math
-from fxpmath import Fxp
 
 
 def build_raw_table(func: Callable[[float], float], table_size: int, x_start, step, input_precision: FixedPrecisionType,
@@ -24,10 +23,7 @@ def build_raw_table(func: Callable[[float], float], table_size: int, x_start, st
     raw_data = []
     for i in range(table_size):
         x = x_start + i * step
-        fxp = Fxp(val=func(x), signed=True, n_word=output_precision.width, n_frac=output_precision.fractional,
-                  rounding='around', overflow='saturate')
-        # TODO store raw or Fxp?
-        raw_data.append(fxp.raw())
+        raw_data.append(float_to_significand(func(x), output_precision))
     return raw_data
 
 

@@ -2,9 +2,31 @@ from __future__ import annotations
 
 from typing import Any
 
-from fxpmath import Fxp
+import numpy as np
+from numpy.typing import NDArray
 
 from hls4ml.model.types import FixedPrecisionType, TensorVariable
+
+
+def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
+                         precision: FixedPrecisionType) -> int:
+    """Convert floating point value to fixed point significand.
+
+    Returns: x * 2^precision.fractional
+    """
+    assert precision.signed, 'Only signed types are supported'
+
+    width = precision.width
+    frac = precision.fractional
+    scale = 2 ** frac
+    if not np.isscalar(x):
+        if not isinstance(x, np.ndarray) or x.dtype.kind != 'f':
+            x = np.asarray(x, dtype=np.float64)
+    # TODO support different saturation and rounding modes
+    significand = np.round(x * scale).astype(np.int64)
+    n = 2 ** width
+    shift = 2 ** (width - 1)
+    return (significand + shift) % n - shift
 
 
 # XLS types
@@ -155,9 +177,9 @@ class XLSFixedPoint:
         self.significand = significand
 
     @classmethod
-    def from_fxp(cls, fxp: Fxp):
-        fp_type = XLSFixedPointType.from_precision(fxp.precision)
-        return cls(type=fp_type, significand=fxp.raw())
+    def from_float(cls, x: np.floating[Any], precision: FixedPrecisionType):
+        fp_type = XLSFixedPointType.from_precision(precision)
+        return cls(type=fp_type, significand=float_to_significand(x, precision))
 
     @classmethod
     def min_value(cls, type: XLSFixedPointType | FixedPrecisionType):
