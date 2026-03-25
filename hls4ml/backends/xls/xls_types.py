@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from hls4ml.model.types import FixedPrecisionType, TensorVariable
+from hls4ml.model.types import FixedPrecisionType, TensorVariable, PrecisionType, IntegerPrecisionType
 
 
 def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
@@ -27,6 +27,27 @@ def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
     n = 2 ** width
     shift = 2 ** (width - 1)
     return (significand + shift) % n - shift
+
+
+def to_signed_fixed_precision(precision: PrecisionType) -> FixedPrecisionType:
+    """Convert precision to a signed FixedPrecisionType used by XLS."""
+    assert isinstance(precision, IntegerPrecisionType) or \
+           isinstance(precision, FixedPrecisionType), \
+        f'Unknown precision type: {type(precision)}'
+    fixed_precision = FixedPrecisionType(
+        width=precision.width,
+        integer=precision.integer,
+        signed=precision.signed,
+        rounding_mode=precision.rounding_mode,
+        saturation_mode=precision.saturation_mode,
+    )
+    # Only signed types are supported in XLS
+    if not fixed_precision.signed:
+        fixed_precision.signed = True
+        fixed_precision.width += 1
+        fixed_precision.integer += 1
+
+    return fixed_precision
 
 
 # XLS types

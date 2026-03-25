@@ -3,10 +3,8 @@ from __future__ import annotations  # makes all annotations into strings
 
 from typing import Literal, Optional, Callable, TYPE_CHECKING
 
-from numpy.typing import NDArray
-
 from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTensorVariable, XLSArrayType, XLSIntegerType, \
-    XLSArray, XLSFixedPointType, float_to_significand
+    XLSArray, XLSFixedPointType, float_to_significand, to_signed_fixed_precision
 from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
@@ -63,7 +61,7 @@ class XLSAttrBuilder:
 
     @attach_to_node()
     def xls_weights(self) -> XLSConst | None:
-        weights = self.node.get_weights()
+        weights = self.node.weights.get('weight', None)
         if not weights:
             return None
 
@@ -73,9 +71,7 @@ class XLSAttrBuilder:
         in_dim: int = input_var.shape[0]
         out_dim: int = output_var.shape[0]
 
-        precision: FixedPrecisionType = input_var.type.precision
-        width = precision.width
-        frac = precision.fractional
+        precision: FixedPrecisionType = to_signed_fixed_precision(weights.type.precision)
 
         match self.node.class_name:
             case 'Conv2D':
@@ -83,17 +79,17 @@ class XLSAttrBuilder:
                 filt_height = self.node.get_attr('filt_height')
                 filt_width = self.node.get_attr('filt_width')
                 n_filt = self.node.get_attr('n_filt')
-                mat = np.array(list(list(weights)[0])).reshape(filt_height, filt_width, n_chan, n_filt)
+                mat = np.array(weights.data).reshape(filt_height, filt_width, n_chan, n_filt)
                 mat_T = np.transpose(mat, (3, 2, 0, 1))  # in Keras the weights are transposed
             case 'Dense':
-                mat = np.array(list(list(weights)[0])).reshape(in_dim, out_dim)
+                mat = np.array(weights.data).reshape(in_dim, out_dim)
                 mat_T = mat.T  # in Keras the weights are transposed
             case _:
                 raise ValueError(f'Unsupported weights for layer {self.node.class_name}')
         shape = mat_T.shape
         xls_raw_array = XLSArray(
             array_type=XLSArrayType(
-                element_type=XLSIntegerType(width, signed=True),
+                element_type=XLSIntegerType(precision.width, signed=True),
                 shape=mat_T.shape),
             array=float_to_significand(mat_T, precision))
         xls_precision = XLSFixedPointType.from_precision(precision)
@@ -110,22 +106,15 @@ class XLSAttrBuilder:
 
     @attach_to_node()
     def xls_bias(self) -> XLSConst | None:
-        # TODO: check which element in the precision array should we take
-        #  Currently we assume the precision of weights is the first elem.
-        weights = self.node.get_weights()
-        if not weights or len(weights) < 2:
+        bias = self.node.weights.get('bias', None)
+        if not bias:
             return None
 
-        # get_weights() returns [weights,bias]
-        assert len(weights) == 2, f'len(weights)={len(weights)}, expected 2'
-
-        precision: FixedPrecisionType = self.node.get_input_variable().type.precision
-        width = precision.width
-        frac = precision.fractional
-        raw_bias = float_to_significand(list(list(weights)[1]), precision)
+        precision: FixedPrecisionType = to_signed_fixed_precision(bias.type.precision)
+        raw_bias = float_to_significand(bias.data, precision)
         shape = raw_bias.shape
         xls_raw_array = XLSArray(
-            array_type=XLSArrayType(element_type=XLSIntegerType(width, signed=True), shape=shape),
+            array_type=XLSArrayType(element_type=XLSIntegerType(precision.width, signed=True), shape=shape),
             array=raw_bias
         )
         xls_precision = XLSFixedPointType.from_precision(precision)
