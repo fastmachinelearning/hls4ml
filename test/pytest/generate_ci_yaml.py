@@ -41,6 +41,7 @@ KERAS3_LIST = {
 # Value = chunk size per CI job
 SPLIT_BY_TEST_CASE = {
     'test_keras_api': 1,
+    'test_keras_api_vivadoacc': 1,
 }
 
 
