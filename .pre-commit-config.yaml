@@ -64,6 +64,6 @@ ci:
     autofix_prs: false  # default is true
     autoupdate_branch: 'main'
     autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
-    autoupdate_schedule: weekly
+    autoupdate_schedule: quarterly
     skip: []
     submodules: true
