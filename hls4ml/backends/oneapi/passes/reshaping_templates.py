@@ -33,10 +33,10 @@ zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 
 zeropad1d_task_sequence_template = (
-    'task_sequence<nnet::zeropad1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::zeropad1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 zeropad2d_task_sequence_template = (
-    'task_sequence<nnet::zeropad2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::zeropad2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 
 reshaping_stream_function_template = '{name}.async();'
@@ -116,7 +116,7 @@ resize_config_template = """struct config{index} : nnet::resize_config {{
 
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {output_t}, {config}>({input}, {output});'
 resize_task_sequence_template = (
-    'task_sequence<nnet::resize_{algorithm}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::resize_{algorithm}_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 resize_include_list = ['nnet_utils/nnet_resize.h', 'nnet_utils/nnet_resize_stream.h']
 
@@ -172,7 +172,9 @@ transpose_config_template = """struct {config_name} : nnet::transpose_config {{
 }};\n"""
 
 transpose_function_template = 'nnet::transpose<{input_t}, {output_t}, {config}>({input}, {output});'
-transpose_task_sequence_template = 'task_sequence<nnet::transpose_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+transpose_task_sequence_template = (
+    'task_sequence<nnet::transpose_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
+)
 transpose_include_list = ['nnet_utils/nnet_transpose.h', 'nnet_utils/nnet_transpose_stream.h']
 
 
@@ -215,7 +217,9 @@ class TransposeTaskSequenceTemplate(TaskSequenceTemplate):
 
 
 # Reshape template (only used in streaming)
-reshape_task_sequence_template = 'task_sequence<nnet::repack_stream<{input_pipe}, {output_pipe}, {size}>> {name};'
+reshape_task_sequence_template = (
+    'task_sequence<nnet::repack_stream<{input_pipe}, {output_pipe}, {size}>, MAX_INVOCATIONS> {name};'
+)
 reshape_include_list = ['nnet_utils/nnet_stream.h']
 
 

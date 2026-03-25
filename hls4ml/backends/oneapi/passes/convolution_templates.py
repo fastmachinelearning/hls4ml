@@ -62,7 +62,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
 conv1d_task_sequence_template = (
-    'task_sequence<nnet::conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 
 conv_stream_function_template = '{name}.async({w}, {b});'
@@ -192,7 +192,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
 conv2d_task_sequence_template = (
-    'task_sequence<nnet::conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
 )
 
 conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
