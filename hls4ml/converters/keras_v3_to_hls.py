@@ -180,7 +180,7 @@ class KerasV3HandlerDispatcher:
         if self.allow_da_fallback:
             try:
                 ret = self.da_call(layer, inp_tensors, out_tensors)
-                print(f'DA handler used for layer {layer.name}')
+                print(f'DA handler used for layer {layer.name} ({layer.__class__.__module__}.{layer.__class__.__name__}).')
                 return ret
             except KeyError:
                 pass  # missing DA handler
@@ -208,9 +208,12 @@ class KerasV3HandlerDispatcher:
             raise ValueError(f'DA combinational requires n_out=1, got {n_out=} for layer {layer.name} ({cls_name}).')
 
         input_shapes: list[list[int]] = [list(t.shape[1:]) for t in inp_tensors]  # type: ignore
-        inp = tuple(FixedVariableArrayInput(tuple(shape)).quantize(1, 32, 32) for shape in input_shapes)
         _model = keras.Model(inp_tensors, out_tensors)
-        inp, out = trace_model(_model, inputs=inp)
+        try:
+            inp, out = trace_model(_model)  # When input bw can be determined automatically
+        except (AssertionError, ValueError):
+            inp = tuple(FixedVariableArrayInput(tuple(shape)).quantize(1, 32, 32) for shape in input_shapes)
+            inp, out = trace_model(_model, inputs=inp)
         comb = comb_trace(inp, out)
         input_names = [t.name for t in inp_tensors]
         output_names = [t.name for t in out_tensors]
