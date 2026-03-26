@@ -31,6 +31,13 @@ del module_path
 del optimizers
 
 register_flow(
+    'parse_brevitas',
+    [
+        'brevitas_input_output_optimizer',
+    ],
+)
+
+register_flow(
     'parse_qonnx',
     [
         'reshape_constant',
@@ -59,6 +66,7 @@ register_flow(
         'conv_to_conv_x_d',
         'conv_to_depthwise_conv_x_d',
     ],
+    requires=['parse_brevitas'],
 )
 
 register_flow(
@@ -86,6 +94,7 @@ register_flow(
         'merge_linear_activation',
         # many of the above optimzers need to be done before this
         'infer_precision_types',
+        'adjust_resize_input_precision',
     ],
     requires=['parse_qonnx'],
 )  # TODO Maybe not all QKeras optmizers belong here?
