@@ -305,22 +305,30 @@ class VivadoBackend(FPGABackend):
             if found != 0:
                 raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
 
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
-        vivado_cmd = (
-            f'vivado_hls -f build_prj.tcl "reset={reset} '
-            f'csim={csim} '
-            f'synth={synth} '
-            f'cosim={cosim} '
-            f'validation={validation} '
-            f'export={export} '
-            f'vsynth={vsynth} '
-            f'fifo_opt={fifo_opt}"'
+        build_opts = (
+            'array set opt {\n'
+            f'    reset      {int(reset)}\n'
+            f'    csim       {int(csim)}\n'
+            f'    synth      {int(synth)}\n'
+            f'    cosim      {int(cosim)}\n'
+            f'    validation {int(validation)}\n'
+            f'    export     {int(export)}\n'
+            f'    vsynth     {int(vsynth)}\n'
+            f'    fifo_opt   {int(fifo_opt)}\n'
+            '}\n'
         )
+        output_dir = model.config.get_output_dir()
+        tcl_path = os.path.join(output_dir, 'build_opt.tcl')
+        with open(tcl_path, 'w') as f:
+            f.write(build_opts)
+
+        curr_dir = os.getcwd()
+        os.chdir(output_dir)
+        vivado_cmd = 'vivado_hls -f build_prj.tcl'
         os.system(vivado_cmd)
         os.chdir(curr_dir)
 
-        return parse_vivado_report(model.config.get_output_dir())
+        return parse_vivado_report(output_dir)
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):

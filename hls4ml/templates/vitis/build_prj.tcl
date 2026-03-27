@@ -99,6 +99,89 @@ proc add_vcd_instructions_tcl {} {
     file rename -force $temp $filename
 }
 
+# Generate RTL simulation JSON report from transaction file (latency and II in clock cycles)
+proc generate_rtl_sim_report { project_name } {
+    set transaction_file ${project_name}_prj/solution1/sim/verilog/${project_name}.performance.result.transaction.xml
+    file mkdir vivado_reports
+    set report_json vivado_reports/rtl_sim_${project_name}_report.json
+    if {![file exists $transaction_file]} {
+        puts "WARNING: Transaction file not found: $transaction_file (skipping RTL sim report)"
+        return
+    }
+    set latency_min 0
+    set latency_max 0
+    set latency_sum 0
+    set latency_count 0
+    set ii_min 0
+    set ii_max 0
+    set ii_sum 0
+    set ii_count 0
+    set first_latency 1
+    set first_ii 1
+    set fh [open $transaction_file r]
+    while {[gets $fh line] >= 0} {
+        if {[regexp {transaction\s+\d+:\s+(\d+)\s+(\d+|x)} $line -> lat_val ii_val]} {
+                if {[string is integer -strict $lat_val]} {
+                    set lat [expr {int($lat_val)}]
+                    if $first_latency {
+                        set latency_min $lat
+                        set latency_max $lat
+                        set latency_sum $lat
+                        set latency_count 1
+                        set first_latency 0
+                    } else {
+                        if {$lat < $latency_min} { set latency_min $lat }
+                        if {$lat > $latency_max} { set latency_max $lat }
+                        set latency_sum [expr {$latency_sum + $lat}]
+                        incr latency_count
+                    }
+                }
+                if {$ii_val != "x" && [string is integer -strict $ii_val]} {
+                    set ii [expr {int($ii_val)}]
+                    if $first_ii {
+                        set ii_min $ii
+                        set ii_max $ii
+                        set ii_sum $ii
+                        set ii_count 1
+                        set first_ii 0
+                    } else {
+                        if {$ii < $ii_min} { set ii_min $ii }
+                        if {$ii > $ii_max} { set ii_max $ii }
+                        set ii_sum [expr {$ii_sum + $ii}]
+                        incr ii_count
+                    }
+                }
+        }
+    }
+    close $fh
+    set latency_avg 0
+    if {$latency_count > 0} {
+        set latency_avg [expr {double($latency_sum) / $latency_count}]
+    }
+    set ii_avg 0
+    if {$ii_count > 0} {
+        set ii_avg [expr {double($ii_sum) / $ii_count}]
+    }
+    set ofile [open $report_json w]
+    puts $ofile "\{"
+    puts $ofile "  \"transaction_count\": $latency_count,"
+    puts $ofile "  \"latency\": \{"
+    puts $ofile "    \"min\": $latency_min,"
+    puts $ofile "    \"max\": $latency_max,"
+    puts $ofile "    \"avg\": $latency_avg"
+    puts $ofile "  \},"
+    puts $ofile "  \"initiation_interval\": \{"
+    puts $ofile "    \"min\": $ii_min,"
+    puts $ofile "    \"max\": $ii_max,"
+    puts $ofile "    \"avg\": $ii_avg"
+    puts $ofile "  \}"
+    puts $ofile "\}"
+    flush $ofile
+    close $ofile
+    puts "INFO: RTL sim report written to $report_json"
+    return $report_json
+}
+
 proc report_time { op_name time_start time_end } {
     set time_taken [expr $time_end - $time_start]
     set time_s [expr ($time_taken / 1000) % 60]
@@ -196,9 +279,11 @@ if {$opt(cosim)} {
     set time_end [clock clicks -milliseconds]
     puts "INFO:"
     if {[string equal "$backend" "vivadoaccelerator"]} {
-        puts [read [open ${project_name}_prj/solution1/sim/report/${project_name}_axi_cosim.rpt r]]
+        set report_path [generate_rtl_sim_report ${project_name}_axi]
+        puts [read [open $report_path r]]
     } else {
-        puts [read [open ${project_name}_prj/solution1/sim/report/${project_name}_cosim.rpt r]]
+        set report_path [generate_rtl_sim_report ${project_name}]
+        puts [read [open $report_path r]]
     }
     report_time "C/RTL SIMULATION" $time_start $time_end
 }
