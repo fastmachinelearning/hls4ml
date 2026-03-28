@@ -183,6 +183,18 @@ class XLSWriter(Writer):
                     line = append_line(line, XLSConst(
                         name='OVERFLOW_MODE',
                         value=f'OverflowMode::{precision.saturation_mode}'))
+                    if layer.get_attr('class_name') == 'Conv2D':
+                        line = append_lines(
+                            line,
+                            XLSConst(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
+                            XLSConst(name='STRIDE_WIDTH', value=layer.get_attr('stride_width'), type='u32'),
+                            XLSConst(name='PAD_TOP', value=layer.get_attr('pad_top'), type='u32'),
+                            XLSConst(name='PAD_BOTTOM', value=layer.get_attr('pad_bottom'), type='u32'),
+                            XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
+                            XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
+                            XLSConst(name='DATA_FORMAT',
+                                     value=f"conv2d::DataFormat::{layer.get_attr('data_format').upper()}")
+                        )
 
                 elif '// hls-fpga-machine-learning insert weights' in line:
                     weights = layer.get_attr('xls_weights')

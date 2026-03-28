@@ -199,7 +199,12 @@ class XLSAttrBuilder:
             case 'Conv2D':
                 name = f'conv2d::conv2d_latency'
                 args += ['WEIGHTS', 'BIAS']
-                params = params_out + params_rounding
+                params = params_out + params_rounding + [
+                    'STRIDE_HEIGHT', 'STRIDE_WIDTH',
+                    'PAD_TOP', 'PAD_BOTTOM',
+                    'PAD_LEFT', 'PAD_RIGHT',
+                    'DATA_FORMAT'
+                ]
 
             case 'Activation':
                 func_name = self.node.get_attr('activation').lower()
