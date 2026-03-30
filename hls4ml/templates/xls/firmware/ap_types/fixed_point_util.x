@@ -116,24 +116,58 @@ pub fn make_fixed_points_1d
 }
 
 pub fn make_fixed_points_2d
-    <BE: s32, NB: u32, DIM_1: u32, DIM_2: u32>
-    (significands: sN[NB][DIM_2][DIM_1])
-    -> FixedPoint<NB, BE>[DIM_2][DIM_1] {
+    <BE: s32, NB: u32, DIM_0: u32, DIM_1: u32>
+    (significands: sN[NB][DIM_1][DIM_0])
+    -> FixedPoint<NB, BE>[DIM_1][DIM_0] {
     map(significands, make_fixed_points_1d<BE>)
 }
 
 pub fn make_fixed_points_3d
-    <BE: s32, NB: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32>
-    (significands: sN[NB][DIM_3][DIM_2][DIM_1])
-    -> FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1] {
+    <BE: s32, NB: u32, DIM_0: u32, DIM_1: u32, DIM_2: u32>
+    (significands: sN[NB][DIM_2][DIM_1][DIM_0])
+    -> FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0] {
     map(significands, make_fixed_points_2d<BE>)
 }
 
 pub fn make_fixed_points_4d
-    <BE: s32, NB: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32, DIM_4: u32>
-    (significands: sN[NB][DIM_4][DIM_3][DIM_2][DIM_1])
-    -> FixedPoint<NB, BE>[DIM_4][DIM_3][DIM_2][DIM_1] {        
+    <BE: s32, NB: u32, DIM_0: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32>
+    (significands: sN[NB][DIM_3][DIM_2][DIM_1][DIM_0])
+    -> FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0] {        
     map(significands, make_fixed_points_3d<BE>)
+}
+
+// === Convert FixedPoint array to array of significands sN[NB] ===
+
+pub fn to_significand
+    <NB: u32, BE: s32>
+    (x: FixedPoint<NB, BE>) 
+    -> sN[NB] {
+    x.significand
+}
+
+pub fn to_significand_1d
+    <NB: u32, BE: s32, DIM_0: u32>
+    (x: FixedPoint<NB, BE>[DIM_0])
+    -> sN[NB][DIM_0] {
+    map(x, to_significand)
+}
+pub fn to_significand_2d
+    <NB: u32, BE: s32, DIM_0: u32, DIM_1: u32>
+    (x: FixedPoint<NB, BE>[DIM_1][DIM_0])
+    -> sN[NB][DIM_1][DIM_0] {
+    map(x, to_significand_1d)
+}
+pub fn to_significand_3d
+    <NB: u32, BE: s32, DIM_0: u32, DIM_1: u32, DIM_2: u32>
+    (x: FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0])
+    -> sN[NB][DIM_2][DIM_1][DIM_0] {
+    map(x, to_significand_2d)
+}
+pub fn to_significand_4d
+    <NB: u32, BE: s32, DIM_0: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32>
+    (x: FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0])
+    -> sN[NB][DIM_3][DIM_2][DIM_1][DIM_0] {
+    map(x, to_significand_3d)
 }
 
 // === Change width and exponent ===

@@ -249,10 +249,14 @@ class XLSArray:
 
 
 class XLSFunctionCall:
-    def __init__(self, name, params, args):
+    def __init__(self, name, params=None, args=None):
         self.name = name
-        self.params = params
-        self.args = args
+        self.params = params or []
+        self.args = args or []
+        if isinstance(self.params, str):
+            self.params = [self.params]
+        if isinstance(self.args, str):
+            self.args = [self.args]
 
     @property
     def namespace(self):
@@ -303,6 +307,17 @@ class XLSImport:
         return f'import {self.name}{as_alias};'
 
 
+class XLSVariableDefinition:
+    def __init__(self, name, value, type=None):
+        self.name = name
+        self.type = type
+        self.value = value
+
+    def __str__(self):
+        type = f': {self.type}' if self.type else ''
+        return f'let {self.name}{type} = {self.value};'
+
+
 class XLSFunctionDefinition:
     def __init__(self, name, params, args, output_type, body):
         self.name = name
@@ -344,6 +359,7 @@ class XLSTensorVariable:
         )
         name = name[0].upper() + name[1:].lower()
         self.type_alias = XLSTypeAlias(name=f'{name}Type', type=self.to_array_type())
+        self.type_alias_bits = XLSTypeAlias(name=f'{name}TypeBits', type=self.to_array_type_bits())
 
     @classmethod
     def from_tensor_variable(cls, name: str, var: TensorVariable) -> XLSTensorVariable:
@@ -357,13 +373,19 @@ class XLSTensorVariable:
             shape=var.shape)
 
     def definitions(self) -> list[XLSConst | XLSTypeAlias]:
-        return [self.num_bits, self.binary_exponent] + list(self.shape) + [self.type_alias]
+        return [self.num_bits, self.binary_exponent] + list(self.shape) + [self.type_alias, self.type_alias_bits]
 
     def to_array_type(self) -> XLSArrayType:
         return XLSArrayType(
             element_type=XLSFixedPointType(
                 self.num_bits.name,
                 binary_exponent=self.binary_exponent.name),
+            shape=tuple(dim.name for dim in self.shape)
+        )
+
+    def to_array_type_bits(self) -> XLSArrayType:
+        return XLSArrayType(
+            element_type=XLSIntegerType(width=self.num_bits.name, signed=True),
             shape=tuple(dim.name for dim in self.shape)
         )
 

@@ -192,18 +192,13 @@ class XLSBackend(FPGABackend):
 
         os.chdir(curr_dir)
 
-    # TODO: move to utils and use in other places instead of fxpmath
     @staticmethod
     def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]],
                          precision: FixedPrecisionType) -> xls.Value:
         if np.isscalar(x):
             significand = float_to_significand(x, precision)
-            # Input type in DSLX is FixedPoint, which in IR reduces to 1-tuple, e.g. (bits[16]:123)
-            # TODO: change top-level input type to integers sN[N] and remove make_tuple
             bits = xls.Value.make_sbits(bit_count=precision.width, val=significand)
-            return xls.Value.make_tuple((bits,))
-        elif isinstance(x, tuple):
-            return xls.Value.make_tuple(tuple(XLSBackend._float_to_xls_ir(item, precision) for item in x))
+            return bits
         else:
             return xls.Value.make_array([XLSBackend._float_to_xls_ir(item, precision) for item in x])
 
@@ -211,14 +206,8 @@ class XLSBackend(FPGABackend):
     def _xls_ir_to_float(x: xls.Value, precision: FixedPrecisionType,
                          dtype: np.typing.DTypeLike) -> ArrayLike:
         match x.get_kind():
-            case xls.c_api.ValueKind.TUPLE:
-                # DSLX FixedPoint -> IR 1-tuple (bits[N])
-                if x.get_element_count() == 1 and x.get_element(0).get_kind() == xls.c_api.ValueKind.BITS:
-                    return x.get_element(0).get_bits().to_int64() / (2 ** precision.fractional)
-                else:
-                    return tuple(
-                        XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)
-                        for i in range(x.get_element_count()))
+            case xls.c_api.ValueKind.BITS:
+                return x.get_bits().to_int64() / (2 ** precision.fractional)
             case xls.c_api.ValueKind.ARRAY:
                 return np.asarray([
                     XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)

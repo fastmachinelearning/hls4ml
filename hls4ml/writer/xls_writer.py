@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
 from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTypeAlias, XLSImport, XLSFunctionDefinition, \
-    XLSTensorVariable
+    XLSTensorVariable, XLSVariableDefinition
 from hls4ml.model.layers import Layer
 from hls4ml.model.types import FixedPrecisionType
 
@@ -103,29 +103,57 @@ class XLSWriter(Writer):
                     line = line.replace('myproject', model.config.get_project_name())
 
                 elif '// hls-fpga-machine-learning insert imports' in line:
-                    input_type = None
-                    output_type = None
-                    for layer in layers:
-                        layer_module_name = layer.get_attr('xls_module_name')
-                        input_var = layer.get_attr('xls_input_variable')
-                        output_var = layer.get_attr('xls_output_variable')
+                    line = append_lines(line, (XLSImport(layer.get_attr('xls_module_name')) for layer in layers))
 
-                        input_type = input_type or f'{layer_module_name}::{input_var.type_alias.name}'
-                        output_type = f'{layer_module_name}::{output_var.type_alias.name}'
-                        line = append_line(line, XLSImport(layer_module_name))
-                    line = append_lines(line,
-                                        XLSTypeAlias(name='InputType', type=input_type),
-                                        XLSTypeAlias(name='OutputType', type=output_type))
+                    input_module = layers[0].get_attr('xls_module_name')
+                    output_module = layers[-1].get_attr('xls_module_name')
+                    input_var = layers[0].get_attr('xls_input_variable')
+                    output_var = layers[-1].get_attr('xls_output_variable')
+
+                    line = append_lines(
+                        line,
+                        XLSConst(name='INPUT_BINARY_EXPONENT',
+                                 value=f'{input_module}::{input_var.binary_exponent.name}',
+                                 type='s32'),
+                        XLSTypeAlias(name='InputType', type=f'{input_module}::{input_var.type_alias.name}'),
+                        XLSTypeAlias(name='InputTypeBits', type=f'{input_module}::{input_var.type_alias_bits.name}'),
+                        XLSTypeAlias(name='OutputType', type=f'{output_module}::{output_var.type_alias.name}'),
+                        XLSTypeAlias(name='OutputTypeBits', type=f'{output_module}::{output_var.type_alias_bits.name}'),
+                    )
 
                 elif '// hls-fpga-machine-learning insert layers' in line:
                     prev_var = 'x'
                     for layer in layers:
                         layer_module_name = layer.get_attr('xls_module_name')
                         var = f'z{layer.index}'
-                        line = append_line(line, INDENT + f'let {var} = {layer_module_name}::transform({prev_var});')
+                        line = append_line(line, INDENT + str(
+                            XLSVariableDefinition(
+                                name=var,
+                                value=XLSFunctionCall(
+                                    name=f'{layer_module_name}::transform',
+                                    args=[prev_var]))))
                         prev_var = var
 
-                    line = append_line(line, INDENT + prev_var + '\n')
+                    line = append_line(line, INDENT + prev_var)
+
+                elif '// hls-fpga-machine-learning convert from bits' in line:
+                    input_rank = len(layers[0].get_attr('xls_input_variable').shape)
+                    output_rank = len(layers[-1].get_attr('xls_output_variable').shape)
+
+                    line = append_lines(
+                        line,
+                        [f'{INDENT}{x}'
+                         for x in (
+                             XLSVariableDefinition(name='y', value=XLSFunctionCall(
+                                 name=f'fixed_point_util::make_fixed_points_{input_rank}d',
+                                 params=['INPUT_BINARY_EXPONENT'],
+                                 args='x')),
+                             XLSVariableDefinition(name='z', value=XLSFunctionCall(
+                                 name=f'{model.config.get_project_name()}_fixed_point',
+                                 args='y')),
+                             XLSFunctionCall(name=f'fixed_point_util::to_significand_{output_rank}d', args='z')
+                         )]
+                    )
 
                 else:
                     pass
