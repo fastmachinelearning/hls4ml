@@ -24,7 +24,7 @@ class XLSAttrBuilder:
     The new attributes must be accessed with .get_attr(...)
 
     New attributes:
-        - xls_module_name (str):                  DSLX module name (e.g. layer_4) used for the layer
+        - xls_module_name (str):                  DSLX module name (e.g. layer_4_softmax) used for the layer
         - xls_input_variable(XLSTensorVariable):  XLS representation of input shape and precision
         - xls_output_variable(XLSTensorVariable): XLS representation of output shape and precision
         - xls_weights(XLSArray):                  Weights converted to XLS array
@@ -131,7 +131,8 @@ class XLSAttrBuilder:
 
     @attach_to_node()
     def xls_module_name(self) -> str:
-        return f'layer_{self.node.index}'
+        name = ''.join(c for c in self.node.name if c.isalnum() or c == '_').lower()
+        return f'layer_{self.node.index}_{name}'
 
     @attach_to_node()
     def xls_output_variable(self) -> XLSTensorVariable:
