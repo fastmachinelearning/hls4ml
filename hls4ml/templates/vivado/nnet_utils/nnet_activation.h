@@ -86,6 +86,7 @@ template <typename CONFIG_T, int N_TABLE> void init_sigmoid_table(typename CONFI
         float in_val = 2 * 8.0 * (ii - float(N_TABLE) / 2.0) / float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = sigmoid_fcn_float(in_val);
+        // std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }

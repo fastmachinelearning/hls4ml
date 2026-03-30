@@ -1,9 +1,3 @@
-# Typing imports
-from __future__ import annotations # makes all annotations into strings
-from typing import List, Any, TYPE_CHECKING
-if TYPE_CHECKING:
-    pass # Add typing classes here
-
 import math
 import re
 import subprocess
@@ -199,7 +193,6 @@ class FPGABackend(Backend):
 
         return lib_name
 
-
     def write(self, model):
         """Write the generated project to disk.
 
@@ -212,7 +205,7 @@ class FPGABackend(Backend):
 
         model.apply_flow(self.get_writer_flow())
 
-    def get_writer_flow(self) -> str:
+    def get_writer_flow(self):
         raise NotImplementedError
 
     def get_layer_mult_size(self, layer):
