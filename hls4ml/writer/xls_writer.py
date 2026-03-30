@@ -96,7 +96,6 @@ class XLSWriter(Writer):
         output_path = firmware_dir(model) / f'{model.config.get_project_name()}.x'
 
         layers = list(model.get_layers())
-        last_layer_dim_key = ''
         with open(output_path, 'w') as f:
             for line in open(XLS_TEMPLATE_DIR / 'firmware/myproject.x'):
                 # Add headers to weights and biases
@@ -127,20 +126,6 @@ class XLSWriter(Writer):
                         prev_var = var
 
                     line = append_line(line, INDENT + prev_var + '\n')
-
-                elif '// hls-fpga-machine-learning insert call inlined weights' in line:
-                    line = INDENT + INDENT
-                    weighted_layers_count = 0
-                    for i, layer in enumerate(layers):
-                        if layer.class_name == 'Input':
-                            line += 'x,'
-                        elif layer.get_attr("write_weights"):
-                            line += f'w{i}, b{i}'
-                            if weighted_layers_count < len(
-                                    [layer for layer in layers if layer.get_attr("write_weights")]) - 1:
-                                line += ', '
-                                weighted_layers_count += 1
-                    line += '\n'
 
                 else:
                     pass
