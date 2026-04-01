@@ -153,42 +153,32 @@ class XLSBackend(FPGABackend):
             'WriteTar': write_tar,
             'TBOutputStream': tb_output_stream,
         }
-        # TODO: update to a better way to access the bazel-bin project
+        # TODO: in future, it will be bundled to pyxls
+        config['dslx_stdlib_path'] = '$HOME/xls/xls/dslx/stdlib'
+        # TODO: use pyxls for codegen and remove this from config
         config['xls_bazel_bin_path'] = '$HOME/xls/bazel-bin'
 
         return config
 
-    def _get_backend_exec_path(self, model: ModelGraph) -> str:
-        if 'linux' in sys.platform:
-            path: str = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
-            if os.path.isdir(path) == 0:
-                raise Exception(
-                    'XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
-        return path
+    @staticmethod
+    def _ir_top_function_name(model: ModelGraph):
+        name = model.config.get_project_name()
+        return xls.mangle_dslx_name(module_name=name, function_name=name)
 
     def compile(self, model: ModelGraph) -> None:
-
-        path = self._get_backend_exec_path(model)
-
         curr_dir = os.getcwd()
         os.chdir(f'{model.config.get_output_dir()}/firmware')
         kernel_name = model.config.get_project_name()
+        dslx_stdlib_path = os.path.expandvars(model.config.get_config_value('dslx_stdlib_path'))
 
-        ## Generate IR
+        ir_text = xls.c_api.xls_convert_dslx_path_to_ir(path=f'{kernel_name}.x',
+                                                        dslx_stdlib_path=dslx_stdlib_path)
         with open(f'{kernel_name}.ir', 'w') as ir_file:
-            gen_cmd = [
-                f'{path}/xls/dslx/ir_convert/ir_converter_main',
-                f'--top={kernel_name}',
-                f'{kernel_name}.x'
-            ]
-            subprocess.run(gen_cmd, check=True, stdout=ir_file)
-        ## Optimize IR
-        with open(f'{kernel_name}.opt.ir', 'w') as opt_file:
-            opt_cmd = [
-                f'{path}/xls/tools/opt_main',
-                f'{kernel_name}.ir'
-            ]
-            subprocess.run(opt_cmd, check=True, stdout=opt_file)
+            ir_file.write(ir_text)
+
+        opt_ir_text = xls.optimize_ir(ir=ir_text, top=XLSBackend._ir_top_function_name(model))
+        with open(f'{kernel_name}.opt.ir', 'w') as opt_ir_file:
+            opt_ir_file.write(opt_ir_text)
 
         os.chdir(curr_dir)
 
@@ -224,7 +214,7 @@ class XLSBackend(FPGABackend):
         ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
         ir_text = open(ir_path, 'r').read()
         pkg = xls.Package.parse_ir(ir_text)
-        fn = pkg.get_function(f'__{project_name}__{project_name}')
+        fn = pkg.get_function(XLSBackend._ir_top_function_name(model))
         jit = fn.to_jit()
 
         input_vars = model.get_input_variables()
