@@ -2,7 +2,7 @@
 from __future__ import annotations  # makes all annotations into strings
 
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Dict
 
 import xls
 from numpy.typing import NDArray, ArrayLike
@@ -13,8 +13,8 @@ from hls4ml.model.types import FixedPrecisionType
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
 
-import os, sys
-import subprocess, shlex
+import os
+import subprocess
 import numpy as np
 from warnings import warn
 
@@ -107,6 +107,7 @@ class XLSBackend(FPGABackend):
             write_weights_txt=True,
             write_tar=False,
             tb_output_stream='both',
+            xls_codegen_flags=None,
             **_,
     ) -> dict[str, Any]:
         """Create an initial configuration of the XLS backend.
@@ -123,6 +124,7 @@ class XLSBackend(FPGABackend):
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
             tb_output_stream (str, optional): Controls where to write the output. Options are 'stdout', 'file' and 'both'.
                 Defaults to 'both'.
+            xls_codegen_flags (dict, optional): Flags to pass to the XLS codegen. Defaults to None.:
 
         Returns:
             dict: initial configuration.
@@ -142,8 +144,19 @@ class XLSBackend(FPGABackend):
         }
         # TODO: in future, it will be bundled to pyxls
         config['dslx_stdlib_path'] = '$HOME/xls/xls/dslx/stdlib'
-        # TODO: use pyxls for codegen and remove this from config
-        config['xls_bazel_bin_path'] = '$HOME/xls/bazel-bin'
+
+        # Set default flags to mimic codegen_main executable behavior
+        config['XLSCodegenFlags'] = xls_codegen_flags or {
+            'delay_model': 'asap7',
+            'generator': 'pipeline',
+            'use_system_verilog': True,
+            'flop_inputs': True,
+            'flop_outputs': True,
+            'max_inline_depth': 5,
+            'flop_single_value_channels': True,
+            # convert nanoseconds to picoseconds
+            'clock_period_ps': config['ClockPeriod'] * 1000,
+        }
 
         return config
 
@@ -248,7 +261,7 @@ class XLSBackend(FPGABackend):
     def build(
             self,
             model: ModelGraph,
-            reset: bool = True,
+            reset: bool | None = None,
             pr: bool = False,
     ) -> dict:
         """ Builds the RTL (SystemVerilog) code and uses Vivado to return the resource utilization.
@@ -256,20 +269,16 @@ class XLSBackend(FPGABackend):
         Args:
             model (ModelGraph): the hls4ml model.
             reset (bool): the reset synthesis option
-            clk_period (int):  clock period in nanoseconds (e.g., 5 ns => 1,000 / 5 = 200 MHz)
             pr (bool): place and route option
         """
 
-        if 'linux' in sys.platform:
-            path = os.path.expandvars(model.config.get_config_value('xls_bazel_bin_path'))
-            if os.path.isdir(path) == 0:
-                raise Exception(
-                    'XLS is expected to be installed in your $HOME dir. We are looking for `$HOME/xls/bazel-bin`')
-
-        def build_flags() -> str:
-            flags = f'--delay_model=asap7 --fifo_module="xls_fifo_wrapper" --clock_period_ps={model.config.get_config_value("ClockPeriod") * 1000} '
-            if reset:
-                flags += '--reset=reset'
+        def build_codegen_flags() -> Dict[str, Any]:
+            flags = dict(model.config.get_config_value('XLSCodegenFlags'))
+            # convert nanoseconds to picoseconds
+            flags['clock_period_ps'] = model.config.get_config_value("ClockPeriod") * 1000
+            if reset is not None:
+                flags['reset'] = 'reset' if reset else None
+                flags['reset_data_path'] = reset
             return flags
 
         def build_vivado_flags() -> list[str]:
@@ -292,15 +301,14 @@ class XLSBackend(FPGABackend):
         kernel_name = model.config.get_project_name()
 
         # Generate RTL
-        codegen_flags: str = build_flags()
-        with open(f'{kernel_name}.sv', 'w') as synth_file:
-            flags = shlex.split(codegen_flags)
-            synth_cmd = [
-                f'{path}/xls/tools/codegen_main',
-                *flags,
-                f'{kernel_name}.opt.ir',
-            ]
-            subprocess.run(synth_cmd, check=True, stdout=synth_file)
+
+        opt_ir_path = f'{kernel_name}.opt.ir'
+        opt_ir_text = Path(opt_ir_path).read_text()
+        codegen_flags = build_codegen_flags()
+
+        pkg = xls.parse_ir_package(ir=opt_ir_text, filename=opt_ir_path)
+        verilog_text = pkg.schedule_and_codegen(**codegen_flags).get_verilog_text()
+        Path(f'{kernel_name}.sv').write_text(verilog_text)
 
         # Run Vivado for resource report
         os.chdir(curr_dir)
