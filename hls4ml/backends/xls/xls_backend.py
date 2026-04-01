@@ -212,7 +212,7 @@ class XLSBackend(FPGABackend):
         project_dir = model.config.get_output_dir()
         project_name = model.config.get_project_name()
         ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
-        ir_text = open(ir_path, 'r').read()
+        ir_text = ir_path.read_text()
         pkg = xls.Package.parse_ir(ir_text)
         fn = pkg.get_function(XLSBackend._ir_top_function_name(model))
         jit = fn.to_jit()
