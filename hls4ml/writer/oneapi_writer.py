@@ -128,7 +128,7 @@ class OneAPIWriter(Writer):
                     if io_type == 'io_stream':
                         newline += (
                             indent
-                            + 'const uint32_t MAX_INVOCATIONS = '
+                            + 'const uint32_t MAX_INVOC = '
                             + f'{model.config.get_config_value("MaxParallelInvocations")};\n'
                         )
 

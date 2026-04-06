@@ -47,7 +47,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                     if io_type == 'io_stream':
                         newline += (
                             indent
-                            + 'const uint32_t MAX_INVOCATIONS = '
+                            + 'const uint32_t MAX_INVOC = '
                             + f'{model.config.get_config_value("MaxParallelInvocations")};\n'
                         )
                         newline += indent + 'uint32_t count = 0;\n'
@@ -143,7 +143,7 @@ class OneAPIAcceleratorWriter(OneAPIWriter):
                         newline += indent * 2 + '// stops the kernel when the last input seen.\n'
                         newline += indent * 2 + f'keep_going = !{model_inputs[0].name}_beat.eop;\n'
                     else:
-                        newline += indent * 2 + 'if (count >= MAX_INVOCATIONS-1) {\n'
+                        newline += indent * 2 + 'if (count >= MAX_INVOC-1) {\n'
                         for layer in model.get_layers():
                             if layer.get_attr('stream_function_cpp') and not isinstance(layer, SidebandExtraction):
                                 newline += indent * 3 + f'{layer.name}.get();\n'

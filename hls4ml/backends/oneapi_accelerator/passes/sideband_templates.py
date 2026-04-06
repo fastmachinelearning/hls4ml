@@ -11,11 +11,11 @@ sideband_config_template = """struct config{index} : nnet::sideband_config {{
 }};\n"""
 sideband_extract_stream_function_template = '{name}.async();'
 sideband_extract_task_sequence_template = (
-    'task_sequence<nnet::extract_sideband_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
+    'task_sequence<nnet::extract_sideband_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOC, MAX_INVOC> {name};'
 )
 sideband_merge_stream_function_template = '{name}.async(keep_going, count);'
 sideband_merge_task_sequence_template = (
-    'task_sequence<nnet::merge_sideband_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
+    'task_sequence<nnet::merge_sideband_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOC, MAX_INVOC> {name};'
 )
 sideband_include_list = ['nnet_utils/nnet_stream_beat.h']
 

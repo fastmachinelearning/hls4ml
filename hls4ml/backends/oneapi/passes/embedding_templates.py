@@ -6,7 +6,7 @@ from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, T
 from hls4ml.model.layers import Embedding
 
 embed_task_sequence_template = (
-    'task_sequence<nnet::embedding_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
+    'task_sequence<nnet::embedding_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOC, MAX_INVOC> {name};'
 )
 embed_stream_function_template = '{name}.async({e});'
 

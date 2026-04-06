@@ -101,7 +101,7 @@ gru_function_initial_state_template = (
     'nnet::gru_init_state<{input_t}, {h_t}, {output_t}, {config}>({input}, {init_state}, {output}, {w}, {wr}, {b}, {br});'
 )
 gru_task_sequence_template = (
-    'task_sequence<nnet::gru_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS> {name};'
+    'task_sequence<nnet::gru_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOC, MAX_INVOC> {name};'
 )
 gru_stream_function_template = '{name}.async({w}, {wr}, {b}, {br});'
 

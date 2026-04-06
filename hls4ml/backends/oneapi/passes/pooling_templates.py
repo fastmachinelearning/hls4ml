@@ -75,18 +75,21 @@ global_pooling2d_function_template = (
 )
 
 pooling1d_task_sequence_template = (
-    'task_sequence<nnet::pooling1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS>({name});'
+    'task_sequence<nnet::pooling1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, '
+    'MAX_INVOC, MAX_INVOC>({name});'
 )
 pooling2d_task_sequence_template = (
-    'task_sequence<nnet::pooling2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS>({name});'
+    'task_sequence<nnet::pooling2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>, '
+    'MAX_INVOC, MAX_INVOC>({name});'
 )
+
 global_pooling1d_task_sequence_template = (
     'task_sequence<nnet::global_pooling1d_{data_format}_stream'
-    '<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS>({name});'
+    '<{input_pipe}, {output_pipe}, {config}>, MAX_INVOC, MAX_INVOC>({name});'
 )
 global_pooling2d_task_sequence_template = (
     'task_sequence<nnet::global_pooling2d_{data_format}_stream'
-    '<{input_pipe}, {output_pipe}, {config}>, MAX_INVOCATIONS>({name});'
+    '<{input_pipe}, {output_pipe}, {config}>, MAX_INVOC, MAX_INVOC>({name});'
 )
 pooling_stream_function_template = '{name}.async();'
 

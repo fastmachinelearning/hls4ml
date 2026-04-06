@@ -17,7 +17,9 @@ class CloneTaskSequenceTemplate(TaskSequenceTemplate):
 
         output_pipes = ', '.join([f'{{output{i + 1}_pipe}}' for i in range(len(node.outputs))])
 
-        template = f'task_sequence<nnet::clone_stream<{{input_pipe}}, {output_pipes}, {{size}}>, MAX_INVOCATIONS> {{name}};'
+        template = (
+            f'task_sequence<nnet::clone_stream<{{input_pipe}}, {output_pipes}, {{size}}>, MAX_INVOC, MAX_INVOC> {{name}};'
+        )
         return template.format(**params)
 
 
