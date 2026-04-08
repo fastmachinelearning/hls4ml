@@ -13,11 +13,34 @@ pub enum DataFormat: u1 {
     CHANNELS_FIRST = 1
 }
 
-fn height_width_chans(dim_0: u32, dim_1: u32, dim_2: u32, data_format: DataFormat) -> u32[3] {    
+fn to_height_width_chans(dim_0: u32, dim_1: u32, dim_2: u32, data_format: DataFormat) -> u32[3] {    
     match data_format {
         DataFormat::CHANNELS_LAST  => [dim_0, dim_1, dim_2],
-        DataFormat::CHANNELS_FIRST => [dim_2, dim_0, dim_1]
+        // CHW -> HWC
+        DataFormat::CHANNELS_FIRST => [dim_1, dim_2, dim_0]
     }
+}
+
+fn from_height_width_chans(height: u32, width: u32, channels: u32, data_format: DataFormat) -> u32[3] {    
+    match data_format {
+        DataFormat::CHANNELS_LAST  => [height, width, channels],
+        // HWC -> CHW
+        DataFormat::CHANNELS_FIRST => [channels, height, width]
+    }
+}
+
+#[test]
+fn test_data_format() {
+    let (h, w, c) = (1,2,3);
+    for (data_format, _) in [DataFormat::CHANNELS_LAST, DataFormat::CHANNELS_FIRST] {
+        let dims = from_height_width_chans(h, w, c, data_format);
+        let hwc = to_height_width_chans(dims[0], dims[1], dims[2], data_format);
+        assert_eq(hwc, [h, w, c]);
+        assert_eq(
+            dims == hwc,
+            data_format == DataFormat::CHANNELS_LAST
+        );
+    }(());
 }
 
 pub fn conv2d_latency
@@ -40,30 +63,39 @@ pub fn conv2d_latency
     // Bias
     BIAS_NB: u32, BIAS_BE: s32,
     // Input image
-    IN_HEIGHT: u32 = {height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[0]},
-    IN_WIDTH: u32 = {height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[1]},
-    IN_CHANNELS: u32 = {height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[2]},
+    IN_HEIGHT: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[0]},
+    IN_WIDTH: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[1]},
+    IN_CHANNELS: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[2]},
     // Output Image
     OUT_HEIGHT: u32 = {((IN_HEIGHT + PAD_TOP + PAD_BOTTOM - KERN_HEIGHT) / STRIDE_HEIGHT) + 1},
     OUT_WIDTH: u32 = {((IN_WIDTH  + PAD_LEFT + PAD_RIGHT  - KERN_WIDTH) / STRIDE_WIDTH) + 1},
+    // Output dimension
+    OUT_DIM_0: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, OUT_FILTERS, DATA_FORMAT)[0]},
+    OUT_DIM_1: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, OUT_FILTERS, DATA_FORMAT)[1]},
+    OUT_DIM_2: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, OUT_FILTERS, DATA_FORMAT)[2]},
     // Precision inference MUL
     MUL_BE: s32 = {IN_BE + IN_BE},
     MUL_NB: u32 = {IN_NB + IN_NB},
     // Precision Inference CONV
     // TODO support custom accum_t precision
-    CONV_NB: u32 = {MUL_NB + std::clog2(KERN_HEIGHT*KERN_WIDTH*IN_CHANNELS)},
+    CONV_NB: u32 = {MUL_NB + std::clog2(KERN_HEIGHT * KERN_WIDTH * IN_CHANNELS)},
     CONV_BE: s32 = {MUL_BE}
     >
     (x: FixedPoint<IN_NB, IN_BE>[IN_DIM_2][IN_DIM_1][IN_DIM_0],
-    kernel: FixedPoint<KERN_NB, KERN_BE>[KERN_WIDTH][KERN_HEIGHT][IN_CHANNELS][OUT_FILTERS],
+    kernel: FixedPoint<KERN_NB, KERN_BE>[OUT_FILTERS][IN_CHANNELS][KERN_WIDTH][KERN_HEIGHT],
     bias: FixedPoint<BIAS_NB, BIAS_BE>[OUT_FILTERS])
-    -> FixedPoint<OUT_NB, OUT_BE>[OUT_FILTERS][OUT_WIDTH][OUT_HEIGHT] {
+    -> FixedPoint<OUT_NB, OUT_BE>[OUT_DIM_2][OUT_DIM_1][OUT_DIM_0] {
 
-    for (out_i, out_image) in 0..OUT_HEIGHT {
-        let out_row = for (out_j, out_row) in 0..OUT_WIDTH {
-            let in_i: s32 =  ((out_i as s32) - (PAD_TOP as s32)) * (STRIDE_HEIGHT as s32);
-            let in_j: s32 =  ((out_j as s32) - (PAD_LEFT as s32)) * (STRIDE_WIDTH as s32);
-            let out_pixel = for (filter_idx, out_pixel) in 0..OUT_FILTERS {
+    for (out_i_0, out_3d) in 0..OUT_DIM_0 {
+        let out_2d = for (out_i_1, out_2d) in 0..OUT_DIM_1 {
+            let out_1d = for (out_i_2, out_1d) in 0..OUT_DIM_2 {
+                let ijf = to_height_width_chans(out_i_0, out_i_1, out_i_2, DATA_FORMAT);
+                let out_i = ijf[0];
+                let out_j = ijf[1];
+                let filter_idx = ijf[2];
+
+                let in_i: s32 =  ((out_i as s32) - (PAD_TOP as s32)) * (STRIDE_HEIGHT as s32);
+                let in_j: s32 =  ((out_j as s32) - (PAD_LEFT as s32)) * (STRIDE_WIDTH as s32);
                 // Compute convolution across channels:
                 // res[out_i, out_j, filt] = sum(x[in_i+di, in_j+dj, ch_idx] * w[di, dj, ch_idx, filt])
                 let conv_pixel = for (ch_idx, pixel_chans) in 0..IN_CHANNELS {
@@ -87,7 +119,7 @@ pub fn conv2d_latency
                                     DataFormat::CHANNELS_FIRST => x[ch_idx][ii][jj]
                                 }
                             };
-                            let w = kernel[filter_idx][ch_idx][di][dj];
+                            let w = kernel[di][dj][ch_idx][filter_idx];
                             fixed_point_util::fmadd_already_widened(val, w, acc)
                         }(pixel_ch)
                     }(pixel_chans)
@@ -95,15 +127,17 @@ pub fn conv2d_latency
                 let conv_pixel_with_bias = fixed_point::add(conv_pixel, bias[filter_idx]);
                 let conv_pixel_with_bias = fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(conv_pixel_with_bias);
 
-                update(out_pixel, filter_idx, conv_pixel_with_bias)
+                update(out_1d, out_i_2, conv_pixel_with_bias)
 
-            }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_FILTERS]>());
-            update(out_row, out_j, out_pixel)
+            }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_DIM_2]>());
 
-        }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_FILTERS][OUT_WIDTH]>());
-        update(out_image, out_i, out_row)
+            update(out_2d, out_i_1, out_1d)
 
-    }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_FILTERS][OUT_WIDTH][OUT_HEIGHT]>())
+        }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_DIM_2][OUT_DIM_1]>());
+
+        update(out_3d, out_i_0, out_2d)
+    
+    }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_DIM_2][OUT_DIM_1][OUT_DIM_0]>())
 }
 
 // Set some default parameters reused in all tests.
@@ -128,7 +162,7 @@ fn conv2d_latency_default<
     PAD_RIGHT: u32 = {u32:0}
     >
     (x: FixedPoint<IN_NB, IN_BE>[IN_CHANNELS][IN_WIDTH][IN_HEIGHT],
-    weights: FixedPoint<IN_NB, IN_BE>[KERN_WIDTH][KERN_HEIGHT][IN_CHANNELS][OUT_FILTERS],
+    weights: FixedPoint<IN_NB, IN_BE>[OUT_FILTERS][IN_CHANNELS][KERN_WIDTH][KERN_HEIGHT],
     bias: FixedPoint<IN_NB, IN_BE>[OUT_FILTERS])
     -> FixedPoint<OUT_NB, OUT_BE>[OUT_FILTERS][OUT_WIDTH][OUT_HEIGHT] {
 
@@ -140,6 +174,100 @@ fn conv2d_latency_default<
         PAD_LEFT, PAD_RIGHT,
         DataFormat::CHANNELS_LAST
     >(x, weights, bias)
+}
+
+// Same but with CHANNELS_FIRST
+fn conv2d_latency_default_first<
+    IN_NB: u32, IN_BE: s32, 
+    // Input Image
+    IN_HEIGHT: u32, IN_WIDTH: u32, IN_CHANNELS: u32,
+    // Kernel Dims
+    KERN_HEIGHT: u32, KERN_WIDTH: u32, OUT_FILTERS: u32,
+    // Output Image
+    OUT_HEIGHT: u32 = {IN_HEIGHT + u32:1 - KERN_HEIGHT},
+    OUT_WIDTH: u32 = {IN_WIDTH + u32:1 - KERN_WIDTH},
+    // Default parameters:
+    OUT_NB: u32 = {IN_NB},
+    OUT_BE: s32 = {IN_BE},
+    STRIDE_HEIGHT: u32 = {u32:1},
+    STRIDE_WIDTH: u32 = {u32:1},
+    PAD_TOP: u32 = {u32:0},
+    PAD_BOTTOM: u32 = {u32:0},
+    PAD_LEFT: u32 = {u32:0},
+    PAD_RIGHT: u32 = {u32:0}
+    >
+    (x: FixedPoint<IN_NB, IN_BE>[IN_WIDTH][IN_HEIGHT][IN_CHANNELS],
+    weights: FixedPoint<IN_NB, IN_BE>[OUT_FILTERS][IN_CHANNELS][KERN_WIDTH][KERN_HEIGHT],
+    bias: FixedPoint<IN_NB, IN_BE>[OUT_FILTERS])
+    -> FixedPoint<OUT_NB, OUT_BE>[OUT_WIDTH][OUT_HEIGHT][OUT_FILTERS] {
+
+    conv2d_latency<
+        OUT_NB, OUT_BE,
+        RoundingMode::TRN, OverflowMode::WRAP,
+        STRIDE_HEIGHT, STRIDE_WIDTH,
+        PAD_TOP, PAD_BOTTOM,
+        PAD_LEFT, PAD_RIGHT,
+        DataFormat::CHANNELS_FIRST
+    >(x, weights, bias)
+}
+
+// All inputs are zero => we test only dimensions
+// TODO: test also padding and stride
+fn test_zero<
+    IN_HEIGHT: u32, IN_WIDTH: u32,
+    IN_CHANNELS: u32,
+    KERN_HEIGHT: u32, KERN_WIDTH: u32,
+    OUT_FILTERS: u32,
+    OUT_HEIGHT: u32 = {IN_HEIGHT + u32:1 - KERN_HEIGHT},
+    OUT_WIDTH: u32 = {IN_WIDTH + u32:1 - KERN_WIDTH},
+    >() {
+    
+    let x = zero!<FixedPoint<16, -10>[IN_CHANNELS][IN_WIDTH][IN_HEIGHT]>();
+    
+    let w = zero!<FixedPoint<16, -10>[OUT_FILTERS][IN_CHANNELS][KERN_WIDTH][KERN_HEIGHT]>();
+    let b = zero!<FixedPoint<16, -10>[OUT_FILTERS]>();
+    
+    let expected = zero!<FixedPoint<16, -10>[OUT_FILTERS][OUT_WIDTH][OUT_HEIGHT]>();
+
+    assert_eq(expected, conv2d_latency_default(x, w, b));
+    
+    // CHANNELS_FIRST
+    let x_first = zero!<FixedPoint<16, -10>[IN_WIDTH][IN_HEIGHT][IN_CHANNELS]>();
+    let expected_first = zero!<FixedPoint<16, -10>[OUT_WIDTH][OUT_HEIGHT][OUT_FILTERS]>();
+    assert_eq(expected_first, conv2d_latency_default_first(x_first, w, b));
+}
+
+#[test]
+fn test_zero_1() {
+    let IN_HEIGHT = u32:1;
+    let IN_WIDTH = u32:1;
+    let IN_CHANNELS = u32:1;
+    let KERN_HEIGHT = u32:1;
+    let KERN_WIDTH = u32:1;
+    let OUT_FILTERS = u32:1;
+    test_zero<IN_HEIGHT, IN_WIDTH, IN_CHANNELS, KERN_HEIGHT, KERN_WIDTH, OUT_FILTERS>();
+}
+
+#[test]
+fn test_zero_2() {
+    let IN_HEIGHT = u32:2;
+    let IN_WIDTH = u32:2;
+    let IN_CHANNELS = u32:1;
+    let KERN_HEIGHT = u32:1;
+    let KERN_WIDTH = u32:1;
+    let OUT_FILTERS = u32:1;
+    test_zero<IN_HEIGHT, IN_WIDTH, IN_CHANNELS, KERN_HEIGHT, KERN_WIDTH, OUT_FILTERS>();
+}
+
+#[test]
+fn test_zero_multi() {
+    let IN_HEIGHT = u32:9;
+    let IN_WIDTH = u32:10;
+    let IN_CHANNELS = u32:4;
+    let KERN_HEIGHT = u32:3;
+    let KERN_WIDTH = u32:2;
+    let OUT_FILTERS = u32:5;
+    test_zero<IN_HEIGHT, IN_WIDTH, IN_CHANNELS, KERN_HEIGHT, KERN_WIDTH, OUT_FILTERS>();
 }
 
 
@@ -157,11 +285,11 @@ fn conv2d_latency_test_uniform_io() {
     //  | 1, 1, 1|
     //  | 2, 2, 2|
     //  | 3, 3, 3|
-    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[3][3][1][1]:[[[
-        [s16:1024, 1024, 1024],
-        [s16:2048, 2048, 2048],
-        [s16:3072, 3072, 3072],
-    ]]]);
+    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[1][1][3][3]:[
+        s16[1][1][3]:[[[s16:1024]], ...],
+        s16[1][1][3]:[[[s16:2048]], ...],
+        s16[1][1][3]:[[[s16:3072]], ...]
+    ]);
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:0]);
 
     // expected = 
@@ -178,6 +306,13 @@ fn conv2d_latency_test_uniform_io() {
     let expected = fixed_point_util::make_fixed_points_3d<-10>(s16[1][3][3]:[
         s16[1][3]:[[s16:18432], ...], ...]);
     assert_eq(expected, conv2d_latency_default(x, w, b));
+
+    // CHANNELS_FIRST
+    let x_first = fixed_point_util::make_fixed_points_3d<-10>(s16[5][5][1]:[
+        s16[5][5]:[s16[5]:[s16:1024, ...], ...]]);
+    let expected_first = fixed_point_util::make_fixed_points_3d<-10>(s16[3][3][1]:[
+            s16[3][3]:[s16[3]:[s16:18432, ...], ...]]);
+    assert_eq(expected_first, conv2d_latency_default_first(x_first, w, b));
 }
 
 #[test]
@@ -194,11 +329,11 @@ fn conv2d_latency_test_bias() {
     //  | 1, 1, 1|
     //  | 2, 2, 2|
     //  | 3, 3, 3|
-    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[3][3][1][1]:[[[
-        [s16:1024, 1024, 1024],
-        [s16:2048, 2048, 2048],
-        [s16:3072, 3072, 3072],
-    ]]]);
+    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[1][1][3][3]:[
+        s16[1][1][3]:[[[s16:1024]], ...],
+        s16[1][1][3]:[[[s16:2048]], ...],
+        s16[1][1][3]:[[[s16:3072]], ...]
+    ]);
     // b = | 1 |
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:1024]);
 
@@ -209,6 +344,12 @@ fn conv2d_latency_test_bias() {
     let expected = fixed_point_util::make_fixed_points_3d<-10>(s16[1][3][3]:[
         s16[1][3]:[[s16:19456], ...], ...]);
     assert_eq(expected, conv2d_latency_default(x, w, b));
+    
+    // CHANNELS_FIRST
+    let x_first = fixed_point_util::make_fixed_points_3d<-10>(s16[5][5][1]:[s16[5][5]:[s16[5]:[s16:1024, ...], ...]]);
+    let expected_first = fixed_point_util::make_fixed_points_3d<-10>(s16[3][3][1]:[
+            s16[3][3]:[s16[3]:[s16:19456, ...], ...]]);
+    assert_eq(expected_first, conv2d_latency_default_first(x_first, w, b));
 }
 
 #[test]
@@ -231,11 +372,11 @@ fn conv2d_latency_test_pattern() {
     //  | 1, 1, 1|
     //  | 2, 2, 2|
     //  | 3, 3, 3|
-    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[3][3][1][1]:[[[
-        [s16:1024, 1024, 1024],
-        [s16:2048, 2048, 2048],
-        [s16:3072, 3072, 3072],
-    ]]]);
+    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[1][1][3][3]:[
+        s16[1][1][3]:[[[s16:1024]], ...],
+        s16[1][1][3]:[[[s16:2048]], ...],
+        s16[1][1][3]:[[[s16:3072]], ...]
+    ]);
     // b = | 0 |
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:0]);
 
@@ -271,19 +412,12 @@ fn conv2d_latency_test_mutiple_filters() {
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
     //  | 2, 2, 2|  | 1, 1, 1|  | 0, 0, 0|
     //  | 3, 3, 3|  | 1, 1, 1|  | 0, 0, 0|
-    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[3][3][1][3]:[[[
-        [s16:1024, 1024, 1024],
-        [s16:2048, 2048, 2048],
-        [s16:3072, 3072, 3072],
-    ]],[[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ]],[[
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-    ]]]);
+    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[3][1][3][3]:[
+        s16[3][1][3]:[[[s16:1024, 1024, 0]], ...],
+        s16[3][1][3]:[[[s16:2048, 1024, 0]], ...],
+        s16[3][1][3]:[[[s16:3072, 1024, 0]], ...],
+    ]);
+
     // b = | 0, 0 ,-2|
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[3]:[s16:0, 0, -2048]);
 
@@ -332,6 +466,11 @@ fn conv2d_latency_test_mutiple_channels() {
         [s16:0, 0, 0],
         [s16:0, 0, 0],
     ]]]);
+    let w = fixed_point_util::make_fixed_points_4d<-10>(s16[1][3][3][3]:[
+        s16[1][3][3]:[[[s16:1024], [s16:1024], [s16:0]], ...],
+        s16[1][3][3]:[[[s16:2048], [s16:1024], [s16:0]], ...],
+        s16[1][3][3]:[[[s16:1024], [s16:1024], [s16:0]], ...]
+    ]);
     // b = | 0 |
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:0]);
 
@@ -376,47 +515,22 @@ fn conv2d_latency_test_mutiple_channels_and_filters() {
     //  | 0, 0, 0|  | 0, 0, 0|  | 0, 0, 0|
     //  | 0, 0, 0|  | 0, 0, 0|  | 0, 0, 0|
     let w = fixed_point_util::make_fixed_points_4d<-10>(s16[3][3][3][3]:[
-    [[
-        [s16:1024, 1024, 1024],
-        [s16:2048, 2048, 2048],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-    ]],
-
-    [[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ]],
-
-    [[
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-    ],[
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-    ],[
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-    ]],]);
+        s16[3][3][3]:[[
+            [s16:1024, 1024, 0],
+            [s16:1024, 1024, 0],
+            [s16:0, 1024, 0]
+        ], ...],
+        s16[3][3][3]:[[
+            [s16:2048, 1024, 0],
+            [s16:1024, 1024, 0],
+            [s16:0, 1024, 0]
+        ], ...],
+        s16[3][3][3]:[[
+            [s16:1024, 1024, 0],
+            [s16:1024, 1024, 0],
+            [s16:0, 1024, 0]
+        ], ...]
+    ]);
     // b = | 0, 0, 0|
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[3]:[s16:0, 0, 0]);
 
@@ -456,34 +570,23 @@ fn conv2d_latency_test_two_layers() {
     //  | 1, 1, 1|  | 1, 1, 1|  | 1, 1, 1|
     //  | 1, 1, 1|  | 1, 1, 1|  | 1, 1, 1|
     //  | 1, 1, 1|  | 1, 1, 1|  | 1, 1, 1|
-    let w0 = fixed_point_util::make_fixed_points_4d<-10>(s16[3][3][3][2]:[
-    [[
-        [s16:1024, 1024, 1024],
-        [s16:2048, 2048, 2048],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-        [s16:0, 0, 0],
-    ]],
-
-    [[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ]]]);
+    let w0 = fixed_point_util::make_fixed_points_4d<-10>(s16[2][3][3][3]:[
+        s16[2][3][3]:[[
+            [s16:1024, 1024],
+            [s16:1024, 1024],
+            [s16:0, 1024]
+        ], ...],
+        s16[2][3][3]:[[
+            [s16:2048, 1024],
+            [s16:1024, 1024],
+            [s16:0, 1024]
+        ], ...],
+        s16[2][3][3]:[[
+            [s16:1024, 1024],
+            [s16:1024, 1024],
+            [s16:0, 1024]
+        ], ...]
+    ]);
     // b = | -17, -17|
     let b0 = fixed_point_util::make_fixed_points_1d<-10>(s16[2]:[-17408, -17408]);
 
@@ -491,16 +594,9 @@ fn conv2d_latency_test_two_layers() {
     //  | 1, 1, 1|  | 1, 1, 1|
     //  | 1, 1, 1|  | 1, 1, 1|
     //  | 1, 1, 1|  | 1, 1, 1|
-    let w1 = fixed_point_util::make_fixed_points_4d<-10>(s16[3][3][2][1]:[
-    [[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ],[
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-        [s16:1024, 1024, 1024],
-    ]]]);
+    let w1 = fixed_point_util::make_fixed_points_4d<-10>(s16[1][2][3][3]:[
+        s16[1][2][3]:[s16[1][2]:[[s16:1024], ...], ...], ...
+    ]);
     // b = | 0 |
     let b1 = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:0]);
 

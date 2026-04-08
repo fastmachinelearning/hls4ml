@@ -103,8 +103,9 @@ class XLSAttrBuilder:
                 filt_height = self.node.get_attr('filt_height')
                 filt_width = self.node.get_attr('filt_width')
                 n_filt = self.node.get_attr('n_filt')
-                mat = np.array(weights.data).reshape(filt_height, filt_width, n_chan, n_filt)
-                data = np.transpose(mat, (3, 2, 0, 1))  # in Keras the weights are transposed
+                data = np.asarray(weights.data)
+                assert data.shape == (filt_height, filt_width, n_chan, n_filt), \
+                    f'Expected weights shape ({filt_height}, {filt_width}, {n_chan}, {n_filt}), got {data.shape}'
             case 'Dense':
                 mat = np.array(weights.data).reshape(in_dim, out_dim)
                 data = mat.T  # in Keras the weights are transposed
