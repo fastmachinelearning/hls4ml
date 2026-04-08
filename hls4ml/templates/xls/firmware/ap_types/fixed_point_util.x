@@ -469,6 +469,40 @@ pub fn max_1d
 }
 
 
+// === Clip ===
+
+pub fn clip<NB: u32, BE: s32>(
+    x: FixedPoint<NB, BE>,
+    min_value: FixedPoint<NB, BE>,
+    max_value: FixedPoint<NB, BE>
+    ) -> FixedPoint<NB, BE> {
+    
+    if (fixed_point::sub(x, min_value).significand < 0)
+        { min_value }
+    else if (fixed_point::sub(x, max_value).significand > 0)
+        { max_value }
+    else
+        { x }
+}
+
+pub fn clip_resize<
+    NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32,
+    NB_MIN: u32, BE_MIN: s32,
+    NB_MAX: u32, BE_MAX: s32>(
+        x: FixedPoint<NB_IN, BE_IN>,
+        min_value: FixedPoint<NB_MIN, BE_MIN>,
+        max_value: FixedPoint<NB_MAX, BE_MAX>
+    ) -> FixedPoint<NB_OUT, BE_OUT> {
+    
+    if (fixed_point::sub(x, min_value).significand < 0)
+        { resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(min_value) }
+    else if (fixed_point::sub(x, max_value).significand > 0)
+        { resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(max_value) }
+    else
+        { resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x) }
+}
+
 // === Arithmetic operations ===
 
 

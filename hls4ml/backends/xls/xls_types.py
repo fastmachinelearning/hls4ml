@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from typing import Any
 
 import numpy as np
@@ -185,14 +186,16 @@ class XLSInteger:
 
 
 class XLSFixedPoint:
-    def __init__(self, type: XLSFixedPointType | FixedPrecisionType, significand: XLSInteger | int | str):
+    def __init__(self, type: XLSFixedPointType | FixedPrecisionType,
+                 significand: XLSInteger | int | np.integer[Any] | str):
         if isinstance(type, FixedPrecisionType):
             type = XLSFixedPointType.from_precision(type)
 
-        if isinstance(significand, int):
+        if np.issubdtype(builtins.type(significand), np.integer):
             significand = XLSInteger(type=XLSIntegerType(width=type.num_bits, signed=True), value=significand)
-        assert significand.type.width == type.num_bits
-        assert significand.type.signed == True, 'FixedPoint is always a signed type'
+        elif isinstance(significand, XLSInteger):
+            assert significand.type.width == type.num_bits
+            assert significand.type.signed == True, 'FixedPoint is always a signed type'
 
         self.type = type
         self.significand = significand
@@ -391,8 +394,17 @@ class XLSTensorVariable:
 
 
 class XLSLookupTable:
-    def __init__(self, name, input_precision: XLSFixedPointType, output_precision: XLSFixedPointType,
-                 x_min, log2_step, raw_table) -> None:
+    def __init__(
+            self,
+            name : str,
+            input_precision: XLSFixedPointType | FixedPrecisionType,
+            output_precision: XLSFixedPointType | FixedPrecisionType,
+            x_min,
+            log2_step,
+            raw_table
+    ) -> None:
+        input_precision = as_xls_fixed_point_type(input_precision)
+        output_precision = as_xls_fixed_point_type(output_precision)
         self.input_num_bits = XLSConst(f'{name}_INPUT_NUM_BITS', input_precision.num_bits, 'u32')
         self.input_binary_exponent = XLSConst(f'{name}_INPUT_BINARY_EXPONENT', input_precision.binary_exponent, 's32')
         self.output_num_bits = XLSConst(f'{name}_OUTPUT_NUM_BITS', output_precision.num_bits, 'u32')

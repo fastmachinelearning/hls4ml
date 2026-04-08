@@ -4,7 +4,7 @@ from __future__ import annotations  # makes all annotations into strings
 from typing import Literal, Optional, Callable, TYPE_CHECKING
 
 from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTensorVariable, XLSArrayType, XLSIntegerType, \
-    XLSArray, XLSFixedPointType, float_to_significand, to_signed_fixed_precision
+    XLSArray, XLSFixedPointType, float_to_significand, to_signed_fixed_precision, XLSFixedPoint
 from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
@@ -59,19 +59,43 @@ class XLSAttrBuilder:
 
         return decorator
 
+    @staticmethod
+    def _xls_const_array(name: str, data: np.ndarray, precision: FixedPrecisionType) -> XLSConst:
+        xls_raw_array = XLSArray(
+            array_type=XLSArrayType(
+                element_type=XLSIntegerType(precision.width, signed=True),
+                shape=data.shape),
+            array=float_to_significand(data, precision))
+        xls_precision = XLSFixedPointType.from_precision(precision)
+        xls_fixed_point_array = XLSFunctionCall(
+            name=f'fixed_point_util::make_fixed_points_{len(data.shape)}d',
+            params=[xls_precision.binary_exponent],
+            args=[xls_raw_array]
+        )
+        return XLSConst(
+            name=name,
+            value=xls_fixed_point_array,
+            type=XLSArrayType(element_type=xls_precision, shape=data.shape)
+        )
+
     @attach_to_node()
     def xls_weights(self) -> XLSConst | None:
-        weights = self.node.weights.get('weight', None)
-        if not weights:
+        precision = None
+        if self.node.class_name == 'PReLU':
+            weights = self.node.weights.get('param_data')
+            precision = self.node.get_attr('param_t').precision
+        else:
+            weights = self.node.weights.get('weight', None)
+        if weights is None:
             return None
+
+        precision: FixedPrecisionType = to_signed_fixed_precision(precision or weights.type.precision)
 
         input_var = self.node.get_input_variable()
         output_var = self.node.get_output_variable()
 
         in_dim: int = input_var.shape[0]
         out_dim: int = output_var.shape[0]
-
-        precision: FixedPrecisionType = to_signed_fixed_precision(weights.type.precision)
 
         match self.node.class_name:
             case 'Conv2D':
@@ -80,29 +104,16 @@ class XLSAttrBuilder:
                 filt_width = self.node.get_attr('filt_width')
                 n_filt = self.node.get_attr('n_filt')
                 mat = np.array(weights.data).reshape(filt_height, filt_width, n_chan, n_filt)
-                mat_T = np.transpose(mat, (3, 2, 0, 1))  # in Keras the weights are transposed
+                data = np.transpose(mat, (3, 2, 0, 1))  # in Keras the weights are transposed
             case 'Dense':
                 mat = np.array(weights.data).reshape(in_dim, out_dim)
-                mat_T = mat.T  # in Keras the weights are transposed
+                data = mat.T  # in Keras the weights are transposed
+            case 'PReLU':
+                data = weights
             case _:
                 raise ValueError(f'Unsupported weights for layer {self.node.class_name}')
-        shape = mat_T.shape
-        xls_raw_array = XLSArray(
-            array_type=XLSArrayType(
-                element_type=XLSIntegerType(precision.width, signed=True),
-                shape=mat_T.shape),
-            array=float_to_significand(mat_T, precision))
-        xls_precision = XLSFixedPointType.from_precision(precision)
-        xls_fixed_point_array = XLSFunctionCall(
-            name=f'fixed_point_util::make_fixed_points_{len(shape)}d',
-            params=[xls_precision.binary_exponent],
-            args=[xls_raw_array]
-        )
-        return XLSConst(
-            name='WEIGHTS',
-            value=xls_fixed_point_array,
-            type=XLSArrayType(element_type=xls_precision, shape=shape)
-        )
+
+        return XLSAttrBuilder._xls_const_array(name='WEIGHTS', data=data, precision=precision)
 
     @attach_to_node()
     def xls_bias(self) -> XLSConst | None:
@@ -111,23 +122,7 @@ class XLSAttrBuilder:
             return None
 
         precision: FixedPrecisionType = to_signed_fixed_precision(bias.type.precision)
-        raw_bias = float_to_significand(bias.data, precision)
-        shape = raw_bias.shape
-        xls_raw_array = XLSArray(
-            array_type=XLSArrayType(element_type=XLSIntegerType(precision.width, signed=True), shape=shape),
-            array=raw_bias
-        )
-        xls_precision = XLSFixedPointType.from_precision(precision)
-        xls_fixed_point_array = XLSFunctionCall(
-            name=f'fixed_point_util::make_fixed_points_{len(shape)}d',
-            params=[xls_precision.binary_exponent],
-            args=[xls_raw_array]
-        )
-        return XLSConst(
-            name='BIAS',
-            value=xls_fixed_point_array,
-            type=XLSArrayType(element_type=xls_precision, shape=shape)
-        )
+        return XLSAttrBuilder._xls_const_array(name='BIAS', data=bias.data, precision=precision)
 
     @attach_to_node()
     def xls_module_name(self) -> str:
@@ -210,16 +205,54 @@ class XLSAttrBuilder:
             case 'Activation':
                 func_name = self.node.get_attr('activation').lower()
                 name = f'activations::{func_name}'
+                params = params_out + params_rounding
                 match func_name:
-                    case 'relu':
-                        params = []
+                    case 'selu':
+                        args.append('SELU_TABLE_NEGATIVE')
+                    case 'softplus':
+                        args.append('SOFTPLUS_TABLE')
+                    case 'softsign':
+                        args.append('SOFTSIGN_TABLE')
+                    case 'sigmoid':
+                        args.append('SIGMOID_TABLE')
+                    case 'tanh':
+                        args.append('TANH_TABLE')
                     case _:
-                        raise ValueError(f'Unknown activation function {func_name}')
+                        pass
 
-            case 'ParametrizedActivation':
+            case 'HardActivation':
                 func_name = self.node.get_attr('activation').lower()
                 name = f'activations::{func_name}'
-                # TODO add extra parameters/arguments
+                params = params_out + params_rounding
+                args += [
+                    XLSFixedPoint.from_float(
+                        self.node.get_attr(arg_name),
+                        precision=to_signed_fixed_precision(self.node.get_attr(f'{arg_name}_t').precision))
+                    for arg_name in ['slope', 'shift']
+                ]
+
+            case 'ParametrizedActivation':
+                func_name = self.node._get_act_function_name()
+                precision = to_signed_fixed_precision(self.node.get_attr('param_t').precision)
+                value = self.node.get_attr('activ_param')
+                xls_value = XLSFixedPoint.from_float(value, precision)
+
+                name = f'activations::{func_name}'
+                params = params_out + params_rounding
+                match func_name:
+                    case 'elu':
+                        args.append('ELU_TABLE_NEGATIVE')
+                    case 'leaky_relu':
+                        args.append(xls_value)
+                    case 'thresholded_relu':
+                        args.append(xls_value)
+                    case _:
+                        pass
+
+            case 'PReLU':
+                name = 'activations::prelu'
+                params = params_out + params_rounding
+                args.append('WEIGHTS')
 
             case 'Softmax':
                 implementation = self.node.attributes.get('implementation', 'stable')
@@ -237,6 +270,11 @@ class XLSAttrBuilder:
                 # TODO: support implementation == 'legacy'
                 else:
                     raise ValueError(f'Unknown softmax implementation {implementation}')
+
+            case 'TernaryTanh':
+                name = 'activations::ternary_tanh'
+                params = params_out + params_rounding
+
             case _:
                 raise ValueError(f'Unknown layer type: {self.node.class_name}')
         return XLSFunctionCall(name=name, params=params, args=args)

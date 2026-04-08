@@ -13,21 +13,28 @@ type LookupTable = lookup_table::LookupTable;
 // =========================================================================
 // --------------------------------- ReLU ----------------------------------
 
-pub fn relu_1elem
-    <NB: u32, BE: s32>
-    (fxd_x: FixedPoint<NB, BE>) -> FixedPoint<NB, BE> {
-    
-    if (fxd_x.significand > 0) 
-        { fxd_x } 
-    else 
-        { zero!<FixedPoint<NB, BE>>() }
-} 
+pub fn thresholded_relu
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,    
+    NB_IN: u32, BE_IN: s32, DIM: u32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        threshold: FixedPoint<NB_IN, BE_IN>)
+    -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+
+    for (i, acc) in 0..DIM {
+        let y = if (x[i].significand > threshold.significand) 
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x[i]) } 
+        else 
+            { zero!<FixedPoint<NB_OUT, BE_OUT>>() };
+        update(acc, i, y)
+    }(x)
+}
 
 pub fn relu
-    <NB: u32, BE: s32, DIM: u32>
-    (y: FixedPoint<NB, BE>[DIM]) -> FixedPoint<NB, BE>[DIM] {
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,    
+    NB_IN: u32, BE_IN: s32, DIM: u32>
+    (x: FixedPoint<NB_IN, BE_IN>[DIM]) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
 
-    map(y, relu_1elem<NB>)
+    thresholded_relu<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x, zero!<FixedPoint<NB_IN, BE_IN>>())
 } 
 
 #[test]
@@ -38,7 +45,7 @@ fn relu_test() {
     let expected = fixed_point_util::make_fixed_points_1d<-10>(sN[16][2]:[
         1536, 1024
     ]);
-    assert_eq(expected, relu(x));
+    assert_eq(expected, relu<16, -10, RoundingMode::TRN, OverflowMode::WRAP>(x));
 
     let x = fixed_point_util::make_fixed_points_1d<-10>(sN[16][4]:[
         -1536, -1024, 0, -1024
@@ -46,7 +53,7 @@ fn relu_test() {
     let expected = fixed_point_util::make_fixed_points_1d<-10>(sN[16][4]:[
         0,...
     ]);  
-    assert_eq(expected, relu(x));
+    assert_eq(expected, relu<16, -10, RoundingMode::TRN, OverflowMode::WRAP>(x));
 
     let x = fixed_point_util::make_fixed_points_1d<-10>(sN[16][4]:[
         -1536, -1024, 1024, -1024
@@ -54,7 +61,256 @@ fn relu_test() {
     let expected = fixed_point_util::make_fixed_points_1d<-10>(sN[16][4]:[
         0, 0, 1024, 0
     ]);
-    assert_eq(expected, relu<u32:16>(x));
+    assert_eq(expected, relu<16, -10, RoundingMode::TRN, OverflowMode::WRAP>(x));
+}
+
+pub fn leaky_relu
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32,
+    DIM: u32,
+    NB_ALPHA: u32, BE_ALPHA: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        alpha: FixedPoint<NB_ALPHA, BE_ALPHA>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+
+    for (i, acc) in 0..DIM {
+        let y = if (x[i].significand >= 0)
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x[i]) }
+        else 
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(fixed_point::mul(x[i], alpha)) };
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+pub fn elu
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, 
+    DIM: u32,
+    TABLE_SIZE: u32, TABLE_LOG2_STEP: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        elu_lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    for (i, acc) in 0..DIM {
+        let y = if (x[i].significand >= 0)
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x[i]) }
+        else
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(elu_lut, x[i])) };
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+pub fn selu
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, 
+    DIM: u32,
+    TABLE_SIZE: u32, TABLE_LOG2_STEP: s32,
+    // Precision required for SELU_SCALE in so that it doesn't introduce rounding errors
+    BE_SCALE: s32 = {std::min(s32:-2, BE_OUT - BE_IN - (NB_IN as s32))},
+    NB_SCALE: u32 = {(2 - BE_SCALE) as u32}>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        selu_lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    // SELU_SCALE = 1.0507009873554804934193349852946
+    // TODO: specify up to 64 bit?
+    let SELU_SCALE: FixedPoint<32,-30> = fixed_point::make_fixed_point<-30>(s32: 1128181595);
+    const_assert!(NB_SCALE <= 32);
+
+    // Downscale to required precision
+    let SELU_SCALE = fixed_point_util::resize<NB_SCALE, BE_SCALE, ROUNDING, OVERFLOW>(SELU_SCALE);
+
+    
+    for (i, acc) in 0..DIM {
+        let y = if (x[i].significand >= 0)
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(fixed_point::mul(SELU_SCALE, x[i])) }
+        else
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(selu_lut, x[i])) };
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+pub fn prelu
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, 
+    DIM: u32,
+    NB_ALPHA: u32, BE_ALPHA: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        alpha: FixedPoint<NB_ALPHA, BE_ALPHA>[DIM]
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    for (i, acc) in 0..DIM {
+        let y = if (x[i].significand >= 0)
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x[i]) }
+        else
+            { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(fixed_point::mul(alpha[i], x[i])) };
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+
+pub fn softplus
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, 
+    DIM: u32,
+    TABLE_SIZE: u32, TABLE_LOG2_STEP: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    for (i, acc) in 0..DIM {
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(lut, x[i]));
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+pub fn softsign
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, 
+    DIM: u32,
+    TABLE_SIZE: u32, TABLE_LOG2_STEP: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    for (i, acc) in 0..DIM {
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(lut, x[i]));
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+pub fn sigmoid
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, 
+    DIM: u32,
+    TABLE_SIZE: u32, TABLE_LOG2_STEP: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    for (i, acc) in 0..DIM {
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(lut, x[i]));
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+pub fn tanh
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, 
+    DIM: u32,
+    TABLE_SIZE: u32, TABLE_LOG2_STEP: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    for (i, acc) in 0..DIM {
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(lut, x[i]));
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+// clip(slope * x + shift, 0, 1)
+pub fn hard_sigmoid
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,    
+    NB_IN: u32, BE_IN: s32, DIM: u32,
+    NB_SLOPE: u32, BE_SLOPE: s32,
+    NB_SHIFT: u32, BE_SHIFT: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        slope: FixedPoint<NB_SLOPE, BE_SLOPE>,
+        shift: FixedPoint<NB_SHIFT, BE_SHIFT>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+
+    let ZERO = fixed_point::from_integer(s1:0);
+    let ONE = fixed_point::from_integer(s2:1);
+    for (i, acc) in 0..DIM {
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(
+            fixed_point::add(
+                fixed_point::mul(x[i], slope),                
+                shift)
+        );
+        let y = fixed_point_util::clip_resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(y, ZERO, ONE);
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+// 2 * hard_sigmoid(x) - 1
+// = clip(2 * slope * x + 2 * shift - 1, -1, 1)
+pub fn hard_tanh
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,    
+    NB_IN: u32, BE_IN: s32, DIM: u32,
+    NB_SLOPE: u32, BE_SLOPE: s32,
+    NB_SHIFT: u32, BE_SHIFT: s32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM],
+        slope: FixedPoint<NB_SLOPE, BE_SLOPE>,
+        shift: FixedPoint<NB_SHIFT, BE_SHIFT>
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    
+    let ZERO = fixed_point::from_integer(s1:0);
+    let MINUS_ONE = fixed_point::from_integer(s1:-1);
+    let ONE = fixed_point::from_integer(s2:1);
+    let TWO = fixed_point::from_integer(s3:2);
+    // 2 * slope
+    let slope_2 = fixed_point::mul(slope, TWO);
+    // 2 * shift - 1
+    let shift_2 = fixed_point::sub(fixed_point::mul(shift, TWO), ONE);
+
+    for (i, acc) in 0..DIM {
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(
+            fixed_point::add(
+                fixed_point::mul(x[i], slope_2),                
+                shift_2)
+        );
+        let y = fixed_point_util::clip_resize(y, MINUS_ONE, ONE);
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+// binary_tanh(x) = 
+//   -1 | x <= 0
+//   1  | x > 0
+pub fn binary_tanh<
+    NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, DIM: u32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM]
+    ) -> FixedPoint<NB_OUT, BE_OUT> {
+
+    let ONE = fixed_point::from_integer(s2:1);
+    let MINUS_ONE = fixed_point::from_integer(s2:-1);
+
+    for (i, acc) in 0..DIM {
+        let y = if (x.significand > 0)
+            { ONE }
+        else
+            { MINUS_ONE };
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(y);
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
+}
+
+// ternary_tanh(x) = 
+//   -1 | x <= -1
+//   0  | -1 < x <= 1
+//   1  | x > 1
+pub fn ternary_tanh<
+    NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, DIM: u32>(
+        x: FixedPoint<NB_IN, BE_IN>[DIM]
+    ) -> FixedPoint<NB_OUT, BE_OUT> {
+
+    let ZERO = fixed_point::from_integer(s2:0);
+    let ONE = fixed_point::from_integer(s2:1);
+    let MINUS_ONE = fixed_point::from_integer(s2:-1);
+
+    for (i, acc) in 0..DIM {
+        let y = if (x.significand > ONE.significand)
+            { ONE }
+        else if (x.significand <= MINUS_ONE.significand)
+            { MINUS_ONE }
+        else
+            { ZERO };
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(y);
+        update(acc, i, y)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
 }
 
 // =========================================================================

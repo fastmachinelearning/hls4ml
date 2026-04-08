@@ -45,7 +45,7 @@ pub fn dense_relu
     -> FixedPoint<NB_OUT, BE_OUT>[COLS] {
 
     let y = dense<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x, w, bias);
-    activations::relu(y)
+    activations::relu<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(y)
 }
 
 // Testing
