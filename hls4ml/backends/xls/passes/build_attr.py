@@ -91,12 +91,6 @@ class XLSAttrBuilder:
 
         precision: FixedPrecisionType = to_signed_fixed_precision(precision or weights.type.precision)
 
-        input_var = self.node.get_input_variable()
-        output_var = self.node.get_output_variable()
-
-        in_dim: int = input_var.shape[0]
-        out_dim: int = output_var.shape[0]
-
         match self.node.class_name:
             case 'Conv2D':
                 n_chan = self.node.get_attr('n_chan')
@@ -107,8 +101,12 @@ class XLSAttrBuilder:
                 assert data.shape == (filt_height, filt_width, n_chan, n_filt), \
                     f'Expected weights shape ({filt_height}, {filt_width}, {n_chan}, {n_filt}), got {data.shape}'
             case 'Dense':
-                mat = np.array(weights.data).reshape(in_dim, out_dim)
-                data = mat.T  # in Keras the weights are transposed
+                in_dim: int = self.node.get_input_variable().shape[0]
+                out_dim: int = self.node.get_output_variable().shape[0]
+                # Transpose the weights so that we can call dot_prod(x, w[i]) in dense.x
+                data = np.asarray(weights.data).T
+                assert data.shape == (out_dim, in_dim), \
+                    f'Expected weights shape ({out_dim}, {in_dim}), got {data.shape}'
             case 'PReLU':
                 data = weights
             case _:

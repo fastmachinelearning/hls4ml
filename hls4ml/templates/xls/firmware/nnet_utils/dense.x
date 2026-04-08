@@ -15,18 +15,18 @@ pub fn dense
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
     NB_IN: u32, BE_IN: s32,
-    COLS: u32, ROWS: u32>
-    (x: FixedPoint<NB_IN, BE_IN>[ROWS],
-    w: FixedPoint<NB_IN, BE_IN>[ROWS][COLS],
-    bias: FixedPoint<NB_IN, BE_IN>[COLS])
-    -> FixedPoint<NB_OUT, BE_OUT>[COLS] {
+    IN_DIM: u32, OUT_DIM: u32>(
+        x: FixedPoint<NB_IN, BE_IN>[IN_DIM],
+        w: FixedPoint<NB_IN, BE_IN>[IN_DIM][OUT_DIM],
+        bias: FixedPoint<NB_IN, BE_IN>[OUT_DIM]
+    ) -> FixedPoint<NB_OUT, BE_OUT>[OUT_DIM] {
 
-    for (i, z) in u32:0..COLS {
+    for (i, z) in u32:0..OUT_DIM {
         let vec_prod  = fixed_point_util::dot_prod(x, w[i]);
         let with_bias = fixed_point::add(vec_prod, bias[i]);
         let with_bias_out = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(with_bias);
         update(z, i, with_bias_out)
-    }(zero!<FixedPoint<NB_OUT, BE_OUT>[COLS]>())
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[OUT_DIM]>())
 }
 
 // TODO: used only for tests
@@ -38,11 +38,11 @@ pub fn dense_relu
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
     NB_IN: u32, BE_IN: s32,
-    COLS: u32, ROWS: u32>
-    (x: FixedPoint<NB_IN, BE_IN>[ROWS],
-    w: FixedPoint<NB_IN, BE_IN>[ROWS][COLS],
-    bias: FixedPoint<NB_IN, BE_IN>[COLS])
-    -> FixedPoint<NB_OUT, BE_OUT>[COLS] {
+    IN_DIM: u32, OUT_DIM: u32>(
+        x: FixedPoint<NB_IN, BE_IN>[IN_DIM],
+        w: FixedPoint<NB_IN, BE_IN>[IN_DIM][OUT_DIM],
+        bias: FixedPoint<NB_IN, BE_IN>[OUT_DIM]
+    ) -> FixedPoint<NB_OUT, BE_OUT>[OUT_DIM] {
 
     let y = dense<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x, w, bias);
     activations::relu<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(y)
