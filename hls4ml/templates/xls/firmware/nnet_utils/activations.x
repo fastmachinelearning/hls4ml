@@ -170,11 +170,13 @@ pub fn softsign
     DIM: u32,
     TABLE_SIZE: u32, TABLE_LOG2_STEP: s32>(
         x: FixedPoint<NB_IN, BE_IN>[DIM],
-        lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+        lut_asym: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
     ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
     
     for (i, acc) in 0..DIM {
-        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(lut, x[i]));
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(
+            lookup_table::eval_antisymmetric<OVERFLOW>(lut_asym, x[i])
+        );
         update(acc, i, y)
     }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
 }
@@ -200,11 +202,13 @@ pub fn tanh
     DIM: u32,
     TABLE_SIZE: u32, TABLE_LOG2_STEP: s32>(
         x: FixedPoint<NB_IN, BE_IN>[DIM],
-        lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
+        lut_asym: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, TABLE_SIZE, TABLE_LOG2_STEP>
     ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
     
     for (i, acc) in 0..DIM {
-        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(lookup_table::eval(lut, x[i]));
+        let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(
+            lookup_table::eval_antisymmetric<OVERFLOW>(lut_asym, x[i])
+        );
         update(acc, i, y)
     }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
 }

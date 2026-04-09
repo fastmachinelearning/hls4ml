@@ -3,6 +3,8 @@ import fixed_point;
 import ap_types.fixed_point_util;
 
 type FixedPoint = fixed_point::FixedPoint;
+type RoundingMode = fixed_point_util::RoundingMode;
+type OverflowMode = fixed_point_util::OverflowMode;
 
 // Table of values f(x[i]), i=0..SIZE
 // where x[i] = x_min + i * dx,
@@ -116,12 +118,40 @@ pub fn eval_1d<
     }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
 }
 
+// Evaluate f(-x) = - f(x)
+pub fn eval_antisymmetric<
+    OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32,
+    NB_OUT: u32, BE_OUT: s32,
+    SIZE: u32, LOG2_STEP: s32>(
+        lut: LookupTable<NB_IN, BE_IN, NB_OUT, BE_OUT, SIZE, LOG2_STEP>,
+        x: FixedPoint<NB_IN, BE_IN>
+    ) -> FixedPoint<NB_OUT, BE_OUT> {
+    
+    assert_fmt!(lut.x_min.significand >= 0, "eval_antisymmetric_needs_nonnegative_table_x_min");
+    // f(0) == 0
+    assert_fmt!(lut.values[0].significand == 0, "eval_antisymmetric_nonzero_at_zero");
+
+    if (x.significand == 0) {
+        zero!<FixedPoint<NB_OUT, BE_OUT>>()
+    }
+    else if (x.significand > 0) {
+        eval(lut, x)
+    }
+    else {
+        let minus_x = fixed_point_util::negate_with_overflow<OverflowMode::SAT>(x);
+        assert_fmt!(minus_x.significand >= 0, "minus_x_negative");
+        let minus_f = eval(lut, minus_x);
+        fixed_point_util::negate_with_overflow<OVERFLOW>(minus_f)
+    }
+}
+
 // =========================================================================
 // --------------------------------- Tests ----------------------------------
 
 fn from_integer<NB: u32, BE: s32, NB_IN: u32>(x:sN[NB_IN]) -> FixedPoint<NB, BE> {
     let res:FixedPoint<NB_IN,0> = fixed_point::from_integer(x);
-    let res:FixedPoint<NB, BE> = fixed_point::to_common_type<NB, BE, NB_IN, 0>(res);
+    let res:FixedPoint<NB, BE> = fixed_point::to_common_type<NB, BE>(res);
     res
 }
 
@@ -198,5 +228,25 @@ fn test_lookup_table(){
             lut_values[SIZE - 1]
         ];
         assert_eq(expected, eval_1d(lut, x));
-    }
+    };
+
+    let lut_asym = create<LOG2_STEP>(
+        from_integer<NB_IN, BE_IN>(s32:0),
+        map([0,4,-3,7,12], from_integer<NB_OUT, BE_OUT>) ++ [
+            fixed_point_util::max_value<NB_OUT, BE_OUT>(),
+            fixed_point_util::min_value<NB_OUT, BE_OUT>()
+        ]
+    );
+
+    for (i, _) in std::signed_min_value<NB_IN>()..std::signed_max_value<NB_IN>() {
+        let NEGATE_OVERFLOW = OverflowMode::SAT;
+        let plus_x = fixed_point::make_fixed_point<BE_IN>(i);
+        let minus_x = fixed_point_util::negate_with_overflow<NEGATE_OVERFLOW>(plus_x);
+
+        let plus_f = eval_antisymmetric<NEGATE_OVERFLOW>(lut_asym, plus_x);
+        let minus_f = eval_antisymmetric<NEGATE_OVERFLOW>(lut_asym, minus_x);
+        let minus_minus_f = fixed_point_util::negate_with_overflow<NEGATE_OVERFLOW>(minus_f);
+        let plus_f_sat_sym = fixed_point_util::resize<NB_OUT, BE_OUT, RoundingMode::TRN, OverflowMode::SAT_SYM>(plus_f);
+        assert_eq(plus_f_sat_sym, minus_minus_f);
+    }(())
 }

@@ -222,11 +222,11 @@ class XLSAttrBuilder:
                     case 'softplus':
                         args.append('SOFTPLUS_TABLE')
                     case 'softsign':
-                        args.append('SOFTSIGN_TABLE')
+                        args.append('SOFTSIGN_TABLE_NON_NEGATIVE')
                     case 'sigmoid':
                         args.append('SIGMOID_TABLE')
                     case 'tanh':
-                        args.append('TANH_TABLE')
+                        args.append('TANH_TABLE_NON_NEGATIVE')
                     case _:
                         pass
 

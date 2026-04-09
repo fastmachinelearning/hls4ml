@@ -182,23 +182,30 @@ def build_activation_table(node: Layer) -> XLSLookupTable:
             def func(x):
                 return math.log(1 + math.exp(x))
         case 'softsign':
-            # TODO function is symmetric, build only for half the range? Careful about overflow at 2^-N.
-            table_range = LookupTableRange.FULL
+            table_range = LookupTableRange.NON_NEGATIVE
+
             def func(x):
                 return x / (1 + abs(x))
         case 'tanh':
-            # TODO function is symmetric, build only for half the range? Careful about overflow at 2^-N.
-            table_range = LookupTableRange.FULL
+            table_range = LookupTableRange.NON_NEGATIVE
+
             def func(x):
                 return math.tanh(x)
         case 'sigmoid':
             table_range = LookupTableRange.FULL
+
             def func(x):
                 return 1 / (1 + math.exp(-x))
         case _:
             raise ValueError(f'Unknown activation={activation}')
-    if table_range == LookupTableRange.NEGATIVE:
-        table_name += '_NEGATIVE'
+
+    match table_range:
+        case LookupTableRange.FULL:
+            pass
+        case LookupTableRange.NON_NEGATIVE:
+            table_name += '_NON_NEGATIVE'
+        case LookupTableRange.NEGATIVE:
+            table_name += '_NEGATIVE'
 
     return build_table(
         name=table_name,

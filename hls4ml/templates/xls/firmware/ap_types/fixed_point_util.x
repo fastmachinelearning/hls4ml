@@ -105,6 +105,14 @@ pub fn one<NB: u32, BE: s32>() -> FixedPoint {
     fixed_point::make_fixed_point<BE>(x)
 }
 
+pub fn max_value<NB: u32, BE: s32>() -> FixedPoint<NB, BE> {
+    fixed_point::make_fixed_point<BE>(std::signed_max_value<NB>())
+}
+
+pub fn min_value<NB: u32, BE: s32>() -> FixedPoint<NB, BE> {
+    fixed_point::make_fixed_point<BE>(std::signed_min_value<NB>())
+}
+
 // === Create FixedPoint arrays numbers from arrays of significands sN[NB] ===
 
 
