@@ -186,7 +186,7 @@ fn overflow_truncated<OVERFLOW: OverflowMode, N: u32>(
     // Sign of the result (need to pass it because is could be lost during truncation)
     sign: Sign,
     // Did overflow happen during truncation?
-    has_overflow: bool
+    had_overflow: bool
     ) -> sN[N] {
    
     assert!(N != 0, "illegal_zero_width");
@@ -197,8 +197,8 @@ fn overflow_truncated<OVERFLOW: OverflowMode, N: u32>(
     let MIN = (std::signed_min_value<{N+2}>() >> 2) as sN[N];
 
     let has_overflow = match OVERFLOW {
-        OverflowMode::SAT_SYM => has_overflow || (truncated == MIN),
-        _ => has_overflow
+        OverflowMode::SAT_SYM => had_overflow || (truncated == MIN),
+        _ => had_overflow
     };
 
     if has_overflow {
@@ -242,27 +242,28 @@ fn truncate_msbs<NB_OUT: u32, OVERFLOW: OverflowMode, NB_IN: u32>
     // So we have to introduce NB_SPLIT
     // let (msbs, lsbs) = std::split_lsbs<NB_OUT>(std::to_unsigned(x));
     let NB_SPLIT = std::min(NB_IN, NB_OUT);
-    let (msbs, lsbs) = std::split_lsbs<NB_SPLIT>(std::to_unsigned(x));
-
-
-    let truncated = std::to_signed(lsbs);
-    let overflow_bits = std::to_signed(msbs);
-
+    let (_, lsbs) = std::split_lsbs<NB_SPLIT>(std::to_unsigned(x));
+    let truncated = std::to_signed(lsbs) as sN[NB_OUT];
+    
     // TODO this fails due to eager instantiation for NB_IN = 0 
     // let sign:Sign = std::msb(x) as Sign;
     let sign:Sign = std::msb((x as sN[NB_IN + 1]) << 1) as Sign;
-
-    // If there is no overflow, overflow_bits are either 000..0 or 111..1
+    
+    // TODO this fails due to eager instantiation for NB_IN = 0 
+    // let NB_SIGN_EXT = NB_OVERFLOW + 1;
+    let NB_SIGN_EXT = std::min(NB_OVERFLOW + 1, NB_IN);
+    // If there is no overflow, overflow_bits and are either 000..0 or 111..1
     let sign_ext = match sign {
-        Sign::NonNegative => sN[NB_OVERFLOW]:0,
-        Sign::Negative => std::to_signed(all_ones!<uN[NB_OVERFLOW]>())
+        Sign::NonNegative => zero!<uN[NB_SIGN_EXT]>(),
+        Sign::Negative => all_ones!<uN[NB_SIGN_EXT]>()
     };
-
-    // NB: has_overflow should also be true for OverflowMode::SAT_SYM
-    // if truncated == MIN.
-    // We handle this inside overflow_impl()
-    let has_overflow = (overflow_bits != sign_ext);
-    overflow_truncated<OVERFLOW>(truncated as sN[NB_OUT], sign, has_overflow)
+    // Take all truncated bits and the sign bit
+    let (msbs, _) = std::split_msbs<NB_SIGN_EXT>(std::to_unsigned(x));
+    
+    // NB: overflow also happens when truncated == MIN for OverflowMode::SAT_SYM
+    // We handle this inside overflow_truncated()
+    let had_overflow = (msbs != sign_ext);
+    overflow_truncated<OVERFLOW>(truncated as sN[NB_OUT], sign, had_overflow)
 }
 
 fn convert_rounding_mode<rm: RoundingMode>() -> round::RoundingMode {
@@ -298,9 +299,9 @@ fn truncate_lsbs<NB_OUT: u32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode, NB
     assert!(NB_IN > NB_OUT, "truncate_lsbs_nothing_to_truncate");
     let NUM_BITS_ROUNDED = std::usub_or_zero(NB_IN, NB_OUT);
 
-    let (has_overflow, truncated) = round_trunc_s<NUM_BITS_ROUNDED, ROUNDING>(x);
+    let (had_overflow, truncated) = round_trunc_s<NUM_BITS_ROUNDED, ROUNDING>(x);
     let sign = std::msb(x) as Sign;
-    overflow_truncated<OVERFLOW>(truncated as sN[NB_OUT], sign, has_overflow)
+    overflow_truncated<OVERFLOW>(truncated as sN[NB_OUT], sign, had_overflow)
 }
 
 // FixedPoint<NB, BE> ~ ac_fixed<NB, NB + BE> 
@@ -337,6 +338,11 @@ pub fn resize<
     // Resize width
     let resized = if (NB_OUT < NB_ALIGNED) {
         truncate_msbs<NB_OUT, OVERFLOW>(aligned)
+    } else if (NB_OUT == NB_ALIGNED){
+        // Here overflow_truncated() will change the result on in SAT_SYM mode, if aligned == MIN.
+        let sign = std::msb(aligned as sN[NB_OUT]) as Sign;
+        let had_overflow = false;
+        overflow_truncated<OVERFLOW>(aligned as sN[NB_OUT], sign, had_overflow)
     } else {
         aligned as sN[NB_OUT]
     };
@@ -429,31 +435,38 @@ fn test_resize_more() {
     );
 }
 
+fn resize_overflow_test_case<
+    OVERFLOW: OverflowMode,
+    NB_IN: u32,
+    NB_OUT: u32
+>(
+    x: sN[NB_IN],
+    expected: sN[NB_OUT]
+) {
+    resize_test_case<RoundingMode::TRN, OVERFLOW>(
+        fixed_point::make_fixed_point<0>(x),
+        fixed_point::make_fixed_point<0>(expected)
+    );
+}
+
 #[test]
 fn test_resize_overflow_modes() {
-
+    // WRAP
+    resize_overflow_test_case<OverflowMode::WRAP>(s5:15, s3:-1);
+    resize_overflow_test_case<OverflowMode::WRAP>(s5:8, s3:0);
     // SAT
-    resize_test_case<RoundingMode::TRN, OverflowMode::SAT>(
-        fixed_point::make_fixed_point<0>(s5:15),
-        fixed_point::make_fixed_point<0>(s3:3)
-    );
-
-    resize_test_case<RoundingMode::TRN, OverflowMode::SAT>(
-        fixed_point::make_fixed_point<0>(s5:-16),
-        fixed_point::make_fixed_point<0>(s3:-4)
-    );
-
+    resize_overflow_test_case<OverflowMode::SAT>(s5:15, s4:7);
+    resize_overflow_test_case<OverflowMode::SAT>(s5:15, s3:3);
+    resize_overflow_test_case<OverflowMode::SAT>(s5:-16, s4:-8);
+    resize_overflow_test_case<OverflowMode::SAT>(s5:-16, s3:-4);
     // SAT_ZERO
-    resize_test_case<RoundingMode::TRN, OverflowMode::SAT_ZERO>(
-        fixed_point::make_fixed_point<0>(s5:15),
-        fixed_point::make_fixed_point<0>(s3:0)
-    );
-
+    resize_overflow_test_case<OverflowMode::SAT_ZERO>(s5:15,s3:0);
+    resize_overflow_test_case<OverflowMode::SAT_ZERO>(s5:-15,s3:0);
+    resize_overflow_test_case<OverflowMode::SAT_ZERO>(s5:-9,s3:0);
     // SAT_SYM
-    resize_test_case<RoundingMode::TRN, OverflowMode::SAT_SYM>(
-        fixed_point::make_fixed_point<0>(s5:-16),
-        fixed_point::make_fixed_point<0>(s3:-3)
-    );
+    resize_overflow_test_case<OverflowMode::SAT_SYM>(s5:-16, s3:-3);
+    resize_overflow_test_case<OverflowMode::SAT_SYM>(s5:-16, s5:-15);
+    resize_overflow_test_case<OverflowMode::SAT_SYM>(s5:15, s5:15);
 }
 
 
@@ -512,6 +525,54 @@ pub fn clip_resize<
 }
 
 // === Arithmetic operations ===
+
+// Compute -x
+// Adds one extra bit to avoid overflow when x = -2^(NB-1)
+pub fn negate<
+    NB_IN: u32, BE_IN: s32,
+    NB_OUT: u32 = {NB_IN + 1}, BE_OUT: s32 = {BE_IN}
+>
+(x: FixedPoint<NB_IN, BE_IN>)
+-> FixedPoint<NB_OUT, BE_OUT> {
+    let xx = x.significand as sN[NB_OUT];
+    FixedPoint<NB_OUT, BE_OUT>{ significand: -xx }
+}
+
+// Negate without adding extra bit
+pub fn negate_with_overflow<
+    OVERFLOW: OverflowMode,
+    NB: u32, BE: s32
+>
+(x: FixedPoint<NB, BE>)
+-> FixedPoint<NB, BE> {
+    let minus_x = negate(x);
+    let significand = truncate_msbs<NB, OVERFLOW>(minus_x.significand);
+    fixed_point::make_fixed_point<BE>(significand)
+}
+
+fn negate_test_case<NB: u32, BE: s32, OVERFLOW: OverflowMode>() {
+    let NB_OUT = NB + 1;
+
+    let MIN = std::signed_min_value<NB>();
+    let MAX = std::signed_max_value<NB>();
+
+    let ROUNDING = RoundingMode::TRN;
+    for (i, _) in MIN..MAX {
+        let x = fixed_point::make_fixed_point<BE>(i);
+        let expected = fixed_point::make_fixed_point<BE>(-(i as sN[NB_OUT]));
+        let expected_with_overflow = resize<NB, BE, ROUNDING, OVERFLOW>(expected);
+        assert_eq(expected, negate(x));
+        assert_eq(expected_with_overflow, negate_with_overflow<OVERFLOW>(x));
+    }(());
+}
+
+#[test]
+fn test_negate() {
+    negate_test_case<3, 0, OverflowMode::WRAP>();
+    negate_test_case<3, 0, OverflowMode::SAT>();
+    negate_test_case<3, 0, OverflowMode::SAT_ZERO>();
+    negate_test_case<3, 0, OverflowMode::SAT_SYM>();
+}
 
 
 // Performs an add assuming that the rhs is already wide enough to not overflow.
