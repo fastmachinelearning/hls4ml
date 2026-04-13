@@ -302,6 +302,14 @@ class OneAPIWriter(Writer):
                         config = layer.get_attr('config_cpp', None)
                         if config:
                             newline += config + '\n'
+
+                elif '// hls-fpga-machine-learning insert softmax tables' in line:
+                    newline = line
+                    for layer in model.get_layers():
+                        if 'softmax' in layer.name:
+                            newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
+                            newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
+
                 else:
                     newline = line
                 fout.write(newline)
@@ -695,25 +703,29 @@ class OneAPIWriter(Writer):
 
         return None  # fp_bits, fp_integer, fp_signed
 
+
     def __write_exp_table(self, model, path):
-        table_name = 'exp_table'
-        table_size = self.__get_table_size(model, 'softmax', table_name='exp_table_size')
 
-        h_file = open(f'{path}/{table_name}.tb', 'w')
-        h_file.write(self.__get_table_header(table_name, table_size, table_type='exp_table_t'))
+        for layer in model.get_layers():
+            
+            if 'softmax' in layer.name:
+                
+                table_name = layer.name + '_exp_table'
+                table_size = int(layer.get_attr('exp_table_size'))//2 if (
+                    layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax'
+                    ) and layer.get_attr('exp_table_size') is not None else 1024
 
-        # Default fixed point precision
-        # 6 bits for integer part, 10 bits for decimal - total, 16
-        precision = self.__get_table_precision(model, 'softmax', table_name='inp_norm_t')
+                with open(f'{path}/{table_name}.h', 'w') as h_file:
 
-        if precision is None:
-            fp_bits = 16
-            fp_integer = 6
-            fp_signed = True
+                    header_name = table_name
+                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
+                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
-            for layer in model.get_layers():
-                if layer.name == 'softmax':
-                    ac_type = layer.get_input_variable().type
+                    h_file.write(f'static constexpr {table_name}_t {table_name}[{table_size}] = {{')
+
+                    #ac_type = layer.get_input_variable().type
+                    ac_type = layer.get_attr('inp_norm_t')
+                    
                     if ac_type is not None:
                         try:
                             fp_bits = ac_type.precision.integer + ac_type.precision.fractional
@@ -721,49 +733,55 @@ class OneAPIWriter(Writer):
                             fp_signed = ac_type.precision.signed
                         except Exception:
                             # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                            pass
+                            fp_bits = 16
+                            fp_integer = 6
+                            fp_signed = True
+
                         if fp_signed is False:
                             raise Exception('Softmax types need to be signed')
+                    
+                    else:
+                        fp_bits = 16
+                        fp_integer = 6
+                        fp_signed = True
 
-        else:
-            fp_bits = precision.width
-            fp_integer = precision.integer
-            fp_signed = precision.signed
+                    sep = ''
+                    N = ceil_log2(table_size)
+                    for i in range(table_size):
+                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+                        b = uint_to_binary(i, N)
+                        if i == 0:
+                            b.insert(0, 0)
+                        else:
+                            b.insert(0, 1)
+                        f.set_msb_bits(b)
+                        real_val = f.exp_float()
+                        h_file.write(sep + str(real_val))
+                        sep = ', '
+                    
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
-        f_bits = fp_bits - fp_integer
-        sep = ''
-        for i in range(table_size):
-            # Index represents the raw bit pattern of the input
-            real_val_in = i * (2.0 ** (-f_bits))
-
-            # Calculate exp(-x) for the stable implementation
-            real_val = np.exp(-real_val_in)
-
-            h_file.write(sep + str(real_val))
-            sep = ', '
-
-        h_file.write('};\n')
-        h_file.close()
 
     def __write_invert_table(self, model, path):
-        table_name = 'invert_table'
-        table_size = self.__get_table_size(model, 'softmax', table_name='inv_table_size')
+        for layer in model.get_layers():
+            if 'softmax' in layer.name:
 
-        h_file = open(f'{path}/{table_name}.tb', 'w')
-        h_file.write(self.__get_table_header(table_name, table_size, table_type='inv_table_t'))
-        # Default fixed point precision, in case values from layer attributes cannot be extracted
-        # 8 bits for integer part, 10 bits for decimal - total, 18
+                table_name = layer.name + '_inv_table'
+                table_size = int(layer.get_attr('inv_table_size')) //2 if (
+                    layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax'
+                    ) and layer.get_attr('inv_table_size') is not None else 1024
+                
+                with open(f'{path}/{table_name}.h', 'w') as h_file:
 
-        precision = self.__get_table_precision(model, 'softmax', table_name='inv_inp_t')
+                    header_name = table_name
+                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
+                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
-        if precision is None:
-            fp_bits = 18
-            fp_integer = 8
-            fp_signed = True
+                    h_file.write(f'static constexpr {table_name}_t {table_name}[{table_size}] = {{')
 
-            for layer in model.get_layers():
-                if layer.name == 'softmax':
-                    ac_type = layer.get_attr('exp_table_t')
+                    ac_type = layer.get_attr('inv_inp_t')
+
                     if ac_type is not None:
                         try:
                             fp_bits = ac_type.precision.integer + ac_type.precision.fractional
@@ -771,31 +789,32 @@ class OneAPIWriter(Writer):
                             fp_signed = ac_type.precision.signed
                         except Exception:
                             # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                            pass
+                            fp_bits = 18
+                            fp_integer = 8
+                            fp_signed = True
+
                         if fp_signed is False:
                             raise Exception('Softmax types need to be signed')
 
-        else:
-            fp_bits = precision.width
-            fp_integer = precision.integer
-            fp_signed = precision.signed
+                    else:
+                        fp_bits = 18
+                        fp_integer = 8
+                        fp_signed = True
 
-        f_bits = fp_bits - fp_integer
-        sep = ''
-        for i in range(table_size):
-            # Index represents the raw bit pattern of the input
-            real_val_in = i * (2.0 ** (-f_bits))
+                    sep = ''
+                    N = ceil_log2(table_size)
+                    for i in range(table_size):
+                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+                        b = uint_to_binary(i, N)
+                        b.insert(0, 0)
+                        f.set_msb_bits(b)
+                        real_val = f.inv_float()
+                        h_file.write(sep + str(real_val))
+                        sep = ', '
 
-            if real_val_in == 0:
-                real_val = 999.0
-            else:
-                real_val = 1.0 / real_val_in
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
-            h_file.write(sep + str(real_val))
-            sep = ', '
-
-        h_file.write('};\n')
-        h_file.close()
 
     def __write_exp_table_latency(self, model, path):
         table_name = 'exp_table_latency'
@@ -1015,3 +1034,6 @@ class OneAPIWriter(Writer):
         self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
+
+
+
