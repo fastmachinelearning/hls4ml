@@ -722,8 +722,7 @@ class OneAPIWriter(Writer):
                     h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
                     h_file.write(f'static constexpr {table_name}_t {table_name}[{table_size}] = {{')
-
-                    #ac_type = layer.get_input_variable().type
+                    
                     ac_type = layer.get_attr('inp_norm_t')
                     
                     if ac_type is not None:
