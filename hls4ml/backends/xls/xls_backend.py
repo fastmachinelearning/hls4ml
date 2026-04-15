@@ -35,19 +35,6 @@ class XLSBackend(FPGABackend):
 
     def _register_layer_attributes(self) -> None:
         pass
-        # all_layers = [
-        #     Layer,
-        #     Dense,
-        #     Activation,
-        #     Softmax,
-        # ]
-
-        # for layer in all_layers:
-        #     attrs = self.attribute_map.get(layer, [])
-        #     attrs.append(
-        #         ConfigurableAttribute('skip', value_type=bool, default=True, description=descriptions.softmax_skip)
-        #     )
-        #     self.attribute_map[layer] = attrs
 
     def _register_flows(self) -> None:
         initializers: list = self._get_layer_initializers()
