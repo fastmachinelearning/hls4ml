@@ -1782,6 +1782,92 @@ class DACombinational(Layer):
         self.add_output_variable(shape)
 
 
+class SparseInputReduce(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('n_chan'),
+        Attribute('n_sparse'),
+        Attribute('threshold', value_type=float),
+        Attribute('hash_bits', value_type=int, default=10),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
+class SparseConv2D(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('kernel_size'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('accum'),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_filt']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+    def add_bias(self, quantizer=None):
+        data = self.get_attr('bias_data', None)
+        precision = None
+        type_name = None
+        if data is None:
+            data = np.zeros(self.attributes['n_filt'])
+            precision = IntegerPrecisionType(width=1, signed=False)
+            type_name = 'bias{index}_t'
+            quantizer = None
+        self.add_weights_variable(
+            name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantizer=quantizer
+        )
+
+
+class SparseActivation(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('activation', value_type=str),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
+class SparsePooling2D(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('pool_size'),
+        TypeAttribute('accum'),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
+class SparseFlatten(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['out_height'] * self.attributes['out_width'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1860,6 +1946,12 @@ layer_map = {
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
     'DACombinational': DACombinational,
+    # Sparsepixels layers:
+    'SparseInputReduce': SparseInputReduce,
+    'SparseConv2D': SparseConv2D,
+    'SparseActivation': SparseActivation,
+    'SparsePooling2D': SparsePooling2D,
+    'SparseFlatten': SparseFlatten,
 }
 
 

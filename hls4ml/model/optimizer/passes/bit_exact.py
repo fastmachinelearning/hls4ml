@@ -34,6 +34,11 @@ from hls4ml.model.layers import (
     Pooling2D,
     Reshape,
     Softmax,
+    SparseActivation,
+    SparseConv2D,
+    SparseFlatten,
+    SparseInputReduce,
+    SparsePooling2D,
     Transpose,
 )
 from hls4ml.model.optimizer import ModelOptimizerPass, OptimizerPass
@@ -195,6 +200,24 @@ def _(layer: Transpose):
     i = np.transpose(i, inv_perm)
     f = np.transpose(f, inv_perm)
     return ((k, i, f),)
+
+
+@_request_kif.register
+def _(layer: SparsePooling2D):
+    """SparsePooling2D has two inputs: features (idx=0) and hash (idx=1).
+    The hash input is an integer side-channel and must not widen the upstream's precision.
+    Return minimum values for the hash input so np.maximum in requested_kif does not
+    override the narrow request from the hash-producer's other downstream consumers (e.g. a FPQ)."""
+    # Default: max precision for the feature input (same as no dispatch)
+    feat_shape = get_input_shapes(layer)[0]
+    feat_kif = _maximum_kif_at_shape(feat_shape)
+    if len(get_input_shapes(layer)) > 1:
+        hash_shape = get_input_shapes(layer)[1]
+        k2 = np.zeros(hash_shape, dtype=np.int16)
+        i2 = np.full(hash_shape, -127, dtype=np.int16)
+        f2 = np.full(hash_shape, -127, dtype=np.int16)
+        return (feat_kif, (k2, i2, f2))
+    return (feat_kif,)
 
 
 @_request_kif.register
@@ -677,6 +700,88 @@ def _(layer: Embedding):
     return k, i, f
 
 
+@_produce_kif.register
+def _(layer: SparseInputReduce):
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    n_chan = layer.attributes['n_chan']
+    n_sparse = layer.attributes['n_sparse']
+    k_ch = np.max(k_in.reshape(-1, n_chan), axis=0)
+    i_ch = np.max(i_in.reshape(-1, n_chan), axis=0)
+    f_ch = np.max(f_in.reshape(-1, n_chan), axis=0)
+    return np.tile(k_ch, n_sparse), np.tile(i_ch, n_sparse), np.tile(f_ch, n_sparse)
+
+
+@_produce_kif.register
+def _(layer: SparseConv2D):
+    kernel = layer.attributes['weight'].data
+    _bias = layer.attributes['bias']
+    bias = _bias.data if _bias is not None else 0
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+
+    n_sparse = layer.attributes['n_sparse']
+    n_chan = layer.attributes['n_chan']
+    n_filt = layer.attributes['n_filt']
+    ks = layer.attributes['kernel_size']
+
+    # Match standard Conv2D precision: each output pixel accumulates ks*ks*n_chan
+    # MAC terms (the kernel window), same as dense conv. The sparse loop iterates
+    # n_sparse input pixels, but only those within the kernel radius contribute;
+    # the rest add 0. So the worst-case accumulation depth is ks*ks*n_chan, not n_sparse.
+    k_ch = np.tile(k_in[:n_chan], ks * ks)
+    i_ch = np.tile(i_in[:n_chan], ks * ks)
+    f_ch = np.tile(f_in[:n_chan], ks * ks)
+    qint_in = QIntervalArray.from_kif(k_ch, i_ch, f_ch)
+
+    kernel_flat = kernel.reshape(-1, n_filt)  # (ks*ks*n_chan, n_filt)
+    qint_out = qint_in @ kernel_flat
+    qint_out = qint_out + bias
+    k, i, f = qint_out.to_kif()
+    return (
+        np.tile(k, n_sparse).astype(np.int16),
+        np.tile(i, n_sparse).astype(np.int16),
+        np.tile(f, n_sparse).astype(np.int16),
+    )
+
+
+@_produce_kif.register
+def _(layer: SparseActivation):
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    act = layer.attributes.get('activation', 'relu').lower()
+    if act == 'relu':
+        return np.zeros_like(k_in), i_in, f_in
+    return k_in, i_in, f_in
+
+
+@_produce_kif.register
+def _(layer: SparsePooling2D):
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    # Average pooling divides by pool_size^2, adding fractional bits.
+    # Match standard Pooling2D: add ceil(log2(pool_size^2)) fractional bits.
+    pool_size = layer.attributes['pool_size']
+    n_chan = layer.attributes['n_chan']
+    extra_f = int(np.ceil(np.log2(pool_size * pool_size)))
+    k_ch = k_in[:n_chan]
+    i_ch = i_in[:n_chan]
+    f_ch = f_in[:n_chan] + extra_f
+    n_sparse = layer.attributes['n_sparse']
+    return (
+        np.tile(k_ch, n_sparse).astype(np.int16),
+        np.tile(i_ch, n_sparse).astype(np.int16),
+        np.tile(f_ch, n_sparse).astype(np.int16),
+    )
+
+
+@_produce_kif.register
+def _(layer: SparseFlatten):
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    n_chan = layer.attributes['n_chan']
+    out_h = layer.attributes['out_height']
+    out_w = layer.attributes['out_width']
+    k_ch, i_ch, f_ch = k_in[:n_chan], i_in[:n_chan], f_in[:n_chan]
+    n_out = out_h * out_w
+    return np.tile(k_ch, n_out), np.tile(i_ch, n_out), np.tile(f_ch, n_out)
+
+
 def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
     return tuple(int(np.max(a)) for a in arr)
 
@@ -966,6 +1071,8 @@ def get_output_layers_and_quantizers(
         elif isinstance(_node, (Reshape, Transpose, Concatenate)):
             layers.append(_node)
             get_output_layers_and_quantizers(_node, layers, quantizers)
+        elif isinstance(_node, (SparseInputReduce, SparseConv2D, SparseActivation, SparsePooling2D, SparseFlatten)):
+            layers.append(_node)
         else:
             raise ValueError(f'Layer {node.name} ({node.class_name}) unexpected input layer chain.')
     return layers, quantizers

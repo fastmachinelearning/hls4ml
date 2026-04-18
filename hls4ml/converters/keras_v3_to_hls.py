@@ -352,6 +352,14 @@ def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_
             # If no layer was added in the loop, then there is a circular dependency
             raise ValueError('Circular dependency detected')
 
+    # Post-process: convert Flatten following sparse layers to SparseFlatten
+    try:
+        from hls4ml.converters.keras_v3.sparsepixels import post_process_sparse_layer_list
+
+        post_process_sparse_layer_list(layer_list)
+    except ImportError:
+        pass
+
     # Mark inputs[inp layer name] for ModelGraph to parse from i/o keras tensor names
     provides: dict[str, str] = {}  # tensor_name -> src_layer_name
     for conf in layer_list:
