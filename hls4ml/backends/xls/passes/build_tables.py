@@ -63,6 +63,8 @@ def build_table(name: str, func: Callable[[float], float], table_size: int, inpu
     recompute_range = True
     while recompute_range:
         raw_log2_step = math.ceil(math.log2((raw_x_max - raw_x_min) / (table_size - 1)))
+        if raw_log2_step < 0:
+            raw_log2_step = 0
         raw_step = 2 ** raw_log2_step
         f_min = raw_func(raw_x_min)
         f_max = raw_func(raw_x_max)
