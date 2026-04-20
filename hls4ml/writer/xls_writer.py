@@ -1,6 +1,7 @@
 # Typing imports
 from __future__ import annotations  # makes all annotations into strings
 
+import tarfile
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
@@ -284,9 +285,25 @@ class XLSWriter(Writer):
                 rmtree(dstpath)
             copytree(srcpath, dstpath)
 
+    @staticmethod
+    def write_tar(model):
+        """Write the generated project as a .tar.gz archive
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        write_tar = model.config.get_writer_config().get('WriteTar', False)
+        if write_tar:
+            tar_path = Path(model.config.get_output_dir() + '.tar.gz')
+            tar_path.unlink(missing_ok=True)
+            with tarfile.open(tar_path, mode='w:gz') as archive:
+                archive.add(model.config.get_output_dir(), recursive=True, arcname='')
+
     def write_hls(self, model: ModelGraph) -> None:
         self.write_project_dir(model)
         self.write_build_script(model)
         self.write_project_dslx(model)
         self.write_layers(model)
         self.write_nnet_utils(model)
+        self.write_tar(model)

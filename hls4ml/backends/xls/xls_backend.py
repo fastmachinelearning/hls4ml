@@ -1,6 +1,7 @@
 # Typing imports
 from __future__ import annotations  # makes all annotations into strings
 
+import math
 from pathlib import Path
 from typing import Any, TYPE_CHECKING, Dict
 
@@ -97,18 +98,28 @@ class XLSBackend(FPGABackend):
     def get_writer_flow(self) -> str:
         return self._writer_flow
 
+    @staticmethod
+    def _to_xls_clock_period_ps(clock_period) -> int:
+        """Convert nanoseconds to picoseconds."""
+        return int(float(clock_period) * 1000)
+
+    @staticmethod
+    def _to_xls_clock_margin_percent(clock_uncertainty: str) -> int:
+        """Convert ClockUncertainty string to integer XLS option clock_margin_percent"""
+        assert isinstance(clock_uncertainty, str) and clock_uncertainty.endswith('%'), \
+            f'Clock uncertainty must be in percentage format, got {clock_uncertainty}'
+        return math.ceil(float(clock_uncertainty.strip('%')))
+
     def create_initial_config(
             self,
             part='xcu250-figd2104-2L-e',
             clock_period=5,
             clock_uncertainty='12.5%',
             io_type='io_parallel',
-            namespace=None,
-            write_weights_txt=True,
             write_tar=False,
-            tb_output_stream='both',
             xls_codegen_flags=None,
-            **_,
+            dslx_stdlib_path='$HOME/xls/xls/dslx/stdlib',
+            **kwargs,
     ) -> dict[str, Any]:
         """Create an initial configuration of the XLS backend.
 
@@ -116,15 +127,10 @@ class XLSBackend(FPGABackend):
             part (str, optional): The FPGA part to be used. Defaults to 'xcvu13p-flga2577-2-e'.
             clock_period (int, optional): The clock period. Defaults to 5.
             clock_uncertainty (str, optional): The clock uncertainty. Defaults to 12.5%.
-            io_type (str, optional): Type of implementation used. One of
-                'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
-            namespace (str, optional): If defined, place all generated code within a namespace. Defaults to None.
-            write_weights_txt (bool, optional): If True, writes weights to .txt files which speeds up compilation.
-                Defaults to True.
+            io_type (str, optional): Type of implementation used. Only 'io_parallel' is currently supported.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
-            tb_output_stream (str, optional): Controls where to write the output. Options are 'stdout', 'file' and 'both'.
-                Defaults to 'both'.
             xls_codegen_flags (dict, optional): Flags to pass to the XLS codegen. Defaults to None.:
+            dslx_stdlib_path (str, optional): Path to the DSLX standard library. Defaults to '$HOME/xls/xls/dslx/stdlib'. TODO: in future, it will be bundled to pyxls
 
         Returns:
             dict: initial configuration.
@@ -137,16 +143,13 @@ class XLSBackend(FPGABackend):
         config['IOType'] = io_type if io_type is not None else 'io_parallel'
         config['HLSConfig'] = {}
         config['WriterConfig'] = {
-            'Namespace': namespace,
-            'WriteWeightsTxt': write_weights_txt,
             'WriteTar': write_tar,
-            'TBOutputStream': tb_output_stream,
         }
         # TODO: in future, it will be bundled to pyxls
-        config['dslx_stdlib_path'] = '$HOME/xls/xls/dslx/stdlib'
+        config['DSLXStdlibPath'] = dslx_stdlib_path if dslx_stdlib_path is not None else '$HOME/xls/xls/dslx/stdlib'
 
         # Set default flags to mimic codegen_main executable behavior
-        config['XLSCodegenFlags'] = xls_codegen_flags or {
+        config['XLSCodegenFlags'] = xls_codegen_flags if xls_codegen_flags is not None else {
             'delay_model': 'asap7',
             'generator': 'pipeline',
             'use_system_verilog': True,
@@ -155,8 +158,13 @@ class XLSBackend(FPGABackend):
             'max_inline_depth': 5,
             'flop_single_value_channels': True,
             # convert nanoseconds to picoseconds
-            'clock_period_ps': config['ClockPeriod'] * 1000,
+            'clock_period_ps': self._to_xls_clock_period_ps(config['ClockPeriod']),
+            # XLS converts
+            'clock_margin_percent': self._to_xls_clock_margin_percent(config['ClockUncertainty']),
         }
+
+        for arg in kwargs:
+            warn(f'WARNING: Unknown argument {arg} for XLS backend will be ignored.')
 
         return config
 
@@ -166,10 +174,15 @@ class XLSBackend(FPGABackend):
         return xls.mangle_dslx_name(module_name=name, function_name=name)
 
     def compile(self, model: ModelGraph) -> None:
+        io_type = model.config.get_config_value('IOType')
+        if io_type != 'io_parallel':
+            raise NotImplementedError(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
         curr_dir = os.getcwd()
         os.chdir(f'{model.config.get_output_dir()}/firmware')
         kernel_name = model.config.get_project_name()
-        dslx_stdlib_path = os.path.expandvars(model.config.get_config_value('dslx_stdlib_path'))
+        dslx_stdlib_path = os.path.expandvars(model.config.get_config_value('DSLXStdlibPath'))
+        assert os.path.exists(dslx_stdlib_path), \
+            f'DSLX stdlib path does not exist: {dslx_stdlib_path}'
 
         ir_text = xls.c_api.xls_convert_dslx_path_to_ir(path=f'{kernel_name}.x',
                                                         dslx_stdlib_path=dslx_stdlib_path)
@@ -275,7 +288,9 @@ class XLSBackend(FPGABackend):
         def build_codegen_flags() -> Dict[str, Any]:
             flags = dict(model.config.get_config_value('XLSCodegenFlags'))
             # convert nanoseconds to picoseconds
-            flags['clock_period_ps'] = model.config.get_config_value("ClockPeriod") * 1000
+            flags['clock_period_ps'] = self._to_xls_clock_period_ps(model.config.get_config_value('ClockPeriod'))
+            flags['clock_margin_percent'] = self._to_xls_clock_margin_percent(
+                model.config.get_config_value('ClockUncertainty'))
             if reset is not None:
                 flags['reset'] = 'reset' if reset else None
                 flags['reset_data_path'] = reset
@@ -293,7 +308,7 @@ class XLSBackend(FPGABackend):
                 f'{model.config.get_config_value("ClockPeriod")}'
             ]
             if pr:
-                f += '--pr'
+                f += ['--pr']
             return f
 
         curr_dir: str = os.getcwd()
