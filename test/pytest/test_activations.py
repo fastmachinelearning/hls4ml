@@ -62,6 +62,13 @@ def test_activations(test_case_id, backend, activation, name, shape, io_type):
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     output_dir = str(test_root_path / test_case_id)
 
+    # XLS uses a custom algorithm for determining lookup table boundaries,
+    # so we need to increase the table size for some activations
+    # (note that other backends use a hardcoded range [-8; 8]).
+    # See hls4ml/backends/xls/passes/build_tables.py
+    if backend == 'XLS' and name == 'softsign':
+        hls_config['LayerName']['activation_3']['TableSize'] = 2048
+
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, output_dir=output_dir, backend=backend
     )
