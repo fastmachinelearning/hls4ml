@@ -11,12 +11,14 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.fixture()
-def generate_data(input_shape):
+def generate_data(input_shape, implementation):
     shape = (5000, *input_shape)
     d = np.random.normal(0, 2, shape)
     modify_entries = np.random.randint(0, 1, shape) < 0.05
     d[modify_entries] = d[modify_entries] * 5 + 10
-    return np.clip(d, -32, 31)
+    clip_min = -32
+    clip_max = 0 if implementation == 'latency' else 31
+    return np.clip(d, clip_min, clip_max)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'XLS'])
