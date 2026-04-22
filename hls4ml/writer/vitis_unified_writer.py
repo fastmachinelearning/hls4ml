@@ -26,6 +26,16 @@ class VitisUnifiedWriter(VitisWriter):
         """No-op: Vitis Unified uses vitis-comp.json and hls_kernel_config, not project.tcl."""
         pass
 
+    # ===== sanity check function =====
+    def sanity_check(self, model, is_multigraph=False):
+        if is_multigraph:
+            raise Exception('Vitis Unified does not support multigraphs.')
+        decl = self._get_kernel_declaration(model)
+        if len(decl) > 64:
+            raise ValueError(
+                f"Project name must not exceed 18 characters; kernel declaration exceeds 64 characters: '{decl}'"
+            )
+
     # ===== Public helpers used by backend/passes =====
     def get_vitis_unified_working_directory(self, model):
         return os.path.join(model.config.get_output_dir(), 'vitis_workspace')
@@ -60,6 +70,11 @@ class VitisUnifiedWriter(VitisWriter):
 
     def _get_sim_file_name(self):
         return 'myproject_test'
+
+    def _get_kernel_declaration(self, model):
+        top_module_name = self._get_top_wrap_func_name(model, False)
+        top_mod_inst_name = top_module_name + '_1'
+        return f'{top_module_name}:1:{top_mod_inst_name}'
 
     def _get_top_wrap_func_name(self, model, is_axi_master):
         return self._get_wrapper_file_name(model, is_axi_master)
@@ -256,11 +271,10 @@ fi
                 if '{GUI_STATUS}' in line:
                     line = line.replace('{GUI_STATUS}', 'true')
                 if '# hls-fpga-machine-learning insert custom connection' in line and self._is_axi_stream():
-                    top_module_name = self._get_top_wrap_func_name(model, False)
-                    top_mod_inst_name = top_module_name + '_1'
+                    top_mod_inst_name = self._get_top_wrap_func_name(model, False) + '_1'
                     line += '\n'
                     line += '[connectivity]\n'
-                    line += f'nk={top_module_name}:1:{top_mod_inst_name}\n'
+                    line += f'nk={self._get_kernel_declaration(model)}\n'
                     line += f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
                     line += f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
                 fout.write(line)
@@ -443,7 +457,7 @@ fi
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         with (
-            open(os.path.join(filedir, f'../templates/vitis_unified/{self._get_project_name(model)}_axi_master.cpp')) as fin,
+            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_master.cpp')) as fin,
             open(f'{model.config.get_output_dir()}/firmware/{self._get_wrapper_file_name(model, True)}.cpp', 'w') as fout,
         ):
             for line in fin.readlines():
@@ -752,8 +766,7 @@ fi
 
     # ===== Main entrypoint =====
     def write_hls(self, model, is_multigraph=False):
-        if is_multigraph:
-            raise Exception('Vitis Unified does not support multigraphs.')
+        self.sanity_check(model, is_multigraph)
 
         self._set_unified_config(model)
         super().write_hls(model, is_multigraph=False)
