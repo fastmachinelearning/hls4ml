@@ -58,6 +58,7 @@ def _vitis_unified_convert_kwargs(io_type, axi_mode, board='zcu102', **extra):
         'input_type': 'float',
         'output_type': 'float',
         'axi_mode': axi_mode,
+        'project_name': 'max_length_project',  # 18 chars → decl = 63 chars (limit is 64)
         **extra,
     }
 
@@ -235,7 +236,6 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
 
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
     config['Model']['Strategy'] = strategy
-    test_case_id = test_case_id
     output_dir = str(test_root_path / test_case_id)
 
     vitis_unified_model = hls4ml.converters.convert_from_keras_model(
@@ -260,6 +260,26 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
     assert os.path.isdir(final_reports_dir), f'final_reports directory does not exist: {final_reports_dir}'
     rpt_files = [f for f in os.listdir(final_reports_dir) if f.endswith('.rpt')]
     assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'
+
+
+@pytest.mark.parametrize('io_type', ['io_stream'])
+@pytest.mark.parametrize('strategy', ['latency'])
+@pytest.mark.parametrize('granularity', ['name'])
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_project_name_too_long(test_case_id, simple_unet, io_type, strategy, granularity, axi_mode):
+    model = simple_unet
+    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / test_case_id)
+
+    vitis_unified_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        **_vitis_unified_convert_kwargs(io_type, axi_mode, project_name='name_exceeds_limits'),  # 19 chars → decl = 65 chars
+    )
+    with pytest.raises(ValueError, match='Project name must not exceed 18 characters'):
+        vitis_unified_model.compile()
 
 
 # test_gen_unified('axi_stream_debug_4', simple_unet(), 'io_stream', 'latency', 'name', 10, 'axi_stream', 'kv260')

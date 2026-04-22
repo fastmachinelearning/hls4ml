@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import warnings
 from shutil import copy2
 
 from hls4ml.backends import VitisBackend, VivadoBackend
@@ -25,6 +26,10 @@ class VitisUnifiedBackend(VitisBackend):
         bitfile=False,
         log_to_stdout=True,
     ):
+        if fifo_opt and not cosim:
+            warnings.warn('fifo_opt requires cosim to be enabled; cosim will be run automatically.', stacklevel=2)
+            cosim = True
+
         # it builds and return vivado reports
         if 'linux' in sys.platform:
             found = os.system('command -v v++ > /dev/null')
@@ -56,16 +61,16 @@ class VitisUnifiedBackend(VitisBackend):
 
         commands = []
         if synth:
-            self.prepare_sim_config_file(model, True)
+            self.prepare_sim_config_file(model, True, False)
             commands.append(('csynth', csynth_cmd, vitis_hls_dir))
             commands.append(('package', package_cmd, vitis_hls_dir))
 
         if csim:
-            self.prepare_sim_config_file(model, True)
+            self.prepare_sim_config_file(model, True, False)
             commands.append(('csim', csim_cmd, vitis_hls_dir))
 
         if cosim or fifo_opt:
-            self.prepare_sim_config_file(model, False)
+            self.prepare_sim_config_file(model, False, fifo_opt)
             commands.append(('cosim', cosim_cmd, vitis_hls_dir))
 
         if bitfile:
@@ -90,11 +95,20 @@ class VitisUnifiedBackend(VitisBackend):
                     stdout_target.close()
                     stderr_target.close()
 
-    def prepare_sim_config_file(self, model, is_csim):
+    def prepare_sim_config_file(self, model, is_csim, is_fifo_opt):
+        if is_csim and is_fifo_opt:
+            raise ValueError('fifo_opt requires cosim; cannot use fifo_opt with csim config.')
+
         suffix = 'csim' if is_csim else 'cosim'
         src = f'{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg'
         des = f'{model.config.get_output_dir()}/hls_kernel_config.cfg'
         copy2(src, des)
+
+        with open(des) as f:
+            content = f.read()
+        with open(des, 'w') as f:
+            f.write(content.replace('{ENABLE_FIFO_SIZING}', 'true' if is_fifo_opt else 'false'))
+
         return des
 
     def create_initial_config(
