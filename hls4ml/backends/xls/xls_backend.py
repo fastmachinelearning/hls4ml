@@ -118,7 +118,6 @@ class XLSBackend(FPGABackend):
             io_type='io_parallel',
             write_tar=False,
             xls_codegen_flags=None,
-            dslx_stdlib_path='$HOME/xls/xls/dslx/stdlib',
             **kwargs,
     ) -> dict[str, Any]:
         """Create an initial configuration of the XLS backend.
@@ -129,8 +128,7 @@ class XLSBackend(FPGABackend):
             clock_uncertainty (str, optional): The clock uncertainty. Defaults to 12.5%.
             io_type (str, optional): Type of implementation used. Only 'io_parallel' is currently supported.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
-            xls_codegen_flags (dict, optional): Flags to pass to the XLS codegen. Defaults to None.:
-            dslx_stdlib_path (str, optional): Path to the DSLX standard library. Defaults to '$HOME/xls/xls/dslx/stdlib'. TODO: in future, it will be bundled to pyxls
+            xls_codegen_flags (dict, optional): Flags to pass to the XLS codegen. Defaults to None.
 
         Returns:
             dict: initial configuration.
@@ -145,8 +143,6 @@ class XLSBackend(FPGABackend):
         config['WriterConfig'] = {
             'WriteTar': write_tar,
         }
-        # TODO: in future, it will be bundled to pyxls
-        config['DSLXStdlibPath'] = dslx_stdlib_path if dslx_stdlib_path is not None else '$HOME/xls/xls/dslx/stdlib'
 
         # Set default flags to mimic codegen_main executable behavior
         config['XLSCodegenFlags'] = xls_codegen_flags if xls_codegen_flags is not None else {
@@ -180,12 +176,8 @@ class XLSBackend(FPGABackend):
         curr_dir = os.getcwd()
         os.chdir(f'{model.config.get_output_dir()}/firmware')
         kernel_name = model.config.get_project_name()
-        dslx_stdlib_path = os.path.expandvars(model.config.get_config_value('DSLXStdlibPath'))
-        assert os.path.exists(dslx_stdlib_path), \
-            f'DSLX stdlib path does not exist: {dslx_stdlib_path}'
 
-        ir_text = xls.c_api.xls_convert_dslx_path_to_ir(path=f'{kernel_name}.x',
-                                                        dslx_stdlib_path=dslx_stdlib_path)
+        ir_text = xls.c_api.convert_dslx_path_to_ir(path=f'{kernel_name}.x')
         with open(f'{kernel_name}.ir', 'w') as ir_file:
             ir_file.write(ir_text)
 
