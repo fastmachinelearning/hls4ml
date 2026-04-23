@@ -166,13 +166,13 @@ class XLSAttrBuilder:
     def xls_min_input_rank(self) -> int:
         """Minimally required rank of the input tensor.
          Input tensor can have a higher rank if it consists of multiple batches."""
-        match self.node.class_name:
-            case 'Conv2D':
-                return 3
-            case 'Conv1D':
-                return 2
-            case _:
-                return 1
+        name = self.node.class_name
+        if name.endswith('2D'):
+            return 3
+        elif name.endswith('1D'):
+            return 2
+        else:
+            return 1
 
     @attach_to_node()
     def xls_func_call(self) -> XLSFunctionCall | str:
@@ -210,6 +210,42 @@ class XLSAttrBuilder:
                     'PAD_TOP', 'PAD_BOTTOM',
                     'PAD_LEFT', 'PAD_RIGHT',
                     'DATA_FORMAT'
+                ]
+
+            case 'Pooling1D':
+                name = f'pooling::pooling_1d'
+                params = params_out + params_rounding + [
+                    'POOL_OP',
+                    'POOL_SIZE',
+                    'STRIDE',
+                    'PAD_LEFT', 'PAD_RIGHT',
+                    'COUNT_PAD',
+                    'DATA_FORMAT',
+                ]
+
+            case 'Pooling2D':
+                name = f'pooling::pooling_2d'
+                params = params_out + params_rounding + [
+                    'POOL_OP',
+                    'POOL_HEIGHT', 'POOL_WIDTH',
+                    'STRIDE_HEIGHT', 'STRIDE_WIDTH',
+                    'PAD_TOP', 'PAD_BOTTOM', 'PAD_LEFT', 'PAD_RIGHT',
+                    'COUNT_PAD',
+                    'DATA_FORMAT',
+                ]
+
+            case 'GlobalPooling1D':
+                name = f'pooling::global_pooling_1d'
+                params = params_out + params_rounding + [
+                    'POOL_OP',
+                    'DATA_FORMAT',
+                ]
+
+            case 'GlobalPooling2D':
+                name = f'pooling::global_pooling_2d'
+                params = params_out + params_rounding + [
+                    'POOL_OP',
+                    'DATA_FORMAT',
                 ]
 
             case 'Activation':

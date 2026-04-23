@@ -144,6 +144,127 @@ pub fn make_fixed_points_4d
     map(significands, make_fixed_points_3d<BE>)
 }
 
+pub fn const_array_1d
+    <DIM: u32, NB: u32, BE: s32>
+    (value: FixedPoint<NB, BE>)
+    -> FixedPoint<NB, BE>[DIM] {
+    FixedPoint<NB, BE>[DIM]:[value, ...]
+}
+
+pub fn const_array_2d
+    <DIM_0: u32, DIM_1: u32, NB: u32, BE: s32>
+    (value: FixedPoint<NB, BE>)
+    -> FixedPoint<NB, BE>[DIM_1][DIM_0] {
+    FixedPoint<NB, BE>[DIM_1][DIM_0]:[const_array_1d<DIM_1>(value), ...]
+}
+
+pub fn const_array_3d
+    <DIM_0: u32, DIM_1: u32, DIM_2: u32, NB: u32, BE: s32>
+    (value: FixedPoint<NB, BE>)
+    -> FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0] {
+    FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0]:[const_array_2d<DIM_1, DIM_2>(value), ...]
+}
+
+pub fn const_array_4d
+    <DIM_0: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32, NB: u32, BE: s32>
+    (value: FixedPoint<NB, BE>)
+    -> FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0] {
+    FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0]:[const_array_3d<DIM_0, DIM_1, DIM_2>(value), ...]
+}
+
+// Reshape to and from 1D arrays with C-style (row-major) ordering.
+
+pub fn flatten_2d<
+    NB: u32, BE: s32,
+    DIM_0: u32, DIM_1: u32,
+    DIM: u32 = {DIM_0 * DIM_1}
+>
+(x: FixedPoint<NB, BE>[DIM_1][DIM_0])
+-> FixedPoint<NB, BE>[DIM] {
+    let res = zero!<FixedPoint<NB, BE>[DIM]>();
+    for (i, res) in 0..DIM_0 {
+        for (j, res) in 0..DIM_1 {
+            update(res, i * DIM_1 + j, x[i][j])
+        }(res)
+    }(res)
+}
+
+pub fn flatten_3d<
+    NB: u32, BE: s32,
+    DIM_0: u32, DIM_1: u32, DIM_2: u32,
+    DIM: u32 = {DIM_0 * DIM_1 * DIM_2}
+>(x: FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0]) 
+-> FixedPoint<NB, BE>[DIM] {
+    flatten_2d(map(x, flatten_2d))
+}
+
+pub fn flatten_4d<
+    NB: u32, BE: s32,
+    DIM_0: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32,
+    DIM: u32 = {DIM_0 * DIM_1 * DIM_2 * DIM_3}
+>(x: FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0])
+-> FixedPoint<NB, BE>[DIM] {
+    flatten_2d(map(x, flatten_3d))
+}
+
+pub fn reshape_to_2d<
+    DIM_0: u32, DIM_1: u32,
+    NB: u32, BE: s32,
+    DIM: u32 = {DIM_0 * DIM_1}>
+(x: FixedPoint<NB, BE>[DIM])
+-> FixedPoint<NB, BE>[DIM_1][DIM_0] {
+    let res = zero!<FixedPoint<NB, BE>[DIM_1][DIM_0]>();
+    for (i, res) in 0..DIM_0 {
+        for (j, res) in 0..DIM_1 {
+            update(res, (i, j), x[i * DIM_1 + j])
+        }(res)
+    }(res)
+}
+
+pub fn reshape_to_3d<
+    DIM_0: u32, DIM_1: u32, DIM_2: u32,
+    NB: u32, BE: s32,
+    DIM: u32 = {DIM_0 * DIM_1 * DIM_2}>
+(x: FixedPoint<NB, BE>[DIM])
+-> FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0] {
+    let x_2d = reshape_to_2d<DIM_0, {DIM_1 * DIM_2}>(x);
+    map(x_2d, reshape_to_2d<DIM_1, DIM_2>)
+}
+
+pub fn reshape_to_4d<
+    DIM_0: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32,
+    NB: u32, BE: s32,
+    DIM: u32 = {DIM_0 * DIM_1 * DIM_2 * DIM_3}>
+(x: FixedPoint<NB, BE>[DIM])
+-> FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0] {
+    let x_2d = reshape_to_2d<DIM_0, {DIM_1 * DIM_2 * DIM_3}>(x);
+    map(x_2d, reshape_to_3d<DIM_1, DIM_2, DIM_3>)
+}
+
+#[test]
+fn test_reshape_2d() {
+    let x_flat = make_fixed_points_1d<0>([s16:1, 2, 3, 4, 5, 6]);
+    let x = make_fixed_points_2d<0>([[s16:1, 2, 3], [s16:4, 5, 6]]);
+    assert_eq(x, reshape_to_2d<2,3>(x_flat));
+    assert_eq(x_flat, flatten_2d(x));
+}
+
+#[test]
+fn test_reshape_3d() {
+    let x_flat = make_fixed_points_1d<0>([s16:1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    let x = make_fixed_points_3d<0>([[[s16:1, 2], [s16:3, 4], [s16:5, 6]], [[s16:7, 8], [s16:9, 10], [s16:11, 12]]]);
+    assert_eq(x, reshape_to_3d<2,3,2>(x_flat));
+    assert_eq(x_flat, flatten_3d(x));
+}
+
+#[test]
+fn test_reshape_4d() {
+    let x = make_fixed_points_4d<0>([[[[s16:1, 2], [s16:3, 4], [s16:5, 6]]], [[[s16:7, 8], [s16:9, 10], [s16:11, 12]]]]);
+    let x_flat = make_fixed_points_1d<0>([s16:1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    assert_eq(x, reshape_to_4d<2,1,3,2>(x_flat));
+    assert_eq(x_flat, flatten_4d(x));
+}
+
 // === Convert FixedPoint array to array of significands sN[NB] ===
 
 pub fn to_significand
@@ -349,6 +470,55 @@ pub fn resize<
 
     FixedPoint<NB_OUT, BE_OUT>{ significand: resized }
 }
+
+pub fn resize_1d<
+    NB_OUT: u32, BE_OUT: s32,
+    ROUNDING: RoundingMode,
+    OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32,
+    DIM: u32
+    >
+(x: FixedPoint<NB_IN, BE_IN>[DIM])
+-> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    map(x, resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>)
+}
+
+pub fn resize_2d<
+    NB_OUT: u32, BE_OUT: s32,
+    ROUNDING: RoundingMode,
+    OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32,
+    DIM_0: u32, DIM_1: u32
+    >
+(x: FixedPoint<NB_IN, BE_IN>[DIM_1][DIM_0])
+-> FixedPoint<NB_OUT, BE_OUT>[DIM_1][DIM_0] {
+    map(x, resize_1d<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>)
+}
+
+pub fn resize_3d<
+    NB_OUT: u32, BE_OUT: s32,
+    ROUNDING: RoundingMode,
+    OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32,
+    DIM_0: u32, DIM_1: u32, DIM_2: u32
+    >
+(x: FixedPoint<NB_IN, BE_IN>[DIM_2][DIM_1][DIM_0])
+-> FixedPoint<NB_OUT, BE_OUT>[DIM_2][DIM_1][DIM_0] {
+    map(x, resize_2d<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>)
+}
+
+pub fn resize_4d<
+    NB_OUT: u32, BE_OUT: s32,
+    ROUNDING: RoundingMode,
+    OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32,
+    DIM_0: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32
+    >
+(x: FixedPoint<NB_IN, BE_IN>[DIM_3][DIM_2][DIM_1][DIM_0])
+-> FixedPoint<NB_OUT, BE_OUT>[DIM_3][DIM_2][DIM_1][DIM_0] {
+    map(x, resize_3d<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>)
+}
+
 
 fn resize_test_case<
     ROUNDING: RoundingMode, OVERFLOW: OverflowMode,

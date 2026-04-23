@@ -198,7 +198,8 @@ class XLSWriter(Writer):
                         name='OVERFLOW_MODE',
                         value=f'OverflowMode::{precision.saturation_mode}'))
                     # TODO add custom attribute in build_attr.py and use it here
-                    if layer.get_attr('class_name') == 'Conv1D':
+                    class_name = layer.class_name
+                    if class_name == 'Conv1D':
                         line = append_lines(
                             line,
                             XLSConst(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
@@ -206,7 +207,7 @@ class XLSWriter(Writer):
                             XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
                             XLSConst(name='DATA_FORMAT',
                                      value=f"conv1d::DataFormat::{layer.get_attr('data_format').upper()}"))
-                    if layer.get_attr('class_name') == 'Conv2D':
+                    elif class_name == 'Conv2D':
                         line = append_lines(
                             line,
                             XLSConst(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
@@ -217,6 +218,46 @@ class XLSWriter(Writer):
                             XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
                             XLSConst(name='DATA_FORMAT',
                                      value=f"conv2d::DataFormat::{layer.get_attr('data_format').upper()}")
+                        )
+                    elif class_name.startswith('GlobalPooling'):
+                        pool_op = f"pooling::PoolingOperation::{layer.get_attr('pool_op').upper()}"
+                        data_format = f"pooling::DataFormat::{layer.get_attr('data_format').upper()}"
+                        line = append_lines(
+                            line,
+                            XLSConst(name='POOL_OP', value=pool_op),
+                            XLSConst(name='DATA_FORMAT', value=data_format)
+                        )
+                    elif class_name.endswith('Pooling1D'):
+                        pool_op = f"pooling::PoolingOperation::{layer.get_attr('pool_op').upper()}"
+                        data_format = f"pooling::DataFormat::{layer.get_attr('data_format').upper()}"
+                        count_pad = str(layer.get_attr('count_pad')).lower()
+                        line = append_lines(
+                            line,
+                            XLSConst(name='POOL_OP', value=pool_op),
+                            XLSConst(name='POOL_SIZE', value=layer.get_attr('pool_width'), type='u32'),
+                            XLSConst(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
+                            XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
+                            XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
+                            XLSConst(name='COUNT_PAD', value=count_pad, type='bool'),
+                            XLSConst(name='DATA_FORMAT', value=data_format)
+                        )
+                    elif class_name.endswith('Pooling2D'):
+                        pool_op = f"pooling::PoolingOperation::{layer.get_attr('pool_op').upper()}"
+                        data_format = f"pooling::DataFormat::{layer.get_attr('data_format').upper()}"
+                        count_pad = str(layer.get_attr('count_pad')).lower()
+                        line = append_lines(
+                            line,
+                            XLSConst(name='POOL_OP', value=pool_op),
+                            XLSConst(name='POOL_HEIGHT', value=layer.get_attr('pool_height'), type='u32'),
+                            XLSConst(name='POOL_WIDTH', value=layer.get_attr('pool_width'), type='u32'),
+                            XLSConst(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
+                            XLSConst(name='STRIDE_WIDTH', value=layer.get_attr('stride_width'), type='u32'),
+                            XLSConst(name='PAD_TOP', value=layer.get_attr('pad_top'), type='u32'),
+                            XLSConst(name='PAD_BOTTOM', value=layer.get_attr('pad_bottom'), type='u32'),
+                            XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
+                            XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
+                            XLSConst(name='COUNT_PAD', value=count_pad, type='bool'),
+                            XLSConst(name='DATA_FORMAT', value=data_format)
                         )
 
                 elif '// hls-fpga-machine-learning insert weights' in line:

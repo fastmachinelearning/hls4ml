@@ -147,8 +147,8 @@ def run_synthesis_test(config, hls_model, baseline_file_name, backend):
     if not config.get('run_synthesis', False):
         return
 
-    # Skip Quartus backend
-    if backend == 'Quartus':
+    # Skip Quartus and XLS backends
+    if backend in ['Quartus', 'XLS']:
         return
 
     # Run synthesis
