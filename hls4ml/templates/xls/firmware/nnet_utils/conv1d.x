@@ -70,7 +70,7 @@ pub fn conv1d_latency
             let out_pos = ij[0];
             let filter_idx = ij[1];
 
-            let in_pos: s32 = ((out_pos as s32) - (PAD_LEFT as s32)) * (STRIDE as s32);
+            let in_pos: s32 = ((out_pos as s32) * (STRIDE as s32)) - (PAD_LEFT as s32);
 
             let conv_pixel = for (ch_idx, pixel_chans) in 0..IN_CHANNELS {
 

@@ -94,8 +94,8 @@ pub fn conv2d_latency
                 let out_j = ijf[1];
                 let filter_idx = ijf[2];
 
-                let in_i: s32 =  ((out_i as s32) - (PAD_TOP as s32)) * (STRIDE_HEIGHT as s32);
-                let in_j: s32 =  ((out_j as s32) - (PAD_LEFT as s32)) * (STRIDE_WIDTH as s32);
+                let in_i: s32 = ((out_i as s32) * (STRIDE_HEIGHT as s32)) - (PAD_TOP as s32);
+                let in_j: s32 = ((out_j as s32) * (STRIDE_WIDTH as s32)) - (PAD_LEFT as s32);
                 // Compute convolution across channels:
                 // res[out_i, out_j, filt] = sum(x[in_i+di, in_j+dj, ch_idx] * w[di, dj, ch_idx, filt])
                 let conv_pixel = for (ch_idx, pixel_chans) in 0..IN_CHANNELS {
