@@ -52,6 +52,8 @@ test_root_path = Path(__file__).parent
 def test_activations(test_case_id, backend, activation, name, shape, io_type):
     if name == 'prelu' and shape == (8, 8, 3):
         return
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     # Subtract 0.5 to include negative values
     X = np.random.rand(1000, *shape) - 0.5
 

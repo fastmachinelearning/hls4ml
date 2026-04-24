@@ -38,6 +38,9 @@ def generate_data(input_shape, implementation):
     ],
 )
 def test_softmax(test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     X = generate_data
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
@@ -78,6 +81,8 @@ def test_softmax(test_case_id, backend, implementation, generate_data, input_bit
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     X = np.random.rand(100, 10)
     dense = tf.keras.layers.Dense(14, input_shape=(10,), name='dense')
     softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
