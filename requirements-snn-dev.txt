@@ -1,0 +1,12 @@
+# hls4ml SNN development environment
+# Usage:
+#   python -m venv .venv
+#   source .venv/bin/activate
+#   python -m pip install --upgrade pip
+#   python -m pip install -r requirements-snn-dev.txt
+
+# Install local hls4ml in editable mode with test extras
+-e .[testing]
+
+# SNN training package used upstream in this workflow
+snntorch

@@ -15,3 +15,8 @@ hls4mlprj_*
 *~
 *.ipynb_checkpoints/
 *.bak
+.ipynb_checkpoints/
+.pytest_cache/
+*.ipynb
+snn_test_lif/
+FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
