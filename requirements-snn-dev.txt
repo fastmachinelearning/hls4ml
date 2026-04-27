@@ -10,3 +10,9 @@
 
 # SNN training package used upstream in this workflow
 snntorch
+
+# SNN benchmarking package
+neurobench
+
+# Used by the SNN example notebooks/plots
+matplotlib
