@@ -3,50 +3,18 @@ import fixed_point;
 
 import ap_types.fixed_point_util;
 import nnet_utils.activations;
+import nnet_utils.data_format;
 
 type FixedPoint = fixed_point::FixedPoint;
 type RoundingMode = fixed_point_util::RoundingMode;
 type OverflowMode = fixed_point_util::OverflowMode;
-
-pub enum DataFormat: u1 {
-    CHANNELS_LAST = 0,
-    CHANNELS_FIRST = 1
-}
+type DataFormat = data_format::DataFormat;
 
 pub enum PoolingOperation: u1 {
     MAX = 0,
     AVERAGE = 1
 }
 
-fn to_size_chans(dim_0: u32, dim_1: u32, data_format: DataFormat) -> u32[2] {    
-    match data_format {
-        DataFormat::CHANNELS_LAST  => [dim_0, dim_1],
-        DataFormat::CHANNELS_FIRST => [dim_1, dim_0]
-    }
-}
-
-fn from_size_chans(size: u32, channels: u32, data_format: DataFormat) -> u32[2] {    
-    match data_format {
-        DataFormat::CHANNELS_LAST  => [size, channels],
-        DataFormat::CHANNELS_FIRST => [channels, size]
-    }
-}
-
-fn to_height_width_chans(dim_0: u32, dim_1: u32, dim_2: u32, data_format: DataFormat) -> u32[3] {    
-    match data_format {
-        DataFormat::CHANNELS_LAST  => [dim_0, dim_1, dim_2],
-        // CHW -> HWC
-        DataFormat::CHANNELS_FIRST => [dim_1, dim_2, dim_0]
-    }
-}
-
-fn from_height_width_chans(height: u32, width: u32, channels: u32, data_format: DataFormat) -> u32[3] {    
-    match data_format {
-        DataFormat::CHANNELS_LAST  => [height, width, channels],
-        // HWC -> CHW
-        DataFormat::CHANNELS_FIRST => [channels, height, width]
-    }
-}
 
 pub fn pooling_1d
     <OUT_NB: u32, OUT_BE: s32,
@@ -63,13 +31,13 @@ pub fn pooling_1d
     IN_NB: u32, IN_BE: s32,
     IN_DIM_0: u32, IN_DIM_1: u32,
     // Derived input dims
-    IN_SIZE: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
-    IN_CHANNELS: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
+    IN_SIZE: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
+    IN_CHANNELS: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
     // Output size
     OUT_SIZE: u32 = {((IN_SIZE + PAD_LEFT + PAD_RIGHT - POOL_SIZE) / STRIDE) + 1},
     // Output dims
-    OUT_DIM_0: u32 = {from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
-    OUT_DIM_1: u32 = {from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
+    OUT_DIM_0: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
+    OUT_DIM_1: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
     // Precision for max_or_sum accumulator
     ACC_NB: u32 = {match POOLING_OP {
         PoolingOperation::MAX => IN_NB,
@@ -85,7 +53,7 @@ pub fn pooling_1d
     for (out_i_0, out_2d) in 0..OUT_DIM_0 {
         let out_1d = for (out_i_1, out_1d) in 0..OUT_DIM_1 {
 
-            let ij = to_size_chans(out_i_0, out_i_1, DATA_FORMAT);
+            let ij = data_format::to_size_chans(out_i_0, out_i_1, DATA_FORMAT);
             let out_pos = ij[0];
             let ch_idx = ij[1];
 
@@ -166,16 +134,16 @@ pub fn pooling_2d
     IN_NB: u32, IN_BE: s32,
     IN_DIM_0: u32, IN_DIM_1: u32, IN_DIM_2: u32,
     // Derived input dims
-    IN_HEIGHT: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[0]},
-    IN_WIDTH: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[1]},
-    IN_CHANNELS: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[2]},
+    IN_HEIGHT: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[0]},
+    IN_WIDTH: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[1]},
+    IN_CHANNELS: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[2]},
     // Output size
     OUT_HEIGHT: u32 = {((IN_HEIGHT + PAD_TOP + PAD_BOTTOM - POOL_HEIGHT) / STRIDE_HEIGHT) + 1},
     OUT_WIDTH: u32 = {((IN_WIDTH + PAD_LEFT + PAD_RIGHT - POOL_WIDTH) / STRIDE_WIDTH) + 1},
     // Output dims
-    OUT_DIM_0: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[0]},
-    OUT_DIM_1: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[1]},
-    OUT_DIM_2: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[2]},
+    OUT_DIM_0: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[0]},
+    OUT_DIM_1: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[1]},
+    OUT_DIM_2: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[2]},
     // Precision for max_or_sum accumulator
     ACC_NB: u32 = {match POOLING_OP {
         PoolingOperation::MAX => IN_NB,
@@ -192,7 +160,7 @@ pub fn pooling_2d
         let out_2d = for (out_i_1, out_2d) in 0..OUT_DIM_1 {
             let out_1d = for (out_i_2, out_1d) in 0..OUT_DIM_2 {
 
-                let ijc = to_height_width_chans(out_i_0, out_i_1, out_i_2, DATA_FORMAT);
+                let ijc = data_format::to_height_width_chans(out_i_0, out_i_1, out_i_2, DATA_FORMAT);
                 let out_i = ijc[0];
                 let out_j = ijc[1];
                 let ch_idx = ijc[2];
@@ -274,8 +242,8 @@ pub fn global_pooling_1d<
     IN_NB: u32, IN_BE: s32,
     IN_DIM_0: u32, IN_DIM_1: u32,
     // Derived input dims
-    IN_SIZE: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
-    IN_CHANNELS: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
+    IN_SIZE: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
+    IN_CHANNELS: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
     // For global pooling, pool size is equal to input size
     POOL_SIZE: u32 = {IN_SIZE},
     STRIDE: u32 = {1},
@@ -298,9 +266,9 @@ pub fn global_pooling_2d<
     IN_NB: u32, IN_BE: s32,
     IN_DIM_0: u32, IN_DIM_1: u32, IN_DIM_2: u32,
     // Derived input dims
-    IN_HEIGHT: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[0]},
-    IN_WIDTH: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[1]},
-    IN_CHANNELS: u32 = {to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[2]},
+    IN_HEIGHT: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[0]},
+    IN_WIDTH: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[1]},
+    IN_CHANNELS: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[2]},
     // For global pooling, pool size is equal to input size
     POOL_HEIGHT: u32 = {IN_HEIGHT},
     POOL_WIDTH: u32 = {IN_WIDTH},
@@ -336,23 +304,23 @@ fn test_pooling_const_case<
     // Input
     NB: u32, BE: s32,
     // 2d
-    IN_2D_DIM_0: u32 = {from_height_width_chans(IN_HEIGHT, IN_WIDTH, IN_CHANNELS, DATA_FORMAT)[0]},
-    IN_2D_DIM_1: u32 = {from_height_width_chans(IN_HEIGHT, IN_WIDTH, IN_CHANNELS, DATA_FORMAT)[1]},
-    IN_2D_DIM_2: u32 = {from_height_width_chans(IN_HEIGHT, IN_WIDTH, IN_CHANNELS, DATA_FORMAT)[2]},
+    IN_2D_DIM_0: u32 = {data_format::from_height_width_chans(IN_HEIGHT, IN_WIDTH, IN_CHANNELS, DATA_FORMAT)[0]},
+    IN_2D_DIM_1: u32 = {data_format::from_height_width_chans(IN_HEIGHT, IN_WIDTH, IN_CHANNELS, DATA_FORMAT)[1]},
+    IN_2D_DIM_2: u32 = {data_format::from_height_width_chans(IN_HEIGHT, IN_WIDTH, IN_CHANNELS, DATA_FORMAT)[2]},
     // 1d
     IN_SIZE: u32 = {IN_HEIGHT},
-    IN_1D_DIM_0: u32 = {from_size_chans(IN_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
-    IN_1D_DIM_1: u32 = {from_size_chans(IN_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
+    IN_1D_DIM_0: u32 = {data_format::from_size_chans(IN_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
+    IN_1D_DIM_1: u32 = {data_format::from_size_chans(IN_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
     // Output 2d
     OUT_HEIGHT: u32 = {((IN_HEIGHT + PAD_TOP + PAD_BOTTOM - POOL_HEIGHT) / STRIDE_HEIGHT) + 1},
     OUT_WIDTH: u32 = {((IN_WIDTH + PAD_LEFT + PAD_RIGHT - POOL_WIDTH) / STRIDE_WIDTH) + 1},
-    OUT_2D_DIM_0: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[0]},
-    OUT_2D_DIM_1: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[1]},
-    OUT_2D_DIM_2: u32 = {from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[2]},
+    OUT_2D_DIM_0: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[0]},
+    OUT_2D_DIM_1: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[1]},
+    OUT_2D_DIM_2: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[2]},
     // Output 1d
     OUT_SIZE: u32 = {OUT_HEIGHT},
-    OUT_1D_DIM_0: u32 = {from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
-    OUT_1D_DIM_1: u32 = {from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
+    OUT_1D_DIM_0: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
+    OUT_1D_DIM_1: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
 >(value: FixedPoint<NB, BE>) {
     let R = RoundingMode::TRN;
     let O = OverflowMode::WRAP;
@@ -487,13 +455,13 @@ pub fn pooling_1d_default
     PAD_RIGHT: u32 = {u32:0},
     COUNT_PAD: bool = {false},
     // Derived input dims
-    IN_SIZE: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
-    IN_CHANNELS: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
+    IN_SIZE: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
+    IN_CHANNELS: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
     // Output size
     OUT_SIZE: u32 = {((IN_SIZE + PAD_LEFT + PAD_RIGHT - POOL_SIZE) / STRIDE) + 1},
     // Output dims
-    OUT_DIM_0: u32 = {from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
-    OUT_DIM_1: u32 = {from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
+    OUT_DIM_0: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
+    OUT_DIM_1: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
     >
 (
     x: FixedPoint<IN_NB, IN_BE>[IN_DIM_1][IN_DIM_0]

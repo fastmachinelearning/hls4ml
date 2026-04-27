@@ -180,6 +180,8 @@ class XLSWriter(Writer):
                         imports.append(XLSImport(name=f'nnet_utils.{func_call.namespace}'))
                     if layer.get_attr('lookup_tables'):
                         imports.append(XLSImport(name='nnet_utils.lookup_table'))
+                    if layer.get_attr('data_format'):
+                        imports.append(XLSImport(name='nnet_utils.data_format'))
                     if prev_layer is not None:
                         imports.append(XLSImport(name=prev_layer.get_attr('xls_module_name')))
                     line = append_lines(line, imports)
@@ -206,7 +208,7 @@ class XLSWriter(Writer):
                             XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
                             XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
                             XLSConst(name='DATA_FORMAT',
-                                     value=f"conv1d::DataFormat::{layer.get_attr('data_format').upper()}"))
+                                     value=f"data_format::DataFormat::{layer.get_attr('data_format').upper()}"))
                     elif class_name == 'Conv2D':
                         line = append_lines(
                             line,
@@ -217,11 +219,11 @@ class XLSWriter(Writer):
                             XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
                             XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
                             XLSConst(name='DATA_FORMAT',
-                                     value=f"conv2d::DataFormat::{layer.get_attr('data_format').upper()}")
+                                     value=f"data_format::DataFormat::{layer.get_attr('data_format').upper()}")
                         )
                     elif class_name.startswith('GlobalPooling'):
                         pool_op = f"pooling::PoolingOperation::{layer.get_attr('pool_op').upper()}"
-                        data_format = f"pooling::DataFormat::{layer.get_attr('data_format').upper()}"
+                        data_format = f"data_format::DataFormat::{layer.get_attr('data_format').upper()}"
                         line = append_lines(
                             line,
                             XLSConst(name='POOL_OP', value=pool_op),
@@ -229,7 +231,7 @@ class XLSWriter(Writer):
                         )
                     elif class_name.endswith('Pooling1D'):
                         pool_op = f"pooling::PoolingOperation::{layer.get_attr('pool_op').upper()}"
-                        data_format = f"pooling::DataFormat::{layer.get_attr('data_format').upper()}"
+                        data_format = f"data_format::DataFormat::{layer.get_attr('data_format').upper()}"
                         count_pad = str(layer.get_attr('count_pad')).lower()
                         line = append_lines(
                             line,
@@ -243,7 +245,7 @@ class XLSWriter(Writer):
                         )
                     elif class_name.endswith('Pooling2D'):
                         pool_op = f"pooling::PoolingOperation::{layer.get_attr('pool_op').upper()}"
-                        data_format = f"pooling::DataFormat::{layer.get_attr('data_format').upper()}"
+                        data_format = f"data_format::DataFormat::{layer.get_attr('data_format').upper()}"
                         count_pad = str(layer.get_attr('count_pad')).lower()
                         line = append_lines(
                             line,

@@ -3,29 +3,12 @@ import fixed_point;
 
 import ap_types.fixed_point_util;
 import nnet_utils.activations;
+import nnet_utils.data_format;
 
 type FixedPoint = fixed_point::FixedPoint;
 type RoundingMode = fixed_point_util::RoundingMode;
 type OverflowMode = fixed_point_util::OverflowMode;
-
-pub enum DataFormat: u1 {
-    CHANNELS_LAST = 0,
-    CHANNELS_FIRST = 1
-}
-
-fn to_size_chans(dim_0: u32, dim_1: u32, data_format: DataFormat) -> u32[2] {    
-    match data_format {
-        DataFormat::CHANNELS_LAST  => [dim_0, dim_1],
-        DataFormat::CHANNELS_FIRST => [dim_1, dim_0]
-    }
-}
-
-fn from_size_chans(size: u32, channels: u32, data_format: DataFormat) -> u32[2] {    
-    match data_format {
-        DataFormat::CHANNELS_LAST  => [size, channels],
-        DataFormat::CHANNELS_FIRST => [channels, size]
-    }
-}
+type DataFormat = data_format::DataFormat;
 
 pub fn conv1d_latency
     <OUT_NB: u32, OUT_BE: s32,
@@ -43,13 +26,13 @@ pub fn conv1d_latency
     // Bias
     BIAS_NB: u32, BIAS_BE: s32,
     // Derived input dims
-    IN_SIZE: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
-    IN_CHANNELS: u32 = {to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
+    IN_SIZE: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
+    IN_CHANNELS: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
     // Output size
     OUT_SIZE: u32 = {((IN_SIZE + PAD_LEFT + PAD_RIGHT - KERN_SIZE) / STRIDE) + 1},
     // Output dims
-    OUT_DIM_0: u32 = {from_size_chans(OUT_SIZE, OUT_FILTERS, DATA_FORMAT)[0]},
-    OUT_DIM_1: u32 = {from_size_chans(OUT_SIZE, OUT_FILTERS, DATA_FORMAT)[1]},
+    OUT_DIM_0: u32 = {data_format::from_size_chans(OUT_SIZE, OUT_FILTERS, DATA_FORMAT)[0]},
+    OUT_DIM_1: u32 = {data_format::from_size_chans(OUT_SIZE, OUT_FILTERS, DATA_FORMAT)[1]},
     // Precision
     MUL_BE: s32 = {IN_BE + IN_BE},
     MUL_NB: u32 = {IN_NB + IN_NB},
@@ -66,7 +49,7 @@ pub fn conv1d_latency
     for (out_i_0, out_2d) in 0..OUT_DIM_0 {
         let out_1d = for (out_i_1, out_1d) in 0..OUT_DIM_1 {
 
-            let ij = to_size_chans(out_i_0, out_i_1, DATA_FORMAT);
+            let ij = data_format::to_size_chans(out_i_0, out_i_1, DATA_FORMAT);
             let out_pos = ij[0];
             let filter_idx = ij[1];
 
