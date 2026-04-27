@@ -98,9 +98,17 @@ class XLSAttrBuilder:
             case 'Conv1D':
                 data = np.asarray(weights.data)
                 expected_shape = tuple(self.node.get_attr(x) for x in ['filt_width', 'n_chan', 'n_filt'])
+            case 'DepthwiseConv1D':
+                data = np.asarray(weights.data)
+                expected_shape = tuple(self.node.get_attr(x) for x in ['filt_width', 'n_chan', 'depth_multiplier'])
             case 'Conv2D':
                 data = np.asarray(weights.data)
                 expected_shape = tuple(self.node.get_attr(x) for x in ['filt_height', 'filt_width', 'n_chan', 'n_filt'])
+            case 'DepthwiseConv2D':
+                data = np.asarray(weights.data)
+                expected_shape = tuple(
+                    self.node.get_attr(x) for x in ['filt_height', 'filt_width', 'n_chan', 'depth_multiplier']
+                )
             case 'Dense':
                 # Transpose the weights so that we can call dot_prod(x, w[i]) in dense.x
                 data = np.asarray(weights.data).T
@@ -202,8 +210,25 @@ class XLSAttrBuilder:
                     'STRIDE', 'PAD_LEFT', 'PAD_RIGHT', 'DATA_FORMAT'
                 ]
 
+            case 'DepthwiseConv1D':
+                name = f'depthwise_conv::depthwise_conv_1d'
+                args += ['WEIGHTS', 'BIAS']
+                params = params_out + params_rounding + [
+                    'STRIDE', 'PAD_LEFT', 'PAD_RIGHT', 'DATA_FORMAT'
+                ]
+
             case 'Conv2D':
                 name = f'conv2d::conv2d_latency'
+                args += ['WEIGHTS', 'BIAS']
+                params = params_out + params_rounding + [
+                    'STRIDE_HEIGHT', 'STRIDE_WIDTH',
+                    'PAD_TOP', 'PAD_BOTTOM',
+                    'PAD_LEFT', 'PAD_RIGHT',
+                    'DATA_FORMAT'
+                ]
+
+            case 'DepthwiseConv2D':
+                name = f'depthwise_conv::depthwise_conv_2d'
                 args += ['WEIGHTS', 'BIAS']
                 params = params_out + params_rounding + [
                     'STRIDE_HEIGHT', 'STRIDE_WIDTH',

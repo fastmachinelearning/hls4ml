@@ -201,7 +201,7 @@ class XLSWriter(Writer):
                         value=f'OverflowMode::{precision.saturation_mode}'))
                     # TODO add custom attribute in build_attr.py and use it here
                     class_name = layer.class_name
-                    if class_name == 'Conv1D':
+                    if class_name in ('Conv1D', 'DepthwiseConv1D'):
                         line = append_lines(
                             line,
                             XLSConst(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
@@ -209,7 +209,7 @@ class XLSWriter(Writer):
                             XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
                             XLSConst(name='DATA_FORMAT',
                                      value=f"data_format::DataFormat::{layer.get_attr('data_format').upper()}"))
-                    elif class_name == 'Conv2D':
+                    elif class_name in ('Conv2D', 'DepthwiseConv2D'):
                         line = append_lines(
                             line,
                             XLSConst(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
