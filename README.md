@@ -23,3 +23,5 @@ SNN feature details, supported modules, and behavior notes are documented in:
 A demo of the SNN functionality + neurobench is in:
 
 - [hls4snn-demo.ipynb](hls4snn-demo.ipynb) 
+
+This takes you from building and training a simple SNN in snntorch, to running it through hls4ml and getting Vitis reports, and lastly running the model through neurobench to get SNN-specific metrics.
