@@ -41,9 +41,17 @@ class XLSBackend(FPGABackend):
         initializers: list = self._get_layer_initializers()
         init_flow: str = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
+        quantization_passes = [
+            # 'xls:merge_batch_norm_quantized_tanh',
+            # 'xls:quantize_dense_output',
+            'fuse_consecutive_batch_normalization',
+            'xls:xnor_pooling',
+        ]
+        quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
+
         optimization_passes = [
-            # TODO: we fix table sizes in BuildTables, it should be merged into fix_softmax_table_size.
-            # 'xls:fix_softmax_table_size',
+            'xls:remove_final_reshape',
+            'xls:inplace_parallel_reshape',
             'xls:skip_softmax',
             'infer_precision_types',
         ]
@@ -51,31 +59,52 @@ class XLSBackend(FPGABackend):
 
         xls_attributes = [
             'xls:build_attr',
-        ]
-        xls_attributes_flow: str = register_flow('specific_attributes', xls_attributes, requires=[optimization_flow],
-                                                 backend=self.name)
-
-        xls_build_graph_ir = [
             'xls:build_tables',
         ]
-        xls_build_graph_ir_flow: str = register_flow('build_tables_ir', xls_build_graph_ir,
-                                                     requires=[xls_attributes_flow], backend=self.name)
+        xls_attributes_flow: str = register_flow('xls', xls_attributes, requires=[optimization_flow],
+                                                 backend=self.name)
 
+        # TODO: stamp is currently unused, shall we add it to myproject.x, myproject.ir, myproject.opt.ir, ...?
+        # In other backends, this is used to generate myproject-$STAMP.so.
+        # In XLS, .opt.ir file plays the same role as .so
+        # It is unclear whether we should copy or rename myproject.opt.ir to myproject-$STAMP.opt.ir.
         writer_passes = ['make_stamp', 'xls:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=['xls:ip'], backend=self.name)
 
+        # Passed that are irrelevant for XLS
+        ignored_passes = [f'xls:{opt_pass}' for opt_pass in [
+            # io_stream only:
+            'reshape_stream',
+            'inplace_stream_flatten',
+            'repack_function_template',
+            'clone_output',
+            'clone_function_template',
+            # HGQ passes, not implemented:
+            'process_fixed_point_quantizer_layer',
+            'fixedpointquantizer_function_template',
+            'unarylut_function_template',
+            # Embedding
+            'embedding_config_template',
+            'embedding_function_template',
+            # we fix table sizes in xls:build_tables using a different method
+            'fix_softmax_table_size',
+            # BRAM not supported
+            'register_bram_weights',
+        ]]
+
         all_passes: list = get_backend_passes(self.name)
 
-        # TODO: what is this extras structure here
         extras = [
             # Ideally, this should be empty
             opt_pass
             for opt_pass in all_passes
             if opt_pass
                not in initializers
-               + writer_passes
+               + quantization_passes
                + optimization_passes
                + xls_attributes
+               + writer_passes
+               + ignored_passes
         ]
 
         if len(extras) > 0:
@@ -85,9 +114,9 @@ class XLSBackend(FPGABackend):
         ip_flow_requirements = [
             'optimize',
             init_flow,
+            quantization_flow,
             optimization_flow,
             xls_attributes_flow,
-            xls_build_graph_ir_flow,
         ]
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
