@@ -83,10 +83,10 @@ class XLSWriter(Writer):
             os.makedirs(reports)
 
     def write_build_script(self, model: ModelGraph) -> None:
-        # build_prj.tcl
-        srcpath = XLS_TEMPLATE_DIR / 'build_prj.tcl'
-        dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
-        copyfile(srcpath, dstpath)
+        for name in ('build_prj.tcl', 'constraints.xdc'):
+            srcpath = XLS_TEMPLATE_DIR / name
+            dstpath = Path(model.config.get_output_dir()) / name
+            copyfile(srcpath, dstpath)
 
     def write_project_dslx(self, model: ModelGraph) -> None:
         """Write the main architecture source file (myproject.x)

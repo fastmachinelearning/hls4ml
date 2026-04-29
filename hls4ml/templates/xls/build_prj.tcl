@@ -1,59 +1,56 @@
-# synth_pr.tcl
+# build_prj.tcl
 # Usage:
-#   vivado -mode batch -nolog -nojournal -source synth_pr.tcl --tclargs <sv_file> <board_part> [--pr]
+#   vivado -mode batch -nolog -nojournal -source synth_pr.tcl --tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]
 
-if {![llength $argv] >= 3} {
+if {[llength $argv] < 4} {
     puts stderr "ERROR: missing arguments\nUsage: vivado -mode batch -source synth_pr.tcl -tclargs <sv_file> <board_part> <clock_period> [--pr]"
     exit 1
 }
 
 # get arguments
-set sv_file     [lindex $argv 0]
-set board       [lindex $argv 1]
-set clk_period  [lindex $argv 2]
-set do_pr     0
-if {[llength $argv] > 3 && [lindex $argv 3] eq "--pr"} {
+set project_name      [lindex $argv 0]
+set board             [lindex $argv 1]
+set clock_period      [lindex $argv 2]
+set clock_uncertainty [lindex $argv 3]
+set do_pr             0
+if {[llength $argv] > 4 && [lindex $argv 4] eq "--pr"} {
     set do_pr 1
 }
 
-# infer top name from the file (strip path and extension)
-set proj_name  [file rootname [file tail $sv_file]]
-set top_name   $proj_name
-file delete -force "./${proj_name}_prj"
-file mkdir "./${proj_name}_prj"
-set rpt_dir "./reports"
-file mkdir $rpt_dir
+set prj_root [file normalize [file dirname [info script]]]
+set prj_files [glob -nocomplain "${prj_root}/firmware/*.sv"]
+set output_dir "${prj_root}/output_${project_name}"
+set top_module "__${project_name}__${project_name}"
 
-# create project
-create_project $proj_name "./${proj_name}_prj" -part $board
+# Parameters used in xdc
+set xdc_path "${prj_root}/constraints.xdc"
+set uncertainty_hold_r $clock_uncertainty
+set uncertainty_setup_r $clock_uncertainty
+set delay_max_r 0.4
+set delay_min_r 0.2
 
 
-# add clock
-create_clock -name sys_clk -period $clk_period [get_ports clk]
+set source_type "verilog"
 
-# add the SV files
-add_files $sv_file
-set_property top $top_name [current_fileset]
-update_compile_order -fileset sources_1
+create_project $project_name "${output_dir}/$project_name" -force -part $board
 
-# launch synth (as you already do)
-launch_runs synth_1 -jobs 4
-wait_on_run synth_1
+set_property DEFAULT_LIB work [current_project]
+set_property TARGET_LANGUAGE Verilog [current_project]
 
-# report timing
-report_clocks -file [file join $rpt_dir "clocks_post_synth.rpt"] 
-report_timing_summary -delay_type min_max -check_timing -warn_on_violation \
-  -max_paths 10 -file [file join $rpt_dir "timing_post_synth.rpt"] 
+read_verilog $prj_files
+read_xdc "${xdc_path}" -mode out_of_context
 
-# set common opt/physopt/route switches for impl_1
-set_property STEPS.OPT_DESIGN.ARGS  {-retarget -propconst -sweep -bram_power_opt -shift_register_opt} [get_runs impl_1]
-set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED true                                                    [get_runs impl_1]
-set_property STEPS.PHYS_OPT_DESIGN.ARGS {-directive Explore}                                          [get_runs impl_1]
-set_property STEPS.ROUTE_DESIGN.ARGS {-directive Explore}                                             [get_runs impl_1]
+set_property top $top_module [current_fileset]
 
-# launch implementation
-launch_runs impl_1 -to_step route_design -jobs 4
-wait_on_run impl_1
+file mkdir $output_dir
+file mkdir "${output_dir}/reports"
 
-# report resource & timing after synthesis
-report_utilization -file [file join $rpt_dir "synth_util.rpt"]
+# synth
+synth_design -top $top_module -mode out_of_context -global_retiming on \
+    -flatten_hierarchy full -resource_sharing auto -directive AreaOptimized_High
+
+write_checkpoint -force "${output_dir}/${project_name}_post_synth.dcp"
+
+report_timing_summary -file "${output_dir}/reports/${project_name}_post_synth_timing.rpt"
+report_power -file "${output_dir}/reports/${project_name}_post_synth_power.rpt"
+report_utilization -file "${output_dir}/reports/${project_name}_post_synth_util.rpt"

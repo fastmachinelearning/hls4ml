@@ -3,42 +3,22 @@ import re
 from pathlib import Path
 
 
-def _parse_project(path) -> tuple[str, str]:
-    prj_dir = None
-    top_func_name = None
-
+def _get_project_name(path) -> str:
     project_path = Path(path + "/firmware")
-    sv_files = list(project_path.glob("*.x"))
-    project_file = sv_files[0]
-
-    top_func_name = project_file.stem
-    prj_dir = top_func_name + '_prj'
-
-    return prj_dir, top_func_name
+    sv_files = list(project_path.glob("*.sv"))
+    return sv_files[0].stem
 
 
 def parse_xls_report(hls_dir) -> dict:
     if not os.path.exists(hls_dir):
         print(f'Path {hls_dir} does not exist. Exiting.')
-        return
+        return {}
 
-    prj_dir = None
-    top_func_name = None
+    project_name = _get_project_name(hls_dir)
+    report_dir = Path(hls_dir) / f'output_{project_name}' / 'reports'
 
-    prj_dir, top_func_name = _parse_project(hls_dir)
-
-    if prj_dir is None or top_func_name is None:
-        print('Unable to read project data. Exiting.')
-        return
-
-    sln_dir = hls_dir + '/' + prj_dir
-    if not os.path.exists(sln_dir):
-        print(f'Project {prj_dir} does not exist. Rerun "hls4ml build -p {hls_dir}".')
-        return
-
+    vivado_syn_file = report_dir / f'{project_name}_post_synth_util.rpt'
     report = {}
-
-    vivado_syn_file = hls_dir + '/reports/synth_util.rpt'
     if os.path.isfile(vivado_syn_file):
         vivado_synth_rpt = {}
         with open(vivado_syn_file) as f:
@@ -62,6 +42,6 @@ def parse_xls_report(hls_dir) -> dict:
                         vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
         report['VivadoSynthReport'] = vivado_synth_rpt
     else:
-        print('Vivado synthesis report not found.')
+        print(f'Vivado synthesis report not found at {vivado_syn_file}.')
 
     return report

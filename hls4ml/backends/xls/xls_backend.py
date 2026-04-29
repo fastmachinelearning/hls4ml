@@ -139,6 +139,13 @@ class XLSBackend(FPGABackend):
             f'Clock uncertainty must be in percentage format, got {clock_uncertainty}'
         return math.ceil(float(clock_uncertainty.strip('%')))
 
+    @staticmethod
+    def _percent_to_float(percent: str) -> float:
+        """Convert a string representing a percentage to a float."""
+        assert isinstance(percent, str) and percent.endswith('%'), \
+            f'Clock uncertainty must be in percentage format, got {percent}'
+        return float(percent.strip('%')) / 100
+
     def create_initial_config(
             self,
             part='xcu250-figd2104-2L-e',
@@ -184,7 +191,7 @@ class XLSBackend(FPGABackend):
             'flop_single_value_channels': True,
             # convert nanoseconds to picoseconds
             'clock_period_ps': self._to_xls_clock_period_ps(config['ClockPeriod']),
-            # XLS converts
+            # NB: XLS needs integer percents
             'clock_margin_percent': self._to_xls_clock_margin_percent(config['ClockUncertainty']),
         }
 
@@ -306,52 +313,60 @@ class XLSBackend(FPGABackend):
             pr (bool): place and route option
         """
 
+        project_name = model.config.get_project_name()
+        output_dir = model.config.get_output_dir()
+
+        clock_period_ns = model.config.get_config_value('ClockPeriod')
+        clock_period_ps = self._to_xls_clock_period_ps(clock_period_ns)
+
+        clock_uncertainty_str = model.config.get_config_value('ClockUncertainty')
+        clock_uncertainty_float = self._percent_to_float(clock_uncertainty_str)
+        clock_margin_percent: int = self._to_xls_clock_margin_percent(clock_uncertainty_str)
+
         def build_codegen_flags() -> Dict[str, Any]:
             flags = dict(model.config.get_config_value('XLSCodegenFlags'))
-            # convert nanoseconds to picoseconds
-            flags['clock_period_ps'] = self._to_xls_clock_period_ps(model.config.get_config_value('ClockPeriod'))
-            flags['clock_margin_percent'] = self._to_xls_clock_margin_percent(
-                model.config.get_config_value('ClockUncertainty'))
+            flags['clock_period_ps'] = clock_period_ps
+            flags['clock_margin_percent'] = clock_margin_percent
             if reset is not None:
                 flags['reset'] = 'reset' if reset else None
                 flags['reset_data_path'] = reset
             return flags
 
         def build_vivado_flags() -> list[str]:
-            f = [
+            flags = [
                 '-mode', 'batch',
                 '-nolog',
                 '-nojournal',
                 '-source', './build_prj.tcl',
                 '-tclargs',
-                f'firmware/{model.config.get_project_name()}.sv',
-                f'{model.config.get_config_value("Part")}',
-                f'{model.config.get_config_value("ClockPeriod")}'
+                project_name,
+                model.config.get_config_value('Part'),
+                clock_period_ps,
+                clock_uncertainty_float,
             ]
             if pr:
-                f += ['--pr']
-            return f
+                flags += ['--pr']
+            return [str(flag) for flag in flags]
 
         curr_dir: str = os.getcwd()
-        os.chdir(f'{model.config.get_output_dir()}/firmware')
-        kernel_name = model.config.get_project_name()
+        os.chdir(f'{output_dir}/firmware')
 
         # Generate RTL
 
-        opt_ir_path = f'{kernel_name}.opt.ir'
+        opt_ir_path = f'{project_name}.opt.ir'
         opt_ir_text = Path(opt_ir_path).read_text()
         codegen_flags = build_codegen_flags()
 
         pkg = xls.parse_ir_package(ir=opt_ir_text, filename=opt_ir_path)
         verilog_text = pkg.schedule_and_codegen(**codegen_flags).get_verilog_text()
-        Path(f'{kernel_name}.sv').write_text(verilog_text)
+        Path(f'{project_name}.sv').write_text(verilog_text)
 
         # Run Vivado for resource report
         os.chdir(curr_dir)
-        os.chdir(f'{model.config.get_output_dir()}')
+        os.chdir(f'{output_dir}')
 
         vivado_command: list[str] = ['vivado'] + build_vivado_flags()
         subprocess.run(vivado_command, check=True)
 
         os.chdir(curr_dir)
-        return parse_xls_report(model.config.get_output_dir())
+        return parse_xls_report(output_dir)
