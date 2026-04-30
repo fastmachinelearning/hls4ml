@@ -299,7 +299,7 @@ class VivadoBackend(FPGABackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
-        pnr=True,
+        pnr=False,
     ):
         """Run HLS / optional Vivado flow.
 
