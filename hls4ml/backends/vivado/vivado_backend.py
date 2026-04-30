@@ -299,7 +299,14 @@ class VivadoBackend(FPGABackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
+        pnr=True,
     ):
+        """Run HLS / optional Vivado flow.
+
+        Args:
+            pnr: If True (default) and ``vsynth`` is True, Vivado runs through place and route.
+                If False, Vivado stops after post-synthesis reports and statistics.
+        """
         if 'linux' in sys.platform:
             found = os.system('command -v vivado_hls > /dev/null')
             if found != 0:
@@ -315,6 +322,7 @@ class VivadoBackend(FPGABackend):
             f'    export     {int(export)}\n'
             f'    vsynth     {int(vsynth)}\n'
             f'    fifo_opt   {int(fifo_opt)}\n'
+            f'    pnr        {int(pnr)}\n'
             '}\n'
         )
         output_dir = model.config.get_output_dir()

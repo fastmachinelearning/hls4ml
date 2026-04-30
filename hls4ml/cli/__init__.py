@@ -194,6 +194,12 @@ def _build_vivado(args, extra_args):
     )
     vivado_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
     vivado_parser.add_argument('--fifo-opt', help='Optimize FIFO usage', action='store_true', default=False)
+    vivado_parser.add_argument(
+        '--pnr',
+        help='With Vivado synthesis (-l), run place and route',
+        action='store_true',
+        default=False,
+    )
 
     if args.list_options:
         vivado_parser.print_help()
@@ -209,6 +215,7 @@ def _build_vivado(args, extra_args):
     export = int(vivado_args.export)
     vsynth = int(vivado_args.vivado_synthesis)
     fifo_opt = int(vivado_args.fifo_opt)
+    pnr = int(vivado_args.pnr)
     if vivado_args.all:
         csim = synth = cosim = validation = export = vsynth = 1
 
@@ -229,6 +236,7 @@ def _build_vivado(args, extra_args):
         f'    export     {export}\n'
         f'    vsynth     {vsynth}\n'
         f'    fifo_opt   {fifo_opt}\n'
+        f'    pnr        {pnr}\n'
         '}\n'
     )
     tcl_path = os.path.join(args.project, 'build_opt.tcl')

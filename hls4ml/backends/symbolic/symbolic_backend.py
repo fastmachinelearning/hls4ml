@@ -89,7 +89,18 @@ class SymbolicExpressionBackend(FPGABackend):
 
         return config
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(
+        self,
+        model,
+        reset=False,
+        csim=True,
+        synth=True,
+        cosim=False,
+        validation=False,
+        export=False,
+        vsynth=False,
+        pnr=True,
+    ):
         if 'linux' in sys.platform:
             found = os.system('command -v vivado_hls > /dev/null')
             if found != 0:
@@ -104,6 +115,7 @@ class SymbolicExpressionBackend(FPGABackend):
             f'    validation {int(validation)}\n'
             f'    export     {int(export)}\n'
             f'    vsynth     {int(vsynth)}\n'
+            f'    pnr        {int(pnr)}\n'
             '}\n'
         )
         output_dir = model.config.get_output_dir()

@@ -8,4 +8,5 @@ array set opt {
     vsynth     0
     fifo_opt   0
     bitfile    0
+    pnr        1
 }

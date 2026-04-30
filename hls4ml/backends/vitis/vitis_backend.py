@@ -117,6 +117,7 @@ class VitisBackend(VivadoBackend):
         vsynth=False,
         fifo_opt=False,
         log_to_stdout=True,
+        pnr=True,
     ):
         if 'linux' in sys.platform:
             found_vrun = os.system('command -v vitis-run > /dev/null') == 0
@@ -133,6 +134,7 @@ class VitisBackend(VivadoBackend):
             f'    export     {int(export)}\n'
             f'    vsynth     {int(vsynth)}\n'
             f'    fifo_opt   {int(fifo_opt)}\n'
+            f'    pnr        {int(pnr)}\n'
             '}\n'
         )
 

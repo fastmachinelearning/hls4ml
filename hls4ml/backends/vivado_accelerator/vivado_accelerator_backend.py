@@ -24,6 +24,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         vsynth=False,
         fifo_opt=False,
         bitfile=False,
+        pnr=False,
     ):
         if 'linux' in sys.platform:
             found = os.system('command -v vivado_hls > /dev/null')
@@ -41,6 +42,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
             f'    vsynth     {int(vsynth)}\n'
             f'    fifo_opt   {int(fifo_opt)}\n'
             f'    bitfile    {int(bitfile)}\n'
+            f'    pnr        {int(pnr)}\n'
             '}\n'
         )
         output_dir = model.config.get_output_dir()
