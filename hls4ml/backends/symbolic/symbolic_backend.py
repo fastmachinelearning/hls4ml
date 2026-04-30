@@ -99,7 +99,7 @@ class SymbolicExpressionBackend(FPGABackend):
         validation=False,
         export=False,
         vsynth=False,
-        pnr=True,
+        pnr=False,
     ):
         if 'linux' in sys.platform:
             found = os.system('command -v vivado_hls > /dev/null')
