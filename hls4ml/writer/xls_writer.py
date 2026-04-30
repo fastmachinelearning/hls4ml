@@ -261,6 +261,11 @@ class XLSWriter(Writer):
                             XLSConst(name='COUNT_PAD', value=count_pad, type='bool'),
                             XLSConst(name='DATA_FORMAT', value=data_format)
                         )
+                    elif class_name == 'Transpose':
+                        perm = layer.get_attr('perm')
+                        rank = len(perm)
+                        perm_array = '['+ ', '.join(map(str, perm)) +']'
+                        line = append_line(line, XLSConst(name='PERM', value=perm_array, type=f'u32[{rank}]'))
 
                 elif '// hls-fpga-machine-learning insert weights' in line:
                     weights = layer.get_attr('xls_weights')

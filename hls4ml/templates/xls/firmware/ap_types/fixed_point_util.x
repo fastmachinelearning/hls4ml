@@ -172,6 +172,29 @@ pub fn const_array_4d
     FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0]:[const_array_3d<DIM_0, DIM_1, DIM_2>(value), ...]
 }
 
+
+// === Transpose ===
+
+pub fn transpose
+<NB: u32, BE: s32, DIM_0: u32, DIM_1: u32>
+(x: FixedPoint<NB, BE>[DIM_1][DIM_0])
+-> FixedPoint<NB, BE>[DIM_0][DIM_1] {
+    let res = zero!<FixedPoint<NB, BE>[DIM_0][DIM_1]>();
+    for (i, res) in 0..DIM_0 {
+        for (j, res) in 0..DIM_1 {
+            update(res, (j,i), x[i][j])
+        }(res)
+    }(res)
+}
+
+#[test]
+fn test_transpose() {
+    let x = make_fixed_points_2d<0>([[s16:1, 2, 3], [s16:4, 5, 6]]);
+    let x_t = make_fixed_points_2d<0>([[s16:1, 4], [s16:2, 5], [s16:3, 6]]);
+    assert_eq(x_t, transpose(x));
+    assert_eq(x, transpose(x_t));
+}
+
 // Reshape to and from 1D arrays with C-style (row-major) ordering.
 
 pub fn flatten_2d<

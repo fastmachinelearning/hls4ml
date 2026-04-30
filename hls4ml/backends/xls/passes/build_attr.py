@@ -179,6 +179,8 @@ class XLSAttrBuilder:
             return 3
         elif name.endswith('1D'):
             return 2
+        elif name == 'Transpose':
+            return len(self.node.get_attr('perm'))
         else:
             return 1
 
@@ -341,6 +343,12 @@ class XLSAttrBuilder:
                 # TODO: support implementation == 'legacy'
                 else:
                     raise ValueError(f'Unknown softmax implementation {implementation}')
+
+            case 'Transpose':
+                shape = self.node.get_input_variable().shape
+                rank = len(shape)
+                name = f'transpose::transpose_{rank}d'
+                params = params_out + params_rounding + [f'{{PERM[{i}]}}' for i in range(rank)]
 
             case 'TernaryTanh':
                 name = 'activations::ternary_tanh'
