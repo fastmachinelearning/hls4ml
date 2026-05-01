@@ -11,22 +11,24 @@ type OverflowMode = fixed_point_util::OverflowMode;
 // When called must specify the fixed point precision that is in the output.
 // This allows the truncation to be done correctly.
 pub fn dense
-    <NB_OUT: u32, BE_OUT: s32,
+    <OUT_NB: u32, OUT_BE: s32,
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
-    NB_IN: u32, BE_IN: s32,
+    IN_NB: u32, IN_BE: s32,
+    WEIGHTS_NB: u32, WEIGHTS_BE: s32,
+    BIAS_NB: u32, BIAS_BE: s32,
     IN_DIM: u32, OUT_DIM: u32>(
-        x: FixedPoint<NB_IN, BE_IN>[IN_DIM],
-        w: FixedPoint<NB_IN, BE_IN>[IN_DIM][OUT_DIM],
-        bias: FixedPoint<NB_IN, BE_IN>[OUT_DIM]
-    ) -> FixedPoint<NB_OUT, BE_OUT>[OUT_DIM] {
+        x: FixedPoint<IN_NB, IN_BE>[IN_DIM],
+        w: FixedPoint<WEIGHTS_NB, WEIGHTS_BE>[IN_DIM][OUT_DIM],
+        bias: FixedPoint<BIAS_NB, BIAS_BE>[OUT_DIM]
+    ) -> FixedPoint<OUT_NB, OUT_BE>[OUT_DIM] {
 
     for (i, z) in u32:0..OUT_DIM {
         let vec_prod  = fixed_point_util::dot_prod(x, w[i]);
         let with_bias = fixed_point::add(vec_prod, bias[i]);
-        let with_bias_out = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(with_bias);
+        let with_bias_out = fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(with_bias);
         update(z, i, with_bias_out)
-    }(zero!<FixedPoint<NB_OUT, BE_OUT>[OUT_DIM]>())
+    }(zero!<FixedPoint<OUT_NB, OUT_BE>[OUT_DIM]>())
 }
 
 // TODO: used only for tests
@@ -34,18 +36,20 @@ pub fn dense
 // When called must specify the fixed point precision that is in the output.
 // This allows the truncation to be done correctly.
 pub fn dense_relu
-    <NB_OUT: u32, BE_OUT: s32,
+    <OUT_NB: u32, OUT_BE: s32,
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
-    NB_IN: u32, BE_IN: s32,
+    IN_NB: u32, IN_BE: s32,
+    WEIGHTS_NB: u32, WEIGHTS_BE: s32,
+    BIAS_NB: u32, BIAS_BE: s32,
     IN_DIM: u32, OUT_DIM: u32>(
-        x: FixedPoint<NB_IN, BE_IN>[IN_DIM],
-        w: FixedPoint<NB_IN, BE_IN>[IN_DIM][OUT_DIM],
-        bias: FixedPoint<NB_IN, BE_IN>[OUT_DIM]
-    ) -> FixedPoint<NB_OUT, BE_OUT>[OUT_DIM] {
+        x: FixedPoint<IN_NB, IN_BE>[IN_DIM],
+        w: FixedPoint<WEIGHTS_NB, WEIGHTS_BE>[IN_DIM][OUT_DIM],
+        bias: FixedPoint<BIAS_NB, BIAS_BE>[OUT_DIM]
+    ) -> FixedPoint<OUT_NB, OUT_BE>[OUT_DIM] {
 
-    let y = dense<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x, w, bias);
-    activations::relu<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(y)
+    let y = dense<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(x, w, bias);
+    activations::relu<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(y)
 }
 
 // Testing
@@ -76,6 +80,34 @@ const FXP_6_75     = make_fixed(6912);
 const FXP_12_0     = make_fixed(12288);
 const FXP_13_5     = make_fixed(13824);
 
+const NB_IN = u32:8;
+const BE_IN = s32:-4;
+const NB_WEIGHTS = u32:10;
+const BE_WEIGHTS = s32:-6;
+const NB_BIAS = u32:12;
+const BE_BIAS = s32:-8;
+const NB_OUT = u32:14;
+const BE_OUT = s32:-6;
+
+fn make_in<DIM: u32>(x: sN[NB_IN][DIM]) -> FixedPoint<NB_IN, BE_IN>[DIM] {
+    fixed_point_util::make_fixed_points_1d<BE_IN>(x)
+}
+
+fn make_weights
+    <IN_DIM: u32, OUT_DIM: u32>
+    (x: sN[NB_WEIGHTS][IN_DIM][OUT_DIM])
+    -> FixedPoint<NB_WEIGHTS, BE_WEIGHTS>[IN_DIM][OUT_DIM] {
+    fixed_point_util::make_fixed_points_2d<BE_WEIGHTS>(x)
+}
+
+fn make_bias<DIM: u32>(x: sN[NB_BIAS][DIM]) -> FixedPoint<NB_BIAS, BE_BIAS>[DIM] {
+    fixed_point_util::make_fixed_points_1d<BE_BIAS>(x)
+}
+
+fn make_out<DIM: u32>(x: sN[NB_OUT][DIM]) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+    fixed_point_util::make_fixed_points_1d<BE_OUT>(x)
+}
+
 
 #[test]
 fn dense_relu_test_pos() {
@@ -99,6 +131,20 @@ fn dense_relu_test_neg() {
     let b1 = [FXP_6_75_NEG, FXP_0_0];
     let expected = [FXP_0_0, FXP_4_5];
     assert_eq(expected, dense_relu<NB_COMMON, -10, ROUNDING_COMMON, OVERFLOW_COMMON>(x, w1, b1));
+}
+
+#[test]
+fn dense_test_different_precisions() {
+    let x = make_in(sN[NB_IN][2]:[24, -8]); // [1.5, -0.5]
+    let w = make_weights(sN[NB_WEIGHTS][2][2]:[
+        [32, 16], // [0.5, 0.25]
+        [-64, 96], // [-1.0, 1.5]
+    ]);
+    let bias = make_bias(sN[NB_BIAS][2]:[128, -64]); // [0.5, -0.25]
+    let expected = make_out(sN[NB_OUT][2]:[72, -160]); // [1.125, -2.5]
+    assert_eq(
+        expected,
+        dense<NB_OUT, BE_OUT, ROUNDING_COMMON, OVERFLOW_COMMON>(x, w, bias));
 }
 
 fn integration_nn
