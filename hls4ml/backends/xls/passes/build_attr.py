@@ -179,6 +179,8 @@ class XLSAttrBuilder:
             return 3
         elif name.endswith('1D'):
             return 2
+        elif name == 'Reshape':
+            return len(self.node.get_input_variable().shape)
         elif name == 'Transpose':
             return len(self.node.get_attr('perm'))
         else:
@@ -326,6 +328,14 @@ class XLSAttrBuilder:
                 name = 'activations::prelu'
                 params = params_out + params_rounding
                 args.append('WEIGHTS')
+
+            case 'Reshape':
+                in_shape = self.node.get_input_variable().shape
+                out_shape = self.node.get_output_variable().shape
+                name = f'reshape::reshape_{len(in_shape)}d_to_{len(out_shape)}d'
+                params = params_out + params_rounding + [
+                    dim.name for dim in self.node.get_attr('xls_output_variable').shape
+                ]
 
             case 'Softmax':
                 implementation = self.node.attributes.get('implementation', 'stable')
