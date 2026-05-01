@@ -113,7 +113,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
     implementation = node.get_attr('implementation', 'stable')
     input_precision = node.get_input_variable().type.precision
     exp_in = copy(input_precision)
-    exp_out = node.get_layer_precision()['softmax_exp_table_t'].precision
+    exp_out = node.get_attr('exp_table_t').precision
     match implementation:
         case 'stable':
             exp_in.width += 1
@@ -131,7 +131,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
             raise ValueError(f'Unknown softmax implementation={implementation}')
 
     inv_in = exp_out
-    inv_out = node.get_layer_precision()['softmax_inv_table_t'].precision
+    inv_out = node.get_attr('inv_table_t').precision
     inv_name = 'INV_TABLE'
 
     def inv_func(x):
