@@ -22,9 +22,11 @@ class LinearModel(nn.Module):
         return self.linear(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linear(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = LinearModel()
     model.eval()
 
@@ -74,9 +76,11 @@ def test_linear(test_case_id, backend, io_type):
     ],
     ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'prelu', 'sigmoid', 'threshold'],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
     model.eval()
 
@@ -181,9 +185,11 @@ class SigmoidModel(nn.Module):
     ],
     ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'sigmoid', 'threshold'],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activation_functionals(test_case_id, activation_function, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = activation_function
     model.eval()
 
@@ -215,9 +221,11 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(test_case_id, padds, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -322,9 +330,11 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, padds, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -477,7 +487,7 @@ pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 @pytest.mark.parametrize('pooling', pooling_layers, ids=['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d'])
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
@@ -597,9 +607,11 @@ class BatchNormModel(nn.Module):
         return self.bn(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bn(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = BatchNormModel()
     model.eval()
 
@@ -638,9 +650,11 @@ class SqueezeModel(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_squeeze(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = SqueezeModel()
     model.eval()
 
@@ -673,7 +687,7 @@ def test_squeeze(test_case_id, backend, io_type):
         assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_flatten(test_case_id, backend):
     input = torch.randn(1, 1, 5, 5)
     model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
@@ -717,9 +731,11 @@ class ModelSkippedLayers(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_skipped_layers(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = ModelSkippedLayers()
     model.eval()
 
@@ -750,7 +766,7 @@ def test_skipped_layers(test_case_id, backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # Only io_parallel for now
 @pytest.mark.parametrize('tensor_rank', [2, 3])
 def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
@@ -817,9 +833,11 @@ def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_view(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     class TestModel(nn.Module):
         def __init__(self, n_in, n_out, size_in):
             super().__init__()
