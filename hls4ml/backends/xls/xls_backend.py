@@ -249,7 +249,7 @@ class XLSBackend(FPGABackend):
 
     # TODO call it in compile() and save to model attribute
     @staticmethod
-    def _get_top_function(model: ModelGraph):
+    def get_top_function(model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]):
         project_dir = model.config.get_output_dir()
         project_name = model.config.get_project_name()
         ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
@@ -262,42 +262,37 @@ class XLSBackend(FPGABackend):
         output_vars = model.get_output_variables()
 
         def top_function(*args):
-            assert len(args) == len(input_vars), f'Expected {len(input_vars)} inputs, got {len(args)}'
+            assert len(args) == len(input_vars) + len(output_vars), \
+                f'Expected {len(input_vars)} inputs and {len(output_vars)} outputs, got {len(args)}'
+            inputs = args[:len(input_vars)]
+            outputs = args[len(input_vars):]
             ir_input = [
-                XLSBackend._float_to_xls_ir(x, var.type.precision)
-                for x, var in zip(args, input_vars)
+                XLSBackend._float_to_xls_ir(np.asarray(x).reshape(var.shape), var.type.precision)
+                for x, var in zip(inputs, input_vars)
             ]
             ir_output = jit.run(ir_input)
             if len(output_vars) == 1:
-                return XLSBackend._xls_ir_to_float(ir_output, output_vars[0].type.precision,
-                                                   dtype=np.asarray(args[0]).dtype)
+                output = XLSBackend._xls_ir_to_float(ir_output, output_vars[0].type.precision,
+                                                     dtype=np.asarray(inputs[0]).dtype)
+                outputs[0][:] = np.asarray(output).reshape(-1)
             else:
                 raise ValueError(f'Only one output variable is supported, got {len(output_vars)}')
 
-        return top_function
+        # TODO: this duplicates ModelGraph._get_top_function().
+        # NB: ctype is not used in XLS, but it is required by ModelGraph._predict
+        x0 = x[0] if isinstance(x, (list, tuple)) else x
+        if np.asarray(x0).dtype in [np.single, np.float32]:
+            ctype = np.float32
+        elif np.asarray(x0).dtype in [np.double, np.float64]:
+            ctype = np.float64
+        else:
+            raise Exception(
+                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
+                    np.asarray(x0).dtype
+                )
+            )
 
-    def predict(self, model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> list[NDArray[np.floating]]:
-        top_function = self._get_top_function(model)
-        n_samples = model._compute_n_samples(x)
-        n_inputs = len(model.get_input_variables())
-        n_outputs = len(model.get_output_variables())
-
-        output = []
-        if n_samples == 1 and n_inputs == 1:
-            if np.isscalar(x):
-                x = [x]
-            if np.isscalar(x[0]):
-                x = [x]
-
-        for i in range(n_samples):
-            if n_inputs == 1:
-                inp = [np.asarray(x[i])]
-            else:
-                inp = [np.asarray(xj[i]) for xj in x]
-            predictions = top_function(*inp)
-            output.append(predictions)
-
-        return np.asarray(output)
+        return top_function, ctype
 
     def build(
             self,
