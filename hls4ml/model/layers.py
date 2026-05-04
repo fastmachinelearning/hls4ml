@@ -1042,13 +1042,30 @@ class IFNeuron(Layer):
         Attribute('n_in'),
         Attribute('n_out'),
         Attribute('threshold', value_type=float),
+        Attribute('threshold_mode', value_type=str, default='scalar'),
         ChoiceAttribute('reset_mechanism', choices=['subtract', 'zero'], default='subtract', configurable=False),
+        TypeAttribute('threshold'),
+        TypeAttribute('membrane'),
     ]
 
     def initialize(self):
         shape = list(self.get_input_variable().shape)
         shape[-1] = self.attributes['n_out']
         self.add_output_variable(shape)
+        self._set_type_t('threshold')
+        self._set_type_t('membrane')
+        if self.get_attr('threshold_mode', 'scalar') == 'vector':
+            threshold = self.get_attr('threshold_data')
+            if threshold is None or len(threshold) != self.attributes['n_out']:
+                raise Exception('IFNeuron threshold vector must be present and have length n_out')
+            threshold_t = self.get_attr('threshold_t')
+            self.add_weights_variable(
+                name='threshold_vec',
+                var_name='th{index}',
+                type_name=threshold_t.name,
+                precision=threshold_t.precision,
+                data=threshold,
+            )
 
 
 class LIFNeuron(Layer):
@@ -1056,14 +1073,46 @@ class LIFNeuron(Layer):
         Attribute('n_in'),
         Attribute('n_out'),
         Attribute('threshold', value_type=float),
+        Attribute('threshold_mode', value_type=str, default='scalar'),
         Attribute('beta', value_type=float),
+        Attribute('beta_mode', value_type=str, default='scalar'),
         ChoiceAttribute('reset_mechanism', choices=['subtract', 'zero'], default='subtract', configurable=False),
+        TypeAttribute('beta'),
+        TypeAttribute('threshold'),
+        TypeAttribute('membrane'),
     ]
 
     def initialize(self):
         shape = list(self.get_input_variable().shape)
         shape[-1] = self.attributes['n_out']
         self.add_output_variable(shape)
+        self._set_type_t('beta')
+        self._set_type_t('threshold')
+        self._set_type_t('membrane')
+        if self.get_attr('threshold_mode', 'scalar') == 'vector':
+            threshold = self.get_attr('threshold_data')
+            if threshold is None or len(threshold) != self.attributes['n_out']:
+                raise Exception('LIFNeuron threshold vector must be present and have length n_out')
+            threshold_t = self.get_attr('threshold_t')
+            self.add_weights_variable(
+                name='threshold_vec',
+                var_name='th{index}',
+                type_name=threshold_t.name,
+                precision=threshold_t.precision,
+                data=threshold,
+            )
+        if self.get_attr('beta_mode', 'scalar') == 'vector':
+            beta = self.get_attr('beta_data')
+            if beta is None or len(beta) != self.attributes['n_out']:
+                raise Exception('LIFNeuron beta vector must be present and have length n_out')
+            beta_t = self.get_attr('beta_t')
+            self.add_weights_variable(
+                name='beta_vec',
+                var_name='be{index}',
+                type_name=beta_t.name,
+                precision=beta_t.precision,
+                data=beta,
+            )
 
 
 class SNNReadout(Layer):
@@ -1071,6 +1120,12 @@ class SNNReadout(Layer):
         Attribute('n_classes', configurable=False),
         Attribute('window_size', value_type=int, default=1, configurable=False),
         Attribute('class_threshold', value_type=int, default=1, configurable=False),
+        ChoiceAttribute(
+            'state_reset_policy',
+            choices=['fixed_window', 'tlast', 'host_pulse', 'never'],
+            default='fixed_window',
+            configurable=True,
+        ),
         ChoiceAttribute(
             'decision_rule',
             choices=['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit'],

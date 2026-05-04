@@ -19,4 +19,7 @@ hls4mlprj_*
 .pytest_cache/
 *.ipynb
 snn_test_lif/
+snn_smoke*
+examples/snn_*
 FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
+_ignore_*

@@ -5,11 +5,14 @@ if_config_template = """struct config{index} : nnet::if_neuron_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned io_type = nnet::{iotype};
+    static const bool threshold_is_vector = {threshold_is_vector};
     static constexpr float threshold = {threshold};
     static const nnet::snn_reset_mode reset_mode = nnet::snn_reset_mode::{reset_mechanism};
+    typedef {threshold_t.name} threshold_t;
+    typedef {membrane_t.name} membrane_t;
 }};\n"""
 
-if_function_template = 'nnet::if_neuron<{input_t}, {output_t}, {config}>({input}, {output});'
+if_function_template = 'nnet::if_neuron<{input_t}, {output_t}, {config}>({input}, {output}, {threshold});'
 if_include_list = ['nnet_utils/nnet_if_neuron.h']
 
 
@@ -20,6 +23,7 @@ class IFNeuronConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         params = self._default_config_params(node)
+        params['threshold_is_vector'] = 'true' if node.get_attr('threshold_mode', 'scalar') == 'vector' else 'false'
         return self.template.format(**params)
 
 
@@ -30,6 +34,9 @@ class IFNeuronFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['threshold'] = (
+            node.get_weights('threshold_vec').name if node.get_attr('threshold_mode', 'scalar') == 'vector' else 'nullptr'
+        )
         return self.template.format(**params)
 
 
@@ -37,12 +44,17 @@ lif_config_template = """struct config{index} : nnet::lif_neuron_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned io_type = nnet::{iotype};
+    static const bool beta_is_vector = {beta_is_vector};
+    static const bool threshold_is_vector = {threshold_is_vector};
     static constexpr float threshold = {threshold};
     static constexpr float beta = {beta};
     static const nnet::snn_reset_mode reset_mode = nnet::snn_reset_mode::{reset_mechanism};
+    typedef {beta_t.name} beta_t;
+    typedef {threshold_t.name} threshold_t;
+    typedef {membrane_t.name} membrane_t;
 }};\n"""
 
-lif_function_template = 'nnet::lif_neuron<{input_t}, {output_t}, {config}>({input}, {output});'
+lif_function_template = 'nnet::lif_neuron<{input_t}, {output_t}, {config}>({input}, {output}, {beta}, {threshold});'
 lif_include_list = ['nnet_utils/nnet_lif_neuron.h']
 
 
@@ -53,6 +65,8 @@ class LIFNeuronConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         params = self._default_config_params(node)
+        params['beta_is_vector'] = 'true' if node.get_attr('beta_mode', 'scalar') == 'vector' else 'false'
+        params['threshold_is_vector'] = 'true' if node.get_attr('threshold_mode', 'scalar') == 'vector' else 'false'
         return self.template.format(**params)
 
 
@@ -63,6 +77,10 @@ class LIFNeuronFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        params['beta'] = node.get_weights('beta_vec').name if node.get_attr('beta_mode', 'scalar') == 'vector' else 'nullptr'
+        params['threshold'] = (
+            node.get_weights('threshold_vec').name if node.get_attr('threshold_mode', 'scalar') == 'vector' else 'nullptr'
+        )
         return self.template.format(**params)
 
 

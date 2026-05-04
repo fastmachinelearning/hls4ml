@@ -5,22 +5,34 @@ from hls4ml.converters.pytorch_to_hls import pytorch_handler
 BETA_TO_IF_TOL = 1e-6
 
 
-def _to_scalar(value, name):
+def _to_numpy(value, name):
     if value is None:
         raise Exception(f'Missing SNN parameter: {name}')
 
     if hasattr(value, 'detach'):
         value = value.detach().cpu().numpy()
 
-    if isinstance(value, np.ndarray):
-        if value.size != 1:
-            raise Exception(f'Only scalar "{name}" is supported for SNN conversion, got shape {value.shape}')
-        return float(value.reshape(-1)[0])
-
     try:
-        return float(value)
+        return np.asarray(value, dtype=np.float32)
     except (TypeError, ValueError) as err:
-        raise Exception(f'Could not parse "{name}" as scalar: {value}') from err
+        raise Exception(f'Could not parse "{name}" as numpy array: {value}') from err
+
+
+def _parse_scalar_or_vector(value, name, n_out):
+    arr = _to_numpy(value, name)
+    flat = arr.reshape(-1)
+
+    if flat.size == 1:
+        scalar = float(flat[0])
+        return {'mode': 'scalar', 'scalar': scalar, 'vector': None}
+
+    if flat.size == n_out:
+        if np.allclose(flat, flat[0], rtol=0.0, atol=BETA_TO_IF_TOL):
+            scalar = float(flat[0])
+            return {'mode': 'scalar', 'scalar': scalar, 'vector': None}
+        return {'mode': 'vector', 'scalar': None, 'vector': flat.astype(np.float32)}
+
+    raise Exception(f'Only scalar or length-{n_out} "{name}" is supported for SNN conversion, got shape {arr.shape}')
 
 
 def _parse_reset_mechanism(class_object):
@@ -31,21 +43,45 @@ def _parse_reset_mechanism(class_object):
     return reset
 
 
+def _parse_state_reset_policy(class_object):
+    policy = getattr(class_object, 'state_reset_policy', None)
+    if policy is None:
+        policy = getattr(class_object, 'reset_policy', 'fixed_window')
+    policy = str(policy).lower()
+    if policy not in ['fixed_window', 'tlast', 'host_pulse', 'never']:
+        raise Exception(f'Unsupported state reset policy "{policy}". Supported: "fixed_window", "tlast", "host_pulse", "never".')
+    return policy
+
+
 @pytorch_handler('Leaky')
 def parse_lif_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert operation == 'Leaky'
 
-    beta = _to_scalar(getattr(class_object, 'beta', None), 'beta')
+    n_out = input_shapes[0][-1]
+    beta = _parse_scalar_or_vector(getattr(class_object, 'beta', None), 'beta', n_out)
+    threshold = _parse_scalar_or_vector(getattr(class_object, 'threshold', None), 'threshold', n_out)
 
     layer = {}
-    layer['class_name'] = 'IFNeuron' if np.isclose(beta, 1.0, rtol=0.0, atol=BETA_TO_IF_TOL) else 'LIFNeuron'
+    use_if = beta['mode'] == 'scalar' and np.isclose(beta['scalar'], 1.0, rtol=0.0, atol=BETA_TO_IF_TOL)
+    layer['class_name'] = 'IFNeuron' if use_if else 'LIFNeuron'
     layer['name'] = layer_name
     layer['inputs'] = input_names
-    layer['n_in'] = input_shapes[0][-1]
-    layer['n_out'] = input_shapes[0][-1]
-    layer['threshold'] = _to_scalar(getattr(class_object, 'threshold', None), 'threshold')
+    layer['n_in'] = n_out
+    layer['n_out'] = n_out
+    layer['threshold_mode'] = threshold['mode']
+    if threshold['mode'] == 'scalar':
+        layer['threshold'] = threshold['scalar']
+    else:
+        layer['threshold'] = 0.0
+        layer['threshold_data'] = threshold['vector']
+
     if layer['class_name'] == 'LIFNeuron':
-        layer['beta'] = beta
+        layer['beta_mode'] = beta['mode']
+        if beta['mode'] == 'scalar':
+            layer['beta'] = beta['scalar']
+        else:
+            layer['beta'] = 0.0
+            layer['beta_data'] = beta['vector']
     layer['reset_mechanism'] = _parse_reset_mechanism(class_object)
 
     return layer, [shape for shape in input_shapes[0]]
@@ -64,9 +100,13 @@ def parse_snn_readout_layer(operation, layer_name, input_names, input_shapes, no
     if n_classes is None:
         n_classes = input_shapes[0][-1]
     layer['n_classes'] = int(n_classes)
-    layer['window_size'] = int(getattr(class_object, 'window_size', 1))
+    if hasattr(class_object, 'stream_length'):
+        layer['window_size'] = int(getattr(class_object, 'stream_length'))
+    else:
+        layer['window_size'] = int(getattr(class_object, 'window_size', 1))
     layer['class_threshold'] = int(getattr(class_object, 'class_threshold', 1))
     layer['decision_rule'] = str(getattr(class_object, 'decision_rule', 'argmax_spike_count'))
+    layer['state_reset_policy'] = _parse_state_reset_policy(class_object)
     if layer['decision_rule'] not in ['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit']:
         raise Exception(
             f'Unsupported SNN decision rule "{layer["decision_rule"]}". '

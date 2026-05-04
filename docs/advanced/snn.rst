@@ -32,7 +32,16 @@ For ``Leaky``, the supported reset mechanisms are:
 * ``subtract``
 * ``zero``
 
-Only scalar ``threshold`` and scalar ``beta`` are currently supported.
+``threshold`` supports scalar or per-neuron vectors (length ``n_out``) for both ``IFNeuron`` and ``LIFNeuron``.
+``beta`` supports scalar or per-neuron vectors for ``LIFNeuron``.
+
+Conversion selects the most memory-efficient representation automatically:
+
+* scalar values are emitted as compile-time constants
+* per-neuron values are emitted as parameter vectors
+
+For trainable snntorch parameters, conversion uses the current parameter values from the model
+at conversion time.
 
 Readout and Decision Rules
 ==========================
