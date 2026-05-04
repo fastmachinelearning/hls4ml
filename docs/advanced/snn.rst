@@ -12,13 +12,20 @@ updates and layer computations run in standard HLS pipelines/streams each cycle
 according to interface handshakes. The generated design is not a native
 asynchronous/event-routed neuromorphic architecture (yet!).
 
-Supported PyTorch modules
-=========================
+Supported PyTorch modules and readout wrappers
+==============================================
 
 The frontend currently supports direct parsing of:
 
 * ``Leaky`` -> ``LIFNeuron`` (or ``IFNeuron`` when ``beta`` is effectively 1)
-* ``SNNReadout`` -> ``SNNReadout``
+
+``SNNReadout`` is an hls4ml layer, not a ``snntorch`` module. To use the
+built-in hls4ml readout from a PyTorch model, define a lightweight PyTorch
+module or custom extension layer, subclass ``hls4ml.utils.torch.HLS4MLModule``
+so that FX treats it as a leaf module, and expose the readout configuration as
+attributes. The default parser recognizes a wrapper whose class name is
+``SNNReadout``. Alternatively, register a custom PyTorch layer handler that maps
+your own module name to the hls4ml ``SNNReadout`` layer.
 
 `snntorch` tracing
 ==================
@@ -46,7 +53,7 @@ at conversion time.
 Readout and Decision Rules
 ==========================
 
-``SNNReadout`` implements programmable per-model decision policies:
+The hls4ml ``SNNReadout`` layer implements programmable per-model decision policies:
 
 * ``argmax_spike_count``
 * ``first_to_threshold``
@@ -56,6 +63,15 @@ Readout and Decision Rules
 The layer accumulates class spikes over a window. For most decision rules it emits
 a class ID. For ``binary_logit``, it emits a score equal to
 ``count(class_1) - count(class_0)``.
+
+When using the default PyTorch parser, the wrapper module should expose these
+attributes as needed:
+
+* ``n_classes`` (defaults to the input feature count if omitted)
+* ``window_size`` or ``stream_length`` (defaults to ``1``)
+* ``class_threshold`` (defaults to ``1``)
+* ``decision_rule`` (defaults to ``argmax_spike_count``)
+* ``reset_policy`` or ``state_reset_policy`` (defaults to ``fixed_window``)
 
 Window Boundary Semantics
 =========================
