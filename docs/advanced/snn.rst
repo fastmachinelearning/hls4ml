@@ -34,33 +34,7 @@ marker module:
    from hls4ml.utils.snntorch import SNNReadout
 
 The marker is an identity in PyTorch and is converted to the hls4ml
-``SNNReadout`` layer by the PyTorch frontend. Alternatively, register a custom
-PyTorch layer handler that maps your own module name to the hls4ml
-``SNNReadout`` layer.
-
-Example:
-
-.. code-block:: python
-
-   class ReadoutSNN(torch.nn.Module):
-       def __init__(self, timesteps):
-           super().__init__()
-           self.fc1 = torch.nn.Linear(2, 8)
-           self.if1 = snntorch.Leaky(beta=0.75, threshold=1.0)
-           self.fc2 = torch.nn.Linear(8, 2)
-           self.readout = SNNReadout(
-               n_classes=2,
-               window_size=timesteps,
-               output_mode="membrane",
-               decision_rule="argmax_membrane",
-               beta=1.0,
-           )
-
-       def forward(self, x_t):
-           x_t = self.fc1(x_t)
-           spk1, _ = self.if1(x_t)
-           x_t = self.fc2(spk1)
-           return self.readout(x_t)
+``SNNReadout`` layer by the PyTorch frontend. See Jupyter Notebook example.
 
 `snntorch` tracing
 ==================
@@ -121,8 +95,7 @@ membrane decision policies are:
 * ``argmax_membrane``
 * ``binary_logit`` (emits ``mem(class_1) - mem(class_0)`` for binary classifiers)
 
-This keeps the snnTorch neuron modules unchanged; the final readout layer
-performs the non-spiking LIF-style accumulation in generated HLS.
+The example in the Jupyter Notebook follows this approach.
 
 Do not place a final spiking neuron before ``SNNReadout(output_mode="membrane")``
 unless you intentionally want the readout to consume that neuron's spike output.
@@ -200,10 +173,7 @@ Precision note
 
 Membrane readout accumulates dense currents over the full window, so very narrow
 fixed-point types can reduce accuracy even when the floating-point PyTorch model
-looks good. In the example notebooks, ``ap_fixed<8,3>`` is often too narrow for
-membrane readout. Start with a wider network precision such as
-``ap_fixed<12,5>`` and a wider readout ``membrane_t`` such as
-``ap_fixed<16,7>``, then tighten after comparing HLS and PyTorch outputs.
+looks good.
 
 ``TLAST`` note
 ==============
