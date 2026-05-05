@@ -11,6 +11,7 @@ struct lif_neuron_config {
     static const unsigned n_in = 1;
     static const unsigned n_out = 1;
     static const unsigned io_type = io_parallel;
+    static const unsigned window_size = 0;
     static const bool beta_is_vector = false;
     static const bool threshold_is_vector = false;
     static constexpr float threshold = 1.0;
@@ -32,6 +33,7 @@ void lif_neuron(
 
     static typename CONFIG_T::membrane_t mem[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=mem complete
+    static unsigned ts = 0;
 
     for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
         #pragma HLS UNROLL
@@ -53,6 +55,17 @@ void lif_neuron(
         }
         mem[i] = v;
     }
+
+    if (CONFIG_T::window_size > 0) {
+        ts++;
+        if (ts >= CONFIG_T::window_size) {
+            ts = 0;
+            for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
+                #pragma HLS UNROLL
+                mem[i] = 0;
+            }
+        }
+    }
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -66,6 +79,7 @@ void lif_neuron(
 
     static typename CONFIG_T::membrane_t mem[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=mem complete
+    static unsigned ts = 0;
 
     data_T in_pack = data_stream.read();
     res_T out_pack;
@@ -93,6 +107,17 @@ void lif_neuron(
     }
 
     res_stream.write(out_pack);
+
+    if (CONFIG_T::window_size > 0) {
+        ts++;
+        if (ts >= CONFIG_T::window_size) {
+            ts = 0;
+            for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
+                #pragma HLS UNROLL
+                mem[i] = 0;
+            }
+        }
+    }
 }
 
 } // namespace nnet

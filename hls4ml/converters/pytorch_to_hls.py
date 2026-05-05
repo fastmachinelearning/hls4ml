@@ -422,6 +422,17 @@ def parse_pytorch_model(config, verbose=True):
     if len(input_layers) == 0:
         input_layers = None
 
+    fixed_window_readouts = [
+        layer
+        for layer in layer_list
+        if layer.get('class_name') == 'SNNReadout' and layer.get('state_reset_policy', 'fixed_window') == 'fixed_window'
+    ]
+    if fixed_window_readouts:
+        window_size = fixed_window_readouts[0].get('window_size', 0)
+        for layer in layer_list:
+            if layer.get('class_name') in ['IFNeuron', 'LIFNeuron']:
+                layer['window_size'] = window_size
+
     for layer in layer_list:
         if layer['class_name'] == 'InputLayer':
             continue

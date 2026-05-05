@@ -1041,6 +1041,7 @@ class IFNeuron(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_out'),
+        Attribute('window_size', value_type=int, default=0, configurable=False),
         Attribute('threshold', value_type=float),
         Attribute('threshold_mode', value_type=str, default='scalar'),
         ChoiceAttribute('reset_mechanism', choices=['subtract', 'zero'], default='subtract', configurable=False),
@@ -1072,6 +1073,7 @@ class LIFNeuron(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_out'),
+        Attribute('window_size', value_type=int, default=0, configurable=False),
         Attribute('threshold', value_type=float),
         Attribute('threshold_mode', value_type=str, default='scalar'),
         Attribute('beta', value_type=float),
@@ -1120,6 +1122,8 @@ class SNNReadout(Layer):
         Attribute('n_classes', configurable=False),
         Attribute('window_size', value_type=int, default=1, configurable=False),
         Attribute('class_threshold', value_type=int, default=1, configurable=False),
+        Attribute('beta', value_type=float, default=1.0),
+        ChoiceAttribute('output_mode', choices=['spike', 'membrane'], default='spike', configurable=False),
         ChoiceAttribute(
             'state_reset_policy',
             choices=['fixed_window', 'tlast', 'host_pulse', 'never'],
@@ -1128,16 +1132,18 @@ class SNNReadout(Layer):
         ),
         ChoiceAttribute(
             'decision_rule',
-            choices=['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit'],
+            choices=['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit', 'argmax_membrane'],
             default='argmax_spike_count',
             configurable=False,
         ),
+        TypeAttribute('membrane'),
     ]
 
     def initialize(self):
         shape = list(self.get_input_variable().shape)
         shape[-1] = 1
         self.add_output_variable(shape)
+        self._set_type_t('membrane')
 
 
 class BatchNormOnnx(Layer):

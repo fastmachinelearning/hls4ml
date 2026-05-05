@@ -12,7 +12,10 @@ struct snn_readout_config {
     static const unsigned io_type = io_parallel;
     static const unsigned window_size = 1;
     static const unsigned class_threshold = 1;
+    static constexpr float beta = 1.0;
+    static const snn_readout_mode output_mode = snn_readout_mode::spike;
     static const snn_decision_rule decision_rule = snn_decision_rule::argmax_spike_count;
+    typedef float membrane_t;
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -21,7 +24,39 @@ void snn_readout(data_T data[CONFIG_T::n_classes], res_T res[1]) {
 
     static unsigned counts[CONFIG_T::n_classes];
     #pragma HLS ARRAY_PARTITION variable=counts complete
+    static typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes];
+    #pragma HLS ARRAY_PARTITION variable=mem complete
     static unsigned ts = 0;
+
+    if (CONFIG_T::output_mode == snn_readout_mode::membrane) {
+        unsigned best = 0;
+        for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
+            #pragma HLS UNROLL
+            typename CONFIG_T::membrane_t v =
+                (typename CONFIG_T::membrane_t)((typename CONFIG_T::membrane_t)CONFIG_T::beta * mem[i])
+                + (typename CONFIG_T::membrane_t)data[i];
+            mem[i] = v;
+            if (i == 0 || v > mem[best]) {
+                best = i;
+            }
+        }
+
+        if (CONFIG_T::decision_rule == snn_decision_rule::binary_logit) {
+            res[0] = (typename res_T::value_type)(mem[1] - mem[0]);
+        } else {
+            res[0] = (typename res_T::value_type)best;
+        }
+
+        ts++;
+        if (ts >= CONFIG_T::window_size) {
+            ts = 0;
+            for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
+                #pragma HLS UNROLL
+                mem[i] = 0;
+            }
+        }
+        return;
+    }
 
     if (CONFIG_T::decision_rule == snn_decision_rule::binary_logit) {
         for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
@@ -124,9 +159,48 @@ void snn_readout(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_strea
 
     static unsigned counts[CONFIG_T::n_classes];
     #pragma HLS ARRAY_PARTITION variable=counts complete
+    static typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes];
+    #pragma HLS ARRAY_PARTITION variable=mem complete
     static unsigned ts = 0;
 
     data_T in_pack = data_stream.read();
+
+    if (CONFIG_T::output_mode == snn_readout_mode::membrane) {
+        unsigned best = 0;
+        for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
+            #pragma HLS UNROLL
+            typename CONFIG_T::membrane_t v =
+                (typename CONFIG_T::membrane_t)((typename CONFIG_T::membrane_t)CONFIG_T::beta * mem[i])
+                + (typename CONFIG_T::membrane_t)in_pack[i];
+            mem[i] = v;
+            if (i == 0 || v > mem[best]) {
+                best = i;
+            }
+        }
+
+        res_T out_pack;
+        PRAGMA_DATA_PACK(out_pack)
+        for (unsigned i = 0; i < res_T::size; i++) {
+            #pragma HLS UNROLL
+            out_pack[i] = 0;
+        }
+        if (CONFIG_T::decision_rule == snn_decision_rule::binary_logit) {
+            out_pack[0] = (typename res_T::value_type)(mem[1] - mem[0]);
+        } else {
+            out_pack[0] = (typename res_T::value_type)best;
+        }
+        res_stream.write(out_pack);
+
+        ts++;
+        if (ts >= CONFIG_T::window_size) {
+            ts = 0;
+            for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
+                #pragma HLS UNROLL
+                mem[i] = 0;
+            }
+        }
+        return;
+    }
 
     if (CONFIG_T::decision_rule == snn_decision_rule::binary_logit) {
         for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {

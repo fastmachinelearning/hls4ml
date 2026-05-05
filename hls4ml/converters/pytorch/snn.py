@@ -53,6 +53,14 @@ def _parse_state_reset_policy(class_object):
     return policy
 
 
+def _parse_readout_beta(class_object):
+    beta = getattr(class_object, 'beta', 1.0)
+    arr = _to_numpy(beta, 'beta').reshape(-1)
+    if arr.size != 1:
+        raise Exception(f'Only scalar "beta" is supported for SNNReadout membrane mode, got shape {arr.shape}')
+    return float(arr[0])
+
+
 @pytorch_handler('Leaky')
 def parse_lif_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert operation == 'Leaky'
@@ -105,15 +113,30 @@ def parse_snn_readout_layer(operation, layer_name, input_names, input_shapes, no
     else:
         layer['window_size'] = int(getattr(class_object, 'window_size', 1))
     layer['class_threshold'] = int(getattr(class_object, 'class_threshold', 1))
-    layer['decision_rule'] = str(getattr(class_object, 'decision_rule', 'argmax_spike_count'))
+    layer['output_mode'] = str(getattr(class_object, 'output_mode', 'spike')).lower()
+    if layer['output_mode'] not in ['spike', 'membrane']:
+        raise Exception(f'Unsupported SNNReadout output mode "{layer["output_mode"]}". Supported: spike, membrane.')
+    layer['beta'] = _parse_readout_beta(class_object)
+    default_decision_rule = 'argmax_membrane' if layer['output_mode'] == 'membrane' else 'argmax_spike_count'
+    layer['decision_rule'] = str(getattr(class_object, 'decision_rule', default_decision_rule))
     layer['state_reset_policy'] = _parse_state_reset_policy(class_object)
-    if layer['decision_rule'] not in ['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit']:
+    if layer['decision_rule'] not in [
+        'argmax_spike_count',
+        'first_to_threshold',
+        'threshold_then_argmax',
+        'binary_logit',
+        'argmax_membrane',
+    ]:
         raise Exception(
             f'Unsupported SNN decision rule "{layer["decision_rule"]}". '
-            'Supported: argmax_spike_count, first_to_threshold, threshold_then_argmax, binary_logit.'
+            'Supported: argmax_spike_count, first_to_threshold, threshold_then_argmax, binary_logit, argmax_membrane.'
         )
     if layer['decision_rule'] == 'binary_logit' and layer['n_classes'] != 2:
         raise Exception('binary_logit decision rule requires n_classes == 2')
+    if layer['output_mode'] == 'membrane' and layer['decision_rule'] not in ['argmax_membrane', 'binary_logit']:
+        raise Exception('SNNReadout membrane mode supports decision_rule "argmax_membrane" or "binary_logit".')
+    if layer['output_mode'] == 'spike' and layer['decision_rule'] == 'argmax_membrane':
+        raise Exception('SNNReadout decision_rule "argmax_membrane" requires output_mode "membrane".')
 
     output_shape = input_shapes[0][:]
     output_shape[-1] = 1

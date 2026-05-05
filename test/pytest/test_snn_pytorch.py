@@ -4,6 +4,7 @@ import pytest
 import torch
 
 import hls4ml
+import hls4ml.utils.snntorch
 import hls4ml.utils.torch
 
 test_root_path = Path(__file__).parent
@@ -29,18 +30,6 @@ class LIFNet(torch.nn.Module):
     def forward(self, x):
         x = self.fc(x)
         return self.neuron(x)
-
-
-class SNNReadout(hls4ml.utils.torch.HLS4MLModule):
-    def __init__(self, n_classes=4, window_size=16, decision_rule='argmax_spike_count', class_threshold=2):
-        super().__init__()
-        self.n_classes = n_classes
-        self.window_size = window_size
-        self.decision_rule = decision_rule
-        self.class_threshold = class_threshold
-
-    def forward(self, x):
-        return x
 
 
 class SNNReadoutWithResetPolicy(hls4ml.utils.torch.HLS4MLModule):
@@ -72,13 +61,30 @@ class SNNClassifier(torch.nn.Module):
         super().__init__()
         self.fc = torch.nn.Linear(4, 4)
         self.neuron = Leaky(beta=0.95, threshold=1.2, reset_mechanism='subtract')
-        self.readout = SNNReadout(
+        self.readout = hls4ml.utils.snntorch.SNNReadout(
             n_classes=4, window_size=12, decision_rule='threshold_then_argmax', class_threshold=3
         )
 
     def forward(self, x):
         x = self.fc(x)
         x = self.neuron(x)
+        return self.readout(x)
+
+
+class SNNMembraneReadoutClassifier(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc = torch.nn.Linear(4, 4)
+        self.readout = hls4ml.utils.snntorch.SNNReadout(
+            n_classes=4,
+            window_size=12,
+            decision_rule='argmax_membrane',
+            output_mode='membrane',
+            beta=0.9,
+        )
+
+    def forward(self, x):
+        x = self.fc(x)
         return self.readout(x)
 
 
@@ -151,6 +157,7 @@ class LearnedVectorParamsNet(torch.nn.Module):
         (IFNet, 'IFNeuron'),
         (IFNetTol, 'IFNeuron'),
         (SNNClassifier, 'SNNReadout'),
+        (SNNMembraneReadoutClassifier, 'SNNReadout'),
     ],
 )
 def test_pytorch_snn_layers_are_parsed(test_case_id, model_class, expected_layer):
@@ -172,9 +179,17 @@ def test_pytorch_snn_layers_are_parsed(test_case_id, model_class, expected_layer
 
     if expected_layer == 'SNNReadout':
         readout = [layer for layer in hmodel.get_layers() if layer.class_name == 'SNNReadout'][0]
-        assert readout.get_attr('decision_rule') == 'threshold_then_argmax'
-        assert readout.get_attr('window_size') == 12
-        assert readout.get_attr('class_threshold') == 3
+        if model_class == SNNMembraneReadoutClassifier:
+            assert readout.get_attr('output_mode') == 'membrane'
+            assert readout.get_attr('decision_rule') == 'argmax_membrane'
+            assert readout.get_attr('beta') == pytest.approx(0.9)
+        else:
+            assert readout.get_attr('output_mode') == 'spike'
+            assert readout.get_attr('decision_rule') == 'threshold_then_argmax'
+            assert readout.get_attr('window_size') == 12
+            assert readout.get_attr('class_threshold') == 3
+            neuron = [layer for layer in hmodel.get_layers() if layer.class_name in ['IFNeuron', 'LIFNeuron']][0]
+            assert neuron.get_attr('window_size') == 12
 
 
 @pytest.mark.parametrize(
@@ -306,3 +321,22 @@ def test_snn_layer_type_config_is_exposed_for_quantization(test_case_id):
     assert layer.get_attr('beta_t').precision.definition_cpp() == 'ap_fixed<12,2>'
     assert layer.get_attr('threshold_t').precision.definition_cpp() == 'ap_fixed<10,3>'
     assert layer.get_attr('membrane_t').precision.definition_cpp() == 'ap_fixed<14,4>'
+
+
+def test_snn_membrane_readout_type_config_is_exposed(test_case_id):
+    model = SNNMembraneReadoutClassifier()
+    config = hls4ml.utils.config_from_pytorch_model(
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+    )
+    config['LayerName']['readout']['membrane_t'] = 'ap_fixed<18,6>'
+
+    hmodel = hls4ml.converters.convert_from_pytorch_model(
+        model,
+        output_dir=str(test_root_path / test_case_id),
+        backend='Vivado',
+        io_type='io_parallel',
+        hls_config=config,
+    )
+
+    readout = [layer for layer in hmodel.get_layers() if layer.class_name == 'SNNReadout'][0]
+    assert readout.get_attr('membrane_t').precision.definition_cpp() == 'ap_fixed<18,6>'

@@ -5,6 +5,7 @@ if_config_template = """struct config{index} : nnet::if_neuron_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned io_type = nnet::{iotype};
+    static const unsigned window_size = {window_size};
     static const bool threshold_is_vector = {threshold_is_vector};
     static constexpr float threshold = {threshold};
     static const nnet::snn_reset_mode reset_mode = nnet::snn_reset_mode::{reset_mechanism};
@@ -44,6 +45,7 @@ lif_config_template = """struct config{index} : nnet::lif_neuron_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned io_type = nnet::{iotype};
+    static const unsigned window_size = {window_size};
     static const bool beta_is_vector = {beta_is_vector};
     static const bool threshold_is_vector = {threshold_is_vector};
     static constexpr float threshold = {threshold};
@@ -89,7 +91,10 @@ readout_config_template = """struct config{index} : nnet::snn_readout_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned window_size = {window_size};
     static const unsigned class_threshold = {class_threshold};
+    static constexpr float beta = {beta};
+    static const nnet::snn_readout_mode output_mode = nnet::snn_readout_mode::{output_mode};
     static const nnet::snn_decision_rule decision_rule = nnet::snn_decision_rule::{decision_rule};
+    typedef {membrane_t.name} membrane_t;
 }};\n"""
 
 readout_function_template = 'nnet::snn_readout<{input_t}, {output_t}, {config}>({input}, {output});'
