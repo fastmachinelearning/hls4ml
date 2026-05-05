@@ -4,6 +4,12 @@ Spiking Neural Networks (PyTorch/SNN)
 
 This page describes the initial SNN support in the PyTorch frontend.
 
+Install the SNN frontend dependencies with:
+
+.. code-block:: bash
+
+   pip install hls4ml[snn]
+
 Execution model
 ===============
 
