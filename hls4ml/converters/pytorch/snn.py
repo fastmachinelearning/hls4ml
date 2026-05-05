@@ -2,6 +2,7 @@ import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
+# Treat numerically unit leak as IF behavior.
 BETA_TO_IF_TOL = 1e-6
 
 

@@ -25,6 +25,7 @@ void if_neuron(
 ) {
     #pragma HLS PIPELINE II=1
 
+    // Static state persists across calls until the configured time window ends.
     static typename CONFIG_T::membrane_t mem[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=mem complete
     static unsigned ts = 0;
@@ -69,6 +70,7 @@ void if_neuron(
 ) {
     #pragma HLS PIPELINE II=1
 
+    // Static state persists across calls until the configured time window ends.
     static typename CONFIG_T::membrane_t mem[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=mem complete
     static unsigned ts = 0;

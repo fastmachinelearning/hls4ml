@@ -22,6 +22,7 @@ template <class data_T, class res_T, typename CONFIG_T>
 void snn_readout(data_T data[CONFIG_T::n_classes], res_T res[1]) {
     #pragma HLS PIPELINE II=1
 
+    // Counts and membrane values persist across calls within one readout window.
     static unsigned counts[CONFIG_T::n_classes];
     #pragma HLS ARRAY_PARTITION variable=counts complete
     static typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes];
@@ -157,6 +158,7 @@ template <class data_T, class res_T, typename CONFIG_T>
 void snn_readout(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream) {
     #pragma HLS PIPELINE II=1
 
+    // Counts and membrane values persist across calls within one readout window.
     static unsigned counts[CONFIG_T::n_classes];
     #pragma HLS ARRAY_PARTITION variable=counts complete
     static typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes];
