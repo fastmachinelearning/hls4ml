@@ -4,7 +4,7 @@ from __future__ import annotations  # makes all annotations into strings
 from typing import Literal, Optional, Callable, TYPE_CHECKING
 
 from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTensorVariable, XLSArrayType, XLSIntegerType, \
-    XLSArray, XLSFixedPointType, float_to_significand, to_signed_fixed_precision, XLSFixedPoint
+    XLSArray, XLSFixedPointType, float_to_significand, to_signed_fixed_precision, XLSFixedPoint, XLSQualifiedName
 from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
@@ -25,10 +25,12 @@ class XLSAttrBuilder:
 
     New attributes:
         - xls_module_name (str):                  DSLX module name (e.g. layer_4_softmax) used for the layer
-        - xls_input_variable(XLSTensorVariable):  XLS representation of input shape and precision
-        - xls_output_variable(XLSTensorVariable): XLS representation of output shape and precision
+        - xls_input_variables(list[XLSTensorVariable]):  XLS representation of input shape and precision
+        - xls_output_variables(list[XLSTensorVariable]): XLS representation of output shape and precision
         - xls_weights(XLSArray):                  Weights converted to XLS array
         - xls_bias(XLSArray):                     Bias converted to XLS array
+        - xls_extra_func_params(list[XLSConst]):  Extra parameters for function call, e.g. stride, padding, pool_op, etc.
+        - xls_extra_func_args(list[XLSConst]):    Extra arguments for function call, e.g. activation parameter.
         - xls_func_call(XLSFunctionCall):         Function used for transformation, e.g. softmax_stable or conv2d
 
     Args:
@@ -139,41 +141,31 @@ class XLSAttrBuilder:
         return f'layer_{self.node.index}_{name}'
 
     @attach_to_node()
-    def xls_output_variable(self) -> XLSTensorVariable:
-        return XLSTensorVariable.from_tensor_variable(name='OUTPUT', var=self.node.get_output_variable())
+    def xls_output_variables(self) -> list[XLSTensorVariable]:
+        return [
+            XLSTensorVariable.from_tensor_variable(self.node.get_output_variable(name))
+            for (i, name) in enumerate(self.node.outputs)
+        ]
 
     @attach_to_node()
-    def xls_input_variable(self, prev_layer: Layer | None) -> XLSTensorVariable:
-        if not prev_layer:
-            assert self.node.class_name == 'Input', \
-                f'Unexpected class name for Layer {self.node.name}: {self.node.class_name}'
+    def xls_input_variables(self) -> list[XLSTensorVariable]:
+        if self.node.class_name == 'Input':
             assert self.node.get_input_variable() is None, \
                 f'Input layer {self.node.name} should not have input variable'
-            # Input and output are the same
-            return XLSTensorVariable.from_tensor_variable(
-                name='INPUT',
-                var=self.node.get_output_variable()
-            )
-
-        # Import values from the previous layer, e.g.:
-        # pub const INPUT_NUM_BITS = layer_1::OUTPUT_NUM_BUTS;
-        prev_name = prev_layer.get_attr('xls_module_name')
-        prev_var: XLSTensorVariable = prev_layer.get_attr('xls_output_variable')
-
-        def qualified_name(xls_const: XLSConst):
-            return f'{prev_name}::{xls_const.name}'
-
-        return XLSTensorVariable(
-            name='INPUT',
-            num_bits=qualified_name(prev_var.num_bits),
-            binary_exponent=qualified_name(prev_var.binary_exponent),
-            shape=tuple(map(qualified_name, prev_var.shape)),
-        )
+            out_var = self.node.get_output_variable()
+            return [XLSTensorVariable.from_tensor_variable(out_var, name=f'input_{out_var.name}')]
+        else:
+            return [
+                XLSTensorVariable.from_tensor_variable(var=self.node.get_input_variable(name))
+                for name in self.node.inputs
+            ]
 
     @attach_to_node()
     def xls_min_input_rank(self) -> int:
         """Minimally required rank of the input tensor.
-         Input tensor can have a higher rank if it consists of multiple batches."""
+         Input tensor can have a higher rank if it consists of multiple batches.
+         NB: in the case of multiple input variables, the rank is determined by the first input variable.
+         """
         name = self.node.class_name
         if name.endswith('2D'):
             return 3
@@ -187,185 +179,177 @@ class XLSAttrBuilder:
             return 1
 
     @attach_to_node()
-    def xls_func_call(self) -> XLSFunctionCall | str:
-        name = None
-        out_var = self.node.get_attr('xls_output_variable')
-        params = []
-        args = ['x']
-
-        params_out = [out_var.num_bits.name, out_var.binary_exponent.name]
-        params_rounding = ['ROUNDING_MODE', 'OVERFLOW_MODE']
-
-        match self.node.class_name:
-
-            # Input layer -> identity transformation
-            case 'Input':
-                return 'x'
-
-            case 'Dense':
-                name = f'dense::dense'
-                args += ['WEIGHTS', 'BIAS']
-                params = params_out + params_rounding
-
-            case 'Conv1D':
-                name = f'conv1d::conv1d_latency'
-                args += ['WEIGHTS', 'BIAS']
-                params = params_out + params_rounding + [
-                    'STRIDE', 'PAD_LEFT', 'PAD_RIGHT', 'DATA_FORMAT'
+    def xls_extra_func_params(self) -> list[XLSConst]:
+        layer = self.node
+        class_name = layer.class_name
+        if class_name in ('Conv1D', 'DepthwiseConv1D'):
+            return [
+                XLSConst(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
+                XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
+                XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
+                XLSConst(name='DATA_FORMAT',
+                         value=f"data_format::DataFormat::{layer.get_attr('data_format').upper()}")
+            ]
+        elif class_name in ('Conv2D', 'DepthwiseConv2D'):
+            return [
+                XLSConst(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
+                XLSConst(name='STRIDE_WIDTH', value=layer.get_attr('stride_width'), type='u32'),
+                XLSConst(name='PAD_TOP', value=layer.get_attr('pad_top'), type='u32'),
+                XLSConst(name='PAD_BOTTOM', value=layer.get_attr('pad_bottom'), type='u32'),
+                XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
+                XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
+                XLSConst(name='DATA_FORMAT',
+                         value=f"data_format::DataFormat::{layer.get_attr('data_format').upper()}")
+            ]
+        elif 'Pooling' in class_name:
+            pool_op = f"pooling::PoolingOperation::{layer.get_attr('pool_op').upper()}"
+            data_format = f"data_format::DataFormat::{layer.get_attr('data_format').upper()}"
+            if class_name.startswith('GlobalPooling'):
+                return [
+                    XLSConst(name='POOL_OP', value=pool_op),
+                    XLSConst(name='DATA_FORMAT', value=data_format)
                 ]
-
-            case 'DepthwiseConv1D':
-                name = f'depthwise_conv::depthwise_conv_1d'
-                args += ['WEIGHTS', 'BIAS']
-                params = params_out + params_rounding + [
-                    'STRIDE', 'PAD_LEFT', 'PAD_RIGHT', 'DATA_FORMAT'
+            elif class_name.endswith('Pooling1D'):
+                count_pad = str(layer.get_attr('count_pad')).lower()
+                return [
+                    XLSConst(name='POOL_OP', value=pool_op),
+                    XLSConst(name='POOL_SIZE', value=layer.get_attr('pool_width'), type='u32'),
+                    XLSConst(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
+                    XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
+                    XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
+                    XLSConst(name='COUNT_PAD', value=count_pad, type='bool'),
+                    XLSConst(name='DATA_FORMAT', value=data_format)
                 ]
-
-            case 'Conv2D':
-                name = f'conv2d::conv2d_latency'
-                args += ['WEIGHTS', 'BIAS']
-                params = params_out + params_rounding + [
-                    'STRIDE_HEIGHT', 'STRIDE_WIDTH',
-                    'PAD_TOP', 'PAD_BOTTOM',
-                    'PAD_LEFT', 'PAD_RIGHT',
-                    'DATA_FORMAT'
+            elif class_name.endswith('Pooling2D'):
+                count_pad = str(layer.get_attr('count_pad')).lower()
+                return [
+                    XLSConst(name='POOL_OP', value=pool_op),
+                    XLSConst(name='POOL_HEIGHT', value=layer.get_attr('pool_height'), type='u32'),
+                    XLSConst(name='POOL_WIDTH', value=layer.get_attr('pool_width'), type='u32'),
+                    XLSConst(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
+                    XLSConst(name='STRIDE_WIDTH', value=layer.get_attr('stride_width'), type='u32'),
+                    XLSConst(name='PAD_TOP', value=layer.get_attr('pad_top'), type='u32'),
+                    XLSConst(name='PAD_BOTTOM', value=layer.get_attr('pad_bottom'), type='u32'),
+                    XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
+                    XLSConst(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
+                    XLSConst(name='COUNT_PAD', value=count_pad, type='bool'),
+                    XLSConst(name='DATA_FORMAT', value=data_format)
                 ]
+            else:
+                raise ValueError(f'Unsupported pooling layer {class_name}')
+        elif class_name == 'Reshape':
+            out_vars = layer.get_attr('xls_output_variables')
+            assert len(out_vars) == 1, f"Reshape layer should have exactly one output variable, got {len(out_vars)}"
+            return list(out_vars[0].shape)
+        elif class_name == 'Transpose':
+            return [
+                XLSConst(name=f'PERM_{i}', value=perm, type=f'u32')
+                for i, perm in enumerate(layer.get_attr('perm'))
+            ]
+        else:
+            return []
 
-            case 'DepthwiseConv2D':
-                name = f'depthwise_conv::depthwise_conv_2d'
-                args += ['WEIGHTS', 'BIAS']
-                params = params_out + params_rounding + [
-                    'STRIDE_HEIGHT', 'STRIDE_WIDTH',
-                    'PAD_TOP', 'PAD_BOTTOM',
-                    'PAD_LEFT', 'PAD_RIGHT',
-                    'DATA_FORMAT'
-                ]
-
-            case 'Pooling1D':
-                name = f'pooling::pooling_1d'
-                params = params_out + params_rounding + [
-                    'POOL_OP',
-                    'POOL_SIZE',
-                    'STRIDE',
-                    'PAD_LEFT', 'PAD_RIGHT',
-                    'COUNT_PAD',
-                    'DATA_FORMAT',
-                ]
-
-            case 'Pooling2D':
-                name = f'pooling::pooling_2d'
-                params = params_out + params_rounding + [
-                    'POOL_OP',
-                    'POOL_HEIGHT', 'POOL_WIDTH',
-                    'STRIDE_HEIGHT', 'STRIDE_WIDTH',
-                    'PAD_TOP', 'PAD_BOTTOM', 'PAD_LEFT', 'PAD_RIGHT',
-                    'COUNT_PAD',
-                    'DATA_FORMAT',
-                ]
-
-            case 'GlobalPooling1D':
-                name = f'pooling::global_pooling_1d'
-                params = params_out + params_rounding + [
-                    'POOL_OP',
-                    'DATA_FORMAT',
-                ]
-
-            case 'GlobalPooling2D':
-                name = f'pooling::global_pooling_2d'
-                params = params_out + params_rounding + [
-                    'POOL_OP',
-                    'DATA_FORMAT',
-                ]
-
-            case 'Activation':
-                func_name = self.node.get_attr('activation').lower()
-                name = f'activations::{func_name}'
-                params = params_out + params_rounding
-                match func_name:
-                    case 'selu':
-                        args.append('SELU_TABLE_NEGATIVE')
-                    case 'softplus':
-                        args.append('SOFTPLUS_TABLE')
-                    case 'softsign':
-                        args.append('SOFTSIGN_TABLE_NON_NEGATIVE')
-                    case 'sigmoid':
-                        args.append('SIGMOID_TABLE')
-                    case 'tanh':
-                        args.append('TANH_TABLE_NON_NEGATIVE')
-                    case _:
-                        pass
-
+    @attach_to_node()
+    def xls_extra_func_args(self) -> list[XLSConst]:
+        layer = self.node
+        match layer.class_name:
             case 'HardActivation':
-                func_name = self.node.get_attr('activation').lower()
-                name = f'activations::{func_name}'
-                params = params_out + params_rounding
-                args += [
-                    XLSFixedPoint.from_float(
-                        self.node.get_attr(arg_name),
-                        precision=to_signed_fixed_precision(self.node.get_attr(f'{arg_name}_t').precision))
+                return [
+                    XLSConst(
+                        name=arg_name.upper(),
+                        value=XLSFixedPoint.from_float(
+                            layer.get_attr(arg_name),
+                            precision=to_signed_fixed_precision(layer.get_attr(f'{arg_name}_t').precision))
+                    )
                     for arg_name in ['slope', 'shift']
                 ]
-
             case 'ParametrizedActivation':
-                func_name = self.node._get_act_function_name()
-                precision = to_signed_fixed_precision(self.node.get_attr('param_t').precision)
-                value = self.node.get_attr('activ_param')
-                xls_value = XLSFixedPoint.from_float(value, precision)
-
-                name = f'activations::{func_name}'
-                params = params_out + params_rounding
-                match func_name:
-                    case 'elu':
-                        args.append('ELU_TABLE_NEGATIVE')
-                    case 'leaky_relu':
-                        args.append(xls_value)
-                    case 'thresholded_relu':
-                        args.append(xls_value)
-                    case _:
-                        pass
-
-            case 'PReLU':
-                name = 'activations::prelu'
-                params = params_out + params_rounding
-                args.append('WEIGHTS')
-
-            case 'Reshape':
-                in_shape = self.node.get_input_variable().shape
-                out_shape = self.node.get_output_variable().shape
-                name = f'reshape::reshape_{len(in_shape)}d_to_{len(out_shape)}d'
-                params = params_out + params_rounding + [
-                    dim.name for dim in self.node.get_attr('xls_output_variable').shape
-                ]
-
-            case 'Softmax':
-                implementation = self.node.attributes.get('implementation', 'stable')
-                params = params_out
-                if implementation == 'stable':
-                    name = f'activations::softmax_{implementation}'
-                    params += params_rounding
-                    args += ['EXP_NEG_TABLE', 'INV_TABLE']
-                elif implementation == 'latency':
-                    name = f'activations::softmax_{implementation}'
-                    params += params_rounding
-                    args += ['EXP_TABLE', 'INV_TABLE']
-                elif implementation == 'argmax':
-                    name = 'activations::argmax'
-                # TODO: support implementation == 'legacy'
-                else:
-                    raise ValueError(f'Unknown softmax implementation {implementation}')
-
-            case 'Transpose':
-                shape = self.node.get_input_variable().shape
-                rank = len(shape)
-                name = f'transpose::transpose_{rank}d'
-                params = params_out + params_rounding + [f'{{PERM[{i}]}}' for i in range(rank)]
-
-            case 'TernaryTanh':
-                name = 'activations::ternary_tanh'
-                params = params_out + params_rounding
-
+                precision = to_signed_fixed_precision(layer.get_attr('param_t').precision)
+                value = layer.get_attr('activ_param')
+                if layer.get_attr('activation').lower() in ('leakyrelu', 'leaky_relu', 'thresholdedrelu'):
+                    return [XLSConst(
+                        name='ACTIVATION_PARAM',
+                        value=XLSFixedPoint.from_float(value, precision))]
             case _:
-                raise ValueError(f'Unknown layer type: {self.node.class_name}')
+                pass
+        return []
+
+    @staticmethod
+    def func_name(layer: Layer) -> XLSQualifiedName:
+        class_name = layer.class_name
+        match class_name:
+            case 'Input':
+                # Identity transformation except for OverflowMode::SAT_SYM case.
+                return XLSQualifiedName(name='resize_1d', module_name='fixed_point_util')
+            case 'Dense':
+                return XLSQualifiedName(name='dense', module_name='dense')
+            case 'Conv1D':
+                return XLSQualifiedName(name='conv1d_latency', module_name='conv1d')
+            case 'DepthwiseConv1D':
+                return XLSQualifiedName(name='depthwise_conv_1d', module_name='depthwise_conv')
+            case 'Conv2D':
+                return XLSQualifiedName(name='conv2d_latency', module_name='conv2d')
+            case 'DepthwiseConv2D':
+                return XLSQualifiedName(name='depthwise_conv_2d', module_name='depthwise_conv')
+            case 'Pooling1D':
+                return XLSQualifiedName(name='pooling_1d', module_name='pooling')
+            case 'Pooling2D':
+                return XLSQualifiedName(name='pooling_2d', module_name='pooling')
+            case 'GlobalPooling1D':
+                return XLSQualifiedName(name='global_pooling_1d', module_name='pooling')
+            case 'GlobalPooling2D':
+                return XLSQualifiedName(name='global_pooling_2d', module_name='pooling')
+            case 'Activation':
+                return XLSQualifiedName(name=layer.get_attr('activation').lower(), module_name='activations')
+            case 'HardActivation':
+                return XLSQualifiedName(name=layer.get_attr('activation').lower(), module_name='activations')
+            case 'ParametrizedActivation':
+                return XLSQualifiedName(name=layer._get_act_function_name(), module_name='activations')
+            case 'PReLU':
+                return XLSQualifiedName(name='prelu', module_name='activations')
+            case 'Reshape':
+                in_shape = layer.get_input_variable().shape
+                out_shape = layer.get_output_variable().shape
+                name = f'reshape_{len(in_shape)}d_to_{len(out_shape)}d'
+                return XLSQualifiedName(name=name, module_name='reshape')
+            case 'Softmax':
+                implementation = layer.attributes.get('implementation', 'stable')
+                match implementation:
+                    case 'stable':
+                        name = f'softmax_stable'
+                    case 'latency':
+                        name = f'softmax_latency'
+                    case 'argmax':
+                        name = 'argmax'
+                    case _:
+                        # TODO: support implementation == 'legacy'
+                        raise ValueError(f'Unknown softmax implementation {implementation}')
+                return XLSQualifiedName(name=name, module_name='activations')
+            case 'Transpose':
+                rank = len(layer.get_input_variable().shape)
+                return XLSQualifiedName(name=f'transpose_{rank}d', module_name='transpose')
+            case 'TernaryTanh':
+                return XLSQualifiedName(name='ternary_tanh', module_name='activations')
+            case _:
+                raise ValueError(f'Unknown layer type: {layer.class_name}')
+
+    @attach_to_node()
+    def xls_func_call(self) -> XLSFunctionCall:
+        in_vars = self.node.get_attr('xls_input_variables')
+        out_vars = self.node.get_attr('xls_output_variables')
+        name = self.func_name(self.node)
+        params = [x.name for out_var in out_vars for x in (
+            out_var.num_bits,
+            out_var.binary_exponent,
+            out_var.rounding_mode,
+            out_var.overflow_mode,
+        )] + [x.name for x in self.node.get_attr('xls_extra_func_params')]
+        args = [f'x_{i}' for i in range(len(in_vars))]
+        args += [self.node.get_attr(x).name
+                 for x in ('xls_weights', 'xls_bias')
+                 if self.node.get_attr(x) is not None]
+        args += [x.lookup_table.name for x in self.node.get_attr('lookup_tables', [])]
+        args += [x.name for x in self.node.get_attr('xls_extra_func_args')]
         return XLSFunctionCall(name=name, params=params, args=args)
 
 
@@ -374,27 +358,23 @@ class BuildAttr(OptimizerPass):
     """
 
     def match(self, node: Layer) -> bool:
-        if node.class_name == 'Input':
-            return True
-        return False
+        return True
 
     def transform(self, model: ModelGraph, node: Layer) -> Literal[False]:
-        prev_layer = None
-        for layer in model.get_layers():
-            try:
-                # uses the builder to add all the attributes
-                (XLSAttrBuilder(layer)
-                 .xls_module_name()
-                 .xls_min_input_rank()
-                 .xls_input_variable(prev_layer)
-                 .xls_output_variable()
-                 .xls_weights()
-                 .xls_bias()
-                 .xls_func_call()
-                 )
-            except Exception as e:
-                raise ValueError(f'Failed to build XLS attributes for layer {layer.name}: {e}')
-
-            prev_layer = layer
-
+        try:
+            # uses the builder to add all the attributes
+            (XLSAttrBuilder(node)
+             .xls_module_name()
+             .xls_min_input_rank()
+             .xls_input_variables()
+             .xls_output_variables()
+             .xls_weights()
+             .xls_bias()
+             .xls_extra_func_params()
+             .xls_extra_func_args()
+             .xls_func_call()
+             )
+        except Exception as e:
+            raise ValueError(
+                f'Failed to build XLS attributes for layer (name={node.name}, class_name={node.class_name}): {e}')
         return False

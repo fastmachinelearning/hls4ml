@@ -321,16 +321,14 @@ pub fn ternary_tanh<
 // ------------------------------- Argmax ---------------------------------
 
 pub fn argmax
-    <NB_OUT: u32, BE_OUT: s32,
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
     NB_IN: u32, BE_IN: s32,
     DIM: u32>
     (y: FixedPoint<NB_IN, BE_IN>[DIM])
     -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
         let y_max = fixed_point_util::max_1d(y);
         let one = fixed_point_util::resize<
-            NB_OUT, BE_OUT,
-            RoundingMode::TRN,
-            OverflowMode::WRAP
+            NB_OUT, BE_OUT, ROUNDING, OVERFLOW
         >(fixed_point::from_integer(s2:1));
         for (i, z) in 0..DIM {
             if y[i] == y_max { 
@@ -352,7 +350,7 @@ fn argmax_test() {
         1024, 
         0
     ]);
-    assert_eq(expected, argmax<18, -10>(x));
+    assert_eq(expected, argmax<18, -10, RoundingMode::TRN, OverflowMode::WRAP>(x));
 
     let x = fixed_point_util::make_fixed_points_1d<-10>(sN[16][4]:[
         -1536, 
@@ -366,7 +364,7 @@ fn argmax_test() {
         1024,
         0,
     ]);
-    assert_eq(expected, argmax<18, -10>(x));
+    assert_eq(expected, argmax<18, -10, RoundingMode::TRN, OverflowMode::WRAP>(x));
 
     let x = fixed_point_util::make_fixed_points_1d<-10>(sN[16][4]:[
         -1536, 
@@ -380,7 +378,7 @@ fn argmax_test() {
         1024,
         0,
     ]);  
-    assert_eq(expected, argmax<18, -10>(x));
+    assert_eq(expected, argmax<18, -10, RoundingMode::TRN, OverflowMode::WRAP>(x));
 }
 
 // =========================================================================

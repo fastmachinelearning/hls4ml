@@ -96,10 +96,10 @@ pub fn aligned_width(NB_A: u32, BE_A: s32, NB_B: u32, BE_B: s32) -> u32 {
 
 // === Create FixedPoint constants ===
 
-pub fn one<NB: u32, BE: s32>() -> FixedPoint {
+pub fn one<NB: u32, BE: s32>() -> FixedPoint<NB, BE> {
     // If BE > 0, 1 is below quantization limit
-    const_assert!(BE <= 0);
-    let SHIFT = std::abs(BE);
+    const_assert!(BE <= s32:0);
+    let SHIFT = std::abs(BE) as u32;
     const_assert!(SHIFT <= NB);
     let x = sN[NB]:1 << SHIFT;
     fixed_point::make_fixed_point<BE>(x)

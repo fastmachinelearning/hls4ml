@@ -3,7 +3,7 @@ from __future__ import annotations  # makes all annotations into strings
 
 import math
 from pathlib import Path
-from typing import Any, TYPE_CHECKING, Dict
+from typing import Any, TYPE_CHECKING, Dict, Iterable
 
 import xls
 from numpy.typing import NDArray, ArrayLike
@@ -58,8 +58,8 @@ class XLSBackend(FPGABackend):
         optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         xls_attributes = [
-            'xls:build_attr',
             'xls:build_tables',
+            'xls:build_attr',
         ]
         xls_attributes_flow: str = register_flow('xls', xls_attributes, requires=[optimization_flow],
                                                  backend=self.name)
@@ -234,16 +234,28 @@ class XLSBackend(FPGABackend):
             return xls.Value.make_array([XLSBackend._float_to_xls_ir(item, precision) for item in x])
 
     @staticmethod
-    def _xls_ir_to_float(x: xls.Value, precision: FixedPrecisionType,
-                         dtype: np.typing.DTypeLike) -> ArrayLike:
+    def _xls_ir_to_float(x: xls.Value, precision: FixedPrecisionType | Iterable[FixedPrecisionType],
+                         dtype: np.typing.DTypeLike) -> ArrayLike | tuple[ArrayLike, ...]:
         match x.get_kind():
             case xls.c_api.ValueKind.BITS:
+                assert isinstance(precision, FixedPrecisionType), \
+                    f'Precision must be FixedPrecisionType, got {type(precision)}'
                 return x.get_bits().to_int64() / (2 ** precision.fractional)
             case xls.c_api.ValueKind.ARRAY:
+                assert isinstance(precision, FixedPrecisionType), \
+                    f'Precision must be FixedPrecisionType, got {type(precision)}'
                 return np.asarray([
                     XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)
                     for i in range(x.get_element_count())
                 ], dtype=dtype)
+            case xls.c_api.ValueKind.TUPLE:
+                precision = tuple(precision)
+                assert len(precision) == x.get_element_count(), \
+                    f'Precision mismatch for tuple: {len(precision)} != {x.get_element_count()}'
+                return tuple(
+                    XLSBackend._xls_ir_to_float(x.get_element(i), precision[i], dtype)
+                    for i in range(x.get_element_count())
+                )
             case _:
                 raise ValueError(f'Unexpected output type: {x.get_kind()}')
 
@@ -271,12 +283,17 @@ class XLSBackend(FPGABackend):
                 for x, var in zip(inputs, input_vars)
             ]
             ir_output = jit.run(ir_input)
-            if len(output_vars) == 1:
-                output = XLSBackend._xls_ir_to_float(ir_output, output_vars[0].type.precision,
-                                                     dtype=np.asarray(inputs[0]).dtype)
-                outputs[0][:] = np.asarray(output).reshape(-1)
-            else:
-                raise ValueError(f'Only one output variable is supported, got {len(output_vars)}')
+
+            out_precision = [output_var.type.precision for output_var in output_vars]
+            if len(out_precision) == 1:
+                out_precision = out_precision[0]
+            dtype = np.asarray(inputs[0]).dtype
+            output = XLSBackend._xls_ir_to_float(ir_output, out_precision, dtype)
+            # This is the case when len(output_vars) == 1
+            if not isinstance(output, tuple):
+                output = (output,)
+            for i in range(len(output_vars)):
+                outputs[i][:] = np.reshape(output[i], -1)
 
         # TODO: this duplicates ModelGraph._get_top_function().
         # NB: ctype is not used in XLS, but it is required by ModelGraph._predict

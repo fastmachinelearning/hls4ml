@@ -142,9 +142,15 @@ class XLSArrayType:
         return elt, shape
 
     @property
-    def rank(self):
+    def shape(self):
+        """Returns: shape of the multidimensional array type"""
         _, shape = self.as_multidimensional()
-        return len(shape)
+        return shape
+
+    @property
+    def rank(self):
+        """Returns: rank of the multidimensional array type"""
+        return len(self.shape)
 
     @property
     def innermost_element_type(self):
@@ -251,6 +257,17 @@ class XLSArray:
         return f'{self.array_type}:[{elements}]'
 
 
+class XLSQualifiedName:
+    def __init__(self, name: str, module_name: str | None = None):
+        self.name = name
+        self.module_name = module_name
+
+    def __str__(self):
+        if self.module_name:
+            return f'{self.module_name}::{self.name}'
+        return self.name
+
+
 class XLSFunctionCall:
     def __init__(self, name, params=None, args=None):
         self.name = name
@@ -350,33 +367,40 @@ class XLSTensorVariable:
     """Helper class to generate XLS constants for tensor variables.
     """
 
-    def __init__(self, name: str, num_bits, binary_exponent, shape) -> None:
+    def __init__(self, name: str, num_bits, binary_exponent, rounding_mode, saturation_mode, shape) -> None:
         if isinstance(shape, int) or isinstance(shape, str):
             shape = (shape,)
+        name = ''.join(filter(lambda s: s.isalnum() or s == '_', name))
+        self.name = name
         name = name.upper()
         self.num_bits = XLSConst(f'{name}_NUM_BITS', num_bits, type='u32')
         self.binary_exponent = XLSConst(f'{name}_BINARY_EXPONENT', binary_exponent, type='s32')
+        self.rounding_mode = XLSConst(f'{name}_ROUNDING_MODE', f'RoundingMode::{rounding_mode}', type='RoundingMode')
+        self.overflow_mode = XLSConst(f'{name}_OVERFLOW_MODE', f'OverflowMode::{saturation_mode}', type='OverflowMode')
         self.shape = tuple(
             XLSConst(f'{name}_DIM_{i}', dim, type='u32')
             for i, dim in enumerate(shape)
         )
         name = name[0].upper() + name[1:].lower()
-        self.type_alias = XLSTypeAlias(name=f'{name}Type', type=self.to_array_type())
-        self.type_alias_bits = XLSTypeAlias(name=f'{name}TypeBits', type=self.to_array_type_bits())
+        self.type_alias = XLSTypeAlias(name=f'{name}_Type', type=self.to_array_type())
+        self.type_alias_bits = XLSTypeAlias(name=f'{name}_Type_Bits', type=self.to_array_type_bits())
 
     @classmethod
-    def from_tensor_variable(cls, name: str, var: TensorVariable) -> XLSTensorVariable:
+    def from_tensor_variable(cls, var: TensorVariable, name: str | None = None) -> XLSTensorVariable:
         assert isinstance(var.type.precision, FixedPrecisionType), \
             f'Precision {var.__class__.__name__} must have FixedPrecisionType'
         element_type = XLSFixedPointType.from_precision(var.type.precision)
         return cls(
-            name=name,
+            name=name or var.name,
             num_bits=element_type.num_bits,
             binary_exponent=element_type.binary_exponent,
+            rounding_mode=var.type.precision.rounding_mode,
+            saturation_mode=var.type.precision.saturation_mode,
             shape=var.shape)
 
     def definitions(self) -> list[XLSConst | XLSTypeAlias]:
-        return [self.num_bits, self.binary_exponent] + list(self.shape) + [self.type_alias, self.type_alias_bits]
+        return [self.num_bits, self.binary_exponent, self.rounding_mode, self.overflow_mode] + list(self.shape) + [
+            self.type_alias, self.type_alias_bits]
 
     def to_array_type(self) -> XLSArrayType:
         return XLSArrayType(
@@ -396,7 +420,7 @@ class XLSTensorVariable:
 class XLSLookupTable:
     def __init__(
             self,
-            name : str,
+            name: str,
             input_precision: XLSFixedPointType | FixedPrecisionType,
             output_precision: XLSFixedPointType | FixedPrecisionType,
             x_min,
