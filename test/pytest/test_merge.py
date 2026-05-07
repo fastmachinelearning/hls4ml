@@ -50,8 +50,12 @@ def test_merge(test_case_id, merge_layer, io_type, backend, swap_inputs):
 
 @pytest.mark.parametrize('axes', [1])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # No io_stream implementation yet
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_dot(test_case_id, axes, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
+
     # Only 1D implemented
     input_shape = (10,)
 

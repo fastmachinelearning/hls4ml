@@ -197,3 +197,29 @@ fn test_average() {
     assert_eq(result, expected);
 }
 
+pub fn dot
+    <OUT_NB: u32, OUT_BE: s32,
+    ROUNDING: RoundingMode,
+    OVERFLOW: OverflowMode,
+    X_NB: u32, X_BE: s32,
+    Y_NB: u32, Y_BE: s32,
+    DIM: u32
+>
+(
+    x: FixedPoint<X_NB, X_BE>[DIM],
+    y: FixedPoint<Y_NB, Y_BE>[DIM]
+)
+-> FixedPoint<OUT_NB, OUT_BE>[1] {
+    [fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(
+        fixed_point_util::dot_prod(x,y)
+    )]
+}
+
+#[test]
+fn test_dot() {
+    let x = fixed_point_util::make_fixed_points_1d<0>([s8:1, 2, 3]);
+    let y = fixed_point_util::make_fixed_points_1d<-1>([s16:2, 4, 10]);
+    let result = dot<8, 0, RoundingMode::TRN, OverflowMode::WRAP>(x, y);
+    let expected = fixed_point_util::make_fixed_points_1d<0>([s8:20]);
+    assert_eq(result, expected);
+}

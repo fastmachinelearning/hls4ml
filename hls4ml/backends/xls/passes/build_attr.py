@@ -302,6 +302,8 @@ class XLSAttrBuilder:
             case 'Merge':
                 op = layer.get_attr('op').lower()
                 return XLSQualifiedName(name=op, module_name='merge')
+            case 'Dot':
+                return XLSQualifiedName(name='dot', module_name='merge')
             case 'Activation':
                 return XLSQualifiedName(name=layer.get_attr('activation').lower(), module_name='activations')
             case 'HardActivation':
