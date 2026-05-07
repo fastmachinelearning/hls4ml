@@ -13,9 +13,8 @@
       "c_drivers": ""
     }
   },
-
   "kv260": {
-    "part": "sk-kv260-g",
+    "part": "xck26-sfvc784-2LV-c",
     "axi_master": {
       "platform_generator_tcl": "kv260/tcl_scripts/create_xsa.tcl",
       "platform_output": "kv260/tcl_scripts/output/kv260_axi_all_platform.xsa",
@@ -29,5 +28,4 @@
       "c_drivers": ""
     }
   }
-
 }
