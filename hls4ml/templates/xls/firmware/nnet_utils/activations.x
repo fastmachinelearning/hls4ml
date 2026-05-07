@@ -26,7 +26,7 @@ pub fn thresholded_relu
         else 
             { zero!<FixedPoint<NB_OUT, BE_OUT>>() };
         update(acc, i, y)
-    }(x)
+    }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
 }
 
 pub fn relu
@@ -62,6 +62,15 @@ fn relu_test() {
         0, 0, 1024, 0
     ]);
     assert_eq(expected, relu<16, -10, RoundingMode::TRN, OverflowMode::WRAP>(x));
+
+    // Different width and precision
+    let x = fixed_point_util::make_fixed_points_1d<-10>(sN[32][4]:[
+        -1536, -1024, 1024, -1024
+    ]); 
+    let expected = fixed_point_util::make_fixed_points_1d<-11>(sN[16][4]:[
+        0, 0, 2048, 0
+    ]);
+    assert_eq(expected, relu<16, -11, RoundingMode::TRN, OverflowMode::WRAP>(x));
 }
 
 pub fn leaky_relu
