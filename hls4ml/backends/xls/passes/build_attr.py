@@ -171,7 +171,7 @@ class XLSAttrBuilder:
             return 3
         elif name.endswith('1D'):
             return 2
-        elif name == 'Reshape':
+        elif name in ('Reshape', 'Concatenate'):
             return len(self.node.get_input_variable().shape)
         elif name == 'Transpose':
             return len(self.node.get_attr('perm'))
@@ -182,7 +182,20 @@ class XLSAttrBuilder:
     def xls_extra_func_params(self) -> list[XLSConst]:
         layer = self.node
         class_name = layer.class_name
-        if class_name in ('Conv1D', 'DepthwiseConv1D'):
+        if class_name == 'Concatenate':
+            rank = len(layer.get_input_variable().shape)
+            if rank == 1:
+                return []
+            axis = layer.get_attr('axis')
+            if axis > 0:
+                # Convert axis to a 0-based index.
+                # This is the same adjustment as in hls4ml.model.layers.Concatenate.initialize()
+                # TODO: should it be done earlier, when converting from frontend?
+                axis -= 1
+            if axis == -1:
+                axis = rank - 1
+            return [XLSConst(name=f'AXIS', value=axis, type='u32')]
+        elif class_name in ('Conv1D', 'DepthwiseConv1D'):
             return [
                 XLSConst(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
                 XLSConst(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
@@ -302,6 +315,9 @@ class XLSAttrBuilder:
             case 'Merge':
                 op = layer.get_attr('op').lower()
                 return XLSQualifiedName(name=op, module_name='merge')
+            case 'Concatenate':
+                rank = len(layer.get_input_variable().shape)
+                return XLSQualifiedName(name=f'concatenate{rank}d', module_name='merge')
             case 'Dot':
                 return XLSQualifiedName(name='dot', module_name='merge')
             case 'Activation':

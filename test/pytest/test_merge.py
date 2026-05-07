@@ -83,8 +83,11 @@ def test_dot(test_case_id, axes, io_type, backend):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_concatenate1d(test_case_id, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape1 = (10,)
     input_shape2 = (8,)
 
@@ -113,8 +116,11 @@ def test_concatenate1d(test_case_id, io_type, backend):
 
 @pytest.mark.parametrize('axis', [1, 2])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_concatenate2d(test_case_id, axis, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape1 = [10, 3]
     input_shape2 = [10, 4]
 
@@ -146,8 +152,11 @@ def test_concatenate2d(test_case_id, axis, io_type, backend):
 
 @pytest.mark.parametrize('axis', [1, 2, 3])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_concatenate3d(test_case_id, axis, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape1 = [10, 10, 3]
     input_shape2 = [10, 10, 4]
 
