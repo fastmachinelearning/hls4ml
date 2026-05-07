@@ -12,9 +12,12 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('merge_layer', [Add, Average, Maximum, Minimum, Multiply, Subtract])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('swap_inputs', [True, False])
 def test_merge(test_case_id, merge_layer, io_type, backend, swap_inputs):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape = (10, 10, 3)
 
     in1 = Input(shape=input_shape, name='inp1')

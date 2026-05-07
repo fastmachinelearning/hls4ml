@@ -299,6 +299,9 @@ class XLSAttrBuilder:
                 return XLSQualifiedName(name='global_pooling_1d', module_name='pooling')
             case 'GlobalPooling2D':
                 return XLSQualifiedName(name='global_pooling_2d', module_name='pooling')
+            case 'Merge':
+                op = layer.get_attr('op').lower()
+                return XLSQualifiedName(name=op, module_name='merge')
             case 'Activation':
                 return XLSQualifiedName(name=layer.get_attr('activation').lower(), module_name='activations')
             case 'HardActivation':
