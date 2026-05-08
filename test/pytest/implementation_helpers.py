@@ -5,7 +5,9 @@ import sys
 import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
 
@@ -58,6 +60,25 @@ def _collect_files(output_dir, suffixes=None):
         }
         files.append(entry)
     return files
+
+
+def _file_sha256(path):
+    digest = sha256()
+    with open(path, 'rb') as fp:
+        for chunk in iter(lambda: fp.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _zip_directory(directory, zip_path):
+    directory = Path(directory)
+    zip_path = Path(zip_path)
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
+    with ZipFile(zip_path, 'w', ZIP_DEFLATED) as archive:
+        for path in sorted(directory.rglob('*')):
+            if path.is_file():
+                archive.write(path, path.relative_to(directory.parent))
+    return zip_path
 
 
 def _dataset_dir():
@@ -124,6 +145,7 @@ def _build_dataset(
     build_duration_seconds,
     hls4ml_report_path,
     build_output_path,
+    project_archive_path,
 ):
     output_dir = hls_model.config.get_output_dir()
     model = metadata.get('model', {})
@@ -166,9 +188,11 @@ def _build_dataset(
             'hls4ml_report_json': _portable_path(hls4ml_report_path),
             'build_output_log': _portable_path(build_output_path),
             'bitstreams': _collect_files(output_dir, {'.bit'}),
-            'reports': _collect_files(output_dir, {'.rpt', '.xml'}),
-            'logs': _collect_files(output_dir, {'.log'}),
-            'raw_output_files': _collect_files(output_dir),
+            'project_archive': {
+                'path': _portable_path(project_archive_path),
+                'size_bytes': Path(project_archive_path).stat().st_size,
+                'sha256': _file_sha256(project_archive_path),
+            },
         },
     }
 
@@ -203,6 +227,7 @@ def run_implementation_collection_test(config, hls_model, test_case_id, backend,
         assert bitfiles, f'Implementation failed: no bitstream was generated in {output_dir}'
 
     hls4ml_report_path = _write_json(report, f'{artifact_id}_hls4ml_report.json')
+    project_archive_path = _zip_directory(output_dir, _artifact_path(f'{artifact_id}_project.zip'))
     dataset = _build_dataset(
         config=config,
         hls_model=hls_model,
@@ -216,5 +241,6 @@ def run_implementation_collection_test(config, hls_model, test_case_id, backend,
         build_duration_seconds=duration,
         hls4ml_report_path=hls4ml_report_path,
         build_output_path=build_output_path,
+        project_archive_path=project_archive_path,
     )
     _write_json(dataset, f'{artifact_id}_dataset.json')

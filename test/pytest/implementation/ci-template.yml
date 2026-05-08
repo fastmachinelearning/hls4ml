@@ -24,11 +24,7 @@
       - test/pytest/implementation/*_dataset.json
       - test/pytest/implementation/*_hls4ml_report.json
       - test/pytest/implementation/*_build.log
-      - test/pytest/implementation/*/
-      - test/pytest/implementation/**/*.bit
-      - test/pytest/implementation/**/*.hwh
-      - test/pytest/implementation/**/*.rpt
-      - test/pytest/implementation/**/*.log
+      - test/pytest/implementation/*_project.zip
 
 .pytest-implementation-vivado-runtime:
   extends: .pytest-implementation
