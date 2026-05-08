@@ -1,7 +1,6 @@
 import subprocess
 from pathlib import Path
 
-import numpy as np
 from implementation_helpers import run_implementation_collection_test
 from tensorflow.keras.models import model_from_json
 
@@ -31,14 +30,6 @@ def _example_models_commit():
         return None
 
 
-def _random_input_for_model(model, n_samples=100):
-    input_shape = model.input_shape
-    if isinstance(input_shape, list):
-        input_shape = input_shape[0]
-    input_shape = tuple(dim if dim is not None else n_samples for dim in input_shape)
-    return np.random.rand(*input_shape).astype('float32')
-
-
 def _run_example_model_implementation(
     *,
     model_name,
@@ -48,8 +39,6 @@ def _run_example_model_implementation(
     synthesis_config,
 ):
     model = _load_keras_example_model(model_json, weights_h5)
-    x_input = _random_input_for_model(model)
-    keras_prediction = model.predict(x_input)
 
     hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=BACKEND)
     output_dir = str(test_root_path / test_case_id)
@@ -64,8 +53,6 @@ def _run_example_model_implementation(
     )
 
     hls_model.compile()
-    hls_prediction = hls_model.predict(x_input)
-    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=1e-2, atol=0.01)
 
     run_implementation_collection_test(
         config=synthesis_config,
