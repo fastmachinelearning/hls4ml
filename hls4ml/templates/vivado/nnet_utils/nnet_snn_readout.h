@@ -18,8 +18,7 @@ struct snn_readout_config {
     typedef float membrane_t;
 };
 
-template <class data_T, class res_T, typename CONFIG_T>
-void snn_readout(data_T data[CONFIG_T::n_classes], res_T res[1]) {
+template <class data_T, class res_T, typename CONFIG_T> void snn_readout(data_T data[CONFIG_T::n_classes], res_T res[1]) {
     #pragma HLS PIPELINE II=1
 
     // Counts and membrane values persist across calls within one readout window.
@@ -34,8 +33,8 @@ void snn_readout(data_T data[CONFIG_T::n_classes], res_T res[1]) {
         for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
             #pragma HLS UNROLL
             typename CONFIG_T::membrane_t v =
-                (typename CONFIG_T::membrane_t)((typename CONFIG_T::membrane_t)CONFIG_T::beta * mem[i])
-                + (typename CONFIG_T::membrane_t)data[i];
+                (typename CONFIG_T::membrane_t)((typename CONFIG_T::membrane_t)CONFIG_T::beta * mem[i]) +
+                (typename CONFIG_T::membrane_t)data[i];
             mem[i] = v;
             if (i == 0 || v > mem[best]) {
                 best = i;
@@ -172,8 +171,8 @@ void snn_readout(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_strea
         for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
             #pragma HLS UNROLL
             typename CONFIG_T::membrane_t v =
-                (typename CONFIG_T::membrane_t)((typename CONFIG_T::membrane_t)CONFIG_T::beta * mem[i])
-                + (typename CONFIG_T::membrane_t)in_pack[i];
+                (typename CONFIG_T::membrane_t)((typename CONFIG_T::membrane_t)CONFIG_T::beta * mem[i]) +
+                (typename CONFIG_T::membrane_t)in_pack[i];
             mem[i] = v;
             if (i == 0 || v > mem[best]) {
                 best = i;

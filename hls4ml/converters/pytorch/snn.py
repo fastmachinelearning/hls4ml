@@ -51,8 +51,7 @@ def _parse_state_reset_policy(class_object):
     policy = str(policy).lower()
     if policy not in ['fixed_window', 'tlast', 'host_pulse', 'never']:
         raise Exception(
-            f'Unsupported state reset policy "{policy}". '
-            'Supported: "fixed_window", "tlast", "host_pulse", "never".'
+            f'Unsupported state reset policy "{policy}". Supported: "fixed_window", "tlast", "host_pulse", "never".'
         )
     return policy
 

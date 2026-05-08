@@ -20,9 +20,8 @@ struct if_neuron_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void if_neuron(
-    data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out], const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]
-) {
+void if_neuron(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+               const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]) {
     #pragma HLS PIPELINE II=1
 
     // Static state persists across calls until the configured time window ends.
@@ -32,9 +31,8 @@ void if_neuron(
 
     for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
         #pragma HLS UNROLL
-        typename CONFIG_T::threshold_t threshold = CONFIG_T::threshold_is_vector
-                                                       ? threshold_vec[i]
-                                                       : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
+        typename CONFIG_T::threshold_t threshold =
+            CONFIG_T::threshold_is_vector ? threshold_vec[i] : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
         typename CONFIG_T::membrane_t v = mem[i] + (typename CONFIG_T::membrane_t)data[i];
         bool spike = (v >= threshold);
         if (spike) {
@@ -63,11 +61,8 @@ void if_neuron(
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void if_neuron(
-    hls::stream<data_T> &data_stream,
-    hls::stream<res_T> &res_stream,
-    const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]
-) {
+void if_neuron(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
+               const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]) {
     #pragma HLS PIPELINE II=1
 
     // Static state persists across calls until the configured time window ends.
@@ -81,9 +76,8 @@ void if_neuron(
 
     for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
         #pragma HLS UNROLL
-        typename CONFIG_T::threshold_t threshold = CONFIG_T::threshold_is_vector
-                                                       ? threshold_vec[i]
-                                                       : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
+        typename CONFIG_T::threshold_t threshold =
+            CONFIG_T::threshold_is_vector ? threshold_vec[i] : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
         typename CONFIG_T::membrane_t v = mem[i] + (typename CONFIG_T::membrane_t)in_pack[i];
         bool spike = (v >= threshold);
         if (spike) {

@@ -23,12 +23,9 @@ struct lif_neuron_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void lif_neuron(
-    data_T data[CONFIG_T::n_in],
-    res_T res[CONFIG_T::n_out],
-    const typename CONFIG_T::beta_t beta_vec[CONFIG_T::n_out],
-    const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]
-) {
+void lif_neuron(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+                const typename CONFIG_T::beta_t beta_vec[CONFIG_T::n_out],
+                const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]) {
     #pragma HLS PIPELINE II=1
 
     // Static state persists across calls until the configured time window ends.
@@ -39,11 +36,11 @@ void lif_neuron(
     for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
         #pragma HLS UNROLL
         typename CONFIG_T::beta_t beta = CONFIG_T::beta_is_vector ? beta_vec[i] : (typename CONFIG_T::beta_t)CONFIG_T::beta;
-        typename CONFIG_T::threshold_t threshold = CONFIG_T::threshold_is_vector
-                                                       ? threshold_vec[i]
-                                                       : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
+        typename CONFIG_T::threshold_t threshold =
+            CONFIG_T::threshold_is_vector ? threshold_vec[i] : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
         // LIF update: v[t] = beta * v[t-1] + input.
-        typename CONFIG_T::membrane_t v = (typename CONFIG_T::membrane_t)(beta * mem[i]) + (typename CONFIG_T::membrane_t)data[i];
+        typename CONFIG_T::membrane_t v =
+            (typename CONFIG_T::membrane_t)(beta * mem[i]) + (typename CONFIG_T::membrane_t)data[i];
         bool spike = (v >= threshold);
         if (spike) {
             if (CONFIG_T::reset_mode == snn_reset_mode::subtract) {
@@ -71,12 +68,9 @@ void lif_neuron(
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void lif_neuron(
-    hls::stream<data_T> &data_stream,
-    hls::stream<res_T> &res_stream,
-    const typename CONFIG_T::beta_t beta_vec[CONFIG_T::n_out],
-    const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]
-) {
+void lif_neuron(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
+                const typename CONFIG_T::beta_t beta_vec[CONFIG_T::n_out],
+                const typename CONFIG_T::threshold_t threshold_vec[CONFIG_T::n_out]) {
     #pragma HLS PIPELINE II=1
 
     // Static state persists across calls until the configured time window ends.
@@ -91,11 +85,11 @@ void lif_neuron(
     for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
         #pragma HLS UNROLL
         typename CONFIG_T::beta_t beta = CONFIG_T::beta_is_vector ? beta_vec[i] : (typename CONFIG_T::beta_t)CONFIG_T::beta;
-        typename CONFIG_T::threshold_t threshold = CONFIG_T::threshold_is_vector
-                                                       ? threshold_vec[i]
-                                                       : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
+        typename CONFIG_T::threshold_t threshold =
+            CONFIG_T::threshold_is_vector ? threshold_vec[i] : (typename CONFIG_T::threshold_t)CONFIG_T::threshold;
         // LIF update: v[t] = beta * v[t-1] + input.
-        typename CONFIG_T::membrane_t v = (typename CONFIG_T::membrane_t)(beta * mem[i]) + (typename CONFIG_T::membrane_t)in_pack[i];
+        typename CONFIG_T::membrane_t v =
+            (typename CONFIG_T::membrane_t)(beta * mem[i]) + (typename CONFIG_T::membrane_t)in_pack[i];
         bool spike = (v >= threshold);
         if (spike) {
             if (CONFIG_T::reset_mode == snn_reset_mode::subtract) {
