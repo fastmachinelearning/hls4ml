@@ -173,6 +173,175 @@ pub fn const_array_4d
 }
 
 
+// === Compare ===
+
+pub enum Compare: s2 {
+    LESS = -1,
+    EQUAL = 0,
+    GREATER = 1
+}
+
+pub fn compare<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>
+) -> Compare {
+    let diff = fixed_point::sub(a, b).significand;
+    if (diff == 0)
+        { Compare::EQUAL }
+    else if (std::msb(diff) == u1:1)
+        { Compare::LESS }
+    else
+        { Compare::GREATER }
+}
+
+pub fn greater<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>
+) -> bool {
+    compare(a, b) as s2 == Compare::GREATER as s2
+}
+
+pub fn greater_or_equal<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>
+) -> bool {
+    compare(a, b) as s2 >= Compare::EQUAL as s2
+}
+
+pub fn less<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>
+) -> bool {
+    compare(a, b) as s2 == Compare::LESS as s2
+}
+
+pub fn less_or_equal<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>
+) -> bool {
+    compare(a, b) as s2 <= Compare::EQUAL as s2
+}
+
+pub fn equal<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>
+) -> bool {
+    compare(a, b) as s2 == Compare::EQUAL as s2
+}
+
+fn check_compare_impl<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>,
+    expected_compare_result: Compare
+) {
+    let compare_result = compare(a, b);
+    assert_eq(compare_result as s2, expected_compare_result as s2);
+    
+    match expected_compare_result {
+        Compare::LESS => {
+            assert_eq(less(a,b), true);
+            assert_eq(less_or_equal(a,b), true);
+            assert_eq(equal(a,b), false);
+            assert_eq(greater_or_equal(a,b), false);
+            assert_eq(greater(a,b), false);
+        },
+        Compare::EQUAL => {
+            assert_eq(less(a,b), false);
+            assert_eq(less_or_equal(a,b), true);
+            assert_eq(equal(a,b), true);
+            assert_eq(greater_or_equal(a,b), true);
+            assert_eq(greater(a,b), false);
+        },
+        Compare::GREATER => {
+                assert_eq(less(a,b), false);
+                assert_eq(less_or_equal(a,b), false);
+                assert_eq(equal(a,b), false);
+                assert_eq(greater_or_equal(a,b), true);
+                assert_eq(greater(a,b), true);
+        }
+    };
+}
+
+fn check_compare<
+    NB_A: u32, BE_A: s32,
+    NB_B: u32, BE_B: s32
+>(
+    a: FixedPoint<NB_A, BE_A>,
+    b: FixedPoint<NB_B, BE_B>,
+    expected_compare_result: Compare
+) {
+    check_compare_impl(a, b, expected_compare_result);
+    check_compare_impl(b, a, match expected_compare_result {
+        Compare::LESS => Compare::GREATER,
+        Compare::EQUAL => Compare::EQUAL,
+        Compare::GREATER => Compare::LESS
+    });
+}
+
+#[test]
+fn test_compare() {
+    let minus_one = fixed_point::from_integer(s3:-1);
+    let zero = fixed_point::from_integer(s3:0);
+    let one = fixed_point::from_integer(s3:1);
+    let two = fixed_point::from_integer(s3:2);
+
+    let minus_one_big = fixed_point::make_fixed_point<-8>(s16:-256);
+    let zero_big = fixed_point::make_fixed_point<-4>(s8:0);
+    let one_big = fixed_point::make_fixed_point<-5>(s12:32);    
+    let two_big = fixed_point::make_fixed_point<-1>(s12:4);    
+
+    let values = [minus_one, zero, one, two];
+    // Cannot make it an array because of different types
+    let values_big = (minus_one_big, zero_big, one_big, two_big);
+
+    check_compare(minus_one, minus_one_big, Compare::EQUAL);
+    check_compare(minus_one, minus_one_big, Compare::EQUAL);
+
+    for (i, _) in u32:0..4 {
+        for (j, _) in u32:0..4 {
+            let expected_result = if (i < j) {
+                Compare::LESS
+            } else if (i == j) {
+                Compare::EQUAL
+            } else {
+                Compare::GREATER
+            };
+            let a = values[i];
+            // values_big[i] or values_big.i does not compile,
+            // so we iterate manually
+            match j {
+                u32:0 => check_compare(a, values_big.0, expected_result),
+                u32:1 => check_compare(a, values_big.1, expected_result),
+                u32:2 => check_compare(a, values_big.2, expected_result),
+                u32:3 => check_compare(a, values_big.3, expected_result),
+                _     => fail!("index_out_of_bounds", ())
+            }
+        }(())
+    }(())
+}
+
+
 // === Transpose ===
 
 pub fn transpose

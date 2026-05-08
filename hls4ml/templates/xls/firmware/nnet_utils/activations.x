@@ -15,13 +15,15 @@ type LookupTable = lookup_table::LookupTable;
 
 pub fn thresholded_relu
     <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,    
-    NB_IN: u32, BE_IN: s32, DIM: u32>(
+    NB_IN: u32, BE_IN: s32, DIM: u32,
+    NB_THRESHOLD: u32, BE_THRESHOLD: s32
+    >(
         x: FixedPoint<NB_IN, BE_IN>[DIM],
-        threshold: FixedPoint<NB_IN, BE_IN>)
+        threshold: FixedPoint<NB_THRESHOLD, BE_THRESHOLD>)
     -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
 
     for (i, acc) in 0..DIM {
-        let y = if (x[i].significand > threshold.significand) 
+        let y = if (fixed_point_util::greater(x[i], threshold))
             { fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x[i]) } 
         else 
             { zero!<FixedPoint<NB_OUT, BE_OUT>>() };
@@ -279,19 +281,19 @@ pub fn hard_tanh
 }
 
 // binary_tanh(x) = 
-//   -1 | x <= 0
-//   1  | x > 0
+//   -1 | x < 0
+//   1  | x >= 0
 pub fn binary_tanh<
     NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
     NB_IN: u32, BE_IN: s32, DIM: u32>(
         x: FixedPoint<NB_IN, BE_IN>[DIM]
-    ) -> FixedPoint<NB_OUT, BE_OUT> {
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
 
     let ONE = fixed_point::from_integer(s2:1);
     let MINUS_ONE = fixed_point::from_integer(s2:-1);
 
     for (i, acc) in 0..DIM {
-        let y = if (x.significand > 0)
+        let y = if (x[i].significand >= 0)
             { ONE }
         else
             { MINUS_ONE };
@@ -308,19 +310,19 @@ pub fn ternary_tanh<
     NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
     NB_IN: u32, BE_IN: s32, DIM: u32>(
         x: FixedPoint<NB_IN, BE_IN>[DIM]
-    ) -> FixedPoint<NB_OUT, BE_OUT> {
+    ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
 
     let ZERO = fixed_point::from_integer(s2:0);
     let ONE = fixed_point::from_integer(s2:1);
     let MINUS_ONE = fixed_point::from_integer(s2:-1);
 
     for (i, acc) in 0..DIM {
-        let y = if (x.significand > ONE.significand)
+        let y = if (fixed_point_util::greater(x[i], ONE))
             { ONE }
-        else if (x.significand <= MINUS_ONE.significand)
-            { MINUS_ONE }
+        else if (fixed_point_util::greater(x[i], MINUS_ONE))
+            { ZERO }
         else
-            { ZERO };
+            { MINUS_ONE };
         let y = fixed_point_util::resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(y);
         update(acc, i, y)
     }(zero!<FixedPoint<NB_OUT, BE_OUT>[DIM]>())
