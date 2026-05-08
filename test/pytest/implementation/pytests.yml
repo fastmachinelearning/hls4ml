@@ -1,11 +1,23 @@
-.implementation.test.keras_api_vivadoacc:
+.implementation.test.keras_3layer_vivadoacc:
   variables:
-    PYTESTFILE: implementation/test_keras_api_vivadoacc.py
-    EXAMPLEMODEL: 0
+    PYTESTFILE: implementation/test_vivadoaccelerator_implementation.py::test_keras_3layer
+    EXAMPLEMODEL: 1
 
-pytest.implementation.keras_api_vivadoacc:
+pytest.implementation.keras_3layer_vivadoacc:
   extends:
     - .pytest-implementation-vivado-runtime
-    - .implementation.test.keras_api_vivadoacc
+    - .implementation.test.keras_3layer_vivadoacc
+  variables:
+    VIVADO_VERSION: "2020.1"
+
+.implementation.test.keras_conv1d_small_vivadoacc:
+  variables:
+    PYTESTFILE: implementation/test_vivadoaccelerator_implementation.py::test_keras_conv1d_small
+    EXAMPLEMODEL: 1
+
+pytest.implementation.keras_conv1d_small_vivadoacc:
+  extends:
+    - .pytest-implementation-vivado-runtime
+    - .implementation.test.keras_conv1d_small_vivadoacc
   variables:
     VIVADO_VERSION: "2020.1"

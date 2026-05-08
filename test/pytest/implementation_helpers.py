@@ -114,7 +114,7 @@ def _build_dataset(
     build_started_at,
     build_finished_at,
     build_duration_seconds,
-    parsed_report_path,
+    hls4ml_report_path,
     build_output_path,
 ):
     output_dir = hls_model.config.get_output_dir()
@@ -148,10 +148,10 @@ def _build_dataset(
             'finished_at_utc': build_finished_at,
             'duration_seconds': build_duration_seconds,
         },
-        'parsed_reports': report,
+        'hls4ml_report': report,
         'artifacts': {
             'output_dir': _portable_path(output_dir),
-            'parsed_report_json': _portable_path(parsed_report_path),
+            'hls4ml_report_json': _portable_path(hls4ml_report_path),
             'build_output_log': _portable_path(build_output_path),
             'bitstreams': _collect_files(output_dir, {'.bit'}),
             'reports': _collect_files(output_dir, {'.rpt', '.xml'}),
@@ -166,8 +166,9 @@ def run_implementation_collection_test(config, hls_model, test_case_id, backend,
     Build an implementation target and emit a dataset record plus raw backend reports.
     """
     metadata = _validate_metadata(backend, metadata)
+    artifact_id = metadata.get('artifact_id', test_case_id)
     build_args = config.get('implementation_build_args', {}).get(backend, config.get('build_args', {}).get(backend, {}))
-    build_output_path = _artifact_path(f'implementation_build_output_{test_case_id}.log')
+    build_output_path = _artifact_path(f'{artifact_id}_build.log')
 
     started_at = _utc_now()
     started = time.monotonic()
@@ -189,7 +190,7 @@ def run_implementation_collection_test(config, hls_model, test_case_id, backend,
     if backend in BITFILE_REQUIRED_BACKENDS:
         assert bitfiles, f'Implementation failed: no bitstream was generated in {output_dir}'
 
-    parsed_report_path = _write_json(report, f'implementation_parsed_report_{test_case_id}.json')
+    hls4ml_report_path = _write_json(report, f'{artifact_id}_hls4ml_report.json')
     dataset = _build_dataset(
         config=config,
         hls_model=hls_model,
@@ -201,7 +202,7 @@ def run_implementation_collection_test(config, hls_model, test_case_id, backend,
         build_started_at=started_at,
         build_finished_at=finished_at,
         build_duration_seconds=duration,
-        parsed_report_path=parsed_report_path,
+        hls4ml_report_path=hls4ml_report_path,
         build_output_path=build_output_path,
     )
-    _write_json(dataset, f'implementation_dataset_{test_case_id}.json')
+    _write_json(dataset, f'{artifact_id}_dataset.json')

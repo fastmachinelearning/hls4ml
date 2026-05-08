@@ -21,9 +21,9 @@
         - test/pytest/report.xml
     paths:
       - test/pytest/*.tar.gz
-      - test/pytest/implementation/implementation_dataset_*.json
-      - test/pytest/implementation/implementation_parsed_report_*.json
-      - test/pytest/implementation/implementation_build_output_*.log
+      - test/pytest/implementation/*_dataset.json
+      - test/pytest/implementation/*_hls4ml_report.json
+      - test/pytest/implementation/*_build.log
       - test/pytest/implementation/*/
       - test/pytest/implementation/**/*.bit
       - test/pytest/implementation/**/*.hwh
