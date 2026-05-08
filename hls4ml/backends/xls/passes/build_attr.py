@@ -82,10 +82,16 @@ class XLSAttrBuilder:
 
     @attach_to_node()
     def xls_weights(self) -> XLSConst | None:
+        class_name = self.node.class_name
+        if class_name == 'ApplyAlpha':
+            class_name = 'BatchNormalization'
+
         precision = None
-        if self.node.class_name == 'PReLU':
+        if class_name == 'PReLU':
             weights = self.node.weights.get('param_data')
             precision = self.node.get_attr('param_t').precision
+        elif class_name == 'BatchNormalization':
+            weights = self.node.weights.get('scale', None)
         else:
             weights = self.node.weights.get('weight', None)
         if weights is None:
@@ -96,7 +102,16 @@ class XLSAttrBuilder:
         input_var = self.node.get_input_variable()
         output_var = self.node.get_output_variable()
 
-        match self.node.class_name:
+        match class_name:
+            case 'BatchNormalization':
+                # NB: we need flattening because sometimes the weights can be e.g.
+                # (1,1,1,n_filt) instead of (n_filt,)
+                # We'll throw an error if there are several dimensions larger than 1.
+                data = np.asarray(weights.data).flatten()
+                n_filt = self.node.get_attr('n_filt')
+                if n_filt == -1:
+                    n_filt = input_var.shape[-1]
+                expected_shape = (n_filt,)
             case 'Conv1D':
                 data = np.asarray(weights.data)
                 expected_shape = tuple(self.node.get_attr(x) for x in ['filt_width', 'n_chan', 'n_filt'])
@@ -294,6 +309,10 @@ class XLSAttrBuilder:
             case 'Input':
                 # Identity transformation except for OverflowMode::SAT_SYM case.
                 return XLSQualifiedName(name='resize_1d', module_name='fixed_point_util')
+            case 'ApplyAlpha':
+                return XLSQualifiedName(name='normalize', module_name='batchnorm')
+            case 'BatchNormalization':
+                return XLSQualifiedName(name='normalize', module_name='batchnorm')
             case 'Dense':
                 return XLSQualifiedName(name='dense', module_name='dense')
             case 'Conv1D':
