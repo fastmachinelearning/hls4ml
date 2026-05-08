@@ -6,7 +6,8 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from hls4ml.model.types import FixedPrecisionType, TensorVariable, PrecisionType, IntegerPrecisionType
+from hls4ml.model.types import FixedPrecisionType, TensorVariable, PrecisionType, IntegerPrecisionType, \
+    XnorPrecisionType, RoundingMode, SaturationMode, ExponentPrecisionType
 
 
 def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
@@ -32,15 +33,25 @@ def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
 
 def to_signed_fixed_precision(precision: PrecisionType) -> FixedPrecisionType:
     """Convert precision to a signed FixedPrecisionType used by XLS."""
-    assert isinstance(precision, IntegerPrecisionType) or \
-           isinstance(precision, FixedPrecisionType), \
-        f'Unknown precision type: {type(precision)}'
+    rounding_mode = RoundingMode.TRN
+    saturation_mode = SaturationMode.WRAP
+    integer = precision.width
+    if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
+        integer = precision.integer
+        rounding_mode = precision.rounding_mode
+        saturation_mode = precision.saturation_mode
+    elif isinstance(precision, XnorPrecisionType):
+        integer = precision.integer
+    elif isinstance(precision, ExponentPrecisionType):
+        pass
+    else:
+        raise ValueError(f'Unknown precision type: {type(precision)}')
     fixed_precision = FixedPrecisionType(
         width=precision.width,
-        integer=precision.integer,
+        integer=integer,
         signed=precision.signed,
-        rounding_mode=precision.rounding_mode,
-        saturation_mode=precision.saturation_mode,
+        rounding_mode=rounding_mode,
+        saturation_mode=saturation_mode,
     )
     # Only signed types are supported in XLS
     if not fixed_precision.signed:
@@ -387,15 +398,17 @@ class XLSTensorVariable:
 
     @classmethod
     def from_tensor_variable(cls, var: TensorVariable, name: str | None = None) -> XLSTensorVariable:
-        assert isinstance(var.type.precision, FixedPrecisionType), \
-            f'Precision {var.__class__.__name__} must have FixedPrecisionType'
-        element_type = XLSFixedPointType.from_precision(var.type.precision)
+        precision = var.type.precision
+        assert precision.signed, \
+            f'{var.__class__.__name__}: XLS supports only signed FixedPrecision, but got: {precision} ({type(precision)})'
+        precision = to_signed_fixed_precision(var.type.precision)
+        element_type = XLSFixedPointType.from_precision(precision)
         return cls(
             name=name or var.name,
             num_bits=element_type.num_bits,
             binary_exponent=element_type.binary_exponent,
-            rounding_mode=var.type.precision.rounding_mode,
-            saturation_mode=var.type.precision.saturation_mode,
+            rounding_mode=precision.rounding_mode,
+            saturation_mode=precision.saturation_mode,
             shape=var.shape)
 
     def definitions(self) -> list[XLSConst | XLSTypeAlias]:
