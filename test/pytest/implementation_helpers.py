@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import sys
 import time
 from contextlib import contextmanager
@@ -28,7 +29,14 @@ def _utc_now():
 
 
 def _project_root():
-    return Path(os.getenv('CI_PROJECT_DIR', Path(__file__).parents[2]))
+    return Path(__file__).parents[2]
+
+
+def _git_commit(path):
+    try:
+        return subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=path, text=True).strip()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
 
 
 def _portable_path(path):
@@ -118,27 +126,31 @@ def _build_dataset(
     build_output_path,
 ):
     output_dir = hls_model.config.get_output_dir()
+    model = metadata.get('model', {})
+    run_metadata = {key: value for key, value in metadata.items() if key not in {'artifact_id', 'model'}}
 
     return {
         'schema_version': DATASET_SCHEMA_VERSION,
         'test_id': test_case_id,
+        'source': {
+            'hls4ml_commit': _git_commit(_project_root()),
+            'repository_url': 'https://github.com/fastmachinelearning/hls4ml',
+        },
+        'model': model,
         'hls_config': {
             'backend': backend,
             'project_name': hls_model.config.get_project_name(),
             'build_args': build_args,
         },
-        'metadata': metadata,
+        'metadata': run_metadata,
         'toolchain': {
             'version': config.get('tools_version', {}).get(backend, 'unknown'),
         },
         'ci': {
-            'commit_sha': os.getenv('CI_COMMIT_SHA'),
-            'commit_ref': os.getenv('CI_COMMIT_REF_NAME'),
-            'commit_tag': os.getenv('CI_COMMIT_TAG'),
             'pipeline_id': os.getenv('CI_PIPELINE_ID'),
             'job_id': os.getenv('CI_JOB_ID'),
             'project_url': os.getenv('CI_PROJECT_URL'),
-            'job_image': os.getenv('CI_JOB_IMAGE'),
+            'job_url': os.getenv('CI_JOB_URL'),
             'runner_description': os.getenv('CI_RUNNER_DESCRIPTION'),
             'runner_tags': os.getenv('CI_RUNNER_TAGS'),
         },

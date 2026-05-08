@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -21,6 +22,13 @@ def _load_keras_example_model(model_json, weights_h5):
         model = model_from_json(f.read())
     model.load_weights(example_model_path / weights_h5)
     return model
+
+
+def _example_models_commit():
+    try:
+        return subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=example_model_path, text=True).strip()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
 
 
 def _random_input_for_model(model, n_samples=100):
@@ -66,9 +74,13 @@ def _run_example_model_implementation(
         backend=BACKEND,
         metadata={
             'artifact_id': f'{model_name}_vivadoacc_{VIVADOACC_BOARD}',
-            'model_name': model_name,
-            'model_json': str(Path(model_json)),
-            'weights_h5': str(Path(weights_h5)),
+            'model': {
+                'name': model_name,
+                'source': 'example-models',
+                'source_commit': _example_models_commit(),
+                'model_json': str(Path(model_json)),
+                'weights_h5': str(Path(weights_h5)),
+            },
             'board': VIVADOACC_BOARD,
             'part': VIVADOACC_PART,
         },
