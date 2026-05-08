@@ -50,7 +50,10 @@ def _parse_state_reset_policy(class_object):
         policy = getattr(class_object, 'reset_policy', 'fixed_window')
     policy = str(policy).lower()
     if policy not in ['fixed_window', 'tlast', 'host_pulse', 'never']:
-        raise Exception(f'Unsupported state reset policy "{policy}". Supported: "fixed_window", "tlast", "host_pulse", "never".')
+        raise Exception(
+            f'Unsupported state reset policy "{policy}". '
+            'Supported: "fixed_window", "tlast", "host_pulse", "never".'
+        )
     return policy
 
 
@@ -110,7 +113,7 @@ def parse_snn_readout_layer(operation, layer_name, input_names, input_shapes, no
         n_classes = input_shapes[0][-1]
     layer['n_classes'] = int(n_classes)
     if hasattr(class_object, 'stream_length'):
-        layer['window_size'] = int(getattr(class_object, 'stream_length'))
+        layer['window_size'] = int(class_object.stream_length)
     else:
         layer['window_size'] = int(getattr(class_object, 'window_size', 1))
     layer['class_threshold'] = int(getattr(class_object, 'class_threshold', 1))

@@ -33,7 +33,14 @@ class LIFNet(torch.nn.Module):
 
 
 class SNNReadoutWithResetPolicy(hls4ml.utils.torch.HLS4MLModule):
-    def __init__(self, n_classes=4, stream_length=7, decision_rule='argmax_spike_count', class_threshold=2, reset_policy='tlast'):
+    def __init__(
+        self,
+        n_classes=4,
+        stream_length=7,
+        decision_rule='argmax_spike_count',
+        class_threshold=2,
+        reset_policy='tlast',
+    ):
         super().__init__()
         self.n_classes = n_classes
         self.stream_length = stream_length
