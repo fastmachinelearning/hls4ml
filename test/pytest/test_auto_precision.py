@@ -119,11 +119,14 @@ def keras_model_sepconv2d():
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
 @pytest.mark.parametrize('model_type', ['conv1d', 'conv2d'])
 def test_auto_precision_conv(
     test_case_id, keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend
 ):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     if model_type == 'conv1d':
         model = keras_model_conv1d
         data = data_2d
@@ -218,8 +221,11 @@ def test_auto_precision_sepconv(
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
 def test_auto_precision_dense(test_case_id, keras_model_dense, data_1d, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     model = keras_model_dense
     data = data_1d
 
