@@ -5,11 +5,11 @@
     VIVADO_VERSION: "2020.1"
     EXAMPLEMODEL: 1
 
-pytest.implementation.keras_3layer_vivadoacc:
+pytest.implementation.keras_1layer_vivadoacc:
   extends:
     - .pytest-implementation-vivadoaccelerator
   variables:
-    PYTESTFILE: implementation/test_vivadoaccelerator_implementation.py::test_keras_3layer
+    PYTESTFILE: implementation/test_vivadoaccelerator_implementation.py::test_keras_1layer
 
 pytest.implementation.keras_conv1d_small_vivadoacc:
   extends:
