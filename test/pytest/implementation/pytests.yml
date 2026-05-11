@@ -16,3 +16,9 @@ pytest.implementation.keras_conv1d_small_vivadoacc:
     - .pytest-implementation-vivadoaccelerator
   variables:
     PYTESTFILE: implementation/test_vivadoaccelerator_implementation.py::test_keras_conv1d_small
+
+pytest.implementation.tiny_unet_ch_last_vivadoacc:
+  extends:
+    - .pytest-implementation-vivadoaccelerator
+  variables:
+    PYTESTFILE: implementation/test_vivadoaccelerator_implementation.py::test_tiny_unet_ch_last

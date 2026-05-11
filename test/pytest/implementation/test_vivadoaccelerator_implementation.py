@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 
 from implementation_helpers import run_implementation_collection_test
+from qonnx.core.modelwrapper import ModelWrapper
 from tensorflow.keras.models import model_from_json
 
 import hls4ml
@@ -21,6 +22,12 @@ def _load_keras_example_model(model_json, weights_h5):
         model = model_from_json(f.read())
     model.load_weights(example_model_path / weights_h5)
     return model
+
+
+def _load_onnx_example_model(model_onnx):
+    model_path = example_model_path / model_onnx
+    assert model_path.is_file()
+    return ModelWrapper(str(model_path))
 
 
 def _example_models_commit():
@@ -74,11 +81,65 @@ def _run_example_model_implementation(
     )
 
 
+def _run_onnx_example_model_implementation(
+    *,
+    model_name,
+    model_onnx,
+    test_case_id,
+    synthesis_config,
+):
+    model = _load_onnx_example_model(model_onnx)
+
+    hls_config = hls4ml.utils.config.config_from_onnx_model(
+        model,
+        granularity='name',
+        backend=BACKEND,
+        default_precision='fixed<32,16>',
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model,
+        hls_config=hls_config,
+        output_dir=output_dir,
+        backend=BACKEND,
+        io_type=IO_TYPE,
+        board=VIVADOACC_BOARD,
+        part=VIVADOACC_PART,
+    )
+
+    run_implementation_collection_test(
+        config=synthesis_config,
+        hls_model=hls_model,
+        test_case_id=test_case_id,
+        backend=BACKEND,
+        metadata={
+            'artifact_id': f'{model_name}_vivadoacc_{VIVADOACC_BOARD}',
+            'model': {
+                'name': model_name,
+                'source': 'example-models',
+                'source_commit': _example_models_commit(),
+                'model_onnx': str(Path(model_onnx)),
+            },
+            'board': VIVADOACC_BOARD,
+            'part': VIVADOACC_PART,
+        },
+    )
+
+
 def test_keras_3layer(test_case_id, synthesis_config):
     _run_example_model_implementation(
         model_name='keras_3layer',
         model_json='keras/KERAS_3layer.json',
         weights_h5='keras/KERAS_3layer_weights.h5',
+        test_case_id=test_case_id,
+        synthesis_config=synthesis_config,
+    )
+
+
+def test_tiny_unet_ch_last(test_case_id, synthesis_config):
+    _run_onnx_example_model_implementation(
+        model_name='tiny_unet_ch_last',
+        model_onnx='onnx/tiny_unet_ch_last.onnx',
         test_case_id=test_case_id,
         synthesis_config=synthesis_config,
     )
