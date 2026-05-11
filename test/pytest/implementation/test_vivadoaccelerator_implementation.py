@@ -74,11 +74,11 @@ def _run_example_model_implementation(
     )
 
 
-def test_keras_3layer(test_case_id, synthesis_config):
+def test_keras_1layer(test_case_id, synthesis_config):
     _run_example_model_implementation(
-        model_name='keras_3layer',
-        model_json='keras/KERAS_3layer.json',
-        weights_h5='keras/KERAS_3layer_weights.h5',
+        model_name='keras_1layer',
+        model_json='keras/KERAS_1layer.json',
+        weights_h5='keras/KERAS_1layer_weights.h5',
         test_case_id=test_case_id,
         synthesis_config=synthesis_config,
     )
