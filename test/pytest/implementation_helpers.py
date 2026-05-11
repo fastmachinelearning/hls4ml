@@ -25,6 +25,14 @@ REQUIRED_METADATA_FIELDS = {
 
 BITFILE_REQUIRED_BACKENDS = {'VivadoAccelerator'}
 
+TOOLCHAINS_BY_BACKEND = {
+    'VivadoAccelerator': {'vivado': ('VivadoAccelerator', 'Vivado')},
+    'VitisUnified': {
+        'vivado': ('Vivado',),
+        'vitis': ('VitisUnified', 'Vitis'),
+    },
+}
+
 
 def _utc_now():
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
@@ -132,6 +140,18 @@ def _validate_metadata(backend, metadata):
     return metadata
 
 
+def _toolchain_versions(config, backend):
+    versions = config.get('tools_version', {})
+    toolchains = TOOLCHAINS_BY_BACKEND.get(backend)
+    if toolchains is None:
+        return {backend.lower(): versions.get(backend, 'unknown')}
+
+    resolved = {}
+    for tool_name, version_keys in toolchains.items():
+        resolved[tool_name] = next((versions[key] for key in version_keys if versions.get(key)), 'unknown')
+    return resolved
+
+
 def _build_dataset(
     config,
     hls_model,
@@ -153,6 +173,7 @@ def _build_dataset(
 
     return {
         'schema_version': DATASET_SCHEMA_VERSION,
+        'created_at_utc': _utc_now(),
         'test_id': test_case_id,
         'source': {
             'hls4ml_commit': _git_commit(_project_root()),
@@ -165,9 +186,7 @@ def _build_dataset(
             'build_args': build_args,
         },
         'metadata': run_metadata,
-        'toolchain': {
-            'version': config.get('tools_version', {}).get(backend, 'unknown'),
-        },
+        'toolchain': _toolchain_versions(config, backend),
         'ci': {
             'pipeline_id': os.getenv('CI_PIPELINE_ID'),
             'job_id': os.getenv('CI_JOB_ID'),
