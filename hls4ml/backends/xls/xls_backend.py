@@ -242,8 +242,6 @@ class XLSBackend(FPGABackend):
                     f'Precision must be FixedPrecisionType, got {type(precision)}'
                 return x.get_bits().to_int64() / (2 ** precision.fractional)
             case xls.c_api.ValueKind.ARRAY:
-                assert isinstance(precision, FixedPrecisionType), \
-                    f'Precision must be FixedPrecisionType, got {type(precision)}'
                 return np.asarray([
                     XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)
                     for i in range(x.get_element_count())

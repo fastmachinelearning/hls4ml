@@ -354,10 +354,10 @@ class XLSWriter(Writer):
                         ))
                 elif '// hls-fpga-machine-learning insert layer input' in line:
                     input_args = [
-                        f'x_{i}: {input_var.type_alias.name}'
+                        f'{INDENT}x_{i}: {input_var.type_alias.name}'
                         for i, input_var in enumerate(input_vars)
                     ]
-                    line = append_line(line, f',\n{INDENT}'.join(input_args))
+                    line = append_line(line, f',\n'.join(input_args))
                 elif '// hls-fpga-machine-learning insert layer output' in line:
                     output_types = to_tuple_or_singleton_str(output_var.type_alias.name for output_var in output_vars)
                     line = append_line(line, f'{output_types}')
