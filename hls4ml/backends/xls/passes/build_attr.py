@@ -431,5 +431,6 @@ class BuildAttr(OptimizerPass):
              )
         except Exception as e:
             raise ValueError(
-                f'Failed to build XLS attributes for layer (name={node.name}, class_name={node.class_name}): {e}')
+                f'Failed to build XLS attributes for layer (name={node.name}, class_name={node.class_name}): {e}') \
+                from e
         return False
