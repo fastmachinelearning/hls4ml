@@ -1,11 +1,11 @@
 # Typing imports
 from __future__ import annotations  # makes all annotations into strings
 
+import functools
+import importlib
 import math
 from pathlib import Path
 from typing import Any, TYPE_CHECKING, Dict, Iterable
-
-import xls
 from numpy.typing import NDArray, ArrayLike
 
 from hls4ml.backends.xls.xls_types import float_to_significand
@@ -23,6 +23,17 @@ from hls4ml.backends import FPGABackend
 from hls4ml.model.optimizer import get_backend_passes
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_xls_report
+
+
+@functools.lru_cache(maxsize=1)
+def import_xls():
+    try:
+        return importlib.import_module('xls')
+    except ModuleNotFoundError as e:
+        raise ModuleNotFoundError(
+            "XLS backend requires optional dependency 'xls'. "
+            "Please install hls4ml with XLS extras (or install package 'xls')."
+        ) from e
 
 
 class XLSBackend(FPGABackend):
@@ -202,10 +213,12 @@ class XLSBackend(FPGABackend):
 
     @staticmethod
     def _ir_top_function_name(model: ModelGraph):
+        xls = import_xls()
         name = model.config.get_project_name()
         return xls.mangle_dslx_name(module_name=name, function_name=name)
 
     def compile(self, model: ModelGraph) -> None:
+        xls = import_xls()
         io_type = model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
             raise NotImplementedError(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
@@ -225,7 +238,8 @@ class XLSBackend(FPGABackend):
 
     @staticmethod
     def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]],
-                         precision: FixedPrecisionType) -> xls.Value:
+                         precision: FixedPrecisionType):
+        xls = import_xls()
         if np.isscalar(x):
             significand = float_to_significand(x, precision)
             bits = xls.Value.make_sbits(bit_count=precision.width, val=significand)
@@ -234,7 +248,8 @@ class XLSBackend(FPGABackend):
             return xls.Value.make_array([XLSBackend._float_to_xls_ir(item, precision) for item in x])
 
     @staticmethod
-    def _bits_to_int(bits: xls.Bits, signed: bool = True) -> int:
+    def _bits_to_int(bits, signed: bool = True) -> int:
+        # bits: xls.Bits
         n = bits.get_bit_count()
         if n <= 64:
             return bits.to_int64()
@@ -245,8 +260,10 @@ class XLSBackend(FPGABackend):
         return value
 
     @staticmethod
-    def _xls_ir_to_float(x: xls.Value, precision: FixedPrecisionType | Iterable[FixedPrecisionType],
+    def _xls_ir_to_float(x, precision: FixedPrecisionType | Iterable[FixedPrecisionType],
                          dtype: np.typing.DTypeLike) -> ArrayLike | tuple[ArrayLike, ...]:
+        xls = import_xls()
+        # x: xls.Value
         match x.get_kind():
             case xls.c_api.ValueKind.BITS:
                 assert isinstance(precision, FixedPrecisionType), \
@@ -271,6 +288,7 @@ class XLSBackend(FPGABackend):
     # TODO call it in compile() and save to model attribute
     @staticmethod
     def get_top_function(model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]):
+        xls = import_xls()
         project_dir = model.config.get_output_dir()
         project_name = model.config.get_project_name()
         ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
@@ -333,7 +351,7 @@ class XLSBackend(FPGABackend):
             reset (bool): the reset synthesis option
             pr (bool): place and route option
         """
-
+        xls = import_xls()
         project_name = model.config.get_project_name()
         output_dir = model.config.get_output_dir()
 
