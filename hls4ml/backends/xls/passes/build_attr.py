@@ -87,8 +87,10 @@ class XLSAttrBuilder:
             class_name = 'BatchNormalization'
 
         precision = None
+        xls_weights_name = None
         if class_name == 'PReLU':
             weights = self.node.weights.get('param_data')
+            xls_weights_name = f'PRELU_PARAM'
             precision = self.node.get_attr('param_t').precision
         elif class_name == 'BatchNormalization':
             weights = self.node.weights.get('scale', None)
@@ -97,6 +99,7 @@ class XLSAttrBuilder:
         if weights is None:
             return None
 
+        xls_weights_name = xls_weights_name or f'WEIGHTS_{weights.name}'.upper()
         precision: FixedPrecisionType = to_signed_fixed_precision(precision or weights.type.precision)
 
         input_var = self.node.get_input_variable()
@@ -139,7 +142,11 @@ class XLSAttrBuilder:
         assert data.shape == expected_shape, \
             f'Weights shape mismatch: expected {expected_shape}, got {data.shape}'
 
-        return XLSAttrBuilder._xls_const_array(name='WEIGHTS', data=data, precision=precision)
+        return XLSAttrBuilder._xls_const_array(
+            name=xls_weights_name,
+            data=data,
+            precision=precision
+        )
 
     @attach_to_node()
     def xls_bias(self) -> XLSConst | None:
@@ -148,7 +155,7 @@ class XLSAttrBuilder:
             return None
 
         precision: FixedPrecisionType = to_signed_fixed_precision(bias.type.precision)
-        return XLSAttrBuilder._xls_const_array(name='BIAS', data=bias.data, precision=precision)
+        return XLSAttrBuilder._xls_const_array(name=f'BIAS_{bias.name}'.upper(), data=bias.data, precision=precision)
 
     @attach_to_node()
     def xls_module_name(self) -> str:
