@@ -1,40 +1,67 @@
 # Implementation CI Suite
 
-This directory contains implementation-oriented pytest cases (post-HLS reports and full bitfile flow checks).
+This directory contains manually listed implementation tests. These jobs run full backend implementation flows and collect dataset artifacts with actual tool reports and generated project files.
 
-## Pipeline separation
+The normal pytest CI should stay separate from this suite. Implementation tests are intended for manually triggered dataset collection, not for the regular fast test matrix.
 
-The project keeps one GitLab entrypoint (`.gitlab-ci.yml`) but has two pipeline modes:
+## Pipeline Layout
 
-- default mode (`CI_PIPELINE_MODE` unset): runs normal pytest CI only
-- implementation mode (`CI_PIPELINE_MODE=implementation`): runs only the implementation child pipeline
+Implementation CI uses:
 
-Implementation mode is dispatched to:
+- `test/pytest/implementation/pytests.yml`: static job list
+- `test/pytest/implementation/ci-template.yml`: implementation-specific GitLab templates
+- `test/pytest/implementation/implementation_helpers.py`: dataset artifact helpers used by implementation tests
 
-- `test/pytest/implementation/pytests.yml` (static job list)
+Jobs in `pytests.yml` extend backend-specific runtime templates from `ci-template.yml`, for example:
 
-Both normal and implementation templates reuse the shared base setup:
+- `.pytest-implementation-vivadoaccelerator`
+- `.pytest-implementation-vivado-runtime`
 
-- `test/pytest/ci-base-template.yml`
+Each concrete job sets `PYTESTFILE` to one specific test function, so each model/backend run becomes a separate CI job and artifact set.
 
-and keep their behavior-specific logic in:
+## Dataset Artifacts
 
-- `test/pytest/ci-template.yml` (normal matrix)
-- `test/pytest/implementation/ci-template.yml` (implementation suite)
+Implementation tests should use `run_implementation_collection_test()` from `implementation_helpers.py`. The helper:
 
-Tool exposure policy:
+- runs `hls_model.build(...)` with backend-specific implementation build args
+- captures full terminal output to `*_build.log`
+- writes the hls4ml report returned by the backend to `*_hls4ml_report.json`
+- writes one compact dataset record to `*_dataset.json`
+- compresses the generated project directory to `*_project.zip`
+- records the project archive path, size, and SHA256 in the dataset record
 
-- normal template uses `vivado_hls`
-- implementation template exposes `vivado_hls`, `vivado`, `vitis-run`, `v++`, and `vitis`
-- implementation jobs select tool-exposure mode by extending a script profile in
-  `implementation/pytests.yml` (`.implementation.script.tools-*`)
-- implementation dataset output path is controlled by `IMPLEMENTATION_DATASET_DIR`
-  (default in CI: `test/pytest/implementation`)
+The dataset record includes:
 
-## Adding new implementation tests
+- hls4ml source commit and repository URL
+- example-models source commit and model file names
+- backend, project name, board/part metadata, and build args
+- backend-specific toolchain versions
+- CI metadata for finding the run later
+- build timing and the hls4ml report
+- pointers to the log, hls4ml report JSON, bitstream files, and project archive
 
-1. Add a new file in this folder matching `test_*.py`.
-2. Add a matching static CI job entry in `test/pytest/implementation/pytests.yml`.
-3. Set per-job tool versions (`VIVADO_VERSION`, `VITIS_VERSION`) in `pytests.yml`.
-4. Select a per-job tool wrapper script profile in `pytests.yml`.
-5. Keep tests collect-only: validate full flow success and emit dataset artifacts.
+`IMPLEMENTATION_DATASET_DIR` controls where artifacts are written. In CI it is set to:
+
+```bash
+test/pytest/implementation
+```
+
+## Test Policy
+
+Implementation tests should load models from the `example-models` submodule instead of defining models inline. This keeps dataset records tied to a model name, model file, and exact `example-models` commit.
+
+Keep test code focused on:
+
+- loading the example model
+- converting it with the backend under test
+- passing clear metadata to `run_implementation_collection_test()`
+
+Avoid duplicating dataset/report parsing in individual tests. Add backend-specific dataset behavior in `implementation_helpers.py` when needed.
+
+## Adding A Test
+
+1. Add or update a `test_*.py` file in this directory.
+2. Load a model from `example-models`.
+3. Add model metadata including name, source, source commit, and model file paths.
+4. Add a static job in `pytests.yml` with `PYTESTFILE` pointing to the specific test function.
+5. Set tool versions and backend runtime template through the job/template variables.
