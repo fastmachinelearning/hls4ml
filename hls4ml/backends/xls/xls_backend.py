@@ -234,13 +234,24 @@ class XLSBackend(FPGABackend):
             return xls.Value.make_array([XLSBackend._float_to_xls_ir(item, precision) for item in x])
 
     @staticmethod
+    def _bits_to_int(bits: xls.Bits, signed: bool = True) -> int:
+        n = bits.get_bit_count()
+        if n <= 64:
+            return bits.to_int64()
+        value = int.from_bytes(bits.to_bytes(), byteorder='little', signed=False)
+        value &= (1 << n) - 1
+        if signed and (bits.get_bit(n - 1) == 1):
+            value -= (1 << n)
+        return value
+
+    @staticmethod
     def _xls_ir_to_float(x: xls.Value, precision: FixedPrecisionType | Iterable[FixedPrecisionType],
                          dtype: np.typing.DTypeLike) -> ArrayLike | tuple[ArrayLike, ...]:
         match x.get_kind():
             case xls.c_api.ValueKind.BITS:
                 assert isinstance(precision, FixedPrecisionType), \
                     f'Precision must be FixedPrecisionType, got {type(precision)}'
-                return x.get_bits().to_int64() / (2 ** precision.fractional)
+                return XLSBackend._bits_to_int(x.get_bits()) / (2 ** precision.fractional)
             case xls.c_api.ValueKind.ARRAY:
                 return np.asarray([
                     XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)
