@@ -5,7 +5,8 @@ import functools
 import importlib
 import math
 from pathlib import Path
-from typing import Any, TYPE_CHECKING, Dict, Iterable
+from typing import Any, TYPE_CHECKING, Iterable, Callable
+
 from numpy.typing import NDArray, ArrayLike
 
 from hls4ml.backends.xls.xls_types import float_to_significand
@@ -14,7 +15,6 @@ from hls4ml.model.types import FixedPrecisionType
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
 
-import os
 import subprocess
 import numpy as np
 from warnings import warn
@@ -238,6 +238,10 @@ class XLSBackend(FPGABackend):
         with open(f'{path_no_ext}.opt.ir', 'w') as opt_ir_file:
             opt_ir_file.write(opt_ir_text)
 
+        # This object can be heavy, so we don't want to cache it unless we call predict().
+        if hasattr(model, '_xls_top_function'):
+            delattr(model, '_xls_top_function')
+
     @staticmethod
     def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]],
                          precision: FixedPrecisionType):
@@ -287,13 +291,41 @@ class XLSBackend(FPGABackend):
             case _:
                 raise ValueError(f'Unexpected output type: {x.get_kind()}')
 
-    # TODO call it in compile() and save to model attribute
     @staticmethod
-    def get_top_function(model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]):
+    def get_top_function(
+            model: ModelGraph,
+            x: np.floating | NDArray[np.floating[Any]]
+    ) -> tuple[Callable, np.dtype]:
+        # Cache JIT function to avoid reparsing IR file.
+        top_function = getattr(model, '_xls_top_function', None)
+        if top_function is None:
+            top_function = XLSBackend._make_top_function(model)
+            setattr(model, '_xls_top_function', top_function)
+
+        # TODO: this duplicates ModelGraph._get_top_function().
+        # NB: ctype is not used in XLS, but it is required by ModelGraph._predict
+        x0 = x[0] if isinstance(x, (list, tuple)) else x
+        if np.asarray(x0).dtype in [np.single, np.float32]:
+            ctype = np.float32
+        elif np.asarray(x0).dtype in [np.double, np.float64]:
+            ctype = np.float64
+        else:
+            raise TypeError(
+                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
+                    np.asarray(x0).dtype
+                )
+            )
+
+        return top_function, ctype
+
+    @staticmethod
+    def _make_top_function(model: ModelGraph) -> Callable:
         xls = import_xls()
         project_dir = model.config.get_output_dir()
         project_name = model.config.get_project_name()
         ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
+        if not ir_path.exists():
+            raise FileNotFoundError(f'Optimized IR file not found: {ir_path}. Please compile your model first.')
         ir_text = ir_path.read_text()
         pkg = xls.Package.parse_ir(ir_text)
         fn = pkg.get_function(XLSBackend._ir_top_function_name(model))
@@ -324,21 +356,7 @@ class XLSBackend(FPGABackend):
             for i in range(len(output_vars)):
                 outputs[i][:] = np.reshape(output[i], -1)
 
-        # TODO: this duplicates ModelGraph._get_top_function().
-        # NB: ctype is not used in XLS, but it is required by ModelGraph._predict
-        x0 = x[0] if isinstance(x, (list, tuple)) else x
-        if np.asarray(x0).dtype in [np.single, np.float32]:
-            ctype = np.float32
-        elif np.asarray(x0).dtype in [np.double, np.float64]:
-            ctype = np.float64
-        else:
-            raise Exception(
-                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
-                    np.asarray(x0).dtype
-                )
-            )
-
-        return top_function, ctype
+        return top_function
 
     def build(
             self,
