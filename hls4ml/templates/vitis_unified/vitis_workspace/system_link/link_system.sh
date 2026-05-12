@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 # Generate XSA from TCL if platform source is a generator script
 {XSA_GENERATOR_BLOCK}
 
