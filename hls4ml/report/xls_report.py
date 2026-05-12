@@ -4,8 +4,8 @@ from pathlib import Path
 
 
 def _get_project_name(path) -> str:
-    project_path = Path(path + "/firmware")
-    sv_files = list(project_path.glob("*.sv"))
+    project_path = Path(path) / 'firmware'
+    sv_files = list(project_path.glob('*.sv'))
     return sv_files[0].stem
 
 

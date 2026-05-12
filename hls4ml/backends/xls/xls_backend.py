@@ -222,19 +222,21 @@ class XLSBackend(FPGABackend):
         io_type = model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
             raise NotImplementedError(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
-        curr_dir = os.getcwd()
-        os.chdir(f'{model.config.get_output_dir()}/firmware')
-        kernel_name = model.config.get_project_name()
 
-        ir_text = xls.c_api.convert_dslx_path_to_ir(path=f'{kernel_name}.x')
-        with open(f'{kernel_name}.ir', 'w') as ir_file:
+        kernel_name = model.config.get_project_name()
+        firmware_dir = Path(f'{model.config.get_output_dir()}') / 'firmware'
+        path_no_ext = firmware_dir / kernel_name
+
+        ir_text = xls.c_api.convert_dslx_path_to_ir(
+            path=f'{path_no_ext}.x',
+            additional_search_paths=[str(firmware_dir)]
+        )
+        with open(f'{path_no_ext}.ir', 'w') as ir_file:
             ir_file.write(ir_text)
 
         opt_ir_text = xls.optimize_ir(ir=ir_text, top=XLSBackend._ir_top_function_name(model))
-        with open(f'{kernel_name}.opt.ir', 'w') as opt_ir_file:
+        with open(f'{path_no_ext}.opt.ir', 'w') as opt_ir_file:
             opt_ir_file.write(opt_ir_text)
-
-        os.chdir(curr_dir)
 
     @staticmethod
     def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]],
@@ -353,7 +355,7 @@ class XLSBackend(FPGABackend):
         """
         xls = import_xls()
         project_name = model.config.get_project_name()
-        output_dir = model.config.get_output_dir()
+        output_dir = Path(model.config.get_output_dir())
 
         clock_period_ns = model.config.get_config_value('ClockPeriod')
         clock_period_ps = self._to_xls_clock_period_ps(clock_period_ns)
@@ -362,7 +364,7 @@ class XLSBackend(FPGABackend):
         clock_uncertainty_float = self._percent_to_float(clock_uncertainty_str)
         clock_margin_percent: int = self._to_xls_clock_margin_percent(clock_uncertainty_str)
 
-        def build_codegen_flags() -> Dict[str, Any]:
+        def build_codegen_flags() -> dict[str, Any]:
             flags = dict(model.config.get_config_value('XLSCodegenFlags'))
             flags['clock_period_ps'] = clock_period_ps
             flags['clock_margin_percent'] = clock_margin_percent
@@ -387,25 +389,20 @@ class XLSBackend(FPGABackend):
                 flags += ['--pr']
             return [str(flag) for flag in flags]
 
-        curr_dir: str = os.getcwd()
-        os.chdir(f'{output_dir}/firmware')
-
         # Generate RTL
+        firmware_dir = output_dir / 'firmware'
 
-        opt_ir_path = f'{project_name}.opt.ir'
-        opt_ir_text = Path(opt_ir_path).read_text()
+        opt_ir_path = firmware_dir / f'{project_name}.opt.ir'
+        opt_ir_text = opt_ir_path.read_text()
         codegen_flags = build_codegen_flags()
 
-        pkg = xls.parse_ir_package(ir=opt_ir_text, filename=opt_ir_path)
+        pkg = xls.parse_ir_package(ir=opt_ir_text, filename=str(opt_ir_path))
         verilog_text = pkg.schedule_and_codegen(**codegen_flags).get_verilog_text()
-        Path(f'{project_name}.sv').write_text(verilog_text)
+        sv_path = firmware_dir / f'{project_name}.sv'
+        sv_path.write_text(verilog_text)
 
         # Run Vivado for resource report
-        os.chdir(curr_dir)
-        os.chdir(f'{output_dir}')
-
         vivado_command: list[str] = ['vivado'] + build_vivado_flags()
-        subprocess.run(vivado_command, check=True)
+        subprocess.run(vivado_command, cwd=output_dir, check=True)
 
-        os.chdir(curr_dir)
         return parse_xls_report(output_dir)
