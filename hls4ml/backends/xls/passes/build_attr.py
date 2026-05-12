@@ -3,9 +3,9 @@ from __future__ import annotations  # makes all annotations into strings
 
 from typing import Literal, Optional, Callable, TYPE_CHECKING
 
-from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTensorVariable, XLSArrayType, XLSIntegerType, \
-    XLSArray, XLSFixedPointType, float_to_significand, to_signed_fixed_precision, XLSFixedPoint, XLSQualifiedName
-from hls4ml.model.types import FixedPrecisionType
+from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTensorVariable, XLSArrayType, XLSArray, \
+    XLSFixedPointType, float_to_significand, XLSFixedPoint, XLSQualifiedName
+from hls4ml.model.types import PrecisionType
 
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
@@ -62,13 +62,16 @@ class XLSAttrBuilder:
         return decorator
 
     @staticmethod
-    def _xls_const_array(name: str, data: np.ndarray, precision: FixedPrecisionType) -> XLSConst:
+    def _xls_const_array(name: str, data: np.ndarray, precision: PrecisionType) -> XLSConst:
+        # We allow unsigned types (e.g. XnorPrecisionType or uint<1>) for weights and biases.
+        # They will be converted to signed FixedPoint in DSLX.
+        allow_unsigned = True
+        xls_precision = XLSFixedPointType.from_precision(precision, allow_unsigned)
         xls_raw_array = XLSArray(
             array_type=XLSArrayType(
-                element_type=XLSIntegerType(precision.width, signed=True),
+                element_type=xls_precision.significand_type,
                 shape=data.shape),
-            array=float_to_significand(data, precision))
-        xls_precision = XLSFixedPointType.from_precision(precision)
+            array=float_to_significand(data, precision, allow_unsigned))
         xls_fixed_point_array = XLSFunctionCall(
             name=f'fixed_point_util::make_fixed_points_{len(data.shape)}d',
             params=[xls_precision.binary_exponent],
@@ -100,7 +103,7 @@ class XLSAttrBuilder:
             return None
 
         xls_weights_name = xls_weights_name or f'WEIGHTS_{weights.name}'.upper()
-        precision: FixedPrecisionType = to_signed_fixed_precision(precision or weights.type.precision)
+        precision: PrecisionType = precision or weights.type.precision
 
         input_var = self.node.get_input_variable()
         output_var = self.node.get_output_variable()
@@ -154,8 +157,11 @@ class XLSAttrBuilder:
         if not bias:
             return None
 
-        precision: FixedPrecisionType = to_signed_fixed_precision(bias.type.precision)
-        return XLSAttrBuilder._xls_const_array(name=f'BIAS_{bias.name}'.upper(), data=bias.data, precision=precision)
+        return XLSAttrBuilder._xls_const_array(
+            name=f'BIAS_{bias.name}'.upper(),
+            data=bias.data,
+            precision=bias.type.precision
+        )
 
     @attach_to_node()
     def xls_module_name(self) -> str:
@@ -294,17 +300,19 @@ class XLSAttrBuilder:
                         name=arg_name.upper(),
                         value=XLSFixedPoint.from_float(
                             layer.get_attr(arg_name),
-                            precision=to_signed_fixed_precision(layer.get_attr(f'{arg_name}_t').precision))
+                            precision=layer.get_attr(f'{arg_name}_t').precision,
+                            allow_unsigned=True,
+                        )
                     )
                     for arg_name in ['slope', 'shift']
                 ]
             case 'ParametrizedActivation':
-                precision = to_signed_fixed_precision(layer.get_attr('param_t').precision)
+                precision = layer.get_attr(f'param_t').precision
                 value = layer.get_attr('activ_param')
                 if layer.get_attr('activation').lower() in ('leakyrelu', 'leaky_relu', 'thresholdedrelu'):
                     return [XLSConst(
                         name='ACTIVATION_PARAM',
-                        value=XLSFixedPoint.from_float(value, precision))]
+                        value=XLSFixedPoint.from_float(value, precision, allow_unsigned=True))]
             case _:
                 pass
         return []

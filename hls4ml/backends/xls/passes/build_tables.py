@@ -38,8 +38,8 @@ def build_table(name: str, func: Callable[[float], float], table_size: int, inpu
             output_precision
         )
 
-    raw_minus_inf = XLSFixedPoint.min_value(input_precision).significand.value
-    raw_plus_inf = XLSFixedPoint.max_value(input_precision).significand.value
+    raw_minus_inf = XLSFixedPoint.min_value(XLSFixedPointType.from_precision(input_precision)).significand.value
+    raw_plus_inf = XLSFixedPoint.max_value(XLSFixedPointType.from_precision(input_precision)).significand.value
     match table_range:
         # x = -inf..+inf
         case LookupTableRange.FULL:

@@ -10,32 +10,10 @@ from hls4ml.model.types import FixedPrecisionType, TensorVariable, PrecisionType
     XnorPrecisionType, RoundingMode, SaturationMode, ExponentPrecisionType
 
 
-def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
-                         precision: FixedPrecisionType) -> int:
-    """Convert floating point value to fixed point significand.
-
-    Returns: x * 2^precision.fractional
-    """
-    assert precision.signed, 'Only signed types are supported'
-
-    width = precision.width
-    frac = precision.fractional
-    scale = 2 ** frac
-    if not np.isscalar(x):
-        if not isinstance(x, np.ndarray) or x.dtype.kind != 'f':
-            x = np.asarray(x, dtype=np.float64)
-    # TODO support different saturation and rounding modes
-    significand = np.round(x * scale).astype(np.int64)
-    n = 2 ** width
-    shift = 2 ** (width - 1)
-    return (significand + shift) % n - shift
-
-
-def to_signed_fixed_precision(precision: PrecisionType) -> FixedPrecisionType:
+def to_signed_fixed_precision(precision: PrecisionType, allow_unsigned: bool = False) -> FixedPrecisionType:
     """Convert precision to a signed FixedPrecisionType used by XLS."""
     rounding_mode = RoundingMode.TRN
     saturation_mode = SaturationMode.WRAP
-    integer = precision.width
     if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
         integer = precision.integer
         rounding_mode = precision.rounding_mode
@@ -43,7 +21,7 @@ def to_signed_fixed_precision(precision: PrecisionType) -> FixedPrecisionType:
     elif isinstance(precision, XnorPrecisionType):
         integer = precision.integer
     elif isinstance(precision, ExponentPrecisionType):
-        pass
+        integer = 1
     else:
         raise ValueError(f'Unknown precision type: {type(precision)}')
     fixed_precision = FixedPrecisionType(
@@ -55,11 +33,40 @@ def to_signed_fixed_precision(precision: PrecisionType) -> FixedPrecisionType:
     )
     # Only signed types are supported in XLS
     if not fixed_precision.signed:
+        if not allow_unsigned:
+            raise ValueError(f'Expected signed precision, got: {precision}')
         fixed_precision.signed = True
         fixed_precision.width += 1
         fixed_precision.integer += 1
 
     return fixed_precision
+
+
+def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
+                         precision: PrecisionType, allow_unsigned: bool = False) -> int:
+    """Convert floating point value to fixed point significand.
+
+    Returns: x * 2^precision.fractional
+    """
+    if not np.isscalar(x):
+        if not isinstance(x, np.ndarray) or x.dtype.kind != 'f':
+            x = np.asarray(x, dtype=np.float64)
+
+    if isinstance(precision, XnorPrecisionType):
+        # hls4ml stores XNOR weights as bits {0,1};
+        # We convert it to XLS FixedPoint {-1, 1}
+        x = np.where(x == 0, -1, x)
+
+    precision = to_signed_fixed_precision(precision, allow_unsigned)
+
+    width = precision.width
+    frac = precision.fractional
+    scale = 2 ** frac
+    # TODO support different saturation and rounding modes
+    significand = np.round(x * scale).astype(np.int64)
+    n = 2 ** width
+    shift = 2 ** (width - 1)
+    return (significand + shift) % n - shift
 
 
 # XLS types
@@ -92,11 +99,16 @@ class XLSFixedPointType:
         self.binary_exponent = binary_exponent
 
     @classmethod
-    def from_precision(cls, precision: FixedPrecisionType):
+    def from_precision(cls, precision: PrecisionType, allow_unsigned: bool = False):
+        precision = to_signed_fixed_precision(precision, allow_unsigned)
         assert precision.signed == True, "XLS FixedPoint is always a signed type"
         num_bits = precision.width
         binary_exponent = -precision.fractional
         return cls(num_bits=num_bits, binary_exponent=binary_exponent)
+
+    @property
+    def significand_type(self):
+        return XLSIntegerType(width=self.num_bits, signed=True)
 
     @property
     def precision(self):
@@ -109,17 +121,18 @@ class XLSFixedPointType:
         return f'FixedPoint<{self.num_bits}, {self.binary_exponent}>'
 
 
-def as_xls_fixed_point_type(type: XLSFixedPointType | FixedPrecisionType) -> XLSFixedPointType:
+def as_xls_fixed_point_type(type: XLSFixedPointType | PrecisionType, allow_unsigned: bool = False) -> XLSFixedPointType:
     if isinstance(type, XLSFixedPointType):
         return type
-    return XLSFixedPointType.from_precision(type)
+    return XLSFixedPointType.from_precision(type, allow_unsigned)
 
 
 # 1d array type. TODO make it explicitly multidimensional?
 class XLSArrayType:
-    def __init__(self, element_type, shape: int | str | tuple[int | str, ...] | list[int | str]):
-        if isinstance(element_type, FixedPrecisionType):
-            element_type = XLSFixedPointType.from_precision(element_type)
+    def __init__(self, element_type, shape: int | str | tuple[int | str, ...] | list[int | str],
+                 allow_unsigned: bool = False):
+        if isinstance(element_type, PrecisionType):
+            element_type = XLSFixedPointType.from_precision(element_type, allow_unsigned)
 
         if isinstance(shape, str) or isinstance(shape, int):
             shape = (shape,)
@@ -129,7 +142,7 @@ class XLSArrayType:
         if len(shape) == 1:
             self.element_type = element_type
         else:
-            self.element_type = XLSArrayType(element_type, shape[1:])
+            self.element_type = XLSArrayType(element_type, shape[1:], allow_unsigned)
         self.size = shape[0]
 
     def as_multidimensional(self) -> tuple[Any, tuple[int | str, ...]]:
@@ -203,13 +216,15 @@ class XLSInteger:
 
 
 class XLSFixedPoint:
-    def __init__(self, type: XLSFixedPointType | FixedPrecisionType,
-                 significand: XLSInteger | int | np.integer[Any] | str):
-        if isinstance(type, FixedPrecisionType):
-            type = XLSFixedPointType.from_precision(type)
-
+    def __init__(
+            self,
+            type: XLSFixedPointType | PrecisionType,
+            significand: XLSInteger | int | np.integer[Any] | str,
+            allow_unsigned: bool = False
+    ):
+        type = as_xls_fixed_point_type(type, allow_unsigned)
         if np.issubdtype(builtins.type(significand), np.integer):
-            significand = XLSInteger(type=XLSIntegerType(width=type.num_bits, signed=True), value=significand)
+            significand = XLSInteger(type=type.significand_type, value=significand)
         elif isinstance(significand, XLSInteger):
             assert significand.type.width == type.num_bits
             assert significand.type.signed == True, 'FixedPoint is always a signed type'
@@ -218,23 +233,20 @@ class XLSFixedPoint:
         self.significand = significand
 
     @classmethod
-    def from_float(cls, x: np.floating[Any], precision: FixedPrecisionType):
-        fp_type = XLSFixedPointType.from_precision(precision)
-        return cls(type=fp_type, significand=float_to_significand(x, precision))
+    def from_float(cls, x: np.floating[Any], precision: PrecisionType, allow_unsigned: bool = False):
+        xls_type = XLSFixedPointType.from_precision(precision, allow_unsigned)
+        return cls(type=xls_type, significand=float_to_significand(x, precision, allow_unsigned))
 
     @classmethod
-    def min_value(cls, type: XLSFixedPointType | FixedPrecisionType):
-        type = as_xls_fixed_point_type(type)
+    def min_value(cls, type: XLSFixedPointType):
         return cls(type=type, significand=-2 ** (type.num_bits - 1))
 
     @classmethod
-    def max_value(cls, type: XLSFixedPointType | FixedPrecisionType):
-        type = as_xls_fixed_point_type(type)
+    def max_value(cls, type: XLSFixedPointType):
         return cls(type=type, significand=2 ** (type.num_bits - 1) - 1)
 
     @classmethod
-    def zero(cls, type: XLSFixedPointType | FixedPrecisionType):
-        type = as_xls_fixed_point_type(type)
+    def zero(cls, type: XLSFixedPointType):
         return cls(type=type, significand=0)
 
     def __str__(self):
@@ -401,7 +413,6 @@ class XLSTensorVariable:
         precision = var.type.precision
         assert precision.signed, \
             f'{var.__class__.__name__}: XLS supports only signed FixedPrecision, but got: {precision} ({type(precision)})'
-        precision = to_signed_fixed_precision(var.type.precision)
         element_type = XLSFixedPointType.from_precision(precision)
         return cls(
             name=name or var.name,
