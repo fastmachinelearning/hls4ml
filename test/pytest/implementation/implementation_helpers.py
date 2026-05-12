@@ -13,7 +13,7 @@ import pytest
 
 DATASET_SCHEMA_VERSION = 'implementation-dataset/v1'
 DATASET_DIR_ENV = 'IMPLEMENTATION_DATASET_DIR'
-DEFAULT_DATASET_DIR = Path(__file__).parent / 'implementation'
+DEFAULT_DATASET_DIR = Path(__file__).parent
 
 EXPECTED_REPORT_KEYS = {
     'VivadoAccelerator': {'CSynthesisReport'},
@@ -39,7 +39,7 @@ def _utc_now():
 
 
 def _project_root():
-    return Path(__file__).parents[2]
+    return Path(__file__).parents[3]
 
 
 def _git_commit(path):
