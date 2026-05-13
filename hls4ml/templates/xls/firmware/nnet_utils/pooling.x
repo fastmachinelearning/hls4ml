@@ -207,7 +207,7 @@ pub fn pooling_2d
                         }
                     }((max_or_sum, num_elements))
                 }((max_or_sum, u32:0));
-                
+
                 // TODO is it valid case?
                 // assert_fmt!(num_elements > 0, "pooling2d_zero_elements");
                 let pool_result = match POOLING_OP {
@@ -337,7 +337,7 @@ fn test_pooling_const_case<
         POOLING_OP,
         POOL_HEIGHT,
         STRIDE_HEIGHT, PAD_TOP, PAD_BOTTOM,
-        COUNT_PAD, 
+        COUNT_PAD,
         DATA_FORMAT
         >(input_for_1d);
     let pooling_2d_result = pooling_2d<

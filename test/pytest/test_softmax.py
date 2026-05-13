@@ -37,7 +37,9 @@ def generate_data(input_shape, implementation):
         ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
     ],
 )
-def test_softmax(test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+def test_softmax(
+    test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
+):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
 

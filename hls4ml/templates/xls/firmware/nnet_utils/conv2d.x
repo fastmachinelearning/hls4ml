@@ -19,7 +19,7 @@ pub fn conv2d_latency
     PAD_LEFT: u32, PAD_RIGHT: u32,
     DATA_FORMAT: DataFormat,
     // All parameters below can be deduced automatically
-    IN_NB: u32, IN_BE: s32, 
+    IN_NB: u32, IN_BE: s32,
     // Input Image
     // Dimensions: (IN_HEIGHT, IN_WIDTH, IN_CHANNELS) or (IN_CHANNELS, IN_HEIGHT, IN_WIDTH),
     // depending on DATA_FORMAT
@@ -103,14 +103,14 @@ pub fn conv2d_latency
         }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_DIM_2][OUT_DIM_1]>());
 
         update(out_3d, out_i_0, out_2d)
-    
+
     }(zero!<FixedPoint<OUT_NB,OUT_BE>[OUT_DIM_2][OUT_DIM_1][OUT_DIM_0]>())
 }
 
 // Set some default parameters reused in all tests.
 // TODO: test other parameters
 fn conv2d_latency_default<
-    IN_NB: u32, IN_BE: s32, 
+    IN_NB: u32, IN_BE: s32,
     // Input Image
     IN_HEIGHT: u32, IN_WIDTH: u32, IN_CHANNELS: u32,
     // Kernel Dims
@@ -145,7 +145,7 @@ fn conv2d_latency_default<
 
 // Same but with CHANNELS_FIRST
 fn conv2d_latency_default_first<
-    IN_NB: u32, IN_BE: s32, 
+    IN_NB: u32, IN_BE: s32,
     // Input Image
     IN_HEIGHT: u32, IN_WIDTH: u32, IN_CHANNELS: u32,
     // Kernel Dims
@@ -188,16 +188,16 @@ fn test_zero<
     OUT_HEIGHT: u32 = {IN_HEIGHT + u32:1 - KERN_HEIGHT},
     OUT_WIDTH: u32 = {IN_WIDTH + u32:1 - KERN_WIDTH},
     >() {
-    
+
     let x = zero!<FixedPoint<16, -10>[IN_CHANNELS][IN_WIDTH][IN_HEIGHT]>();
-    
+
     let w = zero!<FixedPoint<16, -10>[OUT_FILTERS][IN_CHANNELS][KERN_WIDTH][KERN_HEIGHT]>();
     let b = zero!<FixedPoint<16, -10>[OUT_FILTERS]>();
-    
+
     let expected = zero!<FixedPoint<16, -10>[OUT_FILTERS][OUT_WIDTH][OUT_HEIGHT]>();
 
     assert_eq(expected, conv2d_latency_default(x, w, b));
-    
+
     // CHANNELS_FIRST
     let x_first = zero!<FixedPoint<16, -10>[IN_WIDTH][IN_HEIGHT][IN_CHANNELS]>();
     let expected_first = zero!<FixedPoint<16, -10>[OUT_WIDTH][OUT_HEIGHT][OUT_FILTERS]>();
@@ -239,8 +239,8 @@ fn test_zero_multi() {
 
 
 #[test]
-fn conv2d_latency_test_uniform_io() { 
-    // x = 
+fn conv2d_latency_test_uniform_io() {
+    // x =
     //  | 1, 1, 1, 1, 1|
     //  | 1, 1, 1, 1, 1|
     //  | 1, 1, 1, 1, 1|
@@ -248,7 +248,7 @@ fn conv2d_latency_test_uniform_io() {
     //  | 1, 1, 1, 1, 1|
     let x = fixed_point_util::make_fixed_points_3d<-10>(s16[1][5][5]:[s16[1][5]:[s16[1]:[s16:1024], ...], ...]);
 
-    // w = 
+    // w =
     //  | 1, 1, 1|
     //  | 2, 2, 2|
     //  | 3, 3, 3|
@@ -259,16 +259,16 @@ fn conv2d_latency_test_uniform_io() {
     ]);
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:0]);
 
-    // expected = 
+    // expected =
     //  | 18, 18, 18|
     //  | 18, 18, 18|
     //  | 18, 18, 18|
     // TODO: herefater we have to specify integer type inside each 1d array because of type inference bug in DSLX:
     // It loses types in make_fixed_points_2d, _3d etc.,
     // and assert_eq fails with a message like:
-    // lhs and rhs were not equal: [ [ FixedPoint { 
+    // lhs and rhs were not equal: [ [ FixedPoint {
     // < significand: s16:0
-    // > significand: u0:0 
+    // > significand: u0:0
     // } ] ]
     let expected = fixed_point_util::make_fixed_points_3d<-10>(s16[1][3][3]:[
         s16[1][3]:[[s16:18432], ...], ...]);
@@ -283,8 +283,8 @@ fn conv2d_latency_test_uniform_io() {
 }
 
 #[test]
-fn conv2d_latency_test_bias() { 
-    // x = 
+fn conv2d_latency_test_bias() {
+    // x =
     //  | 1, 1, 1, 1, 1|
     //  | 1, 1, 1, 1, 1|
     //  | 1, 1, 1, 1, 1|
@@ -292,7 +292,7 @@ fn conv2d_latency_test_bias() {
     //  | 1, 1, 1, 1, 1|
     let x = fixed_point_util::make_fixed_points_3d<-10>(s16[1][5][5]:[s16[1][5]:[s16[1]:[s16:1024], ...], ...]);
 
-    // w = 
+    // w =
     //  | 1, 1, 1|
     //  | 2, 2, 2|
     //  | 3, 3, 3|
@@ -304,14 +304,14 @@ fn conv2d_latency_test_bias() {
     // b = | 1 |
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:1024]);
 
-    // expected = 
+    // expected =
     //  | 19, 19, 19|
     //  | 19, 19, 19|
     //  | 19, 19, 19|
     let expected = fixed_point_util::make_fixed_points_3d<-10>(s16[1][3][3]:[
         s16[1][3]:[[s16:19456], ...], ...]);
     assert_eq(expected, conv2d_latency_default(x, w, b));
-    
+
     // CHANNELS_FIRST
     let x_first = fixed_point_util::make_fixed_points_3d<-10>(s16[5][5][1]:[s16[5][5]:[s16[5]:[s16:1024, ...], ...]]);
     let expected_first = fixed_point_util::make_fixed_points_3d<-10>(s16[3][3][1]:[
@@ -320,8 +320,8 @@ fn conv2d_latency_test_bias() {
 }
 
 #[test]
-fn conv2d_latency_test_pattern() { 
-    // x = 
+fn conv2d_latency_test_pattern() {
+    // x =
     //  | 1, 1, 1, 1, 1|
     //  | 0, 0, 0, 0, 0|
     //  | 2, 2, 2, 2, 2|
@@ -335,7 +335,7 @@ fn conv2d_latency_test_pattern() {
         s16[1][5]:[[s16:1024], ...]
     ]);
 
-    // w = 
+    // w =
     //  | 1, 1, 1|
     //  | 2, 2, 2|
     //  | 3, 3, 3|
@@ -347,7 +347,7 @@ fn conv2d_latency_test_pattern() {
     // b = | 0 |
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:0]);
 
-    // expected = 
+    // expected =
     //  | 21, 21, 21|
     //  | 12, 12, 12|
     //  | 15, 15, 15|
@@ -360,8 +360,8 @@ fn conv2d_latency_test_pattern() {
 }
 
 #[test]
-fn conv2d_latency_test_mutiple_filters() { 
-    // x = 
+fn conv2d_latency_test_mutiple_filters() {
+    // x =
     //  | 1, 1, 1, 1, 1|
     //  | 0, 0, 0, 0, 0|
     //  | 2, 2, 2, 2, 2|
@@ -375,7 +375,7 @@ fn conv2d_latency_test_mutiple_filters() {
         s16[1][5]:[[s16:1024], ...]
     ]);
 
-    // w = 
+    // w =
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
     //  | 2, 2, 2|  | 1, 1, 1|  | 0, 0, 0|
     //  | 3, 3, 3|  | 1, 1, 1|  | 0, 0, 0|
@@ -388,7 +388,7 @@ fn conv2d_latency_test_mutiple_filters() {
     // b = | 0, 0 ,-2|
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[3]:[s16:0, 0, -2048]);
 
-    // expected = 
+    // expected =
     //  | 21, 21, 21|  | 9, 9, 9|  | -2, -2, -2|
     //  | 12, 12, 12|  | 6, 6, 6|  | -2, -2, -2|
     //  | 15, 15, 15|  | 9, 9, 9|  | -2, -2, -2|
@@ -401,8 +401,8 @@ fn conv2d_latency_test_mutiple_filters() {
 }
 
 #[test]
-fn conv2d_latency_test_mutiple_channels() { 
-    // x = 
+fn conv2d_latency_test_mutiple_channels() {
+    // x =
     //  | 1, 1, 1, 1, 1|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
     //  | 0, 0, 0, 0, 0|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
     //  | 2, 2, 2, 2, 2|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
@@ -416,7 +416,7 @@ fn conv2d_latency_test_mutiple_channels() {
         s16[3][5]:[[s16:1024, 1024, 0], ...]
     ]);
 
-    // w = 
+    // w =
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
     //  | 2, 2, 2|  | 1, 1, 1|  | 0, 0, 0|
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
@@ -441,7 +441,7 @@ fn conv2d_latency_test_mutiple_channels() {
     // b = | 0 |
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[1]:[s16:0]);
 
-    // expected = 
+    // expected =
     //  | 18, 18, 18|
     //  | 21, 21, 21|
     //  | 18, 18, 18|
@@ -454,8 +454,8 @@ fn conv2d_latency_test_mutiple_channels() {
 }
 
 #[test]
-fn conv2d_latency_test_mutiple_channels_and_filters() { 
-    // x = 
+fn conv2d_latency_test_mutiple_channels_and_filters() {
+    // x =
     //  | 1, 1, 1, 1, 1|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
     //  | 0, 0, 0, 0, 0|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
     //  | 2, 2, 2, 2, 2|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
@@ -469,7 +469,7 @@ fn conv2d_latency_test_mutiple_channels_and_filters() {
         s16[3][5]:[[s16:1024, 1024, 0], ...]
     ]);
 
-    // w = 
+    // w =
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
     //  | 2, 2, 2|  | 1, 1, 1|  | 0, 0, 0|
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
@@ -501,7 +501,7 @@ fn conv2d_latency_test_mutiple_channels_and_filters() {
     // b = | 0, 0, 0|
     let b = fixed_point_util::make_fixed_points_1d<-10>(s16[3]:[s16:0, 0, 0]);
 
-    // expected = 
+    // expected =
     //  | 18, 18, 18|  | 18, 18, 18|  | 0, 0, 0|
     //  | 21, 21, 21|  | 15, 15, 15|  | 0, 0, 0|
     //  | 18, 18, 18|  | 18, 18, 18|  | 0, 0, 0|
@@ -514,8 +514,8 @@ fn conv2d_latency_test_mutiple_channels_and_filters() {
 }
 
 #[test]
-fn conv2d_latency_test_two_layers() { 
-    // x = 
+fn conv2d_latency_test_two_layers() {
+    // x =
     //  | 1, 1, 1, 1, 1|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
     //  | 0, 0, 0, 0, 0|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
     //  | 2, 2, 2, 2, 2|  | 1, 1, 1, 1, 1|  | 0, 0, 0, 0, 0|
@@ -529,7 +529,7 @@ fn conv2d_latency_test_two_layers() {
         s16[3][5]:[[s16:1024, 1024, 0], ...]
     ]);
 
-    // w = 
+    // w =
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
     //  | 2, 2, 2|  | 1, 1, 1|  | 0, 0, 0|
     //  | 1, 1, 1|  | 1, 1, 1|  | 0, 0, 0|
@@ -557,7 +557,7 @@ fn conv2d_latency_test_two_layers() {
     // b = | -17, -17|
     let b0 = fixed_point_util::make_fixed_points_1d<-10>(s16[2]:[-17408, -17408]);
 
-    // w1 = 
+    // w1 =
     //  | 1, 1, 1|  | 1, 1, 1|
     //  | 1, 1, 1|  | 1, 1, 1|
     //  | 1, 1, 1|  | 1, 1, 1|

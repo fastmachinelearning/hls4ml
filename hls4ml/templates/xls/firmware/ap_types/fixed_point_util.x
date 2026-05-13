@@ -140,7 +140,7 @@ pub fn make_fixed_points_3d
 pub fn make_fixed_points_4d
     <BE: s32, NB: u32, DIM_0: u32, DIM_1: u32, DIM_2: u32, DIM_3: u32>
     (significands: sN[NB][DIM_3][DIM_2][DIM_1][DIM_0])
-    -> FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0] {        
+    -> FixedPoint<NB, BE>[DIM_3][DIM_2][DIM_1][DIM_0] {
     map(significands, make_fixed_points_3d<BE>)
 }
 
@@ -257,7 +257,7 @@ fn check_compare_impl<
 ) {
     let compare_result = compare(a, b);
     assert_eq(compare_result as s2, expected_compare_result as s2);
-    
+
     match expected_compare_result {
         Compare::LESS => {
             assert_eq(less(a,b), true);
@@ -308,8 +308,8 @@ fn test_compare() {
 
     let minus_one_big = fixed_point::make_fixed_point<-8>(s16:-256);
     let zero_big = fixed_point::make_fixed_point<-4>(s8:0);
-    let one_big = fixed_point::make_fixed_point<-5>(s12:32);    
-    let two_big = fixed_point::make_fixed_point<-1>(s12:4);    
+    let one_big = fixed_point::make_fixed_point<-5>(s12:32);
+    let two_big = fixed_point::make_fixed_point<-1>(s12:4);
 
     let values = [minus_one, zero, one, two];
     // Cannot make it an array because of different types
@@ -385,7 +385,7 @@ pub fn flatten_3d<
     NB: u32, BE: s32,
     DIM_0: u32, DIM_1: u32, DIM_2: u32,
     DIM: u32 = {DIM_0 * DIM_1 * DIM_2}
->(x: FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0]) 
+>(x: FixedPoint<NB, BE>[DIM_2][DIM_1][DIM_0])
 -> FixedPoint<NB, BE>[DIM] {
     flatten_2d(map(x, flatten_2d))
 }
@@ -461,7 +461,7 @@ fn test_reshape_4d() {
 
 pub fn to_significand
     <NB: u32, BE: s32>
-    (x: FixedPoint<NB, BE>) 
+    (x: FixedPoint<NB, BE>)
     -> sN[NB] {
     x.significand
 }
@@ -501,7 +501,7 @@ fn overflow_truncated<OVERFLOW: OverflowMode, N: u32>(
     // Did overflow happen during truncation?
     had_overflow: bool
     ) -> sN[N] {
-   
+
     assert!(N != 0, "illegal_zero_width");
     // TODO: this fails due to eager instantiation for N=0
     // let MAX = std::signed_max_value<N>();
@@ -550,19 +550,19 @@ fn truncate_msbs<NB_OUT: u32, OVERFLOW: OverflowMode, NB_IN: u32>
     // let NB_OVERFLOW = NB_IN - NB_OUT;
     assert!(NB_IN > NB_OUT, "truncate_msbs_nothing_to_truncate");
     let NB_OVERFLOW = std::usub_or_zero(NB_IN, NB_OUT);
-    
+
     // TODO: this causes const_assert! in split_lsbs.
     // So we have to introduce NB_SPLIT
     // let (msbs, lsbs) = std::split_lsbs<NB_OUT>(std::to_unsigned(x));
     let NB_SPLIT = std::min(NB_IN, NB_OUT);
     let (_, lsbs) = std::split_lsbs<NB_SPLIT>(std::to_unsigned(x));
     let truncated = std::to_signed(lsbs) as sN[NB_OUT];
-    
-    // TODO this fails due to eager instantiation for NB_IN = 0 
+
+    // TODO this fails due to eager instantiation for NB_IN = 0
     // let sign:Sign = std::msb(x) as Sign;
     let sign:Sign = std::msb((x as sN[NB_IN + 1]) << 1) as Sign;
-    
-    // TODO this fails due to eager instantiation for NB_IN = 0 
+
+    // TODO this fails due to eager instantiation for NB_IN = 0
     // let NB_SIGN_EXT = NB_OVERFLOW + 1;
     let NB_SIGN_EXT = std::min(NB_OVERFLOW + 1, NB_IN);
     // If there is no overflow, overflow_bits and are either 000..0 or 111..1
@@ -572,7 +572,7 @@ fn truncate_msbs<NB_OUT: u32, OVERFLOW: OverflowMode, NB_IN: u32>
     };
     // Take all truncated bits and the sign bit
     let (msbs, _) = std::split_msbs<NB_SIGN_EXT>(std::to_unsigned(x));
-    
+
     // NB: overflow also happens when truncated == MIN for OverflowMode::SAT_SYM
     // We handle this inside overflow_truncated()
     let had_overflow = (msbs != sign_ext);
@@ -601,7 +601,7 @@ fn round_trunc_s<NUM_BITS_ROUNDED: u32, ROUNDING: RoundingMode, N: u32, R: u32 =
     round::round_trunc_s<NUM_BITS_ROUNDED>(convert_rounding_mode<ROUNDING>(), unrounded)
 }
 
-// Drop (NB_IN - NB_OUT) LSBs using RoundingMode, 
+// Drop (NB_IN - NB_OUT) LSBs using RoundingMode,
 // and handle possible overflow (e.g. rounding MAX up) according to OverflowMode.
 fn truncate_lsbs<NB_OUT: u32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode, NB_IN: u32>
     (x: sN[NB_IN]) -> sN[NB_OUT] {
@@ -617,7 +617,7 @@ fn truncate_lsbs<NB_OUT: u32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode, NB
     overflow_truncated<OVERFLOW>(truncated as sN[NB_OUT], sign, had_overflow)
 }
 
-// FixedPoint<NB, BE> ~ ac_fixed<NB, NB + BE> 
+// FixedPoint<NB, BE> ~ ac_fixed<NB, NB + BE>
 // ~ significand * 2^BE
 // 0b00111.001 ~ FixedPoint<8,-3>
 pub fn resize<
@@ -647,7 +647,7 @@ pub fn resize<
         } else {
             truncate_lsbs<NB_ALIGNED, ROUNDING, OVERFLOW>(x.significand)
         };
-    
+
     // Resize width
     let resized = if (NB_OUT < NB_ALIGNED) {
         truncate_msbs<NB_OUT, OVERFLOW>(aligned)
@@ -859,7 +859,7 @@ pub fn clip<NB: u32, BE: s32>(
     min_value: FixedPoint<NB, BE>,
     max_value: FixedPoint<NB, BE>
     ) -> FixedPoint<NB, BE> {
-    
+
     if (fixed_point::sub(x, min_value).significand < 0)
         { min_value }
     else if (fixed_point::sub(x, max_value).significand > 0)
@@ -877,7 +877,7 @@ pub fn clip_resize<
         min_value: FixedPoint<NB_MIN, BE_MIN>,
         max_value: FixedPoint<NB_MAX, BE_MAX>
     ) -> FixedPoint<NB_OUT, BE_OUT> {
-    
+
     if (fixed_point::sub(x, min_value).significand < 0)
         { resize<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(min_value) }
     else if (fixed_point::sub(x, max_value).significand > 0)
@@ -983,18 +983,18 @@ pub fn fmadd_already_widened
 // is reimplemented in such a way as to not widen the output when summing in the accumulator.
 //
 // TYPE EXPLANATIONS:
-// number bits: a multiplication assumes to always double the number of bits. 
+// number bits: a multiplication assumes to always double the number of bits.
 //      Since our vectors must be of the same type
-//      (each elem. within each vector follow the same fixed point representation) 
+//      (each elem. within each vector follow the same fixed point representation)
 //      we know the size of all elem. wise multiplications.
-//      We can also guarantee that all elements will have overlapping positions 
+//      We can also guarantee that all elements will have overlapping positions
 //      (again because elems. within vectors have the same type). This means that we must
 //      widen by one bit for each element of the vector minus one. Minus one because we performs VEC_SZ - 1 adds.
 // binary exponent: The binary exponent will never change with additions since
 //      all elem-wise multiplication will result in the same exponent.
 // exp is negative: inferred from 'binary exponent'
 // unsigned exp:    inferred from 'binary exponent'
-// WARNINGS: 
+// WARNINGS:
 // 1. made aligned_width() and num_bits_overlapping() public in a copy of the fixed_point_lib module.
 // to write the type inference
 // 2. We use ''already_widened'' functions.
@@ -1008,7 +1008,7 @@ pub fn dot_prod
     // Precision Inference DOT PROD
     NB_DOT_PROD: u32 = {NB_MUL + std::clog2(VEC_SZ)},
     BE_DOT_PROD: s32 = {BE_MUL}>
-    (x: FixedPoint<NB_X, BE_X>[VEC_SZ], 
+    (x: FixedPoint<NB_X, BE_X>[VEC_SZ],
      y: FixedPoint<NB_Y, BE_Y>[VEC_SZ])
     -> FixedPoint<NB_DOT_PROD, BE_DOT_PROD> {
 
@@ -1036,18 +1036,18 @@ type FP = FixedPoint<16, -10>;
 #[test]
 fn dot_prod_test() {
     // [1.5, 1.5]
-    let x = make_fixed_points_1d<-10>(sN[16][2]:[1536, ...]); 
+    let x = make_fixed_points_1d<-10>(sN[16][2]:[1536, ...]);
     // [2.25, 2.25]
     let y = make_fixed_points_1d<-10>(sN[16][2]:[2304, ...]);
     // 6.75
-    let expected = fixed_point::make_fixed_point<-20>(sN[33]:7077888); 
+    let expected = fixed_point::make_fixed_point<-20>(sN[33]:7077888);
     assert_eq(expected, dot_prod(x, y));
 
     // [1.0, 1.0, 1.0]
-    let x = make_fixed_points_1d<-10>(sN[16][3]:[1024, ...]); 
+    let x = make_fixed_points_1d<-10>(sN[16][3]:[1024, ...]);
     // [1.0, 1.0, 1.0]
     let y = make_fixed_points_1d<-10>(sN[16][3]:[1024, ...]);
     // 3.0
-    let expected = fixed_point::make_fixed_point<-20>(sN[34]:3145728); 
+    let expected = fixed_point::make_fixed_point<-20>(sN[34]:3145728);
     assert_eq(expected, dot_prod(x, y));
 }

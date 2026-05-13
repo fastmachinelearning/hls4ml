@@ -20,7 +20,7 @@ pub fn normalize<
 )
 -> FixedPoint<OUT_NB, OUT_BE>[DIM] {
     for (i, acc) in 0..DIM {
-        update(acc, i, 
+        update(acc, i,
             fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(
                 fixed_point::add(bias[i % BIAS_DIM],
                     fixed_point::mul(scale[i % SCALE_DIM], x[i])

@@ -55,7 +55,6 @@ def test_dot(test_case_id, axes, io_type, backend):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
 
-
     # Only 1D implemented
     input_shape = (10,)
 

@@ -230,8 +230,8 @@ pub fn concatenate1d
     OVERFLOW: OverflowMode,
     X_NB: u32, X_BE: s32,
     Y_NB: u32, Y_BE: s32,
-    X_DIM: u32, 
-    Y_DIM: u32, 
+    X_DIM: u32,
+    Y_DIM: u32,
     OUT_DIM: u32 = {X_DIM + Y_DIM}
 >
 (
@@ -280,8 +280,8 @@ pub fn concatenate2d
     AXIS: u32,
     X_NB: u32, X_BE: s32,
     Y_NB: u32, Y_BE: s32,
-    X_DIM_0: u32, X_DIM_1: u32, 
-    Y_DIM_0: u32, Y_DIM_1: u32, 
+    X_DIM_0: u32, X_DIM_1: u32,
+    Y_DIM_0: u32, Y_DIM_1: u32,
     OUT_DIM_0: u32 = {concatenate_out_shape(AXIS, [X_DIM_0, X_DIM_1], [Y_DIM_0, Y_DIM_1])[0]},
     OUT_DIM_1: u32 = {concatenate_out_shape(AXIS, [X_DIM_0, X_DIM_1], [Y_DIM_0, Y_DIM_1])[1]},
 >
@@ -299,17 +299,17 @@ pub fn concatenate2d
             let value = match AXIS {
                 u32:0 => {
                     if (i < X_DIM_0) {
-                        x_out[i][j] 
+                        x_out[i][j]
                     } else {
-                        y_out[i - X_DIM_0][j] 
+                        y_out[i - X_DIM_0][j]
                     }
                 },
                 u32:1 => {
                     if (j < X_DIM_1){
-                        x_out[i][j] 
-                    } 
+                        x_out[i][j]
+                    }
                     else {
-                        y_out[i][j - X_DIM_1] 
+                        y_out[i][j - X_DIM_1]
                     }
                 },
                 _ => fail!("concatenate2d_axis", res[0][0])
@@ -323,7 +323,7 @@ pub fn concatenate2d
 fn test_concatenate2d() {
     let x = fixed_point_util::make_fixed_points_2d<0>([[s8:1, 2, 3]]);
     let y = fixed_point_util::make_fixed_points_2d<-1>([[s16:2, 4, 10]]);
-    
+
     let expected_0 = fixed_point_util::make_fixed_points_2d<0>([[s8:1,2,3],[s8:1,2,5]]);
     let result_0 = concatenate2d<8, 0, RoundingMode::TRN, OverflowMode::WRAP, 0>(x, y);
     assert_eq(result_0, expected_0);
@@ -369,7 +369,7 @@ pub fn concatenate3d
                     u32:1 => {
                         if (j < X_DIM_1){
                             x_out[i][j][k]
-                        } 
+                        }
                         else {
                             y_out[i][j - X_DIM_1][k]
                         }
@@ -377,7 +377,7 @@ pub fn concatenate3d
                     u32:2 => {
                         if (k < X_DIM_2){
                             x_out[i][j][k]
-                        } 
+                        }
                         else {
                             y_out[i][j][k - X_DIM_2]
                         }
@@ -402,7 +402,7 @@ fn test_concatenate3d() {
             s8:20, 40, 60, 80, 100, 120
         ])
     );
-    
+
     let expected_0 = fixed_point_util::reshape_to_3d<2,2,3>(
         fixed_point_util::make_fixed_points_1d<0>([
             s8:1,2,3,4,5,6,10,20,30,40,50,60

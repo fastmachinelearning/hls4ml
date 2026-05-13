@@ -2,20 +2,21 @@
 from __future__ import annotations  # makes all annotations into strings
 
 import warnings
+from collections.abc import Callable
 from copy import copy
 from enum import Enum
-from typing import Literal, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
-from hls4ml.backends.xls.xls_types import XLSFixedPointType, XLSLookupTable, XLSFixedPoint, float_to_significand
+from hls4ml.backends.xls.xls_types import XLSFixedPoint, XLSFixedPointType, XLSLookupTable, float_to_significand
 from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
     from hls4ml.model.layers import Layer
 
-from hls4ml.model.optimizer import OptimizerPass
-
 import math
+
+from hls4ml.model.optimizer import OptimizerPass
 
 
 class LookupTableRange(Enum):
@@ -24,19 +25,21 @@ class LookupTableRange(Enum):
     NEGATIVE = 3
 
 
-def build_table(name: str, func: Callable[[float], float], table_size: int, input_precision: FixedPrecisionType,
-                output_precision: FixedPrecisionType,
-                table_range: LookupTableRange) -> XLSLookupTable:
+def build_table(
+    name: str,
+    func: Callable[[float], float],
+    table_size: int,
+    input_precision: FixedPrecisionType,
+    output_precision: FixedPrecisionType,
+    table_range: LookupTableRange,
+) -> XLSLookupTable:
     # Hereafter 'raw' means operations with significand values, i.e.
     # raw_x == x.significand == int(x * 2**precision.fractional)
 
     raw_to_float = 2 ** (-input_precision.fractional)
 
     def raw_func(raw_x: int) -> int:
-        return float_to_significand(
-            func(raw_x * raw_to_float),
-            output_precision
-        )
+        return float_to_significand(func(raw_x * raw_to_float), output_precision)
 
     raw_minus_inf = XLSFixedPoint.min_value(XLSFixedPointType.from_precision(input_precision)).significand.value
     raw_plus_inf = XLSFixedPoint.max_value(XLSFixedPointType.from_precision(input_precision)).significand.value
@@ -65,7 +68,7 @@ def build_table(name: str, func: Callable[[float], float], table_size: int, inpu
         raw_log2_step = math.ceil(math.log2((raw_x_max - raw_x_min) / (table_size - 1)))
         if raw_log2_step < 0:
             raw_log2_step = 0
-        raw_step = 2 ** raw_log2_step
+        raw_step = 2**raw_log2_step
         f_min = raw_func(raw_x_min)
         f_max = raw_func(raw_x_max)
         raw_range = list(range(raw_x_min, raw_x_max + 1, raw_step))
@@ -88,10 +91,11 @@ def build_table(name: str, func: Callable[[float], float], table_size: int, inpu
         warnings.warn(
             f'Lookup table {name} range has been reduced to account for saturation at the table edges. '
             f'The original significand range was {raw_original_x_min}..{raw_original_x_max}, '
-            f'and the adjusted range is {raw_x_min}..{raw_x_max}.'
+            f'and the adjusted range is {raw_x_min}..{raw_x_max}.',
+            stacklevel=1,
         )
     if len(raw_range) < table_size:
-        warnings.warn(f'Lookup table {name} size has been reduced from {table_size} to {len(raw_range)}.')
+        warnings.warn(f'Lookup table {name} size has been reduced from {table_size} to {len(raw_range)}.', stacklevel=1)
 
     assert 0 < len(raw_range) <= table_size
     assert raw_range[0] == raw_x_min >= raw_original_x_min
@@ -103,7 +107,8 @@ def build_table(name: str, func: Callable[[float], float], table_size: int, inpu
         output_precision=XLSFixedPointType.from_precision(output_precision),
         x_min=XLSFixedPoint(type=input_precision, significand=raw_x_min),
         log2_step=raw_log2_step - input_precision.fractional,
-        raw_table=[raw_func(x) for x in raw_range])
+        raw_table=[raw_func(x) for x in raw_range],
+    )
 
 
 def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
@@ -119,7 +124,10 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
             exp_in.width += 1
             exp_in.integer += 1
             exp_name = 'EXP_NEG_TABLE'
-            exp_func = lambda x: math.exp(-x)
+
+            def exp_func(x):
+                return math.exp(-x)
+
             # Arguments of exp_func are (x_max - x_i) > 0
             exp_table_range = LookupTableRange.NON_NEGATIVE
         case 'latency':
@@ -145,7 +153,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
         table_size=exp_table_size,
         input_precision=exp_in,
         output_precision=exp_out,
-        table_range=exp_table_range
+        table_range=exp_table_range,
     )
     inv_table = build_table(
         name=inv_name,
@@ -154,7 +162,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
         input_precision=inv_in,
         output_precision=inv_out,
         # We're inverting sum of exponents, which is always non-negative.
-        table_range=LookupTableRange.NON_NEGATIVE
+        table_range=LookupTableRange.NON_NEGATIVE,
     )
     return [exp_table, inv_table]
 
@@ -215,7 +223,7 @@ def build_activation_table(node: Layer) -> XLSLookupTable:
         table_size=int(node.get_attr('table_size')),
         input_precision=node.get_input_variable().type.precision,
         output_precision=node.get_output_variable().type.precision,
-        table_range=table_range
+        table_range=table_range,
     )
 
 
@@ -229,9 +237,7 @@ class BuildTables(OptimizerPass):
             case 'Softmax':
                 return node.get_attr('implementation', 'stable') != 'argmax'
             case 'Activation':
-                return node.get_attr('activation').lower() in [
-                    'selu', 'softplus', 'softsign', 'tanh', 'sigmoid'
-                ]
+                return node.get_attr('activation').lower() in ['selu', 'softplus', 'softsign', 'tanh', 'sigmoid']
             case 'ParametrizedActivation':
                 return node.get_attr('activation').lower() in ['elu', 'prelu']
             case _:

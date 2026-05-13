@@ -7,7 +7,7 @@ type FixedPoint = fixed_point::FixedPoint;
 type RoundingMode = fixed_point_util::RoundingMode;
 type OverflowMode = fixed_point_util::OverflowMode;
 
-// y = Wx + b 
+// y = Wx + b
 // When called must specify the fixed point precision that is in the output.
 // This allows the truncation to be done correctly.
 pub fn dense

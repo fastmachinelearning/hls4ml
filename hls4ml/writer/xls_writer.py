@@ -5,18 +5,25 @@ import tarfile
 from collections import OrderedDict
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from hls4ml.backends.xls.xls_types import XLSFunctionCall, XLSConst, XLSTypeAlias, XLSImport, XLSFunctionDefinition, \
-    XLSTensorVariable, XLSVariableDefinition
+from hls4ml.backends.xls.xls_types import (
+    XLSConst,
+    XLSFunctionCall,
+    XLSFunctionDefinition,
+    XLSImport,
+    XLSTensorVariable,
+    XLSTypeAlias,
+    XLSVariableDefinition,
+)
 from hls4ml.model.layers import Layer
-from hls4ml.model.types import FixedPrecisionType
 
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
 
 import os
 from shutil import copyfile, copytree, rmtree
+
 from hls4ml.writer.writers import Writer
 
 XLS_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / 'templates/xls'
@@ -24,11 +31,11 @@ INDENT = ' ' * 4
 
 
 def firmware_dir(model: ModelGraph):
-    return Path(model.config.get_output_dir()) / "firmware"
+    return Path(model.config.get_output_dir()) / 'firmware'
 
 
 def reports_dir(model: ModelGraph):
-    return Path(model.config.get_output_dir()) / "reports"
+    return Path(model.config.get_output_dir()) / 'reports'
 
 
 def append_line(line: str, x: Any, indent=None) -> str:
@@ -58,7 +65,6 @@ def to_tuple_or_singleton_str(xs: Iterable[Any], sep: str = ', ') -> str:
 
 
 class XLSWriter(Writer):
-
     def write_project_dir(self, model: ModelGraph) -> None:
         """Write the base project directory
 
@@ -90,14 +96,8 @@ class XLSWriter(Writer):
 
         layers = list(model.get_layers())
 
-        input_vars = OrderedDict(
-            (model.graph[input].get_attr('xls_module_name'),
-             model.graph[input].get_attr('xls_input_variables')[0])
-            for input in model.inputs
-        )
         output_vars = OrderedDict(
-            (model.graph[output].get_attr('xls_module_name'),
-             model.graph[output].get_attr('xls_output_variables')[0])
+            (model.graph[output].get_attr('xls_module_name'), model.graph[output].get_attr('xls_output_variables')[0])
             for output in model.outputs
         )
 
@@ -114,12 +114,15 @@ class XLSWriter(Writer):
                         input_var = model.graph[name].get_attr('xls_input_variables')[0]
                         line = append_lines(
                             line,
-                            XLSConst(name=f'INPUT_{i}_BINARY_EXPONENT',
-                                     value=f'{input_module}::{input_var.binary_exponent.name}',
-                                     type='s32'),
+                            XLSConst(
+                                name=f'INPUT_{i}_BINARY_EXPONENT',
+                                value=f'{input_module}::{input_var.binary_exponent.name}',
+                                type='s32',
+                            ),
                             XLSTypeAlias(name=f'Input_{i}_Type', type=f'{input_module}::{input_var.type_alias.name}'),
-                            XLSTypeAlias(name=f'Input_{i}_Type_Bits',
-                                         type=f'{input_module}::{input_var.type_alias_bits.name}')
+                            XLSTypeAlias(
+                                name=f'Input_{i}_Type_Bits', type=f'{input_module}::{input_var.type_alias_bits.name}'
+                            ),
                         )
                     for name in model.outputs:
                         i = model.graph[name].index
@@ -127,16 +130,18 @@ class XLSWriter(Writer):
                         output_var = model.graph[name].get_attr('xls_output_variables')[0]
                         line = append_lines(
                             line,
-                            XLSConst(name=f'OUTPUT_{i}_NUM_BITS',
-                                     value=f'{output_module}::{output_var.num_bits.name}',
-                                     type='u32'),
-                            XLSConst(name=f'OUTPUT_{i}_BINARY_EXPONENT',
-                                     value=f'{output_module}::{output_var.binary_exponent.name}',
-                                     type='s32'),
-                            XLSTypeAlias(name=f'Output_{i}_Type',
-                                         type=f'{output_module}::{output_var.type_alias.name}'),
-                            XLSTypeAlias(name=f'Output_{i}_Type_Bits',
-                                         type=f'{output_module}::{output_var.type_alias_bits.name}')
+                            XLSConst(
+                                name=f'OUTPUT_{i}_NUM_BITS', value=f'{output_module}::{output_var.num_bits.name}', type='u32'
+                            ),
+                            XLSConst(
+                                name=f'OUTPUT_{i}_BINARY_EXPONENT',
+                                value=f'{output_module}::{output_var.binary_exponent.name}',
+                                type='s32',
+                            ),
+                            XLSTypeAlias(name=f'Output_{i}_Type', type=f'{output_module}::{output_var.type_alias.name}'),
+                            XLSTypeAlias(
+                                name=f'Output_{i}_Type_Bits', type=f'{output_module}::{output_var.type_alias_bits.name}'
+                            ),
                         )
                 elif '// hls-fpga-machine-learning insert architecture input' in line:
                     for name in model.inputs:
@@ -154,8 +159,9 @@ class XLSWriter(Writer):
                         layer_output_vars = layer.get_attr('xls_output_variables')
 
                         if layer.class_name == 'Input':
-                            assert len(layer.inputs) == 1, \
+                            assert len(layer.inputs) == 1, (
                                 f'Input layer {layer.name} should have a single input, but got {len(layer.inputs)}.'
+                            )
                             input_var_names = [f'input_{layer.index}']
                         else:
                             input_var_names = [var.name for var in layer_input_vars]
@@ -166,10 +172,10 @@ class XLSWriter(Writer):
                             line,
                             XLSVariableDefinition(
                                 name=to_tuple_or_singleton_str(layer_output_var_names),
-                                value=XLSFunctionCall(
-                                    name=f'{layer_module_name}::transform',
-                                    args=input_var_names)),
-                            indent=1)
+                                value=XLSFunctionCall(name=f'{layer_module_name}::transform', args=input_var_names),
+                            ),
+                            indent=1,
+                        )
                     line = append_line(line, to_tuple_or_singleton_str(output_var_names), indent=1)
 
                 elif '// hls-fpga-machine-learning insert bits input' in line:
@@ -178,10 +184,7 @@ class XLSWriter(Writer):
                         line = append_line(line, f'input_bits_{i}: Input_{i}_Type_Bits,', indent=1)
 
                 elif '// hls-fpga-machine-learning insert bits output' in line:
-                    out_types = [
-                        f'Output_{model.graph[name].index}_Type_Bits'
-                        for name in model.outputs
-                    ]
+                    out_types = [f'Output_{model.graph[name].index}_Type_Bits' for name in model.outputs]
                     line = append_line(line, to_tuple_or_singleton_str(out_types))
 
                 elif '// hls-fpga-machine-learning insert convert from bits' in line:
@@ -195,20 +198,26 @@ class XLSWriter(Writer):
                         rank = len(input_var.shape)
                         fixed_point_input_names.append(fixed_point_name)
                         xls_statements.append(
-                            XLSVariableDefinition(name=fixed_point_name, value=XLSFunctionCall(
-                                name=f'fixed_point_util::make_fixed_points_{rank}d',
-                                params=[f'INPUT_{i}_BINARY_EXPONENT'],
-                                args=bits_name,
-                            )))
+                            XLSVariableDefinition(
+                                name=fixed_point_name,
+                                value=XLSFunctionCall(
+                                    name=f'fixed_point_util::make_fixed_points_{rank}d',
+                                    params=[f'INPUT_{i}_BINARY_EXPONENT'],
+                                    args=bits_name,
+                                ),
+                            )
+                        )
                     output_fixed_point_names = tuple(
-                        f'output_fixed_point_{output_var.name}' for output_var in output_vars.values())
+                        f'output_fixed_point_{output_var.name}' for output_var in output_vars.values()
+                    )
                     xls_statements.append(
                         XLSVariableDefinition(
                             name=to_tuple_or_singleton_str(output_fixed_point_names),
                             value=XLSFunctionCall(
-                                name=f'{model.config.get_project_name()}_fixed_point',
-                                args=fixed_point_input_names
-                            )))
+                                name=f'{model.config.get_project_name()}_fixed_point', args=fixed_point_input_names
+                            ),
+                        )
+                    )
 
                     output_bits_names = []
                     for name in model.outputs:
@@ -220,11 +229,14 @@ class XLSWriter(Writer):
                         fixed_point_name = f'output_fixed_point_{output_var.name}'
                         rank = len(output_var.shape)
                         xls_statements.append(
-                            XLSVariableDefinition(name=bits_name, value=XLSFunctionCall(
-                                name=f'fixed_point_util::to_significand_{rank}d',
-                                params=[],
-                                args=fixed_point_name,
-                            ))
+                            XLSVariableDefinition(
+                                name=bits_name,
+                                value=XLSFunctionCall(
+                                    name=f'fixed_point_util::to_significand_{rank}d',
+                                    params=[],
+                                    args=fixed_point_name,
+                                ),
+                            )
                         )
                     xls_statements.append(to_tuple_or_singleton_str(output_bits_names))
 
@@ -236,8 +248,10 @@ class XLSWriter(Writer):
                         XLSFunctionCall(
                             name='myproject_bits',
                             params=[],
-                            args=[f'input_bits_{model.graph[name].index}' for name in model.inputs]),
-                        indent=1)
+                            args=[f'input_bits_{model.graph[name].index}' for name in model.inputs],
+                        ),
+                        indent=1,
+                    )
 
                 else:
                     pass
@@ -287,13 +301,13 @@ class XLSWriter(Writer):
                 elif '// hls-fpga-machine-learning insert other constants' in line:
                     # NB: sometimes constant is already defined, e.g. output dimensions for Reshape layer
                     # In that case, we don't write it again.
-                    existing_names = set(
+                    existing_names = {
                         x.name
                         for in_out_vars in (input_vars, output_vars)
                         for var in in_out_vars
                         for x in var.definitions()
                         if isinstance(x, XLSConst)
-                    )
+                    }
                     extra_consts = (
                         x
                         for key in ('xls_extra_func_params', 'xls_extra_func_args')
@@ -317,11 +331,12 @@ class XLSWriter(Writer):
                         input_types = [input_var.type_alias.type for input_var in input_vars]
                         output_types = [output_var.type_alias.type for output_var in output_vars]
                         # Get inner type
-                        for k in range(input_rank - rank):
+                        for _ in range(input_rank - rank):
                             input_types = [input_type.element_type for input_type in input_types]
                             output_types = [output_type.element_type for output_type in output_types]
-                        assert input_types[0].rank == rank, \
+                        assert input_types[0].rank == rank, (
                             f'Input rank mismatch: expected {rank}, got {input_types[0].rank}'
+                        )
 
                         name = f'transform_{rank}d'
                         params = []
@@ -338,26 +353,23 @@ class XLSWriter(Writer):
                             in_vars_i = [f'x_{i}[i]' for i, input_type in enumerate(input_types)]
                             transform_i = XLSVariableDefinition(
                                 name=to_tuple_or_singleton_str(out_var_i),
-                                value=XLSFunctionCall(
-                                    name=f'transform_{rank - 1}d',
-                                    args=in_vars_i
-                                ))
+                                value=XLSFunctionCall(name=f'transform_{rank - 1}d', args=in_vars_i),
+                            )
                             update_i = to_tuple_or_singleton_str(
-                                [f'update({acc}, i, out_{i})' for i, acc in enumerate(acc_vars)])
-                            body = f'''{INDENT}for (i, {to_tuple_or_singleton_str(acc_vars)}) in 0..{dim_0} {{
+                                [f'update({acc}, i, out_{i})' for i, acc in enumerate(acc_vars)]
+                            )
+                            body = f"""{INDENT}for (i, {to_tuple_or_singleton_str(acc_vars)}) in 0..{dim_0} {{
 {INDENT}{INDENT}{transform_i}
 {INDENT}{INDENT}{update_i}
 {INDENT}}}(zero!<{output_type}>())
-                            '''
-                        line = append_line(line, XLSFunctionDefinition(
-                            name=name, params=params, args=args, output_type=output_type, body=body
-                        ))
+                            """
+                        line = append_line(
+                            line,
+                            XLSFunctionDefinition(name=name, params=params, args=args, output_type=output_type, body=body),
+                        )
                 elif '// hls-fpga-machine-learning insert layer input' in line:
-                    input_args = [
-                        f'{INDENT}x_{i}: {input_var.type_alias.name}'
-                        for i, input_var in enumerate(input_vars)
-                    ]
-                    line = append_line(line, f',\n'.join(input_args))
+                    input_args = [f'{INDENT}x_{i}: {input_var.type_alias.name}' for i, input_var in enumerate(input_vars)]
+                    line = append_line(line, ',\n'.join(input_args))
                 elif '// hls-fpga-machine-learning insert layer output' in line:
                     output_types = to_tuple_or_singleton_str(output_var.type_alias.name for output_var in output_vars)
                     line = append_line(line, f'{output_types}')
@@ -367,10 +379,9 @@ class XLSWriter(Writer):
                     line = append_line(
                         line,
                         XLSFunctionCall(
-                            name=f'transform_{input_rank}d',
-                            params=[],
-                            args=[f'x_{i}' for i in range(len(input_vars))]),
-                        indent=1
+                            name=f'transform_{input_rank}d', params=[], args=[f'x_{i}' for i in range(len(input_vars))]
+                        ),
+                        indent=1,
                     )
                 else:
                     pass

@@ -837,6 +837,7 @@ def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
 def test_view(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     class TestModel(nn.Module):
         def __init__(self, n_in, n_out, size_in):
             super().__init__()

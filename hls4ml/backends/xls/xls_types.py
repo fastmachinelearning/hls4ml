@@ -6,8 +6,16 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from hls4ml.model.types import FixedPrecisionType, TensorVariable, PrecisionType, IntegerPrecisionType, \
-    XnorPrecisionType, RoundingMode, SaturationMode, ExponentPrecisionType
+from hls4ml.model.types import (
+    ExponentPrecisionType,
+    FixedPrecisionType,
+    IntegerPrecisionType,
+    PrecisionType,
+    RoundingMode,
+    SaturationMode,
+    TensorVariable,
+    XnorPrecisionType,
+)
 
 
 def to_signed_fixed_precision(precision: PrecisionType, allow_unsigned: bool = False) -> FixedPrecisionType:
@@ -42,8 +50,9 @@ def to_signed_fixed_precision(precision: PrecisionType, allow_unsigned: bool = F
     return fixed_precision
 
 
-def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
-                         precision: PrecisionType, allow_unsigned: bool = False) -> int:
+def float_to_significand(
+    x: np.floating[Any] | NDArray[np.floating[Any]], precision: PrecisionType, allow_unsigned: bool = False
+) -> int:
     """Convert floating point value to fixed point significand.
 
     Returns: x * 2^precision.fractional
@@ -61,15 +70,16 @@ def float_to_significand(x: np.floating[Any] | NDArray[np.floating[Any]],
 
     width = precision.width
     frac = precision.fractional
-    scale = 2 ** frac
+    scale = 2**frac
     # TODO support different saturation and rounding modes
     significand = np.round(x * scale).astype(np.int64)
-    n = 2 ** width
+    n = 2**width
     shift = 2 ** (width - 1)
     return (significand + shift) % n - shift
 
 
 # XLS types
+
 
 class XLSIntegerType:
     def __init__(self, width, signed: bool):
@@ -101,7 +111,7 @@ class XLSFixedPointType:
     @classmethod
     def from_precision(cls, precision: PrecisionType, allow_unsigned: bool = False):
         precision = to_signed_fixed_precision(precision, allow_unsigned)
-        assert precision.signed == True, "XLS FixedPoint is always a signed type"
+        assert precision.signed, 'XLS FixedPoint is always a signed type'
         num_bits = precision.width
         binary_exponent = -precision.fractional
         return cls(num_bits=num_bits, binary_exponent=binary_exponent)
@@ -112,10 +122,7 @@ class XLSFixedPointType:
 
     @property
     def precision(self):
-        return FixedPrecisionType(
-            width=self.num_bits,
-            integer=self.num_bits + self.binary_exponent,
-            signed=True)
+        return FixedPrecisionType(width=self.num_bits, integer=self.num_bits + self.binary_exponent, signed=True)
 
     def __str__(self):
         return f'FixedPoint<{self.num_bits}, {self.binary_exponent}>'
@@ -129,8 +136,9 @@ def as_xls_fixed_point_type(type: XLSFixedPointType | PrecisionType, allow_unsig
 
 # 1d array type. TODO make it explicitly multidimensional?
 class XLSArrayType:
-    def __init__(self, element_type, shape: int | str | tuple[int | str, ...] | list[int | str],
-                 allow_unsigned: bool = False):
+    def __init__(
+        self, element_type, shape: int | str | tuple[int | str, ...] | list[int | str], allow_unsigned: bool = False
+    ):
         if isinstance(element_type, PrecisionType):
             element_type = XLSFixedPointType.from_precision(element_type, allow_unsigned)
 
@@ -146,10 +154,10 @@ class XLSArrayType:
         self.size = shape[0]
 
     def as_multidimensional(self) -> tuple[Any, tuple[int | str, ...]]:
-        """ Returns: (inner element type, shape)
+        """Returns: (inner element type, shape)
 
         >>> element_type = XLSFixedPointType(num_bits=16, binary_exponent=-10)
-        >>> array_2d = XLSArrayType(element_type=element_type, shape=(2,3))
+        >>> array_2d = XLSArrayType(element_type=element_type, shape=(2, 3))
         >>> elt, shape = array_2d.as_multidimensional()
         >>> str(elt)
         'FixedPoint<16, -10>'
@@ -181,7 +189,7 @@ class XLSArrayType:
         """Returns: inner element type, for example:
 
         >>> element_type = XLSFixedPointType(num_bits=16, binary_exponent=-10)
-        >>> array_2d = XLSArrayType(element_type=element_type, shape=(2,3))
+        >>> array_2d = XLSArrayType(element_type=element_type, shape=(2, 3))
         >>> str(array_2d.innermost_element_type)
         'FixedPoint<16, -10>'
         >>> str(array_2d.element_type)
@@ -195,6 +203,7 @@ class XLSArrayType:
 
 
 # XLS values
+
 
 class XLSInteger:
     def __init__(self, type: XLSIntegerType | str, value: int | str):
@@ -217,17 +226,17 @@ class XLSInteger:
 
 class XLSFixedPoint:
     def __init__(
-            self,
-            type: XLSFixedPointType | PrecisionType,
-            significand: XLSInteger | int | np.integer[Any] | str,
-            allow_unsigned: bool = False
+        self,
+        type: XLSFixedPointType | PrecisionType,
+        significand: XLSInteger | int | np.integer[Any] | str,
+        allow_unsigned: bool = False,
     ):
         type = as_xls_fixed_point_type(type, allow_unsigned)
         if np.issubdtype(builtins.type(significand), np.integer):
             significand = XLSInteger(type=type.significand_type, value=significand)
         elif isinstance(significand, XLSInteger):
             assert significand.type.width == type.num_bits
-            assert significand.type.signed == True, 'FixedPoint is always a signed type'
+            assert significand.type.signed, 'FixedPoint is always a signed type'
 
         self.type = type
         self.significand = significand
@@ -239,7 +248,7 @@ class XLSFixedPoint:
 
     @classmethod
     def min_value(cls, type: XLSFixedPointType):
-        return cls(type=type, significand=-2 ** (type.num_bits - 1))
+        return cls(type=type, significand=-(2 ** (type.num_bits - 1)))
 
     @classmethod
     def max_value(cls, type: XLSFixedPointType):
@@ -261,11 +270,9 @@ class XLSArray:
 
         if not isinstance(array, str):
             if isinstance(array_type.element_type, XLSArrayType):
-                array = [XLSArray(array_type=array_type.element_type, array=inner_array)
-                         for inner_array in array]
+                array = [XLSArray(array_type=array_type.element_type, array=inner_array) for inner_array in array]
             if not isinstance(array_type.size, str):
-                assert len(array) == array_type.size, \
-                    f'Array size mismatch: expected {array_type.size}, got {len(array)}'
+                assert len(array) == array_type.size, f'Array size mismatch: expected {array_type.size}, got {len(array)}'
         self.array = array
 
     def __str__(self):
@@ -380,15 +387,14 @@ class XLSFunctionDefinition:
             args = self.args
         else:
             args = ', '.join(map(str, self.args))
-        return f'''pub fn {self.name}{params}({args})
+        return f"""pub fn {self.name}{params}({args})
     -> {self.output_type} {{
     {self.body}
-}}'''
+}}"""
 
 
 class XLSTensorVariable:
-    """Helper class to generate XLS constants for tensor variables.
-    """
+    """Helper class to generate XLS constants for tensor variables."""
 
     def __init__(self, name: str, num_bits, binary_exponent, rounding_mode, saturation_mode, shape) -> None:
         if isinstance(shape, int) or isinstance(shape, str):
@@ -400,10 +406,7 @@ class XLSTensorVariable:
         self.binary_exponent = XLSConst(f'{name}_BINARY_EXPONENT', binary_exponent, type='s32')
         self.rounding_mode = XLSConst(f'{name}_ROUNDING_MODE', f'RoundingMode::{rounding_mode}', type='RoundingMode')
         self.overflow_mode = XLSConst(f'{name}_OVERFLOW_MODE', f'OverflowMode::{saturation_mode}', type='OverflowMode')
-        self.shape = tuple(
-            XLSConst(f'{name}_DIM_{i}', dim, type='u32')
-            for i, dim in enumerate(shape)
-        )
+        self.shape = tuple(XLSConst(f'{name}_DIM_{i}', dim, type='u32') for i, dim in enumerate(shape))
         name = name[0].upper() + name[1:].lower()
         self.type_alias = XLSTypeAlias(name=f'{name}_Type', type=self.to_array_type())
         self.type_alias_bits = XLSTypeAlias(name=f'{name}_Type_Bits', type=self.to_array_type_bits())
@@ -411,8 +414,9 @@ class XLSTensorVariable:
     @classmethod
     def from_tensor_variable(cls, var: TensorVariable, name: str | None = None) -> XLSTensorVariable:
         precision = var.type.precision
-        assert precision.signed, \
+        assert precision.signed, (
             f'{var.__class__.__name__}: XLS supports only signed FixedPrecision, but got: {precision} ({type(precision)})'
+        )
         element_type = XLSFixedPointType.from_precision(precision)
         return cls(
             name=name or var.name,
@@ -420,70 +424,78 @@ class XLSTensorVariable:
             binary_exponent=element_type.binary_exponent,
             rounding_mode=precision.rounding_mode,
             saturation_mode=precision.saturation_mode,
-            shape=var.shape)
+            shape=var.shape,
+        )
 
     def definitions(self) -> list[XLSConst | XLSTypeAlias]:
-        return [self.num_bits, self.binary_exponent, self.rounding_mode, self.overflow_mode] + list(self.shape) + [
-            self.type_alias, self.type_alias_bits]
+        return (
+            [self.num_bits, self.binary_exponent, self.rounding_mode, self.overflow_mode]
+            + list(self.shape)
+            + [self.type_alias, self.type_alias_bits]
+        )
 
     def to_array_type(self) -> XLSArrayType:
         return XLSArrayType(
-            element_type=XLSFixedPointType(
-                self.num_bits.name,
-                binary_exponent=self.binary_exponent.name),
-            shape=tuple(dim.name for dim in self.shape)
+            element_type=XLSFixedPointType(self.num_bits.name, binary_exponent=self.binary_exponent.name),
+            shape=tuple(dim.name for dim in self.shape),
         )
 
     def to_array_type_bits(self) -> XLSArrayType:
         return XLSArrayType(
-            element_type=XLSIntegerType(width=self.num_bits.name, signed=True),
-            shape=tuple(dim.name for dim in self.shape)
+            element_type=XLSIntegerType(width=self.num_bits.name, signed=True), shape=tuple(dim.name for dim in self.shape)
         )
 
 
 class XLSLookupTable:
     def __init__(
-            self,
-            name: str,
-            input_precision: XLSFixedPointType | FixedPrecisionType,
-            output_precision: XLSFixedPointType | FixedPrecisionType,
-            x_min,
-            log2_step,
-            raw_table
+        self,
+        name: str,
+        input_precision: XLSFixedPointType | FixedPrecisionType,
+        output_precision: XLSFixedPointType | FixedPrecisionType,
+        x_min,
+        log2_step,
+        raw_table,
     ) -> None:
         input_precision = as_xls_fixed_point_type(input_precision)
         output_precision = as_xls_fixed_point_type(output_precision)
         self.input_num_bits = XLSConst(f'{name}_INPUT_NUM_BITS', input_precision.num_bits, 'u32')
         self.input_binary_exponent = XLSConst(f'{name}_INPUT_BINARY_EXPONENT', input_precision.binary_exponent, 's32')
         self.output_num_bits = XLSConst(f'{name}_OUTPUT_NUM_BITS', output_precision.num_bits, 'u32')
-        self.output_binary_exponent = XLSConst(f'{name}_OUTPUT_BINARY_EXPONENT', output_precision.binary_exponent,
-                                               's32')
+        self.output_binary_exponent = XLSConst(f'{name}_OUTPUT_BINARY_EXPONENT', output_precision.binary_exponent, 's32')
         self.size = XLSConst(f'{name}_SIZE', len(raw_table), 'u32')
         self.log2_step = XLSConst(f'{name}_LOG2_STEP', log2_step, 's32')
-        self.x_min = XLSConst(f'{name}_X_MIN',
-                              x_min,
-                              XLSFixedPointType(
-                                  num_bits=f'{name}_INPUT_NUM_BITS',
-                                  binary_exponent=f'{name}_INPUT_BINARY_EXPONENT')
-                              )
+        self.x_min = XLSConst(
+            f'{name}_X_MIN',
+            x_min,
+            XLSFixedPointType(num_bits=f'{name}_INPUT_NUM_BITS', binary_exponent=f'{name}_INPUT_BINARY_EXPONENT'),
+        )
         int_table = XLSArray(
             array_type=XLSArrayType(
-                element_type=XLSIntegerType(width=f'{name}_OUTPUT_NUM_BITS', signed=True),
-                shape=f'{name}_SIZE'
+                element_type=XLSIntegerType(width=f'{name}_OUTPUT_NUM_BITS', signed=True), shape=f'{name}_SIZE'
             ),
-            array=raw_table
+            array=raw_table,
         )
-        fixed_point_table = XLSFunctionCall(name='fixed_point_util::make_fixed_points_1d',
-                                            params=[self.output_binary_exponent.name],
-                                            args=[int_table])
-        self.lookup_table = XLSConst(name=name,
-                                     value=XLSFunctionCall(name='lookup_table::create',
-                                                           params=[self.log2_step.name],
-                                                           args=[x_min, fixed_point_table]))
+        fixed_point_table = XLSFunctionCall(
+            name='fixed_point_util::make_fixed_points_1d', params=[self.output_binary_exponent.name], args=[int_table]
+        )
+        self.lookup_table = XLSConst(
+            name=name,
+            value=XLSFunctionCall(
+                name='lookup_table::create', params=[self.log2_step.name], args=[x_min, fixed_point_table]
+            ),
+        )
 
     def definitions(self) -> list[XLSConst]:
-        return [self.input_num_bits, self.input_binary_exponent, self.output_num_bits, self.output_binary_exponent,
-                self.size, self.log2_step, self.x_min, self.lookup_table]
+        return [
+            self.input_num_bits,
+            self.input_binary_exponent,
+            self.output_num_bits,
+            self.output_binary_exponent,
+            self.size,
+            self.log2_step,
+            self.x_min,
+            self.lookup_table,
+        ]
 
     def __str__(self):
         return '\n'.join(map(str, self.definitions()))

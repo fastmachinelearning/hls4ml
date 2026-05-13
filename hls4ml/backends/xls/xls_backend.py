@@ -4,10 +4,11 @@ from __future__ import annotations  # makes all annotations into strings
 import functools
 import importlib
 import math
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any, TYPE_CHECKING, Iterable, Callable
+from typing import TYPE_CHECKING, Any
 
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from hls4ml.backends.xls.xls_types import float_to_significand
 from hls4ml.model.types import FixedPrecisionType
@@ -16,12 +17,13 @@ if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
 
 import subprocess
-import numpy as np
 from warnings import warn
 
+import numpy as np
+
 from hls4ml.backends import FPGABackend
-from hls4ml.model.optimizer import get_backend_passes
 from hls4ml.model.flow import register_flow
+from hls4ml.model.optimizer import get_backend_passes
 from hls4ml.report import parse_xls_report
 
 
@@ -72,8 +74,7 @@ class XLSBackend(FPGABackend):
             'xls:build_tables',
             'xls:build_attr',
         ]
-        xls_attributes_flow: str = register_flow('xls', xls_attributes, requires=[optimization_flow],
-                                                 backend=self.name)
+        xls_attributes_flow: str = register_flow('xls', xls_attributes, requires=[optimization_flow], backend=self.name)
 
         # TODO: stamp is currently unused, shall we add it to myproject.x, myproject.ir, myproject.opt.ir, ...?
         # In other backends, this is used to generate myproject-$STAMP.so.
@@ -83,25 +84,28 @@ class XLSBackend(FPGABackend):
         self._writer_flow = register_flow('write', writer_passes, requires=['xls:ip'], backend=self.name)
 
         # Passed that are irrelevant for XLS
-        ignored_passes = [f'xls:{opt_pass}' for opt_pass in [
-            # io_stream only:
-            'reshape_stream',
-            'inplace_stream_flatten',
-            'repack_function_template',
-            'clone_output',
-            'clone_function_template',
-            # HGQ passes, not implemented:
-            'process_fixed_point_quantizer_layer',
-            'fixedpointquantizer_function_template',
-            'unarylut_function_template',
-            # Embedding
-            'embedding_config_template',
-            'embedding_function_template',
-            # we fix table sizes in xls:build_tables using a different method
-            'fix_softmax_table_size',
-            # BRAM not supported
-            'register_bram_weights',
-        ]]
+        ignored_passes = [
+            f'xls:{opt_pass}'
+            for opt_pass in [
+                # io_stream only:
+                'reshape_stream',
+                'inplace_stream_flatten',
+                'repack_function_template',
+                'clone_output',
+                'clone_function_template',
+                # HGQ passes, not implemented:
+                'process_fixed_point_quantizer_layer',
+                'fixedpointquantizer_function_template',
+                'unarylut_function_template',
+                # Embedding
+                'embedding_config_template',
+                'embedding_function_template',
+                # we fix table sizes in xls:build_tables using a different method
+                'fix_softmax_table_size',
+                # BRAM not supported
+                'register_bram_weights',
+            ]
+        ]
 
         all_passes: list = get_backend_passes(self.name)
 
@@ -110,12 +114,7 @@ class XLSBackend(FPGABackend):
             opt_pass
             for opt_pass in all_passes
             if opt_pass
-               not in initializers
-               + quantization_passes
-               + optimization_passes
-               + xls_attributes
-               + writer_passes
-               + ignored_passes
+            not in initializers + quantization_passes + optimization_passes + xls_attributes + writer_passes + ignored_passes
         ]
 
         if len(extras) > 0:
@@ -146,26 +145,28 @@ class XLSBackend(FPGABackend):
     @staticmethod
     def _to_xls_clock_margin_percent(clock_uncertainty: str) -> int:
         """Convert ClockUncertainty string to integer XLS option clock_margin_percent"""
-        assert isinstance(clock_uncertainty, str) and clock_uncertainty.endswith('%'), \
+        assert isinstance(clock_uncertainty, str) and clock_uncertainty.endswith('%'), (
             f'Clock uncertainty must be in percentage format, got {clock_uncertainty}'
+        )
         return math.ceil(float(clock_uncertainty.strip('%')))
 
     @staticmethod
     def _percent_to_float(percent: str) -> float:
         """Convert a string representing a percentage to a float."""
-        assert isinstance(percent, str) and percent.endswith('%'), \
+        assert isinstance(percent, str) and percent.endswith('%'), (
             f'Clock uncertainty must be in percentage format, got {percent}'
+        )
         return float(percent.strip('%')) / 100
 
     def create_initial_config(
-            self,
-            part='xcu250-figd2104-2L-e',
-            clock_period=5,
-            clock_uncertainty='12.5%',
-            io_type='io_parallel',
-            write_tar=False,
-            xls_codegen_flags=None,
-            **kwargs,
+        self,
+        part='xcu250-figd2104-2L-e',
+        clock_period=5,
+        clock_uncertainty='12.5%',
+        io_type='io_parallel',
+        write_tar=False,
+        xls_codegen_flags=None,
+        **kwargs,
     ) -> dict[str, Any]:
         """Create an initial configuration of the XLS backend.
 
@@ -192,19 +193,23 @@ class XLSBackend(FPGABackend):
         }
 
         # Set default flags to mimic codegen_main executable behavior
-        config['XLSCodegenFlags'] = xls_codegen_flags if xls_codegen_flags is not None else {
-            'delay_model': 'asap7',
-            'generator': 'pipeline',
-            'use_system_verilog': True,
-            'flop_inputs': True,
-            'flop_outputs': True,
-            'max_inline_depth': 5,
-            'flop_single_value_channels': True,
-            # convert nanoseconds to picoseconds
-            'clock_period_ps': self._to_xls_clock_period_ps(config['ClockPeriod']),
-            # NB: XLS needs integer percents
-            'clock_margin_percent': self._to_xls_clock_margin_percent(config['ClockUncertainty']),
-        }
+        config['XLSCodegenFlags'] = (
+            xls_codegen_flags
+            if xls_codegen_flags is not None
+            else {
+                'delay_model': 'asap7',
+                'generator': 'pipeline',
+                'use_system_verilog': True,
+                'flop_inputs': True,
+                'flop_outputs': True,
+                'max_inline_depth': 5,
+                'flop_single_value_channels': True,
+                # convert nanoseconds to picoseconds
+                'clock_period_ps': self._to_xls_clock_period_ps(config['ClockPeriod']),
+                # NB: XLS needs integer percents
+                'clock_margin_percent': self._to_xls_clock_margin_percent(config['ClockUncertainty']),
+            }
+        )
 
         for arg in kwargs:
             warn(f'WARNING: Unknown argument {arg} for XLS backend will be ignored.')
@@ -227,10 +232,7 @@ class XLSBackend(FPGABackend):
         firmware_dir = Path(f'{model.config.get_output_dir()}') / 'firmware'
         path_no_ext = firmware_dir / kernel_name
 
-        ir_text = xls.c_api.convert_dslx_path_to_ir(
-            path=f'{path_no_ext}.x',
-            additional_search_paths=[str(firmware_dir)]
-        )
+        ir_text = xls.c_api.convert_dslx_path_to_ir(path=f'{path_no_ext}.x', additional_search_paths=[str(firmware_dir)])
         with open(f'{path_no_ext}.ir', 'w') as ir_file:
             ir_file.write(ir_text)
 
@@ -240,11 +242,10 @@ class XLSBackend(FPGABackend):
 
         # This object can be heavy, so we don't want to cache it unless we call predict().
         if hasattr(model, '_xls_top_function'):
-            delattr(model, '_xls_top_function')
+            del model._xls_top_function
 
     @staticmethod
-    def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]],
-                         precision: FixedPrecisionType):
+    def _float_to_xls_ir(x: np.floating[Any] | NDArray[np.floating[Any]], precision: FixedPrecisionType):
         xls = import_xls()
         if np.isscalar(x):
             significand = float_to_significand(x, precision)
@@ -262,45 +263,44 @@ class XLSBackend(FPGABackend):
         value = int.from_bytes(bits.to_bytes(), byteorder='little', signed=False)
         value &= (1 << n) - 1
         if signed and (bits.get_bit(n - 1) == 1):
-            value -= (1 << n)
+            value -= 1 << n
         return value
 
     @staticmethod
-    def _xls_ir_to_float(x, precision: FixedPrecisionType | Iterable[FixedPrecisionType],
-                         dtype: np.typing.DTypeLike) -> ArrayLike | tuple[ArrayLike, ...]:
+    def _xls_ir_to_float(
+        x, precision: FixedPrecisionType | Iterable[FixedPrecisionType], dtype: np.typing.DTypeLike
+    ) -> ArrayLike | tuple[ArrayLike, ...]:
         xls = import_xls()
         # x: xls.Value
         match x.get_kind():
             case xls.c_api.ValueKind.BITS:
-                assert isinstance(precision, FixedPrecisionType), \
+                assert isinstance(precision, FixedPrecisionType), (
                     f'Precision must be FixedPrecisionType, got {type(precision)}'
-                return XLSBackend._bits_to_int(x.get_bits()) / (2 ** precision.fractional)
+                )
+                return XLSBackend._bits_to_int(x.get_bits()) / (2**precision.fractional)
             case xls.c_api.ValueKind.ARRAY:
-                return np.asarray([
-                    XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype)
-                    for i in range(x.get_element_count())
-                ], dtype=dtype)
+                return np.asarray(
+                    [XLSBackend._xls_ir_to_float(x.get_element(i), precision, dtype) for i in range(x.get_element_count())],
+                    dtype=dtype,
+                )
             case xls.c_api.ValueKind.TUPLE:
                 precision = tuple(precision)
-                assert len(precision) == x.get_element_count(), \
+                assert len(precision) == x.get_element_count(), (
                     f'Precision mismatch for tuple: {len(precision)} != {x.get_element_count()}'
+                )
                 return tuple(
-                    XLSBackend._xls_ir_to_float(x.get_element(i), precision[i], dtype)
-                    for i in range(x.get_element_count())
+                    XLSBackend._xls_ir_to_float(x.get_element(i), precision[i], dtype) for i in range(x.get_element_count())
                 )
             case _:
                 raise ValueError(f'Unexpected output type: {x.get_kind()}')
 
     @staticmethod
-    def get_top_function(
-            model: ModelGraph,
-            x: np.floating | NDArray[np.floating[Any]]
-    ) -> tuple[Callable, np.dtype]:
+    def get_top_function(model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> tuple[Callable, np.dtype]:
         # Cache JIT function to avoid reparsing IR file.
         top_function = getattr(model, '_xls_top_function', None)
         if top_function is None:
             top_function = XLSBackend._make_top_function(model)
-            setattr(model, '_xls_top_function', top_function)
+            model._xls_top_function = top_function
 
         # TODO: this duplicates ModelGraph._get_top_function().
         # NB: ctype is not used in XLS, but it is required by ModelGraph._predict
@@ -335,10 +335,11 @@ class XLSBackend(FPGABackend):
         output_vars = model.get_output_variables()
 
         def top_function(*args):
-            assert len(args) == len(input_vars) + len(output_vars), \
+            assert len(args) == len(input_vars) + len(output_vars), (
                 f'Expected {len(input_vars)} inputs and {len(output_vars)} outputs, got {len(args)}'
-            inputs = args[:len(input_vars)]
-            outputs = args[len(input_vars):]
+            )
+            inputs = args[: len(input_vars)]
+            outputs = args[len(input_vars) :]
             ir_input = [
                 XLSBackend._float_to_xls_ir(np.asarray(x).reshape(var.shape), var.type.precision)
                 for x, var in zip(inputs, input_vars)
@@ -359,12 +360,12 @@ class XLSBackend(FPGABackend):
         return top_function
 
     def build(
-            self,
-            model: ModelGraph,
-            reset: bool | None = None,
-            pr: bool = False,
+        self,
+        model: ModelGraph,
+        reset: bool | None = None,
+        pr: bool = False,
     ) -> dict:
-        """ Builds the RTL (SystemVerilog) code and uses Vivado to return the resource utilization.
+        """Builds the RTL (SystemVerilog) code and uses Vivado to return the resource utilization.
 
         Args:
             model (ModelGraph): the hls4ml model.
@@ -393,10 +394,12 @@ class XLSBackend(FPGABackend):
 
         def build_vivado_flags() -> list[str]:
             flags = [
-                '-mode', 'batch',
+                '-mode',
+                'batch',
                 '-nolog',
                 '-nojournal',
-                '-source', './build_prj.tcl',
+                '-source',
+                './build_prj.tcl',
                 '-tclargs',
                 project_name,
                 model.config.get_config_value('Part'),
