@@ -1,9 +1,9 @@
 # build_prj.tcl
 # Usage:
-#   vivado -mode batch -nolog -nojournal -source synth_pr.tcl --tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]
+#   vivado -mode batch -nolog -nojournal -source build_prj.tcl --tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]
 
 if {[llength $argv] < 4} {
-    puts stderr "ERROR: missing arguments\nUsage: vivado -mode batch -source synth_pr.tcl -tclargs <sv_file> <board_part> <clock_period> [--pr]"
+    puts stderr "ERROR: missing arguments\nUsage: vivado -mode batch -nolog -nojournal  -source build_prj.tcl -tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]"
     exit 1
 }
 
