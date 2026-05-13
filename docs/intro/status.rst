@@ -47,6 +47,7 @@ HLS backends:
 * Vitis HLS
 * Catapult HLS
 * oneAPI (experimental)
+* XLS (experimental)
 
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 
@@ -78,6 +79,8 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 | Catapult HLS          | ✅  | ✅  | ✅           | ❌     | ❌     | ❌  |
 +-----------------------+-----+-----+--------------+--------+--------+-----+
 | oneAPI (experimental) | ✅  | ✅  | ✅           | ❌     | ✅     | ❌  |
++-----------------------+-----+-----+--------------+--------+--------+-----+
+| XLS (experimental)    | ✅  | ✅  | ❌           | ❌     | ❌     | ❌  |
 +-----------------------+-----+-----+--------------+--------+--------+-----+
 
 Other feature notes:
