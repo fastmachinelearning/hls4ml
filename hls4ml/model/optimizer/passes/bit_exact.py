@@ -11,6 +11,7 @@ from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
+from quantizers import get_fixed_quantizer_np
 
 from hls4ml.model.layers import (
     Activation,
@@ -22,6 +23,7 @@ from hls4ml.model.layers import (
     Dense,
     Einsum,
     EinsumDense,
+    Embedding,
     GlobalPooling1D,
     GlobalPooling2D,
     Input,
@@ -652,6 +654,27 @@ def _(layer: DACombinational):
     comb = comb_trace(inp, out)
     k, i, f = comb.out_kifs
     return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+
+
+@_produce_kif.register
+def _(layer: Embedding):
+    _, out_quantizers = get_output_layers_and_quantizers(layer)
+    assert len(out_quantizers) == 1, 'Embedding layer should have exactly one consumer'
+    quant = out_quantizers[0]
+    k, b, i = quant.mask_kbi
+    k, b, i = k[0], b[0], i[0]
+    i, f = i - k, b - i
+    k, i, f = np.max([k, i, f], axis=1) if isinstance(k, np.ndarray) else (k, i, f)
+    quant = get_fixed_quantizer_np(quant.RND, quant.SAT)
+    data = layer.attributes['embeddings'].data
+    qdata = quant(data, k, i, f)
+    layer.attributes['embeddings'].data = qdata
+    k, i, f = minimal_kif(qdata)
+    shape = get_output_shape(layer)
+    k = np.broadcast_to(np.max(k, axis=0).astype(np.int16), shape)
+    i = np.broadcast_to(np.max(i, axis=0).astype(np.int16), shape)
+    f = np.broadcast_to(np.max(f, axis=0).astype(np.int16), shape)
+    return k, i, f
 
 
 def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
