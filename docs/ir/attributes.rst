@@ -3314,4 +3314,3 @@ Configurable attributes
 * accum_t: NamedType
 
 * reuse_factor: int (Default: 1)
-
