@@ -28,6 +28,16 @@ hls4ml calls XLS compiler to convert DSLX into `XLS IR <https://google.github.io
 
 Then, hls4ml uses `XLS Codegen <https://google.github.io/xls/codegen_options/>`_ to generate SystemVerilog (``<ProjectName>.sv``) from IR, and calls **Vivado** for ``<OutputDir>/build_prj.tcl`` to generate IP.
 
+You can override default codegen options:
+.. code-block:: python
+
+    config = hls4ml.utils.config_from_keras_model(model)
+    # This sets hls_model.config['XLSCodegenFlags']
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, backend='XLS',
+        xls_codegen_flags={'delay_model': 'asap7', 'generator': 'pipeline', 'use_system_verilog': False}
+    )
+
 I/O Types and Strategy
 =========================
 
