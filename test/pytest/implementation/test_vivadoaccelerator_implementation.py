@@ -52,8 +52,6 @@ def _run_example_model_implementation(
         part=VIVADOACC_PART,
     )
 
-    hls_model.compile()
-
     run_implementation_collection_test(
         config=synthesis_config,
         hls_model=hls_model,
