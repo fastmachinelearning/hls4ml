@@ -312,8 +312,7 @@ class XLSAttrBuilder:
 
     @staticmethod
     def func_name(layer: Layer) -> XLSQualifiedName:
-        class_name = layer.class_name
-        match class_name:
+        match layer.class_name:
             case 'Input':
                 # Identity transformation except for OverflowMode::SAT_SYM case.
                 return XLSQualifiedName(name='resize_1d', module_name='fixed_point_util')
