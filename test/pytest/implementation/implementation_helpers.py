@@ -16,7 +16,14 @@ DATASET_DIR_ENV = 'IMPLEMENTATION_DATASET_DIR'
 DEFAULT_DATASET_DIR = Path(__file__).parent
 
 EXPECTED_REPORT_KEYS = {
-    'VivadoAccelerator': {'CSynthesisReport'},
+    'VivadoAccelerator': {
+        'CSynthesisReport',
+        'CosimReport',
+        'CosimResults',
+        'ImplementationReport',
+        'TimingReport',
+        'VivadoSynthReport',
+    },
 }
 
 REQUIRED_METADATA_FIELDS = {
