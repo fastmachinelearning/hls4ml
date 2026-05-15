@@ -45,9 +45,7 @@ optional-dependencies.optimization = [
 ]
 optional-dependencies.profiling = [ "matplotlib", "pandas", "seaborn" ]
 optional-dependencies.qkeras = [
-  "qkeras",
-  "tensorflow>=2.8,<=2.14.1",
-  "tensorflow-model-optimization<=0.7.5",
+  "qkeras-v3"
 ]
 optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
@@ -70,6 +68,7 @@ optional-dependencies.testing-keras3 = [
   "da4ml",
   "hgq2>=0.1.7",
   "keras>=3.10",
+  "qkeras-v3",
   "tensorflow>=2.15",
 ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"

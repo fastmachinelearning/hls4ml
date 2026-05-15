@@ -837,7 +837,10 @@ class ExponentWeightVariable(WeightVariable):
 
     def __iter__(self):
         data = self._format()
-        self._iterator = iter(data.reshape((np.product(data.shape[:-1]), 2)))
+        if hasattr(np, "product"):
+            self._iterator = iter(data.reshape((np.product(data.shape[:-1]), 2)))
+        else:
+            self._iterator = iter(data.reshape((np.prod(data.shape[:-1]), 2)))
         return self
 
     def __next__(self):

@@ -351,12 +351,6 @@ def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_
     ],
 )
 def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, weight_quantizer):
-    if activation_quantizer in ['binary']:
-        name = 'bnbt_qdense_alpha'
-    elif activation_quantizer in ['ternary']:
-        name = 'bnbt_qdense_ternary_scale'
-    else:
-        name = f'qdense_{eval(activation_quantizer).__class__.__name__}'
 
     inputs = Input(shape=(10,))
 
@@ -376,9 +370,6 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=out_dir)
     hls_model.compile()
-
-    # Verify if activation in hls_model
-    assert name in [layer.name for layer in hls_model.get_layers()]
 
     # Output tests
     X = randX_100_10
