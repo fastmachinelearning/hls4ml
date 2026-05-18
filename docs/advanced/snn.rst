@@ -10,6 +10,11 @@ Install the SNN frontend dependencies with:
 
    pip install hls4ml[snn]
 
+Backend support
+===============
+
+The SNN flow currently supports only the ``Vitis`` backend.
+
 Execution model
 ===============
 
