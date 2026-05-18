@@ -170,13 +170,13 @@ class LearnedVectorParamsNet(torch.nn.Module):
 def test_pytorch_snn_layers_are_parsed(test_case_id, model_class, expected_layer):
     model = model_class()
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
 
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )
@@ -221,13 +221,13 @@ def test_leaky_beta_maps_to_if_or_lif(test_case_id, beta, expected_layer):
 
     model = BetaNet()
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
 
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )
@@ -248,12 +248,12 @@ def test_leaky_beta_maps_to_if_or_lif(test_case_id, beta, expected_layer):
 def test_snn_scalar_vs_vector_modes(test_case_id, model_class, expected_layer, beta_mode, threshold_mode):
     model = model_class()
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )
@@ -271,12 +271,12 @@ def test_snn_scalar_vs_vector_modes(test_case_id, model_class, expected_layer, b
 def test_snn_uses_current_parameter_values_for_vector_params(test_case_id):
     model = LearnedVectorParamsNet()
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )
@@ -291,12 +291,12 @@ def test_snn_uses_current_parameter_values_for_vector_params(test_case_id):
 def test_snn_readout_stream_length_alias_and_reset_policy(test_case_id):
     model = SNNClassifierWithResetPolicy()
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )
@@ -310,7 +310,7 @@ def test_snn_readout_stream_length_alias_and_reset_policy(test_case_id):
 def test_snn_layer_type_config_is_exposed_for_quantization(test_case_id):
     model = LIFVectorNet()
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
     config['LayerName']['neuron']['beta_t'] = 'ap_fixed<12,2>'
     config['LayerName']['neuron']['threshold_t'] = 'ap_fixed<10,3>'
@@ -319,7 +319,7 @@ def test_snn_layer_type_config_is_exposed_for_quantization(test_case_id):
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )
@@ -333,14 +333,14 @@ def test_snn_layer_type_config_is_exposed_for_quantization(test_case_id):
 def test_snn_membrane_readout_type_config_is_exposed(test_case_id):
     model = SNNMembraneReadoutClassifier()
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
     config['LayerName']['readout']['membrane_t'] = 'ap_fixed<18,6>'
 
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )

@@ -60,12 +60,12 @@ def test_extensions_pytorch_snn_readout_parser(test_case_id):
 
     pmodel = PyTorchModel()
     config = hls4ml.utils.config_from_pytorch_model(
-        pmodel, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vivado'
+        pmodel, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         pmodel,
         output_dir=str(test_root_path / test_case_id),
-        backend='Vivado',
+        backend='Vitis',
         io_type='io_parallel',
         hls_config=config,
     )
