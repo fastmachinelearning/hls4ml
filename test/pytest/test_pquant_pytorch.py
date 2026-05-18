@@ -10,9 +10,8 @@ from hls4ml.utils import config_from_pytorch_model
 os.environ['KERAS_BACKEND'] = 'torch'
 import torch  # noqa: E402
 import torch.nn as nn  # noqa: E402
+from pquant import pdp_config  # noqa: E402
 from pquant.activations import PQActivation  # noqa: E402
-from pquant.core.finetuning import TuningConfig  # noqa: E402
-from pquant.core.utils import get_default_config  # noqa: E402
 from pquant.layers import PQAvgPool1d, PQAvgPool2d, PQBatchNorm1d, PQBatchNorm2d, PQConv1d, PQConv2d, PQDense  # noqa: E402
 
 test_path = Path(__file__).parent
@@ -73,10 +72,8 @@ def run_model_test(
 
 
 def create_pqlayer_model(layer: str, use_hgq: bool):
-    config = get_default_config('pdp')
-    config['pruning_parameters']['disable_pruning_for_layers'] = ['']
-    config['quantization_parameters']['use_high_granularity_quantization'] = use_hgq
-    config = TuningConfig.load_from_config(config)
+    config = pdp_config()
+    config.quantization_parameters.use_high_granularity_quantization = use_hgq
 
     idx = layer.find('(') + 1
     layer = (

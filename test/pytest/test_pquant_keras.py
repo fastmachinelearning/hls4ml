@@ -3,9 +3,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from pquant import pdp_config
 from pquant.activations import PQActivation
-from pquant.core.finetuning import TuningConfig
-from pquant.core.utils import get_default_config
 from pquant.layers import PQAvgPool1d, PQAvgPool2d, PQBatchNormalization, PQConv1d, PQConv2d, PQDense
 
 from hls4ml.converters import convert_from_keras_model
@@ -68,10 +67,8 @@ def run_model_test(
 
 
 def create_pqlayer_model(layer: str, use_hgq: bool):
-    config = get_default_config('pdp')
-    config['pruning_parameters']['disable_pruning_for_layers'] = ['']
-    config['quantization_parameters']['use_high_granularity_quantization'] = use_hgq
-    config = TuningConfig.load_from_config(config)
+    config = pdp_config()
+    config.quantization_parameters.use_high_granularity_quantization = use_hgq
 
     idx = layer.find('(') + 1
     layer = (
@@ -156,7 +153,8 @@ def get_shape(
         "PQAvgPool2d((2,2), padding='same')",
         "PQAvgPool1d(2, padding='valid')",
         "PQAvgPool2d((1,2), padding='valid')",
-        "PQAvgPool2d((2,2), padding='valid')PQActivation('relu')",
+        "PQAvgPool2d((2,2), padding='valid')",
+        "PQActivation('relu')",
         "PQActivation('tanh')",
     ],
 )
