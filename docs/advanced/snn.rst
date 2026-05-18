@@ -23,6 +23,18 @@ updates and layer computations run in standard HLS pipelines/streams each cycle
 according to interface handshakes. The generated design is not a native
 asynchronous/event-routed neuromorphic architecture (yet!).
 
+Reuse factor support
+====================
+
+Standard hls4ml layers used inside an SNN, such as ``Dense``/linear layers,
+retain their normal ``ReuseFactor`` support. ``ReuseFactor`` can still be set at
+the model, layer type, or layer name level for these layers, and each dense layer
+uses its own configured value independently of the surrounding spiking neuron
+layers.  The spiking neuron kernels themselves, ``IFNeuron`` and ``LIFNeuron``, do not
+currently expose ``ReuseFactor``. They process one timestep at a time, keep
+internal membrane state across timesteps, and unroll the per-neuron update loop
+across ``n_out`` channels.
+
 Supported PyTorch modules and readout wrappers
 ==============================================
 
