@@ -14,7 +14,7 @@ if_config_template = """struct config{index} : nnet::if_neuron_config {{
 }};\n"""
 
 if_function_template = 'nnet::if_neuron<{input_t}, {output_t}, {config}>({input}, {output}, {threshold});'
-if_include_list = ['nnet_utils/nnet_if_neuron.h']
+snn_include_list = ['nnet_utils/nnet_snn.h', 'nnet_utils/nnet_snn_stream.h']
 
 
 class IFNeuronConfigTemplate(LayerConfigTemplate):
@@ -30,7 +30,7 @@ class IFNeuronConfigTemplate(LayerConfigTemplate):
 
 class IFNeuronFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(IFNeuron, include_header=if_include_list)
+        super().__init__(IFNeuron, include_header=snn_include_list)
         self.template = if_function_template
 
     def format(self, node):
@@ -57,7 +57,6 @@ lif_config_template = """struct config{index} : nnet::lif_neuron_config {{
 }};\n"""
 
 lif_function_template = 'nnet::lif_neuron<{input_t}, {output_t}, {config}>({input}, {output}, {beta}, {threshold});'
-lif_include_list = ['nnet_utils/nnet_lif_neuron.h']
 
 
 class LIFNeuronConfigTemplate(LayerConfigTemplate):
@@ -74,7 +73,7 @@ class LIFNeuronConfigTemplate(LayerConfigTemplate):
 
 class LIFNeuronFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(LIFNeuron, include_header=lif_include_list)
+        super().__init__(LIFNeuron, include_header=snn_include_list)
         self.template = lif_function_template
 
     def format(self, node):
@@ -98,7 +97,6 @@ readout_config_template = """struct config{index} : nnet::snn_readout_config {{
 }};\n"""
 
 readout_function_template = 'nnet::snn_readout<{input_t}, {output_t}, {config}>({input}, {output});'
-readout_include_list = ['nnet_utils/nnet_snn_readout.h']
 
 
 class SNNReadoutConfigTemplate(LayerConfigTemplate):
@@ -113,7 +111,7 @@ class SNNReadoutConfigTemplate(LayerConfigTemplate):
 
 class SNNReadoutFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(SNNReadout, include_header=readout_include_list)
+        super().__init__(SNNReadout, include_header=snn_include_list)
         self.template = readout_function_template
 
     def format(self, node):
