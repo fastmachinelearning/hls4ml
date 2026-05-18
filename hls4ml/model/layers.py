@@ -1123,7 +1123,7 @@ class SNNReadout(Layer):
         Attribute('window_size', value_type=int, default=1),
         Attribute('class_threshold', value_type=int, default=1),
         Attribute('beta', value_type=float, default=1.0),
-        ChoiceAttribute('output_mode', choices=['spike', 'membrane'], default='spike'),
+        ChoiceAttribute('output_mode', choices=['spike', 'membrane'], default='membrane'),
         ChoiceAttribute(
             'state_reset_policy',
             choices=['fixed_window', 'tlast', 'host_pulse', 'never'],
@@ -1133,7 +1133,7 @@ class SNNReadout(Layer):
         ChoiceAttribute(
             'decision_rule',
             choices=['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit', 'argmax_membrane'],
-            default='argmax_spike_count',
+            default='argmax_membrane',
             configurable=False,
         ),
         TypeAttribute('membrane'),
