@@ -288,11 +288,13 @@ class KerasV3HandlerDispatcher:
             ret = *ret, act_config
         return ret
 
+
 def _model_has_io_graph(model: 'keras.Model') -> bool:
     try:
         return bool(model.inputs) and bool(model.outputs)
     except (AttributeError, ValueError):
         return False
+
 
 def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_fallback=True):
     """Parse a keras model into a list of dictionaries, each

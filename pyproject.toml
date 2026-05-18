@@ -44,9 +44,7 @@ optional-dependencies.optimization = [
   "packaging",
 ]
 optional-dependencies.profiling = [ "matplotlib", "pandas", "seaborn" ]
-optional-dependencies.qkeras = [
-  "qkeras-v3"
-]
+optional-dependencies.qkeras = [ "qkeras-v3" ]
 optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [

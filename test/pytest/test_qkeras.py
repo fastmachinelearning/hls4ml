@@ -1,11 +1,11 @@
 import warnings
 from pathlib import Path
 
+import keras
 import numpy as np
 import pytest
-import keras
 from keras.layers import BatchNormalization, Input
-from keras.models import Model, Sequential, model_from_json
+from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm

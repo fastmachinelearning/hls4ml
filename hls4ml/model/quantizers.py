@@ -149,7 +149,7 @@ class QKerasQuantizer(Quantizer):
         fractional = bits - integer - (1 if keep_negative else 0)
         scale = 2.0**fractional
         quantized = np.round(data / alpha * scale) / scale * alpha
-        lower = -2.0**integer * alpha if keep_negative else 0.0
+        lower = -(2.0**integer) * alpha if keep_negative else 0.0
         upper = (2.0**integer - 1.0 / scale) * alpha
         return np.clip(quantized, lower, upper)
 

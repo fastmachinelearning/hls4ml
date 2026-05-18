@@ -129,9 +129,8 @@ def get_activation_quantizer(keras_layer, input_names, activation_name='activati
             activation_config['class_name'] = 'ternary_tanh'
         elif activation_config['class_name'] == 'binary':
             activation_config['class_name'] = 'binary_tanh'
-        elif (
-            activation_config['class_name'] == 'quantized_bits'
-            and not activation_config['config'].get('keep_negative', True)
+        elif activation_config['class_name'] == 'quantized_bits' and not activation_config['config'].get(
+            'keep_negative', True
         ):
             activation_config['class_name'] = 'quantized_relu'
             activation_config['config'].setdefault('negative_slope', 0.0)

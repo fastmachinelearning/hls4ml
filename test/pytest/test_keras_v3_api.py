@@ -105,6 +105,7 @@ def test_qkeras_activation_dict_ternary_maps_to_ternary_tanh(monkeypatch):
     assert activation_config['threshold'] == 0.33
     assert activation_config['activation_quantizer']['class_name'] == 'ternary_tanh'
 
+
 def test_config_from_functional_model_with_false_built_flag():
     inputs = keras.Input(shape=(3,), name='input')
     outputs = Dense(2, name='dense')(inputs)

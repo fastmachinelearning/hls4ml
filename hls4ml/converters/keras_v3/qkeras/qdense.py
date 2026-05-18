@@ -1,19 +1,18 @@
-from collections.abc import Sequence
 import numpy as np
 
 from ..core import KerasV3LayerHandler
 
 
 class QKerasQDenseHandler(KerasV3LayerHandler):
-    handles = ("qkeras.qlayers.QDense", "QDense")
+    handles = ('qkeras.qlayers.QDense', 'QDense')
 
-    def handle(self, layer, in_tensors: Sequence["KerasTensor"], out_tensors: Sequence["KerasTensor"]):
+    def handle(self, layer, in_tensors, out_tensors):
         config = layer.get_config()
-        layer_dict = {"config": config, "class_name": layer.__class__.__name__}
+        layer_dict = {'config': config, 'class_name': layer.__class__.__name__}
 
         class IsolatedLayerReader:
             def get_weights_data(self, layer_name, var_name):
-                assert layer_name == layer.name, f"Processing {layer.name}, but handler tried to read {layer_name}"
+                assert layer_name == layer.name, f'Processing {layer.name}, but handler tried to read {layer_name}'
                 for w in layer.weights:
                     if var_name in w.name:
                         return np.array(w)
@@ -27,17 +26,17 @@ class QKerasQDenseHandler(KerasV3LayerHandler):
 
         v2_handler = v2_layer_handlers.get(layer.__class__.__name__)
         if v2_handler is None:
-            raise ValueError(f"No v2 handler found for {layer.__class__.__name__}")
+            raise ValueError(f'No v2 handler found for {layer.__class__.__name__}')
 
         ret, _ = v2_handler(layer_dict, input_names, input_shapes, reader)
 
         # override / normalize the names used by the v3 graph parser
-        ret["name"] = layer.name
-        ret["class_name"] = ret.get("class_name", "QDense")
-        ret["module"] = layer.__module__
-        ret["input_keras_tensor_names"] = [t.name for t in in_tensors]
-        ret["input_shape"] = [list(t.shape[1:]) for t in in_tensors]
-        ret["output_keras_tensor_names"] = [t.name for t in out_tensors]
+        ret['name'] = layer.name
+        ret['class_name'] = ret.get('class_name', 'QDense')
+        ret['module'] = layer.__module__
+        ret['input_keras_tensor_names'] = [t.name for t in in_tensors]
+        ret['input_shape'] = [list(t.shape[1:]) for t in in_tensors]
+        ret['output_keras_tensor_names'] = [t.name for t in out_tensors]
 
         activation = config.get('activation')
         if activation not in (None, 'linear'):
