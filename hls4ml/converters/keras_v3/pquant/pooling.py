@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from hls4ml.converters.keras_v3._base import register
 from hls4ml.converters.keras_v3.pooling import PoolingHandler
 
 from ._base import PQLayerHandler
@@ -11,7 +10,6 @@ if TYPE_CHECKING:
     from keras import KerasTensor
 
 
-@register
 class PQAvgPoolHandler(PQLayerHandler, PoolingHandler):
     handles = (
         'pquant.core.keras.layers.PQAvgPool1d',

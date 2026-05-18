@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from hls4ml.converters.keras_v3._base import KerasV3LayerHandler, register
+from hls4ml.converters.keras_v3._base import KerasV3LayerHandler
 from hls4ml.converters.keras_v3.conv import ConvHandler
 from hls4ml.converters.keras_v3.core import ActivationHandler, DenseHandler
 from hls4ml.converters.keras_v3.hgq2._base import override_io_tensor_confs
@@ -66,7 +66,6 @@ def extract_pquant_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) ->
         return extract_quantizer_config(q, lambda q: (q.k, q.i, q.f), tensor, is_input, 'overflow')
 
 
-@register
 class PQLayerHandler(KerasV3LayerHandler):
     def __call__(
         self,
@@ -130,7 +129,6 @@ class PQLayerHandler(KerasV3LayerHandler):
         return class_name
 
 
-@register
 class PQActivationHandler(PQLayerHandler, ActivationHandler):
     handles = ('pquant.core.keras.activations.PQActivation',)
 
@@ -156,7 +154,6 @@ class PQActivationHandler(PQLayerHandler, ActivationHandler):
         return (config,)
 
 
-@register
 class PQBatchNormalizationHandler(PQLayerHandler):
     handles = ('pquant.core.keras.layers.PQBatchNormalization',)
 
@@ -193,7 +190,6 @@ class PQBatchNormalizationHandler(PQLayerHandler):
         return conf
 
 
-@register
 class PQConvHandler(PQLayerHandler, ConvHandler):
     handles = ('pquant.core.keras.layers.PQConv1d', 'pquant.core.keras.layers.PQConv2d')
 
@@ -216,7 +212,6 @@ class PQConvHandler(PQLayerHandler, ConvHandler):
         return conf
 
 
-@register
 class PQDenseHandler(PQLayerHandler, DenseHandler):
     handles = ('pquant.core.keras.layers.PQDense',)
 
