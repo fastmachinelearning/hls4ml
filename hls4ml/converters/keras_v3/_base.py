@@ -33,7 +33,16 @@ def maybe_add_attrs(config: dict[str, Any] | DefaultConfig, obj: Any, *attrs: st
             config[attr] = getattr(obj, attr)
 
 
-class KerasV3LayerHandler:
+class KerasV3LayerHandlerMeta(type):
+    def __new__(cls, name, bases, attrs):
+        new_class = super().__new__(cls, name, bases, attrs)
+        if 'handles' in attrs:
+            for handle in attrs['handles']:
+                registry[handle] = new_class()
+        return new_class
+
+
+class KerasV3LayerHandler(metaclass=KerasV3LayerHandlerMeta):
     """Base class for keras v3 layer handlers. Subclass this class to create a handler for a specific layer type."""
 
     handles = ()
@@ -120,6 +129,8 @@ class KerasV3LayerHandler:
         return layer.__class__.__name__
 
     def maybe_get_activation_config(self, layer, out_tensors):
+        import inspect
+
         import keras
 
         activation = getattr(layer, 'activation', None)
@@ -130,12 +141,31 @@ class KerasV3LayerHandler:
             intermediate_tensor_name = f'{out_tensors[0].name}_activation'
             act_cls_name = activation.__name__
             act_config = {
-                'class_name': 'Activation',
                 'activation': act_cls_name,
                 'name': f'{name}_{act_cls_name}',
                 'input_keras_tensor_names': [intermediate_tensor_name],
                 'output_keras_tensor_names': [out_tensors[0].name],
             }
+
+            # Check activation type & update parameters
+            match activation:
+                case keras.activations.softmax:
+                    class_name = 'Softmax'
+                    act_config['axis'] = -1
+                case keras.activations.hard_sigmoid:
+                    class_name = 'HardActivation'
+                case keras.activations.leaky_relu:
+                    class_name = 'LeakyReLU'
+                    signature = inspect.signature(keras.activations.leaky_relu)
+                    act_config['activ_param'] = signature.parameters['negative_slope'].default
+                case keras.activations.elu:
+                    class_name = 'ELU'
+                    signature = inspect.signature(keras.activations.elu)
+                    act_config['activ_param'] = signature.parameters['alpha'].default
+                case _:
+                    class_name = 'Activation'
+            act_config['class_name'] = class_name
+
             return act_config, intermediate_tensor_name
         return None, None
 
@@ -160,26 +190,3 @@ class KerasV3LayerHandler:
         import keras
 
         return keras.ops.convert_to_numpy(getattr(layer, key))
-
-
-def register(cls: type):
-    """Decorator to register a handler for a specific layer class. Suggested to decorate the `KerasV3LayerHandler` class.
-
-    Args:
-        cls: the class to register the handler for.
-
-    Examples:
-        ```python
-        @keras_dispatcher.register
-        class MyLayerHandler(KerasV3LayerHandler):
-            handles = ('my_package.src.submodule.MyLayer', 'MyLayer2')
-
-            def handle(self, layer, inp_tensors, out_tensors):
-                # handler code
-        ```
-    """
-
-    fn = cls()
-    for k in fn.handles:
-        registry[k] = fn
-    return cls

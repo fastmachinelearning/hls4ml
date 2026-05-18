@@ -2,6 +2,40 @@ import os
 
 import pytest
 
+# Characters that are problematic in file/directory names
+_PROBLEMATIC_CHARS = ':;=%\'"<>|?*\\'
+
+
+def _sanitize_test_id(s: str) -> str:
+    """
+    Sanitize a test identifier for use in paths.
+    - remove .py
+    - remove test/pytest/ prefix
+    - : → _ (:: → _)
+    - / → _
+    - [ and ] → _
+    - remove problematic chars: % ' " < > | ? * \\ etc.
+    """
+    s = s.replace('.py', '')
+    s = s.replace('test/pytest/', '')
+    s = s.replace('::', '_')
+    s = s.replace('/', '_')
+    s = s.replace('[', '_')
+    s = s.replace(']', '_')
+    for c in _PROBLEMATIC_CHARS:
+        s = s.replace(c, '')
+    return s.strip('_')
+
+
+@pytest.fixture
+def test_case_id(request):
+    """
+    Return a unique identifier for the current parametrized test case.
+    Format: test_file_test_name_param_id (from test_file.py::test_name[param_id]).
+    Used for generating output directory names.
+    """
+    return _sanitize_test_id(request.node.nodeid)
+
 
 def str_to_bool(val):
     return str(val).lower() in ('1', 'true')

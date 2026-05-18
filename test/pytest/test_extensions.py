@@ -130,7 +130,7 @@ def register_custom_layer():
 
 
 @pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
-def test_extensions(tmp_path, backend_id):
+def test_extensions(test_case_id, tmp_path, backend_id):
     # Register the optimization passes (if any)
     backend = hls4ml.backends.get_backend(backend_id)
     ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
@@ -165,7 +165,7 @@ def test_extensions(tmp_path, backend_id):
 
     hmodel = hls4ml.converters.convert_from_keras_model(
         kmodel,
-        output_dir=str(test_root_path / f'hls4mlprj_extensions_{backend_id}'),
+        output_dir=str(test_root_path / test_case_id),
         backend=backend_id,
         io_type='io_parallel',
         hls_config={'Model': {'Precision': 'ap_int<6>', 'ReuseFactor': 1}},

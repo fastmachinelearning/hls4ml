@@ -3,7 +3,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     import keras
@@ -12,7 +12,6 @@ if typing.TYPE_CHECKING:
 rnn_layers = ('SimpleRNN', 'LSTM', 'GRU')
 
 
-@register
 class RecurentHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.rnn.simple_rnn.SimpleRNN',
@@ -72,7 +71,6 @@ class RecurentHandler(KerasV3LayerHandler):
         return (_config,)
 
 
-@register
 class BidirectionalHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.rnn.bidirectional.Bidirectional',)
 

@@ -35,7 +35,7 @@ def generate_data(input_shape):
         ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
     ],
 )
-def test_softmax(backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+def test_softmax(test_case_id, backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
     X = generate_data
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
@@ -58,13 +58,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
     inp_layer_name = next(iter(cfg['LayerName'].keys()))
     cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
 
-    odir = str(
-        test_root_path
-        / (
-            f'hls4mlprj_softmax_{backend}_{io_type}_{strategy}_{input_shape}'
-            f'_input-bits={input_bits}_table-bits={table_bits}_custom-accum={custom_accum}'
-        )
-    )
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
     )
@@ -81,7 +75,7 @@ def test_softmax(backend, strategy, generate_data, input_bits, input_shape, tabl
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_softmax_skipped(backend, io_type):
+def test_softmax_skipped(test_case_id, backend, io_type):
     X = np.random.rand(100, 10)
     dense = tf.keras.layers.Dense(14, input_shape=(10,), name='dense')
     softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
@@ -91,7 +85,7 @@ def test_softmax_skipped(backend, io_type):
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['skip'] = True
 
-    odir = str(test_root_path / 'hls4mlprj_softmax_skipped_{}_{}').format(backend, io_type)
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
     )

@@ -11,6 +11,7 @@ from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
+from quantizers import get_fixed_quantizer_np
 
 from hls4ml.model.layers import (
     Activation,
@@ -18,9 +19,11 @@ from hls4ml.model.layers import (
     Concatenate,
     Conv1D,
     Conv2D,
+    DACombinational,
     Dense,
     Einsum,
     EinsumDense,
+    Embedding,
     GlobalPooling1D,
     GlobalPooling2D,
     Input,
@@ -192,6 +195,13 @@ def _(layer: Transpose):
     i = np.transpose(i, inv_perm)
     f = np.transpose(f, inv_perm)
     return ((k, i, f),)
+
+
+@_request_kif.register
+def _(layer: DACombinational):
+    comb = layer.attributes['da_comb_trace']
+    k, i, f = comb.inp_kifs
+    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
 
 
 def requested_kif(layer: Layer) -> KIF_t:
@@ -631,6 +641,39 @@ def _(layer: UnaryLUT):
     k = np.full(shape, np.max(k), dtype=np.int16)
     i = np.full(shape, np.max(i), dtype=np.int16)
     f = np.full(shape, np.max(f), dtype=np.int16)
+    return k, i, f
+
+
+@_produce_kif.register
+def _(layer: DACombinational):
+    from da4ml.trace import FixedVariableArray, comb_trace
+
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    inp = FixedVariableArray.from_kif(k_in, i_in, f_in)
+    out = layer.attributes['da_comb_logic'](inp)
+    comb = comb_trace(inp, out)
+    k, i, f = comb.out_kifs
+    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+
+
+@_produce_kif.register
+def _(layer: Embedding):
+    _, out_quantizers = get_output_layers_and_quantizers(layer)
+    assert len(out_quantizers) == 1, 'Embedding layer should have exactly one consumer'
+    quant = out_quantizers[0]
+    k, b, i = quant.mask_kbi
+    k, b, i = k[0], b[0], i[0]
+    i, f = i - k, b - i
+    k, i, f = np.max([k, i, f], axis=1) if isinstance(k, np.ndarray) else (k, i, f)
+    quant = get_fixed_quantizer_np(quant.RND, quant.SAT)
+    data = layer.attributes['embeddings'].data
+    qdata = quant(data, k, i, f)
+    layer.attributes['embeddings'].data = qdata
+    k, i, f = minimal_kif(qdata)
+    shape = get_output_shape(layer)
+    k = np.broadcast_to(np.max(k, axis=0).astype(np.int16), shape)
+    i = np.broadcast_to(np.max(i, axis=0).astype(np.int16), shape)
+    f = np.broadcast_to(np.max(f, axis=0).astype(np.int16), shape)
     return k, i, f
 
 
