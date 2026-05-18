@@ -9,7 +9,7 @@ from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
-from qkeras.qconvolutional import QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
+from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
@@ -422,6 +422,58 @@ def test_quantizer_parsing(test_case_id, randX_100_10, backend, io_type):
 @pytest.fixture(scope='module')
 def randX_100_8_8_1():
     return np.random.rand(100, 8, 8, 1)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize(
+    'qconv_layer,input_shape,input_data_shape,layer_kwargs',
+    [
+        (QConv1D, (8, 2), (5, 8, 2), {'filters': 3, 'kernel_size': 3}),
+        (QConv2D, (8, 8, 1), (5, 8, 8, 1), {'filters': 2, 'kernel_size': (3, 3)}),
+    ],
+    ids=['qconv1d', 'qconv2d'],
+)
+def test_qconv_activation_kwarg(test_case_id, qconv_layer, input_shape, input_data_shape, layer_kwargs, backend, io_type):
+    """
+    Test QConv1D and QConv2D handling with activation quantizers passed as layer kwargs.
+    """
+    X = np.random.default_rng(12345).random(input_data_shape)
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+
+    inputs = Input(shape=input_shape, name='input_layer')
+    outputs = qconv_layer(
+        **layer_kwargs,
+        name='qconv',
+        kernel_quantizer='quantized_bits(4, 0, alpha=1)',
+        bias_quantizer='quantized_bits(4, 0, alpha=1)',
+        kernel_initializer='ones',
+        bias_initializer='zeros',
+        activation='quantized_relu(4, 0)',
+    )(inputs)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend='Vivado'
+    )
+    assert 'qconv_activation' in config['LayerName']
+
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        backend=backend,
+        io_type=io_type,
+        allow_da_fallback=False,
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
