@@ -19,7 +19,8 @@ def _to_numpy(value, name):
         raise Exception(f'Could not parse "{name}" as numpy array: {value}') from err
 
 
-def _parse_scalar_or_vector(value, name, n_out):
+def _parse_scalar_or_vector(class_object, name, n_out):
+    value = getattr(class_object, name, None)
     arr = _to_numpy(value, name)
     flat = arr.reshape(-1)
 
@@ -69,8 +70,8 @@ def parse_lif_layer(operation, layer_name, input_names, input_shapes, node, clas
     assert operation == 'Leaky'
 
     n_out = input_shapes[0][-1]
-    beta = _parse_scalar_or_vector(getattr(class_object, 'beta', None), 'beta', n_out)
-    threshold = _parse_scalar_or_vector(getattr(class_object, 'threshold', None), 'threshold', n_out)
+    beta = _parse_scalar_or_vector(class_object, 'beta', n_out)
+    threshold = _parse_scalar_or_vector(class_object, 'threshold', n_out)
 
     layer = {}
     use_if = beta['mode'] == 'scalar' and np.isclose(beta['scalar'], 1.0, rtol=0.0, atol=BETA_TO_IF_TOL)
