@@ -1119,16 +1119,16 @@ class LIFNeuron(Layer):
 
 class SNNReadout(Layer):
     _expected_attributes = [
-        Attribute('n_classes', configurable=False),
-        Attribute('window_size', value_type=int, default=1, configurable=False),
-        Attribute('class_threshold', value_type=int, default=1, configurable=False),
+        Attribute('n_classes'),
+        Attribute('window_size', value_type=int, default=1),
+        Attribute('class_threshold', value_type=int, default=1),
         Attribute('beta', value_type=float, default=1.0),
-        ChoiceAttribute('output_mode', choices=['spike', 'membrane'], default='spike', configurable=False),
+        ChoiceAttribute('output_mode', choices=['spike', 'membrane'], default='spike'),
         ChoiceAttribute(
             'state_reset_policy',
             choices=['fixed_window', 'tlast', 'host_pulse', 'never'],
             default='fixed_window',
-            configurable=True,
+            configurable=False,
         ),
         ChoiceAttribute(
             'decision_rule',
