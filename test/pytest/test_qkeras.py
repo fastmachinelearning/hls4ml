@@ -4,7 +4,7 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from keras.layers import BatchNormalization, Input
+from keras.layers import BatchNormalization, EinsumDense, Input
 from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
@@ -385,6 +385,46 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
         assert sum(wrong) / len(wrong) <= 0.005
 
 
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_qkeras_einsum_dense(test_case_id, randX_100_10, backend, io_type):
+    """
+    Test a QKeras-quantized activation -> EinsumDense -> QKeras-quantized activation topology.
+    """
+    if keras.__version__ < '3.0':
+        pytest.skip('EinsumDense conversion is only supported for Keras v3')
+
+    X = randX_100_10[:, :4]
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+
+    inputs = Input(shape=(4,), name='input_layer')
+    x = QActivation(quantized_bits(6, 0, alpha=1), name='input_quant')(inputs)
+    x = EinsumDense(
+        'bi,io->bo',
+        output_shape=3,
+        name='einsum_dense',
+        kernel_initializer=keras.initializers.Constant(0.25),
+        bias_axes=None,
+    )(x)
+    outputs = QActivation(quantized_relu(6, 0), name='output_quant')(x)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer_parsing(test_case_id, randX_100_10, backend, io_type):
@@ -521,9 +561,16 @@ def randX_10_32_32_3():
 
 # Currently only Vivado and Vitis is supported for io_stream.
 # Note, qkeras only supports 2d version of depthwise
+def KQ():
+    return quantized_bits(bits=8, integer=3, keep_negative=True, alpha=1.0, symmetric=False)
+
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
+@pytest.mark.parametrize('quantized_bits', ['quantized_bits(6, 0, alpha=1)', KQ()])
+@pytest.mark.parametrize('use_bias', [True, False])
+@pytest.mark.parametrize('padding', ['valid', 'same'])
+def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type, quantized_bits, use_bias, padding):
     """
     Test proper handling of QDepthwiseConv2D.
     """
@@ -534,9 +581,11 @@ def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
         QDepthwiseConv2D(
             kernel_size=(3, 3),
             input_shape=(32, 32, 3),
-            depthwise_quantizer='quantized_bits(6, 0, alpha=1)',
-            bias_quantizer='quantized_bits(4, 0, alpha=1)',
+            depthwise_quantizer=quantized_bits,
+            bias_quantizer=quantized_bits,
             bias_initializer='he_normal',
+            use_bias=use_bias,
+            padding=padding,
             activation='quantized_relu(3, 0)',
         )
     )
