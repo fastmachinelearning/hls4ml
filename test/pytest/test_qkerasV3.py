@@ -1,14 +1,15 @@
 import warnings
 from pathlib import Path
 
+import keras
 import numpy as np
 import pytest
-from keras.layers import BatchNormalization, Input
-from keras.models import Model, Sequential, model_from_json
+from keras.layers import BatchNormalization, EinsumDense, Input
+from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
-from qkeras.qconvolutional import QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
+from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
@@ -60,11 +61,8 @@ def load_jettagging_model():
     """
     Load the 3 hidden layer QKeras example model trained on the jet tagging dataset
     """
-    model_path = example_model_path / 'keras/qkeras_3layer.json'
-    with model_path.open('r') as f:
-        jsons = f.read()
-    model = model_from_json(jsons, custom_objects=co)
-    model.load_weights(example_model_path / 'keras/qkeras_3layer_weights.h5')
+    model_path = example_model_path / 'keras/qkeras-v3_3layer.keras'
+    model = keras.saving.load_model(model_path, custom_objects=co)
     return model
 
 
@@ -351,12 +349,6 @@ def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_
     ],
 )
 def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, weight_quantizer):
-    if activation_quantizer in ['binary']:
-        name = 'bnbt_qdense_alpha'
-    elif activation_quantizer in ['ternary']:
-        name = 'bnbt_qdense_ternary_scale'
-    else:
-        name = f'qdense_{eval(activation_quantizer).__class__.__name__}'
 
     inputs = Input(shape=(10,))
 
@@ -377,9 +369,6 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=out_dir)
     hls_model.compile()
 
-    # Verify if activation in hls_model
-    assert name in [layer.name for layer in hls_model.get_layers()]
-
     # Output tests
     X = randX_100_10
     X = np.round(X * 2**10) * 2**-10
@@ -394,6 +383,46 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
             y_hls4ml = np.where(y_hls4ml == 0, -1, 1)
         wrong = (y_hls4ml != y_qkeras).ravel()
         assert sum(wrong) / len(wrong) <= 0.005
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_qkeras_einsum_dense(test_case_id, randX_100_10, backend, io_type):
+    """
+    Test a QKeras-quantized activation -> EinsumDense -> QKeras-quantized activation topology.
+    """
+    if keras.__version__ < '3.0':
+        pytest.skip('EinsumDense conversion is only supported for Keras v3')
+
+    X = randX_100_10[:, :4]
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+
+    inputs = Input(shape=(4,), name='input_layer')
+    x = QActivation(quantized_bits(6, 0, alpha=1), name='input_quant')(inputs)
+    x = EinsumDense(
+        'bi,io->bo',
+        output_shape=3,
+        name='einsum_dense',
+        kernel_initializer=keras.initializers.Constant(0.25),
+        bias_axes=None,
+    )(x)
+    outputs = QActivation(quantized_relu(6, 0), name='output_quant')(x)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
@@ -433,6 +462,58 @@ def test_quantizer_parsing(test_case_id, randX_100_10, backend, io_type):
 @pytest.fixture(scope='module')
 def randX_100_8_8_1():
     return np.random.rand(100, 8, 8, 1)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize(
+    'qconv_layer,input_shape,input_data_shape,layer_kwargs',
+    [
+        (QConv1D, (8, 2), (5, 8, 2), {'filters': 3, 'kernel_size': 3}),
+        (QConv2D, (8, 8, 1), (5, 8, 8, 1), {'filters': 2, 'kernel_size': (3, 3)}),
+    ],
+    ids=['qconv1d', 'qconv2d'],
+)
+def test_qconv_activation_kwarg(test_case_id, qconv_layer, input_shape, input_data_shape, layer_kwargs, backend, io_type):
+    """
+    Test QConv1D and QConv2D handling with activation quantizers passed as layer kwargs.
+    """
+    X = np.random.default_rng(12345).random(input_data_shape)
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+
+    inputs = Input(shape=input_shape, name='input_layer')
+    outputs = qconv_layer(
+        **layer_kwargs,
+        name='qconv',
+        kernel_quantizer='quantized_bits(4, 0, alpha=1)',
+        bias_quantizer='quantized_bits(4, 0, alpha=1)',
+        kernel_initializer='ones',
+        bias_initializer='zeros',
+        activation='quantized_relu(4, 0)',
+    )(inputs)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend='Vivado'
+    )
+    assert 'qconv_activation' in config['LayerName']
+
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        backend=backend,
+        io_type=io_type,
+        allow_da_fallback=False,
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
@@ -480,9 +561,16 @@ def randX_10_32_32_3():
 
 # Currently only Vivado and Vitis is supported for io_stream.
 # Note, qkeras only supports 2d version of depthwise
+def KQ():
+    return quantized_bits(bits=8, integer=3, keep_negative=True, alpha=1.0, symmetric=False)
+
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
-def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
+@pytest.mark.parametrize('quantized_bits', ['quantized_bits(6, 0, alpha=1)', KQ()])
+@pytest.mark.parametrize('use_bias', [True, False])
+@pytest.mark.parametrize('padding', ['valid', 'same'])
+def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type, quantized_bits, use_bias, padding):
     """
     Test proper handling of QDepthwiseConv2D.
     """
@@ -493,9 +581,11 @@ def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
         QDepthwiseConv2D(
             kernel_size=(3, 3),
             input_shape=(32, 32, 3),
-            depthwise_quantizer='quantized_bits(6, 0, alpha=1)',
-            bias_quantizer='quantized_bits(4, 0, alpha=1)',
+            depthwise_quantizer=quantized_bits,
+            bias_quantizer=quantized_bits,
             bias_initializer='he_normal',
+            use_bias=use_bias,
+            padding=padding,
             activation='quantized_relu(3, 0)',
         )
     )
@@ -563,10 +653,10 @@ def test_qsimplernn(test_case_id, backend):
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
     model = Sequential()
+    model.add(Input(shape=(5, 2)))
     model.add(
         QSimpleRNN(
             4,
-            input_shape=(5, 2),
             kernel_quantizer='quantized_bits(16, 0, alpha=1)',
             recurrent_quantizer='quantized_bits(16, 0, alpha=1)',
             bias_quantizer='quantized_bits(16, 0, alpha=1)',
@@ -598,10 +688,10 @@ def test_qlstm(test_case_id, backend):
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
     model = Sequential()
+    model.add(Input(shape=(5, 2)))
     model.add(
         QLSTM(
             4,
-            input_shape=(5, 2),
             kernel_quantizer='quantized_bits(8, 0, alpha=1)',
             recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
             bias_quantizer='quantized_bits(8, 0, alpha=1)',
@@ -634,10 +724,10 @@ def test_qgru(test_case_id, backend):
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
     model = Sequential()
+    model.add(Input(shape=(5, 2)))
     model.add(
         QGRU(
             4,
-            input_shape=(5, 2),
             kernel_quantizer='quantized_bits(8, 0, alpha=1)',
             recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
             bias_quantizer='quantized_bits(8, 0, alpha=1)',

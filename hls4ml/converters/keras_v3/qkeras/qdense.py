@@ -1,6 +1,7 @@
 import numpy as np
 
 from ..core import KerasV3LayerHandler
+from util import IsolatedLayerReader
 
 
 class QKerasQDenseHandler(KerasV3LayerHandler):
@@ -10,15 +11,7 @@ class QKerasQDenseHandler(KerasV3LayerHandler):
         config = layer.get_config()
         layer_dict = {'config': config, 'class_name': layer.__class__.__name__}
 
-        class IsolatedLayerReader:
-            def get_weights_data(self, layer_name, var_name):
-                assert layer_name == layer.name, f'Processing {layer.name}, but handler tried to read {layer_name}'
-                for w in layer.weights:
-                    if var_name in w.name:
-                        return np.array(w)
-                return None
-
-        reader = IsolatedLayerReader()
+        reader = IsolatedLayerReader(layer)
         input_shapes = [list(t.shape) for t in in_tensors]
         input_names = [t.name for t in in_tensors]
 

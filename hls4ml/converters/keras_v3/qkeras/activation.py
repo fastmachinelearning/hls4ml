@@ -1,12 +1,10 @@
 from typing import Any
 
-import numpy as np
-
-from hls4ml.converters.keras_v3.core import KerasV3LayerHandler  # adjust import to your tree
+from ..core import KerasV3LayerHandler
+from util import IsolatedLayerReader
 
 
 class QKerasQActivationHandler(KerasV3LayerHandler):
-    # IMPORTANT: match dispatcher key(s)
     handles = ('qkeras.qlayers.QActivation', 'QActivation')
 
     def handle(
@@ -16,19 +14,10 @@ class QKerasQActivationHandler(KerasV3LayerHandler):
         out_tensors,
     ) -> tuple[dict[str, Any], ...]:
 
-        # --- v2 handler plumbing (same pattern as your dispatcher.v2_call) ---
         config = layer.get_config()
         layer_dict = {'config': config, 'class_name': layer.__class__.__name__}
 
-        class IsolatedLayerReader:
-            def get_weights_data(self, layer_name, var_name):
-                assert layer_name == layer.name, f'Processing {layer.name}, but handler tried to read {layer_name}'
-                for w in layer.weights:
-                    if var_name in w.name:
-                        return np.array(w)
-                return None
-
-        reader = IsolatedLayerReader()
+        reader = IsolatedLayerReader(layer)
         input_shapes = [list(t.shape) for t in in_tensors]
         input_names = [t.name for t in in_tensors]
         output_names = [t.name for t in out_tensors]

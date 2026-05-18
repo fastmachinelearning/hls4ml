@@ -53,7 +53,8 @@ The following Python packages are all optional and are only required if you inte
 * `PyTorch <https://pytorch.org/get-started>`_ is required by the PyTorch converter.
 
 * Quantization support
-   * `QKeras <https://github.com/fastmachinelearning/qkeras-v3>`_: based on Keras v3. See `frontend/keras <../frontend/keras.html>`_ for more details
+   * `QKeras <https://github.com/fastmachinelearning/qkeras>`_: based on Keras v2. See `frontend/keras <../frontend/keras.html>`_ for more details
+   * `QKeras-v3 <https://github.com/fastmachinelearning/qkeras-v3>`_: based on Keras v3. See `frontend/keras <../frontend/keras.html>`_ for more details
    * `HGQ <https://github.com/calad0i/HGQ>`_: Based on Keras v2. See `advanced/HGQ <../advanced/hgq.html>`_ for more details.
    * `HGQ2 <https://github.com/calad0i/HGQ2>`_: Based on Keras v3. See `advanced/HGQ2 <../advanced/hgq.html>`_ for more details.
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
@@ -169,7 +170,7 @@ Optional Dependencies
 ``hls4ml`` provides several optional dependency groups that can be installed based on your specific needs. Multiple groups can be installed simultaneously by specifying them in a comma-separated list (``pip install hls4ml[xxx,yyy,zzz]``).
 
 .. warning::
-   Some optional dependencies may conflict with each other. For example, Keras v2 and Keras v3 cannot coexist in the same Python environment. Also ``pip install hls4ml[qkeras,hgq2]`` will not work since HQG2 has naming conflicts with qkeras layers (e.g. qdense).
+   Some optional dependencies may conflict with each other. For example, Keras v2 and Keras v3 cannot coexist in the same Python environment; ``qkeras`` requires certain versions of TensorFlow that may conflict with other packages. For example, ``pip install hls4ml[qkeras,hgq2]`` will not work.
 
 .. code-block::
 
@@ -196,6 +197,9 @@ Optional Dependencies
 
    # For QKeras frontend
    pip install hls4ml[qkeras]
+
+   # For QKeras-v3 frontend
+   pip install hls4ml[qkeras-v3]
 
    # For Quartus report parsing
    pip install hls4ml[quartus-report]
