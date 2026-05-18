@@ -4,7 +4,7 @@ import pytest
 import torch
 
 import hls4ml
-import hls4ml.utils.snntorch
+import hls4ml.contrib.snntorch
 import hls4ml.utils.torch
 
 test_root_path = Path(__file__).parent
@@ -68,7 +68,7 @@ class SNNClassifier(torch.nn.Module):
         super().__init__()
         self.fc = torch.nn.Linear(4, 4)
         self.neuron = Leaky(beta=0.95, threshold=1.2, reset_mechanism='subtract')
-        self.readout = hls4ml.utils.snntorch.SNNReadout(
+        self.readout = hls4ml.contrib.snntorch.SNNReadout(
             n_classes=4, window_size=12, decision_rule='threshold_then_argmax', class_threshold=3
         )
 
@@ -82,7 +82,7 @@ class SNNMembraneReadoutClassifier(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.fc = torch.nn.Linear(4, 4)
-        self.readout = hls4ml.utils.snntorch.SNNReadout(
+        self.readout = hls4ml.contrib.snntorch.SNNReadout(
             n_classes=4,
             window_size=12,
             decision_rule='argmax_membrane',

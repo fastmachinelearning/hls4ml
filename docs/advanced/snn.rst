@@ -48,7 +48,7 @@ marker module:
 
 .. code-block:: python
 
-   from hls4ml.utils.snntorch import SNNReadout
+   from hls4ml.contrib.snntorch import SNNReadout
 
 The marker is an identity in PyTorch and is converted to the hls4ml
 ``SNNReadout`` layer by the PyTorch frontend. See Jupyter Notebook example.
