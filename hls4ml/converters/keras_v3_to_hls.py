@@ -262,20 +262,37 @@ class KerasV3HandlerDispatcher:
 
         activation = getattr(layer, 'activation', None)
         if activation not in (keras.activations.linear, None):
-            assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
             intermediate_tensor_name = f'{output_names[0]}_activation'
             ret[0]['output_keras_tensor_names'] = (intermediate_tensor_name,)
-            act_cls_name = activation.__name__
-            act_config = {
-                'class_name': 'Activation',
-                'activation': act_cls_name,
-                'name': f'{layer.name}_{act_cls_name}',
-                'input_keras_tensor_names': (intermediate_tensor_name,),
-                'output_keras_tensor_names': output_names,
-            }
+            if 'qkeras' in str(type(activation)):
+                from hls4ml.converters.keras.qkeras import get_activation_quantizer
+
+                act_config = get_activation_quantizer(layer_dict, input_names)
+                act_config.update(
+                    {
+                        'name': f'{layer.name}_activation',
+                        'input_keras_tensor_names': (intermediate_tensor_name,),
+                        'output_keras_tensor_names': output_names,
+                    }
+                )
+            else:
+                assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
+                act_cls_name = activation.__name__
+                act_config = {
+                    'class_name': 'Activation',
+                    'activation': act_cls_name,
+                    'name': f'{layer.name}_{act_cls_name}',
+                    'input_keras_tensor_names': (intermediate_tensor_name,),
+                    'output_keras_tensor_names': output_names,
+                }
             ret = *ret, act_config
         return ret
 
+def _model_has_io_graph(model: 'keras.Model') -> bool:
+    try:
+        return bool(model.inputs) and bool(model.outputs)
+    except (AttributeError, ValueError):
+        return False
 
 def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_fallback=True):
     """Parse a keras model into a list of dictionaries, each
@@ -303,12 +320,16 @@ def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_
         ValueError: If a circular dependency is detected.
     """
 
-    assert model.built, 'Model must be built before parsing'
-
     import keras
 
-    if isinstance(model, keras.Sequential):
+    if isinstance(model, keras.Sequential) and getattr(model, '_functional', None) is not None:
         model = model._functional  # everything is functional under the hood lol
+
+    if not getattr(model, 'built', False) and not _model_has_io_graph(model):
+        raise ValueError(
+            'Model must be built or called before parsing. '
+            'For Sequential models, add an Input layer or call model.build(input_shape) first.'
+        )
 
     from .keras_v2_to_hls import layer_handlers as v2_layer_handlers  # Delayed import to avoid circular import
 

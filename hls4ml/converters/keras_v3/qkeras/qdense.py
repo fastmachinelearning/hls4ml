@@ -22,7 +22,6 @@ class QKerasQDenseHandler(KerasV3LayerHandler):
         reader = IsolatedLayerReader()
         input_shapes = [list(t.shape) for t in in_tensors]
         input_names = [t.name for t in in_tensors]
-        output_names = [t.name for t in out_tensors]
 
         from hls4ml.converters.keras_v2_to_hls import layer_handlers as v2_layer_handlers
 
@@ -39,5 +38,21 @@ class QKerasQDenseHandler(KerasV3LayerHandler):
         ret["input_keras_tensor_names"] = [t.name for t in in_tensors]
         ret["input_shape"] = [list(t.shape[1:]) for t in in_tensors]
         ret["output_keras_tensor_names"] = [t.name for t in out_tensors]
+
+        activation = config.get('activation')
+        if activation not in (None, 'linear'):
+            from hls4ml.converters.keras.qkeras import get_activation_quantizer
+
+            activation_config = get_activation_quantizer(layer_dict, input_names)
+            intermediate_tensor_name = f'{out_tensors[0].name}_activation'
+            ret['output_keras_tensor_names'] = [intermediate_tensor_name]
+            activation_config.update(
+                {
+                    'name': f'{layer.name}_activation',
+                    'input_keras_tensor_names': [intermediate_tensor_name],
+                    'output_keras_tensor_names': [out_tensors[0].name],
+                }
+            )
+            return ret, activation_config
 
         return ret

@@ -9,6 +9,8 @@ from hls4ml.model.types import FixedPrecisionType
 def get_quantizer_from_config(keras_layer, quantizer_var):
     quantizer_config = keras_layer['config'].get(f'{quantizer_var}_quantizer', None)
     if quantizer_config is None:
+        quantizer_config = keras_layer['config'].get(f'{quantizer_var[0]}q_conf', None)
+    if quantizer_config is None:
         return None  # No quantizer specified in the layer
     if keras_layer['class_name'] == 'QBatchNormalization':
         return QKerasQuantizer(quantizer_config)
@@ -118,27 +120,39 @@ def get_activation_quantizer(keras_layer, input_names, activation_name='activati
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     activation_config = keras_layer['config'][activation_name]
-    quantizer_obj = get_quantizer(activation_config)
-    activation_config = {}
-    # some activations are classes
-    if hasattr(quantizer_obj, 'get_config'):
-        activation_config['class_name'] = quantizer_obj.__class__.__name__
-        if activation_config['class_name'] == 'ternary' or activation_config['class_name'] == 'binary':
-            activation_config['class_name'] += '_tanh'
-        activation_config['config'] = quantizer_obj.get_config()
-    # some activation quantizers are just functions with no config
+    if isinstance(activation_config, dict):
+        activation_config = {
+            'class_name': activation_config['class_name'],
+            'config': activation_config.get('config', {}),
+        }
+        if (
+            activation_config['class_name'] == 'quantized_bits'
+            and not activation_config['config'].get('keep_negative', True)
+        ):
+            activation_config['class_name'] = 'quantized_relu'
+            activation_config['config'].setdefault('negative_slope', 0.0)
     else:
-        activation_config['config'] = {}
-        if 'binary' in quantizer_obj.__name__:
-            activation_config['class_name'] = 'binary_tanh'
-            activation_config['config']['bits'] = 1
-            activation_config['config']['integer'] = 1
-        elif 'ternary' in quantizer_obj.__name__:
-            activation_config['class_name'] = 'ternary_tanh'
-            activation_config['config']['bits'] = 2
-            activation_config['config']['integer'] = 2
+        quantizer_obj = get_quantizer(activation_config)
+        activation_config = {}
+        # some activations are classes
+        if hasattr(quantizer_obj, 'get_config'):
+            activation_config['class_name'] = quantizer_obj.__class__.__name__
+            if activation_config['class_name'] == 'ternary' or activation_config['class_name'] == 'binary':
+                activation_config['class_name'] += '_tanh'
+            activation_config['config'] = quantizer_obj.get_config()
+        # some activation quantizers are just functions with no config
         else:
-            activation_config['class_name'] = 'unknown'
+            activation_config['config'] = {}
+            if 'binary' in quantizer_obj.__name__:
+                activation_config['class_name'] = 'binary_tanh'
+                activation_config['config']['bits'] = 1
+                activation_config['config']['integer'] = 1
+            elif 'ternary' in quantizer_obj.__name__:
+                activation_config['class_name'] = 'ternary_tanh'
+                activation_config['config']['bits'] = 2
+                activation_config['config']['integer'] = 2
+            else:
+                activation_config['class_name'] = 'unknown'
 
     if activation_config['class_name'] not in supported_activations:
         raise Exception('Unsupported QKeras activation: {}'.format(activation_config['class_name']))
@@ -165,7 +179,7 @@ def get_activation_quantizer(keras_layer, input_names, activation_name='activati
         layer['slope_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer['shift_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer[activation_name] = activation_config['class_name'].replace('quantized_', 'hard_')
-    elif activation_config['class_name'] == 'quantized_relu' and activation_config['config']['negative_slope'] != 0:
+    elif activation_config['class_name'] == 'quantized_relu' and activation_config['config'].get('negative_slope', 0) != 0:
         layer['class_name'] = 'LeakyReLU'
         layer[activation_name] = activation_config['class_name'].replace('quantized_', 'leaky_')
         layer['activ_param'] = activation_config['config']['negative_slope']

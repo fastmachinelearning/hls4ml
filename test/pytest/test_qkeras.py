@@ -554,10 +554,10 @@ def test_qsimplernn(test_case_id, backend):
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
     model = Sequential()
+    model.add(Input(shape=(5, 2)))
     model.add(
         QSimpleRNN(
             4,
-            input_shape=(5, 2),
             kernel_quantizer='quantized_bits(16, 0, alpha=1)',
             recurrent_quantizer='quantized_bits(16, 0, alpha=1)',
             bias_quantizer='quantized_bits(16, 0, alpha=1)',
@@ -589,10 +589,10 @@ def test_qlstm(test_case_id, backend):
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
     model = Sequential()
+    model.add(Input(shape=(5, 2)))
     model.add(
         QLSTM(
             4,
-            input_shape=(5, 2),
             kernel_quantizer='quantized_bits(8, 0, alpha=1)',
             recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
             bias_quantizer='quantized_bits(8, 0, alpha=1)',
@@ -625,10 +625,10 @@ def test_qgru(test_case_id, backend):
     X = np.stack([X, X], axis=1).reshape(1, 5, 2)
 
     model = Sequential()
+    model.add(Input(shape=(5, 2)))
     model.add(
         QGRU(
             4,
-            input_shape=(5, 2),
             kernel_quantizer='quantized_bits(8, 0, alpha=1)',
             recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
             bias_quantizer='quantized_bits(8, 0, alpha=1)',

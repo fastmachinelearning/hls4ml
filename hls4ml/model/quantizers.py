@@ -106,7 +106,10 @@ class QKerasQuantizer(Quantizer):
         from qkeras.quantizers import get_quantizer
 
         self.qkeras_config = config
-        self.quantizer_fn = get_quantizer(config)
+        try:
+            self.quantizer_fn = get_quantizer(config)
+        except Exception:
+            self.quantizer_fn = None
         self.alpha = config['config'].get('alpha', None)
         if config['class_name'] == 'quantized_bits':
             self.bits = config['config']['bits']
@@ -126,8 +129,29 @@ class QKerasQuantizer(Quantizer):
 
     def __call__(self, data):
         data = np.array(data, dtype='float32')
-        return self.quantizer_fn(data).numpy()
-        # return self.quantizer_fn(data)
+        if self.quantizer_fn is not None:
+            try:
+                return self.quantizer_fn(data).numpy()
+            except TypeError:
+                pass
+        if self.qkeras_config['class_name'] != 'quantized_bits':
+            raise RuntimeError(f'Cannot evaluate QKeras quantizer {self.qkeras_config["class_name"]}')
+        return self._quantize_bits(data, self.qkeras_config)
+
+    def _quantize_bits(self, data, quantizer_config):
+        config = quantizer_config['config']
+        bits = config['bits']
+        integer = config.get('integer', 0)
+        keep_negative = config.get('keep_negative', True)
+        alpha = config.get('alpha', 1)
+        if alpha is None:
+            alpha = 1
+        fractional = bits - integer - (1 if keep_negative else 0)
+        scale = 2.0**fractional
+        quantized = np.round(data / alpha * scale) / scale * alpha
+        lower = -2.0**integer * alpha if keep_negative else 0.0
+        upper = (2.0**integer - 1.0 / scale) * alpha
+        return np.clip(quantized, lower, upper)
 
     def _get_type(self, quantizer_config):
         width = quantizer_config['config']['bits']
@@ -140,7 +164,8 @@ class QKerasQuantizer(Quantizer):
             else:
                 return IntegerPrecisionType(width=width, signed=True)
         else:
-            return FixedPrecisionType(width=width, integer=integer + 1, signed=True)
+            signed = quantizer_config['config'].get('keep_negative', True)
+            return FixedPrecisionType(width=width, integer=integer + int(signed), signed=signed)
 
     def serialize_state(self):
         state = {

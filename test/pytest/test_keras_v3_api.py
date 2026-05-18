@@ -1,4 +1,6 @@
 import math
+import sys
+import types
 from pathlib import Path
 
 import keras
@@ -27,6 +29,61 @@ from keras.layers import (
 import hls4ml
 
 test_root_path = Path(__file__).parent
+
+
+def test_qkeras_qdense_v3_handler_chains_quantized_activation(monkeypatch):
+    from hls4ml.converters.keras_v2_to_hls import layer_handlers
+    from hls4ml.converters.keras_v3.qkeras.qdense import QKerasQDenseHandler
+
+    qkeras_module = types.ModuleType('qkeras')
+    quantizers_module = types.ModuleType('qkeras.quantizers')
+
+    class quantized_relu:
+        def get_config(self):
+            return {'bits': 8, 'integer': 0, 'negative_slope': 0}
+
+    quantizers_module.get_quantizer = lambda config: quantized_relu()
+    monkeypatch.setitem(sys.modules, 'qkeras', qkeras_module)
+    monkeypatch.setitem(sys.modules, 'qkeras.quantizers', quantizers_module)
+
+    def fake_qdense_handler(layer_dict, input_names, input_shapes, reader):
+        return {'name': layer_dict['config']['name'], 'class_name': 'Dense'}, input_shapes[0]
+
+    monkeypatch.setitem(layer_handlers, 'QDense', fake_qdense_handler)
+
+    class Tensor:
+        def __init__(self, name):
+            self.name = name
+            self.shape = (None, 10)
+
+    QDense = type(
+        'QDense',
+        (),
+        {
+            'name': 'qdense',
+            'weights': [],
+            '__module__': 'qkeras.qlayers',
+            'get_config': lambda self: {'name': 'qdense', 'activation': 'quantized_relu(8, 0)'},
+        },
+    )
+
+    dense_config, activation_config = QKerasQDenseHandler().handle(QDense(), [Tensor('input')], [Tensor('output')])
+
+    assert dense_config['output_keras_tensor_names'] == ['output_activation']
+    assert activation_config['input_keras_tensor_names'] == ['output_activation']
+    assert activation_config['output_keras_tensor_names'] == ['output']
+    assert activation_config['activation'] == 'relu'
+    assert activation_config['activation_quantizer']['class_name'] == 'quantized_relu'
+
+def test_config_from_functional_model_with_false_built_flag():
+    inputs = keras.Input(shape=(3,), name='input')
+    outputs = Dense(2, name='dense')(inputs)
+    model = keras.Model(inputs, outputs)
+    model.built = False
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+
+    assert 'dense' in config['LayerName']
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
