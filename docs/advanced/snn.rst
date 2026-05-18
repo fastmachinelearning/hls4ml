@@ -51,7 +51,7 @@ marker module:
    from hls4ml.contrib.snntorch import SNNReadout
 
 The marker is an identity in PyTorch and is converted to the hls4ml
-``SNNReadout`` layer by the PyTorch frontend. See Jupyter Notebook example.
+``SNNReadout`` layer by the PyTorch frontend.
 
 `snntorch` tracing
 ==================
@@ -112,7 +112,7 @@ membrane decision policies are:
 * ``argmax_membrane``
 * ``binary_logit`` (emits ``mem(class_1) - mem(class_0)`` for binary classifiers)
 
-The example in the Jupyter Notebook follows this approach.
+This will be explained in a tutorial in the hls4ml-tutorials repo.
 
 Do not place a final spiking neuron before ``SNNReadout(output_mode="membrane")``
 unless you intentionally want the readout to consume that neuron's spike output.
