@@ -39,9 +39,8 @@ unsigned update_snn_membrane_pack(data_T in_pack, typename CONFIG_T::membrane_t 
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-typename res_T::value_type snn_membrane_readout_value_pack(
-    data_T in_pack, typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes]
-) {
+typename res_T::value_type snn_membrane_readout_value_pack(data_T in_pack,
+                                                           typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes]) {
     unsigned best = update_snn_membrane_pack<data_T, CONFIG_T>(in_pack, mem);
     if (CONFIG_T::decision_rule == snn_decision_rule::binary_logit) {
         return (typename res_T::value_type)(mem[1] - mem[0]);

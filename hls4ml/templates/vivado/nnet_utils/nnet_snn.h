@@ -201,8 +201,7 @@ template <typename CONFIG_T> unsigned first_snn_threshold(unsigned counts[CONFIG
     return best;
 }
 
-template <typename CONFIG_T>
-unsigned threshold_then_snn_argmax(unsigned counts[CONFIG_T::n_classes], unsigned fallback) {
+template <typename CONFIG_T> unsigned threshold_then_snn_argmax(unsigned counts[CONFIG_T::n_classes], unsigned fallback) {
     bool any_reached = false;
     for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
         #pragma HLS UNROLL
@@ -217,9 +216,8 @@ unsigned threshold_then_snn_argmax(unsigned counts[CONFIG_T::n_classes], unsigne
 }
 
 template <class data_T, typename CONFIG_T>
-unsigned update_snn_membrane_array(
-    data_T data[CONFIG_T::n_classes], typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes]
-) {
+unsigned update_snn_membrane_array(data_T data[CONFIG_T::n_classes],
+                                   typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes]) {
     unsigned best = 0;
     for (unsigned i = 0; i < CONFIG_T::n_classes; i++) {
         #pragma HLS UNROLL
@@ -235,9 +233,8 @@ unsigned update_snn_membrane_array(
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-typename res_T::value_type snn_membrane_readout_value(
-    data_T data[CONFIG_T::n_classes], typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes]
-) {
+typename res_T::value_type snn_membrane_readout_value(data_T data[CONFIG_T::n_classes],
+                                                      typename CONFIG_T::membrane_t mem[CONFIG_T::n_classes]) {
     unsigned best = update_snn_membrane_array<data_T, CONFIG_T>(data, mem);
     if (CONFIG_T::decision_rule == snn_decision_rule::binary_logit) {
         return (typename res_T::value_type)(mem[1] - mem[0]);
@@ -246,9 +243,7 @@ typename res_T::value_type snn_membrane_readout_value(
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-typename res_T::value_type snn_spike_readout_value(
-    data_T data[CONFIG_T::n_classes], unsigned counts[CONFIG_T::n_classes]
-) {
+typename res_T::value_type snn_spike_readout_value(data_T data[CONFIG_T::n_classes], unsigned counts[CONFIG_T::n_classes]) {
     if (CONFIG_T::decision_rule == snn_decision_rule::argmax_spike_count) {
         unsigned best = 0;
         unsigned best_count = 0;
@@ -280,8 +275,7 @@ typename res_T::value_type snn_spike_readout_value(
     return (typename res_T::value_type)best;
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
-void snn_readout(data_T data[CONFIG_T::n_classes], res_T res[1]) {
+template <class data_T, class res_T, typename CONFIG_T> void snn_readout(data_T data[CONFIG_T::n_classes], res_T res[1]) {
     #pragma HLS PIPELINE II=1
 
     // Counts and membrane values persist across calls within one readout window.
