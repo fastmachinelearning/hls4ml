@@ -112,15 +112,18 @@ class QKerasFactorizeAlpha(OptimizerPass):
     def transform(self, model, node):
         # The quantizer has to be applied to set the scale attribute
         # This must be applied to the _unquantized_ weights to obtain the correct scale
-        import tensorflow as tf
 
         quantizer = node.weights['weight'].quantizer.quantizer_fn  # get QKeras quantizer
         weights = node.weights['weight'].data_unquantized  # get weights
-        qweights = quantizer(tf.convert_to_tensor(weights))
+        qweights = quantizer(weights)
+        if hasattr(qweights, 'numpy'):
+            qweights = qweights.numpy()
         if isinstance(quantizer.scale, (int, float)):
             scale = np.ones(shape=node.get_output_variable().shape[-1]) * quantizer.scale
-        else:
+        elif hasattr(quantizer.scale, 'numpy'):
             scale = quantizer.scale.numpy()
+        else:
+            scale = quantizer.scale
         unscale = 1.0 / scale
 
         new_weights = unscale * qweights  # use the quantized weights for safety
@@ -133,7 +136,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
         # update the weights also applying the hls4ml quantizer
         # this is only needed for the binary layers which encode -1 as 0
-        quantized_new_weights = node.weights['weight'].quantizer(new_weights.numpy())
+        quantized_new_weights = node.weights['weight'].quantizer(new_weights)
         node.weights['weight'].data = quantized_new_weights
 
         # Move the biases from the Dense layer to the ApplyAlpha layer

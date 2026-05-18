@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import keras
 from keras.layers import BatchNormalization, Input
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
@@ -60,11 +61,8 @@ def load_jettagging_model():
     """
     Load the 3 hidden layer QKeras example model trained on the jet tagging dataset
     """
-    model_path = example_model_path / 'keras/qkeras_3layer.json'
-    with model_path.open('r') as f:
-        jsons = f.read()
-    model = model_from_json(jsons, custom_objects=co)
-    model.load_weights(example_model_path / 'keras/qkeras_3layer_weights.h5')
+    model_path = example_model_path / 'keras/qkeras-v3_3layer.keras'
+    model = keras.saving.load_model(model_path, custom_objects=co)
     return model
 
 

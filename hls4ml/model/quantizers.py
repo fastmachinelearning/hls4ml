@@ -195,7 +195,9 @@ class QKerasBinaryQuantizer(Quantizer):
 
     def __call__(self, data):
         data = np.array(data, dtype='float32')
-        y = self.quantizer_fn(data).numpy()
+        y = self.quantizer_fn(data)
+        if hasattr(y, 'numpy'):
+            y = y.numpy()
         return self.binary_quantizer(y)
 
     def serialize_state(self):

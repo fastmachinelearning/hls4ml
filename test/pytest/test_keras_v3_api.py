@@ -75,6 +75,36 @@ def test_qkeras_qdense_v3_handler_chains_quantized_activation(monkeypatch):
     assert activation_config['activation'] == 'relu'
     assert activation_config['activation_quantizer']['class_name'] == 'quantized_relu'
 
+
+def test_qkeras_activation_dict_ternary_maps_to_ternary_tanh(monkeypatch):
+    qkeras_module = types.ModuleType('qkeras')
+    quantizers_module = types.ModuleType('qkeras.quantizers')
+    quantizers_module.get_quantizer = lambda config: None
+    monkeypatch.setitem(sys.modules, 'qkeras', qkeras_module)
+    monkeypatch.setitem(sys.modules, 'qkeras.quantizers', quantizers_module)
+
+    from hls4ml.converters.keras.qkeras import get_activation_quantizer
+
+    layer = {
+        'class_name': 'QDense',
+        'config': {
+            'name': 'qdense',
+            'activation': {
+                'module': 'qkeras.quantizers',
+                'class_name': 'ternary',
+                'config': {'alpha': None, 'threshold': None},
+                'registered_name': 'qkeras>ternary',
+            },
+        },
+    }
+
+    activation_config = get_activation_quantizer(layer, ['input'])
+
+    assert activation_config['class_name'] == 'TernaryTanh'
+    assert activation_config['activation'] == 'ternary_tanh'
+    assert activation_config['threshold'] == 0.33
+    assert activation_config['activation_quantizer']['class_name'] == 'ternary_tanh'
+
 def test_config_from_functional_model_with_false_built_flag():
     inputs = keras.Input(shape=(3,), name='input')
     outputs = Dense(2, name='dense')(inputs)
