@@ -2,14 +2,14 @@ exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pyte
 
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.15.5
+  rev: v0.15.9
   hooks:
     - id: ruff
       args: [--fix]
     - id: ruff-format
 
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: v2.16.2
+  rev: v2.21.0
   hooks:
     - id: pyproject-fmt
 
@@ -64,6 +64,6 @@ ci:
     autofix_prs: false  # default is true
     autoupdate_branch: 'main'
     autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
-    autoupdate_schedule: weekly
+    autoupdate_schedule: quarterly
     skip: []
     submodules: true

@@ -78,12 +78,12 @@ If you use this software in a publication, please cite the software
   title        = {fastmachinelearning/hls4ml},
   year         = 2025,
   publisher    = {Zenodo},
-  version      = {v1.2.0},
+  version      = {v1.3.0},
   doi          = {10.5281/zenodo.1201549},
   url          = {https://github.com/fastmachinelearning/hls4ml}
 }
 ```
-and first publication:
+the first publication:
 ```bibtex
 @article{Duarte:2018ite,
     author = "Duarte, Javier and others",
@@ -100,6 +100,20 @@ and first publication:
     year = "2018"
 }
 ```
+and the latest overview paper:
+```bibtex
+@article{Schulte:2025mai,
+    author = "Schulte, Jan-Frederik and others",
+    title = "{hls4ml: A Flexible, Open-Source Platform for Deep Learning Acceleration on Reconfigurable Hardware}",
+    eprint = "2512.01463",
+    archivePrefix = "arXiv",
+    primaryClass = "cs.AR",
+    reportNumber = "FERMILAB-PUB-25-0890-CSAID-ETD-PPD",
+    month = "12",
+    year = "2025"
+}
+```
+
 Additionally, if you use specific features developed in later papers, please cite those as well. For example, CNNs:
 ```bibtex
 @article{Aarrestad:2021zos,
@@ -163,7 +177,7 @@ Please use the following text for this acknowledgment:
   > We acknowledge the Fast Machine Learning collective as an open community of multi-domain experts and collaborators. This community and \<names of individuals\>, in particular, were important for the development of this project.
 
 # Funding
-We gratefully acknowledge previous and current support from the U.S. National Science Foundation (NSF) Harnessing the Data Revolution (HDR) Institute for <a href="https://a3d3.ai">Accelerating AI Algorithms for Data Driven Discovery (A3D3)</a> under Cooperative Agreement No. <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2117997">PHY-2117997</a>, U.S. Department of Energy (DOE) Office of Science, Office of Advanced Scientific Computing Research under the Real‐time Data Reduction Codesign at the Extreme Edge for Science (XDR) Project (<a href="https://science.osti.gov/-/media/grants/pdf/foas/2021/SC_FOA_0002501.pdf">DE-FOA-0002501</a>), DOE Office of Science, Office of High Energy Physics Early Career Research Program (<a href="https://pamspublic.science.energy.gov/WebPAMSExternal/Interface/Common/ViewPublicAbstract.aspx?rv=df0ae4ab-a46e-481a-9acc-3856b6b041e5&rtc=24&PRoleId=10">DE-SC0021187</a>, DE-0000247070), the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (Grant No. <a href="https://doi.org/10.3030/772369">772369</a>), and the Eric & Wendy Schmidt Fund for Strategic Innovation through the CERN Next Generation Triggers project under grant agreement number SIF-2023-004.
+We gratefully acknowledge previous and current support from the U.S. National Science Foundation (NSF) Harnessing the Data Revolution (HDR) Institute for <a href="https://a3d3.ai">Accelerating AI Algorithms for Data Driven Discovery (A3D3)</a> under Cooperative Agreement No. <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2117997">PHY-2117997</a>, U.S. Department of Energy (DOE) Office of Science, Office of Advanced Scientific Computing Research under the Real‐time Data Reduction Codesign at the Extreme Edge for Science (XDR) Project (<a href="https://science.osti.gov/-/media/grants/pdf/foas/2021/SC_FOA_0002501.pdf">DE-FOA-0002501</a>), DOE Office of Science, Office of High Energy Physics Early Career Research Program (<a href="https://pamspublic.science.energy.gov/WebPAMSExternal/Interface/Common/ViewPublicAbstract.aspx?rv=df0ae4ab-a46e-481a-9acc-3856b6b041e5&rtc=24&PRoleId=10">DE-SC0021187</a>, DE-0000247070), the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (Grant No. <a href="https://doi.org/10.3030/772369">772369</a> and <a href="https://doi.org/10.3030/966696">966696</a>), and the Eric & Wendy Schmidt Fund for Strategic Innovation through the CERN Next Generation Triggers project under grant agreement number SIF-2023-004.
 
 <p align="center">
 <img src="https://github.com/fastmachinelearning/hls4ml/assets/29201053/bd1217d4-9930-47b7-8917-ad3fc430c75d" alt="A3D3" width="130"/>
