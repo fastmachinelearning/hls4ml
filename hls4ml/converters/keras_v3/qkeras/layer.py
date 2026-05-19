@@ -1,9 +1,7 @@
-import numpy as np
+from hls4ml.converters.utils import IsolatedLayerReader
 
 from ..core import KerasV3LayerHandler
 from .utils import set_default_config
-
-from hls4ml.converters.utils import IsolatedLayerReader
 
 
 class QKerasV3LayerHandler(KerasV3LayerHandler):
@@ -12,7 +10,7 @@ class QKerasV3LayerHandler(KerasV3LayerHandler):
         'qkeras.qconvolutional.QConv1D',
         'qkeras.qconvolutional.QConv2D',
         'qkeras.qconvolutional.QDepthwiseConv2D',
-        'qkeras.qconv2d_batchnorm.QConv2DBatchnorm'
+        'qkeras.qconv2d_batchnorm.QConv2DBatchnorm',
     )
 
     def handle(self, layer, in_tensors, out_tensors):

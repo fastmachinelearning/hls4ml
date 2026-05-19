@@ -4,10 +4,8 @@ from itertools import chain
 from types import FunctionType
 from typing import Any
 
-import numpy as np
-
-from hls4ml.model import ModelGraph
 from hls4ml.converters.utils import IsolatedLayerReader
+from hls4ml.model import ModelGraph
 
 if typing.TYPE_CHECKING:
     import keras

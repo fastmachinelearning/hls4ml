@@ -1,9 +1,9 @@
 from typing import Any
 
+from hls4ml.converters.utils import IsolatedLayerReader
+
 from ..core import KerasV3LayerHandler
 from .utils import set_default_config
-
-from hls4ml.converters.utils import IsolatedLayerReader
 
 
 class QKerasQActivationHandler(KerasV3LayerHandler):
@@ -22,7 +22,6 @@ class QKerasQActivationHandler(KerasV3LayerHandler):
         reader = IsolatedLayerReader(layer)
         input_shapes = [list(t.shape) for t in in_tensors]
         input_names = [t.name for t in in_tensors]
-        output_names = [t.name for t in out_tensors]
 
         from hls4ml.converters.keras_v2_to_hls import layer_handlers as v2_layer_handlers
 
