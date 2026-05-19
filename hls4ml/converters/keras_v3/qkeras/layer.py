@@ -1,8 +1,9 @@
 import numpy as np
 
 from ..core import KerasV3LayerHandler
-from .utils import IsolatedLayerReader, set_default_config
+from .utils import set_default_config
 
+from hls4ml.converters.utils import IsolatedLayerReader
 
 class QKerasQConv2DBatchnormHandler(KerasV3LayerHandler):
     handles = ('qkeras.qconv2d_batchnorm.QConv2DBatchnorm')

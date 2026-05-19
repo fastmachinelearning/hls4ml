@@ -1,7 +1,9 @@
 from typing import Any
 
 from ..core import KerasV3LayerHandler
-from .utils import IsolatedLayerReader, set_default_config
+from .utils import set_default_config
+
+from hls4ml.converters.utils import IsolatedLayerReader
 
 
 class QKerasQActivationHandler(KerasV3LayerHandler):
