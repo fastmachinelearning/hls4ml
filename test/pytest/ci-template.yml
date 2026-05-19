@@ -50,3 +50,9 @@
   variables:
     CONDA_ENV: "hls4ml-testing-keras3"
     EXTRA_DEPS: "[da,testing,testing-keras3,sr]"
+
+.pytest-qkeras-v3-only:
+  extends: .pytest
+  variables:
+    CONDA_ENV: "hls4ml-testing-qkeras-v3"
+    EXTRA_DEPS: "[testing,testing-keras3]"
