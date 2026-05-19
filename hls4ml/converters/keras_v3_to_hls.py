@@ -270,13 +270,6 @@ class KerasV3HandlerDispatcher:
         return ret
 
 
-def _model_has_io_graph(model: 'keras.Model') -> bool:
-    try:
-        return bool(model.inputs) and bool(model.outputs)
-    except (AttributeError, ValueError):
-        return False
-
-
 def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_fallback=True):
     """Parse a keras model into a list of dictionaries, each
     representing a layer in the HLS model, and a list of input and
@@ -303,16 +296,12 @@ def parse_keras_v3_model(model: 'keras.Model', allow_da_fallback=True, allow_v2_
         ValueError: If a circular dependency is detected.
     """
 
+    assert model.built, 'Model must be built before parsing'
+
     import keras
 
-    if isinstance(model, keras.Sequential) and getattr(model, '_functional', None) is not None:
+    if isinstance(model, keras.Sequential):
         model = model._functional  # everything is functional under the hood lol
-
-    if not getattr(model, 'built', False) and not _model_has_io_graph(model):
-        raise ValueError(
-            'Model must be built or called before parsing. '
-            'For Sequential models, add an Input layer or call model.build(input_shape) first.'
-        )
 
     from .keras_v2_to_hls import layer_handlers as v2_layer_handlers  # Delayed import to avoid circular import
 
