@@ -32,26 +32,6 @@ class LIFNet(torch.nn.Module):
         return self.neuron(x)
 
 
-class SNNReadoutWithResetPolicy(hls4ml.utils.torch.HLS4MLModule):
-    def __init__(
-        self,
-        n_classes=4,
-        stream_length=7,
-        decision_rule='argmax_spike_count',
-        class_threshold=2,
-        reset_policy='tlast',
-    ):
-        super().__init__()
-        self.n_classes = n_classes
-        self.stream_length = stream_length
-        self.decision_rule = decision_rule
-        self.class_threshold = class_threshold
-        self.reset_policy = reset_policy
-
-    def forward(self, x):
-        return x
-
-
 class IFNet(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -100,7 +80,7 @@ class SNNClassifierWithResetPolicy(torch.nn.Module):
         super().__init__()
         self.fc = torch.nn.Linear(4, 4)
         self.neuron = Leaky(beta=0.95, threshold=1.2, reset_mechanism='subtract')
-        self.readout = SNNReadoutWithResetPolicy(
+        self.readout = hls4ml.contrib.snntorch.SNNReadout(
             n_classes=4, stream_length=7, decision_rule='first_to_threshold', class_threshold=2, reset_policy='host_pulse'
         )
 
@@ -312,9 +292,9 @@ def test_snn_layer_type_config_is_exposed_for_quantization(test_case_id):
     config = hls4ml.utils.config_from_pytorch_model(
         model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
-    config['LayerName']['neuron']['beta_t'] = 'ap_fixed<12,2>'
-    config['LayerName']['neuron']['threshold_t'] = 'ap_fixed<10,3>'
-    config['LayerName']['neuron']['membrane_t'] = 'ap_fixed<14,4>'
+    config['LayerName']['neuron']['Precision']['beta'] = 'ap_fixed<12,2>'
+    config['LayerName']['neuron']['Precision']['threshold'] = 'ap_fixed<10,3>'
+    config['LayerName']['neuron']['Precision']['membrane'] = 'ap_fixed<14,4>'
 
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
@@ -335,7 +315,7 @@ def test_snn_membrane_readout_type_config_is_exposed(test_case_id):
     config = hls4ml.utils.config_from_pytorch_model(
         model, (4,), default_precision='ap_fixed<16,6>', granularity='name', backend='Vitis'
     )
-    config['LayerName']['readout']['membrane_t'] = 'ap_fixed<18,6>'
+    config['LayerName']['readout']['Precision']['membrane'] = 'ap_fixed<18,6>'
 
     hmodel = hls4ml.converters.convert_from_pytorch_model(
         model,
