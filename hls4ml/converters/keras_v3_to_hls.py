@@ -255,29 +255,17 @@ class KerasV3HandlerDispatcher:
 
         activation = getattr(layer, 'activation', None)
         if activation not in (keras.activations.linear, None):
+            assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
             intermediate_tensor_name = f'{output_names[0]}_activation'
             ret[0]['output_keras_tensor_names'] = (intermediate_tensor_name,)
-            if 'qkeras' in str(type(activation)):
-                from hls4ml.converters.keras.qkeras import get_activation_quantizer
-
-                act_config = get_activation_quantizer(layer_dict, input_names)
-                act_config.update(
-                    {
-                        'name': f'{layer.name}_activation',
-                        'input_keras_tensor_names': (intermediate_tensor_name,),
-                        'output_keras_tensor_names': output_names,
-                    }
-                )
-            else:
-                assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
-                act_cls_name = activation.__name__
-                act_config = {
-                    'class_name': 'Activation',
-                    'activation': act_cls_name,
-                    'name': f'{layer.name}_{act_cls_name}',
-                    'input_keras_tensor_names': (intermediate_tensor_name,),
-                    'output_keras_tensor_names': output_names,
-                }
+            act_cls_name = activation.__name__
+            act_config = {
+                'class_name': 'Activation',
+                'activation': act_cls_name,
+                'name': f'{layer.name}_{act_cls_name}',
+                'input_keras_tensor_names': (intermediate_tensor_name,),
+                'output_keras_tensor_names': output_names,
+            }
             ret = *ret, act_config
         return ret
 

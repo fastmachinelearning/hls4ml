@@ -5,8 +5,15 @@ from .utils import set_default_config
 
 from hls4ml.converters.utils import IsolatedLayerReader
 
-class QKerasQConv2DBatchnormHandler(KerasV3LayerHandler):
-    handles = ('qkeras.qconv2d_batchnorm.QConv2DBatchnorm')
+
+class QKerasV3LayerHandler(KerasV3LayerHandler):
+    handles = (
+        'qkeras.qlayers.QDense',
+        'qkeras.qconvolutional.QConv1D',
+        'qkeras.qconvolutional.QConv2D',
+        'qkeras.qconvolutional.QDepthwiseConv2D',
+        'qkeras.qconv2d_batchnorm.QConv2DBatchnorm'
+    )
 
     def handle(self, layer, in_tensors, out_tensors):
         config = layer.get_config()
