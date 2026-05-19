@@ -406,7 +406,9 @@ def config_from_pytorch_model(
             elif attr.name == 'reuse_factor':
                 layer_config[attr.config_name] = default_reuse_factor
             else:
-                if attr.default is not None:
+                if attr.name in layer:
+                    layer_config[attr.config_name] = layer[attr.name]
+                elif attr.default is not None:
                     layer_config[attr.config_name] = attr.default
 
         if layer['class_name'] == 'Input':
