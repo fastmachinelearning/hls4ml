@@ -143,6 +143,19 @@ def parse_pytorch_model(config, verbose=True):
 
     tracer = CustomFXTracer()
     traced_model = tracer.trace(model)
+    changed = True
+    while changed:
+        changed = False
+
+        for node in reversed(list(traced_model.nodes)):
+            if node.op in ("get_attr", "call_function", "call_method", "call_module"):
+                if len(node.users) == 0:
+                    traced_model.erase_node(node)
+                    changed = True
+    print (traced_model)
+
+    #traced_model.recompile()
+
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Sequential']
 
@@ -180,8 +193,8 @@ def parse_pytorch_model(config, verbose=True):
                     i += 1
 
     traced_model.lint()
-
     for node in traced_model.nodes:
+        print (node.op)
         if node.op == 'call_module':
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
             # where x is an integer numbering the elements of the Sequential
@@ -262,7 +275,7 @@ def parse_pytorch_model(config, verbose=True):
                 node.args = [source_node]
             else:
                 input_shapes = [output_shapes[str(i)] for i in node.args]
-            # for Conv layers
+            # for Conv layers(
             if 'Conv' in pytorch_class:
                 if not class_object.padding_mode == 'zeros':
                     raise Exception('Padding modes other than "zeros" not implemented yet')
@@ -270,8 +283,10 @@ def parse_pytorch_model(config, verbose=True):
                     raise Exception('Non-default options for groups not implemented yet')
 
             # Process the layer
+            print(node.args)
+            print(node.kwargs)
             layer, output_shape = layer_handlers[pytorch_class](
-                pytorch_class, layer_name, input_names, input_shapes, node, class_object, reader, config
+                pytorch_class, layer_name, input_names, input_shapes, node, class_object, reader, config, 
             )
 
             if verbose:
@@ -306,6 +321,7 @@ def parse_pytorch_model(config, verbose=True):
 
             else:
                 input_layer['class_name'] = 'InputLayer'
+                print (input_shapes)
                 input_layer['input_shape'] = list(input_shapes[n_inputs][1:])
                 layer_list.insert(n_inputs, input_layer)
 
@@ -363,6 +379,9 @@ def parse_pytorch_model(config, verbose=True):
         if node.op == 'get_attr':
             # Deals with tensors that are member variables of the model class
             # We insert these tensors are input layer nodes into the hls4ML model graph
+            print (node.target)
+            print (children)
+            print (len(children))
             if '.' not in node.target:
                 obj = getattr(model, node.name)
             else:

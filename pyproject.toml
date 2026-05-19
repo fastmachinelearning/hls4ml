@@ -59,7 +59,10 @@ optional-dependencies.testing = [
   "pytest-randomly",
   "qonnx",
   "tabulate",
-  "torch",
+  "torch==2.8.0",
+  "torch_geometric",
+  #~ "torch-scatter",
+  #~ "torch-sparse"
 ]
 optional-dependencies.testing-keras2 = [
   "hgq>=0.2.3",

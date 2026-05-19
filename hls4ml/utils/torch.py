@@ -11,12 +11,14 @@ class HLS4MLModule(torch.nn.Module):
 
 class CustomFXTracer(torch.fx.Tracer):
     def is_leaf_module(self, m, module_qualified_name: str) -> bool:
+        print ("????????????????????????????????")
         """
         Custom Tracer class for hls4ml to define Brevitas modules and custom modules as leaf modules so they are not traced
         through by torch.FX
         """
         import torch
-
+        print (isinstance(m, HLS4MLModule))
+        print (m.__module__)
         return (
             isinstance(m, HLS4MLModule)
             or m.__module__.startswith('torch.nn')
