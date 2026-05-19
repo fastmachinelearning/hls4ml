@@ -1,7 +1,7 @@
 from typing import Any
 
 from ..core import KerasV3LayerHandler
-from .util import IsolatedLayerReader
+from .util import IsolatedLayerReader, set_default_config
 
 
 class QKerasQActivationHandler(KerasV3LayerHandler):
@@ -29,10 +29,6 @@ class QKerasQActivationHandler(KerasV3LayerHandler):
             raise ValueError(f'No v2 handler found for {layer.__class__.__name__}')
 
         hls_conf, _ = v2_handler(layer_dict, input_names, input_shapes, reader)
-
-        hls_conf['input_keras_tensor_names'] = list(input_names)
-        hls_conf['output_keras_tensor_names'] = list(output_names)
-        hls_conf.setdefault('name', layer.name)
-        hls_conf.setdefault('class_name', 'QActivation')
+        hls_conf = set_default_config(hls_conf, self.default_config)
 
         return (hls_conf,)

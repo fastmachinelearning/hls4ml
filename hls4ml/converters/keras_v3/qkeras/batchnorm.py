@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..core import KerasV3LayerHandler
-from .util import IsolatedLayerReader
+from .util import IsolatedLayerReader, set_default_config
 
 
 class QKerasQConv2DBatchnormHandler(KerasV3LayerHandler):
@@ -22,14 +22,7 @@ class QKerasQConv2DBatchnormHandler(KerasV3LayerHandler):
             raise ValueError(f'No v2 handler found for {layer.__class__.__name__}')
 
         ret, _ = v2_handler(layer_dict, input_names, input_shapes, reader)
-
-        # override / normalize the names used by the v3 graph parser
-        ret['name'] = layer.name
-        ret['class_name'] = ret.get('class_name', 'QDense')
-        ret['module'] = layer.__module__
-        ret['input_keras_tensor_names'] = [t.name for t in in_tensors]
-        ret['input_shape'] = [list(t.shape[1:]) for t in in_tensors]
-        ret['output_keras_tensor_names'] = [t.name for t in out_tensors]
+        ret = set_default_config(ret, self.default_config)
 
         activation = config.get('activation')
         if activation not in (None, 'linear'):
