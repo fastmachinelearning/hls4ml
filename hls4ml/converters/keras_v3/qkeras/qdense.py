@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..core import KerasV3LayerHandler
-from .util import IsolatedLayerReader, set_default_config
+from .utils import IsolatedLayerReader, set_default_config
 
 
 class QKerasQDenseHandler(KerasV3LayerHandler):

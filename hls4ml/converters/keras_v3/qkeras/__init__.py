@@ -1,1 +1,1 @@
-from . import activation, batchnorm, qdense, util
+from . import activation, batchnorm, qdense, utils
