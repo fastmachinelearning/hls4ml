@@ -5,7 +5,7 @@ from .utils import IsolatedLayerReader, set_default_config
 
 
 class QKerasQDenseHandler(KerasV3LayerHandler):
-    handles = ('qkeras.qlayers.QDense', 'QDense')
+    handles = ('qkeras.qlayers.QDense')
 
     def handle(self, layer, in_tensors, out_tensors):
         config = layer.get_config()

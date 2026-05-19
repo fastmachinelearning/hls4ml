@@ -5,7 +5,7 @@ from .utils import IsolatedLayerReader, set_default_config
 
 
 class QKerasQConv2DBatchnormHandler(KerasV3LayerHandler):
-    handles = ('qkeras.qlayers.QConv2DBatchnorm', 'QConv2DBatchnorm')
+    handles = ('qkeras.qconv2d_batchnorm.QConv2DBatchnorm')
 
     def handle(self, layer, in_tensors, out_tensors):
         config = layer.get_config()

@@ -9,7 +9,7 @@ class QKerasQActivationHandler(KerasV3LayerHandler):
 
     def handle(
         self,
-        layer,  # qkeras.qlayers.QActivation
+        layer,
         in_tensors,
         out_tensors,
     ) -> tuple[dict[str, Any], ...]:
