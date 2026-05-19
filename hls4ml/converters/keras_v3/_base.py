@@ -136,8 +136,6 @@ class KerasV3LayerHandler(metaclass=KerasV3LayerHandlerMeta):
         activation = getattr(layer, 'activation', None)
         name = layer.name
         if activation not in (keras.activations.linear, None):
-            if 'qkeras' in str(type(activation)):
-                return None, None
             assert len(out_tensors) == 1, f'Layer {name} has more than one output, but has an activation function'
             assert isinstance(activation, FunctionType), f'Activation function for layer {name} is not a function'
             intermediate_tensor_name = f'{out_tensors[0].name}_activation'

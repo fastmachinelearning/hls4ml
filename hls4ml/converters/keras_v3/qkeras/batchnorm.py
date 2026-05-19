@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..core import KerasV3LayerHandler
-from util import IsolatedLayerReader
+from .util import IsolatedLayerReader
 
 
 class QKerasQConv2DBatchnormHandler(KerasV3LayerHandler):

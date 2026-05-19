@@ -1,7 +1,7 @@
 from typing import Any
 
 from ..core import KerasV3LayerHandler
-from util import IsolatedLayerReader
+from .util import IsolatedLayerReader
 
 
 class QKerasQActivationHandler(KerasV3LayerHandler):
