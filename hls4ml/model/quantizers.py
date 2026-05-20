@@ -139,8 +139,7 @@ class QKerasQuantizer(Quantizer):
             else:
                 return IntegerPrecisionType(width=width, signed=True)
         else:
-            signed = quantizer_config['config'].get('keep_negative', True)
-            return FixedPrecisionType(width=width, integer=integer + int(signed), signed=signed)
+            return FixedPrecisionType(width=width, integer=integer + 1, signed=True)
 
     def serialize_state(self):
         state = {
