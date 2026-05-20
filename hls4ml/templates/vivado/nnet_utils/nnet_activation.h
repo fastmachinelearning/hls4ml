@@ -165,7 +165,7 @@ template <class data_T, typename CONFIG_T>
 void init_invert_table(typename CONFIG_T::inv_table_t table_out[CONFIG_T::inv_table_size]) {
     // The template data_T is the data type used to address the table
     for (unsigned i = 0; i < CONFIG_T::inv_table_size; i++) {
-        float x = softmax_real_val_from_idx<typename CONFIG_T::accum_t, CONFIG_T::inv_table_size>(i);
+        float x = softmax_real_val_from_idx<data_T, CONFIG_T::inv_table_size>(i);
         typename CONFIG_T::inv_table_t inv_x = 1 / x;
         table_out[i] = inv_x;
     }
@@ -259,9 +259,9 @@ void softmax_stable(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]
 
     // Explicitly sum the results with an adder tree.
     // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
-    typename CONFIG_T::inv_inp_t exp_sum(0);
     Op_add<typename CONFIG_T::accum_t> op_add;
-    exp_sum = reduce<typename CONFIG_T::accum_t, CONFIG_T::n_slice, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
+    typename CONFIG_T::inv_inp_t exp_sum =
+        reduce<typename CONFIG_T::accum_t, CONFIG_T::n_slice, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
     typename CONFIG_T::inv_table_t inv_exp_sum =
         invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
