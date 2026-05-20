@@ -62,7 +62,11 @@ def load_jettagging_model():
     Load the 3 hidden layer QKeras example model trained on the jet tagging dataset
     """
     model_path = example_model_path / 'keras/qkeras-v3_3layer.keras'
-    model = keras.saving.load_model(model_path, custom_objects=co)
+    model = keras.saving.load_model(
+        model_path,
+        custom_objects=co,
+        safe_mode=False,
+    )
     return model
 
 
