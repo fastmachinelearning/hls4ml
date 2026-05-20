@@ -249,12 +249,12 @@ void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
-    typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
-    typename CONFIG_T::table_t invert_table[CONFIG_T::table_size];
+    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
+    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::table_size];
 #else
     static bool initialized = false;
-    static typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
-    static typename CONFIG_T::table_t invert_table[CONFIG_T::table_size];
+    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
+    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::table_size];
 #endif
     if (!initialized) {
         init_exp_table_legacy<CONFIG_T, CONFIG_T::table_size>(exp_table);
@@ -263,8 +263,8 @@ void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 
     // Index into the lookup table based on data for exponentials
-    typename CONFIG_T::table_t exp_res[data_T::size];
-    typename CONFIG_T::table_t exp_diff_res;
+    typename CONFIG_T::accum_t exp_res[data_T::size];
+    typename CONFIG_T::exp_table_t exp_diff_res;
     typename data_T::value_type data_cache[data_T::size];
 
 SoftmaxInitLoop:

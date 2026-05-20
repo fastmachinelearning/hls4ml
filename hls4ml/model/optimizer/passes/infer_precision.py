@@ -90,6 +90,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if node_class in ['PReLU']:
             return self._infer_prelu_act_precision(node, types_to_infer)
+
+        if node_class in ['Softmax']:
+            return self._infer_softmax_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -602,6 +605,26 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             node.weights['param'].update_precision(node.types['param_t'].precision)
 
             inferred_types.append('param_t')
+
+        return inferred_types
+
+    def _infer_softmax_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        # for softmax, the table parameters have a default seting, so they don't need to be inferred
+        # here. We never expect them to be of type auto.
+
+        # For result, we leave it to be set externally (model default if not set). We expect it to
+        # likely be the output value, in which case the output format would determine it's precision.
+        # Therefore, only the accum is configured here
+
+        if 'accum_t' in types_to_infer:
+            exp_w = node.types['exp_table_t'].precision.width
+            exp_i = node.types['exp_table_t'].precision.integer
+            exp_s = node.types['exp_table_t'].precision.signed
+            ceillog = math.ceil(np.log2(node.get_attr('n_in')))
+            node.types['accum_t'].precision = FixedPrecisionType(exp_w + ceillog, exp_i + ceillog, signed=exp_s)
+            inferred_types.append('accum_t')
 
         return inferred_types
 
