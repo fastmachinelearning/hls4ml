@@ -495,7 +495,7 @@ def test_qconv_activation_kwarg(test_case_id, qconv_layer, input_shape, input_da
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='fixed<24,8>', backend='Vivado'
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
     )
     assert 'qconv_activation' in config['LayerName']
 
