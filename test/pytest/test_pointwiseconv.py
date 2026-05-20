@@ -43,9 +43,15 @@ strides2d_options = [(1, 1), (2, 2)]
 def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, strategy, rf):
     model = tf.keras.models.Sequential()
     input_shape = (28, 3)
+    filters = 32
+    # XLS test is slow due to big IR size, we reduce dimensions to make it faster.
+    if backend == 'XLS':
+        input_shape = (14, 3)
+        filters = 8
+
     model.add(
         Conv1D(
-            filters=32,
+            filters=filters,
             kernel_size=(1,),
             strides=strides,
             padding=padds,
@@ -101,9 +107,16 @@ def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, 
 def test_pointwiseconv2d(test_case_id, chans, padds, strides, backend, io_type, strategy):
     model = tf.keras.models.Sequential()
     input_shape = (28, 28, 3)
+    filters = 32
+
+    # XLS test is slow due to big IR size, we reduce dimensions to make it faster.
+    if backend == 'XLS':
+        input_shape = (14, 14, 3)
+        filters = 8
+
     model.add(
         Conv2D(
-            filters=32,
+            filters=filters,
             kernel_size=(1, 1),
             strides=strides,
             padding=padds,
