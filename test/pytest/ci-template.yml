@@ -52,50 +52,13 @@
     EXTRA_DEPS: "[da,testing,testing-keras3,sr]"
 
 .pytest-qkeras-v3-only:
-  stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.6.3.base
-  tags:
-    - k8s-default
+  extends: .pytest
   variables:
     CONDA_ENV: "hls4ml-testing-keras3"
     EXTRA_DEPS: "[qkeras-v3]"
-  before_script:
-    - eval "$(conda shell.bash hook)"
-    - conda activate "$CONDA_ENV"
-    - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
-    - git submodule update --init --recursive hls4ml/templates/catapult/
-    - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
+  script:
     - pip uninstall tensorflow keras
     - pip install .
     - pip install qkeras-v3 tensorflow keras
-
-    # set up vivado_hls command
-    - mkdir -p cmd_vivado_${VIVADO_VERSION}
-    - echo '#!/bin/bash' > cmd_vivado_${VIVADO_VERSION}/vivado_hls
-    - echo "apptainer exec --cleanenv --env LANG=C,LC_ALL=C /cvmfs/projects.cern.ch/hls4ml/vivado/${VIVADO_VERSION} vivado_hls \"\$@\"" >> cmd_vivado_${VIVADO_VERSION}/vivado_hls
-    - chmod +x cmd_vivado_${VIVADO_VERSION}/vivado_hls
-    - export PATH=$PWD/cmd_vivado_${VIVADO_VERSION}:$PATH
-
-    # set up vitis-run command
-    - mkdir -p cmd_vitis_${VITIS_VERSION}
-    - echo '#!/bin/bash' > cmd_vitis_${VITIS_VERSION}/vitis-run
-    - echo "apptainer exec /cvmfs/projects.cern.ch/hls4ml/vitis/${VITIS_VERSION} vitis-run \"\$@\"" >> cmd_vitis_${VITIS_VERSION}/vitis-run
-    - chmod +x cmd_vitis_${VITIS_VERSION}/vitis-run
-    - export PATH=$PWD/cmd_vitis_${VITIS_VERSION}:$PATH
-
-    # Load Intel oneAPI environment variables
-    - source /opt/intel/oneapi/setvars.sh --force
-  script:
     - cd test/pytest
     - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - test/pytest/report.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: test/pytest/coverage.xml
-    paths:
-      - test/pytest/*.tar.gz
-      - test/pytest/synthesis_report_*.json
