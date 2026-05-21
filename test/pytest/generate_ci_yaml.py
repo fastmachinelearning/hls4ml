@@ -36,6 +36,7 @@ KERAS3_LIST = {
     'test_multiout_onnx',
     'test_keras_v3_profiling',
     'test_pquant_keras',
+    'test_pquant_pytorch',
 }
 
 # Test files to split by individual test cases
