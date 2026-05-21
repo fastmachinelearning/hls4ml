@@ -48,22 +48,22 @@ test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../example-models').resolve()
 
 
-@pytest.fixture(scope='module')
-def get_jettagging_data():
-    """
-    Download the jet tagging dataset
-    """
-    print('Fetching data from openml')
-    data = fetch_openml('hls4ml_lhc_jets_hlf')
-    X, y = data['data'], data['target']
-    le = LabelEncoder()
-    y = le.fit_transform(y)
-    y = to_categorical(y, 5)
-    X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    scaler = StandardScaler()
-    X_train_val = scaler.fit_transform(X_train_val)
-    X_test = scaler.transform(X_test)
-    return X_train_val, X_test, y_train_val, y_test
+# @pytest.fixture(scope='module')
+# def get_jettagging_data():
+#     """
+#     Download the jet tagging dataset
+#     """
+#     print('Fetching data from openml')
+#     data = fetch_openml('hls4ml_lhc_jets_hlf')
+#     X, y = data['data'], data['target']
+#     le = LabelEncoder()
+#     y = le.fit_transform(y)
+#     y = to_categorical(y, 5)
+#     X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+#     scaler = StandardScaler()
+#     X_train_val = scaler.fit_transform(X_train_val)
+#     X_test = scaler.transform(X_test)
+#     return X_train_val, X_test, y_train_val, y_test
 
 
 @pytest.fixture(scope='module')
@@ -106,7 +106,7 @@ def convert(load_jettagging_model, request, test_case_id):
 
 
 @pytest.mark.parametrize('convert', ['latency', 'resource'], indirect=True, ids=['latency', 'resource'])
-def test_accuracy(convert, load_jettagging_model, get_jettagging_data):
+def test_accuracy(convert, load_jettagging_model):
     """
     Test the hls4ml-evaluated accuracy of a 3 hidden layer QKeras model trained on
     the jet tagging dataset. QKeras model accuracy is required to be over 70%, and
