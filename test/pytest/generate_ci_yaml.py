@@ -155,7 +155,6 @@ def generate_test_yaml(test_root='.'):
         batch_need_example_model = int(any([qkeras3_need_examples[i] for i in batch_idxs]))
         diff_yml = yaml.safe_load(template.format(name, '.pytest-qkeras-v3-only', test_files, batch_need_example_model))
         yml = diff_yml
-        
         #yml.update(diff_yml)
 
     return yml
