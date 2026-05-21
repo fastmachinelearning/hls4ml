@@ -27,6 +27,15 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 import hls4ml
 
+
+_original_init = QDense.__init__
+
+def patched_init(self, *args, **kwargs):
+    kwargs.pop("quantization_config", None)
+    _original_init(self, *args, **kwargs)
+
+QDense.__init__ = patched_init
+
 co = {}
 _add_supported_quantized_objects(co)
 
