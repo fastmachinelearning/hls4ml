@@ -65,6 +65,7 @@ def load_jettagging_model():
     model = keras.saving.load_model(
         model_path,
         custom_objects=co,
+        compile=False,
         safe_mode=False,
     )
     return model
