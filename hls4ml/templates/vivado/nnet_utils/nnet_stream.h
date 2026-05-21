@@ -19,6 +19,7 @@ struct broadcast_config {
 template <class data_T, class res_T, int N>
 void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stream<res_T> &res2) {
 CloneLoop:
+    //std::cout << "N: " << N << std::endl;
     for (int i = 0; i < N / data_T::size; i++) {
         #pragma HLS PIPELINE
 
@@ -34,9 +35,53 @@ CloneLoop:
             out_data1[j] = in_data[j];
             out_data2[j] = in_data[j];
         }
-
         res1.write(out_data1);
         res2.write(out_data2);
+    }
+}
+
+template <class data_T, class res_T, int N, int STREAM_SIZE, int OUTER_STREAM_SIZE>
+void clone_stream(hls::stream<data_T> data[OUTER_STREAM_SIZE][STREAM_SIZE], hls::stream<res_T> res1[OUTER_STREAM_SIZE][STREAM_SIZE], hls::stream<res_T> res2[OUTER_STREAM_SIZE][STREAM_SIZE]) {
+CloneLoop:
+    //std::cout << "N: " << N << std::endl;
+    for(int outer = 0; outer < OUTER_STREAM_SIZE; outer++) {
+        #pragma HLS UNROLL
+        for (int i = 0; i < N / STREAM_SIZE; i++) {
+            #pragma HLS PIPELINE
+            ClonePack:
+            for (int j = 0; j < STREAM_SIZE; j++) {
+                #pragma HLS UNROLL
+                res_T out_data1;
+                res_T out_data2;
+                data_T in_data;
+                in_data = data[outer][j].read();
+                out_data1 = in_data;
+                out_data2 = in_data;
+                res1[outer][j].write(out_data1);
+                res2[outer][j].write(out_data2);
+            }
+        }
+    }
+}
+
+template <class data_T, class res_T, int N, int STREAM_SIZE>
+void clone_stream(hls::stream<data_T> data[STREAM_SIZE], hls::stream<res_T> res1[STREAM_SIZE], hls::stream<res_T> res2[STREAM_SIZE]) {
+CloneLoop:
+    //std::cout << "N: " << N << std::endl;
+    for (int i = 0; i < N / STREAM_SIZE; i++) {
+        #pragma HLS PIPELINE
+        ClonePack:
+        for (int j = 0; j < STREAM_SIZE; j++) {
+            #pragma HLS UNROLL
+            res_T out_data1;
+            res_T out_data2;
+            data_T in_data;
+            in_data = data[j].read();
+            out_data1 = in_data;
+            out_data2 = in_data;
+            res1[j].write(out_data1);
+            res2[j].write(out_data2);
+        }
     }
 }
 
@@ -65,162 +110,6 @@ CloneLoop:
         res1.write(out_data1);
         res2.write(out_data2);
         res3.write(out_data3);
-    }
-}
-
-template <class data_T, class res_T, int N>
-void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stream<res_T> &res2, hls::stream<res_T> &res3,
-                  hls::stream<res_T> &res4) {
-CloneLoop:
-    for (int i = 0; i < N / data_T::size; i++) {
-        #pragma HLS PIPELINE
-
-        data_T in_data = data.read();
-        res_T out_data1;
-        res_T out_data2;
-        res_T out_data3;
-        res_T out_data4;
-        PRAGMA_DATA_PACK(out_data1)
-        PRAGMA_DATA_PACK(out_data2)
-        PRAGMA_DATA_PACK(out_data3)
-        PRAGMA_DATA_PACK(out_data4)
-
-    ClonePack:
-        for (int j = 0; j < data_T::size; j++) {
-            #pragma HLS UNROLL
-            out_data1[j] = in_data[j];
-            out_data2[j] = in_data[j];
-            out_data3[j] = in_data[j];
-            out_data4[j] = in_data[j];
-        }
-
-        res1.write(out_data1);
-        res2.write(out_data2);
-        res3.write(out_data3);
-        res4.write(out_data4);
-    }
-}
-
-template <class data_T, class res_T, int N>
-void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stream<res_T> &res2, hls::stream<res_T> &res3,
-                  hls::stream<res_T> &res4, hls::stream<res_T> &res5) {
-CloneLoop:
-    for (int i = 0; i < N / data_T::size; i++) {
-        #pragma HLS PIPELINE
-
-        data_T in_data = data.read();
-        res_T out_data1;
-        res_T out_data2;
-        res_T out_data3;
-        res_T out_data4;
-        res_T out_data5;
-        PRAGMA_DATA_PACK(out_data1)
-        PRAGMA_DATA_PACK(out_data2)
-        PRAGMA_DATA_PACK(out_data3)
-        PRAGMA_DATA_PACK(out_data4)
-        PRAGMA_DATA_PACK(out_data5)
-
-    ClonePack:
-        for (int j = 0; j < data_T::size; j++) {
-            #pragma HLS UNROLL
-            out_data1[j] = in_data[j];
-            out_data2[j] = in_data[j];
-            out_data3[j] = in_data[j];
-            out_data4[j] = in_data[j];
-            out_data5[j] = in_data[j];
-        }
-
-        res1.write(out_data1);
-        res2.write(out_data2);
-        res3.write(out_data3);
-        res4.write(out_data4);
-        res5.write(out_data5);
-    }
-}
-
-template <class data_T, class res_T, int N>
-void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stream<res_T> &res2, hls::stream<res_T> &res3,
-                  hls::stream<res_T> &res4, hls::stream<res_T> &res5, hls::stream<res_T> &res6) {
-CloneLoop:
-    for (int i = 0; i < N / data_T::size; i++) {
-        #pragma HLS PIPELINE
-
-        data_T in_data = data.read();
-        res_T out_data1;
-        res_T out_data2;
-        res_T out_data3;
-        res_T out_data4;
-        res_T out_data5;
-        res_T out_data6;
-        PRAGMA_DATA_PACK(out_data1)
-        PRAGMA_DATA_PACK(out_data2)
-        PRAGMA_DATA_PACK(out_data3)
-        PRAGMA_DATA_PACK(out_data4)
-        PRAGMA_DATA_PACK(out_data5)
-        PRAGMA_DATA_PACK(out_data6)
-
-    ClonePack:
-        for (int j = 0; j < data_T::size; j++) {
-            #pragma HLS UNROLL
-            out_data1[j] = in_data[j];
-            out_data2[j] = in_data[j];
-            out_data3[j] = in_data[j];
-            out_data4[j] = in_data[j];
-            out_data5[j] = in_data[j];
-            out_data6[j] = in_data[j];
-        }
-
-        res1.write(out_data1);
-        res2.write(out_data2);
-        res3.write(out_data3);
-        res4.write(out_data4);
-        res5.write(out_data5);
-        res6.write(out_data6);
-    }
-}
-
-template <class data_T, class res_T, int N>
-void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stream<res_T> &res2, hls::stream<res_T> &res3,
-                  hls::stream<res_T> &res4, hls::stream<res_T> &res5, hls::stream<res_T> &res6, hls::stream<res_T> &res7) {
-CloneLoop:
-    for (int i = 0; i < N / data_T::size; i++) {
-        #pragma HLS PIPELINE
-
-        data_T in_data = data.read();
-        res_T out_data1;
-        res_T out_data2;
-        res_T out_data3;
-        res_T out_data4;
-        res_T out_data5;
-        res_T out_data6;
-        res_T out_data7;
-        PRAGMA_DATA_PACK(out_data1)
-        PRAGMA_DATA_PACK(out_data2)
-        PRAGMA_DATA_PACK(out_data3)
-        PRAGMA_DATA_PACK(out_data4)
-        PRAGMA_DATA_PACK(out_data5)
-        PRAGMA_DATA_PACK(out_data6)
-        PRAGMA_DATA_PACK(out_data7)
-
-    ClonePack:
-        for (int j = 0; j < data_T::size; j++) {
-            #pragma HLS UNROLL
-            out_data1[j] = in_data[j];
-            out_data2[j] = in_data[j];
-            out_data3[j] = in_data[j];
-            out_data4[j] = in_data[j];
-            out_data5[j] = in_data[j];
-            out_data6[j] = in_data[j];
-            out_data7[j] = in_data[j];
-        }
-
-        res1.write(out_data1);
-        res2.write(out_data2);
-        res3.write(out_data3);
-        res4.write(out_data4);
-        res5.write(out_data5);
-        res6.write(out_data6);
-        res7.write(out_data7);
     }
 }
 
@@ -335,6 +224,29 @@ void broadcast_stream(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 }
 
+template <class data_T, class res_T, typename CONFIG_T>
+void transpose_2d(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    typename data_T::value_type data_array[CONFIG_T::height * CONFIG_T::width];
+    #pragma HLS ARRAY_PARTITION variable=data_array complete
+
+    for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / data_T::size; i++) {
+        #pragma HLS PIPELINE
+        data_T in_data = data.read();
+        for (int j = 0; j < data_T::size; j++) {
+            data_array[i * data_T::size + j] = typename data_T::value_type(in_data[j]);
+        }
+    }
+
+    for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / res_T::size; i++) {
+        #pragma HLS PIPELINE
+        res_T out_data;
+        PRAGMA_DATA_PACK(out_data)
+        for (int j = 0; j < res_T::size; j++) {
+            out_data[j] = typename res_T::value_type(data_array[j * data_T::size + i]);
+        }
+        res.write(out_data);
+    }
+}
 } // namespace nnet
 
 #endif

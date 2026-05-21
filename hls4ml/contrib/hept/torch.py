@@ -100,7 +100,9 @@ def parse_hept_attention_layer(operation, layer_name, input_names, input_shapes,
     dim_per_head = class_object.attn.dim_per_head
     num_hashes = class_object.attn.n_hashes
     num_w_per_dist = class_object.attn.num_w_per_dist
-    par_factor = int(cfg.get("par_factor", 1))
+    par_factor = int(cfg.get('HLSConfig',{}).get('Model',{}).get("par_factor", 1))
+    print (cfg.get('HLSConfig',{}))
+    print (par_factor)
     par_factor_sort = int(cfg.get("par_factor_sort", par_factor))
     block_size = int(cfg.get("block_size", par_factor))
     inter_reuse_factor = int(cfg.get("inter_reuse_factor", max(1, seq_len // max(1, num_heads))))
