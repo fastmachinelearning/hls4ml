@@ -74,9 +74,9 @@ optional-dependencies.testing-keras3 = [
   "tensorflow>=2.15",
 ]
 optional-dependencies.testing-qkeras-v3 = [
-  "keras>=3.10",
+  "keras==3.14.1",
   "qkeras-v3",
-  "tensorflow>=2.15",
+  "tensorflow>=2.21.0",
 ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
 scripts.hls4ml = "hls4ml.cli:main"
