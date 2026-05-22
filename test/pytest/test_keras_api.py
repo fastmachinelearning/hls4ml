@@ -176,19 +176,20 @@ def test_conv1d(test_case_id, padds, backend, strategy, io_type, synthesis_confi
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=5e-2)
 
     off = 0
-    if backend in ["Vitis", "Vivado"] and io_type == "io_stream" and padds == "same":
+    # Vitis/Vivado adds a padding layer after the input in the io_stream case
+    if backend in ['Vitis', 'Vivado'] and io_type == 'io_stream' and padds == 'same':
         off = 1
     assert len(model.layers) + 2 + off == len(hls_model.get_layers())
-    assert list(hls_model.get_layers())[1+off].attributes['name'] == model.layers[0]._name
-    assert list(hls_model.get_layers())[1+off].attributes['class_name'] == 'Conv1D'
-    assert list(hls_model.get_layers())[1+off].attributes['activation'] == str(model.layers[0].activation).split()[1]
+    assert list(hls_model.get_layers())[1 + off].attributes['name'] == model.layers[0]._name
+    assert list(hls_model.get_layers())[1 + off].attributes['class_name'] == 'Conv1D'
+    assert list(hls_model.get_layers())[1 + off].attributes['activation'] == str(model.layers[0].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[1]
-    assert list(hls_model.get_layers())[1+off].attributes['filt_width'] == model.layers[0].kernel_size[0]
-    assert list(hls_model.get_layers())[1+off].attributes['n_chan'] == model.layers[0].input_shape[2]
-    assert list(hls_model.get_layers())[1+off].attributes['n_filt'] == model.layers[0].filters
-    assert list(hls_model.get_layers())[1+off].attributes['stride_width'] == model.layers[0].strides[0]
-    assert list(hls_model.get_layers())[1+off].attributes['data_format'] == model.layers[0].data_format
-    assert list(hls_model.get_layers())[1+off].attributes['out_width'] == list(model.layers[0].output_shape)[1]
+    assert list(hls_model.get_layers())[1 + off].attributes['filt_width'] == model.layers[0].kernel_size[0]
+    assert list(hls_model.get_layers())[1 + off].attributes['n_chan'] == model.layers[0].input_shape[2]
+    assert list(hls_model.get_layers())[1 + off].attributes['n_filt'] == model.layers[0].filters
+    assert list(hls_model.get_layers())[1 + off].attributes['stride_width'] == model.layers[0].strides[0]
+    assert list(hls_model.get_layers())[1 + off].attributes['data_format'] == model.layers[0].data_format
+    assert list(hls_model.get_layers())[1 + off].attributes['out_width'] == list(model.layers[0].output_shape)[1]
 
     out_width = math.ceil(float(model.layers[0]._batch_input_shape[2]) / float(model.layers[0].strides[0]))
     pad_along_width = max(
@@ -204,9 +205,8 @@ def test_conv1d(test_case_id, padds, backend, strategy, io_type, synthesis_confi
         assert list(hls_model.get_layers())[1].attributes['pad_left'] == pad_left
         assert list(hls_model.get_layers())[1].attributes['pad_right'] == pad_right
     elif model.layers[0].padding == 'valid':
-        assert list(hls_model.get_layers())[1+off].attributes['pad_left'] == 0
-        assert list(hls_model.get_layers())[1+off].attributes['pad_right'] == 0
-
+        assert list(hls_model.get_layers())[1 + off].attributes['pad_left'] == 0
+        assert list(hls_model.get_layers())[1 + off].attributes['pad_right'] == 0
 
 
 chans_options = ['channels_last']
