@@ -138,10 +138,12 @@ template <class data_T, unsigned table_size> inline float softmax_real_val_from_
     return (float)x;
 }
 
-template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_real_val(data_T x) {
+template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_real_val_unsigned(data_T x) {
     // Slice the top N bits to get an index into the table
     static constexpr int N = ceillog2(table_size); // number of address bits for table
-    ap_uint<N> y = x(x.width - 1, x.width - N);    // slice the top N bits of input
+
+    // skip sign bit because inputs are guaranteed nonnegative
+    ap_uint<N> y = x(x.width - 2, x.width - N - 1);    // slice the top N bits of input
     return (unsigned)y(N - 1, 0);
 }
 
@@ -254,7 +256,7 @@ void softmax_stable(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]
     typename CONFIG_T::inv_inp_t exp_sum(0);
     for (unsigned i = 0; i < CONFIG_T::n_slice; i++) {
         #pragma HLS unroll
-        unsigned x = softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(d_xi_xmax[i]);
+        unsigned x = softmax_idx_from_real_val_unsigned<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(d_xi_xmax[i]);
         exp_res[i] = exp_table[x];
     }
 
