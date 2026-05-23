@@ -141,7 +141,6 @@ template <class data_T, unsigned table_size> inline float softmax_real_val_from_
 template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_real_val_unsigned(data_T x) {
     // Slice the top N bits to get an index into the table
     static constexpr int N = ceillog2(table_size); // number of address bits for table
-
     // skip sign bit because inputs are guaranteed nonnegative
     ap_uint<N> y = x(x.width - 2, x.width - N - 1);    // slice the top N bits of input
     return (unsigned)y(N - 1, 0);
