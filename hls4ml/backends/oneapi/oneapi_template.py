@@ -52,8 +52,8 @@ class TaskSequenceTemplate(Template):
         params = self._default_params(layer)
         params['name'] = layer.name
         params['config'] = f'config{layer.index}'
-        params['input_pipe'] = layer.get_input_variable().pipe_name
-        params['output_pipe'] = layer.get_output_variable().pipe_name
+        params['input_pipe'] = layer.get_input_variable(layer.inputs[0]).pipe_name
+        params['output_pipe'] = layer.get_output_variable(layer.outputs[0]).pipe_name
 
         return params
 

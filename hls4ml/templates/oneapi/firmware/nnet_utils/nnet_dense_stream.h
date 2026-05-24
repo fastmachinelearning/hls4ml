@@ -7,7 +7,9 @@
 
 namespace nnet {
 
-// Note:  DataPack logic removed, at least in the initial version
+// Note:  DataPack logic removed, at least in the initial version.
+//        The data should be sent to the dense layer in parallel, in one stream transaction.
+//        Note that this means flatten is not a noop in oneAPI streaming.
 template <class data_pipe, class res_pipe, typename CONFIG_T>
 void dense_resource_stream(typename CONFIG_T::weight_t weights, typename CONFIG_T::bias_t biases) {
 
