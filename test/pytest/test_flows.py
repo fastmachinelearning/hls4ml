@@ -121,8 +121,6 @@ def test_flows(tester):
     assert success, f'Tester {i} fails: expected ({expected}), observed ({observed})'
 
 
-
-
 def test_update_dynamic_flow():
     dynamic_flow = hls4ml.model.flow.register_flow('TestDynamicFlowUpdate', lambda: ['A', 'B'])
     hls4ml.model.flow.update_flow(dynamic_flow, add_optimizers=['C'], remove_optimizers=['A'])
