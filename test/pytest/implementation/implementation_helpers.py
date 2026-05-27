@@ -121,16 +121,21 @@ def _capture_terminal_output(path):
     sys.stderr.flush()
     saved_stdout = os.dup(1)
     saved_stderr = os.dup(2)
-    with open(path, 'w') as fp:
-        os.dup2(fp.fileno(), 1)
-        os.dup2(fp.fileno(), 2)
+    tee = subprocess.Popen(['tee', str(path)], stdin=subprocess.PIPE)
+    os.dup2(tee.stdin.fileno(), 1)
+    os.dup2(tee.stdin.fileno(), 2)
+
+    try:
+        yield path
+    finally:
+        sys.stdout.flush()
+        sys.stderr.flush()
         try:
-            yield path
-        finally:
-            sys.stdout.flush()
-            sys.stderr.flush()
             os.dup2(saved_stdout, 1)
             os.dup2(saved_stderr, 2)
+        finally:
+            tee.stdin.close()
+            tee.wait()
             os.close(saved_stdout)
             os.close(saved_stderr)
 

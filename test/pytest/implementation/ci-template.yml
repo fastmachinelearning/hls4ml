@@ -39,7 +39,7 @@
     - export PATH=$PWD/cmd_vivado_${VIVADO_VERSION}:$PATH
     - export IMPLEMENTATION_DATASET_DIR=$PWD/test/pytest/implementation
     - cd test/pytest
-    - pytest $PYTESTFILE -rA --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
+    - pytest $PYTESTFILE -s -rA --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
 
 .pytest-implementation-vitis-runtime:
   extends: .pytest-implementation
@@ -61,4 +61,4 @@
     - export PATH=$PWD/cmd_vivado_${VIVADO_VERSION}:$PWD/cmd_vitis_${VITIS_VERSION}:$PATH
     - export IMPLEMENTATION_DATASET_DIR=$PWD/test/pytest/implementation
     - cd test/pytest
-    - pytest $PYTESTFILE -rA --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
+    - pytest $PYTESTFILE -s -rA --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
