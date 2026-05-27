@@ -29,7 +29,13 @@ test_root_path = Path(__file__).parent
     ],
 )
 def test_binary_cnn(test_case_id, backend, io_type, strategy):
-    x_in = Input(shape=(28, 28, 1))
+    if backend == 'XLS':
+        # XLS test is slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (12, 12, 1)
+    else:
+        input_shape = (28, 28, 1)
+
+    x_in = Input(shape=input_shape)
 
     x = QConv2D(
         4,
@@ -95,7 +101,7 @@ def test_binary_cnn(test_case_id, backend, io_type, strategy):
         io_type=io_type,
     )
 
-    X = np.random.rand(100, 28, 28, 1)
+    X = np.random.rand(100, *input_shape)
     X = np.round(X * 2**10) * 2**-10
 
     hls_model.compile()

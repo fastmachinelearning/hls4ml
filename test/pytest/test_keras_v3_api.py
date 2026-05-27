@@ -135,11 +135,17 @@ padds_options = ['same', 'valid']
 def test_conv1d(test_case_id, padds, backend, io_type, activation):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (10, 32, 4)
+        filters = 8
+    else:
+        input_shape = (10, 128, 4)
+        filters = 32
     model = keras.models.Sequential()
-    input_shape = (10, 128, 4)
     model.add(
         Conv1D(
-            filters=32,
+            filters=filters,
             kernel_size=3,
             strides=2,
             padding=padds,
@@ -154,7 +160,7 @@ def test_conv1d(test_case_id, padds, backend, io_type, activation):
     model.add(Activation(activation='relu'))
     model.compile(optimizer='adam', loss='mse')
 
-    X_input = np.random.rand(10, 128, 4)
+    X_input = np.random.rand(*input_shape)
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
 
     config = hls4ml.utils.config_from_keras_model(model)
@@ -215,12 +221,18 @@ padds_options = ['same', 'valid']
 def test_conv2d(test_case_id, chans, padds, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
-    input_shape = (32, 32, 3)
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (16, 16, 3)
+        filters = 6
+    else:
+        input_shape = (32, 32, 3)
+        filters = 32
     model = keras.Sequential(
         [
             keras.layers.InputLayer(input_shape),
             Conv2D(
-                filters=32,
+                filters=filters,
                 kernel_size=(2, 3),
                 strides=(4, 5),
                 padding=padds,
@@ -314,9 +326,15 @@ def test_depthwise2d(test_case_id, backend, io_type):
     """
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
-    X = np.random.rand(10, 32, 32, 3)
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (8, 8, 3)
+    else:
+        input_shape = (32, 32, 3)
+
+    X = np.random.rand(10, *input_shape)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
-    model = keras.models.Sequential([keras.layers.Input((32, 32, 3)), DepthwiseConv2D(kernel_size=(3, 3))])
+    model = keras.models.Sequential([keras.layers.Input(input_shape), DepthwiseConv2D(kernel_size=(3, 3))])
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(
