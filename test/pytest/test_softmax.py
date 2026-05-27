@@ -42,6 +42,8 @@ def test_softmax(
 ):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'Catapult' and implementation == 'argmax':
+        pytest.skip('Catapult backend does not support argmax implementation')
 
     X = generate_data
     model = tf.keras.models.Sequential()
