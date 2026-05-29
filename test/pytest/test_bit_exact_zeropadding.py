@@ -1,83 +1,80 @@
-import os
+"""Bit-exact precision propagation through ZeroPadding1D/2D.
 
+ZeroPadding inserts exact zeros, so the bit-exact flow must propagate the
+input kif unchanged (padded with zeros) through the layer. Placing a plain
+Keras ZeroPadding layer between two HGQ2 quantized convolutions triggers the
+bit_exact pass and exercises the ZeroPadding _produce_kif handlers.
+"""
+
+from pathlib import Path
+
+import keras
 import numpy as np
+import pytest
 
-os.environ.setdefault('KERAS_BACKEND', 'tensorflow')
+from hls4ml.converters import convert_from_keras_model
 
-import keras  # noqa: E402
+try:
+    from hgq.config import QuantizerConfigScope
+    from hgq.layers import QConv1D, QConv2D
+    from hgq.utils import trace_minmax
+except ImportError:
+    pytest.skip('HGQ2 is not installed', allow_module_level=True)
 
-import hls4ml  # noqa: E402
+from keras.layers import Input, ZeroPadding1D, ZeroPadding2D  # noqa: E402
+
+test_root_path = Path(__file__).parent
 
 
-def _convert(model, output_dir):
-    cfg = hls4ml.utils.config_from_keras_model(
-        model,
-        granularity='name',
-        backend='Vitis',
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_bit_exact_zeropadding1d(test_case_id, backend, io_type):
+    """ZeroPadding1D between two quantized Conv1D layers must convert via the
+    bit_exact flow and reproduce the quantized Keras output exactly."""
+    with QuantizerConfigScope(f0=4, i0=4):
+        inp = Input((16, 8))
+        x = QConv1D(4, 1, name='c0')(inp)
+        x = ZeroPadding1D(padding=(2, 0))(x)
+        out = QConv1D(4, 3, padding='valid', name='c1')(x)
+        model = keras.Model(inp, out)
+
+    data = np.random.default_rng(0).standard_normal((1000, 16, 8)).astype(np.float32)
+    r_keras = trace_minmax(model, data, return_results=True)
+
+    precision = 'ac_fixed<2,0>' if backend == 'oneAPI' else 'ap_fixed<1,0>'
+    hls_config = {'Model': {'Precision': precision, 'ReuseFactor': 1, 'Strategy': 'latency'}}
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_keras_model(
+        model, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type
     )
-    return hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=cfg,
-        backend='Vitis',
-        output_dir=output_dir,
-        io_type='io_parallel',
-        clock_period=5,
-    )
-
-
-def test_zeropadding1d_produce_kif(tmp_path):
-    """ZeroPadding1D followed by Conv1D must convert without
-    NotImplementedError and reproduce the Keras output bit-exactly."""
-    x = keras.Input((16, 8))
-    y = keras.layers.ZeroPadding1D(padding=(2, 0))(x)
-    y = keras.layers.Conv1D(4, 3, padding='valid')(y)
-    model = keras.Model(x, y)
-
-    hls_model = _convert(model, str(tmp_path / 'zpad1d'))
     hls_model.compile()
 
-    rng = np.random.default_rng(0)
-    xin = rng.standard_normal((2, 16, 8)).astype(np.float32)
-    y_keras = model.predict(xin)
-    y_hls = hls_model.predict(xin).reshape(y_keras.shape)
-
-    np.testing.assert_allclose(y_keras, y_hls, atol=1e-2)
+    r_hls = hls_model.predict(data).reshape(r_keras.shape)
+    np.testing.assert_array_equal(r_keras, r_hls)
 
 
-def test_zeropadding2d_produce_kif(tmp_path):
-    """ZeroPadding2D followed by Conv2D must convert and match Keras."""
-    x = keras.Input((8, 8, 4))
-    y = keras.layers.ZeroPadding2D(padding=((1, 1), (1, 1)))(x)
-    y = keras.layers.Conv2D(8, 3, padding='valid')(y)
-    model = keras.Model(x, y)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
+def test_bit_exact_zeropadding2d(test_case_id, backend, io_type):
+    """ZeroPadding2D between two quantized Conv2D layers must convert via the
+    bit_exact flow and reproduce the quantized Keras output exactly."""
+    with QuantizerConfigScope(f0=4, i0=4):
+        inp = Input((8, 8, 4))
+        x = QConv2D(8, 1, name='c0')(inp)
+        x = ZeroPadding2D(padding=((1, 1), (1, 1)))(x)
+        out = QConv2D(8, 3, padding='valid', name='c1')(x)
+        model = keras.Model(inp, out)
 
-    hls_model = _convert(model, str(tmp_path / 'zpad2d'))
+    data = np.random.default_rng(1).standard_normal((500, 8, 8, 4)).astype(np.float32)
+    r_keras = trace_minmax(model, data, return_results=True)
+
+    precision = 'ac_fixed<2,0>' if backend == 'oneAPI' else 'ap_fixed<1,0>'
+    hls_config = {'Model': {'Precision': precision, 'ReuseFactor': 1, 'Strategy': 'latency'}}
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_keras_model(
+        model, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type
+    )
     hls_model.compile()
 
-    rng = np.random.default_rng(1)
-    xin = rng.standard_normal((2, 8, 8, 4)).astype(np.float32)
-    y_keras = model.predict(xin)
-    y_hls = hls_model.predict(xin).reshape(y_keras.shape)
-
-    np.testing.assert_allclose(y_keras, y_hls, atol=1e-2)
-
-
-def test_causal_via_zeropadding1d_matches_native_causal():
-    """`ZeroPadding1D(pad_left=K-1) + Conv1D(padding='valid')` should
-    behave identically to `Conv1D(padding='causal')` — guards against
-    a future change in either path drifting from the other."""
-    K = 3
-    ref = keras.Sequential([keras.Input((16, 8)), keras.layers.Conv1D(4, K, padding='causal')])
-    pad = keras.Sequential(
-        [keras.Input((16, 8)), keras.layers.ZeroPadding1D(padding=(K - 1, 0)), keras.layers.Conv1D(4, K, padding='valid')]
-    )
-    pad.layers[1].set_weights(ref.layers[0].get_weights())
-
-    rng = np.random.default_rng(2)
-    x = rng.standard_normal((2, 16, 8)).astype(np.float32)
-    np.testing.assert_allclose(
-        ref.predict(x),
-        pad.predict(x),
-        atol=0,
-        rtol=0,
-    )
+    r_hls = hls_model.predict(data).reshape(r_keras.shape)
+    np.testing.assert_array_equal(r_keras, r_hls)

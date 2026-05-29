@@ -681,6 +681,7 @@ def _(layer: Embedding):
 
 @_produce_kif.register
 def _(layer: ZeroPadding1D):
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     pad_left = int(layer.attributes['pad_left'])
     pad_right = int(layer.attributes['pad_right'])
@@ -694,6 +695,7 @@ def _(layer: ZeroPadding1D):
 
 @_produce_kif.register
 def _(layer: ZeroPadding2D):
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     pad_top = int(layer.attributes['pad_top'])
     pad_bottom = int(layer.attributes['pad_bottom'])
