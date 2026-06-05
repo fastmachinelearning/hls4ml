@@ -4,15 +4,17 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from hls4ml.converters import convert_from_pytorch_model
-from hls4ml.utils import config_from_pytorch_model
-
 os.environ['KERAS_BACKEND'] = 'torch'
+
 import torch  # noqa: E402
 import torch.nn as nn  # noqa: E402
 from pquant import pdp_config  # noqa: E402
 from pquant.activations import PQActivation  # noqa: E402
 from pquant.layers import PQAvgPool1d, PQAvgPool2d, PQBatchNorm1d, PQBatchNorm2d, PQConv1d, PQConv2d, PQDense  # noqa: E402
+from pquant.quantizer import Quantizer  # noqa: E402
+
+from hls4ml.converters import convert_from_pytorch_model  # noqa: E402
+from hls4ml.utils import config_from_pytorch_model  # noqa: E402
 
 test_path = Path(__file__).parent
 
@@ -75,25 +77,45 @@ def create_pqlayer_model(layer: str, use_hgq: bool):
     config = pdp_config()
     config.quantization_parameters.use_high_granularity_quantization = use_hgq
 
-    idx = layer.find('(') + 1
-    layer = (
-        layer[:idx]
-        + 'config, '
-        + layer[idx:-1]
-        + (', quantize_output=True, out_quant_bits=(1, 2, 7)' if 'BatchNorm' not in layer else '')
-        + ')'
-    )
-    _layer = eval(layer)
+    if 'Quantizer' not in layer:
+        idx = layer.find('(') + 1
+        layer = (
+            layer[:idx]
+            + 'config, '
+            + layer[idx:-1]
+            + (', quantize_output=True, out_quant_bits=(1, 2, 7)' if 'BatchNorm' not in layer else '')
+            + ')'
+        )
+        _layer = eval(layer)
 
-    class SingleLayerModel(nn.Module):
-        def __init__(self, layer):
-            super().__init__()
-            self.layer = layer
+        class SingleLayerModel(nn.Module):
+            def __init__(self, layer):
+                super().__init__()
+                self.layer = layer
 
-        def forward(self, x):
-            return self.layer(x)
+            def forward(self, x):
+                return self.layer(x)
 
-    model = SingleLayerModel(_layer)
+        model = SingleLayerModel(_layer)
+
+    else:
+
+        class ExplicitQuantizerModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.input_quantizer = Quantizer(
+                    k=0.0, i=0.0, f=7.0, overflow='SAT', round_mode='RND', is_heterogeneous=use_hgq, is_data=True
+                )
+                self.a = PQDense(config, 32, 16, quantize_input=False, quantize_output=True)
+                self.b = PQDense(config, 16, 8, quantize_output=True)
+
+            def forward(self, x):
+                x = self.input_quantizer(x)
+                y = self.a(x)
+                return self.b(y)
+
+        model = ExplicitQuantizerModel()
+
     return model
 
 
@@ -137,6 +159,9 @@ def get_shape(model: nn.Module, batch_size: int = 1, default_length: int = 32, d
         case PQDense():
             # (N, in_features)
             return (batch_size, layer.in_features)
+        case Quantizer():
+            # (N, L)
+            return (batch_size, default_length)
         case _:
             raise TypeError(f'Unsupported layer type: {type(layer).__name__}')
 
@@ -165,6 +190,7 @@ def get_shape(model: nn.Module, batch_size: int = 1, default_length: int = 32, d
         'PQAvgPool2d((1, 2), stride=(1, 2), padding=(0, 1))',
         "PQActivation('relu')",
         "PQActivation('tanh')",
+        'Quantizer()',
     ],
 )
 @pytest.mark.parametrize('N', [1000])
