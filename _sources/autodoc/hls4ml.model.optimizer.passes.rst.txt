@@ -188,6 +188,14 @@ hls4ml.model.optimizer.passes.seperable\_to\_dw\_conv module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.snn module
+----------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.snn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.stamp module
 ------------------------------------------
 

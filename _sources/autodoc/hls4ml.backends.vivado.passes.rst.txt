@@ -164,6 +164,14 @@ hls4ml.backends.vivado.passes.resource\_strategy module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.vivado.passes.snn\_templates module
+---------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.snn_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.vivado.passes.transform\_types module
 -----------------------------------------------------
 

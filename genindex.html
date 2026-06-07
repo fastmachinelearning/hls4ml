@@ -82,6 +82,7 @@
 <li class="toctree-l1"><a class="reference internal" href="advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced/snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/bramfactor.html">Loading weights from external BRAM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/plugins.html">External Backend and Writer Plugins</a></li>
@@ -1513,6 +1514,18 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingFunctionTemplate.format">(hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingFunctionTemplate method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.IFNeuronConfigTemplate.format">(hls4ml.backends.vivado.passes.snn_templates.IFNeuronConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.IFNeuronFunctionTemplate.format">(hls4ml.backends.vivado.passes.snn_templates.IFNeuronFunctionTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronConfigTemplate.format">(hls4ml.backends.vivado.passes.snn_templates.LIFNeuronConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronFunctionTemplate.format">(hls4ml.backends.vivado.passes.snn_templates.LIFNeuronFunctionTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutConfigTemplate.format">(hls4ml.backends.vivado.passes.snn_templates.SNNReadoutConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutFunctionTemplate.format">(hls4ml.backends.vivado.passes.snn_templates.SNNReadoutFunctionTemplate method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -2783,8 +2796,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.merge_templates">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pipeline_style
 
@@ -2792,6 +2803,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pipeline_style">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pointwise
 
@@ -2832,6 +2845,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.resource_strategy">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.vivado.passes.snn_templates
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.snn_templates">module</a>
 </li>
       </ul></li>
       <li>
@@ -3206,6 +3226,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.converters.pytorch.snn
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.snn">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.converters.pytorch_to_hls
 
       <ul>
@@ -3441,6 +3468,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.model.optimizer.passes.snn
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.snn">module</a>
 </li>
       </ul></li>
       <li>
@@ -3714,6 +3748,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.I">I (hls4ml.utils.einsum_utils.EinsumRecipe attribute)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.IFNeuron">IFNeuron (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.IFNeuronConfigTemplate">IFNeuronConfigTemplate (class in hls4ml.backends.vivado.passes.snn_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.IFNeuronFunctionTemplate">IFNeuronFunctionTemplate (class in hls4ml.backends.vivado.passes.snn_templates)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.im2col">im2col() (in module hls4ml.model.optimizer.passes.bit_exact)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.einsum_utils.EinsumRecipe.in_transpose_idxs">in_transpose_idxs (hls4ml.utils.einsum_utils.EinsumRecipe attribute)</a>
@@ -3951,6 +3991,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.HardActivation.initialize">(hls4ml.model.layers.HardActivation method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.IFNeuron.initialize">(hls4ml.model.layers.IFNeuron method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Input.initialize">(hls4ml.model.layers.Input method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.initialize">(hls4ml.model.layers.Layer method)</a>
@@ -3958,6 +4000,8 @@
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LayerGroup.initialize">(hls4ml.model.layers.LayerGroup method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LayerNormalization.initialize">(hls4ml.model.layers.LayerNormalization method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LIFNeuron.initialize">(hls4ml.model.layers.LIFNeuron method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LSTM.initialize">(hls4ml.model.layers.LSTM method)</a>
 </li>
@@ -3984,6 +4028,8 @@
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SeparableConv2D.initialize">(hls4ml.model.layers.SeparableConv2D method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SimpleRNN.initialize">(hls4ml.model.layers.SimpleRNN method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SNNReadout.initialize">(hls4ml.model.layers.SNNReadout method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Softmax.initialize">(hls4ml.model.layers.Softmax method)</a>
 </li>
@@ -4112,10 +4158,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.libero.html#hls4ml.backends.libero.libero_types.LiberoInplaceArrayVariableConverter">LiberoInplaceArrayVariableConverter (class in hls4ml.backends.libero.libero_types)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.libero.html#hls4ml.backends.libero.libero_types.LiberoInplaceArrayVariableDefinition">LiberoInplaceArrayVariableDefinition (class in hls4ml.backends.libero.libero_types)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.libero.html#hls4ml.backends.libero.libero_types.LiberoInplaceStreamVariableConverter">LiberoInplaceStreamVariableConverter (class in hls4ml.backends.libero.libero_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.libero.html#hls4ml.backends.libero.libero_types.LiberoInplaceStreamVariableDefinition">LiberoInplaceStreamVariableDefinition (class in hls4ml.backends.libero.libero_types)</a>
@@ -4129,6 +4175,12 @@
       <li><a href="autodoc/hls4ml.backends.libero.html#hls4ml.backends.libero.libero_types.LiberoStructWrapperVariableDefinition">LiberoStructWrapperVariableDefinition (class in hls4ml.backends.libero.libero_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.libero_writer.LiberoWriter">LiberoWriter (class in hls4ml.writer.libero_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LIFNeuron">LIFNeuron (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronConfigTemplate">LIFNeuronConfigTemplate (class in hls4ml.backends.vivado.passes.snn_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronFunctionTemplate">LIFNeuronFunctionTemplate (class in hls4ml.backends.vivado.passes.snn_templates)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.link_existing_project">link_existing_project() (in module hls4ml.converters)</a>
 </li>
@@ -4690,6 +4742,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.resource_strategy">hls4ml.backends.vivado.passes.resource_strategy</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.snn_templates">hls4ml.backends.vivado.passes.snn_templates</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.transform_types">hls4ml.backends.vivado.passes.transform_types</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.unrolled_codegen">hls4ml.backends.vivado.passes.unrolled_codegen</a>
@@ -4796,6 +4850,8 @@
 </li>
         <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.reshape">hls4ml.converters.pytorch.reshape</a>
 </li>
+        <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.snn">hls4ml.converters.pytorch.snn</a>
+</li>
         <li><a href="autodoc/hls4ml.converters.html#module-hls4ml.converters.pytorch_to_hls">hls4ml.converters.pytorch_to_hls</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.html#module-hls4ml.converters.utils">hls4ml.converters.utils</a>
@@ -4863,6 +4919,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.resize_remove_constants">hls4ml.model.optimizer.passes.resize_remove_constants</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.seperable_to_dw_conv">hls4ml.model.optimizer.passes.seperable_to_dw_conv</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.snn">hls4ml.model.optimizer.passes.snn</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.stamp">hls4ml.model.optimizer.passes.stamp</a>
 </li>
@@ -4959,6 +5017,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name">(hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D attribute)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass.name">(hls4ml.model.optimizer.optimizer.OptimizerPass attribute)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize.name">(hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize attribute)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.NamedType">NamedType (class in hls4ml.model.types)</a>
@@ -5197,6 +5257,8 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.libero_report.parse_libero_report">parse_libero_report() (in module hls4ml.report.libero_report)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.snn.parse_lif_layer">parse_lif_layer() (in module hls4ml.converters.pytorch.snn)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.core.parse_linear_layer">parse_linear_layer() (in module hls4ml.converters.pytorch.core)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_matmul_layer">parse_matmul_layer() (in module hls4ml.converters.onnx.core)</a>
@@ -5271,6 +5333,8 @@
         <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.recurrent.parse_rnn_layer">(in module hls4ml.converters.pytorch.recurrent)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.snn.parse_snn_readout_layer">parse_snn_readout_layer() (in module hls4ml.converters.pytorch.snn)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_squeeze_layer">parse_squeeze_layer() (in module hls4ml.converters.pytorch.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_time_distributed_layer">parse_time_distributed_layer() (in module hls4ml.converters.keras.recurrent)</a>
@@ -5446,6 +5510,8 @@
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.product_type">product_type() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer.propagate">propagate() (hls4ml.model.optimizer.passes.hgq_proxy_model.FuseFixedPointQuantizer method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize">PropagateSNNReadoutWindowSize (class in hls4ml.model.optimizer.passes.snn)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.pytorch_to_hls.pytorch_handler">pytorch_handler() (in module hls4ml.converters.pytorch_to_hls)</a>
 </li>
@@ -5630,6 +5696,8 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.register_qkeras">register_qkeras() (in module hls4ml.model.optimizer.passes.qkeras)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.register_repack_stream">register_repack_stream() (in module hls4ml.backends.fpga.passes.repack_stream)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.register_snn_templates">register_snn_templates() (in module hls4ml.backends.vivado.passes.snn_templates)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.fix_softmax_table_size.register_softmax__table_size_fix">register_softmax__table_size_fix() (in module hls4ml.backends.fpga.passes.fix_softmax_table_size)</a>
 </li>
@@ -5932,6 +6000,12 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.size_cpp">size_cpp() (hls4ml.model.types.TensorVariable method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax">SkipSoftmax (class in hls4ml.backends.fpga.passes.remove_softmax)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SNNReadout">SNNReadout (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutConfigTemplate">SNNReadoutConfigTemplate (class in hls4ml.backends.vivado.passes.snn_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutFunctionTemplate">SNNReadoutFunctionTemplate (class in hls4ml.backends.vivado.passes.snn_templates)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Softmax">Softmax (class in hls4ml.model.layers)</a>
 </li>
@@ -6251,6 +6325,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants.transform">(hls4ml.model.optimizer.passes.resize_remove_constants.ResizeRemoveConstants method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv.transform">(hls4ml.model.optimizer.passes.seperable_to_dw_conv.SeparableToDepthwiseAndConv method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize.transform">(hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.stamp.MakeStamp.transform">(hls4ml.model.optimizer.passes.stamp.MakeStamp method)</a>
 </li>

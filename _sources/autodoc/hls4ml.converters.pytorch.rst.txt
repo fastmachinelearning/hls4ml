@@ -52,6 +52,14 @@ hls4ml.converters.pytorch.reshape module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.converters.pytorch.snn module
+------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.snn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

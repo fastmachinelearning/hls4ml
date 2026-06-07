@@ -83,6 +83,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/plugins.html">External Backend and Writer Plugins</a></li>
@@ -261,6 +262,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.contrib.html">hls4ml.contrib package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.contrib.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.contrib.html#hls4ml-contrib-garnet-module">hls4ml.contrib.garnet module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.contrib.html#hls4ml-contrib-snntorch-module">hls4ml.contrib.snntorch module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.contrib.html#module-hls4ml.contrib">Module contents</a></li>
 </ul>
 </li>
@@ -312,6 +314,7 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.pooling">hls4ml.converters.pytorch.pooling module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.recurrent">hls4ml.converters.pytorch.recurrent module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.reshape">hls4ml.converters.pytorch.reshape module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.snn">hls4ml.converters.pytorch.snn module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch">Module contents</a></li>
 </ul>
 </li>
@@ -641,8 +644,16 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.HardActivation.initialize"><code class="docutils literal notranslate"><span class="pre">HardActivation.initialize()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.IFNeuron"><code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.IFNeuron.initialize"><code class="docutils literal notranslate"><span class="pre">IFNeuron.initialize()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Input"><code class="docutils literal notranslate"><span class="pre">Input</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Input.initialize"><code class="docutils literal notranslate"><span class="pre">Input.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.LIFNeuron"><code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.LIFNeuron.initialize"><code class="docutils literal notranslate"><span class="pre">LIFNeuron.initialize()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.LSTM"><code class="docutils literal notranslate"><span class="pre">LSTM</span></code></a><ul>
@@ -712,6 +723,10 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Resize"><code class="docutils literal notranslate"><span class="pre">Resize</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Resize.initialize"><code class="docutils literal notranslate"><span class="pre">Resize.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.SNNReadout"><code class="docutils literal notranslate"><span class="pre">SNNReadout</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.SNNReadout.initialize"><code class="docutils literal notranslate"><span class="pre">SNNReadout.initialize()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.SeparableConv1D"><code class="docutils literal notranslate"><span class="pre">SeparableConv1D</span></code></a><ul>

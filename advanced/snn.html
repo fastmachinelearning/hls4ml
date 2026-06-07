@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spiking Neural Networks (PyTorch/SNN) &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Hardware-aware Optimization API" href="model_optimization.html" />
+    <link rel="prev" title="Extension API" href="extension.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Spiking Neural Networks (PyTorch/SNN)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#backend-support">Backend support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution-model">Execution model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reuse-factor-support">Reuse factor support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-pytorch-modules-and-readout-wrappers">Supported PyTorch modules and readout wrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#snntorch-tracing"><cite>snntorch</cite> tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#readout-and-decision-rules">Readout and Decision Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#window-boundary-semantics">Window Boundary Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-hls-model-predict">Running <code class="docutils literal notranslate"><span class="pre">hls_model.predict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#precision-note">Precision note</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tlast-note"><code class="docutils literal notranslate"><span class="pre">TLAST</span></code> note</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Spiking Neural Networks (PyTorch/SNN)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/snn.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="spiking-neural-networks-pytorch-snn">
+<h1>Spiking Neural Networks (PyTorch/SNN)<a class="headerlink" href="#spiking-neural-networks-pytorch-snn" title="Link to this heading"></a></h1>
+<p>This page describes the initial SNN support in the PyTorch frontend.</p>
+<p>Install the SNN frontend dependencies with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>hls4ml<span class="o">[</span>snn<span class="o">]</span>
+</pre></div>
+</div>
+<section id="backend-support">
+<h2>Backend support<a class="headerlink" href="#backend-support" title="Link to this heading"></a></h2>
+<p>The SNN flow currently supports only the <code class="docutils literal notranslate"><span class="pre">Vitis</span></code> backend.</p>
+</section>
+<section id="execution-model">
+<h2>Execution model<a class="headerlink" href="#execution-model" title="Link to this heading"></a></h2>
+<p>Current hls4ml SNN implementations are synchronous (clock-driven). Neuron state
+updates and layer computations run in standard HLS pipelines/streams each cycle
+according to interface handshakes. The generated design is not a native
+asynchronous/event-routed neuromorphic architecture (yet!).</p>
+</section>
+<section id="reuse-factor-support">
+<h2>Reuse factor support<a class="headerlink" href="#reuse-factor-support" title="Link to this heading"></a></h2>
+<p>Standard hls4ml layers used inside an SNN, such as <code class="docutils literal notranslate"><span class="pre">Dense</span></code>/linear layers,
+retain their normal <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> support. <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> can still be set at
+the model, layer type, or layer name level for these layers, and each dense layer
+uses its own configured value independently of the surrounding spiking neuron
+layers.  The spiking neuron kernels themselves, <code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code> and <code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code>, do not
+currently expose <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code>. They process one timestep at a time, keep
+internal membrane state across timesteps, and unroll the per-neuron update loop
+across <code class="docutils literal notranslate"><span class="pre">n_out</span></code> channels.</p>
+</section>
+<section id="supported-pytorch-modules-and-readout-wrappers">
+<h2>Supported PyTorch modules and readout wrappers<a class="headerlink" href="#supported-pytorch-modules-and-readout-wrappers" title="Link to this heading"></a></h2>
+<p>The frontend currently supports direct parsing of:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Leaky</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code> (or <code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code> when <code class="docutils literal notranslate"><span class="pre">beta</span></code> is effectively 1)</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">SNNReadout</span></code> is an hls4ml layer, not a <code class="docutils literal notranslate"><span class="pre">snntorch</span></code> module. To use the
+built-in hls4ml readout from a PyTorch model, instantiate the provided PyTorch
+marker module:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.contrib.snntorch</span><span class="w"> </span><span class="kn">import</span> <span class="n">SNNReadout</span>
+</pre></div>
+</div>
+<p>The marker is an identity in PyTorch and is converted to the hls4ml
+<code class="docutils literal notranslate"><span class="pre">SNNReadout</span></code> layer by the PyTorch frontend.</p>
+</section>
+<section id="snntorch-tracing">
+<h2><cite>snntorch</cite> tracing<a class="headerlink" href="#snntorch-tracing" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">snntorch</span></code> modules are treated as leaf modules by the hls4ml PyTorch FX tracer.
+This allows conversion models to use <code class="docutils literal notranslate"><span class="pre">snntorch.Leaky</span></code> directly without defining
+conversion-only wrapper classes.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">Leaky</span></code>, the supported reset mechanisms are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">subtract</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zero</span></code></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">threshold</span></code> supports scalar or per-neuron vectors (length <code class="docutils literal notranslate"><span class="pre">n_out</span></code>) for both <code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code> and <code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code>.
+<code class="docutils literal notranslate"><span class="pre">beta</span></code> supports scalar or per-neuron vectors for <code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code>.</p>
+<p>Conversion selects the most memory-efficient representation automatically:</p>
+<ul class="simple">
+<li><p>scalar values are emitted as compile-time constants</p></li>
+<li><p>per-neuron values are emitted as parameter vectors</p></li>
+</ul>
+<p>For trainable snntorch parameters, conversion uses the current parameter values from the model
+at conversion time.</p>
+</section>
+<section id="readout-and-decision-rules">
+<h2>Readout and Decision Rules<a class="headerlink" href="#readout-and-decision-rules" title="Link to this heading"></a></h2>
+<p>The hls4ml <code class="docutils literal notranslate"><span class="pre">SNNReadout</span></code> layer implements programmable per-model decision policies.
+By default, <code class="docutils literal notranslate"><span class="pre">output_mode=&quot;spike&quot;</span></code> preserves the original spike-count behavior:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax_spike_count</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first_to_threshold</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">threshold_then_argmax</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binary_logit</span></code> (for binary classifiers with <code class="docutils literal notranslate"><span class="pre">n_classes</span> <span class="pre">==</span> <span class="pre">2</span></code>)</p></li>
+</ul>
+<p>The layer accumulates class spikes over a window. For most decision rules it emits
+a class ID. For <code class="docutils literal notranslate"><span class="pre">binary_logit</span></code>, it emits a score equal to
+<code class="docutils literal notranslate"><span class="pre">count(class_1)</span> <span class="pre">-</span> <span class="pre">count(class_0)</span></code>.</p>
+<p>For non-spiking readout heads, set <code class="docutils literal notranslate"><span class="pre">output_mode=&quot;membrane&quot;</span></code> and connect
+<code class="docutils literal notranslate"><span class="pre">SNNReadout</span></code> directly after the final dense/linear layer instead of after a
+final spiking neuron. In this mode the readout owns the final membrane state:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At each timestep, the generated readout computes:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">mem</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">beta</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">mem</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">input</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</pre></div>
+</div>
+<p>No threshold or reset-on-spike is applied in membrane mode. The supported
+membrane decision policies are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">argmax_membrane</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binary_logit</span></code> (emits <code class="docutils literal notranslate"><span class="pre">mem(class_1)</span> <span class="pre">-</span> <span class="pre">mem(class_0)</span></code> for binary classifiers)</p></li>
+</ul>
+<p>This will be explained in a tutorial in the hls4ml-tutorials repo.</p>
+<p>Do not place a final spiking neuron before <code class="docutils literal notranslate"><span class="pre">SNNReadout(output_mode=&quot;membrane&quot;)</span></code>
+unless you intentionally want the readout to consume that neuron’s spike output.
+The membrane mode does not recover or expose the internal membrane state of a
+preceding <code class="docutils literal notranslate"><span class="pre">Leaky</span></code>/<code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code>/<code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code> layer. If a final output neuron
+has a learnable <code class="docutils literal notranslate"><span class="pre">beta</span></code>, that learnable neuron membrane is not the same state
+as the readout-owned membrane. The readout uses its own scalar <code class="docutils literal notranslate"><span class="pre">beta</span></code>.</p>
+<p>When using the default PyTorch parser, the wrapper module should expose these
+attributes as needed:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n_classes</span></code> (defaults to the input feature count if omitted)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_size</span></code> or <code class="docutils literal notranslate"><span class="pre">stream_length</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">class_threshold</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_mode</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">spike</span></code>; use <code class="docutils literal notranslate"><span class="pre">membrane</span></code> for readout-owned membrane accumulation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code> for membrane readout)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decision_rule</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">argmax_spike_count</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reset_policy</span></code> or <code class="docutils literal notranslate"><span class="pre">state_reset_policy</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">fixed_window</span></code>)</p></li>
+</ul>
+</section>
+<section id="window-boundary-semantics">
+<h2>Window Boundary Semantics<a class="headerlink" href="#window-boundary-semantics" title="Link to this heading"></a></h2>
+<p>The current implementation uses <code class="docutils literal notranslate"><span class="pre">window_size</span></code> timesteps as the sequence boundary
+for generated HLS. During PyTorch conversion, the first fixed-window
+<code class="docutils literal notranslate"><span class="pre">SNNReadout</span></code>’s <code class="docutils literal notranslate"><span class="pre">window_size</span></code> is propagated to all converted <code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code> and
+<code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code> layers in the graph.</p>
+<p>At each boundary:</p>
+<ul class="simple">
+<li><p>the class decision is emitted</p></li>
+<li><p>internal readout counters or readout membrane state are reset for the next sequence</p></li>
+<li><p>internal <code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code>/<code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code> membrane state is reset for the next sequence</p></li>
+</ul>
+<p>The reset happens after the final timestep has been processed and has contributed
+to the output. This behavior is compatible with fixed-length time windows.</p>
+<p>Only fixed-window reset is implemented in generated layer kernels today.
+<code class="docutils literal notranslate"><span class="pre">state_reset_policy</span></code> accepts future-facing values such as <code class="docutils literal notranslate"><span class="pre">tlast</span></code>,
+<code class="docutils literal notranslate"><span class="pre">host_pulse</span></code>, and <code class="docutils literal notranslate"><span class="pre">never</span></code>, but the current layer kernels still use fixed
+<code class="docutils literal notranslate"><span class="pre">window_size</span></code> reset behavior.</p>
+</section>
+<section id="running-hls-model-predict">
+<h2>Running <code class="docutils literal notranslate"><span class="pre">hls_model.predict()</span></code><a class="headerlink" href="#running-hls-model-predict" title="Link to this heading"></a></h2>
+<p>Compiled SNN models are stateful across top-function calls. For fixed-window
+SNN inference, call the compiled model once per timestep and pass exactly
+<code class="docutils literal notranslate"><span class="pre">window_size</span></code> timesteps for each independent sequence:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">last</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">timesteps</span><span class="p">):</span>
+    <span class="n">x_step</span> <span class="o">=</span> <span class="n">x_sequence</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="n">hls_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_step</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After the last call in the window, generated HLS resets the neuron and readout
+state for the next sequence. Avoid making stray single-timestep <code class="docutils literal notranslate"><span class="pre">predict</span></code>
+calls before evaluating a sequence, because those calls advance the state.</p>
+<p>For membrane readout, the PyTorch reference should match the generated readout
+accumulation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mem</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">currents</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
+<span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">currents</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+    <span class="n">mem</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">mem</span> <span class="o">+</span> <span class="n">currents</span><span class="p">[:,</span> <span class="n">step</span><span class="p">,</span> <span class="p">:]</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">mem</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using only the final dense current, or using spike-count reduction for a
+membrane readout, does not match generated HLS behavior.</p>
+</section>
+<section id="precision-note">
+<h2>Precision note<a class="headerlink" href="#precision-note" title="Link to this heading"></a></h2>
+<p>Membrane readout accumulates dense currents over the full window, so very narrow
+fixed-point types can reduce accuracy even when the floating-point PyTorch model
+looks good.</p>
+</section>
+<section id="tlast-note">
+<h2><code class="docutils literal notranslate"><span class="pre">TLAST</span></code> note<a class="headerlink" href="#tlast-note" title="Link to this heading"></a></h2>
+<p>True AXI sideband <code class="docutils literal notranslate"><span class="pre">TLAST</span></code> boundary handling requires top-level writer/interface support for packetized AXI stream types.
+The current implementation does not yet expose <code class="docutils literal notranslate"><span class="pre">TLAST</span></code> to layer kernels directly.</p>
+<p>For variable-length windows, a practical workaround is to keep the hls4ml core unchanged and perform <code class="docutils literal notranslate"><span class="pre">TLAST</span></code> to boundary conversion in a thin wrapper IP around the generated project.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="extension.html" class="btn btn-neutral float-left" title="Extension API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="model_optimization.html" class="btn btn-neutral float-right" title="Hardware-aware Optimization API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

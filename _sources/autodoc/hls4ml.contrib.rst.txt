@@ -12,6 +12,14 @@ hls4ml.contrib.garnet module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.contrib.snntorch module
+------------------------------
+
+.. automodule:: hls4ml.contrib.snntorch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
