@@ -1,8 +1,7 @@
-<p align="center">
-   <img src="https://github.com/fastmachinelearning/fastmachinelearning.github.io/raw/master/images/hls4ml_logo.svg" alt="hls4ml" width="400"/>
-</p>
+<p align="center"><a href="https://github.com/fastmachinelearning/fastmachinelearning.github.io"><img src="https://fastmachinelearning.org/hls4ml/_images/hls4ml_logo.png" alt="hls4ml" width="400"/></a></p>
 
-[![DOI](https://zenodo.org/badge/108329371.svg)](https://zenodo.org/badge/latestdoi/108329371)
+
+[![DOI](https://img.shields.io/badge/DOI-Zenodo-blue)](https://zenodo.org/records/19134628)
 [![License](https://img.shields.io/badge/License-Apache_2.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Documentation Status](https://github.com/fastmachinelearning/hls4ml/actions/workflows/build-sphinx.yml/badge.svg)](https://fastmachinelearning.org/hls4ml)
 [![PyPI version](https://badge.fury.io/py/hls4ml.svg)](https://badge.fury.io/py/hls4ml)
