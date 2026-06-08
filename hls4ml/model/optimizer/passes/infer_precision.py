@@ -611,7 +611,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
     def _infer_softmax_precision(self, node, types_to_infer):
         inferred_types = []
 
-        # for softmax, the table parameters have a default seting, so they don't need to be inferred
+        # for softmax, the table parameters have a default setting, so they don't need to be inferred
         # here. We never expect them to be of type auto.
 
         # For result, we leave it to be set externally (model default if not set). We expect it to

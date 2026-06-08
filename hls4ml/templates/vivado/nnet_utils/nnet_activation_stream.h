@@ -120,8 +120,8 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     if (!initialized) {
         // Note we are exponentiating the inputs, which have type data_T
         init_exp_table<typename data_T::value_type, CONFIG_T>(exp_table);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
+        // Note we are inverting the summed exponentials, which have type accum_t
+        init_invert_table<typename CONFIG_T::accum_t, CONFIG_T>(invert_table);
         initialized = true;
     }
 
@@ -292,8 +292,8 @@ SoftmaxInitLoop:
                     int index = data_round + 8 * CONFIG_T::table_size / 16;
                     if (index < 0)
                         index = 0;
-                    if (index > CONFIG_T::table_size - 1)
-                        index = CONFIG_T::table_size - 1;
+                    if (index > CONFIG_T::exp_table_size - 1)
+                        index = CONFIG_T::exp_table_size - 1;
                     exp_diff_res = exp_table[index];
                 }
 
@@ -311,8 +311,8 @@ SoftmaxInitLoop:
             int exp_res_index = exp_res[j] * CONFIG_T::table_size / 64;
             if (exp_res_index < 0)
                 exp_res_index = 0;
-            if (exp_res_index > CONFIG_T::table_size - 1)
-                exp_res_index = CONFIG_T::table_size - 1;
+            if (exp_res_index > CONFIG_T::inv_table_size - 1)
+                exp_res_index = CONFIG_T::inv_table_size - 1;
 
             out_pack[j] = static_cast<typename res_T::value_type>(invert_table[exp_res_index]);
         }
