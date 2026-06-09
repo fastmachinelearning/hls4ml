@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import numpy as np
@@ -13,10 +14,12 @@ from tensorflow.keras.layers import (
     ReLU,
     SeparableConv1D,
     SeparableConv2D,
+    Softmax,
 )
 from tensorflow.keras.models import Sequential
 
 import hls4ml
+import hls4ml.model.layers
 from hls4ml.model.optimizer.passes.infer_precision import _get_precision_from_constant
 
 test_root_path = Path(__file__).parent
@@ -285,3 +288,37 @@ def test_precision_from_constant_unit(val, expected_width):
     quantum = 2.0**-fp.fractional
     if expected_width < max_width:
         assert val % quantum == 0
+
+
+@pytest.mark.parametrize('n_in', [4, 8, 16])
+@pytest.mark.parametrize('backend', ['Vitis', 'oneAPI'])
+def test_auto_precision_softmax(test_case_id, n_in, backend):
+    """Test that auto accumulator precision is correctly inferred for softmax layers."""
+    model = Sequential()
+    model.add(Softmax(input_shape=(n_in,)))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, backend=backend, granularity='name')
+
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=odir, backend=backend)
+
+    # Find the Softmax layer and verify accum_t precision
+    softmax_layer = next((layer for layer in hls_model.get_layers() if isinstance(layer, hls4ml.model.layers.Softmax)), None)
+    assert softmax_layer is not None, 'No Softmax layer found in converted model'
+
+    accum_t = softmax_layer.types['accum_t'].precision
+    exp_table_t = softmax_layer.types['exp_table_t'].precision
+
+    ceillog = math.ceil(math.log2(n_in))
+    expected_width = exp_table_t.width + ceillog
+    expected_integer = exp_table_t.integer + ceillog
+    expected_signed = exp_table_t.signed
+
+    assert accum_t.width == expected_width, f'Expected accum_t width {expected_width}, got {accum_t.width} (n_in={n_in})'
+    assert accum_t.integer == expected_integer, (
+        f'Expected accum_t integer {expected_integer}, got {accum_t.integer} (n_in={n_in})'
+    )
+    assert accum_t.signed == expected_signed, (
+        f'Expected accum_t signed={expected_signed}, got {accum_t.signed} (n_in={n_in})'
+    )
