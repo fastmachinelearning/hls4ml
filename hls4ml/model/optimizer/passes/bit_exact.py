@@ -11,6 +11,7 @@ from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
+from quantizers import get_fixed_quantizer_np
 
 from hls4ml.model.layers import (
     Activation,
@@ -22,6 +23,7 @@ from hls4ml.model.layers import (
     Dense,
     Einsum,
     EinsumDense,
+    Embedding,
     GlobalPooling1D,
     GlobalPooling2D,
     Input,
@@ -33,6 +35,8 @@ from hls4ml.model.layers import (
     Reshape,
     Softmax,
     Transpose,
+    ZeroPadding1D,
+    ZeroPadding2D,
 )
 from hls4ml.model.optimizer import ModelOptimizerPass, OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer, UnaryLUT
@@ -652,6 +656,57 @@ def _(layer: DACombinational):
     comb = comb_trace(inp, out)
     k, i, f = comb.out_kifs
     return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+
+
+@_produce_kif.register
+def _(layer: Embedding):
+    _, out_quantizers = get_output_layers_and_quantizers(layer)
+    assert len(out_quantizers) == 1, 'Embedding layer should have exactly one consumer'
+    quant = out_quantizers[0]
+    k, b, i = quant.mask_kbi
+    k, b, i = k[0], b[0], i[0]
+    i, f = i - k, b - i
+    k, i, f = np.max([k, i, f], axis=1) if isinstance(k, np.ndarray) else (k, i, f)
+    quant = get_fixed_quantizer_np(quant.RND, quant.SAT)
+    data = layer.attributes['embeddings'].data
+    qdata = quant(data, k, i, f)
+    layer.attributes['embeddings'].data = qdata
+    k, i, f = minimal_kif(qdata)
+    shape = get_output_shape(layer)
+    k = np.broadcast_to(np.max(k, axis=0).astype(np.int16), shape)
+    i = np.broadcast_to(np.max(i, axis=0).astype(np.int16), shape)
+    f = np.broadcast_to(np.max(f, axis=0).astype(np.int16), shape)
+    return k, i, f
+
+
+@_produce_kif.register
+def _(layer: ZeroPadding1D):
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    pad_left = int(layer.attributes['pad_left'])
+    pad_right = int(layer.attributes['pad_right'])
+    # channels_last: kif shape is (in_width, n_chan); pad axis 0.
+    pad_shape = ((pad_left, pad_right),) + ((0, 0),) * (k_in.ndim - 1)
+    k = np.pad(k_in, pad_shape, mode='constant', constant_values=0)
+    i = np.pad(i_in, pad_shape, mode='constant', constant_values=0)
+    f = np.pad(f_in, pad_shape, mode='constant', constant_values=0)
+    return k.astype(np.int16), i, f
+
+
+@_produce_kif.register
+def _(layer: ZeroPadding2D):
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    pad_top = int(layer.attributes['pad_top'])
+    pad_bottom = int(layer.attributes['pad_bottom'])
+    pad_left = int(layer.attributes['pad_left'])
+    pad_right = int(layer.attributes['pad_right'])
+    # channels_last: kif shape is (in_height, in_width, n_chan); pad axes 0 and 1.
+    pad_shape = ((pad_top, pad_bottom), (pad_left, pad_right)) + ((0, 0),) * (k_in.ndim - 2)
+    k = np.pad(k_in, pad_shape, mode='constant', constant_values=0)
+    i = np.pad(i_in, pad_shape, mode='constant', constant_values=0)
+    f = np.pad(f_in, pad_shape, mode='constant', constant_values=0)
+    return k.astype(np.int16), i, f
 
 
 def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):

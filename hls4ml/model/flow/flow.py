@@ -62,10 +62,10 @@ class DynamicFlow(Flow):
         return optimizers
 
     def _add_optimizer(self, opt_name):
-        self._added_optimizers.put(opt_name)
+        self._added_optimizers.add(opt_name)
 
     def _remove_optimizer(self, opt_name):
-        self._removed_optimizers.put(opt_name)
+        self._removed_optimizers.add(opt_name)
 
 
 flow_map = {}
