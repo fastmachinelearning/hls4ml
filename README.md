@@ -2,7 +2,7 @@
    <img src="https://raw.githubusercontent.com/fastmachinelearning/hls4ml/refs/heads/main/docs/img/hls4ml_logo.svg" alt="hls4ml" width="400"/>
 </p>
 
-[![DOI](https://zenodo.org/badge/108329371.svg)](https://zenodo.org/badge/latestdoi/108329371)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19134628.svg)](https://doi.org/10.5281/zenodo.19134628)
 [![License](https://img.shields.io/badge/License-Apache_2.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Documentation Status](https://github.com/fastmachinelearning/hls4ml/actions/workflows/build-sphinx.yml/badge.svg)](https://fastmachinelearning.org/hls4ml)
 [![PyPI version](https://badge.fury.io/py/hls4ml.svg)](https://badge.fury.io/py/hls4ml)
@@ -76,7 +76,7 @@ If you use this software in a publication, please cite the software
 @software{fastml_hls4ml,
   author       = {{FastML Team}},
   title        = {fastmachinelearning/hls4ml},
-  year         = 2025,
+  year         = 2026,
   publisher    = {Zenodo},
   version      = {v1.3.0},
   doi          = {10.5281/zenodo.1201549},
@@ -109,9 +109,14 @@ and the latest overview paper:
     archivePrefix = "arXiv",
     primaryClass = "cs.AR",
     reportNumber = "FERMILAB-PUB-25-0890-CSAID-ETD-PPD",
-    month = "12",
-    year = "2025"
+    year = "2026",
+    doi = "10.1145/3801979",
+    journal = "ACM Trans. Reconfigurable Technol. Syst."
+    volume = "19",
+    pages = "19",
 }
+
+
 ```
 
 Additionally, if you use specific features developed in later papers, please cite those as well. For example, CNNs:
