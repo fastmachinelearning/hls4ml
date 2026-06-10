@@ -1,15 +1,11 @@
-import os
 from pathlib import Path
 
+import keras
 import numpy as np
 import pytest
-
-os.environ['KERAS_BACKEND'] = 'tensorflow'
-
-import keras  # noqa: E402
-from pquant import pdp_config  # noqa: E402
-from pquant.core.keras.activations import PQActivation  # noqa: E402
-from pquant.core.keras.layers import (  # noqa: E402
+from pquant import pdp_config
+from pquant.core.keras.activations import PQActivation
+from pquant.core.keras.layers import (
     PQAvgPool1d,
     PQAvgPool2d,
     PQBatchNormalization,
@@ -17,10 +13,10 @@ from pquant.core.keras.layers import (  # noqa: E402
     PQConv2d,
     PQDense,
 )
-from pquant.core.keras.quantizer import Quantizer  # noqa: E402
+from pquant.core.keras.quantizer import Quantizer
 
-from hls4ml.converters import convert_from_keras_model  # noqa: E402
-from hls4ml.utils import config_from_keras_model  # noqa: E402
+from hls4ml.converters import convert_from_keras_model
+from hls4ml.utils import config_from_keras_model
 
 test_path = Path(__file__).parent
 

@@ -1,16 +1,12 @@
-import os
 from pathlib import Path
 
 import numpy as np
 import pytest
-
-os.environ['KERAS_BACKEND'] = 'torch'
-
-import torch  # noqa: E402
-import torch.nn as nn  # noqa: E402
-from pquant import pdp_config  # noqa: E402
-from pquant.core.torch.activations import PQActivation  # noqa: E402
-from pquant.core.torch.layers import (  # noqa: E402
+import torch
+import torch.nn as nn
+from pquant import pdp_config
+from pquant.core.torch.activations import PQActivation
+from pquant.core.torch.layers import (
     PQAvgPool1d,
     PQAvgPool2d,
     PQBatchNorm1d,
@@ -19,10 +15,10 @@ from pquant.core.torch.layers import (  # noqa: E402
     PQConv2d,
     PQDense,
 )
-from pquant.core.torch.quantizer import Quantizer  # noqa: E402
+from pquant.core.torch.quantizer import Quantizer
 
-from hls4ml.converters import convert_from_pytorch_model  # noqa: E402
-from hls4ml.utils import config_from_pytorch_model  # noqa: E402
+from hls4ml.converters import convert_from_pytorch_model
+from hls4ml.utils import config_from_pytorch_model
 
 test_path = Path(__file__).parent
 
