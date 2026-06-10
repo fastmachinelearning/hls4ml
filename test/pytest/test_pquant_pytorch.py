@@ -9,9 +9,17 @@ os.environ['KERAS_BACKEND'] = 'torch'
 import torch  # noqa: E402
 import torch.nn as nn  # noqa: E402
 from pquant import pdp_config  # noqa: E402
-from pquant.activations import PQActivation  # noqa: E402
-from pquant.layers import PQAvgPool1d, PQAvgPool2d, PQBatchNorm1d, PQBatchNorm2d, PQConv1d, PQConv2d, PQDense  # noqa: E402
-from pquant.quantizer import Quantizer  # noqa: E402
+from pquant.core.torch.activations import PQActivation  # noqa: E402
+from pquant.core.torch.layers import (  # noqa: E402
+    PQAvgPool1d,
+    PQAvgPool2d,
+    PQBatchNorm1d,
+    PQBatchNorm2d,
+    PQConv1d,
+    PQConv2d,
+    PQDense,
+)
+from pquant.core.torch.quantizer import Quantizer  # noqa: E402
 
 from hls4ml.converters import convert_from_pytorch_model  # noqa: E402
 from hls4ml.utils import config_from_pytorch_model  # noqa: E402

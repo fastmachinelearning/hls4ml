@@ -3,15 +3,24 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from pquant import pdp_config
-from pquant.activations import PQActivation
-from pquant.layers import PQAvgPool1d, PQAvgPool2d, PQBatchNormalization, PQConv1d, PQConv2d, PQDense
-
-from hls4ml.converters import convert_from_keras_model
-from hls4ml.utils import config_from_keras_model
 
 os.environ['KERAS_BACKEND'] = 'tensorflow'
+
 import keras  # noqa: E402
+from pquant import pdp_config  # noqa: E402
+from pquant.core.keras.activations import PQActivation  # noqa: E402
+from pquant.core.keras.layers import (  # noqa: E402
+    PQAvgPool1d,
+    PQAvgPool2d,
+    PQBatchNormalization,
+    PQConv1d,
+    PQConv2d,
+    PQDense,
+)
+from pquant.core.keras.quantizer import Quantizer  # noqa: E402
+
+from hls4ml.converters import convert_from_keras_model  # noqa: E402
+from hls4ml.utils import config_from_keras_model  # noqa: E402
 
 test_path = Path(__file__).parent
 
@@ -70,23 +79,39 @@ def create_pqlayer_model(layer: str, use_hgq: bool):
     config = pdp_config()
     config.quantization_parameters.use_high_granularity_quantization = use_hgq
 
-    idx = layer.find('(') + 1
-    layer = (
-        layer[:idx]
-        + 'config, '
-        + layer[idx:-1]
-        + (', quantize_output=True, out_quant_bits=(1., 2., 7.)' if 'BatchNorm' not in layer else '')
-        + ')'
-    )
-    _layer = eval(layer)
+    if 'Quantizer' not in layer:
+        idx = layer.find('(') + 1
+        layer = (
+            layer[:idx]
+            + 'config, '
+            + layer[idx:-1]
+            + (', quantize_output=True, out_quant_bits=(1., 2., 7.)' if 'BatchNorm' not in layer else '')
+            + ')'
+        )
+        _layer = eval(layer)
 
-    shape = get_shape(_layer)
-    inp = keras.Input(shape[1:])
-    out = _layer(inp)
-    if 'BatchNorm' in layer:
-        flat = keras.layers.Flatten()
-        _layer2 = PQDense(config, 16, in_quant_bits=(1.0, 1.0, 7.0), quantize_output=True, out_quant_bits=(1.0, 2.0, 7.0))
-        out = _layer2(flat(out))
+        shape = get_shape(_layer)
+        inp = keras.Input(shape[1:])
+        out = _layer(inp)
+        if 'BatchNorm' in layer:
+            flat = keras.layers.Flatten()
+            _layer2 = PQDense(
+                config, 16, in_quant_bits=(1.0, 1.0, 7.0), quantize_output=True, out_quant_bits=(1.0, 2.0, 7.0)
+            )
+            out = _layer2(flat(out))
+
+    else:
+        input_quantizer = Quantizer(
+            k=0.0, i=0.0, f=7.0, overflow='SAT', round_mode='RND', is_heterogeneous=use_hgq, is_data=True
+        )
+        a = PQDense(config, 16, quantize_input=False, quantize_output=True)
+        b = PQDense(config, 8, quantize_output=True)
+        shape = get_shape(input_quantizer)
+        inp = keras.Input(shape[1:])
+        q_in = input_quantizer(inp)
+        y = a(q_in)
+        out = b(y)
+
     model = keras.Model(inp, out)
 
     return model, shape
@@ -128,6 +153,9 @@ def get_shape(
         case PQDense():
             # (N, in_features)
             return (batch_size, default_length)
+        case Quantizer():
+            # (N, L)
+            return (batch_size, default_length)
         case _:
             raise TypeError(f'Unsupported layer type: {type(layer).__name__}')
 
@@ -156,6 +184,7 @@ def get_shape(
         "PQAvgPool2d((2,2), padding='valid')",
         "PQActivation('relu')",
         "PQActivation('tanh')",
+        'Quantizer()',
     ],
 )
 @pytest.mark.parametrize('N', [1000])

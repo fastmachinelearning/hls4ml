@@ -15,16 +15,20 @@ if TYPE_CHECKING:
     from keras.src.layers.layer import Layer as Layer
 
 
-def extract_quantizer_config(
-    q, extract_kif, tensor: 'KerasTensor', is_input: bool, overflow_attr: str = 'overflow_mode'
-) -> dict[str, Any]:
+def extract_pquant_quantizer_config(q, tensor: 'KerasTensor', is_input: bool = None) -> dict[str, Any]:
+
+    from pquant.quantizer import Quantizer
+
+    if not isinstance(q, Quantizer):
+        raise TypeError(f'Quantizer {type(q).__name__} ({q.__module__}) is not an instance of any allowed Quantizer class.')
+
     from keras import ops
 
     shape: tuple[int, ...] = tensor.shape[1:]  # type: ignore
     if any([s is None for s in shape]):
         raise ValueError(f'Tensor {tensor.name} has at least one dimension with no fixed size')
 
-    k, i, f = extract_kif(q)
+    k, i, f = q.quantizer.quantizer.kif if q.use_hgq else (q.k, q.i, q.f)
     k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
     k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
     I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
@@ -33,14 +37,19 @@ def extract_quantizer_config(
     B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
     I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
 
-    overflow_mode: str = getattr(q, overflow_attr, 'SAT')
+    overflow_mode: str = getattr(q, 'overflow_mode' if q.use_hgq else 'overflow', 'SAT')
     round_mode: str = q.round_mode
     if round_mode.startswith('S_'):
         round_mode = round_mode[2:]
     fusible = np.unique(k).size == 1 and np.unique(B).size == 1 and np.unique(I).size == 1
 
-    input_keras_tensor_names = tensor.name if is_input else f'{tensor.name}_q'
-    output_keras_tensor_names = f'{tensor.name}_q' if is_input else tensor.name
+    if is_input is not None:
+        input_keras_tensor_names = tensor.name if is_input else f'{tensor.name}_q'
+        output_keras_tensor_names = f'{tensor.name}_q' if is_input else tensor.name
+    else:
+        input_keras_tensor_names = ''
+        output_keras_tensor_names = ''
+
     return {
         'name': q.name,
         'class_name': 'FixedPointQuantizer',
@@ -54,16 +63,20 @@ def extract_quantizer_config(
     }
 
 
-def extract_pquant_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> dict[str, Any]:
-    from pquant.quantizer import Quantizer
+class PQQuantizerHandler(KerasV3LayerHandler):
+    handles = ('pquant.core.keras.quantizer.Quantizer',)
 
-    if not isinstance(q, Quantizer):
-        raise TypeError(f'Quantizer {type(q).__name__} ({q.__module__}) is not an instance of any allowed Quantizer class.')
+    def handle(
+        self,
+        layer: 'pquant.core.keras.quantizer.Quantizer',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        config = extract_pquant_quantizer_config(layer, in_tensors[0])
+        config['input_keras_tensor_names'] = [t.name for t in in_tensors]
+        config['output_keras_tensor_names'] = [t.name for t in out_tensors]
 
-    if q.use_hgq:
-        return extract_quantizer_config(q.quantizer.quantizer, lambda q: q.kif, tensor, is_input)
-    else:
-        return extract_quantizer_config(q, lambda q: (q.k, q.i, q.f), tensor, is_input, 'overflow')
+        return (config,)
 
 
 class PQLayerHandler(KerasV3LayerHandler):
