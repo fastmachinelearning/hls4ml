@@ -1,0 +1,213 @@
+from datetime import datetime
+
+# import the library
+from pynq import Overlay     # import the overlay
+from pynq import allocate    # import for CMA (contingeous memory allocation)
+from pynq import DefaultIP   # import the ip connector library for extension
+from pynq import Interrupt
+from pynq import PL
+
+import asyncio
+import numpy as np
+import os
+import subprocess
+import re
+import time
+
+class NeuralNetworkOverlay(Overlay):
+    def __init__(
+        self, bitfile_name, x_shape, y_shape, dtype=np.float32, dtbo=None, download=True, ignore_version=False, device=None
+    ):
+        super().__init__(bitfile_name, dtbo=None, download=True, ignore_version=False, device=None)
+        self.input_buffer = allocate(shape=x_shape, dtype=dtype)
+        self.output_buffer = allocate(shape=y_shape, dtype=dtype)
+
+    def calculate_performance(self, N, execution_time):
+        rate = N / execution_time if execution_time > 0 else float('inf')
+        print(
+            f"Processed elements: {N}, Execution time: {execution_time:.4f} seconds, Performance rate: {rate:.2f} inferences/second")
+        return rate
+
+
+    def predict(self, X, debug=False, profile=False, encode=None, decode=None):
+        """
+        Obtain the predictions of the NN implemented in the FPGA.
+        Parameters:
+        - X : the input vector. Should be numpy ndarray.
+        - dtype : the data type of the elements of the input/output vectors.
+                  Note: it should be set depending on the interface of the accelerator; if it uses 'float'
+                  types for the 'data' AXI-Stream field, 'np.float32' dtype is the correct one to use.
+                  Instead if it uses 'ap_fixed<A,B>', 'np.intA' is the correct one to use (note that A cannot
+                  any integer value, but it can assume {..., 8, 16, 32, ...} values. Check `numpy`
+                  doc for more info).
+                  In this case the encoding/decoding has to be computed by the PS. For example for
+                  'ap_fixed<16,6>' type the following 2 functions are the correct one to use for encode/decode
+                  'float' -> 'ap_fixed<16,6>':
+                  ```
+                    def encode(xi):
+                        return np.int16(round(xi * 2**10)) # note 2**10 = 2**(A-B)
+                    def decode(yi):
+                        return yi * 2**-10
+                    encode_v = np.vectorize(encode) # to apply them element-wise
+                    decode_v = np.vectorize(decode)
+                  ```
+        - profile : boolean. Set it to `True` to print the performance of the algorithm in term of `inference/s`.
+        - encode/decode: function pointers. See `dtype` section for more information.
+        - return: an output array based on `np.ndarray` with a shape equal to `y_shape` and a `dtype` equal to
+                  the namesake parameter.
+        """
+
+        # reset the PL
+        PL.reset()
+        # set interrupt controller
+        my_interrupt = Interrupt("<TOP_WRAPPER_NAME>/interrupt")
+        ip = self.<TOP_WRAPPER_NAME>
+
+        if encode is not None:
+            X = encode(X)
+        np.copyto(self.input_buffer, X)
+        exec_time = ip.transfer(self.input_buffer, self.output_buffer, my_interrupt, profile)
+        # exec_time will valid only when the profile is enabled
+        if decode is not None:
+            self.output_buffer = decode(self.output_buffer)
+
+        if profile:
+            performance = self.calculate_performance(len(X), exec_time)
+            return self.output_buffer, exec_time, performance
+        return self.output_buffer
+
+class HLS4ML_IP(DefaultIP):
+    def __init__(self, description):
+        super().__init__(description=description)
+
+        self.REG_ADDR_AP_CTRL = 0x00
+        self.REG_ADDR_BATCH_SIZE = VAL
+
+        self.REG_ADDR_GIE = 0x04
+        self.REG_ADDR_IER = 0x08
+        self.REG_ADDR_ISR = 0x0C
+
+        self.INP_PORT_NAMEs = [
+            # hls-driver-input-dbg-name
+        ]
+
+        self.REG_ADDR_INP_PTRs = [
+            # hls-driver-input-ptr
+        ]
+
+        self.OUT_PORT_NAMEs = [
+            # hls-driver-output-dbg-name
+        ]
+
+        self.REG_ADDR_OUT_PTRs = [
+            # hls-driver-output-ptr
+        ]
+
+    bindto = ['xilinx.com:hls:<TOP_NAME>:1.0']
+
+    def enable_gie(self):
+        print("global interrupt enable register")
+        self.write(self.REG_ADDR_GIE, 0x01)
+        print("enable gie successful")
+
+    def disable_gie(self):
+        print("global interrupt enable register")
+        self.write(self.REG_ADDR_GIE, 0x01)
+        print("disable gie successful")
+
+    def enable_done_intr(self):
+        print("ap_done interrupt enable register")
+        self.write(self.REG_ADDR_IER, 0x01)
+        print("enable ap_done interrupt successful")
+
+    def clear_done_status(self):
+        print("ap_done register clear")
+        self.write(self.REG_ADDR_ISR, 0x01)
+        print("clear ap_done interrupt successful")
+
+    def set_single_bit(self, addr, idx):
+        self.write(addr, 1 << idx)
+
+    def ctrl_start(self):
+        self.write(0x00, 0x01)  # ap_start = 1
+
+    def wait_until_done(self):
+        while (self.read(0x00) & 0x2) == 0:  # Wait for ap_done
+            time.sleep(0.001)
+
+    def set_input(self, idx, buffer):
+
+        print(
+            f"input {self.INP_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}"
+        )
+        self.write(self.REG_ADDR_INP_PTRs[idx], buffer.physical_address)
+        self.write(self.REG_ADDR_INP_PTRs[idx] + 4, 0)
+        buffer.flush()
+
+    def set_output(self, idx, buffer):
+
+        print(
+            f"output {self.OUT_PORT_NAMEs[idx]} will be set to addr: {hex(buffer.physical_address)} with elements: {buffer.size}"
+        )
+        self.write(self.REG_ADDR_OUT_PTRs[idx], buffer.physical_address)
+        self.write(self.REG_ADDR_OUT_PTRs[idx] + 4, 0)
+
+    def set_amt_query(self, val):
+        print(f"amount of queries will be set to: {val} at address: {hex(self.REG_ADDR_BATCH_SIZE)}")
+        self.write(self.REG_ADDR_BATCH_SIZE, val)
+
+    def prepare_intr(self):
+        print("prepare your interrupt")
+        self.enable_gie()
+        self.enable_done_intr()
+        self.clear_done_status()
+        print("----------------------")
+
+    def build_event_and_run(self, intr, profile):
+
+        async def wait_for_acc():
+            exec_time = 0
+            print("starting the accelerator")
+            if profile:
+                t_start = time.perf_counter()
+
+            # Start receive (PL → PS)
+            # Start send (PS → PL)
+            self.ctrl_start()
+
+            # Wait for complete
+            await intr.wait()
+
+            # print porfile data
+            if profile:
+                t_end = time.perf_counter()
+                exec_time = t_end - t_start
+                print(f"Accelerator execution time: \
+                      {(exec_time) * 1e3:.3f} ms")
+
+            print("accelerator has finished")
+
+            return exec_time if profile else None
+
+        # get event loop from asyncio
+        loop = asyncio.get_event_loop()
+        # build task
+        task = loop.create_task(wait_for_acc())
+        # run and return whatever inside the wait_for_acc return
+        return loop.run_until_complete(task)
+
+    def transfer(self, input_buffer, output_buffer, intr, profile = True):
+
+        # flush the buffer first
+        input_buffer.flush()
+        # prepare the data
+        self.set_input(0, input_buffer)
+        self.set_output(0, output_buffer)
+        self.set_amt_query(input_buffer.shape[0])
+        self.prepare_intr()
+        # run and get the profile data
+        exec_time = self.build_event_and_run(intr, profile)
+        # invalidate the output buffer
+        output_buffer.invalidate()
+        # it will return 0 if the profile is not enable
+        return exec_time

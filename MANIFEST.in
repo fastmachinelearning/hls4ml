@@ -7,3 +7,4 @@ recursive-include hls4ml *.py
 recursive-include hls4ml/contrib *
 global-exclude .git .gitmodules .gitlab-ci.yml *.pyc
 include hls4ml/backends/vivado_accelerator/supported_boards.json
+include hls4ml/backends/vitis_unified/supported_boards.json
