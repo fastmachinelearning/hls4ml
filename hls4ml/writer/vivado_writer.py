@@ -1112,14 +1112,13 @@ class VivadoWriter(Writer):
         Args:
             model (ModelGraph): the hls4ml model.
         """
-
-        write_tar = model.config.get_writer_config().get('WriteTar', False)
-        if write_tar:
-            tar_path = model.config.get_output_dir() + '.tar.gz'
-            if os.path.exists(tar_path):
-                os.remove(tar_path)
-            with tarfile.open(tar_path, mode='w:gz') as archive:
-                archive.add(model.config.get_output_dir(), recursive=True, arcname='')
+        if not self.should_write_tar(model):
+            return
+        tar_path = model.config.get_output_dir() + '.tar.gz'
+        if os.path.exists(tar_path):
+            os.remove(tar_path)
+        with tarfile.open(tar_path, mode='w:gz') as archive:
+            archive.add(model.config.get_output_dir(), recursive=True, arcname='')
 
     def write_hls(self, model, is_multigraph=False):
         if not is_multigraph:
