@@ -1,5 +1,5 @@
 <p align="center">
-   <img src="https://github.com/fastmachinelearning/fastmachinelearning.github.io/raw/master/images/hls4ml_logo.svg" alt="hls4ml" width="400"/>
+   <img src="https://raw.githubusercontent.com/fastmachinelearning/hls4ml/refs/heads/main/docs/img/hls4ml_logo.svg" alt="hls4ml" width="400"/>
 </p>
 
 [![DOI](https://zenodo.org/badge/108329371.svg)](https://zenodo.org/badge/latestdoi/108329371)
