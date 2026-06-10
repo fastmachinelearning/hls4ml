@@ -302,6 +302,14 @@ class OneAPIWriter(Writer):
                         config = layer.get_attr('config_cpp', None)
                         if config:
                             newline += config + '\n'
+
+                elif '// hls-fpga-machine-learning insert softmax tables' in line:
+                    newline = line
+                    for layer in model.get_layers():
+                        if 'softmax' in layer.name:
+                            newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
+                            newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
+
                 else:
                     newline = line
                 fout.write(newline)
@@ -549,16 +557,16 @@ class OneAPIWriter(Writer):
             dstpath = f'{model.config.get_output_dir()}/src/firmware/{dst}'
             copyfile(srcpath, dstpath)
 
-    def __get_table_size(self, model, activation):
+    def __get_table_size(self, model, activation, table_name='table_size'):
         for layer in model.get_layers():
             if (
                 layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation
-            ) and layer.get_attr('table_size') is not None:
-                return int(layer.get_attr('table_size'))
+            ) and layer.get_attr(table_name) is not None:
+                return int(layer.get_attr(table_name))
         return 1024
 
-    def __get_table_header(self, table_name, table_size):
-        table_header = f'static const typename CONFIG_T::table_t {table_name}[{table_size}] = {{'
+    def __get_table_header(self, table_name, table_size, table_type='table_t'):
+        table_header = f'static const typename CONFIG_T::{table_type} {table_name}[{table_size}] = {{'
         return table_header
 
     def __write_elu_table(self, model, path):
@@ -687,94 +695,123 @@ class OneAPIWriter(Writer):
         h_file.write('};\n')
         h_file.close()
 
-    def __write_exp_table(self, model, path):
-        table_name = 'exp_table'
-        table_size = self.__get_table_size(model, 'softmax')
-
-        h_file = open(f'{path}/{table_name}.tb', 'w')
-        h_file.write(self.__get_table_header(table_name, table_size))
-
-        # Default fixed point precision
-        # 6 bits for integer part, 10 bits for decimal - total, 16
-        fp_bits = 16
-        fp_integer = 6
-        fp_signed = True
-
-        # Exp table should use the same precision as exp_table, as seen in Vivado code
-        # init_exp_table<data_T, CONFIG_T>(exp_table);
+    def __get_table_precision(self, model, activation, table_name='table_precision'):
         for layer in model.get_layers():
-            if layer.name == 'softmax':
-                ac_type = layer.get_input_variable().type
-                if ac_type is not None:
-                    try:
-                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                        fp_integer = ac_type.precision.integer
-                        fp_signed = ac_type.precision.signed
-                    except Exception:
-                        # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                        pass
-                    if fp_signed is False:
-                        raise Exception('Softmax types need to be signed')
+            if layer.get_attr('activation') == activation and layer.get_attr(table_name) is not None:
+                precision = layer.get_attr(table_name)
+                return precision.precision
 
-        sep = ''
-        N = ceil_log2(table_size)
-        for i in range(table_size):
-            f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-            b = uint_to_binary(i, N)
-            if i == 0:
-                b.insert(0, 0)
-            else:
-                b.insert(0, 1)
-            f.set_msb_bits(b)
-            real_val = f.exp_float()
-            h_file.write(sep + str(real_val))
-            sep = ', '
+        return None  # fp_bits, fp_integer, fp_signed
 
-        h_file.write('};\n')
-        h_file.close()
+    def __write_exp_table(self, model, path):
+
+        for layer in model.get_layers():
+            if 'softmax' in layer.name:
+                table_name = layer.name + '_exp_table'
+                table_size = (
+                    int(layer.get_attr('exp_table_size')) // 2
+                    if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax')
+                    and layer.get_attr('exp_table_size') is not None
+                    else 1024
+                )
+
+                with open(f'{path}/{table_name}.h', 'w') as h_file:
+                    header_name = table_name
+                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
+                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
+
+                    h_file.write(f'static constexpr {table_name}_t {table_name}[{table_size}] = {{')
+
+                    ac_type = layer.get_attr('inp_norm_t')
+
+                    if ac_type is not None:
+                        try:
+                            fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                            fp_integer = ac_type.precision.integer
+                            fp_signed = ac_type.precision.signed
+                        except Exception:
+                            # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
+                            fp_bits = 16
+                            fp_integer = 6
+                            fp_signed = True
+
+                        if fp_signed is False:
+                            raise Exception('Softmax types need to be signed')
+
+                    else:
+                        fp_bits = 16
+                        fp_integer = 6
+                        fp_signed = True
+
+                    sep = ''
+                    N = ceil_log2(table_size)
+                    for i in range(table_size):
+                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+                        b = uint_to_binary(i, N)
+                        if i == 0:
+                            b.insert(0, 0)
+                        else:
+                            b.insert(0, 1)
+                        f.set_msb_bits(b)
+                        real_val = f.exp_float()
+                        h_file.write(sep + str(real_val))
+                        sep = ', '
+
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
     def __write_invert_table(self, model, path):
-        table_name = 'invert_table'
-        table_size = self.__get_table_size(model, 'softmax')
-
-        h_file = open(f'{path}/{table_name}.tb', 'w')
-        h_file.write(self.__get_table_header(table_name, table_size))
-
-        # Default fixed point precision, in case values from layer attributes cannot be extracted
-        # 8 bits for integer part, 10 bits for decimal - total, 18
-        fp_bits = 18
-        fp_integer = 8
-        fp_signed = True
-
-        # Invert table should use the same precision as exp_table, as seen in Vivado code
-        # init_invert_table<typename CONFIG_T::exp_table_t, CONFIG_T>(invert_table);
         for layer in model.get_layers():
-            if layer.name == 'softmax':
-                ac_type = layer.get_attr('exp_table_t')
-                if ac_type is not None:
-                    try:
-                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                        fp_integer = ac_type.precision.integer
-                        fp_signed = ac_type.precision.signed
-                    except Exception:
-                        # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                        pass
-                    if fp_signed is False:
-                        raise Exception('Softmax types need to be signed')
+            if 'softmax' in layer.name:
+                table_name = layer.name + '_inv_table'
+                table_size = (
+                    int(layer.get_attr('inv_table_size')) // 2
+                    if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax')
+                    and layer.get_attr('inv_table_size') is not None
+                    else 1024
+                )
 
-        sep = ''
-        N = ceil_log2(table_size)
-        for i in range(table_size):
-            f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-            b = uint_to_binary(i, N)
-            b.insert(0, 0)
-            f.set_msb_bits(b)
-            real_val = f.inv_float()
-            h_file.write(sep + str(real_val))
-            sep = ', '
+                with open(f'{path}/{table_name}.h', 'w') as h_file:
+                    header_name = table_name
+                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
+                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
-        h_file.write('};\n')
-        h_file.close()
+                    h_file.write(f'static constexpr {table_name}_t {table_name}[{table_size}] = {{')
+
+                    ac_type = layer.get_attr('inv_inp_t')
+
+                    if ac_type is not None:
+                        try:
+                            fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                            fp_integer = ac_type.precision.integer
+                            fp_signed = ac_type.precision.signed
+                        except Exception:
+                            # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
+                            fp_bits = 18
+                            fp_integer = 8
+                            fp_signed = True
+
+                        if fp_signed is False:
+                            raise Exception('Softmax types need to be signed')
+
+                    else:
+                        fp_bits = 18
+                        fp_integer = 8
+                        fp_signed = True
+
+                    sep = ''
+                    N = ceil_log2(table_size)
+                    for i in range(table_size):
+                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+                        b = uint_to_binary(i, N)
+                        b.insert(0, 0)
+                        f.set_msb_bits(b)
+                        real_val = f.inv_float()
+                        h_file.write(sep + str(real_val))
+                        sep = ', '
+
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
     def __write_exp_table_latency(self, model, path):
         table_name = 'exp_table_latency'
