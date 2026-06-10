@@ -99,20 +99,18 @@ template <class data_T, class res_T, typename CONFIG_T> void sigmoid(const data_
 
 enum class softmax_implementation { latency = 0, legacy = 1, stable = 2, argmax = 3 };
 
-
 template <class data_T, unsigned table_size> inline unsigned softmax_stable_idx_from_real_val(const data_T x) {
     // Number of address bits for table
     static constexpr int N = ceillog2<table_size>::val;
 
     // Slice the top N bits of the input
     [[intel::fpga_register]] ac_int<N, false> y = x.template slc<N>(x.width - N - 1);
-    
+
     // If x is the most negative value, the slice will be 0, so we need to set the 0-th bit to ensure correctness
     if (x != 0 && y == 0)
         y[0] = 1;
     return y.to_uint();
 }
-
 
 template <class data_T, typename CONFIG_T> inline unsigned softmax_latency_idx_from_real_val(const data_T x) {
     // Number of address bits for table
@@ -123,7 +121,6 @@ template <class data_T, typename CONFIG_T> inline unsigned softmax_latency_idx_f
     return y.to_uint();
 }
 
-
 template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(const data_T &data, res_T &res) {
 
     // Find maximum
@@ -132,8 +129,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
         reduce<typename data_T::value_type, CONFIG_T::n_in, Op_max<typename data_T::value_type>>(data.data(), op_max);
 
     // For the diffs, use the same type as the input but force rounding and saturation
-    [[intel::fpga_register]]
-        typename CONFIG_T::inp_norm_t d_xi_xmax[CONFIG_T::n_in];
+    [[intel::fpga_register]] typename CONFIG_T::inp_norm_t d_xi_xmax[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         d_xi_xmax[i] = data[i] - x_max;
@@ -143,7 +139,9 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = CONFIG_T::exp_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(d_xi_xmax[i])]; //input_t, CONFIG_T
+        exp_res[i] =
+            CONFIG_T::exp_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
+                d_xi_xmax[i])]; // input_t, CONFIG_T
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree
@@ -153,14 +151,14 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
     [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-        CONFIG_T::invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
+        CONFIG_T::invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
+            exp_sum)];
 
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         res[i] = exp_res[i] * inv_exp_sum;
     }
 }
-
 
 // TODO - Improve accuracy
 template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(const data_T &data, res_T &res) {
