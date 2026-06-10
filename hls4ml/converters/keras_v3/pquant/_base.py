@@ -214,7 +214,7 @@ class PQConvHandler(PQLayerHandler, ConvHandler):
     ):
         conf = super().handle(layer, in_tensors, out_tensors)
         conf['class_name'] = layer.__class__.__name__[1:-1] + 'D'
-        pf = layer.parallelization_factor
+        pf = int(layer.parallelization_factor)
         out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
         if pf < 0:
             if layer.data_format == 'channels_last':
@@ -238,6 +238,6 @@ class PQDenseHandler(PQLayerHandler, DenseHandler):
         conf['class_name'] = 'Dense'
         in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
         if len(in_shape) > 1:
-            pf = layer.parallelization_factor
+            pf = int(layer.parallelization_factor)
             conf['parallelization_factor'] = pf
         return conf
