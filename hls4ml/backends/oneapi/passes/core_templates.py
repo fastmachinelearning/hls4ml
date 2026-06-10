@@ -263,7 +263,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
                     params['inp_norm_t'].precision.signed = True
                     params['inp_norm_t'].name = f'{node.name}_inp_norm_t'
                 else:
-                    params['inp_norm_t'].name = f'ac_fixed<{width},{iwidth},{'true' if signed else 'false'},AC_RND,AC_SAT_SYM>'
+                    params['inp_norm_t'].name = f'ac_fixed<{width},{iwidth},{str(signed).lower()},AC_RND,AC_SAT_SYM>'
                 
                 node.set_attr('inp_norm_t', params['inp_norm_t'])
 
