@@ -22,5 +22,6 @@ class CustomFXTracer(torch.fx.Tracer):
             or m.__module__.startswith('torch.nn')
             or m.__module__.startswith('torch.ao.nn')
             or m.__module__.startswith('brevitas.nn')
+            or m.__module__.startswith('pquant.core')
             or m.__module__.startswith('snntorch')
         ) and not isinstance(m, torch.nn.Sequential)

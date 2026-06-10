@@ -43,6 +43,7 @@ optional-dependencies.optimization = [
   "ortools==9.4.1874",
   "packaging",
 ]
+optional-dependencies.pquant-ml = [ "pquant-ml>=0.0.1" ]
 optional-dependencies.profiling = [ "matplotlib", "pandas", "seaborn" ]
 optional-dependencies.qkeras = [
   "qkeras",
@@ -71,6 +72,7 @@ optional-dependencies.testing-keras3 = [
   "da4ml",
   "hgq2>=0.1.7",
   "keras>=3.10",
+  "pquant-ml",
   "tensorflow>=2.15",
 ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
