@@ -131,10 +131,18 @@ class FuseFixedPointQuantizer(OptimizerPass):
 
         inp_layer = get_input_layers(node)[0]
         can_fuse = len(get_output_layers(inp_layer)) == 1
+        attributes = copy(node.attributes)
+        attributes['activation'] = 'linear'
+        attributes['table_size'] = -1
+        attributes['table_t'] = FixedPrecisionType(1, 0)
+        attributes['result_t'] = precision
         if not can_fuse:
-            return False
-        self.propagate(inp_layer, precision)
-        model.remove_node(node)
+            linear = Activation(model, node.name, attributes, node.inputs, node.outputs)
+            linear.get_output_variable().type.precision = precision
+            model.replace_node(node, linear)
+        else:
+            self.propagate(inp_layer, precision)
+            model.remove_node(node)
         return True
 
 

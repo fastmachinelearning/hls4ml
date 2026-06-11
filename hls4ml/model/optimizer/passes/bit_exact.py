@@ -963,7 +963,8 @@ class BitExact(ModelOptimizerPass):
             for k in list(model.graph.keys()):
                 v = model.graph[k]
                 if isinstance(v, Activation) and v.attributes.get('activation') == 'linear':
-                    model.remove_node(v)
+                    if len(get_output_layers(get_input_layers(v)[0])) == 1:
+                        model.remove_node(v)
 
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
