@@ -488,14 +488,46 @@ def _(layer: Conv1D | Conv2D):
     bias = _bias.data if _bias is not None else 0
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
-    k_in, i_in, f_in = im2col(kernel.shape, k_in, i_in, f_in)
-    k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
-    kernel = kernel.reshape(-1, kernel.shape[-1])
-    qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
-    qint_out = qint_in @ kernel
-    qint_out = qint_out + bias
-    k, i, f = qint_out.to_kif()
-    return k.astype(np.int16), i, f
+
+    in_per_group = kernel.shape[-2]
+    n_chan = k_in.shape[-1]
+    if in_per_group == n_chan:
+        # Standard (non-grouped) convolution: kernel covers every input channel.
+        k_in, i_in, f_in = im2col(kernel.shape, k_in, i_in, f_in)
+        k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
+        kernel = kernel.reshape(-1, kernel.shape[-1])
+        qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
+        qint_out = qint_in @ kernel
+        qint_out = qint_out + bias
+        k, i, f = qint_out.to_kif()
+        return k.astype(np.int16), i, f
+
+    # Grouped / depthwise convolution: the kernel stores only ``in_per_group``
+    # input channels (groups = n_chan // in_per_group). Each group is an
+    # independent standard convolution over its own channel slice; process the
+    # groups separately and concatenate along the channel axis. Depthwise is the
+    # degenerate groups == n_chan (in_per_group == 1) case.
+    out_chan = kernel.shape[-1]
+    groups = n_chan // in_per_group
+    out_per_group = out_chan // groups
+    k_outs, i_outs, f_outs = [], [], []
+    for g in range(groups):
+        in_sl = slice(g * in_per_group, (g + 1) * in_per_group)
+        out_sl = slice(g * out_per_group, (g + 1) * out_per_group)
+        kernel_g = kernel[..., out_sl]
+        kg, ig, fg = im2col(kernel_g.shape, k_in[..., in_sl], i_in[..., in_sl], f_in[..., in_sl])
+        kg, ig, fg = stride_arrs(layer, kg, ig, fg)
+        qint_in = QIntervalArray.from_kif(kg, ig, fg)
+        qint_out = qint_in @ kernel_g.reshape(-1, out_per_group)
+        qint_out = qint_out + (bias[out_sl] if _bias is not None else 0)
+        k, i, f = qint_out.to_kif()
+        k_outs.append(k)
+        i_outs.append(i)
+        f_outs.append(f)
+    k = np.concatenate(k_outs, axis=-1).astype(np.int16)
+    i = np.concatenate(i_outs, axis=-1)
+    f = np.concatenate(f_outs, axis=-1)
+    return k, i, f
 
 
 @_produce_kif.register(Pooling1D)
