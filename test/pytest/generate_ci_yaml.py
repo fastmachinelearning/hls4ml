@@ -25,6 +25,7 @@ n_test_files_per_yml = int(os.environ.get('N_TESTS_PER_YAML', 4))
 
 # Blacklisted tests will be skipped
 BLACKLIST = {'test_reduction'}
+EXCLUDED_DIRS = {'implementation'}
 
 # Long-running tests will not be bundled with other tests
 LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_api'}
@@ -42,6 +43,11 @@ KERAS3_LIST = {
 SPLIT_BY_TEST_CASE = {
     'test_keras_api': 1,
 }
+
+
+def include_in_default_ci(path: Path) -> bool:
+    """Exclude dedicated suites (e.g. implementation-only jobs) from the default CI matrix."""
+    return not any(part in EXCLUDED_DIRS for part in path.parts)
 
 
 def collect_test_functions_from_ast(test_file):
@@ -79,7 +85,8 @@ def generate_test_yaml(test_root='.'):
     test_paths = [
         path
         for path in test_root.glob('**/test_*.py')
-        if path.stem not in (BLACKLIST | LONGLIST | set(SPLIT_BY_TEST_CASE.keys()) | KERAS3_LIST)
+        if include_in_default_ci(path)
+        and path.stem not in (BLACKLIST | LONGLIST | set(SPLIT_BY_TEST_CASE.keys()) | KERAS3_LIST)
     ]
     need_example_models = [uses_example_model(path) for path in test_paths]
 
@@ -99,7 +106,7 @@ def generate_test_yaml(test_root='.'):
         else:
             yml.update(diff_yml)
 
-    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in LONGLIST]
+    test_paths = [path for path in test_root.glob('**/test_*.py') if include_in_default_ci(path) and path.stem in LONGLIST]
     for path in test_paths:
         name = path.stem.replace('test_', '')
         test_file = str(path.relative_to(test_root))
@@ -107,7 +114,9 @@ def generate_test_yaml(test_root='.'):
         diff_yml = yaml.safe_load(template.format(name, '.pytest', test_file, int(needs_examples)))
         yml.update(diff_yml)
 
-    test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in SPLIT_BY_TEST_CASE]
+    test_paths = [
+        path for path in test_root.glob('**/test_*.py') if include_in_default_ci(path) and path.stem in SPLIT_BY_TEST_CASE
+    ]
     for path in test_paths:
         stem = path.stem
         name_base = stem.replace('test_', '')
@@ -125,7 +134,9 @@ def generate_test_yaml(test_root='.'):
             else:
                 yml.update(diff_yml)
 
-    keras3_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in KERAS3_LIST]
+    keras3_paths = [
+        path for path in test_root.glob('**/test_*.py') if include_in_default_ci(path) and path.stem in KERAS3_LIST
+    ]
     keras3_need_examples = [uses_example_model(path) for path in keras3_paths]
 
     k3_idxs = list(range(len(keras3_need_examples)))
