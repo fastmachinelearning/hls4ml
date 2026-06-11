@@ -399,6 +399,7 @@ def convert_from_symbolic_expression(
     input_data_tb=None,
     output_data_tb=None,
     precision='ap_fixed<16,6>',
+    hls_compiler='vivado_hls',
     **kwargs,
 ):
     """Converts a given (SymPy or string) expression to hls4ml model.
@@ -438,17 +439,24 @@ def convert_from_symbolic_expression(
         part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
-        compiler (str, optional): Compiler to use, ``vivado_hls`` or ``vitis_hls``. Defaults to ``vivado_hls``.
-        hls_include_path (str, optional): Path to HLS inlcude files. If `None` the location will be inferred from the
-            location of the `compiler` used. If an empty string is passed the HLS math libraries won't be used during
+        hls_compiler (str, optional): HLS compiler to use. Must be ``'vivado_hls'`` or ``'vitis_hls'`. Defaults to ``'vivado_hls'``.
+        hls_include_path (str, optional): Path to HLS include files. If `None` the location will be inferred from the
+            location of the compiler. If an empty string is passed the HLS math libraries won't be used during
             compilation, meaning Python integration won't work unless all functions are LUT-based. Doesn't affect synthesis.
             Defaults to None.
         hls_libs_path (str, optional): Path to HLS libs files. If `None` the location will be inferred from the
-            location of the `compiler` used. Defaults to None.
+            location of the compiler. Defaults to None.
 
     Returns:
         ModelGraph: hls4ml model.
     """
+    _valid_compilers = ('vivado_hls', 'vitis_hls')
+    if hls_compiler not in _valid_compilers:
+        raise ValueError(f"hls_compiler must be one of {_valid_compilers}, got '{hls_compiler}'")
+
+    # Remove legacy 'compiler' kwarg if passed to avoid duplicate keyword argument
+    kwargs.pop('compiler', None)
+
     import sympy
 
     if not isinstance(expr, (list, set)):
@@ -490,7 +498,7 @@ def convert_from_symbolic_expression(
     expr_layer['use_built_in_luts'] = use_built_in_lut_functions
     layer_list.append(expr_layer)
 
-    config = create_config(output_dir=output_dir, project_name=project_name, backend='SymbolicExpression', **kwargs)
+    config = create_config(output_dir=output_dir, project_name=project_name, backend='SymbolicExpression', compiler=hls_compiler, **kwargs)
 
     # config['Expression'] = str(expr)
     config['NSymbols'] = n_symbols

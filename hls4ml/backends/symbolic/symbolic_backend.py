@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 from hls4ml.backends import FPGABackend
 from hls4ml.model.flow import register_flow
@@ -90,23 +91,49 @@ class SymbolicExpressionBackend(FPGABackend):
         return config
 
     def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
-        if 'linux' in sys.platform:
-            found = os.system('command -v vivado_hls > /dev/null')
-            if found != 0:
-                raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+        compiler = model.config.get_config_value('Compiler')
 
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        vivado_cmd = (
-            f'vivado_hls -f build_prj.tcl "reset={reset} '
-            f'csim={csim} '
-            f'synth={synth} '
-            f'cosim={cosim} '
-            f'validation={validation} '
-            f'export={export} '
-            f'vsynth={vsynth}"'
-        )
-        os.system(vivado_cmd)
+
+        if compiler == 'vitis_hls':
+            if 'linux' in sys.platform:
+                found = os.system('command -v vitis-run > /dev/null') == 0
+                if not found:
+                    raise Exception('Vitis HLS installation not found. Make sure "vitis-run" is on PATH.')
+
+            build_opts = (
+                'array set opt {\n'
+                f'    reset      {int(reset)}\n'
+                f'    csim       {int(csim)}\n'
+                f'    synth      {int(synth)}\n'
+                f'    cosim      {int(cosim)}\n'
+                f'    validation {int(validation)}\n'
+                f'    export     {int(export)}\n'
+                f'    vsynth     {int(vsynth)}\n'
+                f'    fifo_opt   0\n'
+                '}\n'
+            )
+            with open('build_opt.tcl', 'w') as f:
+                f.write(build_opts)
+            os.system('vitis-run --tcl build_prj.tcl --mode hls')
+        else:
+            if 'linux' in sys.platform:
+                found = os.system('command -v vivado_hls > /dev/null')
+                if found != 0:
+                    raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+
+            vivado_cmd = (
+                f'vivado_hls -f build_prj.tcl "reset={reset} '
+                f'csim={csim} '
+                f'synth={synth} '
+                f'cosim={cosim} '
+                f'validation={validation} '
+                f'export={export} '
+                f'vsynth={vsynth}"'
+            )
+            os.system(vivado_cmd)
+
         os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
