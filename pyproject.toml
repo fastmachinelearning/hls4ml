@@ -53,6 +53,7 @@ optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.snn = [ "snntorch", "torch" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [
+  "brevitas",
   "calmjs-parse",
   "onnx>=1.4",
   "pytest",

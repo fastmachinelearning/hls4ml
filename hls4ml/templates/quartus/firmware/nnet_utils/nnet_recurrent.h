@@ -501,7 +501,7 @@ INIT_LOOP:
         }
 
         // Do SimpleRNN
-        simple_rnn_pytorch_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias, rec_bias);
+        simple_rnn_pytorch_cell<data_T, h_T, CONFIG_T>(in, hidden_state_temp, h, kernel, rec_kernel, bias, rec_bias);
 
         // Write result
         #pragma unroll
