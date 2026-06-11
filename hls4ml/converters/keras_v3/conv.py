@@ -137,6 +137,26 @@ class ConvHandler(KerasV3LayerHandler):
             config['depthwise_data'] = kernel
             config['pointwise_data'] = self.load_weight(layer, 'pointwise_kernel')
             config['depth_multiplier'] = layer.depth_multiplier
+        elif isinstance(layer, BaseConv) and getattr(layer, 'groups', 1) > 1:
+            # A grouped convolution with groups == in_channels and one filter per channel
+            # (depth_multiplier == 1) is a depthwise convolution. Keras stores its kernel as
+            # (*kernel_size, 1, n_chan); reshape it to the (*kernel_size, n_chan, 1) layout the
+            # depthwise codegen expects and emit it as a DepthwiseConv. Without this a grouped
+            # Conv falls through to the dense branch below and is silently miscomputed.
+            #
+            # Other grouped shapes have no correct hls4ml kernel: general grouping
+            # (1 < groups < in_channels) has no implementation, and depthwise with
+            # depth_multiplier > 1 is unsupported by the depthwise kernels (true for a native
+            # DepthwiseConv too). Reject them rather than emit a wrong result.
+            n_chan, n_filt = config['n_chan'], config['n_filt']
+            if layer.groups != n_chan or n_filt != n_chan:
+                raise NotImplementedError(
+                    'Grouped convolution is only supported as depthwise (groups == in_channels == filters); '
+                    f'layer {layer.name} has groups={layer.groups}, in_channels={n_chan}, filters={n_filt}.'
+                )
+            config['class_name'] = f'DepthwiseConv{len(ker_px_shape)}D'
+            config['depthwise_data'] = kernel.reshape(*kernel.shape[:-2], n_chan, 1)
+            config['depth_multiplier'] = 1
         elif isinstance(layer, BaseConv):
             config['weight_data'] = kernel
 
