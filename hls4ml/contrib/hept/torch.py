@@ -84,15 +84,11 @@ def parse_hept_attention_layer(operation, layer_name, input_names, input_shapes,
 
     x_shape = _strip_batch(input_shapes[0])
     coords_shape = _strip_batch(input_shapes[1])
-    print (coords_shape)
     shift_shape = _strip_batch(input_shapes[2])
 
     if x_shape is None or coords_shape is None or shift_shape is None:
         raise ValueError("HEPTAttention requires concrete input shapes for all three inputs.")
 
-    print(class_object.attn.__dict__)
-    print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(cfg)
     seq_len = int(cfg.get("seq_len", x_shape[0]))
     embed_dim = int(cfg.get("embed_dim", x_shape[-1]))
     coords_dim = int(cfg.get("coords_dim", coords_shape[-1]))
@@ -100,7 +96,7 @@ def parse_hept_attention_layer(operation, layer_name, input_names, input_shapes,
     dim_per_head = class_object.attn.dim_per_head
     num_hashes = class_object.attn.n_hashes
     num_w_per_dist = class_object.attn.num_w_per_dist
-    par_factor = int(cfg.get("par_factor", 1))
+    par_factor = int(cfg.get('HLSConfig',{}).get('Model',{}).get("par_factor", 1))
     par_factor_sort = int(cfg.get("par_factor_sort", par_factor))
     block_size = int(cfg.get("block_size", par_factor))
     inter_reuse_factor = int(cfg.get("inter_reuse_factor", max(1, seq_len // max(1, num_heads))))
@@ -123,7 +119,6 @@ def parse_hept_attention_layer(operation, layer_name, input_names, input_shapes,
         )
 
     weight_names = cfg.get("weight_names", {})
-    print (weight_names)
     def aliases(key: str, defaults: list[str]) -> list[str]:
         alias = weight_names.get(key)
         if alias is None:
@@ -150,9 +145,6 @@ def parse_hept_attention_layer(operation, layer_name, input_names, input_shapes,
         "qkv_reuse_factor": qkv_reuse_factor,
     }
 
-    print (class_object.norm1.weight)
-
-
     layer["layer_norm_weight_data"] = class_object.norm1.weight.detach().numpy()
     layer["layer_norm_bias_data"] = class_object.norm1.bias.detach().numpy()
     layer["q_weight_data"] = class_object.w_q.weight.detach().numpy()
@@ -173,8 +165,12 @@ def parse_hept_attention_layer(operation, layer_name, input_names, input_shapes,
         k=num_w_per_dist,
     )
 
+    # Must match prep_qk() in HEPT/.../attention/hept.py, which builds the coords
+    # augmentation as sqrt(2 * new_qw_expand_dim) * coords. The HLS kernel only
+    # multiplies sqrt_w * coords, so the sqrt(2 * .) transform has to be baked in here.
     qw = w.sum(dim=1).clamp(max=50).exp().sum(dim=-1)
-    layer["sqrt_w_data"]  = torch.cat([qw[:, :1], qw], dim=-1).detach().numpy()
+    new_qw_expand_dim = torch.cat([qw[:, :1], qw], dim=-1)
+    layer["sqrt_w_data"] = torch.sqrt(2 * new_qw_expand_dim).detach().numpy()
 
     expected_lengths = {
         "layer_norm_weight": embed_dim,

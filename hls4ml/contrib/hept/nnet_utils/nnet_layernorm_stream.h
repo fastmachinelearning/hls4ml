@@ -70,9 +70,12 @@ void init_n_invert_sqr_table(typename CONFIG_T::accum_t table_out[N_TABLE])
         // First, convert from table index to X-value (signed 8-bit, range 0 to +0.01)
         double in_val;
         if (N_TABLE > CONFIG_T::inv_sqrt_range) {
-            in_val = ii/typename CONFIG_T::accum_t(N_TABLE / CONFIG_T::inv_sqrt_range);
+            // NOTE: compute in double. The previous form `ii / accum_t(...)` performed
+            // integer division (ap_fixed->int implicit conversion), yielding 0 for every
+            // entry and a table full of zeros -> deno_inv==0 -> LayerNorm output collapses.
+            in_val = double(ii) / (double(N_TABLE) / double(CONFIG_T::inv_sqrt_range));
         } else {
-            in_val = ii*typename CONFIG_T::accum_t(CONFIG_T::inv_sqrt_range / N_TABLE);
+            in_val = double(ii) * (double(CONFIG_T::inv_sqrt_range) / double(N_TABLE));
         }
         //float in_val = ii/float(N_TABLE / CONFIG_T::inv_sqrt_range);
         // Next, compute lookup table function

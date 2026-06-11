@@ -152,7 +152,6 @@ def parse_pytorch_model(config, verbose=True):
                 if len(node.users) == 0:
                     traced_model.erase_node(node)
                     changed = True
-    print (traced_model)
 
     #traced_model.recompile()
 
@@ -194,7 +193,6 @@ def parse_pytorch_model(config, verbose=True):
 
     traced_model.lint()
     for node in traced_model.nodes:
-        print (node.op)
         if node.op == 'call_module':
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
             # where x is an integer numbering the elements of the Sequential
@@ -283,8 +281,6 @@ def parse_pytorch_model(config, verbose=True):
                     raise Exception('Non-default options for groups not implemented yet')
 
             # Process the layer
-            print(node.args)
-            print(node.kwargs)
             layer, output_shape = layer_handlers[pytorch_class](
                 pytorch_class, layer_name, input_names, input_shapes, node, class_object, reader, config, 
             )
@@ -321,7 +317,6 @@ def parse_pytorch_model(config, verbose=True):
 
             else:
                 input_layer['class_name'] = 'InputLayer'
-                print (input_shapes)
                 input_layer['input_shape'] = list(input_shapes[n_inputs][1:])
                 layer_list.insert(n_inputs, input_layer)
 
@@ -379,9 +374,6 @@ def parse_pytorch_model(config, verbose=True):
         if node.op == 'get_attr':
             # Deals with tensors that are member variables of the model class
             # We insert these tensors are input layer nodes into the hls4ML model graph
-            print (node.target)
-            print (children)
-            print (len(children))
             if '.' not in node.target:
                 obj = getattr(model, node.name)
             else:
