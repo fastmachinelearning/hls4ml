@@ -49,6 +49,7 @@ optional-dependencies.qkeras = [
   "tensorflow>=2.8,<=2.14.1",
   "tensorflow-model-optimization<=0.7.5",
 ]
+optional-dependencies.qkeras-v3 = [ "qkeras-v3" ]
 optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.snn = [ "snntorch", "torch" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
@@ -72,6 +73,11 @@ optional-dependencies.testing-keras3 = [
   "hgq2>=0.1.7",
   "keras>=3.10",
   "tensorflow>=2.15",
+]
+optional-dependencies.testing-qkeras-v3 = [
+  "keras==3.14.1",
+  "qkeras-v3",
+  "tensorflow>=2.21",
 ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
 scripts.hls4ml = "hls4ml.cli:main"

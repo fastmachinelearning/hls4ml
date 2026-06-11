@@ -127,7 +127,6 @@ class QKerasQuantizer(Quantizer):
     def __call__(self, data):
         data = np.array(data, dtype='float32')
         return self.quantizer_fn(data).numpy()
-        # return self.quantizer_fn(data)
 
     def _get_type(self, quantizer_config):
         width = quantizer_config['config']['bits']
@@ -170,7 +169,9 @@ class QKerasBinaryQuantizer(Quantizer):
 
     def __call__(self, data):
         data = np.array(data, dtype='float32')
-        y = self.quantizer_fn(data).numpy()
+        y = self.quantizer_fn(data)
+        if hasattr(y, 'numpy'):
+            y = y.numpy()
         return self.binary_quantizer(y)
 
     def serialize_state(self):
