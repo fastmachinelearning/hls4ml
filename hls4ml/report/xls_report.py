@@ -6,6 +6,8 @@ from pathlib import Path
 def _get_project_name(path) -> str:
     project_path = Path(path) / 'firmware'
     sv_files = list(project_path.glob('*.sv'))
+    if not sv_files:
+        raise FileNotFoundError(f'No .sv files found in {project_path}')
     return sv_files[0].stem
 
 
