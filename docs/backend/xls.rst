@@ -5,6 +5,7 @@ XLS
 The XLS backend can convert hls4ml models into SystemVerilog via `Google XLS <https://google.github.io/xls/>`_, which can be converted to IP via **Vivado**.
 
 To enable XLS:
+
 .. code-block:: bash
 
     pip install hls4ml[xls]
@@ -15,7 +16,8 @@ pyxls comes with batteries included, and a separate XLS installation is not requ
 Workflow
 =========================
 
-XLS backend preforms the following transformations:
+XLS backend performs the following transformations:
+
 .. code-block::
 
     hls4ml representation -> DSLX (<ProjectName>.x) -> XLS IR (<ProjectName>.ir) -> Optimized XLS IR (<ProjectName>.opt.ir) -> SystemVerilog (<ProjectName>.sv) -> IP
