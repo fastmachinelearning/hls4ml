@@ -403,7 +403,7 @@ class XLSBackend(FPGABackend):
                 '-tclargs',
                 project_name,
                 model.config.get_config_value('Part'),
-                clock_period_ps,
+                clock_period_ns,
                 clock_uncertainty_float,
             ]
             if pr:
