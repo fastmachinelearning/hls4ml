@@ -82,7 +82,7 @@ def test_softmax(
     assert acc_hls4ml >= 0.98
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
