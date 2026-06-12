@@ -29,9 +29,11 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = keras.Sequential(
         [
             Dense(
@@ -91,9 +93,11 @@ def test_dense(test_case_id, backend, io_type):
         Activation(activation='sigmoid', name='sigmoid'),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = keras.models.Sequential()
     model.add(Dense(64, input_shape=(1,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
     model.add(activation_function)
@@ -125,15 +129,23 @@ padds_options = ['same', 'valid']
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('activation', ['elu', 'relu'])
 def test_conv1d(test_case_id, padds, backend, io_type, activation):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (10, 32, 4)
+        filters = 8
+    else:
+        input_shape = (10, 128, 4)
+        filters = 32
     model = keras.models.Sequential()
-    input_shape = (10, 128, 4)
     model.add(
         Conv1D(
-            filters=32,
+            filters=filters,
             kernel_size=3,
             strides=2,
             padding=padds,
@@ -148,7 +160,7 @@ def test_conv1d(test_case_id, padds, backend, io_type, activation):
     model.add(Activation(activation='relu'))
     model.compile(optimizer='adam', loss='mse')
 
-    X_input = np.random.rand(10, 128, 4)
+    X_input = np.random.rand(*input_shape)
     keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
 
     config = hls4ml.utils.config_from_keras_model(model)
@@ -204,15 +216,23 @@ padds_options = ['same', 'valid']
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, chans, padds, backend, io_type):
-    input_shape = (32, 32, 3)
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (16, 16, 3)
+        filters = 6
+    else:
+        input_shape = (32, 32, 3)
+        filters = 32
     model = keras.Sequential(
         [
             keras.layers.InputLayer(input_shape),
             Conv2D(
-                filters=32,
+                filters=filters,
                 kernel_size=(2, 3),
                 strides=(4, 5),
                 padding=padds,
@@ -298,15 +318,23 @@ def test_conv2d(test_case_id, chans, padds, backend, io_type):
         assert hls_conv_attr['pad_right'] == 0
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 def test_depthwise2d(test_case_id, backend, io_type):
     """
     Test proper handling of DepthwiseConv2D
     """
-    X = np.random.rand(10, 32, 32, 3)
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (8, 8, 3)
+    else:
+        input_shape = (32, 32, 3)
+
+    X = np.random.rand(10, *input_shape)
     X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
-    model = keras.models.Sequential([keras.layers.Input((32, 32, 3)), DepthwiseConv2D(kernel_size=(3, 3))])
+    model = keras.models.Sequential([keras.layers.Input(input_shape), DepthwiseConv2D(kernel_size=(3, 3))])
     model.compile()
 
     config = hls4ml.utils.config_from_keras_model(
@@ -355,7 +383,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
@@ -476,9 +504,11 @@ def test_pooling(test_case_id, pooling, padds, chans, backend):
     #         assert hls_pool.attributes['pad_right'] == 0
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reused_layer(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     inp1 = keras.layers.Input(shape=(10, 10))
     inp2 = keras.layers.Input(shape=(10, 10))
 

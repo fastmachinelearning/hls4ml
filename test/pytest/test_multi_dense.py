@@ -21,11 +21,15 @@ test_root_path = Path(__file__).parent
         ('oneAPI', 'Resource'),
         ('Catapult', 'Latency'),
         ('Catapult', 'Resource'),
+        ('XLS', 'Latency'),
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('shape', [(4, 3), (4, 1), (2, 3, 2), (1, 3, 1)])
 def test_multi_dense(test_case_id, backend, strategy, io_type, shape):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     model = tf.keras.models.Sequential()
     model.add(Dense(7, input_shape=shape, activation='relu'))
     model.add(Dense(2, activation='relu'))

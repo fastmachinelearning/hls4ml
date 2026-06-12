@@ -13,7 +13,7 @@ test_root_path = Path(__file__).parent
 # Variable 'name' is simply used as an identifier for the activation
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('shape, io_type', [((8,), 'io_parallel'), ((8,), 'io_stream'), ((8, 8, 3), 'io_stream')])
 @pytest.mark.parametrize(
     'activation, name',
@@ -52,6 +52,8 @@ test_root_path = Path(__file__).parent
 def test_activations(test_case_id, backend, activation, name, shape, io_type):
     if name == 'prelu' and shape == (8, 8, 3):
         return
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     # Subtract 0.5 to include negative values
     X = np.random.rand(1000, *shape) - 0.5
 
@@ -61,6 +63,13 @@ def test_activations(test_case_id, backend, activation, name, shape, io_type):
 
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     output_dir = str(test_root_path / test_case_id)
+
+    # XLS uses a custom algorithm for determining lookup table boundaries,
+    # so we need to increase the table size for some activations
+    # (note that other backends use a hardcoded range [-8; 8]).
+    # See hls4ml/backends/xls/passes/build_tables.py
+    if backend == 'XLS' and name == 'softsign':
+        hls_config['LayerName']['activation_3']['TableSize'] = 2048
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, output_dir=output_dir, backend=backend

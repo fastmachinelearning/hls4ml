@@ -20,9 +20,12 @@ def randX_20_10():
     return randX(20, 10)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reshape_parallel(test_case_id, randX_20_10, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     model = tf.keras.models.Sequential(
         [
             tf.keras.layers.Input(shape=(10,)),

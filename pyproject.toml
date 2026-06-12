@@ -73,6 +73,7 @@ optional-dependencies.testing-keras3 = [
   "keras>=3.10",
   "tensorflow>=2.15",
 ]
+optional-dependencies.xls = [ "xls-python>=0.1.9875" ]
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
 scripts.hls4ml = "hls4ml.cli:main"
 entry-points.pytest_randomly.random_seeder = "hls4ml:reseed"

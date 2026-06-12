@@ -12,6 +12,7 @@ from hls4ml.backends.vivado_accelerator.vivado_accelerator_config import VivadoA
 from hls4ml.backends.catapult.catapult_backend import CatapultBackend  # isort: skip
 
 from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
+from hls4ml.backends.xls.xls_backend import XLSBackend
 
 
 def _register_builtin_backends():
@@ -23,6 +24,7 @@ def _register_builtin_backends():
     register_backend('SymbolicExpression', SymbolicExpressionBackend)
     register_backend('oneAPI', OneAPIBackend)
     register_backend('Libero', LiberoBackend)
+    register_backend('XLS', XLSBackend)
 
 
 _register_builtin_backends()
