@@ -1,0 +1,21 @@
+hls4ml.converters.keras\_v3.pquant package
+==========================================
+
+Submodules
+----------
+
+hls4ml.converters.keras\_v3.pquant.pooling module
+-------------------------------------------------
+
+.. automodule:: hls4ml.converters.keras_v3.pquant.pooling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.converters.keras_v3.pquant
+   :members:
+   :undoc-members:
+   :show-inheritance:

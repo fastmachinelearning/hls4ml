@@ -215,6 +215,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.add_output_variable">add_output_variable() (hls4ml.model.layers.Layer method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.add_quantizer_info">add_quantizer_info() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.ApplyAlpha.add_weights">add_weights() (hls4ml.model.layers.ApplyAlpha method)</a>
 
       <ul>
@@ -1968,6 +1970,8 @@
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.pooling.PoolingHandler.handle">(hls4ml.converters.keras_v3.pooling.PoolingHandler method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.pquant.html#hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler.handle">(hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler method)</a>
+</li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handle">(hls4ml.converters.keras_v3.recurrent.BidirectionalHandler method)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.RecurentHandler.handle">(hls4ml.converters.keras_v3.recurrent.RecurentHandler method)</a>
@@ -2013,6 +2017,8 @@
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.merge.MergeHandler.handles">(hls4ml.converters.keras_v3.merge.MergeHandler attribute)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.pooling.PoolingHandler.handles">(hls4ml.converters.keras_v3.pooling.PoolingHandler attribute)</a>
+</li>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.pquant.html#hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler.handles">(hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler attribute)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handles">(hls4ml.converters.keras_v3.recurrent.BidirectionalHandler attribute)</a>
 </li>
@@ -2803,8 +2809,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pipeline_style">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pointwise
 
@@ -2812,6 +2816,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pointwise">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pooling_templates
 
@@ -3114,6 +3120,20 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.converters.keras_v3.pquant
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.pquant.html#module-hls4ml.converters.keras_v3.pquant">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.converters.keras_v3.pquant.pooling
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.pquant.html#module-hls4ml.converters.keras_v3.pquant.pooling">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.converters.keras_v3.recurrent
 
       <ul>
@@ -3209,6 +3229,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.pooling">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.converters.pytorch.pquant
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.pquant">module</a>
 </li>
       </ul></li>
       <li>
@@ -4214,6 +4241,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.make_node">make_node() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.make_pquant_handler">make_pquant_handler() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.make_xclbin">make_xclbin() (hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.stamp.MakeStamp">MakeStamp (class in hls4ml.model.optimizer.passes.stamp)</a>
@@ -4818,6 +4847,10 @@
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.pooling">hls4ml.converters.keras_v3.pooling</a>
 </li>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.pquant.html#module-hls4ml.converters.keras_v3.pquant">hls4ml.converters.keras_v3.pquant</a>
+</li>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.pquant.html#module-hls4ml.converters.keras_v3.pquant.pooling">hls4ml.converters.keras_v3.pquant.pooling</a>
+</li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#module-hls4ml.converters.keras_v3.recurrent">hls4ml.converters.keras_v3.recurrent</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.html#module-hls4ml.converters.keras_v3_to_hls">hls4ml.converters.keras_v3_to_hls</a>
@@ -4845,6 +4878,8 @@
         <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.merge">hls4ml.converters.pytorch.merge</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.pooling">hls4ml.converters.pytorch.pooling</a>
+</li>
+        <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.pquant">hls4ml.converters.pytorch.pquant</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.recurrent">hls4ml.converters.pytorch.recurrent</a>
 </li>
@@ -5293,6 +5328,22 @@
         <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pooling.parse_pooling_layer">(in module hls4ml.converters.pytorch.pooling)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqactivation_layer">parse_pqactivation_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqbatchnorm1d_layer">parse_pqbatchnorm1d_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqbatchnorm2d_layer">parse_pqbatchnorm2d_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqconv1d_layer">parse_pqconv1d_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqconv2d_layer">parse_pqconv2d_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqlinear_layer">parse_pqlinear_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqpool1d_layer">parse_pqpool1d_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_pqpool2d_layer">parse_pqpool2d_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.pytorch_to_hls.parse_pytorch_model">parse_pytorch_model() (in module hls4ml.converters.pytorch_to_hls)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qactivation_layer">parse_qactivation_layer() (in module hls4ml.converters.keras.qkeras)</a>
@@ -5311,10 +5362,16 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qsepconv_layer">parse_qsepconv_layer() (in module hls4ml.converters.keras.qkeras)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_quant_activation_layer">parse_quant_activation_layer() (in module hls4ml.converters.pytorch.pquant)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_quant_layer">parse_quant_layer() (in module hls4ml.converters.onnx.core)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.pquant.parse_quantizer_layer">parse_quantizer_layer() (in module hls4ml.converters.pytorch.pquant)</a>
 </li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.quartus_report.parse_quartus_report">parse_quartus_report() (in module hls4ml.report.quartus_report)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_reshape_layer">parse_reshape_layer() (in module hls4ml.converters.keras.reshape)</a>
 
       <ul>
@@ -5325,8 +5382,6 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_resize_layer">parse_resize_layer() (in module hls4ml.converters.onnx.reshape)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer">parse_rnn_layer() (in module hls4ml.converters.keras.recurrent)</a>
 
       <ul>
@@ -5449,6 +5504,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.populate_values">(in module hls4ml.backends.vivado.passes.fifo_depth_optimization)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.converters.keras_v3.pquant.html#hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler">PQAvgPoolHandler (class in hls4ml.converters.keras_v3.pquant.pooling)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.precision_string_modify">precision_string_modify() (hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionConverter">PrecisionConverter (class in hls4ml.backends.fpga.fpga_types)</a>

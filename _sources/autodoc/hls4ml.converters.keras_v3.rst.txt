@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    hls4ml.converters.keras_v3.hgq2
+   hls4ml.converters.keras_v3.pquant
 
 Submodules
 ----------

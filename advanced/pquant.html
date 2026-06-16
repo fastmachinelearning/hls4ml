@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PQuantML &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">PQuantML</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/pquant.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pquantml">
+<h1>PQuantML<a class="headerlink" href="#pquantml" title="Link to this heading"></a></h1>
+<a class="reference external image-reference" href="https://www.apache.org/licenses/LICENSE-2.0"><img alt="https://img.shields.io/badge/License-Apache_2.0-blue.svg" src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" /></a>
+<a class="reference external image-reference" href="https://pquantml.readthedocs.io"><img alt="https://github.com/nroope/PQuant/actions/workflows/python-publish.yml/badge.svg" src="https://github.com/nroope/PQuant/actions/workflows/python-publish.yml/badge.svg" /></a>
+<a class="reference external image-reference" href="https://badge.fury.io/py/pquant-ml"><img alt="https://badge.fury.io/py/pquant-ml.svg" src="https://badge.fury.io/py/pquant-ml.svg" /></a>
+<dl class="simple">
+<dt>PQuantML is a hardware-aware model compression framework supporting:</dt><dd><ul class="simple">
+<li><p>Joint pruning + quantization</p></li>
+<li><p>Layer-wise precision configuration</p></li>
+<li><p>Flexible training pipelines</p></li>
+<li><p>PyTorch and Keras V3 implementations</p></li>
+<li><p>Integration with hardware-friendly toolchains (e.g., hls4ml)</p></li>
+</ul>
+</dd>
+</dl>
+<p>PQuantML enables efficient deployment of compact neural networks on resource-constrained hardware such as FPGAs and embedded accelerators.</p>
+<section id="key-characteristics">
+<h2>Key Characteristics<a class="headerlink" href="#key-characteristics" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>Joint Quantization + Pruning</strong>: Combine bit-width reduction with structured pruning.</p></li>
+<li><p><strong>Flexible Precision Control</strong>: Per-layer and mixed-precision configuration.</p></li>
+<li><p><strong>Hardware-Aware Objective</strong>: Include resource constraints (DSP, LUT, BRAM) in training.</p></li>
+<li><p><strong>Simple API</strong>: Configure compression through a single YAML or Python object.</p></li>
+<li><p><strong>PyTorch Integration</strong>: Works with custom training/validation loops.</p></li>
+<li><p><strong>Export Support</strong>: Model conversion towards hardware toolchains.</p></li>
+</ul>
+</div></blockquote>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Simple example</span><a class="headerlink" href="#id1" title="Link to this code"></a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pquant</span><span class="w"> </span><span class="kn">import</span> <span class="n">dst_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pquant.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">PQDense</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pquant.activations</span><span class="w"> </span><span class="kn">import</span> <span class="n">PQActivation</span>
+
+<span class="c1"># Define the compression config and model</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">dst_config</span><span class="p">()</span>
+<span class="n">config</span><span class="o">.</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">config</span><span class="o">.</span><span class="n">quantization_parameters</span><span class="o">.</span><span class="n">default_data_integer_bit</span> <span class="o">=</span> <span class="mf">3.</span>
+<span class="n">config</span><span class="o">.</span><span class="n">quantization_parameters</span><span class="o">.</span><span class="n">default_data_fractional_bits</span> <span class="o">=</span> <span class="mf">2.</span>
+<span class="n">config</span><span class="o">.</span><span class="n">quantization_parameters</span><span class="o">.</span><span class="n">default_weight_fractional_bits</span> <span class="o">=</span> <span class="mf">3.</span>
+<span class="n">config</span><span class="o">.</span><span class="n">quantization_parameters</span><span class="o">.</span><span class="n">use_relu_multiplier</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_model</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+   <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+       <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">dense1</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span>
+                                 <span class="n">in_quant_bits</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">relu1</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">dense2</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">relu2</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">dense3</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">relu3</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">dense4</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span>
+                             <span class="n">quantize_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">out_quant_bits</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+       <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+       <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+       <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu3</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense3</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+       <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+       <span class="k">return</span> <span class="n">x</span>
+
+   <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+<span class="n">PQmodel</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="n">PQmodel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">)))</span>
+
+<span class="o">...</span> <span class="c1"># Training, evaluation, and anything else you want to do with the model</span>
+
+<span class="n">hls_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Model&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;ChannelsLastConversion&#39;</span><span class="p">:</span> <span class="s1">&#39;full&#39;</span><span class="p">},</span> <span class="s1">&#39;InputShape&#39;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">,}</span>
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">convert_from_pytorch_model</span><span class="p">(</span><span class="n">PQmodel</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="c1"># Model-wise precision propagation is done automatically for PQuantML models for bit-exactness</span>
+<span class="c1"># Do NOT pass precision config if you don&#39;t know what you are doing</span>
+<span class="c1"># Note: Model-wise precision propagation needs ChannelsLastConversion to be active in order to work correctly with PyTorch models</span>
+
+<span class="n">hls_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not pass any precision configuration from <code class="docutils literal notranslate"><span class="pre">hls4ml.converters.convert_from_&lt;frontend&gt;_model</span></code> in general, as it may be ignored or lead to undefined behaviour! PQuantML-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the PQuantML model and the generated HLS code (See <a class="reference external" href="./precision.html">here</a> for more details).</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
