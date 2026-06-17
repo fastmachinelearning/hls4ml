@@ -54,6 +54,7 @@ The following Python packages are all optional and are only required if you inte
 
 * Quantization support
    * `QKeras <https://github.com/fastmachinelearning/qkeras>`_: based on Keras v2. See `frontend/keras <../frontend/keras.html>`_ for more details
+   * `QKeras-v3 <https://github.com/fastmachinelearning/qkeras-v3>`_: based on Keras v3. See `frontend/keras <../frontend/keras.html>`_ for more details
    * `HGQ <https://github.com/calad0i/HGQ>`_: Based on Keras v2. See `advanced/HGQ <../advanced/hgq.html>`_ for more details.
    * `HGQ2 <https://github.com/calad0i/HGQ2>`_: Based on Keras v3. See `advanced/HGQ2 <../advanced/hgq.html>`_ for more details.
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
@@ -196,6 +197,9 @@ Optional Dependencies
 
    # For QKeras frontend
    pip install hls4ml[qkeras]
+
+   # For QKeras-v3 frontend
+   pip install hls4ml[qkeras-v3]
 
    # For Quartus report parsing
    pip install hls4ml[quartus-report]

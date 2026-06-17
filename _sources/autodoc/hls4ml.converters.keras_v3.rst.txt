@@ -9,6 +9,7 @@ Subpackages
 
    hls4ml.converters.keras_v3.hgq2
    hls4ml.converters.keras_v3.pquant
+   hls4ml.converters.keras_v3.qkeras
 
 Submodules
 ----------

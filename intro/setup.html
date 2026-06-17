@@ -53,7 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Optional Dependencies</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
@@ -187,6 +187,7 @@ version can be installed directly from <code class="docutils literal notranslate
 <li><dl class="simple">
 <dt>Quantization support</dt><dd><ul>
 <li><p><a class="reference external" href="https://github.com/fastmachinelearning/qkeras">QKeras</a>: based on Keras v2. See <a class="reference external" href="../frontend/keras.html">frontend/keras</a> for more details</p></li>
+<li><p><a class="reference external" href="https://github.com/fastmachinelearning/qkeras-v3">QKeras-v3</a>: based on Keras v3. See <a class="reference external" href="../frontend/keras.html">frontend/keras</a> for more details</p></li>
 <li><p><a class="reference external" href="https://github.com/calad0i/HGQ">HGQ</a>: Based on Keras v2. See <a class="reference external" href="../advanced/hgq.html">advanced/HGQ</a> for more details.</p></li>
 <li><p><a class="reference external" href="https://github.com/calad0i/HGQ2">HGQ2</a>: Based on Keras v3. See <a class="reference external" href="../advanced/hgq.html">advanced/HGQ2</a> for more details.</p></li>
 <li><p><a class="reference external" href="https://xilinx.github.io/brevitas/">Brevitas</a>: Based on PyTorch. See <a class="reference external" href="../frontend/pytorch.html">frontend/pytorch</a> for more details.</p></li>
@@ -282,8 +283,8 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 </div>
 </section>
 </section>
-<section id="id1">
-<h2>Optional Dependencies<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<section id="id2">
+<h2>Optional Dependencies<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> provides several optional dependency groups that can be installed based on your specific needs. Multiple groups can be installed simultaneously by specifying them in a comma-separated list (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[xxx,yyy,zzz]</span></code>).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -312,6 +313,9 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 
 <span class="c1"># For QKeras frontend</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">qkeras</span><span class="p">]</span>
+
+<span class="c1"># For QKeras-v3 frontend</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">qkeras</span><span class="o">-</span><span class="n">v3</span><span class="p">]</span>
 
 <span class="c1"># For Quartus report parsing</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">quartus</span><span class="o">-</span><span class="n">report</span><span class="p">]</span>

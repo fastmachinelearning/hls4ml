@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.converters.keras_v3.pquant package &mdash; hls4ml 1.3.0 documentation</title>
+  <title>hls4ml.converters.keras_v3.qkeras package &mdash; hls4ml 1.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hls4ml.converters.keras_v3.qkeras package" href="hls4ml.converters.keras_v3.qkeras.html" />
-    <link rel="prev" title="hls4ml.converters.keras_v3.hgq2 package" href="hls4ml.converters.keras_v3.hgq2.html" /> 
+    <link rel="next" title="hls4ml.converters.onnx package" href="hls4ml.converters.onnx.html" />
+    <link rel="prev" title="hls4ml.converters.keras_v3.pquant package" href="hls4ml.converters.keras_v3.pquant.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -135,9 +135,9 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="hls4ml.converters.html">hls4ml.converters package</a></li>
           <li class="breadcrumb-item"><a href="hls4ml.converters.keras_v3.html">hls4ml.converters.keras_v3 package</a></li>
-      <li class="breadcrumb-item active">hls4ml.converters.keras_v3.pquant package</li>
+      <li class="breadcrumb-item active">hls4ml.converters.keras_v3.qkeras package</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/autodoc/hls4ml.converters.keras_v3.pquant.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/autodoc/hls4ml.converters.keras_v3.qkeras.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -145,32 +145,59 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hls4ml-converters-keras-v3-pquant-package">
-<h1>hls4ml.converters.keras_v3.pquant package<a class="headerlink" href="#hls4ml-converters-keras-v3-pquant-package" title="Link to this heading"></a></h1>
+  <section id="hls4ml-converters-keras-v3-qkeras-package">
+<h1>hls4ml.converters.keras_v3.qkeras package<a class="headerlink" href="#hls4ml-converters-keras-v3-qkeras-package" title="Link to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="module-hls4ml.converters.keras_v3.pquant.pooling">
-<span id="hls4ml-converters-keras-v3-pquant-pooling-module"></span><h2>hls4ml.converters.keras_v3.pquant.pooling module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.pquant.pooling" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.keras_v3.qkeras.activation">
+<span id="hls4ml-converters-keras-v3-qkeras-activation-module"></span><h2>hls4ml.converters.keras_v3.qkeras.activation module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.qkeras.activation" title="Link to this heading"></a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.pquant.pooling.</span></span><span class="sig-name descname"><span class="pre">PQAvgPoolHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PQLayerHandler</span></code>, <a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.pooling.PoolingHandler" title="hls4ml.converters.keras_v3.pooling.PoolingHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PoolingHandler</span></code></a></p>
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.qkeras.activation.QKerasQActivationHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.qkeras.activation.</span></span><span class="sig-name descname"><span class="pre">QKerasQActivationHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.qkeras.activation.QKerasQActivationHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler.handle">
-<span class="sig-name descname"><span class="pre">handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pquant.core.keras.layers.PQAvgPool1d</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pquant.core.keras.layers.PQAvgPool2d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_tensors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">KerasTensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_tensors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">KerasTensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler.handle" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.qkeras.activation.QKerasQActivationHandler.handle">
+<span class="sig-name descname"><span class="pre">handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_tensors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_tensors</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.qkeras.activation.QKerasQActivationHandler.handle" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('pquant.core.keras.layers.PQAvgPool1d',</span> <span class="pre">'pquant.core.keras.layers.PQAvgPool2d')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.pquant.pooling.PQAvgPoolHandler.handles" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.qkeras.activation.QKerasQActivationHandler.handles">
+<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('qkeras.qlayers.QActivation',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.qkeras.activation.QKerasQActivationHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
-<section id="module-hls4ml.converters.keras_v3.pquant">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.converters.keras_v3.pquant" title="Link to this heading"></a></h2>
+<section id="module-hls4ml.converters.keras_v3.qkeras.layer">
+<span id="hls4ml-converters-keras-v3-qkeras-layer-module"></span><h2>hls4ml.converters.keras_v3.qkeras.layer module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.qkeras.layer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.qkeras.layer.QKerasV3LayerHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.qkeras.layer.</span></span><span class="sig-name descname"><span class="pre">QKerasV3LayerHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.qkeras.layer.QKerasV3LayerHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.qkeras.layer.QKerasV3LayerHandler.handle">
+<span class="sig-name descname"><span class="pre">handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_tensors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_tensors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_v3.qkeras.layer.QKerasV3LayerHandler.handle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.qkeras.layer.QKerasV3LayerHandler.handles">
+<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('qkeras.qlayers.QDense',</span> <span class="pre">'qkeras.qconvolutional.QConv1D',</span> <span class="pre">'qkeras.qconvolutional.QConv2D',</span> <span class="pre">'qkeras.qconvolutional.QDepthwiseConv2D',</span> <span class="pre">'qkeras.qconv2d_batchnorm.QConv2DBatchnorm')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.qkeras.layer.QKerasV3LayerHandler.handles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.converters.keras_v3.qkeras.utils">
+<span id="hls4ml-converters-keras-v3-qkeras-utils-module"></span><h2>hls4ml.converters.keras_v3.qkeras.utils module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.qkeras.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_v3.qkeras.utils.set_default_config">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.qkeras.utils.</span></span><span class="sig-name descname"><span class="pre">set_default_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hls_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_v3.qkeras.utils.set_default_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.converters.keras_v3.qkeras">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.converters.keras_v3.qkeras" title="Link to this heading"></a></h2>
 </section>
 </section>
 
@@ -178,8 +205,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="hls4ml.converters.keras_v3.hgq2.html" class="btn btn-neutral float-left" title="hls4ml.converters.keras_v3.hgq2 package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hls4ml.converters.keras_v3.qkeras.html" class="btn btn-neutral float-right" title="hls4ml.converters.keras_v3.qkeras package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hls4ml.converters.keras_v3.pquant.html" class="btn btn-neutral float-left" title="hls4ml.converters.keras_v3.pquant package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.converters.onnx.html" class="btn btn-neutral float-right" title="hls4ml.converters.onnx package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

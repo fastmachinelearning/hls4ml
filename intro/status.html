@@ -142,7 +142,7 @@
 <h1>Status and Features<a class="headerlink" href="#status-and-features" title="Link to this heading"></a></h1>
 <section id="status">
 <h2>Status<a class="headerlink" href="#status" title="Link to this heading"></a></h2>
-<p>The latest version (built from <code class="docutils literal notranslate"><span class="pre">main</span></code>) is 1.4.0.dev15+g889e313d.
+<p>The latest version (built from <code class="docutils literal notranslate"><span class="pre">main</span></code>) is 1.4.0.dev16+g2945c243.
 The stable version (released on PyPI) is 1.3.0.
 See the <a class="reference internal" href="release_notes.html#release-notes"><span class="std std-ref">Release Notes</span></a> section for a changelog.</p>
 </section>
@@ -161,6 +161,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 </li>
 <li><p>Keras v3</p>
 <ul>
+<li><p>QKeras-v3</p></li>
 <li><p>HGQ2</p></li>
 </ul>
 </li>
@@ -219,7 +220,14 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>N/A</p></td>
 <td><p>N/A</p></td>
 </tr>
-<tr class="row-even"><td><p>HGQ</p></td>
+<tr class="row-even"><td><p>QKeras-v3</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td colspan="2"><p>✅      | ✅</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>HGQ</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>N/A</p></td>
@@ -227,7 +235,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>N/A</p></td>
 <td><p>N/A</p></td>
 </tr>
-<tr class="row-odd"><td><p>Keras v3</p></td>
+<tr class="row-even"><td><p>Keras v3</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
@@ -235,7 +243,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>✅</p></td>
 <td><p>❌</p></td>
 </tr>
-<tr class="row-even"><td><p>HGQ2</p></td>
+<tr class="row-odd"><td><p>HGQ2</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>N/A</p></td>
@@ -243,7 +251,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
-<tr class="row-odd"><td><p>Torch</p></td>
+<tr class="row-even"><td><p>Torch</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
@@ -251,7 +259,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>✅</p></td>
 <td><p>❌</p></td>
 </tr>
-<tr class="row-even"><td><p>ONNX</p></td>
+<tr class="row-odd"><td><p>ONNX</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>❌</p></td>
@@ -259,7 +267,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>❌</p></td>
 <td><p>❌</p></td>
 </tr>
-<tr class="row-odd"><td><p>QONNX</p></td>
+<tr class="row-even"><td><p>QONNX</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>❌</p></td>
@@ -267,7 +275,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>N/A</p></td>
 <td><p>N/A</p></td>
 </tr>
-<tr class="row-even"><td><p>Vivado/Vitis HLS</p></td>
+<tr class="row-odd"><td><p>Vivado/Vitis HLS</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
@@ -275,7 +283,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
-<tr class="row-odd"><td><p>Intel HLS</p></td>
+<tr class="row-even"><td><p>Intel HLS</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
@@ -283,7 +291,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>❌</p></td>
 <td><p>❌</p></td>
 </tr>
-<tr class="row-even"><td><p>Catapult HLS</p></td>
+<tr class="row-odd"><td><p>Catapult HLS</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
@@ -291,7 +299,7 @@ See the <a class="reference internal" href="release_notes.html#release-notes"><s
 <td><p>❌</p></td>
 <td><p>❌</p></td>
 </tr>
-<tr class="row-odd"><td><p>oneAPI (experimental)</p></td>
+<tr class="row-even"><td><p>oneAPI (experimental)</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
 <td><p>✅</p></td>
