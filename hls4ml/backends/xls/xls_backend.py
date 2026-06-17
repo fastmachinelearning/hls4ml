@@ -64,11 +64,8 @@ class XLSBackend(FPGABackend):
         ]
         xls_attributes_flow: str = register_flow('xls', xls_attributes, requires=[optimization_flow], backend=self.name)
 
-        # TODO: stamp is currently unused, shall we add it to myproject.x, myproject.ir, myproject.opt.ir, ...?
-        # In other backends, this is used to generate myproject-$STAMP.so.
-        # In XLS, .opt.ir file plays the same role as .so
-        # It is unclear whether we should copy or rename myproject.opt.ir to myproject-$STAMP.opt.ir.
-        writer_passes = ['make_stamp', 'xls:write_hls']
+        # NB: unlike other backends, we don't need make_stamp pass for XLS
+        writer_passes = ['xls:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=['xls:ip'], backend=self.name)
 
         # Passed that are irrelevant for XLS
