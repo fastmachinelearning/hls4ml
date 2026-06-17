@@ -1,6 +1,5 @@
 import os
 import sys
-from pathlib import Path
 
 from hls4ml.backends import FPGABackend
 from hls4ml.model.flow import register_flow

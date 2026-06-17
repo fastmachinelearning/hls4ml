@@ -498,7 +498,9 @@ def convert_from_symbolic_expression(
     expr_layer['use_built_in_luts'] = use_built_in_lut_functions
     layer_list.append(expr_layer)
 
-    config = create_config(output_dir=output_dir, project_name=project_name, backend='SymbolicExpression', compiler=hls_compiler, **kwargs)
+    config = create_config(
+        output_dir=output_dir, project_name=project_name, backend='SymbolicExpression', compiler=hls_compiler, **kwargs
+    )
 
     # config['Expression'] = str(expr)
     config['NSymbols'] = n_symbols
