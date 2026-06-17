@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 CC=g++
 CFLAGS="-O3 -fPIC -std=c++11"

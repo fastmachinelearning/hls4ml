@@ -12,9 +12,9 @@ If you use this software in a publication, please cite the software
     @software{fastml_hls4ml,
     author       = {{FastML Team}},
     title        = {fastmachinelearning/hls4ml},
-    year         = 2024,
+    year         = 2026,
     publisher    = {Zenodo},
-    version      = {v1.0.0},
+    version      = {v1.3.0},
     doi          = {10.5281/zenodo.1201549},
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }
@@ -49,8 +49,11 @@ and the latest overview paper:
 		archivePrefix = "arXiv",
 		primaryClass = "cs.AR",
 		reportNumber = "FERMILAB-PUB-25-0890-CSAID-ETD-PPD",
-		month = "12",
-		year = "2025"
+		year = "2026",
+		doi = "10.1145/3801979",
+		journal = "ACM Trans. Reconfigurable Technol. Syst."
+		volume = "19",
+		pages = "19",
 	}
 
 Additionally, if you use specific features developed in later papers, please cite those as well. For example, CNNs:

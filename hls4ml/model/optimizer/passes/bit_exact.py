@@ -35,6 +35,8 @@ from hls4ml.model.layers import (
     Reshape,
     Softmax,
     Transpose,
+    ZeroPadding1D,
+    ZeroPadding2D,
 )
 from hls4ml.model.optimizer import ModelOptimizerPass, OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer, UnaryLUT
@@ -677,6 +679,36 @@ def _(layer: Embedding):
     return k, i, f
 
 
+@_produce_kif.register
+def _(layer: ZeroPadding1D):
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    pad_left = int(layer.attributes['pad_left'])
+    pad_right = int(layer.attributes['pad_right'])
+    # channels_last: kif shape is (in_width, n_chan); pad axis 0.
+    pad_shape = ((pad_left, pad_right),) + ((0, 0),) * (k_in.ndim - 1)
+    k = np.pad(k_in, pad_shape, mode='constant', constant_values=0)
+    i = np.pad(i_in, pad_shape, mode='constant', constant_values=0)
+    f = np.pad(f_in, pad_shape, mode='constant', constant_values=0)
+    return k.astype(np.int16), i, f
+
+
+@_produce_kif.register
+def _(layer: ZeroPadding2D):
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    pad_top = int(layer.attributes['pad_top'])
+    pad_bottom = int(layer.attributes['pad_bottom'])
+    pad_left = int(layer.attributes['pad_left'])
+    pad_right = int(layer.attributes['pad_right'])
+    # channels_last: kif shape is (in_height, in_width, n_chan); pad axes 0 and 1.
+    pad_shape = ((pad_top, pad_bottom), (pad_left, pad_right)) + ((0, 0),) * (k_in.ndim - 2)
+    k = np.pad(k_in, pad_shape, mode='constant', constant_values=0)
+    i = np.pad(i_in, pad_shape, mode='constant', constant_values=0)
+    f = np.pad(f_in, pad_shape, mode='constant', constant_values=0)
+    return k.astype(np.int16), i, f
+
+
 def kif_arrs_to_ints(arr: tuple[np.ndarray, np.ndarray, np.ndarray]):
     return tuple(int(np.max(a)) for a in arr)
 
@@ -931,7 +963,8 @@ class BitExact(ModelOptimizerPass):
             for k in list(model.graph.keys()):
                 v = model.graph[k]
                 if isinstance(v, Activation) and v.attributes.get('activation') == 'linear':
-                    model.remove_node(v)
+                    if len(get_output_layers(get_input_layers(v)[0])) == 1:
+                        model.remove_node(v)
 
         for node in model.graph.values():
             if node.attributes.get('bit_exact_transformed'):
