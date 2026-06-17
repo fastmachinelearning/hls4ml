@@ -230,8 +230,8 @@ class XLSBackend(FPGABackend):
             opt_ir_file.write(opt_ir_text)
 
         # This object can be heavy, so we don't want to cache it unless we call predict().
-        if hasattr(model, '_xls_top_function'):
-            del model._xls_top_function
+        if hasattr(model, '_xls_jit_function'):
+            del model._xls_jit_function
 
     @staticmethod
     @requires('xls')
@@ -288,43 +288,23 @@ class XLSBackend(FPGABackend):
                 raise ValueError(f'Unexpected output type: {x.get_kind()}')
 
     @staticmethod
-    def get_top_function(model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> tuple[Callable, np.dtype]:
-        # Cache JIT function to avoid reparsing IR file.
-        top_function = getattr(model, '_xls_top_function', None)
-        if top_function is None:
-            top_function = XLSBackend._make_top_function(model)
-            model._xls_top_function = top_function
-
-        # TODO: this duplicates ModelGraph._get_top_function().
-        # NB: ctype is not used in XLS, but it is required by ModelGraph._predict
-        x0 = x[0] if isinstance(x, (list, tuple)) else x
-        if np.asarray(x0).dtype in [np.single, np.float32]:
-            ctype = np.float32
-        elif np.asarray(x0).dtype in [np.double, np.float64]:
-            ctype = np.float64
-        else:
-            raise TypeError(
-                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
-                    np.asarray(x0).dtype
-                )
-            )
-
-        return top_function, ctype
-
-    @staticmethod
     @requires('xls')
-    def _make_top_function(model: ModelGraph) -> Callable:
+    def get_top_function(model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> tuple[Callable, np.dtype]:
         import xls
 
-        project_dir = model.config.get_output_dir()
-        project_name = model.config.get_project_name()
-        ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
-        if not ir_path.exists():
-            raise FileNotFoundError(f'Optimized IR file not found: {ir_path}. Please compile your model first.')
-        ir_text = ir_path.read_text()
-        pkg = xls.Package.parse_ir(ir_text)
-        fn = pkg.get_function(XLSBackend._ir_top_function_name(model))
-        jit = fn.to_jit()
+        # Cache JIT function to avoid reparsing IR file.
+        jit = getattr(model, '_xls_jit_function', None)
+        if jit is None:
+            project_dir = model.config.get_output_dir()
+            project_name = model.config.get_project_name()
+            ir_path = Path(project_dir) / 'firmware' / f'{project_name}.opt.ir'
+            if not ir_path.exists():
+                raise FileNotFoundError(f'Optimized IR file not found: {ir_path}. Please compile your model first.')
+            ir_text = ir_path.read_text()
+            pkg = xls.Package.parse_ir(ir_text)
+            fn = pkg.get_function(XLSBackend._ir_top_function_name(model))
+            jit = fn.to_jit()
+            model._xls_jit_function = jit
 
         input_vars = model.get_input_variables()
         output_vars = model.get_output_variables()
@@ -352,7 +332,21 @@ class XLSBackend(FPGABackend):
             for i in range(len(output_vars)):
                 outputs[i][:] = np.reshape(output[i], -1)
 
-        return top_function
+        # TODO: this duplicates ModelGraph._get_top_function().
+        # NB: ctype is not used in XLS, but it is required by ModelGraph._predict
+        x0 = x[0] if isinstance(x, (list, tuple)) else x
+        if np.asarray(x0).dtype in [np.single, np.float32]:
+            ctype = np.float32
+        elif np.asarray(x0).dtype in [np.double, np.float64]:
+            ctype = np.float64
+        else:
+            raise TypeError(
+                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
+                    np.asarray(x0).dtype
+                )
+            )
+
+        return top_function, ctype
 
     @requires('xls')
     def build(
