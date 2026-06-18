@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
+from quantizers import get_fixed_quantizer_np
 
 from hls4ml.model.types import (
     ExponentPrecisionType,
@@ -68,15 +69,9 @@ def float_to_significand(
         x = np.where(x == 0, -1, 1)
 
     precision = to_signed_fixed_precision(precision, allow_unsigned)
-
-    width = precision.width
-    frac = precision.fractional
-    scale = 2**frac
-    # TODO support different saturation and rounding modes
-    significand = np.round(x * scale).astype(np.int64)
-    n = 2**width
-    shift = 2 ** (width - 1)
-    return (significand + shift) % n - shift
+    quantizer = get_fixed_quantizer_np(round_mode=str(precision.rounding_mode), overflow_mode=str(precision.saturation_mode))
+    scale = 2**precision.fractional
+    return quantizer(x * scale, k=precision.signed, i=precision.width, f=0).astype(np.int64)
 
 
 # XLS types
