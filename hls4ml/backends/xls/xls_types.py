@@ -95,14 +95,6 @@ class XLSIntegerType:
         # uN[NUM_BITS]
         return f'{prefix}N[{self.width}]'
 
-    @staticmethod
-    def u32():
-        return XLSIntegerType(width=32, signed=False)
-
-    @staticmethod
-    def s32():
-        return XLSIntegerType(width=32, signed=True)
-
 
 class XLSFixedPointType:
     def __init__(self, num_bits, binary_exponent):
@@ -207,19 +199,9 @@ class XLSArrayType:
 
 
 class XLSInteger:
-    def __init__(self, type: XLSIntegerType | str, value: int | str):
+    def __init__(self, type: XLSIntegerType, value: int | str):
         self.type = type
         self.value = value
-
-    @classmethod
-    def u32(cls, value: int | str):
-        if isinstance(value, int):
-            assert value >= 0, f'value={value} is not an unsigned integer'
-        return cls(XLSIntegerType.u32(), value)
-
-    @classmethod
-    def s32(cls, value: int | str):
-        return cls(XLSIntegerType.s32(), value)
 
     def __str__(self):
         return f'{self.type}:{self.value}'
