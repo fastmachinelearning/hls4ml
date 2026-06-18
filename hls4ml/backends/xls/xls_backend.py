@@ -15,7 +15,6 @@ from hls4ml.utils.dependency import requires
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
 
-import subprocess
 from warnings import warn
 
 import numpy as np
@@ -23,7 +22,6 @@ import numpy as np
 from hls4ml.backends import FPGABackend
 from hls4ml.model.flow import register_flow
 from hls4ml.model.optimizer import get_backend_passes
-from hls4ml.report import parse_xls_report
 
 
 class XLSBackend(FPGABackend):
@@ -353,14 +351,12 @@ class XLSBackend(FPGABackend):
         self,
         model: ModelGraph,
         reset: bool | None = None,
-        pr: bool = False,
-    ) -> dict:
-        """Builds the RTL (SystemVerilog) code and uses Vivado to return the resource utilization.
+    ) -> Path:
+        """Generates the RTL (SystemVerilog or Verilog) code.
 
         Args:
             model (ModelGraph): the hls4ml model.
             reset (bool): the reset synthesis option
-            pr (bool): place and route option
         """
         import xls
 
@@ -371,7 +367,6 @@ class XLSBackend(FPGABackend):
         clock_period_ps = self._to_xls_clock_period_ps(clock_period_ns)
 
         clock_uncertainty_str = model.config.get_config_value('ClockUncertainty')
-        clock_uncertainty_float = self._percent_to_float(clock_uncertainty_str)
         clock_margin_percent: int = self._to_xls_clock_margin_percent(clock_uncertainty_str)
 
         def build_codegen_flags() -> dict[str, Any]:
@@ -382,24 +377,6 @@ class XLSBackend(FPGABackend):
                 flags['reset'] = 'reset' if reset else None
                 flags['reset_data_path'] = reset
             return flags
-
-        def build_vivado_flags() -> list[str]:
-            flags = [
-                '-mode',
-                'batch',
-                '-nolog',
-                '-nojournal',
-                '-source',
-                './build_prj.tcl',
-                '-tclargs',
-                project_name,
-                model.config.get_config_value('Part'),
-                clock_period_ns,
-                clock_uncertainty_float,
-            ]
-            if pr:
-                flags += ['--pr']
-            return [str(flag) for flag in flags]
 
         # Generate RTL
         firmware_dir = output_dir / 'firmware'
@@ -412,9 +389,4 @@ class XLSBackend(FPGABackend):
         verilog_text = pkg.schedule_and_codegen(**codegen_flags).get_verilog_text()
         sv_path = firmware_dir / f'{project_name}.sv'
         sv_path.write_text(verilog_text)
-
-        # Run Vivado for resource report
-        vivado_command: list[str] = ['vivado'] + build_vivado_flags()
-        subprocess.run(vivado_command, cwd=output_dir, check=True)
-
-        return parse_xls_report(output_dir)
+        return sv_path
