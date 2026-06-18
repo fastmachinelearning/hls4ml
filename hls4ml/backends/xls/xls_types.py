@@ -64,7 +64,8 @@ def float_to_significand(
     if isinstance(precision, XnorPrecisionType):
         # hls4ml stores XNOR weights as bits {0,1};
         # We convert it to XLS FixedPoint {-1, 1}
-        x = np.where(x == 0, -1, x)
+        assert np.all((x == 0) | (x == 1)), 'XNOR weights must be 0 or 1'
+        x = np.where(x == 0, -1, 1)
 
     precision = to_signed_fixed_precision(precision, allow_unsigned)
 
