@@ -14,5 +14,6 @@ docs/_build
 docs/autodoc/*
 hls4mlprj_*
 *~
+*.ipynb
 *.ipynb_checkpoints/
 *.bak

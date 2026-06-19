@@ -1,5 +1,7 @@
 import math
 
+import numpy as np
+
 
 def parse_data_format(input_shape, data_format='channels_last'):
     """Parses the given input shape according to the specified data format.
@@ -287,3 +289,15 @@ def compute_padding_2d_pytorch(
             pad_left = pad_width
 
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
+
+
+class IsolatedLayerReader:
+    def __init__(self, layer):
+        self.layer = layer
+
+    def get_weights_data(self, layer_name, var_name):
+        assert layer_name == self.layer.name, f'Processing {self.layer.name}, but handler tried to read {layer_name}'
+        for w in self.layer.weights:
+            if var_name in w.name:
+                return np.array(w)
+        return None
