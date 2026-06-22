@@ -127,7 +127,8 @@ padds_options = ['same', 'valid']
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_conv1d(test_case_id, padds, backend, io_type):
+@pytest.mark.parametrize('activation', ['elu', 'relu'])
+def test_conv1d(test_case_id, padds, backend, io_type, activation):
     model = keras.models.Sequential()
     input_shape = (10, 128, 4)
     model.add(
@@ -136,7 +137,7 @@ def test_conv1d(test_case_id, padds, backend, io_type):
             kernel_size=3,
             strides=2,
             padding=padds,
-            activation='relu',
+            activation=activation,
             input_shape=input_shape[1:],
             kernel_initializer='normal',
             use_bias=False,
