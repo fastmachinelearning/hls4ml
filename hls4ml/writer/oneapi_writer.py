@@ -720,7 +720,9 @@ class OneAPIWriter(Writer):
                     h_file.write(f'#ifndef {header_name.upper()}_H_\n')
                     h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
-                    h_file.write(f'static constexpr {layer.get_attr("exp_table_t").name} {table_name}[{table_size}] = {{')
+                    h_file.write(
+                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
+                    )
 
                     ac_type = layer.get_attr('inp_norm_t')
 
@@ -776,7 +778,9 @@ class OneAPIWriter(Writer):
                     h_file.write(f'#ifndef {header_name.upper()}_H_\n')
                     h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
-                    h_file.write(f'static constexpr {layer.get_attr("exp_table_t").name} {table_name}[{table_size}] = {{')
+                    h_file.write(
+                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
+                    )
 
                     ac_type = layer.get_attr('inv_inp_t')
 
