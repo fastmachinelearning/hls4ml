@@ -19,7 +19,7 @@ If you use this software in a publication, please cite the software
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }
 
-and first publication:
+first publication:
 
 ..  code-block:: bibtex
 
@@ -37,6 +37,21 @@ and first publication:
         pages = "P07027",
         year = "2018"
     }
+
+and the latest overview paper:
+
+..  code-block:: bibtex
+
+	@article{Schulte:2025mai,
+		author = "Schulte, Jan-Frederik and others",
+		title = "{hls4ml: A Flexible, Open-Source Platform for Deep Learning Acceleration on Reconfigurable Hardware}",
+		eprint = "2512.01463",
+		archivePrefix = "arXiv",
+		primaryClass = "cs.AR",
+		reportNumber = "FERMILAB-PUB-25-0890-CSAID-ETD-PPD",
+		month = "12",
+		year = "2025"
+	}
 
 Additionally, if you use specific features developed in later papers, please cite those as well. For example, CNNs:
 
@@ -123,7 +138,7 @@ Please use the following text for this acknowledgment:
 
 Funding
 =======
-We gratefully acknowledge previous and current support from the U.S. National Science Foundation (NSF) Harnessing the Data Revolution (HDR) Institute for `Accelerating AI Algorithms for Data Driven Discovery (A3D3) <https://a3d3.ai>`_ under Cooperative Agreement No. `PHY-2117997 <https://www.nsf.gov/awardsearch/showAward?AWD_ID=2117997>`_, U.S. Department of Energy (DOE) Office of Science, Office of Advanced Scientific Computing Research under the Real‐time Data Reduction Codesign at the Extreme Edge for Science (XDR) Project (`DE-FOA-0002501 <https://science.osti.gov/-/media/grants/pdf/foas/2021/SC_FOA_0002501.pdf>`_), DOE Office of Science, Office of High Energy Physics Early Career Research Program (`DE-SC0021187 <https://pamspublic.science.energy.gov/WebPAMSExternal/Interface/Common/ViewPublicAbstract.aspx?rv=df0ae4ab-a46e-481a-9acc-3856b6b041e5&rtc=24&PRoleId=10>`_, DE-0000247070), and the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (Grant No. `772369 <https://doi.org/10.3030/772369>`_).
+We gratefully acknowledge previous and current support from the U.S. National Science Foundation (NSF) Harnessing the Data Revolution (HDR) Institute for `Accelerating AI Algorithms for Data Driven Discovery (A3D3) <https://a3d3.ai>`_ under Cooperative Agreement No. `PHY-2117997 <https://www.nsf.gov/awardsearch/showAward?AWD_ID=2117997>`_, U.S. Department of Energy (DOE) Office of Science, Office of Advanced Scientific Computing Research under the Real‐time Data Reduction Codesign at the Extreme Edge for Science (XDR) Project (`DE-FOA-0002501 <https://science.osti.gov/-/media/grants/pdf/foas/2021/SC_FOA_0002501.pdf>`_), DOE Office of Science, Office of High Energy Physics Early Career Research Program (`DE-SC0021187 <https://pamspublic.science.energy.gov/WebPAMSExternal/Interface/Common/ViewPublicAbstract.aspx?rv=df0ae4ab-a46e-481a-9acc-3856b6b041e5&rtc=24&PRoleId=10>`_, DE-0000247070), the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (Grant No. `772369 <https://doi.org/10.3030/772369>`_ and  `966696 <https://doi.org/10.3030/966696>`_), and the Eric & Wendy Schmidt Fund for Strategic Innovation through the CERN Next Generation Triggers project under grant agreement number SIF-2023-004.
 
 .. image:: https://github.com/fastmachinelearning/hls4ml/assets/29201053/bd1217d4-9930-47b7-8917-ad3fc430c75d
     :height: 130
@@ -138,6 +153,10 @@ We gratefully acknowledge previous and current support from the U.S. National Sc
     :align: center
 
 .. image:: https://github.com/fastmachinelearning/hls4ml/assets/4932543/7a369971-a381-4bb8-932a-7162b173cbac
+    :height: 130
+    :align: center
+
+.. image:: https://github.com/user-attachments/assets/7d8cd75d-e0a8-451e-b52c-6f31fa1b8114
     :height: 130
     :align: center
 
