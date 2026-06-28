@@ -136,7 +136,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     }
 
     // Calculate all the e^x's
-    [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         exp_res[i] =
@@ -145,9 +145,9 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree
-    Op_add<typename CONFIG_T::exp_table_t> op_add;
+    Op_add<typename CONFIG_T::accum_t> op_add;
     [[intel::fpga_register]] typename CONFIG_T::inv_inp_t exp_sum =
-        reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+        reduce<typename CONFIG_T::accum_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
     [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =

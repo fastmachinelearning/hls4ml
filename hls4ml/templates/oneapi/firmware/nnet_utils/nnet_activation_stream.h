@@ -326,10 +326,6 @@ SoftmaxArrayLoop:
     SoftmaxInvPackLoop:
         #pragma unroll
         for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
-
-            // TODO - Find Quartus-equivalent pragma
-            // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
 

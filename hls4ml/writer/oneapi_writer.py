@@ -709,6 +709,9 @@ class OneAPIWriter(Writer):
             if layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax':
                 table_name = layer.name + '_exp_table'
 
+                # The lookup input (x - x_max) is always <= 0, so only the negative half of
+                # the signed fixed-point input range is ever addressed.
+                # Therefore only half of the full address space is required.
                 table_size = (
                     int(layer.get_attr('exp_table_size')) // 2
                     if layer.get_attr('exp_table_size') is not None
@@ -733,24 +736,18 @@ class OneAPIWriter(Writer):
                             fp_signed = ac_type.precision.signed
                         except Exception:
                             # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                            fp_bits = 16
-                            fp_integer = 6
-                            fp_signed = True
-
+                            pass
                         if fp_signed is False:
                             raise Exception('Softmax types need to be signed')
 
-                    else:
-                        fp_bits = 16
-                        fp_integer = 6
-                        fp_signed = True
-
+                    # Copy scaling from attributes
                     scale = (
                         layer.attributes['exp_scale']
                         if (('exp_scale' in layer.attributes) and (layer.attributes['exp_scale'] is not None))
                         else 1.0
                     )
 
+                    # Use the top bits if table_size < 2**bit_width
                     sep = ''
                     N = ceil_log2(table_size)
                     for i in range(table_size):
@@ -772,6 +769,11 @@ class OneAPIWriter(Writer):
         for layer in model.get_layers():
             if layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax':
                 table_name = layer.name + '_inv_table'
+
+                # Table size is halved since e^x >= 0 and we only lookup 1/sum(e^x) >= 0
+                # since all values in the table are cast to inv_table_t, the precision
+                # is limited by that type (inv_inp_t is signed). Keeping the table size
+                # large has no advantage both in terms of space and in terms of precision.
                 table_size = (
                     int(layer.get_attr('inv_table_size')) // 2
                     if layer.get_attr('inv_table_size') is not None
@@ -796,18 +798,11 @@ class OneAPIWriter(Writer):
                             fp_signed = ac_type.precision.signed
                         except Exception:
                             # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                            fp_bits = 18
-                            fp_integer = 8
-                            fp_signed = True
-
+                            pass
                         if fp_signed is False:
                             raise Exception('Softmax types need to be signed')
 
-                    else:
-                        fp_bits = 18
-                        fp_integer = 8
-                        fp_signed = True
-
+                    # Use the top bits if table_size < 2**bit_width
                     sep = ''
                     N = ceil_log2(table_size)
                     for i in range(table_size):

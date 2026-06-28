@@ -244,7 +244,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
         params['type'] = node.get_attr('activation')
 
         if params['type'] == 'softmax':
-            # By dividing with 2 we only retain positive vals since e^x > 0, at the same precision, best we can do is
+            # The lookup input (x - x_max) is always <= 0, so only the negative half
             if 'exp_table_size' in params and params['exp_table_size'] is not None:
                 params['exp_table_size'] //= 2
             else:
@@ -254,8 +254,9 @@ class ActivationConfigTemplate(LayerConfigTemplate):
                 params['exp_table_t'].precision.integer = params['table_t'].precision.integer - 1
                 params['exp_table_t'].precision.signed = False
 
-            params.setdefault('table_size', params['exp_table_size'])
+            params.setdefault('table_size', params['exp_table_size'])  # Not sure if necessary
 
+            # Determine accumulator type if present, else derive it yourself based on the input size.
             if params['accum_t'].name == 'model_default_t':
                 extra_bits_req = ceil_log2(params['n_in'])
                 s = 'true' if params['exp_table_t'].precision.signed else 'false'
@@ -273,7 +274,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
                 params['inp_norm_t'] = copy.deepcopy(params['exp_table_t'])  # assign type,later override
 
-                # this checks if table sizes will be default, if it is just use the table size to derive precision
+                # This checks if table sizes will be default, if it is just use the table size to derive precision
                 if 'inv_table_size' not in params:
                     params['inp_norm_t'].precision.width = params['exp_table_t'].precision.width + 1
                     params['inp_norm_t'].precision.integer = params['exp_table_t'].precision.integer + 1
@@ -286,11 +287,11 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
                 node.set_attr('inp_norm_t', params['inp_norm_t'])
 
+            # Again we only look up 1/sum(e^x) which is >=0 so no need the entie address space
             if 'inv_table_size' in params:
                 params['inv_table_size'] //= 2
             else:
                 params['inv_table_size'] = 2 ** (params['table_t'].precision.width - 1)
-
                 params['inv_table_t'].precision.width = ceil_log2(params['inv_table_size'])
                 params['inv_table_t'].precision.integer = params['table_t'].precision.integer - 1
                 params['inv_table_t'].precision.signed = False
