@@ -200,7 +200,9 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static constexpr unsigned inv_table_size = {inv_table_size};
     static constexpr unsigned io_type = nnet::{iotype};
     static constexpr unsigned reuse_factor = {reuse};
+
     static constexpr nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
+    typedef {smax_accum_t} accum_t;
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;"""
 
@@ -242,16 +244,26 @@ class ActivationConfigTemplate(LayerConfigTemplate):
         params['type'] = node.get_attr('activation')
 
         if params['type'] == 'softmax':
-            if 'exp_table_size' in params:
+            # By dividing with 2 we only retain positive vals since e^x > 0, at the same precision, best we can do is
+            if 'exp_table_size' in params and params['exp_table_size'] is not None:
                 params['exp_table_size'] //= 2
             else:
-                params['exp_table_size'] = 1024
-
+                # Use the default precision
+                params['exp_table_size'] = 2 ** (params['table_t'].precision.width - 1)
                 params['exp_table_t'].precision.width = ceil_log2(params['exp_table_size'])
-                params['exp_table_t'].precision.integer = 3
+                params['exp_table_t'].precision.integer = params['table_t'].precision.integer - 1
                 params['exp_table_t'].precision.signed = False
 
             params.setdefault('table_size', params['exp_table_size'])
+
+            if params['accum_t'].name == 'model_default_t':
+                extra_bits_req = ceil_log2(params['n_in'])
+                s = 'true' if params['exp_table_t'].precision.signed else 'false'
+                w = params['exp_table_t'].precision.width + extra_bits_req
+                i = params['exp_table_t'].precision.integer + extra_bits_req
+                params['smax_accum_t'] = f'ac_fixed<{str(w)},{str(i)},{s}>'
+            else:
+                params['smax_accum_t'] = params['accum_t'].name
 
             if 'inp_norm_t' not in params:
                 input_t = node.get_input_variable().type.precision
@@ -277,10 +289,10 @@ class ActivationConfigTemplate(LayerConfigTemplate):
             if 'inv_table_size' in params:
                 params['inv_table_size'] //= 2
             else:
-                params['inv_table_size'] = 1024
+                params['inv_table_size'] = 2 ** (params['table_t'].precision.width - 1)
 
                 params['inv_table_t'].precision.width = ceil_log2(params['inv_table_size'])
-                params['inv_table_t'].precision.integer = 3
+                params['inv_table_t'].precision.integer = params['table_t'].precision.integer - 1
                 params['inv_table_t'].precision.signed = False
 
                 params['inv_inp_t'].precision.width = params['inv_table_t'].precision.width + 1
@@ -288,9 +300,9 @@ class ActivationConfigTemplate(LayerConfigTemplate):
                 params['inv_inp_t'].precision.signed = True
 
             if params['implementation'] == 'stable':
-                self.template += softmax_config_table_template_stable
+                self.template = softmax_config_template + softmax_config_table_template_stable
             else:
-                self.template += softmax_config_table_template
+                self.template = softmax_config_template + softmax_config_table_template
 
             params['exp_table_name'] = node.name + '_exp_table'
             params['inv_table_name'] = node.name + '_inv_table'

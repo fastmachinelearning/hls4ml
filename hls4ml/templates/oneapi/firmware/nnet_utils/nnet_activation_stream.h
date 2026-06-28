@@ -303,7 +303,7 @@ SoftmaxArrayLoop:
         }
 
         // Calculate all the e^x's
-        [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[input_arr_size];
+        [[intel::fpga_register]] typename CONFIG_T::accum_t exp_res[input_arr_size];
 
         #pragma unroll
         for (unsigned j = 0; j < input_arr_size; j++) {
@@ -313,9 +313,9 @@ SoftmaxArrayLoop:
 
         // Explicitly sum the results with an adder tree.
         // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
-        Op_add<typename CONFIG_T::exp_table_t> op_add;
+        Op_add<typename CONFIG_T::accum_t> op_add;
         [[intel::fpga_register]] typename CONFIG_T::inv_inp_t exp_sum =
-            reduce<typename CONFIG_T::exp_table_t, input_arr_size, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+            reduce<typename CONFIG_T::accum_t, input_arr_size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
             CONFIG_T::invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(

@@ -708,11 +708,11 @@ class OneAPIWriter(Writer):
         for layer in model.get_layers():
             if layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax':
                 table_name = layer.name + '_exp_table'
+
                 table_size = (
                     int(layer.get_attr('exp_table_size')) // 2
-                    if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax')
-                    and layer.get_attr('exp_table_size') is not None
-                    else 1024
+                    if layer.get_attr('exp_table_size') is not None
+                    else (2 ** layer.attributes['table_t'].precision.width) // 2
                 )
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
@@ -745,6 +745,12 @@ class OneAPIWriter(Writer):
                         fp_integer = 6
                         fp_signed = True
 
+                    scale = (
+                        layer.attributes['exp_scale']
+                        if (('exp_scale' in layer.attributes) and (layer.attributes['exp_scale'] is not None))
+                        else 1.0
+                    )
+
                     sep = ''
                     N = ceil_log2(table_size)
                     for i in range(table_size):
@@ -755,7 +761,7 @@ class OneAPIWriter(Writer):
                         else:
                             b.insert(0, 1)
                         f.set_msb_bits(b)
-                        real_val = f.exp_float()
+                        real_val = f.exp_float() * scale
                         h_file.write(sep + str(real_val))
                         sep = ', '
 
@@ -768,9 +774,8 @@ class OneAPIWriter(Writer):
                 table_name = layer.name + '_inv_table'
                 table_size = (
                     int(layer.get_attr('inv_table_size')) // 2
-                    if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax')
-                    and layer.get_attr('inv_table_size') is not None
-                    else 1024
+                    if layer.get_attr('inv_table_size') is not None
+                    else (2 ** layer.attributes['table_t'].precision.width) // 2
                 )
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
