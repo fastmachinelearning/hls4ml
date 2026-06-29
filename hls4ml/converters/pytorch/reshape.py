@@ -78,11 +78,15 @@ def parse_unsqueeze_layer(operation, layer_name, input_names, input_shapes, node
         squeeze_dim = node.args[1]
     else:  # Specified as unsqueeze(x, dim=n)
         squeeze_dim = node.kwargs['dim']
-    # torch.unsqueeze inserts a new axis of size 1 at position 'squeeze_dim'.
-    # Normalize negative dims (valid range is [-(D+1), D]) so list.insert places
-    # the axis at the correct location regardless of duplicate dimension sizes.
+    # torch.unsqueeze inserts a new axis of size 1 at position 'squeeze_dim' and accepts
+    # dim in [-(D+1), D]. Reject out-of-range values (list.insert would otherwise silently
+    # clamp them to a wrong shape) and normalize negative dims, so the axis lands at the
+    # correct location regardless of duplicate dimension sizes.
+    ndim = len(output_shape)
+    if not -(ndim + 1) <= squeeze_dim <= ndim:
+        raise Exception(f'Dimension {squeeze_dim} is out of range for unsqueeze of a {ndim}D tensor')
     if squeeze_dim < 0:
-        squeeze_dim += len(output_shape) + 1
+        squeeze_dim += ndim + 1
     output_shape.insert(squeeze_dim, 1)
 
     layer['target_shape'] = output_shape.copy()
