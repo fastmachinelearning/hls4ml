@@ -171,7 +171,11 @@ def generate_test_yaml(test_root='.'):
         name = 'qkerasV3'
         test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
         batch_need_example_model = int(any([qkeras3_need_examples[i] for i in batch_idxs]))
-        diff_yml = yaml.safe_load(template.format(name, '.pytest-qkeras-v3-only', test_files, batch_need_example_model))
+        diff_yml = yaml.safe_load(
+            template_keras3_backend.format(
+                name, '.pytest-qkeras-v3-only', test_files, batch_need_example_model, 'tensorflow'
+            )
+        )
         yml.update(diff_yml)
 
     backend_specific_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in KERAS3_BACKEND_SPECIFIC_LIST]
