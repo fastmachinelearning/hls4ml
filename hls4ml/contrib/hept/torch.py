@@ -147,9 +147,13 @@ def parse_hept_attention_layer(operation, layer_name, input_names, input_shapes,
 
     layer["layer_norm_weight_data"] = class_object.norm1.weight.detach().numpy()
     layer["layer_norm_bias_data"] = class_object.norm1.bias.detach().numpy()
-    layer["q_weight_data"] = class_object.w_q.weight.detach().numpy()
-    layer["k_weight_data"] = class_object.w_k.weight.detach().numpy()
-    layer["v_weight_data"] = class_object.w_v.weight.detach().numpy()
+    # The HLS qkv kernel (compute_qkv_pre_qk_merged) indexes weight as [in][out]
+    # (flat = in * num_heads*dim_per_head + out), i.e. the transpose of the PyTorch
+    # nn.Linear weight, which is stored [out][in]. Transpose here so the projection
+    # q = norm(x) @ W matches the reference. (out_linear keeps PyTorch [out][in] layout.)
+    layer["q_weight_data"] = class_object.w_q.weight.detach().numpy().T.copy()
+    layer["k_weight_data"] = class_object.w_k.weight.detach().numpy().T.copy()
+    layer["v_weight_data"] = class_object.w_v.weight.detach().numpy().T.copy()
     layer["alpha_data"] = class_object.attn.e2lsh.alpha.detach().numpy()
     layer["out_linear_weight_data"] = class_object.attn.out_linear.weight.detach().numpy()
     layer["out_linear_bias_data"] = class_object.attn.out_linear.bias.detach().numpy()

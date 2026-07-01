@@ -104,7 +104,7 @@ void lsh_mapping_combined_shift(
                 
                     data_pack_q = q_hat[pf*CONFIG_T::num_head*(CONFIG_T::dim_per_head+CONFIG_T::coords_dim)+flat_idx].read();
                     data_pack_k = k_hat[pf*CONFIG_T::num_head*(CONFIG_T::dim_per_head+CONFIG_T::coords_dim)+flat_idx].read();
-                
+
                     for (int h = 0; h < CONFIG_T::num_hashes; h++) {
                         #pragma HLS UNROLL
                         typename CONFIG_T::hash_mul_accum_t tmp_q = data_pack_q * weight[CONFIG_T::num_hashes * flat_idx + h];
@@ -142,8 +142,8 @@ void lsh_mapping_combined_shift(
                 if(i == 0) {
                     for(int k = 0; k < CONFIG_T::num_hashes; k++) {
                         #pragma HLS UNROLL
-                        row_max[j][k][pf] = (row_buffer_q[j][k] > row_buffer_k[j][k]) ? row_buffer_q[j][k] : row_buffer_k[k+5*j];
-                        row_min[j][k][pf] = (row_buffer_q[j][k] < row_buffer_k[j][k]) ? row_buffer_q[j][k] : row_buffer_k[k+5*j];
+                        row_max[j][k][pf] = (row_buffer_q[j][k] > row_buffer_k[j][k]) ? row_buffer_q[j][k] : row_buffer_k[j][k];
+                        row_min[j][k][pf] = (row_buffer_q[j][k] < row_buffer_k[j][k]) ? row_buffer_q[j][k] : row_buffer_k[j][k];
                     }
                 }  else {
                     for(int k = 0; k < CONFIG_T::num_hashes; k++) {
