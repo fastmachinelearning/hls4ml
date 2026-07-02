@@ -209,7 +209,7 @@ class OneAPIBackend(FPGABackend):
         try:
             subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
-            print("icpx not found. Trying ahls")
+            print('icpx not found. Trying ahls')
             try:
                 subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
             except subprocess.CalledProcessError:
