@@ -244,69 +244,76 @@ class ActivationConfigTemplate(LayerConfigTemplate):
         params['type'] = node.get_attr('activation')
 
         if params['type'] == 'softmax':
-            # The lookup input (x - x_max) is always <= 0, so only the negative half
-            if 'exp_table_size' in params and params['exp_table_size'] is not None:
-                params['exp_table_size'] //= 2
-            else:
-                # Use the default precision
-                params['exp_table_size'] = 2 ** (params['table_t'].precision.width - 1)
-                params['exp_table_t'].precision.width = ceil_log2(params['exp_table_size'])
-                params['exp_table_t'].precision.integer = params['table_t'].precision.integer - 1
-                params['exp_table_t'].precision.signed = False
-
-            params.setdefault('table_size', params['exp_table_size'])  # Not sure if necessary
-
-            # Determine accumulator type if present, else derive it yourself based on the input size.
-            if params['accum_t'].name == 'model_default_t':
-                extra_bits_req = ceil_log2(params['n_in'])
-                s = 'true' if params['exp_table_t'].precision.signed else 'false'
-                w = params['exp_table_t'].precision.width + extra_bits_req
-                i = params['exp_table_t'].precision.integer + extra_bits_req
-                params['smax_accum_t'] = f'ac_fixed<{str(w)},{str(i)},{s}>'
-            else:
-                params['smax_accum_t'] = params['accum_t'].name
-
-            if 'inp_norm_t' not in params:
-                input_t = node.get_input_variable().type.precision
-                width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
-                width, iwidth = width - signed, iwidth - signed
-                import copy
-
-                params['inp_norm_t'] = copy.deepcopy(params['exp_table_t'])  # assign type,later override
-
-                # This checks if table sizes will be default, if it is just use the table size to derive precision
-                if 'inv_table_size' not in params:
-                    params['inp_norm_t'].precision.width = params['exp_table_t'].precision.width + 1
-                    params['inp_norm_t'].precision.integer = params['exp_table_t'].precision.integer + 1
-                    params['inp_norm_t'].precision.signed = True
-                    params['inp_norm_t'].name = f'{node.name}_inp_norm_t'
-                else:
-                    params[
-                        'inp_norm_t'
-                    ].name = f'ac_fixed<{width},{iwidth},{"true" if signed else "false"},AC_RND,AC_SAT_SYM>'
-
-                node.set_attr('inp_norm_t', params['inp_norm_t'])
-
-            # Again we only look up 1/sum(e^x) which is >=0 so no need the entie address space
-            if 'inv_table_size' in params:
-                params['inv_table_size'] //= 2
-            else:
-                params['inv_table_size'] = 2 ** (params['table_t'].precision.width - 1)
-                params['inv_table_t'].precision.width = ceil_log2(params['inv_table_size'])
-                params['inv_table_t'].precision.integer = params['table_t'].precision.integer - 1
-                params['inv_table_t'].precision.signed = False
-
-                params['inv_inp_t'].precision.width = params['inv_table_t'].precision.width + 1
-                params['inv_inp_t'].precision.integer = params['inv_table_t'].precision.integer + 1
-                params['inv_inp_t'].precision.signed = True
-
-            if params['implementation'] == 'stable':
-                self.template = softmax_config_template + softmax_config_table_template_stable
-            else:
-                self.template = softmax_config_template + softmax_config_table_template
 
             params['exp_table_name'] = node.name + '_exp_table'
-            params['inv_table_name'] = node.name + '_inv_table'
+            params['inv_table_name'] = node.name + '_inv_table'       
+            
+            if params['implementation'] == 'stable':
+                self.template = softmax_config_template + softmax_config_table_template_stable
+
+                if 'exp_table_size' not in params:
+                    params['exp_table_size'] = 2 ** params['inp_norm_t'].precision.width
+                    node.set_attr('exp_table_size', params['exp_table_size'])
+                
+                if 'inv_table_size' not in params:
+                    params['inv_table_size'] = 2 ** params['inv_inp_t'].precision.width
+                    node.set_attr('inv_table_size', params['inv_table_size'])
+
+                params['smax_accum_t'] = params['accum_t'].name
+                #params.setdefault('table_size', params['exp_table_size'])  # Not sure if necessary
+                
+            else:
+                if 'exp_table_size' not in params:
+                    params['exp_table_size'] =  params['table_size']
+                if 'inv_table_size' not in params:
+                    params['inv_table_size'] =  params['table_size']
+
+                '''
+                # Determine accumulator type if present, else derive it yourself based on the input size.
+                if params['accum_t'].name == 'model_default_t':
+                    extra_bits_req = ceil_log2(params['n_in'])
+                    s = 'false'#'true' if params['exp_table_t'].precision.signed else 'false'
+                    w = params['exp_table_t'].precision.width + extra_bits_req
+                    i = params['exp_table_t'].precision.integer + extra_bits_req
+                    params['smax_accum_t'] = f'ac_fixed<{str(w)},{str(i)},{s}>'
+                else:
+                    params['smax_accum_t'] = params['accum_t'].name
+                
+
+                if 'inp_norm_t' not in params:
+                    input_t = node.get_input_variable().type.precision
+                    width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
+                    width, iwidth = width - signed, iwidth - signed
+                    import copy
+
+                    params['inp_norm_t'] = copy.deepcopy(params['exp_table_t'])  # assign type,later override
+
+                    # This checks if table sizes will be default, if it is just use the table size to derive precision
+                    if 'inv_table_size' not in params:
+                        params['inp_norm_t'].precision.width = params['exp_table_t'].precision.width + 1
+                        params['inp_norm_t'].precision.integer = params['exp_table_t'].precision.integer + 1
+                        params['inp_norm_t'].precision.signed = True
+                        params['inp_norm_t'].name = f'{node.name}_inp_norm_t'
+                    else:
+                        params[
+                            'inp_norm_t'
+                        ].name = f'ac_fixed<{width},{iwidth},{"true" if signed else "false"},AC_RND,AC_SAT_SYM>'
+
+                    node.set_attr('inp_norm_t', params['inp_norm_t'])
+
+                # Again we only look up 1/sum(e^x) which is >=0 so no need the entie address space
+                if 'inv_table_size' in params:
+                    pass #params['inv_table_size'] //= 2
+                else:
+                    params['inv_table_size'] = 2 ** (params['table_t'].precision.width - 1)
+                    params['inv_table_t'].precision.width = ceil_log2(params['inv_table_size'])
+                    params['inv_table_t'].precision.integer = params['table_t'].precision.integer - 1
+                    params['inv_table_t'].precision.signed = False
+
+                    params['inv_inp_t'].precision.width = params['inv_table_t'].precision.width + 1
+                    params['inv_inp_t'].precision.integer = params['inv_table_t'].precision.integer + 1
+                    params['inv_inp_t'].precision.signed = True
+                '''
 
         return self.template.format(**params)
 
@@ -338,7 +345,7 @@ class HardActivationConfigTemplate(LayerConfigTemplate):
 class SoftmaxConfigTemplate(ActivationConfigTemplate):
     def __init__(self):
         super(ActivationConfigTemplate, self).__init__(Softmax)  # Skip ActivationConfigTemplate's __init__
-        self.template = softmax_config_template
+        self.template = softmax_config_template + softmax_config_table_template
 
 
 class ActivationFunctionTemplate(FunctionCallTemplate):

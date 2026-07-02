@@ -99,7 +99,7 @@ template <class data_T, class res_T, typename CONFIG_T> void sigmoid(const data_
 
 enum class softmax_implementation { latency = 0, legacy = 1, stable = 2, argmax = 3 };
 
-template <class data_T, unsigned table_size> inline unsigned softmax_stable_idx_from_real_val(const data_T x) {
+template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_real_val_negative(const data_T x) {
     // Number of address bits for table
     static constexpr int N = ceillog2<table_size>::val;
 
@@ -112,9 +112,9 @@ template <class data_T, unsigned table_size> inline unsigned softmax_stable_idx_
     return y.to_uint();
 }
 
-template <class data_T, typename CONFIG_T> inline unsigned softmax_latency_idx_from_real_val(const data_T x) {
+template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_real_val(const data_T x) {
     // Number of address bits for table
-    static constexpr int N = ceillog2<CONFIG_T::table_size>::val;
+    static constexpr int N = ceillog2<table_size>::val;
 
     // Slice the top N bits of the input
     [[intel::fpga_register]] ac_int<N, false> y = x.template slc<N>(x.width - N);
@@ -132,7 +132,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     [[intel::fpga_register]] typename CONFIG_T::inp_norm_t d_xi_xmax[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        d_xi_xmax[i] = data[i] - x_max;
+        d_xi_xmax[i] = x_max - data[i];
     }
 
     // Calculate all the e^x's
@@ -140,7 +140,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         exp_res[i] =
-            CONFIG_T::exp_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
+            CONFIG_T::exp_table[softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
                 d_xi_xmax[i])]; // input_t, CONFIG_T
     }
 
@@ -151,7 +151,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
     [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-        CONFIG_T::invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
+        CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
             exp_sum)];
 
     #pragma unroll
@@ -169,7 +169,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(con
     [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = exp_table_latency[softmax_latency_idx_from_real_val<typename data_T::value_type, CONFIG_T>(data[i])];
+        exp_res[i] = CONFIG_T::exp_table[softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T::exp_table_size>(data[i])];
     }
 
     // Explicitly sum the results with an adder tree.
@@ -179,7 +179,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(con
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
     [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-        invert_table_latency[softmax_latency_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
+        CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T::inv_table_size>(exp_sum)];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         res[i] = exp_res[i] * inv_exp_sum;
@@ -187,8 +187,8 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(con
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void softmax_legacy(const data_T &data, res_T &res) {
-#include "activation_tables/exp_table_legacy.tb"
-#include "activation_tables/invert_table_legacy.tb"
+//#include "activation_tables/exp_table_legacy.tb"
+//#include "activation_tables/invert_table_legacy.tb"
 
     [[intel::fpga_register]] int data_round[CONFIG_T::n_in];
 New_loop:
@@ -214,7 +214,7 @@ NN_Outer:
                 if (index > CONFIG_T::table_size - 1)
                     index = CONFIG_T::table_size - 1;
 
-                typename CONFIG_T::exp_table_t temp_exp = exp_table_legacy[index];
+                typename CONFIG_T::exp_table_t temp_exp = CONFIG_T::exp_table[index];
                 exp_res_temp += temp_exp;
             }
         }
@@ -223,7 +223,7 @@ NN_Outer:
             exp_res_index = 0;
         if (exp_res_index > CONFIG_T::table_size - 1)
             exp_res_index = CONFIG_T::table_size - 1;
-        res[ii] = invert_table_legacy[exp_res_index];
+        res[ii] = CONFIG_T::invert_table[exp_res_index];
     }
 }
 

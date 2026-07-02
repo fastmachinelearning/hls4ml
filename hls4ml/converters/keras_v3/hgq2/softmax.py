@@ -12,10 +12,16 @@ if typing.TYPE_CHECKING:
     from keras import KerasTensor
 
 
-def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False):
+def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False, force_unsigned=False):
     from keras import ops
 
     k, i, f = q.kif
+
+    if force_unsigned:
+        k = 0.
+        i += 1.
+        f += 1.
+
     k = ops.convert_to_numpy(k)
     i = ops.convert_to_numpy(i)
     f = ops.convert_to_numpy(f)
@@ -74,14 +80,16 @@ class QSoftmaxHandler(QLayerHandler):
             exp_table_size = 2 ** int(ops.convert_to_numpy(ops.max(layer.exp_table.iq.quantizer.bits)))  # type: ignore
         else:
             exp_table_size = None  # Placeholder, will be overridden in bit-exact pass
-
+        
         exp_oq = layer.exp_table.oq.quantizer
         inv_oq = layer.inv_table.oq.quantizer
         inv_iq = layer.inv_table.iq.quantizer
+        
         assert isinstance(exp_oq, FixedPointQuantizerBase), 'Only fixed-point quantizer is supported for exp_table'
-        exp_table_t = fixed_quantizer_to_hls4ml_t(exp_oq)
-        inv_table_t = fixed_quantizer_to_hls4ml_t(inv_oq)
-        inv_inp_t = fixed_quantizer_to_hls4ml_t(inv_iq)
+        # Enforce unsigned quantisers on all three types
+        exp_table_t = fixed_quantizer_to_hls4ml_t(exp_oq, force_unsigned=True)
+        inv_table_t = fixed_quantizer_to_hls4ml_t(inv_oq, force_unsigned=True)
+        inv_inp_t = fixed_quantizer_to_hls4ml_t(inv_iq, force_unsigned=True) 
         exp_scale = layer.input_scaler
 
         inv_table_size = 2**inv_inp_t.width
@@ -122,7 +130,8 @@ class QSoftmaxHandler(QLayerHandler):
         )
 
         if layer.stable:
-            inp_norm_t = fixed_quantizer_to_hls4ml_t(layer.exp_table.iq.quantizer)
+            # Force unsigned since norm >= 0
+            inp_norm_t = fixed_quantizer_to_hls4ml_t(layer.exp_table.iq.quantizer, force_unsigned=True)
             config['inp_norm_t'] = inp_norm_t
 
         return (config,)

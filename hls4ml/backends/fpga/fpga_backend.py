@@ -129,22 +129,33 @@ class FPGABackend(Backend):
             ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip),
             TypeAttribute(
                 'exp_table',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                default=FixedPrecisionType(
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                ),
                 description=descriptions.table_type,
             ),
             TypeAttribute(
                 'inv_table',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                default=FixedPrecisionType(
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                ),
                 description=descriptions.table_type,
             ),
             TypeAttribute(
                 'inv_inp',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                default=FixedPrecisionType(
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                ),
+                description='What the accumulated value is cast to before accessing the inversion table (only in stable)',
             ),
             TypeAttribute(
-                'accum',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                'inp_norm',
+                default=FixedPrecisionType(
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                ),
+                description='The internal width used for the exp table lookup (only in stable)',
             ),
+            TypeAttribute('accum', description=descriptions.accum_type),
         ]
         self.attribute_map[Softmax] = softmax_attrs
 

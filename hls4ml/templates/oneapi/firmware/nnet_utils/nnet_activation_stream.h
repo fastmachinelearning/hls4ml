@@ -299,7 +299,7 @@ SoftmaxArrayLoop:
 
         #pragma unroll
         for (unsigned j = 0; j < input_arr_size; j++) {
-            d_xi_xmax[j] = data_array[j] - x_max;
+            d_xi_xmax[j] = x_max - data_array[j];
         }
 
         // Calculate all the e^x's
@@ -307,7 +307,7 @@ SoftmaxArrayLoop:
 
         #pragma unroll
         for (unsigned j = 0; j < input_arr_size; j++) {
-            exp_res[j] = CONFIG_T::exp_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inp_norm_t,
+            exp_res[j] = CONFIG_T::exp_table[softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t,
                                                                               CONFIG_T::exp_table_size>(d_xi_xmax[j])];
         }
 
@@ -318,7 +318,7 @@ SoftmaxArrayLoop:
             reduce<typename CONFIG_T::accum_t, input_arr_size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-            CONFIG_T::invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
+            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
                 exp_sum)];
 
         typename ExtractPipeType<res_pipe>::value_type out_pack;
@@ -334,8 +334,8 @@ SoftmaxArrayLoop:
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_latency_stream() {
-#include "activation_tables/exp_table_latency.tb"
-#include "activation_tables/invert_table_latency.tb"
+//#include "activation_tables/exp_table_latency.tb"
+//#include "activation_tables/invert_table_latency.tb"
 
     constexpr unsigned multiplier_limit =
         DIV_ROUNDUP(std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}, CONFIG_T::reuse_factor);
@@ -355,8 +355,8 @@ SoftmaxExpLoop:
     SoftmaxExpPackLoop:
         #pragma unroll
         for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; j++) {
-            exp_res[j] = exp_table_latency[softmax_latency_idx_from_real_val<
-                typename ExtractPipeType<data_pipe>::value_type::value_type, CONFIG_T>(in_pack[j])];
+            exp_res[j] = CONFIG_T::exp_table[softmax_idx_from_real_val<
+                typename ExtractPipeType<data_pipe>::value_type::value_type, CONFIG_T::exp_table_size>(in_pack[j])];
         }
 
         // Explicitly sum the results with an adder tree.
@@ -367,7 +367,7 @@ SoftmaxExpLoop:
 
         // Multiply previously calculated exponetials with the reciprocal of the sum
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-            invert_table_latency[softmax_latency_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
+            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T::inv_table_size>(exp_sum)];
 
         typename ExtractPipeType<res_pipe>::value_type out_pack;
     SoftmaxInvPackLoop:
@@ -382,8 +382,8 @@ SoftmaxExpLoop:
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_legacy_stream() {
-#include "activation_tables/exp_table_legacy.tb"
-#include "activation_tables/invert_table_legacy.tb"
+//#include "activation_tables/exp_table_legacy.tb"
+//#include "activation_tables/invert_table_legacy.tb"
 
     // Index into the lookup table based on data for exponentials
     [[intel::fpga_register]]
@@ -421,7 +421,7 @@ SoftmaxInitLoop:
                         index = 0;
                     if (index > CONFIG_T::table_size - 1)
                         index = CONFIG_T::table_size - 1;
-                    exp_diff_res = exp_table_legacy[index];
+                    exp_diff_res = CONFIG_T::exp_table[index];
                 }
                 exp_res[i] += exp_diff_res;
             }
@@ -437,7 +437,7 @@ SoftmaxInitLoop:
             if (exp_res_index > CONFIG_T::table_size - 1)
                 exp_res_index = CONFIG_T::table_size - 1;
             out_pack[j] =
-                static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(invert_table_legacy[exp_res_index]);
+                static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(CONFIG_T::invert_table[exp_res_index]);
         }
 
         res_pipe::write(out_pack);
