@@ -311,7 +311,7 @@ class OneAPIWriter(Writer):
                             or layer.get_attr('recurrent_activation') == 'softmax'
                             or layer.get_attr('activation') == 'softmax_multidim'
                             or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                        ):
+                        ) and 'implementation' in layer.attributes:
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
 
