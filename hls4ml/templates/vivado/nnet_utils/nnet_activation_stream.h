@@ -120,8 +120,8 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     if (!initialized) {
         // Note we are exponentiating the inputs, which have type data_T
         init_exp_table<typename data_T::value_type, CONFIG_T>(exp_table);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
+        // Note we are inverting the summed exponentials, which have type accum_t
+        init_invert_table<typename CONFIG_T::accum_t, CONFIG_T>(invert_table);
         initialized = true;
     }
 
@@ -150,7 +150,7 @@ SoftmaxExpLoop:
         exp_sum = reduce<typename CONFIG_T::accum_t, data_T::size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         typename CONFIG_T::inv_table_t inv_exp_sum =
-            invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
+            invert_table[softmax_idx_from_real_val<typename CONFIG_T::accum_t, CONFIG_T::inv_table_size>(exp_sum)];
 
         res_T out_pack;
         PRAGMA_DATA_PACK(out_pack)
@@ -216,7 +216,6 @@ SoftmaxArrayLoop:
         // Calculate all the e^x's
         typename CONFIG_T::accum_t exp_res[data_T::size];
         #pragma HLS ARRAY_PARTITION variable=exp_res complete
-        typename CONFIG_T::inv_inp_t exp_sum(0);
         for (unsigned j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
             unsigned x = softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(d_xi_xmax[j]);
@@ -226,7 +225,8 @@ SoftmaxArrayLoop:
         // Explicitly sum the results with an adder tree.
         // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
         Op_add<typename CONFIG_T::accum_t> op_add;
-        exp_sum = reduce<typename CONFIG_T::accum_t, data_T::size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
+        typename CONFIG_T::inv_inp_t exp_sum =
+            reduce<typename CONFIG_T::accum_t, data_T::size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         typename CONFIG_T::inv_table_t inv_exp_sum =
             invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
@@ -249,22 +249,22 @@ void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     // Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
-    typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
-    typename CONFIG_T::table_t invert_table[CONFIG_T::table_size];
+    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
 #else
     static bool initialized = false;
-    static typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
-    static typename CONFIG_T::table_t invert_table[CONFIG_T::table_size];
+    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
 #endif
     if (!initialized) {
-        init_exp_table_legacy<CONFIG_T, CONFIG_T::table_size>(exp_table);
-        init_invert_table_legacy<CONFIG_T, CONFIG_T::table_size>(invert_table);
+        init_exp_table_legacy<CONFIG_T, CONFIG_T::exp_table_size>(exp_table);
+        init_invert_table_legacy<CONFIG_T, CONFIG_T::inv_table_size>(invert_table);
         initialized = true;
     }
 
     // Index into the lookup table based on data for exponentials
-    typename CONFIG_T::table_t exp_res[data_T::size];
-    typename CONFIG_T::table_t exp_diff_res;
+    typename CONFIG_T::accum_t exp_res[data_T::size];
+    typename CONFIG_T::exp_table_t exp_diff_res;
     typename data_T::value_type data_cache[data_T::size];
 
 SoftmaxInitLoop:
@@ -288,12 +288,12 @@ SoftmaxInitLoop:
                 if (i == j) {
                     exp_diff_res = 1;
                 } else {
-                    int data_round = (data_cache[j] - data_cache[i]) * CONFIG_T::table_size / 16;
+                    auto data_round = (data_cache[j] - data_cache[i]) * CONFIG_T::table_size / 16;
                     int index = data_round + 8 * CONFIG_T::table_size / 16;
                     if (index < 0)
                         index = 0;
-                    if (index > CONFIG_T::table_size - 1)
-                        index = CONFIG_T::table_size - 1;
+                    if (index > CONFIG_T::exp_table_size - 1)
+                        index = CONFIG_T::exp_table_size - 1;
                     exp_diff_res = exp_table[index];
                 }
 
@@ -311,10 +311,10 @@ SoftmaxInitLoop:
             int exp_res_index = exp_res[j] * CONFIG_T::table_size / 64;
             if (exp_res_index < 0)
                 exp_res_index = 0;
-            if (exp_res_index > CONFIG_T::table_size - 1)
-                exp_res_index = CONFIG_T::table_size - 1;
+            if (exp_res_index > CONFIG_T::inv_table_size - 1)
+                exp_res_index = CONFIG_T::inv_table_size - 1;
 
-            out_pack[j] = (typename res_T::value_type)invert_table[exp_res_index];
+            out_pack[j] = static_cast<typename res_T::value_type>(invert_table[exp_res_index]);
         }
         res.write(out_pack);
     }
