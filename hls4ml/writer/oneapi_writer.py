@@ -306,7 +306,12 @@ class OneAPIWriter(Writer):
                 elif '// hls-fpga-machine-learning insert softmax tables' in line:
                     newline = line
                     for layer in model.get_layers():
-                        if layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax':
+                        if (
+                            layer.get_attr('activation') == 'softmax'
+                            or layer.get_attr('recurrent_activation') == 'softmax'
+                            or layer.get_attr('activation') == 'softmax_multidim'
+                            or layer.get_attr('recurrent_activation') == 'softmax_multidim'
+                        ):
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
 
@@ -707,13 +712,19 @@ class OneAPIWriter(Writer):
 
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax') \
-                and 'implementation' in layer.attributes and layer.get_attr('implementation') == 'stable':
 
-
-                #import pdb; pdb.set_trace()
+            if (
+                (
+                    layer.get_attr('activation') == 'softmax'
+                    or layer.get_attr('activation') == 'softmax_multidim'
+                    or layer.get_attr('recurrent_activation') == 'softmax'
+                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
+                )
+                and 'implementation' in layer.attributes
+                and layer.get_attr('implementation') == 'stable'
+            ):
                 table_name = layer.name + '_exp_table'
-                table_size = int(layer.get_attr('exp_table_size')) 
+                table_size = int(layer.get_attr('exp_table_size'))
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
                     header_name = table_name
@@ -738,7 +749,7 @@ class OneAPIWriter(Writer):
                         if (('exp_scale' in layer.attributes) and (layer.attributes['exp_scale'] is not None))
                         else 1.0
                     )
-                   
+
                     N = ceil_log2(table_size)
                     if N > 2**fp_bits:
                         raise Exception('Table size is bigger than what precision allows')
@@ -762,9 +773,17 @@ class OneAPIWriter(Writer):
     def __write_invert_table(self, model, path):
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax') \
-                and 'implementation' in layer.attributes and layer.get_attr('implementation') == 'stable':
 
+            if (
+                (
+                    layer.get_attr('activation') == 'softmax'
+                    or layer.get_attr('activation') == 'softmax_multidim'
+                    or layer.get_attr('recurrent_activation') == 'softmax'
+                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
+                )
+                and 'implementation' in layer.attributes
+                and layer.get_attr('implementation') == 'stable'
+            ):
                 table_name = layer.name + '_inv_table'
                 table_size = int(layer.get_attr('inv_table_size'))
 
@@ -809,9 +828,16 @@ class OneAPIWriter(Writer):
     def __write_exp_table_latency(self, model, path):
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax') \
-                and 'implementation' in layer.attributes and layer.get_attr('implementation') == 'latency':
-
+            if (
+                (
+                    layer.get_attr('activation') == 'softmax'
+                    or layer.get_attr('activation') == 'softmax_multidim'
+                    or layer.get_attr('recurrent_activation') == 'softmax'
+                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
+                )
+                and 'implementation' in layer.attributes
+                and layer.get_attr('implementation') == 'latency'
+            ):
                 table_name = layer.name + '_exp_table'
                 table_size = int(layer.get_attr('exp_table_size'))
 
@@ -859,9 +885,16 @@ class OneAPIWriter(Writer):
     def __write_invert_table_latency(self, model, path):
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax') \
-                and 'implementation' in layer.attributes and layer.get_attr('implementation') == 'latency':
-
+            if (
+                (
+                    layer.get_attr('activation') == 'softmax'
+                    or layer.get_attr('activation') == 'softmax_multidim'
+                    or layer.get_attr('recurrent_activation') == 'softmax'
+                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
+                )
+                and 'implementation' in layer.attributes
+                and layer.get_attr('implementation') == 'latency'
+            ):
                 table_name = layer.name + '_inv_table'
                 table_size = int(layer.get_attr('inv_table_size'))
 
@@ -910,12 +943,18 @@ class OneAPIWriter(Writer):
 
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax') \
-                and 'implementation' in layer.attributes and layer.get_attr('implementation') == 'legacy':
-
-                import pdb; pdb.set_trace()
+            if (
+                (
+                    layer.get_attr('activation') == 'softmax'
+                    or layer.get_attr('activation') == 'softmax_multidim'
+                    or layer.get_attr('recurrent_activation') == 'softmax'
+                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
+                )
+                and 'implementation' in layer.attributes
+                and layer.get_attr('implementation') == 'legacy'
+            ):
                 table_name = layer.name + '_exp_table'
-                table_size = int(layer.get_attr('exp_table_size')) # not sure if it works, have to test first 
+                table_size = int(layer.get_attr('exp_table_size'))  # not sure if it works, have to test first
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
                     header_name = table_name
@@ -923,7 +962,7 @@ class OneAPIWriter(Writer):
                     h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
                     h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr('exp_table_t').name},{table_size}> {table_name} = {{'
+                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
                     )
 
                     sep = ''
@@ -940,9 +979,16 @@ class OneAPIWriter(Writer):
 
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (layer.get_attr('activation') == 'softmax' or layer.get_attr('recurrent_activation') == 'softmax') \
-                and 'implementation' in layer.attributes and layer.get_attr('implementation') == 'legacy':
-
+            if (
+                (
+                    layer.get_attr('activation') == 'softmax'
+                    or layer.get_attr('activation') == 'softmax_multidim'
+                    or layer.get_attr('recurrent_activation') == 'softmax'
+                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
+                )
+                and 'implementation' in layer.attributes
+                and layer.get_attr('implementation') == 'legacy'
+            ):
                 table_name = layer.name + '_inv_table'
                 table_size = int(layer.get_attr('inv_table_size'))
 
@@ -952,7 +998,7 @@ class OneAPIWriter(Writer):
                     h_file.write(f'#define {header_name.upper()}_H_\n\n')
 
                     h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr('inv_table_t').name},{table_size}> {table_name} = {{'
+                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
                     )
 
                     sep = ''

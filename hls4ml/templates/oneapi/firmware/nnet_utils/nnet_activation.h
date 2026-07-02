@@ -139,9 +139,8 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     [[intel::fpga_register]] typename CONFIG_T::accum_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] =
-            CONFIG_T::exp_table[softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
-                d_xi_xmax[i])]; // input_t, CONFIG_T
+        exp_res[i] = CONFIG_T::exp_table[softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
+            d_xi_xmax[i])]; // input_t, CONFIG_T
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree
@@ -151,8 +150,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
     [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-        CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
-            exp_sum)];
+        CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
 
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
@@ -162,14 +160,15 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
 
 // TODO - Improve accuracy
 template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(const data_T &data, res_T &res) {
-#include "activation_tables/exp_table_latency.tb"
-#include "activation_tables/invert_table_latency.tb"
+    //#include "activation_tables/exp_table_latency.tb"
+    //#include "activation_tables/invert_table_latency.tb"
 
     // Calculate all the e^x's
     [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = CONFIG_T::exp_table[softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T::exp_table_size>(data[i])];
+        exp_res[i] =
+            CONFIG_T::exp_table[softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T::exp_table_size>(data[i])];
     }
 
     // Explicitly sum the results with an adder tree.
@@ -187,8 +186,8 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(con
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void softmax_legacy(const data_T &data, res_T &res) {
-//#include "activation_tables/exp_table_legacy.tb"
-//#include "activation_tables/invert_table_legacy.tb"
+    //#include "activation_tables/exp_table_legacy.tb"
+    //#include "activation_tables/invert_table_legacy.tb"
 
     [[intel::fpga_register]] int data_round[CONFIG_T::n_in];
 New_loop:

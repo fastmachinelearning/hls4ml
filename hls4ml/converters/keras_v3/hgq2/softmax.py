@@ -18,9 +18,9 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False, fo
     k, i, f = q.kif
 
     if force_unsigned:
-        k = 0.
-        i += 1.
-        f += 1.
+        k = 0.0
+        i += 1.0
+        f += 1.0
 
     k = ops.convert_to_numpy(k)
     i = ops.convert_to_numpy(i)
@@ -80,16 +80,16 @@ class QSoftmaxHandler(QLayerHandler):
             exp_table_size = 2 ** int(ops.convert_to_numpy(ops.max(layer.exp_table.iq.quantizer.bits)))  # type: ignore
         else:
             exp_table_size = None  # Placeholder, will be overridden in bit-exact pass
-        
+
         exp_oq = layer.exp_table.oq.quantizer
         inv_oq = layer.inv_table.oq.quantizer
         inv_iq = layer.inv_table.iq.quantizer
-        
+
         assert isinstance(exp_oq, FixedPointQuantizerBase), 'Only fixed-point quantizer is supported for exp_table'
         # Enforce unsigned quantisers on all three types
         exp_table_t = fixed_quantizer_to_hls4ml_t(exp_oq, force_unsigned=True)
         inv_table_t = fixed_quantizer_to_hls4ml_t(inv_oq, force_unsigned=True)
-        inv_inp_t = fixed_quantizer_to_hls4ml_t(inv_iq, force_unsigned=True) 
+        inv_inp_t = fixed_quantizer_to_hls4ml_t(inv_iq, force_unsigned=True)
         exp_scale = layer.input_scaler
 
         inv_table_size = 2**inv_inp_t.width
@@ -107,13 +107,19 @@ class QSoftmaxHandler(QLayerHandler):
         else:
             raise ValueError(f'Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}')
 
+        # For masked implementation assume first input is the tensor we are operating on
+        activation = 'softmax'
+        if len(in_tensors[0].shape[1:]) > 1:
+            if (1 not in in_tensors[0].shape[1:]) or (len(in_tensors[0].shape[1:]) > 2):
+                activation = 'softmax_multidim'
+
         config = {}
         config.update(self.default_config)
         config.update(
             {
                 'axis': ax,
                 'n_in': n_in,
-                'activation': 'softmax',
+                'activation': activation,
                 'n_outer': n_outer,
                 'n_inner': n_inner,
                 'implementation': impl,
