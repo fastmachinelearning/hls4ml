@@ -252,34 +252,29 @@ class ActivationConfigTemplate(LayerConfigTemplate):
         params['type'] = node.get_attr('activation')
 
         if (params['type'] == 'softmax') or (params['type'] == 'softmax_multidim'):
-            params.setdefault('n_inner', 1)
-            params.setdefault('n_outer', 1)
+            # If no table size is specified, assume default size of 1024
+            params.setdefault('exp_table_size', params['table_size'])
+            params.setdefault('inv_table_size', params['table_size'])
+
+            # This is for non-quantised layers where table size is not a layer attribute
+            if node.get_attr('exp_table_size', -1) == -1:
+                node.set_attr('exp_table_size', params['exp_table_size'])
+
+            if node.get_attr('inv_table_size', -1) == -1:
+                node.set_attr('inv_table_size', params['inv_table_size'])
+
+            params.setdefault('exp_scale', 1.0)
+            params.setdefault('parallelization_factor', -1)
+
             n_slice = params['n_in'] // params['n_inner'] // params['n_outer']
             params['n_slice'] = n_slice
 
             params['exp_table_name'] = node.name + '_exp_table'
             params['inv_table_name'] = node.name + '_inv_table'
+            params['smax_accum_t'] = params['accum_t'].name
 
             if params['implementation'] == 'stable':
                 self.template = softmax_config_template + softmax_config_table_template_stable
-
-                if 'exp_table_size' not in params:
-                    params['exp_table_size'] = 2 ** params['inp_norm_t'].precision.width
-                    node.set_attr('exp_table_size', params['exp_table_size'])
-
-                if 'inv_table_size' not in params:
-                    params['inv_table_size'] = 2 ** params['inv_inp_t'].precision.width
-                    node.set_attr('inv_table_size', params['inv_table_size'])
-
-                params['smax_accum_t'] = params['accum_t'].name
-                # params.setdefault('table_size', params['exp_table_size'])  # Not sure if necessary
-
-            else:
-                # TODO: For latency check the table sizes correctly, match them
-                if 'exp_table_size' not in params:
-                    params['exp_table_size'] = params['table_size']
-                if 'inv_table_size' not in params:
-                    params['inv_table_size'] = params['table_size']
 
         return self.template.format(**params)
 

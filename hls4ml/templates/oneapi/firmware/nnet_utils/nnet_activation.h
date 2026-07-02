@@ -160,8 +160,6 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
 
 // TODO - Improve accuracy
 template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(const data_T &data, res_T &res) {
-    //#include "activation_tables/exp_table_latency.tb"
-    //#include "activation_tables/invert_table_latency.tb"
 
     // Calculate all the e^x's
     [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
@@ -186,8 +184,6 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_latency(con
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void softmax_legacy(const data_T &data, res_T &res) {
-    //#include "activation_tables/exp_table_legacy.tb"
-    //#include "activation_tables/invert_table_legacy.tb"
 
     [[intel::fpga_register]] int data_round[CONFIG_T::n_in];
 New_loop:

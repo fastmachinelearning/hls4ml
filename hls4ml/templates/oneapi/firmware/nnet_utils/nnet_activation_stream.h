@@ -335,8 +335,6 @@ SoftmaxArrayLoop:
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_latency_stream() {
-    //#include "activation_tables/exp_table_latency.tb"
-    //#include "activation_tables/invert_table_latency.tb"
 
     constexpr unsigned multiplier_limit =
         DIV_ROUNDUP(std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}, CONFIG_T::reuse_factor);
@@ -385,8 +383,6 @@ SoftmaxExpLoop:
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_legacy_stream() {
-    //#include "activation_tables/exp_table_legacy.tb"
-    //#include "activation_tables/invert_table_legacy.tb"
 
     // Index into the lookup table based on data for exponentials
     [[intel::fpga_register]]
