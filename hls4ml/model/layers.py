@@ -1956,6 +1956,7 @@ class SparsePooling2D(Layer):
         Attribute('n_sparse'),
         Attribute('n_chan'),
         Attribute('pool_size'),
+        Attribute('pool_op', value_type=str, default='avg'),  # 'avg' or 'max'
         TypeAttribute('accum'),
     ]
 

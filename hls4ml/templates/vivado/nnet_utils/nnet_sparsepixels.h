@@ -45,11 +45,14 @@ template <class T, int N, class Op, class t> T find_active(T *x, Op op, t thresh
               threshold);
 }
 
+// Input-reduce (find-max tree): selects the first N_sparse active pixels (first input channel
+// > threshold) in raster order and emits their features (all channels) and 1-based (h, w) hashes.
+// A combinational find-active reduction is reused across N_sparse pipelined extractions -- low
+// latency, high LUT.
 template <class data_T, class res_T, class hash_T, int N_h, int N_w, int N_c, int N_sparse>
 void sparse_input_reduce(data_T input_arr[N_h * N_w * N_c], data_T threshold, res_T sparse_arr_feat[N_sparse * N_c],
                          hash_T sparse_arr_hash[N_sparse * 2]) {
 
-    // Flat pixel index ranges over 0..N_h*N_w-1 -> auto-sized to minimum bits
     static constexpr int IDX_BITS = _sp_ceillog2(N_h * N_w);
     typedef value_idx_pair<data_T, IDX_BITS> pair_t;
 
@@ -92,6 +95,41 @@ MaxPixelsLoop:
     }
 }
 
+// Input-reduce (streaming): same selection as the tree, via a one-pixel-per-cycle raster scan --
+// minimal LUT, latency ~N_h*N_w. Unused output slots (fewer than N_sparse active pixels) are zeroed.
+template <class data_T, class res_T, class hash_T, int N_h, int N_w, int N_c, int N_sparse>
+void sparse_input_reduce_stream(data_T input_arr[N_h * N_w * N_c], data_T threshold, res_T sparse_arr_feat[N_sparse * N_c],
+                                hash_T sparse_arr_hash[N_sparse * 2]) {
+    constexpr int NP = N_h * N_w;
+
+InitOut:
+    for (int s = 0; s < N_sparse; s++) {
+        #pragma HLS UNROLL
+        for (int c = 0; c < N_c; c++) {
+            #pragma HLS UNROLL
+            sparse_arr_feat[N_c * s + c] = 0;
+        }
+        sparse_arr_hash[2 * s] = 0;
+        sparse_arr_hash[2 * s + 1] = 0;
+    }
+
+    int cnt = 0;
+ScanLoop:
+    for (int j = 0; j < NP; j++) {
+        #pragma HLS PIPELINE
+        if (cnt < N_sparse && input_arr[N_c * j] > threshold) {
+            sparse_arr_feat[N_c * cnt] = (res_T)input_arr[N_c * j];
+            for (int c = 1; c < N_c; c++) {
+                #pragma HLS UNROLL
+                sparse_arr_feat[N_c * cnt + c] = (res_T)input_arr[N_c * j + c];
+            }
+            sparse_arr_hash[2 * cnt] = j / N_w + 1;
+            sparse_arr_hash[2 * cnt + 1] = j % N_w + 1;
+            cnt++;
+        }
+    }
+}
+
 template <class data_T, class accum_T, class w_T, int n_chan, int n_filt, int N_sparse, int ker_size>
 accum_T mult_for_sparse_conv_kernel(int offset_h, int offset_w, data_T sparse_arr_feat_in[n_chan * N_sparse],
                                     w_T filt_w[ker_size * ker_size * n_chan * n_filt], int i_filt, int i_pixel_in) {
@@ -100,9 +138,14 @@ accum_T mult_for_sparse_conv_kernel(int offset_h, int offset_w, data_T sparse_ar
     if ((unsigned)(offset_h + R) >= ker_size || (unsigned)(offset_w + R) >= ker_size) {
         return (accum_T)0;
     }
-    ap_uint<4> row = R - offset_h;
-    ap_uint<4> col = R - offset_w;
-    ap_uint<7> pos = row * ker_size + col;
+    // Smallest functional widths for the given ker_size (compile-time):
+    //   row, col in [0, ker_size-1]          -> ceil(log2(ker_size)) bits
+    //   pos     in [0, ker_size*ker_size-1]  -> ceil(log2(ker_size*ker_size)) bits
+    static constexpr int ROW_BITS = _sp_ceillog2(ker_size);
+    static constexpr int POS_BITS = _sp_ceillog2(ker_size * ker_size);
+    ap_uint<ROW_BITS> row = R - offset_h;
+    ap_uint<ROW_BITS> col = R - offset_w;
+    ap_uint<POS_BITS> pos = row * ker_size + col;
 
     accum_T acc = 0;
 MultLoopPerFilter:
@@ -114,14 +157,21 @@ MultLoopPerFilter:
     return acc;
 }
 
+// Sparse convolution on the active pixels. Two independent parallelization knobs trade LUT for
+// latency without changing the output:
+//   pixel_parallel_factor : output pixels (N_sparse axis) computed per cycle. Default = N_sparse.
+//   filt_parallel_factor  : output filters (n_filt axis) computed per cycle. Default = n_filt.
+// Both loops use UNROLL factor (no PIPELINE: pipelining the outer loop would force-unroll the filter
+// loop and ignore filt_parallel_factor); inter-layer throughput comes from the top-level DATAFLOW.
+// accum_T accumulates the MACs; a single cast to res_T is applied at the store.
 template <class data_T, class res_T, class hash_T, class w_T, class b_T, class accum_T, int N_sparse, int n_chan, int n_filt,
-          int ker_size>
+          int ker_size, int pixel_parallel_factor = N_sparse, int filt_parallel_factor = n_filt>
 void sparse_conv(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_feat_out[N_sparse * n_filt],
                  hash_T sparse_arr_hash[N_sparse * 2], w_T w[ker_size * ker_size * n_chan * n_filt], b_T b[n_filt]) {
 
 OutputPixelLoop:
     for (int i_pixel_out = 0; i_pixel_out < N_sparse; i_pixel_out++) {
-        #pragma HLS UNROLL
+        #pragma HLS UNROLL factor = pixel_parallel_factor
 
         bool nonzero = false;
         for (int i_chan = 0; i_chan < n_chan; i_chan++) {
@@ -131,7 +181,7 @@ OutputPixelLoop:
 
     OutputFilterLoop:
         for (int i_filt = 0; i_filt < n_filt; i_filt++) {
-            #pragma HLS UNROLL
+            #pragma HLS UNROLL factor = filt_parallel_factor
             accum_T acc = 0;
 
         InputPixelLoop:
@@ -169,7 +219,12 @@ void sparse_relu(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_
     }
 }
 
-template <class data_T, class res_T, class hash_T, class accum_T, int N_sparse, int n_chan, int pool_size>
+// Sparse average pooling. Each pooled cell is emitted once -- by the lowest-indexed output pixel
+// mapping to it (the is_first test); duplicate pixels of the same cell emit 0. The averaging reads
+// only the input array (no scratch mutation), so it is safe to partially unroll. Two independent
+// knobs: pixel_parallel_factor (N_sparse axis) and chan_parallel_factor (n_chan axis).
+template <class data_T, class res_T, class hash_T, class accum_T, int N_sparse, int n_chan, int pool_size,
+          int pixel_parallel_factor = N_sparse, int chan_parallel_factor = n_chan>
 void sparse_pooling_avg(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_feat_out[N_sparse * n_chan],
                         hash_T sparse_arr_hash_in[N_sparse * 2], hash_T sparse_arr_hash_out[N_sparse * 2]) {
 
@@ -177,7 +232,7 @@ void sparse_pooling_avg(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T spar
     const ap_fixed<10, 0> pool_size_recip = _pool_size_recip_d;
 
     int hash_tmp[N_sparse * 2];
-#pragma HLS ARRAY_PARTITION variable = hash_tmp type = complete dim = 0
+    #pragma HLS ARRAY_PARTITION variable = hash_tmp type = complete dim = 0
 ComputePooledLoc:
     for (int i = 0; i < N_sparse; i++) {
         #pragma HLS UNROLL
@@ -185,22 +240,24 @@ ComputePooledLoc:
         hash_tmp[2 * i + 1] = (sparse_arr_hash_in[2 * i + 1] - 1) / pool_size + 1;
     }
 
-    data_T sparse_arr_feat_in_copy[N_sparse * n_chan];
-    #pragma HLS ARRAY_PARTITION variable = sparse_arr_feat_in_copy type = complete dim = 0
-    for (int i = 0; i < N_sparse * n_chan; i++) {
-        #pragma HLS UNROLL
-        sparse_arr_feat_in_copy[i] = sparse_arr_feat_in[i];
-    }
-
 HashOutLoop:
     for (int i_pixel = 0; i_pixel < N_sparse; i_pixel++) {
-        #pragma HLS UNROLL
+        #pragma HLS UNROLL factor = pixel_parallel_factor
         int h_out = hash_tmp[2 * i_pixel];
         int w_out = hash_tmp[2 * i_pixel + 1];
 
+        bool is_first = true;
+    FirstCheck:
+        for (int k = 0; k < N_sparse; k++) {
+            #pragma HLS UNROLL
+            if (k < i_pixel && hash_tmp[2 * k] == h_out && hash_tmp[2 * k + 1] == w_out) {
+                is_first = false;
+            }
+        }
+
     ChannelLoop:
         for (int i_chan = 0; i_chan < n_chan; i_chan++) {
-            #pragma HLS UNROLL
+            #pragma HLS UNROLL factor = chan_parallel_factor
             accum_T acc = 0;
 
         HashInLoop:
@@ -209,44 +266,109 @@ HashOutLoop:
                 int h_in = hash_tmp[2 * j_pixel];
                 int w_in = hash_tmp[2 * j_pixel + 1];
 
-                data_T data = sparse_arr_feat_in_copy[n_chan * j_pixel + i_chan];
                 if ((h_out == h_in) && (w_out == w_in)) {
-                    acc += data;
-                    sparse_arr_feat_in_copy[n_chan * j_pixel + i_chan] = 0;
+                    acc += sparse_arr_feat_in[n_chan * j_pixel + i_chan];
                 }
             }
-            sparse_arr_feat_out[n_chan * i_pixel + i_chan] = (res_T)(acc * pool_size_recip * pool_size_recip);
+            sparse_arr_feat_out[n_chan * i_pixel + i_chan] =
+                is_first ? (res_T)(acc * pool_size_recip * pool_size_recip) : (res_T)0;
         }
         sparse_arr_hash_out[2 * i_pixel] = h_out;
         sparse_arr_hash_out[2 * i_pixel + 1] = w_out;
     }
 }
 
-template <class data_T, class res_T, class hash_T, int n_height, int n_width, int n_chan, int N_sparse>
+// Sparse max pooling. Same structure as the average version (one emission per pooled cell via the
+// is_first test), but takes the per-channel maximum of the active pixels in the cell, floored at 0
+// to match dense max pooling over the zero-masked window. Two independent knobs:
+// pixel_parallel_factor (N_sparse axis) and chan_parallel_factor (n_chan axis).
+template <class data_T, class res_T, class hash_T, int N_sparse, int n_chan, int pool_size,
+          int pixel_parallel_factor = N_sparse, int chan_parallel_factor = n_chan>
+void sparse_pooling_max(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_feat_out[N_sparse * n_chan],
+                        hash_T sparse_arr_hash_in[N_sparse * 2], hash_T sparse_arr_hash_out[N_sparse * 2]) {
+
+    int hash_tmp[N_sparse * 2];
+    #pragma HLS ARRAY_PARTITION variable = hash_tmp type = complete dim = 0
+ComputePooledLoc:
+    for (int i = 0; i < N_sparse; i++) {
+        #pragma HLS UNROLL
+        hash_tmp[2 * i] = (sparse_arr_hash_in[2 * i] - 1) / pool_size + 1;
+        hash_tmp[2 * i + 1] = (sparse_arr_hash_in[2 * i + 1] - 1) / pool_size + 1;
+    }
+
+HashOutLoop:
+    for (int i_pixel = 0; i_pixel < N_sparse; i_pixel++) {
+        #pragma HLS UNROLL factor = pixel_parallel_factor
+        int h_out = hash_tmp[2 * i_pixel];
+        int w_out = hash_tmp[2 * i_pixel + 1];
+
+        bool is_first = true;
+    FirstCheck:
+        for (int k = 0; k < N_sparse; k++) {
+            #pragma HLS UNROLL
+            if (k < i_pixel && hash_tmp[2 * k] == h_out && hash_tmp[2 * k + 1] == w_out) {
+                is_first = false;
+            }
+        }
+
+    ChannelLoop:
+        for (int i_chan = 0; i_chan < n_chan; i_chan++) {
+            #pragma HLS UNROLL factor = chan_parallel_factor
+            data_T vmax = 0;
+
+        HashInLoop:
+            for (int j_pixel = 0; j_pixel < N_sparse; j_pixel++) {
+                #pragma HLS UNROLL
+                int h_in = hash_tmp[2 * j_pixel];
+                int w_in = hash_tmp[2 * j_pixel + 1];
+
+                data_T v = sparse_arr_feat_in[n_chan * j_pixel + i_chan];
+                if ((h_out == h_in) && (w_out == w_in) && (v > vmax)) {
+                    vmax = v;
+                }
+            }
+            sparse_arr_feat_out[n_chan * i_pixel + i_chan] = is_first ? (res_T)vmax : (res_T)0;
+        }
+        sparse_arr_hash_out[2 * i_pixel] = h_out;
+        sparse_arr_hash_out[2 * i_pixel + 1] = w_out;
+    }
+}
+
+// Scatters the sparse pixels back to a dense n_height * n_width * n_chan grid (the sparse->dense
+// transition before Dense layers). Implemented as a gather: each dense location is written exactly
+// once by scanning the sparse pixels for the one mapping to it (no data-dependent writes), so it is
+// safe to fully or partially unroll. parallel_factor = dense locations produced per cycle.
+template <class data_T, class res_T, class hash_T, int n_height, int n_width, int n_chan, int N_sparse,
+          int parallel_factor = n_height *n_width>
 void sparse_flatten(data_T sparse_arr_feat[N_sparse * n_chan], hash_T sparse_arr_hash[N_sparse * 2],
                     res_T flat_arr[n_height * n_width * n_chan]) {
 
-InitFlatArr:
-    for (int i = 0; i < n_height * n_width * n_chan; i++) {
+    int pix_idx[N_sparse];
+    #pragma HLS ARRAY_PARTITION variable = pix_idx type = complete dim = 0
+PixIdxLoop:
+    for (int i = 0; i < N_sparse; i++) {
         #pragma HLS UNROLL
-        flat_arr[i] = 0;
+        pix_idx[i] = (sparse_arr_hash[2 * i] - 1) * n_width + (sparse_arr_hash[2 * i + 1] - 1);
     }
 
-FillFlatArr:
-    for (int i = 0; i < N_sparse; i++) {
-        #pragma HLS UNROLL factor = 4
-        int i_h = sparse_arr_hash[2 * i];
-        int i_w = sparse_arr_hash[2 * i + 1];
-        int pixel_idx = (i_h - 1) * n_width + (i_w - 1);
+GatherLoop:
+    for (int p = 0; p < n_height * n_width; p++) {
+        #pragma HLS UNROLL factor = parallel_factor
 
     ChannelLoop:
         for (int i_chan = 0; i_chan < n_chan; i_chan++) {
             #pragma HLS UNROLL
-            data_T data = sparse_arr_feat[n_chan * i + i_chan];
+            res_T val = 0;
 
-            if (data != 0) {
-                flat_arr[n_chan * pixel_idx + i_chan] = (res_T)data;
+        ScanLoop:
+            for (int i = 0; i < N_sparse; i++) {
+                #pragma HLS UNROLL
+                data_T data = sparse_arr_feat[n_chan * i + i_chan];
+                if (pix_idx[i] == p && data != 0) {
+                    val = (res_T)data;
+                }
             }
+            flat_arr[n_chan * p + i_chan] = val;
         }
     }
 }

@@ -219,6 +219,30 @@ class QConv2DSparseHandler(KerasV3LayerHandler):
         return tuple(results)
 
 
+def _sparse_pooling_config(
+    in_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor'], pool_size: int, pool_op: str
+) -> dict[str, Any]:
+    """Shared config for the average/max sparse pooling handlers (differ only in pool_op)."""
+    feat_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
+    n_chan = int(feat_shape[-1])
+    n_sparse = _sparse_context.get('n_sparse', 0)
+
+    prev_h, prev_w = _sparse_context.get('spatial', (1, 1))
+    new_h, new_w = prev_h // pool_size, prev_w // pool_size
+    _sparse_context['spatial'] = (new_h, new_w)
+
+    for t in out_tensors:
+        _mark_sparse_output(t.name, n_sparse, n_chan, new_h, new_w)
+
+    return {
+        'class_name': 'SparsePooling2D',
+        'n_sparse': n_sparse,
+        'n_chan': n_chan,
+        'pool_size': pool_size,
+        'pool_op': pool_op,
+    }
+
+
 class AveragePooling2DSparseHandler(KerasV3LayerHandler):
     handles = ('sparsepixels.layers.AveragePooling2DSparse',)
 
@@ -228,23 +252,16 @@ class AveragePooling2DSparseHandler(KerasV3LayerHandler):
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
-        pool_size = int(layer.avg_pool.pool_size[0])
+        return _sparse_pooling_config(in_tensors, out_tensors, int(layer.avg_pool.pool_size[0]), 'avg')
 
-        feat_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
-        n_chan = int(feat_shape[-1])
-        n_sparse = _sparse_context.get('n_sparse', 0)
 
-        prev_h, prev_w = _sparse_context.get('spatial', (1, 1))
-        new_h, new_w = prev_h // pool_size, prev_w // pool_size
-        _sparse_context['spatial'] = (new_h, new_w)
+class MaxPooling2DSparseHandler(KerasV3LayerHandler):
+    handles = ('sparsepixels.layers.MaxPooling2DSparse',)
 
-        out_tensor_names = [t.name for t in out_tensors]
-        for t_name in out_tensor_names:
-            _mark_sparse_output(t_name, n_sparse, n_chan, new_h, new_w)
-
-        return {
-            'class_name': 'SparsePooling2D',
-            'n_sparse': n_sparse,
-            'n_chan': n_chan,
-            'pool_size': pool_size,
-        }
+    def handle(
+        self,
+        layer: 'keras.Layer',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        return _sparse_pooling_config(in_tensors, out_tensors, int(layer.max_pool.pool_size[0]), 'max')

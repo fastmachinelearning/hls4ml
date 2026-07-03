@@ -96,6 +96,15 @@ class SparseGraphOptimizer(OptimizerPass):
                     model.replace_node(n, new_node)
                     changed = True
 
+            else:
+                # Passthrough nodes inside the sparse region (e.g. an input quantizer that
+                # bit_exact has rendered as a linear activation) preserve the sparse pixel
+                # layout, so carry the hash variable and spatial dims to the next sparse layer.
+                if n.inputs and n.inputs[0] in hash_map:
+                    src = n.inputs[0]
+                    hash_map[name] = hash_map[src]
+                    spatial[name] = spatial.get(src)
+
         return changed
 
 
@@ -184,31 +193,42 @@ class SparseFlattenConfigTemplate(LayerConfigTemplate):
 
 #  Function-call templates
 
+# Input reduce: {fn} selects the tree (default) or the streaming implementation.
 sparse_input_reduce_function = (
     '{input_t} threshold_{index} = {threshold};\n'
     'ap_uint<{hash_bits}> {hash_out}[{n_sparse} * 2];\n'
     '#pragma HLS ARRAY_PARTITION variable={hash_out} complete dim=0\n'
-    'sparse_input_reduce<{input_t}, {output_t}, ap_uint<{hash_bits}>, {in_height}, {in_width}, {n_chan}, {n_sparse}>'
+    '{fn}<{input_t}, {output_t}, ap_uint<{hash_bits}>, {in_height}, {in_width}, {n_chan}, {n_sparse}>'
     '({input}, threshold_{index}, {output}, {hash_out});'
 )
 
+# The last two template args are the parallelization factors (default to full parallelism).
 sparse_conv2d_function = (
     'sparse_conv<{input_t}, {output_t}, ap_uint<{hash_bits}>, {weight_t}, {bias_t}, {accum_t_name}, '
-    '{n_sparse}, {n_chan}, {n_filt}, {kernel_size}>'
+    '{n_sparse}, {n_chan}, {n_filt}, {kernel_size}, {pixel_parallel_factor}, {filt_parallel_factor}>'
     '({input}, {output}, {hash_in}, {w}, {b});'
 )
 
 sparse_activation_function = 'sparse_relu<{input_t}, {output_t}, {n_sparse}, {n_chan}>({input}, {output});'
 
-sparse_pooling2d_function = (
-    'ap_uint<{hash_bits}> {hash_out}[{n_sparse} * 2];\n'
-    '#pragma HLS ARRAY_PARTITION variable={hash_out} complete dim=0\n'
-    'sparse_pooling_avg<{input_t}, {output_t}, ap_uint<{hash_bits}>, {accum_t_name}, {n_sparse}, {n_chan}, {pool_size}>'
+sparse_pooling2d_prefix = (
+    'ap_uint<{hash_bits}> {hash_out}[{n_sparse} * 2];\n#pragma HLS ARRAY_PARTITION variable={hash_out} complete dim=0\n'
+)
+# Average pooling takes an accum_t; max pooling does not. Both take the two parallelization factors.
+sparse_pooling2d_avg_call = (
+    'sparse_pooling_avg<{input_t}, {output_t}, ap_uint<{hash_bits}>, {accum_t_name}, '
+    '{n_sparse}, {n_chan}, {pool_size}, {pixel_parallel_factor}, {chan_parallel_factor}>'
+    '({input}, {output}, {hash_in}, {hash_out});'
+)
+sparse_pooling2d_max_call = (
+    'sparse_pooling_max<{input_t}, {output_t}, ap_uint<{hash_bits}>, '
+    '{n_sparse}, {n_chan}, {pool_size}, {pixel_parallel_factor}, {chan_parallel_factor}>'
     '({input}, {output}, {hash_in}, {hash_out});'
 )
 
 sparse_flatten_function = (
-    'sparse_flatten<{input_t}, {output_t}, ap_uint<{hash_bits}>, {out_height}, {out_width}, {n_chan}, {n_sparse}>'
+    'sparse_flatten<{input_t}, {output_t}, ap_uint<{hash_bits}>, {out_height}, {out_width}, {n_chan}, '
+    '{n_sparse}, {parallel_factor}>'
     '({input}, {hash_in}, {output});'
 )
 
@@ -240,6 +260,8 @@ class SparseInputReduceFunctionTemplate(FunctionCallTemplate):
         params['hash_bits'] = node.get_attr('hash_bits')
         params['threshold'] = node.get_attr('threshold')
         params['hash_out'] = node.get_attr('hash_out_name')
+        variant = node.get_attr('variant', 'tree')
+        params['fn'] = 'sparse_input_reduce_stream' if variant == 'stream' else 'sparse_input_reduce'
         return self.template.format(**params)
 
 
@@ -261,6 +283,8 @@ class SparseConv2DFunctionTemplate(FunctionCallTemplate):
         params['weight_t'] = node.get_weights('weight').type.name
         params['bias_t'] = node.get_weights('bias').type.name
         params['accum_t_name'] = node.get_attr('accum_t').name
+        params['pixel_parallel_factor'] = node.get_attr('pixel_parallel_factor') or params['n_sparse']
+        params['filt_parallel_factor'] = node.get_attr('filt_parallel_factor') or params['n_filt']
         return self.template.format(**params)
 
 
@@ -279,7 +303,7 @@ class SparseActivationFunctionTemplate(FunctionCallTemplate):
 class SparsePooling2DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(SparsePooling2D, include_header=sparsepixels_include)
-        self.template = sparse_pooling2d_function
+        self.template = sparse_pooling2d_prefix + sparse_pooling2d_avg_call
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -289,8 +313,14 @@ class SparsePooling2DFunctionTemplate(FunctionCallTemplate):
         params['hash_bits'] = _get_hash_bits(node)
         params['hash_in'] = node.get_attr('hash_in_name')
         params['hash_out'] = node.get_attr('hash_out_name')
-        params['accum_t_name'] = node.get_attr('accum_t').name
-        return self.template.format(**params)
+        params['pixel_parallel_factor'] = node.get_attr('pixel_parallel_factor') or params['n_sparse']
+        params['chan_parallel_factor'] = node.get_attr('chan_parallel_factor') or params['n_chan']
+        if node.get_attr('pool_op', 'avg') == 'max':
+            template = sparse_pooling2d_prefix + sparse_pooling2d_max_call
+        else:
+            template = sparse_pooling2d_prefix + sparse_pooling2d_avg_call
+            params['accum_t_name'] = node.get_attr('accum_t').name
+        return template.format(**params)
 
 
 class SparseFlattenFunctionTemplate(FunctionCallTemplate):
@@ -306,6 +336,7 @@ class SparseFlattenFunctionTemplate(FunctionCallTemplate):
         params['out_width'] = node.get_attr('out_width')
         params['hash_bits'] = _get_hash_bits(node)
         params['hash_in'] = node.get_attr('hash_in_name')
+        params['parallel_factor'] = node.get_attr('parallel_factor') or (params['out_height'] * params['out_width'])
         return self.template.format(**params)
 
 

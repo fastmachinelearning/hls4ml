@@ -223,6 +223,45 @@ def _(layer: SparsePooling2D):
 
 
 @_request_kif.register
+def _(layer: SparseInputReduce):
+    """Propagate the downstream precision request back to the dense model input.
+
+    The output is packed per (sparse pixel, channel); any input pixel may be selected into any
+    slot, so each input position must satisfy the max request over slots (per channel), broadcast
+    across the H*W input grid. Without this the untrusted model input keeps its maximal placeholder
+    precision, which downstream passes then collapse to a degenerate type (e.g. ap_ufixed<1,0>),
+    clamping the real inputs. See also the SparseFlatten dispatch below."""
+    n_chan = layer.attributes['n_chan']
+    n_sparse = layer.attributes['n_sparse']
+    in_shape = get_input_shapes(layer)[0]  # dense model input grid, channel-last
+    k, i, f = requested_kif(layer)
+
+    def to_in(a):
+        per_chan = a.reshape(n_sparse, n_chan).max(axis=0)
+        return np.broadcast_to(per_chan, in_shape).astype(np.int16)
+
+    return ((to_in(k), to_in(i), to_in(f)),)
+
+
+@_request_kif.register
+def _(layer: SparseFlatten):
+    """Map the flattened (dense) request back to the packed sparse input. Each sparse slot can
+    scatter to any spatial position, so its request is the max over positions (per channel). This
+    lets the request reach the SparseInputReduce (and hence the model input) when no quantizer sits
+    between them."""
+    n_chan = layer.attributes['n_chan']
+    n_sparse = layer.attributes['n_sparse']
+    n_pos = layer.attributes['out_height'] * layer.attributes['out_width']
+    k, i, f = requested_kif(layer)
+
+    def to_in(a):
+        per_chan = a.reshape(n_pos, n_chan).max(axis=0)
+        return np.tile(per_chan, n_sparse).astype(np.int16)
+
+    return ((to_in(k), to_in(i), to_in(f)),)
+
+
+@_request_kif.register
 def _(layer: DACombinational):
     comb = layer.attributes['da_comb_trace']
     k, i, f = comb.inp_kifs
@@ -757,11 +796,14 @@ def _(layer: SparseActivation):
 @_produce_kif.register
 def _(layer: SparsePooling2D):
     k_in, i_in, f_in = get_input_kifs(layer)[0]
-    # Average pooling divides by pool_size^2, adding fractional bits.
-    # Match standard Pooling2D: add ceil(log2(pool_size^2)) fractional bits.
+    # Average pooling divides by pool_size^2, which adds ceil(log2(pool_size^2)) fractional bits
+    # (matching standard Pooling2D). Max pooling just selects an input, so the precision is unchanged.
     pool_size = layer.attributes['pool_size']
     n_chan = layer.attributes['n_chan']
-    extra_f = int(np.ceil(np.log2(pool_size * pool_size)))
+    if layer.attributes.get('pool_op', 'avg') == 'max':
+        extra_f = 0
+    else:
+        extra_f = int(np.ceil(np.log2(pool_size * pool_size)))
     k_ch = k_in[:n_chan]
     i_ch = i_in[:n_chan]
     f_ch = f_in[:n_chan] + extra_f
