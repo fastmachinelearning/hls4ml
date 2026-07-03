@@ -249,7 +249,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         params = self._default_config_params(node)
-        params['type'] = node.get_attr('activation')
+        params['type'] = node.get_attr('activation').lower()
 
         if (params['type'] == 'softmax') or (params['type'] == 'softmax_multidim'):
             # If no table size is specified, assume default size of 1024
