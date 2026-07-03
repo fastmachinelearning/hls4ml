@@ -53,7 +53,7 @@ optional-dependencies.qkeras = [
 optional-dependencies.qkeras-v3 = [ "qkeras-v3" ]
 optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.snn = [ "snntorch", "torch" ]
-optional-dependencies.sparsepixels = [ "sparsepixels>=0.3.0" ]
+optional-dependencies.sparsepixels = [ "sparsepixels>=0.3" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [
   "calmjs-parse",
