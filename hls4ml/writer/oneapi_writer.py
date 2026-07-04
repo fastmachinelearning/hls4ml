@@ -738,10 +738,6 @@ class OneAPIWriter(Writer):
                     ac_type = layer.get_attr('inp_norm_t')
                     fp_bits = ac_type.precision.integer + ac_type.precision.fractional
                     fp_integer = ac_type.precision.integer
-                    fp_signed = ac_type.precision.signed
-
-                    if fp_signed is True:
-                        raise Exception('Softmax types need to be unsigned')
 
                     # Copy scaling from attributes
                     scale = (
@@ -758,6 +754,8 @@ class OneAPIWriter(Writer):
                     sep = ''
                     # Use the top bits if table_size < 2**bit_width
                     for i in range(table_size):
+                        # Norm type is always > 1 so if input quantiser is set to be signed for any reason,
+                        # force unsigned but keep the width
                         f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
                         b = uint_to_binary(i, N)
                         f.set_msb_bits(b)
@@ -799,10 +797,6 @@ class OneAPIWriter(Writer):
                     ac_type = layer.get_attr('inv_inp_t')
                     fp_bits = ac_type.precision.integer + ac_type.precision.fractional
                     fp_integer = ac_type.precision.integer
-                    fp_signed = ac_type.precision.signed
-
-                    if fp_signed is True:
-                        raise Exception('Softmax types need to be unsigned')
 
                     N = ceil_log2(table_size)
                     if N > 2**fp_bits:
@@ -812,7 +806,8 @@ class OneAPIWriter(Writer):
                     # Use the top bits if table_size < 2**bit_width
                     sep = ''
                     for i in range(table_size):
-                        # ALWAYS ASSUME ALL TYPES HERE ARE UNSIGNED
+                        # Norm type is always > 1 so if input quantiser is set to be signed for any reason,
+                        # force unsigned but keep the width
                         f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
                         b = uint_to_binary(i, N)
                         f.set_msb_bits(b)

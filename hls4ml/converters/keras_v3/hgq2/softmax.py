@@ -20,7 +20,6 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False, fo
     if force_unsigned:
         k = 0.0
         i += 1.0
-        f += 1.0
 
     k = ops.convert_to_numpy(k)
     i = ops.convert_to_numpy(i)
