@@ -30,7 +30,7 @@ test_path = Path(__file__).parent
 
 
 def _run_synth_match_test(proxy: keras.Model, data, io_type: str, backend: str, dir: str, cond=None, strategy='latency'):
-    output_dir = dir + '/hls4ml_prj'
+    output_dir = dir
     hls_model = convert_from_keras_model(
         proxy,
         io_type=io_type,
@@ -175,12 +175,14 @@ def custom_activation_fn(x):
 @pytest.mark.parametrize('cover_factor', [1.0])
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
-def test_syn_hlayers(layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
+def test_syn_hlayers(
+    test_case_id, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+):
     model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 16), 7, 1)
 
     cond = None if 'softmax' not in layer else softmax_cond
-    path = test_path / f'hls4mlprj_hgq_{layer}_{rnd_strategy}_{io_type}_{aggressive}_{backend}'
+    path = test_path / test_case_id
 
     run_model_test(model, cover_factor, data, io_type, backend, str(path), aggressive, cond=cond)
 
@@ -202,11 +204,13 @@ def test_syn_hlayers(layer, N: int, rnd_strategy: str, io_type: str, cover_facto
 @pytest.mark.parametrize('cover_factor', [1.0])
 @pytest.mark.parametrize('aggressive', [True, False])
 @pytest.mark.parametrize('backend', ['vivado', 'vitis'])
-def test_syn_hlayers_da(layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str):
+def test_syn_hlayers_da(
+    test_case_id, layer, N: int, rnd_strategy: str, io_type: str, cover_factor: float, aggressive: bool, backend: str
+):
     model = create_hlayer_model(layer=layer, rnd_strategy=rnd_strategy, io_type=io_type)
     data = get_data((N, 16), 7, 1)
 
-    path = test_path / f'hls4mlprj_hgq_da_{layer}_{rnd_strategy}_{io_type}_{aggressive}_{backend}_distributed_arithmetic'
+    path = test_path / test_case_id
 
     run_model_test(
         model=model,

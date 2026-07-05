@@ -31,7 +31,7 @@ def fusion_data():
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-def test_batchnorm(data, backend, io_type):
+def test_batchnorm(test_case_id, data, backend, io_type):
     model = nn.Sequential(
         nn.BatchNorm1d(in_shape),
     ).to()
@@ -42,7 +42,7 @@ def test_batchnorm(data, backend, io_type):
     config = hls4ml.utils.config_from_pytorch_model(
         model, (in_shape,), default_precision=default_precision, granularity='name', backend=backend
     )
-    output_dir = str(test_root_path / f'hls4mlprj_batchnorm_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model, backend=backend, hls_config=config, io_type=io_type, output_dir=output_dir
     )
@@ -80,7 +80,7 @@ class BatchNorm_w_Fusion(nn.Module):
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-def test_batchnorm_fusion(fusion_data, backend, io_type):
+def test_batchnorm_fusion(test_case_id, fusion_data, backend, io_type):
     n_in = 2
     momentum = 0.99
     size_in_height = 32
@@ -107,7 +107,7 @@ def test_batchnorm_fusion(fusion_data, backend, io_type):
     config['Model']['Strategy'] = 'Resource'
 
     # conversion
-    output_dir = str(test_root_path / f'hls4mlprj_block_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_pytorch_model(
         model,
         hls_config=config,

@@ -5,6 +5,7 @@ The Precision types are given names for convenience (``NamedType``). Named types
 higher-dimensional tensors, which are defined as arrays or FIFO streams in the generated code.
 """
 
+import math
 from enum import Enum
 
 import numpy as np
@@ -665,6 +666,17 @@ class InplaceTensorVariable(TensorVariable):
         return cls(tv, input_var)
 
 
+class StructWrapperVariable(TensorVariable):
+    def __init__(self, tv):
+        self.__dict__.update(tv.__dict__)
+        self.struct_name = tv.type.name[:-1] + 'array_t'
+
+    @classmethod
+    def deserialize(cls, state):
+        tv = TensorVariable.deserialize(state)
+        return cls(tv)
+
+
 class WeightVariable(Variable):
     """Class representing a tensor containing the weights of a layer.
 
@@ -826,7 +838,7 @@ class ExponentWeightVariable(WeightVariable):
 
     def __iter__(self):
         data = self._format()
-        self._iterator = iter(data.reshape((np.product(data.shape[:-1]), 2)))
+        self._iterator = iter(data.reshape((math.prod(data.shape[:-1]), 2)))
         return self
 
     def __next__(self):

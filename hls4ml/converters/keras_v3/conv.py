@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from math import ceil
 from typing import Any
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     import keras
@@ -75,7 +75,6 @@ def gen_conv_config(
     return config
 
 
-@register
 class ConvHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.convolutional.conv1d.Conv1D',

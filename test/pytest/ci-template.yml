@@ -42,7 +42,7 @@
         coverage_format: cobertura
         path: test/pytest/coverage.xml
     paths:
-      - test/pytest/hls4mlprj*.tar.gz
+      - test/pytest/*.tar.gz
       - test/pytest/synthesis_report_*.json
 
 .pytest-keras3-only:
@@ -50,3 +50,9 @@
   variables:
     CONDA_ENV: "hls4ml-testing-keras3"
     EXTRA_DEPS: "[da,testing,testing-keras3,sr]"
+
+.pytest-qkeras-v3-only:
+  extends: .pytest
+  variables:
+    CONDA_ENV: "hls4ml-testing-keras3"
+    EXTRA_DEPS: "[qkeras-v3]"
