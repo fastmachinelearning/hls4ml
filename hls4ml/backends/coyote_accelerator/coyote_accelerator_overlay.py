@@ -62,7 +62,7 @@ class CoyoteOverlay:
         """
         if len(X.shape) == 1:
             X = np.array([X])
-        if not (isinstance(X.dtype, float) or isinstance(X.dtype, np.float32)):
+        if not np.issubdtype(X.dtype, np.floating):
             logging.warning('CoyoteOverlay only supports (for now) floating-point inputs; casting input data to float')
             X = X.astype(np.float32)
         y = np.empty((len(X), *y_shape))
