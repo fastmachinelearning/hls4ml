@@ -135,7 +135,7 @@ class CoyoteBackend(VitisBackend):
             f'-DEN_HLS_COSIM={int(cosim)} '
             f'-DEN_HLS_VALIDATION={int(validation)} '
             f'-DHLS_CLOCK_PERIOD={hls_clock_period} '
-            f'-DHLS_CLOCK_UNCERTAINTY="{str(hls_clock_uncertainty)}%"'
+            f'-DHLS_CLOCK_UNCERTAINTY={int(hls_clock_uncertainty)}'
         )
 
         os.makedirs(hw_build_dir, exist_ok=True)
