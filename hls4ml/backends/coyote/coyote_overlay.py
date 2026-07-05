@@ -23,7 +23,7 @@ class CoyoteOverlay:
 
         # Set up dynamic C library
         self.coyote_lib = ctypes.cdll.LoadLibrary(
-            f'{self.path}/build/{self.project_name}_cyt_sw/lib/libCoyoteInference.so'
+            f'{self.path}/build/{self.project_name}_cyt_sw/libCoyoteInference.so'
         )
 
         self.coyote_lib.init_model_inference.argtypes = [ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]

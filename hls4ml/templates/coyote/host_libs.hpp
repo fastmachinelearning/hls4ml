@@ -2,8 +2,8 @@
 #define HOST_LIBS_HPP_
 
 #include <vector>
-#include "cOps.hpp"
-#include "cThread.hpp"
+#include <coyote/cOps.hpp>
+#include <coyote/cThread.hpp>
 
 // Coyote uses so-called vFPGAs: individual applications running in parallel on the FPGA
 // Users can deploy multiple vFPGAs on the same hardware, each with its own application
