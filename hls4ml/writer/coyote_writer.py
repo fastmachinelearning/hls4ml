@@ -18,11 +18,8 @@ class CoyoteWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model
         """
-        if not os.path.exists(f'{model.config.get_output_dir()}/Coyote'):
-            filedir = os.path.dirname(os.path.abspath(__file__))
-            srcpath = os.path.join(filedir, '../contrib/Coyote/')
-            dstpath = f'{model.config.get_output_dir()}/Coyote'
-            copytree(srcpath, dstpath)
+        filedir = Path(__file__).parent
+        copytree(filedir / '../contrib/Coyote/', Path(model.config.get_output_dir()) / 'Coyote', dirs_exist_ok=True)
 
     def restructure_dir(self, model):
         """
@@ -53,10 +50,13 @@ class CoyoteWriter(VitisWriter):
             model (ModelGraph): the hls4ml model
         """
 
-        filedir = os.path.dirname(os.path.abspath(__file__))
+        filedir = Path(__file__).parent
 
-        f = open(os.path.join(filedir, '../templates/vivado/firmware/myproject.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}.cpp', 'w')
+        src_path = (filedir / '../templates/vivado/firmware/myproject.cpp').resolve()
+        dst_path = Path(model.config.get_output_dir()) / 'firmware' / f'{model.config.get_project_name()}.cpp'
+        with open(src_path) as f:
+            lines = f.readlines()
+        fout_lines = []
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
@@ -64,7 +64,7 @@ class CoyoteWriter(VitisWriter):
 
         indent = '    '
 
-        for line in f.readlines():
+        for line in lines:
             # Add headers to weights and biases
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
@@ -178,10 +178,10 @@ class CoyoteWriter(VitisWriter):
             else:
                 newline = line
 
-            fout.write(newline)
+            fout_lines.append(newline)
 
-        f.close()
-        fout.close()
+        with open(dst_path, 'w') as fout:
+            fout.writelines(fout_lines)
 
     def write_nnet_utils_overrides(self, model):
         """
@@ -261,25 +261,26 @@ class CoyoteWriter(VitisWriter):
         copyfile(srcpath, dstpath)
 
         # model_wrapper.cpp
-        f = open(os.path.join(filedir, '../templates/coyote/model_wrapper.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/src/hls/model_wrapper/model_wrapper.cpp', 'w')
+        src_path = (filedir / '../templates/coyote/model_wrapper.cpp').resolve()
+        dst_path = Path(model.config.get_output_dir()) / 'src/hls/model_wrapper/model_wrapper.cpp'
+        with open(src_path) as f:
+            lines = f.readlines()
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         if len(model_inputs) > 1 or len(model_outputs) > 1:
             raise RuntimeError('Coyote backend currently only supports one input and one output')
 
-        for line in f.readlines():
+        fout_lines = []
+        for line in lines:
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
 
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = ''
-                io_type = model.config.get_config_value('IOType')
-
                 for inp in model_inputs:
-                    newline += indent + inp.definition_cpp() + ';\n'      
+                    newline += indent + inp.definition_cpp() + ';\n'
                     newline += indent + self._make_array_pragma(inp) + '\n\n'
                     
                 for out in model_outputs:
@@ -303,11 +304,11 @@ class CoyoteWriter(VitisWriter):
 
             else:
                 newline = line
-            
-            fout.write(newline)
-        
-        f.close()
-        fout.close()
+
+            fout_lines.append(newline)
+
+        with open(dst_path, 'w') as fout:
+            fout.writelines(fout_lines)
 
         # vfpga_top.svh
         srcpath = (filedir / '../templates/coyote/vfpga_top.svh').resolve()
@@ -336,15 +337,18 @@ class CoyoteWriter(VitisWriter):
             os.makedirs(f'{model.config.get_output_dir()}/src/')
 
         # myproject_host.cpp
-        f = open(os.path.join(filedir, '../templates/coyote/myproject_host.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/src/{model.config.get_project_name()}_host.cpp', 'w')
+        src_path = (filedir / '../templates/coyote/myproject_host.cpp').resolve()
+        dst_path = Path(model.config.get_output_dir()) / 'src' / f'{model.config.get_project_name()}_host.cpp'
+        with open(src_path) as f:
+            lines = f.readlines()
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         if len(model_inputs) > 1 or len(model_outputs) > 1:
             raise RuntimeError('Coyote backend currently only supports one input and one output')
 
-        for line in f.readlines():
+        fout_lines = []
+        for line in lines:
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
             if '// hls-fpga-machine-learning insert I/O size' in line:
@@ -356,21 +360,23 @@ class CoyoteWriter(VitisWriter):
             
             else:
                 newline = line
-            
-            fout.write(newline)
 
-        f.close()
-        fout.close()
+            fout_lines.append(newline)
+
+        with open(dst_path, 'w') as fout:
+            fout.writelines(fout_lines)
 
         # host_libs.hpp
-        srcpath = os.path.join(filedir, '../templates/coyote/host_libs.hpp')
-        dstpath = f'{model.config.get_output_dir()}/src/host_libs.hpp'
-        copyfile(srcpath, dstpath)
+        copyfile(
+            (filedir / '../templates/coyote/host_libs.hpp').resolve(), 
+            Path(model.config.get_output_dir()) / 'src/host_libs.hpp'
+        )
 
         # host_libs.cpp
-        srcpath = os.path.join(filedir, '../templates/coyote/host_libs.cpp')
-        dstpath = f'{model.config.get_output_dir()}/src/host_libs.cpp'
-        copyfile(srcpath, dstpath)
+        copyfile(
+            (filedir / '../templates/coyote/host_libs.cpp').resolve(), 
+            Path(model.config.get_output_dir()) / 'src/host_libs.cpp'
+        )
 
     def __make_dat_file(self, original_path, project_path):
         """
@@ -409,10 +415,9 @@ class CoyoteWriter(VitisWriter):
         Args:
             model (ModelGraph): the hls4ml model
         """
-        filedir = os.path.dirname(os.path.abspath(__file__))
+        filedir = Path(__file__).parent
 
-        if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
-            os.mkdir(f'{model.config.get_output_dir()}/tb_data/')
+        os.makedirs(f'{model.config.get_output_dir()}/tb_data/', exist_ok=True)
 
         input_data = model.config.get_config_value('InputData')
         output_predictions = model.config.get_config_value('OutputPredictions')
@@ -431,15 +436,18 @@ class CoyoteWriter(VitisWriter):
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
         
-        f = open(os.path.join(filedir, '../templates/coyote/myproject_test.cpp'))
-        fout = open(f'{model.config.get_output_dir()}/src/{model.config.get_project_name()}_test.cpp', 'w')
+        src_path = (filedir / '../templates/coyote/myproject_test.cpp').resolve()
+        dst_path = Path(model.config.get_output_dir()) / 'src' / f'{model.config.get_project_name()}_test.cpp'
+        with open(src_path) as f:
+            lines = f.readlines()
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         if len(model_inputs) > 1 or len(model_outputs) > 1:
             raise RuntimeError('Coyote backend currently only supports one input and one output')
 
-        for line in f.readlines():
+        fout_lines = []
+        for line in lines:
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
             if 'myproject' in line:
@@ -498,9 +506,11 @@ class CoyoteWriter(VitisWriter):
 
             else:
                 newline = line
-            fout.write(newline)
-        f.close()
-        fout.close()
+
+            fout_lines.append(newline)
+
+        with open(dst_path, 'w') as fout:
+            fout.writelines(fout_lines)
 
     def write_hls(self, model):
         """

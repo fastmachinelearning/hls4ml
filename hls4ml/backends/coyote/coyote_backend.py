@@ -119,7 +119,8 @@ class CoyoteBackend(VitisBackend):
 
         TODO: Add functionality to parse synthesis reports
         """
-        curr_dir = os.getcwd()
+        hw_build_dir = f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_hw'
+        sw_build_dir = f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_sw'
 
         # Synthesize hardware
         cmake_cmd = (
@@ -137,26 +138,18 @@ class CoyoteBackend(VitisBackend):
             f'-DHLS_CLOCK_UNCERTAINTY="{str(hls_clock_uncertainty)}%"'
         )
 
-        if not os.path.exists(f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_hw'):
-            os.mkdir(f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_hw')
-        os.chdir(f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_hw')
-        os.system(cmake_cmd)
+        os.makedirs(hw_build_dir, exist_ok=True)
+        subprocess.run(cmake_cmd, shell=True, cwd=hw_build_dir, check=True)
 
         if bitfile:
-            os.system('make project && make bitgen')
+            subprocess.run('make project && make bitgen', shell=True, cwd=hw_build_dir, check=True)
         elif csynth:
-            os.system('make project && make synth')
+            subprocess.run('make project && make synth', shell=True, cwd=hw_build_dir, check=True)
         else:
-            os.system('make project')
-            
-        os.chdir(curr_dir)
-        
+            subprocess.run('make project', shell=True, cwd=hw_build_dir, check=True)
+
         # Compile host software
-        cmake_cmd = 'cmake ../../ -DFLOW=sw'
-        if not os.path.exists(f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_sw'):
-            os.mkdir(f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_sw')
-        os.chdir(f'{model.config.get_output_dir()}/build/{model.config.get_project_name()}_cyt_sw')
-        os.system(cmake_cmd)
-        os.system('make')
-        os.chdir(curr_dir)
+        os.makedirs(sw_build_dir, exist_ok=True)
+        subprocess.run('cmake ../../ -DFLOW=sw', shell=True, cwd=sw_build_dir, check=True)
+        subprocess.run('make', shell=True, cwd=sw_build_dir, check=True)
 

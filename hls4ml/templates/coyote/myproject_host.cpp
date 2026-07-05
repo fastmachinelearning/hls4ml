@@ -24,11 +24,15 @@ std::string default_path("../../tb_data/");
 int main(int argc, char **argv) {
     std::string data_path;
     unsigned int batch_size;
+    bool verify;
+    bool verbose;
 
     boost::program_options::options_description runtime_options("Coyote hls4ml run-time options");
     runtime_options.add_options()
         ("batch_size,b", boost::program_options::value<unsigned int>(&batch_size)->default_value(1), "Inference batch size")
-        ("data_path,p", boost::program_options::value<std::string>(&data_path)->default_value(default_path), "Path to tb_data folder with input/output features for validation");
+        ("data_path,p", boost::program_options::value<std::string>(&data_path)->default_value(default_path), "Path to tb_data folder with input/output features for validation")
+        ("verify,c", boost::program_options::bool_switch(&verify)->default_value(false), "Verify predictions against csim_results.log")
+        ("verbose,v", boost::program_options::bool_switch(&verbose)->default_value(true), "Print latency and throughput statistics");
     boost::program_options::variables_map command_line_arguments;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, runtime_options), command_line_arguments);
     boost::program_options::notify(command_line_arguments);
@@ -84,11 +88,13 @@ int main(int argc, char **argv) {
                 avg_throughput += (batch_size / (time * 1e-9));
                 
                 // Functional correctness
-                for (int i = 0; i < batch_size; i++) { 
-                    float *pred = model.get_predictions(i);
-                    for (int j = 0; j < out_size; j++) {
-                        assert(int(10000.0 * labels[i][j]) == int(10000.0 * pred[j])); 
-                    } 
+                if (verify) {
+                    for (int i = 0; i < batch_size; i++) {
+                        float *pred = model.get_predictions(i);
+                        for (int j = 0; j < out_size; j++) {
+                            assert(int(10000.0 * labels[i][j]) == int(10000.0 * pred[j]));
+                        }
+                    }
                 }
                 
                 // Reset for next batch
@@ -99,9 +105,11 @@ int main(int argc, char **argv) {
 
         }
 
-        std::cout << "Batches processed: " << total_batches << std::endl;
-        std::cout << "Average latency: " << avg_latency / (double) total_batches << " us" << std::endl;
-        std::cout << "Average throughput: " << avg_throughput / (double) total_batches << " inferences/s" << std::endl;
+        if (verbose) {
+            std::cout << "Batches processed: " << total_batches << std::endl;
+            std::cout << "Average latency: " << avg_latency / (double) total_batches << " us" << std::endl;
+            std::cout << "Average throughput: " << avg_throughput / (double) total_batches << " inferences/s" << std::endl;
+        }
 
         fin.close();
         fpr.close();

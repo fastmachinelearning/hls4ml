@@ -51,7 +51,7 @@ class CoyoteOverlay:
             f'bash program_hacc_local.sh ../../build/{self.project_name}_cyt_hw/bitstreams/cyt_top.bit ../driver/build/coyote_driver.ko'
         )
 
-    def predict(self, X: np.array, y_shape: tuple, batch_size: int = 1):
+    def predict(self, X: np.array, y_shape: tuple, batch_size: int = 1, verbose: bool = True):
         """
         Run model inference
 
@@ -97,8 +97,9 @@ class CoyoteOverlay:
                 total_batches += 1
 
         self.coyote_lib.free_model_inference(model)
-        print(f'Batch size: {batch_size}; batches processed: {total_batches}')
-        print(f'Mean latency: {round(avg_latency / total_batches, 3)}us (inference only)')
-        print(f'Mean throughput: {round(avg_throughput / total_batches, 1)} samples/s (inference only)')
+        if verbose:
+            print(f'Batch size: {batch_size}; batches processed: {total_batches}')
+            print(f'Mean latency: {round(avg_latency / total_batches, 3)}us (inference only)')
+            print(f'Mean throughput: {round(avg_throughput / total_batches, 1)} samples/s (inference only)')
 
         return y 

@@ -104,6 +104,7 @@ functon to load the model bitstream and driver for some clusters. On others, the
 For guidance, see the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
 
 .. note:: To use the Coyote backend, hls4ml must be cloned with submodules using ``git clone --recurse-submodules``.
+   Additionally, a full Vivado/Vitis installation is required to synthesize the hardware and compile the host software.
 
 C++ binary
 ================================
@@ -140,7 +141,7 @@ The ``predict`` method will send the input data to the FPGA and return the outpu
 
 .. code-block:: Python
 
-    from hls4ml.backends.coyote.coyote_overlay import CoyoteOverlay
+    from hls4ml.backends.coyote import CoyoteOverlay
 
     overlay = CoyoteOverlay('hls4ml_prj_coyote')
     y_hw = overlay.predict(x, (1, ), BATCH_SIZE)
