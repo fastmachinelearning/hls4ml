@@ -9,6 +9,15 @@ type RoundingMode = fixed_point_util::RoundingMode;
 type OverflowMode = fixed_point_util::OverflowMode;
 type LookupTable = lookup_table::LookupTable;
 
+pub fn linear
+    <NB_OUT: u32, BE_OUT: s32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode,
+    NB_IN: u32, BE_IN: s32, DIM: u32>
+(
+    x: FixedPoint<NB_IN, BE_IN>[DIM]
+) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
+
+    fixed_point_util::resize_1d<NB_OUT, BE_OUT, ROUNDING, OVERFLOW>(x)
+}
 
 // =========================================================================
 // --------------------------------- ReLU ----------------------------------
