@@ -71,7 +71,7 @@ def build_table(
         raw_log2_step = math.ceil(math.log2((raw_x_max - raw_x_min) / (table_size - 1)))
         if raw_log2_step < 0:
             raw_log2_step = 0
-        raw_step = 2 ** raw_log2_step
+        raw_step = 2**raw_log2_step
         f_min = raw_func(raw_x_min)
         f_max = raw_func(raw_x_max)
         raw_range = list(range(raw_x_min, raw_x_max + 1, raw_step))
@@ -137,11 +137,13 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
             exp_table_range = LookupTableRange.NON_NEGATIVE
         case 'latency':
             exp_name = 'EXP_TABLE'
+
             def exp_func(x):
                 # avoid OverflowError
                 if x > EXP_ARG_MAX:
                     return sys.float_info.max
                 return math.exp(x)
+
             # Arguments of exp_func are x_i, which can be both positive and negative
             exp_table_range = LookupTableRange.FULL
         case _:

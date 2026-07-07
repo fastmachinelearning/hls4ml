@@ -34,7 +34,10 @@ class TransformTypes(GlobalOptimizerPass):
                 if out_name in node.outputs:
                     precision = new_var.type.precision
                     if not precision.signed:
-                        warn_msg = f'WARNING: {{}} variable "{out_name}": unsigned type: {precision} will be converted to signed XLS type: {precision.xls_definition()}'
+                        warn_msg = (
+                            f'WARNING: {{}} variable "{out_name}": unsigned type: {precision} will be '
+                            f'converted to signed XLS type: {precision.xls_definition()}'
+                        )
                         if node.name in model.inputs:
                             warn(warn_msg.format('input'))
                         if node.name in model.outputs:
