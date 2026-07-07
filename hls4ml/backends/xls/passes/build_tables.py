@@ -1,6 +1,8 @@
 # Typing imports
 from __future__ import annotations  # makes all annotations into strings
 
+import math
+import sys
 import warnings
 from collections.abc import Callable
 from copy import copy
@@ -13,14 +15,11 @@ from hls4ml.backends.xls.xls_types import (
     XLSLookupTableDefinition,
     float_to_significand,
 )
+from hls4ml.model.optimizer import OptimizerPass
 
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
     from hls4ml.model.layers import Layer
-
-import math
-
-from hls4ml.model.optimizer import OptimizerPass
 
 
 class LookupTableRange(Enum):
@@ -72,7 +71,7 @@ def build_table(
         raw_log2_step = math.ceil(math.log2((raw_x_max - raw_x_min) / (table_size - 1)))
         if raw_log2_step < 0:
             raw_log2_step = 0
-        raw_step = 2**raw_log2_step
+        raw_step = 2 ** raw_log2_step
         f_min = raw_func(raw_x_min)
         f_max = raw_func(raw_x_max)
         raw_range = list(range(raw_x_min, raw_x_max + 1, raw_step))
@@ -123,6 +122,8 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
     input_precision = node.get_input_variable().type.precision
     exp_in = copy(input_precision)
     exp_out = node.get_attr('exp_table_t').precision
+
+    EXP_ARG_MAX = math.log(sys.float_info.max)
     match implementation:
         case 'stable':
             exp_in.width += 1
@@ -136,7 +137,11 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
             exp_table_range = LookupTableRange.NON_NEGATIVE
         case 'latency':
             exp_name = 'EXP_TABLE'
-            exp_func = math.exp
+            def exp_func(x):
+                # avoid OverflowError
+                if x > EXP_ARG_MAX:
+                    return sys.float_info.max
+                return math.exp(x)
             # Arguments of exp_func are x_i, which can be both positive and negative
             exp_table_range = LookupTableRange.FULL
         case _:
@@ -181,7 +186,7 @@ def build_activation_table(node: Layer) -> XLSLookupTableDefinition:
 
             def func(x):
                 assert x < 0, f'Building ELU table only for x < 0, got {x}'
-                return alpha * (math.exp(x) - 1)
+                return alpha * math.expm1(x)
         case 'selu':
             table_range = LookupTableRange.NEGATIVE
             alpha = 1.6732632423543772848170429916717
@@ -189,12 +194,15 @@ def build_activation_table(node: Layer) -> XLSLookupTableDefinition:
 
             def func(x):
                 assert x < 0, f'Building ELU table only for x < 0, got {x}'
-                return scale * alpha * (math.exp(x) - 1)
+                return scale * alpha * math.expm1(x)
         case 'softplus':
             table_range = LookupTableRange.FULL
 
             def func(x):
-                return math.log(1 + math.exp(x))
+                # log(1 + exp(x)), avoid overflow
+                if x > 0:
+                    return x + math.log1p(math.exp(-x))
+                return math.log1p(math.exp(x))
         case 'softsign':
             table_range = LookupTableRange.NON_NEGATIVE
 
@@ -209,7 +217,11 @@ def build_activation_table(node: Layer) -> XLSLookupTableDefinition:
             table_range = LookupTableRange.FULL
 
             def func(x):
-                return 1 / (1 + math.exp(-x))
+                # 1 / (1 + exp(-x)), avoid overflow
+                if x < 0:
+                    z = math.exp(x)
+                    return z / (1.0 + z)
+                return 1.0 / (1.0 + math.exp(-x))
         case _:
             raise ValueError(f'Unknown activation={activation}')
 
