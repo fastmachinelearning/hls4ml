@@ -48,4 +48,4 @@ I/O Types and Strategy
 Currently, only ``io_parallel`` is supported. ``Strategy`` is ignored.
 All operations are fully unrolled.
 
-XLS supports only signed ``FixedPoint`` type (similar to ``ap_fixed``).
+Since XLS supports only signed ``FixedPoint`` type (similar to ``ap_fixed``), all unsigned types are converted to signed types (with extra bit added).
