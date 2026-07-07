@@ -1,4 +1,5 @@
 # from hls4ml.backends.xls.xls_types import ()
+from warnings import warn
 
 from hls4ml.backends.xls.xls_types import (
     XLSInterfaceVarConverter,
@@ -25,6 +26,19 @@ class TransformTypes(GlobalOptimizerPass):
             else:
                 new_var = self.var_converter.convert(var)
             node.set_attr(out_name, new_var)
+
+            # Print warnings if model inputs or outputs have unsigned types.
+            # XLS converts unsigned types to signed types.
+            # Note that we do not print warnings for internal variables.
+            if node.name in model.inputs or node.name in model.outputs:
+                if out_name in node.outputs:
+                    precision = new_var.type.precision
+                    if not precision.signed:
+                        warn_msg = f'WARNING: {{}} variable "{out_name}": unsigned type: {precision} will be converted to signed XLS type: {precision.xls_definition()}'
+                        if node.name in model.inputs:
+                            warn(warn_msg.format('input'))
+                        if node.name in model.outputs:
+                            warn(warn_msg.format('output'))
 
         for w_name, weight in node.weights.items():
             new_weight = self.weight_var_converter.convert(weight_var=weight, node=node, weights_key=w_name)
