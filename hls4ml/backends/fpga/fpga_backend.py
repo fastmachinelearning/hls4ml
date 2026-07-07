@@ -150,9 +150,7 @@ class FPGABackend(Backend):
             ),
             TypeAttribute(
                 'inp_norm',
-                default=FixedPrecisionType(
-                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
-                ),
+                default=UnspecifiedPrecisionType(),
                 description='The internal width used for the exp table lookup (only in stable)',
             ),
             TypeAttribute('accum', description=descriptions.accum_type),

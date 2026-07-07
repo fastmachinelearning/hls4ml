@@ -626,6 +626,13 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             node.types['accum_t'].precision = FixedPrecisionType(exp_w + ceillog, exp_i + ceillog, signed=exp_s)
             inferred_types.append('accum_t')
 
+        if 'inp_norm_t' in types_to_infer:
+            in_type = node.get_input_variable().type.precision
+            inp_norm_width = in_type.width - in_type.signed
+            inp_norm_int = in_type.integer - in_type.signed
+            node.types['inp_norm_t'].precision = FixedPrecisionType(inp_norm_width, inp_norm_int, signed=False)
+            inferred_types.append('inp_norm_t')
+
         return inferred_types
 
 
