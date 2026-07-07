@@ -7,8 +7,12 @@ from copy import copy
 from enum import Enum
 from typing import TYPE_CHECKING, Literal
 
-from hls4ml.backends.xls.xls_types import XLSFixedPoint, XLSFixedPointType, XLSLookupTable, float_to_significand
-from hls4ml.model.types import FixedPrecisionType
+from hls4ml.backends.xls.xls_types import (
+    XLSFixedPointDefinition,
+    XLSFixedPointPrecisionDefinitionBase,
+    XLSLookupTableDefinition,
+    float_to_significand,
+)
 
 if TYPE_CHECKING:
     from hls4ml.model.graph import ModelGraph
@@ -29,20 +33,20 @@ def build_table(
     name: str,
     func: Callable[[float], float],
     table_size: int,
-    input_precision: FixedPrecisionType,
-    output_precision: FixedPrecisionType,
+    input_precision: XLSFixedPointPrecisionDefinitionBase,
+    output_precision: XLSFixedPointPrecisionDefinitionBase,
     table_range: LookupTableRange,
-) -> XLSLookupTable:
+) -> XLSLookupTableDefinition:
     # Hereafter 'raw' means operations with significand values, i.e.
     # raw_x == x.significand == int(x * 2**precision.fractional)
 
-    raw_to_float = 2 ** (-input_precision.fractional)
+    raw_to_float = 2**input_precision.xls_binary_exponent
 
     def raw_func(raw_x: int) -> int:
         return float_to_significand(func(raw_x * raw_to_float), output_precision)
 
-    raw_minus_inf = XLSFixedPoint.min_value(XLSFixedPointType.from_precision(input_precision)).significand.value
-    raw_plus_inf = XLSFixedPoint.max_value(XLSFixedPointType.from_precision(input_precision)).significand.value
+    raw_minus_inf = XLSFixedPointDefinition.min_value(input_precision).significand
+    raw_plus_inf = XLSFixedPointDefinition.max_value(input_precision).significand
     match table_range:
         # x = -inf..+inf
         case LookupTableRange.FULL:
@@ -101,17 +105,17 @@ def build_table(
     assert raw_range[0] == raw_x_min >= raw_original_x_min
     assert raw_range[-1] <= raw_x_max <= raw_original_x_max
 
-    return XLSLookupTable(
+    return XLSLookupTableDefinition(
         name=name,
-        input_precision=XLSFixedPointType.from_precision(input_precision),
-        output_precision=XLSFixedPointType.from_precision(output_precision),
-        x_min=XLSFixedPoint(type=input_precision, significand=raw_x_min),
-        log2_step=raw_log2_step - input_precision.fractional,
+        input_precision=input_precision,
+        output_precision=output_precision,
+        x_min=XLSFixedPointDefinition(significand=raw_x_min, precision=input_precision),
+        log2_step=raw_log2_step + input_precision.xls_binary_exponent,
         raw_table=[raw_func(x) for x in raw_range],
     )
 
 
-def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
+def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
     table_size = int(node.get_attr('table_size'))
     exp_table_size = int(node.get_attr('exp_table_size', table_size))
     inv_table_size = int(node.get_attr('inv_table_size', table_size))
@@ -167,7 +171,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTable]:
     return [exp_table, inv_table]
 
 
-def build_activation_table(node: Layer) -> XLSLookupTable:
+def build_activation_table(node: Layer) -> XLSLookupTableDefinition:
     activation = node.get_attr('activation').lower()
     table_name = f'{activation.upper()}_TABLE'
     match activation:

@@ -56,11 +56,13 @@ class XLSBackend(FPGABackend):
         ]
         optimization_flow: str = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
-        xls_attributes = [
-            'xls:build_tables',
-            'xls:build_attr',
-        ]
-        xls_attributes_flow: str = register_flow('xls', xls_attributes, requires=[optimization_flow], backend=self.name)
+        xls_types = ['xls:transform_types']
+        xls_types_flow = register_flow('specific_types', xls_types, requires=[init_flow], backend=self.name)
+
+        xls_tables = ['xls:build_tables']
+        xls_tables_flow: str = register_flow(
+            'xls', xls_tables, requires=[optimization_flow, xls_types_flow], backend=self.name
+        )
 
         # NB: unlike other backends, we don't need make_stamp pass for XLS
         writer_passes = ['xls:write_hls']
@@ -97,7 +99,13 @@ class XLSBackend(FPGABackend):
             opt_pass
             for opt_pass in all_passes
             if opt_pass
-            not in initializers + quantization_passes + optimization_passes + xls_attributes + writer_passes + ignored_passes
+            not in initializers
+            + quantization_passes
+            + optimization_passes
+            + xls_types
+            + xls_tables
+            + writer_passes
+            + ignored_passes
         ]
 
         if len(extras) > 0:
@@ -109,7 +117,8 @@ class XLSBackend(FPGABackend):
             init_flow,
             quantization_flow,
             optimization_flow,
-            xls_attributes_flow,
+            xls_types_flow,
+            xls_tables_flow,
         ]
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
@@ -238,7 +247,7 @@ class XLSBackend(FPGABackend):
 
         if np.isscalar(x):
             significand = float_to_significand(x, precision)
-            bits = xls.Value.make_sbits(bit_count=precision.width, val=significand)
+            bits = xls.Value.make_sbits(bit_count=precision.xls_num_bits, val=significand)
             return bits
         else:
             return xls.Value.make_array([XLSBackend._float_to_xls_ir(item, precision) for item in x])
