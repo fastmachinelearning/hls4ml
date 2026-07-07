@@ -68,8 +68,10 @@ def test_activations(test_case_id, backend, activation, name, shape, io_type):
     # so we need to increase the table size for some activations
     # (note that other backends use a hardcoded range [-8; 8]).
     # See hls4ml/backends/xls/passes/build_tables.py
-    if backend == 'XLS' and name == 'softsign':
-        hls_config['LayerName']['activation_3']['TableSize'] = 2048
+    if backend == 'XLS' and name in ['softsign', 'selu', 'tanh']:
+        for layer_cfg in hls_config['LayerName'].values():
+            if 'TableSize' in layer_cfg:
+                layer_cfg['TableSize'] = 2048
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, output_dir=output_dir, backend=backend

@@ -89,7 +89,13 @@ def test_activations(test_case_id, activation_function, backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model, (1,))
+    config = config_from_pytorch_model(model, (1,), granularity='name')
+    # XLS uses a custom algorithm for determining lookup table boundaries,
+    # so we need to increase the table size for some activations
+    # (note that other backends use a hardcoded range [-8; 8]).
+    # See hls4ml/backends/xls/passes/build_tables.py
+    if backend == 'XLS' and activation_function.__class__.__name__ == 'Tanh':
+        config['LayerName']['_1']['TableSize'] = 4096
     output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
