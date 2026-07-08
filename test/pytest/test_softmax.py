@@ -20,7 +20,7 @@ def generate_data(input_shape):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-@pytest.mark.parametrize('strategy', ['stable', 'latency', 'argmax'])
+@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
@@ -35,26 +35,24 @@ def generate_data(input_shape):
         ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
     ],
 )
-def test_softmax(test_case_id, backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+def test_softmax(test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
     X = generate_data
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
     model.compile()
 
-    table_type = f'fixed<{table_bits}, RND, SAT>'
+    table_type = f'ufixed<{table_bits}, RND, SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    cfg['LayerName']['softmax']['Strategy'] = strategy
-    cfg['LayerName']['softmax']['inv_table_t'] = table_type
-    cfg['LayerName']['softmax']['exp_table_t'] = table_type
-    cfg['LayerName']['softmax']['accum_t'] = table_type
-    cfg['LayerName']['softmax']['inv_inp_t'] = table_type
+    cfg['LayerName']['softmax']['Implementation'] = implementation
+    cfg['LayerName']['softmax']['Precision']['inv_table'] = table_type
+    cfg['LayerName']['softmax']['Precision']['exp_table'] = table_type
+    cfg['LayerName']['softmax']['Precision']['inv_inp'] = table_type
     if custom_accum:
         if backend not in ['Vivado', 'Vitis']:
             pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
         W, I = map(int, input_bits.split(','))  # noqa: E741
-        cfg['LayerName']['softmax']['accum_t'] = f'fixed<{W + 3},{I + 3}>'
-        cfg['LayerName']['softmax']['inv_inp_t'] = f'fixed<{W + 2},{I + 2}>'
+        cfg['LayerName']['softmax']['Precision']['inv_inp'] = f'ufixed<{W + 2},{I + 2}>'
     inp_layer_name = next(iter(cfg['LayerName'].keys()))
     cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
 
