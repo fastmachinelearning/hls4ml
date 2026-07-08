@@ -51,9 +51,11 @@ DummyFlowBReqA = hls4ml.model.flow.register_flow('BReqA', ['B'], requires=[Dummy
 DummyFlowCReqBReqA = hls4ml.model.flow.register_flow('CReqBReqA', ['C'], requires=[DummyFlowBReqA])
 
 
-def dummy_flow_model():
+def dummy_flow_model(hls_config=None):
     layers = [{'class_name': 'Input', 'name': 'layer0_input', 'input_shape': [1]}]
     config = {'HLSConfig': {'Model': {'Precision': 'ap_fixed<32,16>', 'ReuseFactor': 1}, 'Flows': []}}
+    if hls_config is not None:
+        config['HLSConfig'].update(hls_config)
     model = hls4ml.model.ModelGraph.from_layer_list(config, layers)
     return model
 
@@ -125,3 +127,38 @@ def test_update_dynamic_flow():
     dynamic_flow = hls4ml.model.flow.register_flow('TestDynamicFlowUpdate', lambda: ['A', 'B'])
     hls4ml.model.flow.update_flow(dynamic_flow, add_optimizers=['C'], remove_optimizers=['A'])
     assert set(hls4ml.model.flow.get_flow(dynamic_flow).optimizers) == {'B', 'C'}
+
+
+def test_skip_optimizers_filters_flow_passes():
+    model = dummy_flow_model({'SkipOptimizers': ['A']})
+    model.test_flow_passes = []
+
+    model.apply_flow(DummyFlowAB)
+
+    assert model.test_flow_passes == ['B']
+    assert model._applied_flows[-1][DummyFlowAB] == {'B'}
+
+
+def test_optimizers_filters_flow_passes():
+    model = dummy_flow_model({'Optimizers': ['B']})
+    model.test_flow_passes = []
+
+    model.apply_flow(DummyFlowAB)
+
+    assert model.test_flow_passes == ['B']
+    assert model._applied_flows[-1][DummyFlowAB] == {'B'}
+
+
+def test_empty_optimizers_disables_flow_passes():
+    model = dummy_flow_model({'Optimizers': []})
+    model.test_flow_passes = []
+
+    model.apply_flow(DummyFlowAB)
+
+    assert model.test_flow_passes == []
+    assert model._applied_flows[-1][DummyFlowAB] == set()
+
+
+def test_optimizers_and_skip_optimizers_are_mutually_exclusive():
+    with pytest.raises(Exception, match='Invalid optimizer configuration'):
+        dummy_flow_model({'Optimizers': ['A'], 'SkipOptimizers': ['B']})

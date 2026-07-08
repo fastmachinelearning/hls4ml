@@ -160,3 +160,27 @@ def test_pointwise_config(test_case_id, strategy):
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     # Model will fail to compile if strategy was set incorrectly
     hls_model.compile()
+
+
+def test_skip_pointwise_optimizer(tmp_path):
+    model = tf.keras.models.Sequential()
+    model.add(
+        Conv1D(
+            filters=4,
+            kernel_size=(1,),
+            input_shape=(8, 3),
+            use_bias=False,
+            name='pointwise1d',
+        )
+    )
+    model.compile(optimizer='adam', loss='mse')
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    config['SkipOptimizers'] = ['vivado:optimize_pointwise_conv']
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=str(tmp_path), io_type='io_parallel', backend='Vivado'
+    )
+
+    assert [node.class_name for node in hls_model.graph.values()] == ['Input', 'Conv1D']
+    assert 'vivado:optimize_pointwise_conv' not in hls_model._applied_flows[0]['vivado:optimize']

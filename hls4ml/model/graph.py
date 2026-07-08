@@ -15,7 +15,7 @@ import numpy.ctypeslib as npc
 from hls4ml.backends import get_backend
 from hls4ml.model.flow import get_flow
 from hls4ml.model.layers import Layer, layer_map
-from hls4ml.model.optimizer import get_available_passes, optimize_model
+from hls4ml.model.optimizer import optimize_model
 from hls4ml.model.types import Serializable
 from hls4ml.utils.string_utils import convert_to_snake_case
 
@@ -247,19 +247,14 @@ class HLSConfig(Serializable):
         if self.flows is None:
             self.flows = [self.backend.get_default_flow()]
 
-        # TODO this is now effectively broken
         self.optimizers = hls_config.get('Optimizers')
+        self.skip_optimizers = hls_config.get('SkipOptimizers')
         if 'SkipOptimizers' in hls_config:
             if self.optimizers is not None:
                 raise Exception('Invalid optimizer configuration, please use either "Optimizers" or "SkipOptimizers".')
-            skip_optimizers = hls_config.get('SkipOptimizers')
-            selected_optimizers = get_available_passes()
-            for opt in skip_optimizers:
-                try:
-                    selected_optimizers.remove(opt)
-                except ValueError:
-                    pass
-            self.optimizers = selected_optimizers
+            self.skip_optimizers = self._as_list(self.skip_optimizers)
+        elif self.optimizers is not None:
+            self.optimizers = self._as_list(self.optimizers)
 
         model_cfg = hls_config.get('Model')
         if model_cfg is not None:
@@ -315,6 +310,23 @@ class HLSConfig(Serializable):
             for layer_name, layer_cfg in layer_name_cfg.items():
                 self.parse_name_config(layer_name, layer_cfg)
 
+    @staticmethod
+    def _as_list(value):
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value]
+        return list(value)
+
+    def get_flow_optimizers(self, optimizers):
+        if self.optimizers is not None:
+            selected_optimizers = set(self.optimizers)
+            return [opt for opt in optimizers if opt in selected_optimizers]
+        if self.skip_optimizers is not None:
+            skip_optimizers = set(self.skip_optimizers)
+            return [opt for opt in optimizers if opt not in skip_optimizers]
+        return optimizers
+
     def serialize(self):
         state = {}
 
@@ -355,6 +367,7 @@ class HLSConfig(Serializable):
         state['writer_config'] = self.writer_config.copy()
         state['flows'] = self.flows.copy()
         state['optimizers'] = self.optimizers.copy() if self.optimizers is not None else None
+        state['skip_optimizers'] = self.skip_optimizers.copy() if self.skip_optimizers is not None else None
         state['model_bf'] = self.model_bf
 
         return state
@@ -393,6 +406,7 @@ class HLSConfig(Serializable):
         config.writer_config = state['writer_config']
         config.flows = state['flows']
         config.optimizers = state['optimizers']
+        config.skip_optimizers = state.get('skip_optimizers')
         config.model_bf = state['model_bf']
 
         return config
@@ -527,8 +541,9 @@ class ModelGraph(Serializable):
             if sub_flow not in applied_flows.keys():
                 self._apply_sub_flow(sub_flow, applied_flows)
 
-        if len(flow.optimizers) > 0:
-            applied_passes = optimize_model(self, flow.optimizers)
+        optimizers = self.config.get_flow_optimizers(flow.optimizers)
+        if len(optimizers) > 0:
+            applied_passes = optimize_model(self, optimizers)
         else:
             applied_passes = set()
         applied_flows[flow.name] = applied_passes
