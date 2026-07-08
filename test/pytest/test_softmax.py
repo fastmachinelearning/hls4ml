@@ -35,7 +35,9 @@ def generate_data(input_shape):
         ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
     ],
 )
-def test_softmax(test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+def test_softmax(
+    test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
+):
     X = generate_data
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
