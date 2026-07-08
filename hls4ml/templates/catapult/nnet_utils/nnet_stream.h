@@ -216,6 +216,72 @@ template <class data_T, class res_T, int N> void repack_stream(ac_channel<data_T
     }
 }
 
+template <class data_T, class res_T, typename CONFIG_T> void transpose_2d(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+    typename data_T::value_type data_array[CONFIG_T::height * CONFIG_T::width];
+
+    for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / data_T::size; i++) {
+        data_T in_data = data.read();
+
+        for (int j = 0; j < data_T::size; j++) {
+            data_array[i * data_T::size + j] = typename data_T::value_type(in_data[j]);
+        }
+    }
+
+    for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / res_T::size; i++) {
+        res_T out_data;
+
+        for (int j = 0; j < res_T::size; j++) {
+            out_data[j] = typename res_T::value_type(data_array[j * CONFIG_T::width + i]);
+        }
+
+        res.write(out_data);
+    }
+}
+
+template <typename CONFIG_T> unsigned transpose_3d_stream_idx(unsigned index) {
+    unsigned dims[3] = {CONFIG_T::depth, CONFIG_T::height, CONFIG_T::width};
+    unsigned dims_t[3];
+    dims_t[0] = dims[CONFIG_T::perm[0]];
+    dims_t[1] = dims[CONFIG_T::perm[1]];
+    dims_t[2] = dims[CONFIG_T::perm[2]];
+
+    unsigned idx[3];
+    unsigned idx_t[3];
+    idx_t[2] = index % dims_t[2];
+    index /= dims_t[2];
+    idx_t[1] = index % dims_t[1];
+    index /= dims_t[1];
+    idx_t[0] = index;
+
+    idx[CONFIG_T::perm[0]] = idx_t[0];
+    idx[CONFIG_T::perm[1]] = idx_t[1];
+    idx[CONFIG_T::perm[2]] = idx_t[2];
+
+    return idx[0] * dims[1] * dims[2] + idx[1] * dims[2] + idx[2];
+}
+
+template <class data_T, class res_T, typename CONFIG_T> void transpose_3d(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+    typename data_T::value_type data_array[CONFIG_T::depth * CONFIG_T::height * CONFIG_T::width];
+
+    for (int i = 0; i < CONFIG_T::depth * CONFIG_T::height * CONFIG_T::width / data_T::size; i++) {
+        data_T in_data = data.read();
+
+        for (int j = 0; j < data_T::size; j++) {
+            data_array[i * data_T::size + j] = typename data_T::value_type(in_data[j]);
+        }
+    }
+
+    for (int i = 0; i < CONFIG_T::depth * CONFIG_T::height * CONFIG_T::width / res_T::size; i++) {
+        res_T out_data;
+
+        for (int j = 0; j < res_T::size; j++) {
+            out_data[j] = typename res_T::value_type(data_array[transpose_3d_stream_idx<CONFIG_T>(i * res_T::size + j)]);
+        }
+
+        res.write(out_data);
+    }
+}
+
 template <class data_T, class res_T, typename CONFIG_T>
 void broadcast_stream_1x1xC(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     assert(CONFIG_T::in_height == 1 && CONFIG_T::in_width == 1 && CONFIG_T::in_chan == CONFIG_T::out_chan);

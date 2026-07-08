@@ -77,6 +77,29 @@ def test_accuracy(data, keras_model, hls_model):
     np.testing.assert_allclose(y_keras, y_hls4ml, rtol=0, atol=1e-04, verbose=True)
 
 
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+def test_stream_3d_permute_pack_mismatch(test_case_id, backend):
+    inp = Input(shape=(4, 1, 2), name='input_1')
+    out = Permute((3, 1, 2), name='permute')(inp)
+    model = Model(inputs=inp, outputs=out)
+
+    X = np.arange(3 * 4 * 1 * 2).reshape(3, 4, 1, 2) / 16
+    X = X.astype(np.float32)
+
+    model_hls = hls4ml.converters.convert_from_keras_model(
+        model,
+        io_type='io_stream',
+        backend=backend,
+        output_dir=str(test_root_path / test_case_id),
+    )
+    model_hls.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = model_hls.predict(X).reshape(y_keras.shape)
+
+    np.testing.assert_allclose(y_keras, y_hls4ml, rtol=0, atol=1e-04, verbose=True)
+
+
 @pytest.fixture(scope='module')
 def keras_model_highdim():
     inp = Input(shape=(2, 3, 4, 5, 6), name='input_1')
