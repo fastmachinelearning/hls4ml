@@ -20,7 +20,7 @@ def generate_data(input_shape):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax'])
+@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax', 'stable'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
@@ -38,6 +38,10 @@ def generate_data(input_shape):
 def test_softmax(
     test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
 ):
+
+    if backend == 'Catapult' and implementation == 'argmax':
+        pytest.skip('Argmax is not supported in cataplut')
+
     X = generate_data
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
