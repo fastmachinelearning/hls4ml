@@ -473,6 +473,39 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_qconv2dbn_without_quantizers(test_case_id, randX_100_8_8_1, strategy):
+    X = randX_100_8_8_1
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QConv2DBatchnorm(
+            4,
+            kernel_size=(3, 3),
+            input_shape=(8, 8, 1),
+            kernel_initializer='ones',
+            bias_initializer='zeros',
+            activation='linear',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend='Vivado'
+    )
+    config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=2**-12)
+
+
 @pytest.fixture(scope='module')
 def randX_10_32_32_3():
     return np.random.rand(10, 32, 32, 3)
