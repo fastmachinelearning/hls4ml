@@ -122,8 +122,8 @@ lint.unfixable = []
 [tool.check-manifest]
 ignore = [
   ".github/**",
-  "docs/**",
   ".pre-commit-config.yaml",
-  "Jenkinsfile",
+  "docs/**",
   "hls4ml/_version.py",
+  "Jenkinsfile",
 ]
