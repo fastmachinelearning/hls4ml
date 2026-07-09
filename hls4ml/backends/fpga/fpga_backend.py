@@ -143,9 +143,7 @@ class FPGABackend(Backend):
             ),
             TypeAttribute(
                 'inv_inp',
-                default=FixedPrecisionType(
-                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
-                ),
+                default=UnspecifiedPrecisionType(),
                 description='What the accumulated value is cast to before accessing the inversion table (only in stable)',
             ),
             TypeAttribute(
