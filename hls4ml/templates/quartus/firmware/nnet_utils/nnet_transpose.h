@@ -12,10 +12,19 @@ struct transpose_config {
 
 template <class data_T, class res_T, typename CONFIG_T>
 void transpose_2d(data_T data[CONFIG_T::height * CONFIG_T::width], res_T res[CONFIG_T::height * CONFIG_T::width]) {
-    for (int i = 0; i < CONFIG_T::height; i++) {
-        #pragma unroll
-        for (int j = 0; j < CONFIG_T::width; j++) {
-            res[j * CONFIG_T::height + i] = static_cast<res_T>(data[i * CONFIG_T::width + j]);
+    if (CONFIG_T::perm[1] == 1 && CONFIG_T::perm[2] == 2) {
+        for (int i = 0; i < CONFIG_T::height; i++) {
+            #pragma unroll
+            for (int j = 0; j < CONFIG_T::width; j++) {
+                res[i * CONFIG_T::width + j] = static_cast<res_T>(data[i * CONFIG_T::width + j]);
+            }
+        }
+    } else {
+        for (int i = 0; i < CONFIG_T::height; i++) {
+            #pragma unroll
+            for (int j = 0; j < CONFIG_T::width; j++) {
+                res[j * CONFIG_T::height + i] = static_cast<res_T>(data[i * CONFIG_T::width + j]);
+            }
         }
     }
 }

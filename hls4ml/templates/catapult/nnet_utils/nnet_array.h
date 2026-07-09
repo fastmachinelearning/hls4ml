@@ -16,9 +16,17 @@ template <class data_T, class res_T, typename CONFIG_T>
 void transpose_2d(data_T data[CONFIG_T::height * CONFIG_T::width], res_T data_t[CONFIG_T::height * CONFIG_T::width]) {
     //#pragma HLS PIPELINE
 
-    for (int i = 0; i < CONFIG_T::height; i++) {
-        for (int j = 0; j < CONFIG_T::width; j++) {
-            data_t[j * CONFIG_T::height + i] = data[i * CONFIG_T::width + j];
+    if (CONFIG_T::perm[1] == 1 && CONFIG_T::perm[2] == 2) {
+        for (int i = 0; i < CONFIG_T::height; i++) {
+            for (int j = 0; j < CONFIG_T::width; j++) {
+                data_t[i * CONFIG_T::width + j] = data[i * CONFIG_T::width + j];
+            }
+        }
+    } else {
+        for (int i = 0; i < CONFIG_T::height; i++) {
+            for (int j = 0; j < CONFIG_T::width; j++) {
+                data_t[j * CONFIG_T::height + i] = data[i * CONFIG_T::width + j];
+            }
         }
     }
 }

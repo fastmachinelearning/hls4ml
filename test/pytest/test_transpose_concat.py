@@ -77,14 +77,63 @@ def test_accuracy(data, keras_model, hls_model):
     np.testing.assert_allclose(y_keras, y_hls4ml, rtol=0, atol=1e-04, verbose=True)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-def test_stream_3d_permute_pack_mismatch(test_case_id, backend):
-    inp = Input(shape=(4, 1, 2), name='input_1')
-    out = Permute((3, 1, 2), name='permute')(inp)
+@pytest.mark.parametrize('backend', ['Quartus', 'Catapult'])
+@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
+def test_identity_permute(test_case_id, backend, io_type):
+    inp = Input(shape=(2, 3), name='input_1')
+    out = Permute((1, 2), name='permute')(inp)
     model = Model(inputs=inp, outputs=out)
 
-    X = np.arange(3 * 4 * 1 * 2).reshape(3, 4, 1, 2) / 16
-    X = X.astype(np.float32)
+    X = (np.arange(2 * 2 * 3).reshape(2, 2, 3) / 16).astype(np.float32)
+
+    model_hls = hls4ml.converters.convert_from_keras_model(
+        model,
+        io_type=io_type,
+        backend=backend,
+        output_dir=str(test_root_path / test_case_id),
+    )
+    model_hls.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = model_hls.predict(X).reshape(y_keras.shape)
+
+    np.testing.assert_allclose(y_keras, y_hls4ml, rtol=0, atol=1e-04, verbose=True)
+
+
+@pytest.mark.parametrize('backend', ['Quartus', 'Catapult'])
+def test_stream_2d_permute(test_case_id, backend):
+    inp = Input(shape=(2, 3), name='input_1')
+    out = Permute((2, 1), name='permute')(inp)
+    model = Model(inputs=inp, outputs=out)
+
+    X = (np.arange(2 * 2 * 3).reshape(2, 2, 3) / 16).astype(np.float32)
+
+    model_hls = hls4ml.converters.convert_from_keras_model(
+        model,
+        io_type='io_stream',
+        backend=backend,
+        output_dir=str(test_root_path / test_case_id),
+    )
+    model_hls.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = model_hls.predict(X).reshape(y_keras.shape)
+
+    np.testing.assert_allclose(y_keras, y_hls4ml, rtol=0, atol=1e-04, verbose=True)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize(
+    ('input_shape', 'perm'),
+    [((4, 1, 2), (3, 1, 2)), ((4, 3, 2), (2, 3, 1))],
+    ids=['repack_shrink', 'repack_expand'],
+)
+def test_stream_3d_permute_pack_mismatch(test_case_id, backend, input_shape, perm):
+    inp = Input(shape=input_shape, name='input_1')
+    out = Permute(perm, name='permute')(inp)
+    model = Model(inputs=inp, outputs=out)
+
+    X = (np.arange(3 * np.prod(input_shape)).reshape(3, *input_shape) / 64).astype(np.float32)
 
     model_hls = hls4ml.converters.convert_from_keras_model(
         model,

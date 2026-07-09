@@ -217,6 +217,21 @@ template <class data_T, class res_T, int N> void repack_stream(ac_channel<data_T
 }
 
 template <class data_T, class res_T, typename CONFIG_T> void transpose_2d(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+    if (CONFIG_T::perm[1] == 1 && CONFIG_T::perm[2] == 2) {
+        for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / data_T::size; i++) {
+            data_T in_data = data.read();
+            res_T out_data;
+
+            for (int j = 0; j < data_T::size; j++) {
+                out_data[j] = typename res_T::value_type(in_data[j]);
+            }
+
+            res.write(out_data);
+        }
+
+        return;
+    }
+
     typename data_T::value_type data_array[CONFIG_T::height * CONFIG_T::width];
 
     for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / data_T::size; i++) {
