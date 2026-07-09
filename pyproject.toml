@@ -75,6 +75,7 @@ optional-dependencies.testing-keras3 = [
   "hgq2>=0.1.7",
   "keras>=3.10",
   "pquant-ml",
+  "sparsepixels>=0.3",
   "tensorflow>=2.15",
 ]
 optional-dependencies.testing-qkeras-v3 = [
