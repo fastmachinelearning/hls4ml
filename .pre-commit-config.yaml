@@ -12,6 +12,7 @@ repos:
   rev: v2.25.1
   hooks:
     - id: pyproject-fmt
+      additional_dependencies: [tomli]
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v6.0.0
