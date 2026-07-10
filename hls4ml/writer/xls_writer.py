@@ -7,13 +7,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from hls4ml.backends.xls.xls_layer_util import (
-    xls_bias,
     xls_extra_func_args,
     xls_extra_func_params,
     xls_func_call,
     xls_min_input_rank,
     xls_module_name,
-    xls_weights,
+    xls_weights_definitions,
 )
 from hls4ml.backends.xls.xls_types import (
     XLSConstDefinition,
@@ -71,9 +70,7 @@ def to_tuple_or_singleton_str(xs: Iterable[Any], sep: str = ', ') -> str:
 
 def xls_import_const_definition(const_def: XLSConstDefinition, module_name, new_name=None) -> XLSConstDefinition:
     """Returns: const new_name = module_name::const_name"""
-    return XLSConstDefinition(
-        name=new_name or const_def.xls_name, value=f'{module_name}::{const_def.xls_name}', type=const_def.xls_type
-    )
+    return XLSConstDefinition(name=new_name or const_def.name, value=f'{module_name}::{const_def.name}', type=const_def.type)
 
 
 def xls_import_type_alias(type_alias_def: XLSTypeAliasDefinition, module_name, new_name=None) -> XLSTypeAliasDefinition:
@@ -222,7 +219,7 @@ class XLSWriter(Writer):
                                 name=input_name,
                                 value=XLSFunctionCallDefinition(
                                     name=f'fixed_point_util::make_fixed_points_{rank}d',
-                                    params=[input_var.xls_binary_exponent.xls_name],
+                                    params=[input_var.xls_binary_exponent.name],
                                     args=input_name_bits,
                                 ),
                             )
@@ -317,12 +314,7 @@ class XLSWriter(Writer):
                         line += '\n'
 
                 elif '// hls-fpga-machine-learning insert weights' in line:
-                    weights = xls_weights(layer)
-                    if weights:
-                        line = append_line(line, weights)
-                    bias = xls_bias(layer)
-                    if bias:
-                        line = append_lines(line, '\n', bias)
+                    line = append_lines(line, xls_weights_definitions(layer))
 
                 elif '// hls-fpga-machine-learning insert lookup tables' in line:
                     for table in layer.get_attr('lookup_tables', []):
@@ -333,7 +325,7 @@ class XLSWriter(Writer):
                     # NB: sometimes constant is already defined, e.g. output dimensions for Reshape layer
                     # In that case, we don't write it again.
                     existing_names = {
-                        x.xls_name
+                        x.name
                         for in_out_vars in (input_vars, output_vars)
                         for var in in_out_vars
                         for x in var.xls_definitions()
@@ -343,7 +335,7 @@ class XLSWriter(Writer):
                         x
                         for consts in (xls_extra_func_params(layer), xls_extra_func_args(layer))
                         for x in consts
-                        if x.xls_name not in existing_names
+                        if x.name not in existing_names
                     )
                     line = append_lines(line, extra_consts)
 

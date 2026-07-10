@@ -9,6 +9,7 @@ from hls4ml.backends.xls.xls_types import (
     XLSFunctionCallDefinition,
     XLSQualifiedName,
     XLSTensorVariableDefinition,
+    XLSWeightVariableDefinition,
 )
 
 if TYPE_CHECKING:
@@ -28,12 +29,16 @@ def xls_weights_key(node: Layer) -> str:
             return 'weight'
 
 
-def xls_weights(node: Layer) -> XLSConstDefinition | None:
+def xls_weights(node: Layer) -> XLSWeightVariableDefinition | None:
     return node.weights.get(xls_weights_key(node), None)
 
 
-def xls_bias(node: Layer) -> XLSConstDefinition | None:
+def xls_bias(node: Layer) -> XLSWeightVariableDefinition | None:
     return node.weights.get('bias', None)
+
+
+def xls_weights_definitions(node: Layer) -> list[XLSConstDefinition]:
+    return [weight_var.get_xls_const_definition(node, key) for key, weight_var in node.weights.items()]
 
 
 def xls_module_name(node: Layer) -> str:
@@ -251,7 +256,7 @@ def xls_func_call(node: Layer) -> XLSFunctionCallDefinition:
     out_vars = node.get_variables()
     name = xls_func_name(node)
     params = [
-        x.xls_name
+        x.name
         for out_var in out_vars
         for x in (
             out_var.xls_num_bits,
@@ -259,9 +264,9 @@ def xls_func_call(node: Layer) -> XLSFunctionCallDefinition:
             out_var.xls_rounding_mode,
             out_var.xls_overflow_mode,
         )
-    ] + [x.xls_name for x in xls_extra_func_params(node)]
+    ] + [x.name for x in xls_extra_func_params(node)]
     args = [f'x_{i}' for i in range(len(in_vars))]
     args += [w.xls_name for w in [xls_weights(node), xls_bias(node)] if w is not None]
-    args += [x.lookup_table.xls_name for x in node.get_attr('lookup_tables', [])]
-    args += [x.xls_name for x in xls_extra_func_args(node)]
+    args += [x.lookup_table.name for x in node.get_attr('lookup_tables', [])]
+    args += [x.name for x in xls_extra_func_args(node)]
     return XLSFunctionCallDefinition(name=name, params=params, args=args)

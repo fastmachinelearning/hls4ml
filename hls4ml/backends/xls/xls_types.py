@@ -21,21 +21,30 @@ from hls4ml.model.types import (
 # region Precision types
 
 
-class XLSIntegerPrecisionDefinition:
+class XLSDefinitionBase:
+    def xls_definition(self) -> str:
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        return self.xls_definition()
+
+
+def xls_str(x) -> str:
+    return x.xls_definition() if hasattr(x, 'xls_definition') else str(x)
+
+
+class XLSIntegerPrecisionDefinition(XLSDefinitionBase):
     def __init__(self, width, signed: bool):
         self.width = width
         self.signed = signed
 
-    def xls_definition(self):
+    def xls_definition(self) -> str:
         prefix = 's' if self.signed else 'u'
         if isinstance(self.width, int) and 1 <= self.width <= 64:
             # u32
             return f'{prefix}{self.width}'
         # uN[NUM_BITS]
         return f'{prefix}N[{self.width}]'
-
-    def __str__(self):
-        return self.xls_definition()
 
 
 def sN(width):
@@ -50,7 +59,7 @@ s32 = sN(32)
 u32 = uN(32)
 
 
-class XLSFixedPointPrecisionDefinitionBase(PrecisionType):
+class XLSFixedPointPrecisionDefinitionBase(XLSDefinitionBase, PrecisionType):
     def xls_definition(self) -> str:
         return f'FixedPoint<{self.xls_num_bits}, {self.xls_binary_exponent}>'
 
@@ -164,45 +173,34 @@ def xls_shape_str(shape):
 # region Data types
 
 
-class XLSQualifiedName:
+class XLSQualifiedName(XLSDefinitionBase):
     def __init__(self, name: str, module_name: str | None = None):
         self.name = name
         self.module_name = module_name
 
-    def __str__(self):
-        if self.module_name:
-            return f'{self.module_name}::{self.name}'
-        return self.name
+    def xls_definition(self) -> str:
+        return f'{self.module_name}::{self.name}' if self.module_name else self.name
 
 
-class XLSConstDefinition:
+class XLSConstDefinition(XLSDefinitionBase):
     def __init__(self, name, value, type=None):
-        self.xls_name = name
-        self.xls_value = value
-        self.xls_type = type
+        self.name = name
+        self.value = value
+        self.type = type
 
     def xls_definition(self) -> str:
-        type = self.xls_type
-        if hasattr(type, 'xls_definition'):
-            type = type.xls_definition()
-        type = f': {type}' if type else ''
-        return f'pub const {self.xls_name}{type} = {self.xls_value};'
-
-    def __str__(self):
-        return self.xls_definition()
+        type_str = f': {xls_str(self.type)}' if self.type else ''
+        return f'pub const {self.name}{type_str} = {xls_str(self.value)};'
 
 
-class XLSFixedPointDefinition:
+class XLSFixedPointDefinition(XLSDefinitionBase):
     def __init__(self, significand, precision: XLSFixedPointPrecisionDefinitionBase):
         assert isinstance(precision, XLSFixedPointPrecisionDefinitionBase)
         self.significand = significand
         self.precision = precision
 
     def xls_definition(self) -> str:
-        return f'{self.precision.xls_definition()}{{ significand: {self.significand} }}'
-
-    def __str__(self):
-        return self.xls_definition()
+        return f'{xls_str(self.precision)}{{ significand: {self.significand} }}'
 
     @classmethod
     def from_float(cls, value, precision: XLSFixedPointPrecisionDefinitionBase):
@@ -224,7 +222,7 @@ class XLSFixedPointDefinition:
 # endregion
 
 
-class XLSArrayTypeDefinition:
+class XLSArrayTypeDefinition(XLSDefinitionBase):
     def __init__(self, element_type, shape):
         self.element_type = element_type
         self.shape = shape_tuple(shape)
@@ -240,13 +238,7 @@ class XLSArrayTypeDefinition:
         return XLSArrayTypeDefinition(self.element_type, self.shape[1:])
 
     def xls_definition(self):
-        element_type = self.element_type
-        if hasattr(element_type, 'xls_definition'):
-            element_type = element_type.xls_definition()
-        return f'{element_type}{xls_shape_str(self.shape)}'
-
-    def __str__(self):
-        return self.xls_definition()
+        return f'{xls_str(self.element_type)}{xls_shape_str(self.shape)}'
 
 
 class XLSTypeConverter:
@@ -280,22 +272,16 @@ class XLSInterfaceVarConverter(XLSVarConverter):
         return var
 
 
-class XLSTypeAliasDefinition:
+class XLSTypeAliasDefinition(XLSDefinitionBase):
     def __init__(self, name, type):
         self.name = name
         self.type = type
 
     def xls_definition(self):
-        type = self.type
-        if hasattr(type, 'xls_definition'):
-            type = type.xls_definition()
-        return f'pub type {self.name} = {type};'
-
-    def __str__(self):
-        return self.xls_definition()
+        return f'pub type {self.name} = {xls_str(self.type)};'
 
 
-class XLSTensorVariableDefinition:
+class XLSTensorVariableDefinition(XLSDefinitionBase):
     @property
     def xls_name(self):
         return ''.join(filter(lambda s: s.isalnum() or s == '_', self.name)).lower()
@@ -309,12 +295,10 @@ class XLSTensorVariableDefinition:
         words = self.xls_name.split('_')
         return '_'.join(word[:1].upper() + word[1:].lower() for word in words)
 
-    # TODO rename
     @property
     def xls_num_bits(self):
         return XLSConstDefinition(f'{self.xls_name_upper}_NUM_BITS', self.type.precision.xls_num_bits, type=u32)
 
-    # TODO rename
     @property
     def xls_binary_exponent(self):
         return XLSConstDefinition(
@@ -344,16 +328,14 @@ class XLSTensorVariableDefinition:
             for i, dim in enumerate(shape_tuple(self.shape))
         )
 
-    # TODO rename
     def xls_type_alias(self, rank=None):
-        shape = [dim.xls_name for dim in self.xls_dims]
+        shape = [dim.name for dim in self.xls_dims]
         name = f'{self.xls_name_camel}_Type'
         if rank is not None:
             shape = shape[len(shape) - rank :]
             name += f'_{rank}d'
         return XLSTypeAliasDefinition(name=name, type=XLSArrayTypeDefinition(self.type.precision, shape))
 
-    # TODO rename
     @property
     def xls_type_alias_bits(self):
         return XLSTypeAliasDefinition(
@@ -376,14 +358,14 @@ class XLSTensorVariableDefinition:
         return '\n'.join(x.xls_definition() for x in self.xls_definitions())
 
 
-class XLSArrayDefinition:
+class XLSArrayDefinition(XLSDefinitionBase):
     def __init__(self, element_type, shape, data):
         self.element_type = element_type
         self.shape = shape_tuple(shape)
         self.data = data
 
     def xls_definition(self) -> str:
-        array_type = str(self.element_type) + xls_shape_str(self.shape)
+        array_type = f'{xls_str(self.element_type)}{xls_shape_str(self.shape)}'
         data = self.data
         if not isinstance(data, str):
             if len(self.shape) > 1:
@@ -395,11 +377,8 @@ class XLSArrayDefinition:
                 data = ', '.join(map(str, data))
         return f'{array_type}:[{data}]'
 
-    def __str__(self):
-        return self.xls_definition()
 
-
-class XLSFunctionCallDefinition:
+class XLSFunctionCallDefinition(XLSDefinitionBase):
     def __init__(self, name, params=None, args=None):
         self.name = name
         self.params = params or []
@@ -427,11 +406,8 @@ class XLSFunctionCallDefinition:
         args = ', '.join(map(str, self.args))
         return f'{self.name}{params}({args})'
 
-    def __str__(self):
-        return self.xls_definition()
 
-
-class XLSFixedPointArrayDefinition:
+class XLSFixedPointArrayDefinition(XLSDefinitionBase):
     def __init__(self, precision: XLSFixedPointPrecisionDefinitionBase, shape, data):
         precision = XLSPrecisionConverter().convert(precision)
         shape = shape_tuple(shape)
@@ -450,29 +426,13 @@ class XLSFixedPointArrayDefinition:
             args=[raw_array.xls_definition()],
         ).xls_definition()
 
-    def __str__(self):
-        return self.xls_definition()
 
+class XLSWeightVariableDefinition:
+    @property
+    def xls_name(self):
+        return self.name.upper()
 
-class XLSWeightVariableDefinition(XLSConstDefinition):
-    pass
-
-
-class XLSWeightVarConverter:
-    def __init__(self, type_converter):
-        self.type_converter = type_converter
-
-    def convert(self, weight_var, node: Layer, weights_key: str):
-        if isinstance(weight_var, XLSWeightVariableDefinition):  # Already converted
-            return weight_var
-        weight_var.type = self.type_converter.convert(weight_var.type)
-        weight_cls_fqn = weight_var.__class__.__module__ + '.' + weight_var.__class__.__qualname__
-        weight_var.__class__ = type(
-            'XLSWeightVariable',
-            (type(weight_var), XLSWeightVariableDefinition),
-            {'_wrapped': weight_cls_fqn},
-        )
-
+    def get_xls_const_definition(self, node: Layer, weights_key: str) -> XLSConstDefinition:
         class_name = node.class_name
         if class_name == 'ApplyAlpha':
             class_name = 'BatchNormalization'
@@ -481,18 +441,15 @@ class XLSWeightVarConverter:
         output_var = node.get_output_variable()
 
         precision = None
-        xls_name = None
-        data = weight_var.data
+        data = self.data
         expected_shape = None
         if weights_key == 'bias':
-            xls_name = f'BIAS_{weight_var.name}'.upper()
             expected_shape = (output_var.shape[-1],)
         else:
             if class_name == 'PReLU':
                 assert weights_key == 'param', (
                     f'Unexpected weights key {weights_key} for PReLU node {node.name}, expected "param"'
                 )
-                xls_name = 'PRELU_PARAM'
                 precision = node.get_attr('param_t').precision
             elif class_name == 'BatchNormalization':
                 assert weights_key == 'scale', (
@@ -537,17 +494,33 @@ class XLSWeightVarConverter:
                 f'Weights shape mismatch: expected {expected_shape}, got {data.shape}'
             )
 
-        xls_name = xls_name or f'WEIGHTS_{weight_var.name}'.upper()
-        precision = precision or weight_var.type.precision
+        precision = precision or self.type.precision
 
-        weight_var.xls_name = xls_name
-        weight_var.xls_type = precision.xls_definition() + xls_shape_str(data.shape)
-        weight_var.xls_value = XLSFixedPointArrayDefinition(precision=precision, shape=data.shape, data=data)
+        return XLSConstDefinition(
+            name=self.xls_name,
+            type=precision.xls_definition() + xls_shape_str(data.shape),
+            value=XLSFixedPointArrayDefinition(precision=precision, shape=data.shape, data=data),
+        )
 
+
+class XLSWeightVarConverter:
+    def __init__(self, type_converter):
+        self.type_converter = type_converter
+
+    def convert(self, weight_var, node: Layer, weights_key: str):
+        if isinstance(weight_var, XLSWeightVariableDefinition):  # Already converted
+            return weight_var
+        weight_var.type = self.type_converter.convert(weight_var.type)
+        weight_cls_fqn = weight_var.__class__.__module__ + '.' + weight_var.__class__.__qualname__
+        weight_var.__class__ = type(
+            'XLSWeightVariable',
+            (type(weight_var), XLSWeightVariableDefinition),
+            {'_wrapped': weight_cls_fqn},
+        )
         return weight_var
 
 
-class XLSLookupTableDefinition:
+class XLSLookupTableDefinition(XLSDefinitionBase):
     def __init__(
         self,
         name: str,
@@ -573,12 +546,12 @@ class XLSLookupTableDefinition:
         self.x_min = XLSConstDefinition(f'{name}_X_MIN', x_min, input_precision)
         int_table = XLSArrayDefinition(element_type=sN(f'{name}_OUTPUT_NUM_BITS'), shape=f'{name}_SIZE', data=raw_table)
         fixed_point_table = XLSFunctionCallDefinition(
-            name='fixed_point_util::make_fixed_points_1d', params=[self.output_binary_exponent.xls_name], args=[int_table]
+            name='fixed_point_util::make_fixed_points_1d', params=[self.output_binary_exponent.name], args=[int_table]
         )
         self.lookup_table = XLSConstDefinition(
             name=name,
             value=XLSFunctionCallDefinition(
-                name='lookup_table::create', params=[self.log2_step.xls_name], args=[self.x_min.xls_name, fixed_point_table]
+                name='lookup_table::create', params=[self.log2_step.name], args=[self.x_min.name, fixed_point_table]
             ),
         )
 
@@ -597,6 +570,3 @@ class XLSLookupTableDefinition:
     def xls_definition(self, indent=None):
         indent = indent or ''
         return '\n'.join([f'{indent}{d}' for d in self.xls_definitions()])
-
-    def __str__(self):
-        return self.xls_definition()
