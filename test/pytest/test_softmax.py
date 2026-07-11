@@ -19,8 +19,8 @@ def generate_data(input_shape):
     return np.clip(d, -32, 31)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax', 'stable'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
@@ -47,7 +47,7 @@ def test_softmax(
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
     model.compile()
 
-    table_type = f'ufixed<{table_bits}, RND, SAT>'
+    table_type = f'ufixed<{table_bits}, RND, SAT>' if backend != 'oneAPI' else f'ac_fixed<{table_bits}, AC_RND, AC_SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['Implementation'] = implementation
@@ -59,6 +59,7 @@ def test_softmax(
             pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
         W, I = map(int, input_bits.split(','))  # noqa: E741
         cfg['LayerName']['softmax']['Precision']['inv_inp'] = f'ufixed<{W + 2},{I + 2}>'
+        
     inp_layer_name = next(iter(cfg['LayerName'].keys()))
     cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}>'
 
@@ -77,7 +78,7 @@ def test_softmax(
     assert acc_hls4ml >= 0.98
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(test_case_id, backend, io_type):
     X = np.random.rand(100, 10)
