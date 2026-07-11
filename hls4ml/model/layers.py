@@ -965,6 +965,9 @@ class Activation(Layer):
         if 'n_in' not in self.attributes:
             self.set_attr('n_in', self.get_input_variable().size())
 
+        # set the needed types if needed
+        self._set_type_t('table')
+
 
 class ParametrizedActivation(Activation):
     _expected_attributes = [
@@ -1030,6 +1033,12 @@ class PReLU(Activation):
 class Softmax(Activation):
     def initialize(self):
         super().initialize()
+
+        # set the needed types if needed
+        self._set_type_t('exp_table')
+        self._set_type_t('inv_table')
+        self._set_type_t('inv_inp')
+        self._set_type_t('inv_norm')
 
 
 class TernaryTanh(Activation):

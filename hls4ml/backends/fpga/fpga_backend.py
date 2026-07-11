@@ -143,16 +143,12 @@ class FPGABackend(Backend):
             ),
             TypeAttribute(
                 'inv_inp',
-                default=FixedPrecisionType(
-                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
-                ),
+                default=UnspecifiedPrecisionType(),
                 description='What the accumulated value is cast to before accessing the inversion table (only in stable)',
             ),
             TypeAttribute(
                 'inp_norm',
-                default=FixedPrecisionType(
-                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
-                ),
+                default=UnspecifiedPrecisionType(),
                 description='The internal width used for the exp table lookup (only in stable)',
             ),
             TypeAttribute('accum', description=descriptions.accum_type),
