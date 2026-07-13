@@ -208,9 +208,9 @@ class AlteraBackend(FPGABackend):
         builddir = outdir / 'build'
         builddir.mkdir(exist_ok=True)
         try:
-            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
+            subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find icpx. Please configure the Intel oneAPI toolchain appropriately')
+            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately')
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 

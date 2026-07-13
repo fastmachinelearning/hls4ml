@@ -1,7 +1,12 @@
 # Direct CMake to use icpx rather than the default C++ compiler/linker on Linux
 # and icx-cl on Windows
 if(UNIX)
-    set(CMAKE_CXX_COMPILER icpx)
+    find_program(CXX_COMPILER NAMES icpx ahls)
+    if(NOT CXX_COMPILER)
+        message(FATAL_ERROR "Neither icpx nor ahls was found in PATH.")
+    endif()
+    set(CMAKE_CXX_COMPILER "${CXX_COMPILER}")
+    message(STATUS "Using C++ compiler: ${CXX_COMPILER}")
 else() # Windows
     include (CMakeForceCompiler)
     CMAKE_FORCE_CXX_COMPILER (icx-cl IntelDPCPP)
@@ -11,6 +16,10 @@ endif()
 cmake_minimum_required (VERSION 3.7.2)
 
 project(myproject CXX)
+
+if(CXX_COMPILER MATCHES "ahls$")
+    add_compile_definitions(AHLS)
+endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

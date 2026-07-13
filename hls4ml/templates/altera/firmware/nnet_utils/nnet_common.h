@@ -2,9 +2,16 @@
 #define NNET_COMMON_H_
 
 #include "nnet_helpers.h"
+
+#ifdef AHLS
+#include <sycl/ext/altera/ac_types/ac_fixed.hpp>
+#include <sycl/ext/altera/ac_types/ac_fixed_math.hpp>
+#include <sycl/ext/altera/ac_types/ac_int.hpp>
+#else
 #include <sycl/ext/intel/ac_types/ac_fixed.hpp>
 #include <sycl/ext/intel/ac_types/ac_fixed_math.hpp>
 #include <sycl/ext/intel/ac_types/ac_int.hpp>
+#endif
 
 typedef ac_fixed<16, 6> table_default_t;
 
