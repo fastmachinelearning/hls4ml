@@ -255,6 +255,8 @@ class ActivationConfigTemplate(LayerConfigTemplate):
             # If no table size is specified, assume default size of 1024
             params.setdefault('exp_table_size', params['table_size'])
             params.setdefault('inv_table_size', params['table_size'])
+            params['exp_table_size'] = min(params['exp_table_size'], params['table_size'])
+            params['inv_table_size'] = min(params['inv_table_size'], params['table_size'])
 
             # This is for non-quantised layers where table size is not a layer attribute
             if node.get_attr('exp_table_size', -1) == -1:

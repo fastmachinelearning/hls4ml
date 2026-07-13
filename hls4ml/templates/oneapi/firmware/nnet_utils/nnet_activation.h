@@ -242,22 +242,14 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_argmax(cons
 }
 
 template <class data_T, class res_T, typename CONFIG_T> inline void softmax(const data_T &data, res_T &res) {
-    switch (CONFIG_T::implementation) {
-    case softmax_implementation::stable:
-        softmax_stable<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    case softmax_implementation::latency:
+    if constexpr (CONFIG_T::implementation == softmax_implementation::latency) {
         softmax_latency<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    case softmax_implementation::legacy:
-        softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    default:
-        softmax_stable<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    case softmax_implementation::argmax:
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::argmax) {
         softmax_argmax<data_T, res_T, CONFIG_T>(data, res);
-        break;
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::legacy) {
+        softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
+    } else {
+        softmax_stable<data_T, res_T, CONFIG_T>(data, res);
     }
 }
 

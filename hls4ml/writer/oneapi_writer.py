@@ -708,7 +708,7 @@ class OneAPIWriter(Writer):
 
         return None  # fp_bits, fp_integer, fp_signed
 
-    def __write_exp_table(self, model, path):
+    def __write_exp_tables_stable(self, model, path):
 
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
@@ -724,7 +724,7 @@ class OneAPIWriter(Writer):
                 and layer.get_attr('implementation') == 'stable'
             ):
                 table_name = layer.name + '_exp_table'
-                table_size = int(layer.get_attr('exp_table_size'))
+                table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr('exp_table_size')))
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
                     header_name = table_name
@@ -768,7 +768,7 @@ class OneAPIWriter(Writer):
                     h_file.write('};\n\n')
                     h_file.write('#endif')
 
-    def __write_invert_table(self, model, path):
+    def __write_invert_tables_stable(self, model, path):
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
 
@@ -783,7 +783,7 @@ class OneAPIWriter(Writer):
                 and layer.get_attr('implementation') == 'stable'
             ):
                 table_name = layer.name + '_inv_table'
-                table_size = int(layer.get_attr('inv_table_size'))
+                table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr('inv_table_size')))
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
                     header_name = table_name
@@ -820,7 +820,7 @@ class OneAPIWriter(Writer):
                     h_file.write('};\n\n')
                     h_file.write('#endif')
 
-    def __write_exp_table_latency(self, model, path):
+    def __write_exp_tables_latency(self, model, path):
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
             if (
@@ -845,25 +845,10 @@ class OneAPIWriter(Writer):
                         f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
                     )
 
-                    # Default fixed point precision
-                    # 6 bits for integer part, 10 bits for decimal - total, 16
-                    fp_bits = 16
-                    fp_integer = 6
-                    fp_signed = True
-
-                    # Exp table should use the same precision as exp_table, as seen in Vivado code
-                    # init_exp_table<data_T, CONFIG_T>(exp_table);
-                    for layer in model.get_layers():
-                        if layer.name == 'softmax':
-                            ac_type = layer.get_input_variable().type
-                            if ac_type is not None:
-                                try:
-                                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                                    fp_integer = ac_type.precision.integer
-                                    fp_signed = ac_type.precision.signed
-                                except Exception:
-                                    # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                                    pass
+                    ac_type = layer.get_input_variable().type
+                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                    fp_integer = ac_type.precision.integer
+                    fp_signed = ac_type.precision.signed
 
                     sep = ''
                     N = ceil_log2(table_size)
@@ -874,10 +859,10 @@ class OneAPIWriter(Writer):
                         h_file.write(sep + str(real_val))
                         sep = ', '
 
-                    h_file.write('};\n')
-                    h_file.close()
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
-    def __write_invert_table_latency(self, model, path):
+    def __write_invert_tables_latency(self, model, path):
         for layer in model.get_layers():
             # Last property is essential since it seperates layer with activation property from actual activation layers
             if (
@@ -902,25 +887,10 @@ class OneAPIWriter(Writer):
                         f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
                     )
 
-                    # Default fixed point precision, in case values from layer attributes cannot be extracted
-                    # 8 bits for integer part, 10 bits for decimal - total, 18
-                    fp_bits = 18
-                    fp_integer = 8
-                    fp_signed = True
-
-                    # Invert table should use the same precision as exp_table, as seen in Vivado code
-                    # init_invert_table<typename CONFIG_T::exp_table_t, CONFIG_T>(invert_table);
-                    for layer in model.get_layers():
-                        if layer.name == 'softmax':
-                            ac_type = layer.get_attr('exp_table_t')
-                            if ac_type is not None:
-                                try:
-                                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                                    fp_integer = ac_type.precision.integer
-                                    fp_signed = ac_type.precision.signed
-                                except Exception:
-                                    # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
-                                    pass
+                    ac_type = layer.get_attr('exp_table_t')
+                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                    fp_integer = ac_type.precision.integer
+                    fp_signed = ac_type.precision.signed
 
                     sep = ''
                     N = ceil_log2(table_size)
@@ -931,8 +901,8 @@ class OneAPIWriter(Writer):
                         h_file.write(sep + str(real_val))
                         sep = ', '
 
-                    h_file.write('};\n')
-                    h_file.close()
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
     def __write_exp_table_legacy(self, model, path):
 
@@ -967,8 +937,8 @@ class OneAPIWriter(Writer):
                         h_file.write(sep + str(real_val))
                         sep = ', '
 
-                    h_file.write('};\n')
-                    h_file.close()
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
     def __write_invert_table_legacy(self, model, path):
 
@@ -1005,8 +975,8 @@ class OneAPIWriter(Writer):
                         h_file.write(sep + str(real_val))
                         sep = ', '
 
-                    h_file.write('};\n')
-                    h_file.close()
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
     def write_activation_tables(self, model):
         """Write the lookup tables for activation functions
@@ -1027,10 +997,10 @@ class OneAPIWriter(Writer):
         self.__write_softplus_table(model, dstpath)
         self.__write_softsign_table(model, dstpath)
         self.__write_selu_table(model, dstpath)
-        self.__write_exp_table(model, dstpath)
-        self.__write_invert_table(model, dstpath)
-        self.__write_exp_table_latency(model, dstpath)
-        self.__write_invert_table_latency(model, dstpath)
+        self.__write_exp_tables_stable(model, dstpath)
+        self.__write_invert_tables_stable(model, dstpath)
+        self.__write_exp_tables_latency(model, dstpath)
+        self.__write_invert_tables_latency(model, dstpath)
         self.__write_exp_table_legacy(model, dstpath)
         self.__write_invert_table_legacy(model, dstpath)
 

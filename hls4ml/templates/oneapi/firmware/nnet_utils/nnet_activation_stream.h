@@ -471,22 +471,14 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_argma
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_stream() {
-    switch (CONFIG_T::implementation) {
-    case softmax_implementation::latency:
+    if constexpr (CONFIG_T::implementation == softmax_implementation::latency) {
         softmax_latency_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    case softmax_implementation::stable:
-        softmax_stable_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    case softmax_implementation::legacy:
-        softmax_legacy_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    case softmax_implementation::argmax:
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::argmax) {
         softmax_argmax_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    default:
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::legacy) {
+        softmax_argmax_stream<data_pipe, res_pipe, CONFIG_T>();
+    } else { // Default to stable
         softmax_stable_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
     }
 }
 

@@ -629,12 +629,20 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if 'inv_inp_t' in types_to_infer:
             # if not set, just choose the accumulator type
             node.types['inv_inp_t'].precision = node.types['accum_t'].precision
+            if node.model.config.backend.name == 'oneAPI':
+                # TODO - Can introduce this on onther backends since it benefits from only using required number of bits
+                # for the integer part. + 1 is for guarding
+                node.types['inv_inp_t'].precision.integer = 1 + math.ceil(math.log2(max(node.get_input_variable().shape)))
             inferred_types.append('inv_inp_t')
 
         if 'inp_norm_t' in types_to_infer:
             in_type = node.get_input_variable().type.precision
-            inp_norm_width = in_type.width - in_type.signed
-            inp_norm_int = in_type.integer - in_type.signed
+            if node.model.config.backend.name == 'oneAPI':
+                inp_norm_width = in_type.width
+                inp_norm_int = in_type.integer
+            else:
+                inp_norm_width = in_type.width - in_type.signed
+                inp_norm_int = in_type.integer - in_type.signed
             node.types['inp_norm_t'].precision = FixedPrecisionType(inp_norm_width, inp_norm_int, signed=False)
             inferred_types.append('inp_norm_t')
 
