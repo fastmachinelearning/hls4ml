@@ -1,9 +1,15 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
+#ifdef AHLS
+#include <sycl/ext/altera/ac_types/ac_fixed.hpp>
+#include <sycl/ext/altera/ac_types/ac_int.hpp>
+#include <sycl/ext/altera/fpga_extensions.hpp>
+#else
 #include <sycl/ext/intel/ac_types/ac_fixed.hpp>
 #include <sycl/ext/intel/ac_types/ac_int.hpp>
 #include <sycl/ext/intel/fpga_extensions.hpp>
+#endif
 #include <sycl/sycl.hpp>
 
 // Include nnet::array - a custom array-like struct, mainly used with io_stream

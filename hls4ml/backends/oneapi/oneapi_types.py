@@ -2,6 +2,8 @@
 This package includes oneAPI-specific customizations to the variable types
 """
 
+import shutil
+
 import numpy as np
 
 from hls4ml.backends.fpga.fpga_types import (
@@ -180,9 +182,10 @@ class OneAPIInterfaceVariableDefinition(VariableDefinition):
             return f'{self.type.name} {self.name}{name_suffix}'
 
     def declare_cpp(self, pipe_min_size=0, indent=''):
+        compiler_name = 'altera' if shutil.which('ahls') else 'intel'
         lines = indent + f'class {self.pipe_id};\n'
         lines += indent + (
-            f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
+            f'using {self.pipe_name} = sycl::ext::{compiler_name}::experimental::pipe<{self.pipe_id}, '
             + f'{self.type.name}, {pipe_min_size}, PipeProps>;\n'
         )
         return lines
@@ -202,9 +205,10 @@ class OneAPIStreamVariableDefinition(VariableDefinition):
         return f'{self.name}{name_suffix}'
 
     def declare_cpp(self, indent=''):
+        compiler_name = 'altera' if shutil.which('ahls') else 'intel'
         lines = indent + f'class {self.pipe_id};\n'
         lines += indent + (
-            f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
+            f'using {self.pipe_name} = sycl::ext::{compiler_name}::experimental::pipe<{self.pipe_id}, '
             + f'{self.type.name}, {self.pragma[-1]}>;\n'
         )
         return lines
