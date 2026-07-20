@@ -55,6 +55,33 @@ SPLIT_BY_TEST_CASE = {
     'test_keras_api': 1,
 }
 
+# Files that parametrize both Bambu and non-Bambu backends. They run twice:
+# once in the standard image with the Bambu cases excluded, and once in the
+# Bambu image with only the Bambu cases selected.
+BAMBU_SHARED_TESTS = {
+    'test_activations',
+    'test_auto_precision',
+    'test_build_bambu',
+    'test_dense_unrolled',
+    'test_keras_api',
+    'test_multi_dense',
+    'test_pooling',
+    'test_softmax',
+}
+
+# Bambu tests not expressed through backend parametrization, so they have to be
+# named individually.
+BAMBU_ONLY_TESTS = {'test_report.py::test_bambu_report'}
+
+# Whole files that only make sense in the Bambu image. They need Bambu installed
+# but do not parametrize a ``backend``, so the filter args cannot select them.
+# They are kept out of the standard matrix and get their own unfiltered job in
+# the Bambu image.
+BAMBU_ONLY_FILES = {'test_build_bambu_accelerator'}
+
+BAMBU_FILTER_ARG = '--backend-filter=Bambu'
+BAMBU_EXCLUDE_ARG = '--backend-exclude=Bambu'
+
 
 def collect_test_functions_from_ast(test_file):
     """Collect all test function names using AST parsing (no imports)."""
@@ -86,6 +113,19 @@ def uses_example_model(test_filename):
         return 'example-models' in content
 
 
+def standard_extra_args(batch_paths):
+    """Pytest args that keep the Bambu cases out of the standard image."""
+    args = []
+    if any(path.stem in BAMBU_SHARED_TESTS for path in batch_paths):
+        args.append(BAMBU_EXCLUDE_ARG)
+    args += [
+        f'--ci-exclude-nodeid={nodeid}'
+        for nodeid in sorted(BAMBU_ONLY_TESTS)
+        if any(nodeid.startswith(f'{path.name}::') for path in batch_paths)
+    ]
+    return args
+
+
 def generate_test_yaml(test_root='.'):
     test_root = Path(test_root)
     test_paths = [
@@ -95,6 +135,7 @@ def generate_test_yaml(test_root='.'):
         not in (
             BLACKLIST
             | LONGLIST
+            | BAMBU_ONLY_FILES
             | set(SPLIT_BY_TEST_CASE.keys())
             | KERAS3_LIST
             | set(KERAS3_BACKEND_SPECIFIC_LIST.keys() | QKERAS3_LIST)
@@ -110,7 +151,7 @@ def generate_test_yaml(test_root='.'):
         batch_paths: list[Path] = [test_paths[i] for i in batch_idxs]
         names = [path_to_name(path) for path in batch_paths]
         name = '+'.join(names)
-        test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
+        test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths] + standard_extra_args(batch_paths))
         batch_need_example_model = int(any([need_example_models[i] for i in batch_idxs]))
         diff_yml = yaml.safe_load(template.format(name, '.pytest', test_files, batch_need_example_model))
         if yml is None:
@@ -121,7 +162,7 @@ def generate_test_yaml(test_root='.'):
     test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in LONGLIST]
     for path in test_paths:
         name = path.stem.replace('test_', '')
-        test_file = str(path.relative_to(test_root))
+        test_file = ' '.join([str(path.relative_to(test_root))] + standard_extra_args([path]))
         needs_examples = uses_example_model(path)
         diff_yml = yaml.safe_load(template.format(name, '.pytest', test_file, int(needs_examples)))
         yml.update(diff_yml)
@@ -137,7 +178,7 @@ def generate_test_yaml(test_root='.'):
 
         for i, batch in enumerate(batched(test_ids, chunk_size)):
             job_name = f'{name_base}_part{i}'
-            test_file_args = ' '.join(batch).strip().replace('\n', ' ')
+            test_file_args = ' '.join(list(batch) + standard_extra_args([path])).strip().replace('\n', ' ')
             diff_yml = yaml.safe_load(template.format(job_name, '.pytest', test_file_args, int(needs_examples)))
             if yml is None:
                 yml = diff_yml
@@ -184,6 +225,30 @@ def generate_test_yaml(test_root='.'):
             template_keras3_backend.format(name, '.pytest-keras3-only', test_file, int(needs_examples), backend)
         )
         yml.update(diff_yml)
+
+    # Bambu jobs: the same test files, Bambu cases only, in the Bambu image.
+    bambu_paths = sorted(
+        (path for path in test_root.glob('**/test_*.py') if path.stem in BAMBU_SHARED_TESTS), key=path_to_name
+    )
+    for batch_paths in batched(bambu_paths, n_test_files_per_yml):
+        name = 'bambu-' + '+'.join(path_to_name(path) for path in batch_paths)
+        test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths] + [BAMBU_FILTER_ARG])
+        batch_need_example_model = int(any(uses_example_model(path) for path in batch_paths))
+        yml.update(yaml.safe_load(template.format(name, '.pytest-bambu', test_files, batch_need_example_model)))
+
+    for nodeid in sorted(BAMBU_ONLY_TESTS):
+        name = 'bambu-' + nodeid.split('::', 1)[1].replace('test_', '')
+        yml.update(yaml.safe_load(template.format(name, '.pytest-bambu', nodeid, 0)))
+
+    # Bambu-only files run whole and unfiltered: they have no backend parameter
+    # for BAMBU_FILTER_ARG to match.
+    bambu_only_paths = sorted(
+        (path for path in test_root.glob('**/test_*.py') if path.stem in BAMBU_ONLY_FILES), key=path_to_name
+    )
+    for path in bambu_only_paths:
+        name = 'bambu-' + path_to_name(path)
+        test_file = str(path.relative_to(test_root))
+        yml.update(yaml.safe_load(template.format(name, '.pytest-bambu', test_file, int(uses_example_model(path)))))
 
     return yml
 
