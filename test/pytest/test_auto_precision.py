@@ -119,7 +119,7 @@ def keras_model_sepconv2d():
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Bambu'])
 @pytest.mark.parametrize('model_type', ['conv1d', 'conv2d'])
 def test_auto_precision_conv(
     test_case_id, keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend

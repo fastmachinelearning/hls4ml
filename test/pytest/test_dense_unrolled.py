@@ -32,7 +32,7 @@ def test_resource_unrolled_parsing(test_case_id, strategy):
 # Tests a wide range of RF to ensure the unrolled resource kernel is correct
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('reuse_factor', [1, 2, 4, 8, 16, 32, 48, 64, 96, 192])
-@pytest.mark.parametrize('backend', ['Vitis', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Vivado', 'Bambu'])
 def test_resource_unrolled_dense(test_case_id, io_type, reuse_factor, backend):
     input_shape = (16,)
     X = np.random.rand(100, *input_shape)
