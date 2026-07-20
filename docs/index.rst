@@ -39,6 +39,7 @@
     backend/catapult
     backend/quartus
     backend/bambu
+    backend/nanoxplore
     backend/sr
 
 .. toctree::
