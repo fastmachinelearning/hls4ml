@@ -319,8 +319,16 @@ def _parse_transaction_file(sln_dir, solution, rtl, top_func_name):
     }
 
 
-def _parse_implementation_report(hls_dir, is_vivado_accelerator):
-    """Parse post-route utilization report."""
+def _parse_implementation_report(hls_dir, is_vivado_accelerator, percentage_columns=True):
+    """Parse post-route utilization report.
+
+    Args:
+        hls_dir: project directory.
+        is_vivado_accelerator: select the system-level report instead of the top-level one.
+        percentage_columns (bool, optional): whether each cell carries a percentage next to the
+            absolute value. Vivado's hierarchical utilization report writes both, but reports
+            produced by other flows carry the absolute count only. Defaults to True.
+    """
     util_rpt_path = 'util_rpt_system' if is_vivado_accelerator else 'util_rpt_vivado'
     post_route_util_file = _path(util_rpt_path, hls_dir=hls_dir)
     if not os.path.isfile(post_route_util_file):
@@ -329,29 +337,30 @@ def _parse_implementation_report(hls_dir, is_vivado_accelerator):
     with open(post_route_util_file) as f:
         for line in f.readlines():
             if re.search(r'\(top\)', line):
-                results = [_get_abs_and_percentage_values(elem) for elem in line.replace('|', '').split()[UTIL_SKIP_CELLS:]]
-                implementation_report['TotLUTs'] = results[UTIL_COL_TOTLUTS][0]
-                implementation_report['TotLUTs%'] = results[UTIL_COL_TOTLUTS][1]
-                implementation_report['LogicLUTs'] = results[UTIL_COL_LOGICLUTS][0]
-                implementation_report['LogicLUTs%'] = results[UTIL_COL_LOGICLUTS][1]
-                implementation_report['LUTRAMs'] = results[UTIL_COL_LUTRAMS][0]
-                implementation_report['LUTRAMs%'] = results[UTIL_COL_LUTRAMS][1]
-                implementation_report['SRLs'] = results[UTIL_COL_SRLS][0]
-                implementation_report['SRLs%'] = results[UTIL_COL_SRLS][1]
-                implementation_report['FFs'] = results[UTIL_COL_FFS][0]
-                implementation_report['FFs%'] = results[UTIL_COL_FFS][1]
-                implementation_report['RAMB36s'] = results[UTIL_COL_RAMB36][0]
-                implementation_report['RAMB36s%'] = results[UTIL_COL_RAMB36][1]
-                implementation_report['RAMB18s'] = results[UTIL_COL_RAMB18][0]
-                implementation_report['RAMB18s%'] = results[UTIL_COL_RAMB18][1]
-                if len(results) == UTIL_COLS_WITH_URAM:
-                    implementation_report['URAMs'] = results[UTIL_COL_URAM][0]
-                    implementation_report['URAMs%'] = results[UTIL_COL_URAM][1]
-                    implementation_report['DSPs'] = results[UTIL_COL_DSP][0]
-                    implementation_report['DSPs%'] = results[UTIL_COL_DSP][1]
+                cells = line.replace('|', '').split()[UTIL_SKIP_CELLS:]
+                if percentage_columns:
+                    results = [_get_abs_and_percentage_values(elem) for elem in cells]
                 else:
-                    implementation_report['DSPs'] = results[UTIL_COL_DSP - 1][0]
-                    implementation_report['DSPs%'] = results[UTIL_COL_DSP - 1][1]
+                    results = [(int(elem), None) for elem in cells]
+
+                columns = [
+                    ('TotLUTs', UTIL_COL_TOTLUTS),
+                    ('LogicLUTs', UTIL_COL_LOGICLUTS),
+                    ('LUTRAMs', UTIL_COL_LUTRAMS),
+                    ('SRLs', UTIL_COL_SRLS),
+                    ('FFs', UTIL_COL_FFS),
+                    ('RAMB36s', UTIL_COL_RAMB36),
+                    ('RAMB18s', UTIL_COL_RAMB18),
+                ]
+                if len(results) == UTIL_COLS_WITH_URAM:
+                    columns += [('URAMs', UTIL_COL_URAM), ('DSPs', UTIL_COL_DSP)]
+                else:
+                    columns += [('DSPs', UTIL_COL_DSP - 1)]
+
+                for name, col in columns:
+                    implementation_report[name] = results[col][0]
+                    if percentage_columns:
+                        implementation_report[f'{name}%'] = results[col][1]
                 break
     return implementation_report if implementation_report else None
 
