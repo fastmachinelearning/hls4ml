@@ -1,3 +1,4 @@
+from hls4ml.report.bambu_report import parse_bambu_report  # noqa: F401
 from hls4ml.report.catapult_report import (
     parse_catapult_report,  # noqa: F401
     qofr,  # noqa: F401
