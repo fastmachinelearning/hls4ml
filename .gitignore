@@ -13,5 +13,6 @@ docs/_build
 docs/autodoc/*
 test/pytest/*_test_*
 *~
+*.ipynb
 *.ipynb_checkpoints/
 *.bak

@@ -1037,6 +1037,115 @@ class TernaryTanh(Activation):
         super().initialize()
 
 
+class IFNeuron(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+        Attribute('window_size', value_type=int, default=0, configurable=False),
+        Attribute('threshold', value_type=float),
+        Attribute('threshold_mode', value_type=str, default='scalar'),
+        ChoiceAttribute('reset_mechanism', choices=['subtract', 'zero'], default='subtract', configurable=False),
+        TypeAttribute('threshold'),
+        TypeAttribute('membrane'),
+    ]
+
+    def initialize(self):
+        shape = list(self.get_input_variable().shape)
+        shape[-1] = self.attributes['n_out']
+        self.add_output_variable(shape)
+        self._set_type_t('threshold')
+        self._set_type_t('membrane')
+        if self.get_attr('threshold_mode', 'scalar') == 'vector':
+            threshold = self.get_attr('threshold_data')
+            if threshold is None or len(threshold) != self.attributes['n_out']:
+                raise Exception('IFNeuron threshold vector must be present and have length n_out')
+            threshold_t = self.get_attr('threshold_t')
+            self.add_weights_variable(
+                name='threshold_vec',
+                var_name='th{index}',
+                type_name=threshold_t.name,
+                precision=threshold_t.precision,
+                data=threshold,
+            )
+
+
+class LIFNeuron(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+        Attribute('window_size', value_type=int, default=0, configurable=False),
+        Attribute('threshold', value_type=float),
+        Attribute('threshold_mode', value_type=str, default='scalar'),
+        Attribute('beta', value_type=float),
+        Attribute('beta_mode', value_type=str, default='scalar'),
+        ChoiceAttribute('reset_mechanism', choices=['subtract', 'zero'], default='subtract', configurable=False),
+        TypeAttribute('beta'),
+        TypeAttribute('threshold'),
+        TypeAttribute('membrane'),
+    ]
+
+    def initialize(self):
+        shape = list(self.get_input_variable().shape)
+        shape[-1] = self.attributes['n_out']
+        self.add_output_variable(shape)
+        self._set_type_t('beta')
+        self._set_type_t('threshold')
+        self._set_type_t('membrane')
+        if self.get_attr('threshold_mode', 'scalar') == 'vector':
+            threshold = self.get_attr('threshold_data')
+            if threshold is None or len(threshold) != self.attributes['n_out']:
+                raise Exception('LIFNeuron threshold vector must be present and have length n_out')
+            threshold_t = self.get_attr('threshold_t')
+            self.add_weights_variable(
+                name='threshold_vec',
+                var_name='th{index}',
+                type_name=threshold_t.name,
+                precision=threshold_t.precision,
+                data=threshold,
+            )
+        if self.get_attr('beta_mode', 'scalar') == 'vector':
+            beta = self.get_attr('beta_data')
+            if beta is None or len(beta) != self.attributes['n_out']:
+                raise Exception('LIFNeuron beta vector must be present and have length n_out')
+            beta_t = self.get_attr('beta_t')
+            self.add_weights_variable(
+                name='beta_vec',
+                var_name='be{index}',
+                type_name=beta_t.name,
+                precision=beta_t.precision,
+                data=beta,
+            )
+
+
+class SNNReadout(Layer):
+    _expected_attributes = [
+        Attribute('n_classes'),
+        Attribute('window_size', value_type=int, default=1),
+        Attribute('class_threshold', value_type=int, default=1),
+        Attribute('beta', value_type=float, default=1.0),
+        ChoiceAttribute('output_mode', choices=['spike', 'membrane'], default='spike'),
+        ChoiceAttribute(
+            'state_reset_policy',
+            choices=['fixed_window', 'tlast', 'host_pulse', 'never'],
+            default='fixed_window',
+            configurable=False,
+        ),
+        ChoiceAttribute(
+            'decision_rule',
+            choices=['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit', 'argmax_membrane'],
+            default='argmax_membrane',
+            configurable=False,
+        ),
+        TypeAttribute('membrane'),
+    ]
+
+    def initialize(self):
+        shape = list(self.get_input_variable().shape)
+        shape[-1] = 1
+        self.add_output_variable(shape)
+        self._set_type_t('membrane')
+
+
 class BatchNormOnnx(Layer):
     """
     A transient layer formed from ONNX BatchNormalization that gets converted to
@@ -1793,6 +1902,9 @@ layer_map = {
     'ELU': ParametrizedActivation,
     'PReLU': PReLU,
     'Softmax': Softmax,
+    'IFNeuron': IFNeuron,
+    'LIFNeuron': LIFNeuron,
+    'SNNReadout': SNNReadout,
     'TernaryTanh': TernaryTanh,
     'HardActivation': HardActivation,
     'Reshape': Reshape,
