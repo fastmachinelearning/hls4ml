@@ -175,6 +175,18 @@ binary/ternary networks:
     year = "2021"
 }
 ```
+Spiking Neural Networks (SNNs):
+```bibtex
+@misc{dillon2026spikingneuralnetworkinference,
+      title={Spiking Neural Network inference on FPGAs with hls4ml},
+      author={Barry M. Dillon},
+      year={2026},
+      eprint={2606.10008},
+      archivePrefix={arXiv},
+      primaryClass={cs.NE},
+      url={https://arxiv.org/abs/2606.10008},
+}
+```
 
 # Acknowledgments
 If you benefited from participating in our community, we ask that you please acknowledge the Fast Machine Learning collaboration, and particular individuals who helped you, in any publications.
