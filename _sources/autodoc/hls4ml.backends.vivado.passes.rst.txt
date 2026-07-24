@@ -172,6 +172,14 @@ hls4ml.backends.vivado.passes.snn\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.vivado.passes.sparsepixels module
+-------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.sparsepixels
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.vivado.passes.transform\_types module
 -----------------------------------------------------
 

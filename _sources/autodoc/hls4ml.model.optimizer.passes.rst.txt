@@ -196,6 +196,14 @@ hls4ml.model.optimizer.passes.snn module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.sparsepixels\_flatten module
+----------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.sparsepixels_flatten
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.stamp module
 ------------------------------------------
 
