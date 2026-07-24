@@ -204,6 +204,9 @@ class AttributeMapping(MutableMapping):
         precision_keys = [k for k, v in self.attributes.items() if isinstance(v, self.clazz)]
         yield from precision_keys
 
+    def __contains__(self, key):
+        return key in self.attributes and isinstance(self.attributes[key], self.clazz)
+
     def __setitem__(self, key, value):
         self.attributes[key] = value
 
