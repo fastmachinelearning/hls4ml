@@ -1,14 +1,17 @@
-import os
-import time
 import ctypes
 import logging
+import os
+import time
+
 import numpy as np
+
 
 class CoyoteOverlay:
     """
     CoyoteOverlay class, similar to NeuralNetworkOverlay for the VivadoAccelerator backend
     This class can be used to run model inference on the FPGA with the Coyote backend
     """
+
     def __init__(self, path: str, project_name: str = 'myproject'):
         """
         Default constructor
@@ -22,9 +25,7 @@ class CoyoteOverlay:
         self.project_name = project_name
 
         # Set up dynamic C library
-        self.coyote_lib = ctypes.cdll.LoadLibrary(
-            f'{self.path}/build/{self.project_name}_cyt_sw/libCoyoteInference.so'
-        )
+        self.coyote_lib = ctypes.cdll.LoadLibrary(f'{self.path}/build/{self.project_name}_cyt_sw/libCoyoteInference.so')
 
         self.coyote_lib.init_model_inference.argtypes = [ctypes.c_uint, ctypes.c_uint, ctypes.c_uint]
         self.coyote_lib.init_model_inference.restype = ctypes.POINTER(ctypes.c_void_p)
@@ -36,7 +37,7 @@ class CoyoteOverlay:
         self.coyote_lib.get_inference_predictions.restype = ctypes.POINTER(ctypes.c_float)
 
         self.coyote_lib.free_model_inference.argtypes = [ctypes.POINTER(ctypes.c_void_p)]
-        
+
     def program_ethz_hacc_fpga(self):
         """
         Utility function for loading the Coyote-hls4ml bitstream and driver
@@ -46,9 +47,9 @@ class CoyoteOverlay:
         """
         os.system(
             f'cd {self.path}/Coyote/driver && '
-            f'make && '  
+            f'make && '
             f'cd ../util && '
-            f'bash program_hacc_local.sh ../../build/{self.project_name}_cyt_hw/bitstreams/cyt_top.bit ../driver/build/coyote_driver.ko'
+            f'bash program_hacc_local.sh ../../build/{self.project_name}_cyt_hw/bitstreams/cyt_top.bit ../driver/build/coyote_driver.ko'  # noqa: E501
         )
 
     def predict(self, X: np.array, y_shape: tuple, batch_size: int = 1, verbose: bool = True):
@@ -70,7 +71,7 @@ class CoyoteOverlay:
         self.coyote_lib.set_inference_data.argtypes = [ctypes.POINTER(ctypes.c_void_p), np_pointer_nd, ctypes.c_uint]
 
         model = self.coyote_lib.init_model_inference(batch_size, int(np.prod(X[0].shape)), int(np.prod(y_shape)))
-        
+
         cnt = 0
         avg_latency = 0
         avg_throughput = 0
@@ -86,8 +87,8 @@ class CoyoteOverlay:
                 te = time.time_ns()
 
                 time_taken = te - ts
-                avg_latency += (time_taken / 1e3)
-                avg_throughput += (batch_size / (time_taken * 1e-9))
+                avg_latency += time_taken / 1e3
+                avg_throughput += batch_size / (time_taken * 1e-9)
 
                 for j in range(batch_size):
                     tmp = self.coyote_lib.get_inference_predictions(model, j)
@@ -102,4 +103,4 @@ class CoyoteOverlay:
             print(f'Mean latency: {round(avg_latency / total_batches, 3)}us (inference only)')
             print(f'Mean throughput: {round(avg_throughput / total_batches, 1)} samples/s (inference only)')
 
-        return y 
+        return y
