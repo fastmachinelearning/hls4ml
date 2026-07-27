@@ -42,7 +42,9 @@ KERAS3_LIST = {
     'test_qeinsum',
     'test_multiout_onnx',
     'test_keras_v3_profiling',
+    'test_sparsepixels',
 }
+QKERAS3_LIST = {'test_qkerasV3'}
 KERAS3_BACKEND_SPECIFIC_LIST = {
     'test_pquant_keras': 'tensorflow',
     'test_pquant_pytorch': 'torch',
@@ -92,7 +94,11 @@ def generate_test_yaml(test_root='.'):
         for path in test_root.glob('**/test_*.py')
         if path.stem
         not in (
-            BLACKLIST | LONGLIST | set(SPLIT_BY_TEST_CASE.keys()) | KERAS3_LIST | set(KERAS3_BACKEND_SPECIFIC_LIST.keys())
+            BLACKLIST
+            | LONGLIST
+            | set(SPLIT_BY_TEST_CASE.keys())
+            | KERAS3_LIST
+            | set(KERAS3_BACKEND_SPECIFIC_LIST.keys() | QKERAS3_LIST)
         )
     ]
     need_example_models = [uses_example_model(path) for path in test_paths]
@@ -152,6 +158,21 @@ def generate_test_yaml(test_root='.'):
         test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
         batch_need_example_model = int(any([keras3_need_examples[i] for i in batch_idxs]))
         diff_yml = yaml.safe_load(template.format(name, '.pytest-keras3-only', test_files, batch_need_example_model))
+        yml.update(diff_yml)
+
+    qkeras3_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in QKERAS3_LIST]
+    qkeras3_need_examples = [uses_example_model(path) for path in qkeras3_paths]
+
+    qk3_idxs = list(range(len(qkeras3_need_examples)))
+    qk3_idxs = sorted(qk3_idxs, key=lambda i: f'{qkeras3_need_examples[i]}_{path_to_name(qkeras3_paths[i])}')
+
+    for batch_idxs in batched(qk3_idxs, n_test_files_per_yml):
+        batch_paths: list[Path] = [qkeras3_paths[i] for i in batch_idxs]
+        names = [path_to_name(path) for path in batch_paths]
+        name = 'qkerasV3'
+        test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
+        batch_need_example_model = int(any([qkeras3_need_examples[i] for i in batch_idxs]))
+        diff_yml = yaml.safe_load(template.format(name, '.pytest-qkeras-v3-only', test_files, batch_need_example_model))
         yml.update(diff_yml)
 
     backend_specific_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in KERAS3_BACKEND_SPECIFIC_LIST]
