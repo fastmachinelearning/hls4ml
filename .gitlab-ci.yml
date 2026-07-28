@@ -24,6 +24,7 @@ pytests:
   trigger:
     include:
       - local: test/pytest/ci-template.yml
+      - local: test/pytest/ci-template-bambu.yml
       - artifact: test/pytest/pytests.yml
         job: generator
     strategy: depend

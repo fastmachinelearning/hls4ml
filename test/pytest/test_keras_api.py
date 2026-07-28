@@ -26,7 +26,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Bambu'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(test_case_id, backend, io_type, synthesis_config):
     model = tf.keras.models.Sequential()
@@ -137,6 +137,8 @@ padds_options = ['same', 'valid']
         ('Vitis', 'Latency'),
         ('Quartus', 'Resource'),
         ('oneAPI', 'Resource'),
+        ('Bambu', 'Resource'),
+        ('Bambu', 'Latency'),
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
@@ -175,7 +177,7 @@ def test_conv1d(test_case_id, padds, backend, strategy, io_type, synthesis_confi
     # 5e-2 might be too high
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=5e-2)
 
-    if not (backend in ['Vivado', 'Vitis'] and io_type == 'io_stream' and padds == 'same'):
+    if not (backend in ['Vivado', 'Vitis', 'Bambu'] and io_type == 'io_stream' and padds == 'same'):
         # Vivado/Vitis inserts and additional layer for 'same' padding in io_stream
         assert len(model.layers) + 2 == len(hls_model.get_layers())
         assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
