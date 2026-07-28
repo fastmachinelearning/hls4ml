@@ -447,7 +447,7 @@ class BambuBackend(FPGABackend):
             # bug on io_stream's ac_channel FIFOs, so it is filtered below.
             REQ_ARGS = [
                 '-lm',
-                '-Ifirmware/ac_types',
+                '-Ifirmware/ac_types/include',
                 '--compiler=I386_CLANG16',
                 CC_TEMPLATE_DEPTH,
                 '--generate-interface=INFER',
