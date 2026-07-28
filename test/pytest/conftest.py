@@ -6,6 +6,64 @@ import pytest
 _PROBLEMATIC_CHARS = ':;=%\'"<>|?*\\'
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        '--backend-filter',
+        action='append',
+        default=[],
+        help='Run only parametrized test cases whose backend parameter matches one of these values.',
+    )
+    parser.addoption(
+        '--backend-exclude',
+        action='append',
+        default=[],
+        help='Skip parametrized test cases whose backend parameter matches one of these values.',
+    )
+    parser.addoption(
+        '--ci-exclude-nodeid',
+        action='append',
+        default=[],
+        help='Skip collected tests whose non-parametrized nodeid matches this value.',
+    )
+
+
+def _base_nodeid(nodeid):
+    return nodeid.split('[', 1)[0]
+
+
+def pytest_collection_modifyitems(config, items):
+    backend_filter = set(config.getoption('--backend-filter'))
+    backend_exclude = set(config.getoption('--backend-exclude'))
+    excluded_nodeids = set(config.getoption('--ci-exclude-nodeid'))
+
+    if not backend_filter and not backend_exclude and not excluded_nodeids:
+        return
+
+    kept = []
+    deselected = []
+    for item in items:
+        base_nodeid = _base_nodeid(item.nodeid)
+        backend = getattr(item, 'callspec', None)
+        backend = backend.params.get('backend') if backend is not None else None
+
+        selected = True
+        if base_nodeid in excluded_nodeids:
+            selected = False
+        if backend_filter and backend not in backend_filter:
+            selected = False
+        if backend_exclude and backend in backend_exclude:
+            selected = False
+
+        if selected:
+            kept.append(item)
+        else:
+            deselected.append(item)
+
+    if deselected:
+        config.hook.pytest_deselected(items=deselected)
+        items[:] = kept
+
+
 def _sanitize_test_id(s: str) -> str:
     """
     Sanitize a test identifier for use in paths.

@@ -148,3 +148,38 @@ def test_report(hls_model_setup, capsys):
     captured = capsys.readouterr()  # capture again to test
 
     assert captured.out == backend_config['expected_outcome']
+
+
+def test_bambu_report(tmp_path):
+    """Tests parsing of Bambu XML reports (reference schema: PandA 2026.06).
+
+    The fixture uses the real <application> root with <resources> attributes,
+    a top-level <evaluation> block, and <timing><simulation><run> cycle counts.
+    parse_bambu_report is called with part_family='Xilinx'; without Vivado
+    report files present only BambuMetrics is populated.
+    """
+    output_dir = tmp_path / 'bambu'
+    output_dir.mkdir()
+    sample_report = test_root_path / 'test_report/Bambu/bambu_results_0.xml'
+    shutil.copy(sample_report, output_dir / 'bambu_results_0.xml')
+
+    report = hls4ml.report.parse_bambu_report(str(output_dir), 'Xilinx')
+
+    assert report is not None
+    m = report['BambuMetrics']
+
+    # Resource metrics from <resources> attributes
+    assert m['LUTS'] == 798
+    assert m['REGISTERS'] == 808
+    assert m['DSPS'] == 27
+    assert m['BRAMS'] == 0
+    assert m['SLICES'] == 292
+
+    # Cycle count from <timing><simulation><run>
+    assert m['Total cycles'] == 35
+    assert m['Number of executions'] == 1
+    assert m['Average execution'] == pytest.approx(35.0)
+
+    # CYCLES from top-level <evaluation> (setdefault, so does not override resources)
+    assert m['CYCLES'] == 35
+    assert m['AREA'] == 10248

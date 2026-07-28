@@ -38,6 +38,7 @@
     backend/oneapi
     backend/catapult
     backend/quartus
+    backend/bambu
     backend/sr
 
 .. toctree::

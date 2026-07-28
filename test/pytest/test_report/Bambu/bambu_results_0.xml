@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<application
+	benchmark="mytop"
+	version="Version: PandA 2026.06"
+	verbosity="4"
+	timestamp="2026-06-04T14:23:54"
+	args="bambu --top-fname=mytop --evaluation mytop.cpp">
+	<hls_results planner_context_xml="false">
+		<function_490285
+			id="490285"
+			function_ii="0"
+			function_pipelined="false"
+			name="_Z5mytopP6ac_intILi16ELb1EES1_S1_" />
+	</hls_results>
+	<timing>
+		<simulation return_value="0">
+			<run>35</run>
+		</simulation>
+	</timing>
+	<resources
+		REGISTERS="808"
+		SLACK="-0.072"
+		FREQUENCY="99.285"
+		LUTS="798"
+		IOPINS="0"
+		POWER="0.160"
+		SLICES="292"
+		DSPS="27"
+		DELAY="10.072"
+		BRAMS="0"
+		DRAMS="0" />
+	<evaluation
+		AREA="10248"
+		CYCLES="35"
+		TOTAL_CYCLES="35"
+		BRAMS="0"
+		DRAMS="0"
+		DSPS="27"
+		FREQUENCY="99.285"
+		PERIOD="10.072"
+		REGISTERS="808" />
+</application>
