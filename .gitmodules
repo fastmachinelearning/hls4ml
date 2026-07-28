@@ -10,3 +10,9 @@
 [submodule "hls4ml/templates/catapult/ac_math"]
 	path = hls4ml/templates/catapult/ac_math
 	url = https://github.com/hlslibs/ac_math.git
+[submodule "hls4ml/templates/bambu/nnet_utils/gcem"]
+	path = hls4ml/templates/bambu/nnet_utils/gcem
+	url = https://github.com/kthohr/gcem
+[submodule "hls4ml/templates/bambu/ac_types"]
+	path = hls4ml/templates/bambu/ac_types
+	url = https://github.com/ferrandi/ac_types.git

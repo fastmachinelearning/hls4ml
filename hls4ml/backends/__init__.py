@@ -13,6 +13,12 @@ from hls4ml.backends.catapult.catapult_backend import CatapultBackend  # isort: 
 
 from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
 
+from hls4ml.backends.bambu.bambu_backend import BambuBackend  # isort: skip
+
+from hls4ml.backends.bambu_accelerator.bambu_accelerator_backend import BambuAcceleratorBackend  # isort: skip  # noqa: F401
+
+from hls4ml.backends.nanoxplore_accelerator.nanoxplore_accelerator_backend import NanoXploreAcceleratorBackend  # isort: skip  # noqa: E501,F401
+
 
 def _register_builtin_backends():
     register_backend('Vivado', VivadoBackend)
@@ -23,6 +29,8 @@ def _register_builtin_backends():
     register_backend('SymbolicExpression', SymbolicExpressionBackend)
     register_backend('oneAPI', OneAPIBackend)
     register_backend('Libero', LiberoBackend)
+    register_backend('Bambu', BambuBackend)
+    register_backend('NanoXploreAccelerator', NanoXploreAcceleratorBackend)
 
 
 _register_builtin_backends()
