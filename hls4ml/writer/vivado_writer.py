@@ -220,6 +220,8 @@ class VivadoWriter(Writer):
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
+                    if all_brams:
+                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
                     newline += pipeline_pragma
 
                 if io_type == 'io_stream':
@@ -585,6 +587,14 @@ class VivadoWriter(Writer):
                 newline = line
                 for bram in model_brams:
                     newline += f'#include "firmware/weights/{bram.name}.h"\n'
+
+            elif '// hls-fpga-machine-learning insert load weights' in line:
+                newline = line
+                if model_brams and model.config.get_writer_config()['WriteWeightsTxt']:
+                    for bram in model_brams:
+                        newline += indent + 'nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                            bram.type.name, bram.data_length, bram.name, bram.name
+                        )
 
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
