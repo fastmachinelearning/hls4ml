@@ -5,14 +5,13 @@ from math import prod
 
 import numpy as np
 
-from ._base import KerasV3LayerHandler, register
+from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
     import keras
     from keras import KerasTensor
 
 
-@register
 class DenseHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.core.dense.Dense',)
 
@@ -36,7 +35,6 @@ class DenseHandler(KerasV3LayerHandler):
         return config
 
 
-@register
 class InputHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.core.input_layer.InputLayer',)
 
@@ -50,7 +48,6 @@ class InputHandler(KerasV3LayerHandler):
         return config
 
 
-@register
 class ActivationHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.activation.Activation',)
 
@@ -89,7 +86,6 @@ class ActivationHandler(KerasV3LayerHandler):
         return (config,)
 
 
-@register
 class ReLUHandler(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.activations.leaky_relu.LeakyReLU',
@@ -136,7 +132,6 @@ class ReLUHandler(KerasV3LayerHandler):
         return (config,)
 
 
-@register
 class SoftmaxHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.softmax.Softmax',)
 
@@ -169,7 +164,6 @@ class SoftmaxHandler(KerasV3LayerHandler):
         return (config,)
 
 
-@register
 class EluHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.activations.elu.ELU',)
 
@@ -190,7 +184,6 @@ class EluHandler(KerasV3LayerHandler):
         return (config,)
 
 
-@register
 class ReshapeHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.reshaping.reshape.Reshape', 'keras.src.layers.reshaping.flatten.Flatten')
 
@@ -206,7 +199,6 @@ class ReshapeHandler(KerasV3LayerHandler):
         }
 
 
-@register
 class PermuteHandler(KerasV3LayerHandler):
     handles = ('keras.src.layers.reshaping.permute.Permute',)
 
@@ -220,7 +212,6 @@ class PermuteHandler(KerasV3LayerHandler):
         return config
 
 
-@register
 class NoOp(KerasV3LayerHandler):
     handles = (
         'keras.src.layers.preprocessing.image_preprocessing.random_brightness.RandomBrightness',

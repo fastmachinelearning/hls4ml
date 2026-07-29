@@ -1,0 +1,42 @@
+{
+    "CSimResults": [
+        [
+            "0",
+            "0"
+        ],
+        [
+            "0",
+            "0"
+        ],
+        [
+            "0",
+            "0"
+        ],
+        [
+            "0",
+            "0"
+        ],
+        [
+            "0",
+            "0"
+        ]
+    ],
+    "CSynthesisReport": {
+        "TargetClockPeriod": "5.00",
+        "EstimatedClockPeriod": "3.015",
+        "BestLatency": "2",
+        "WorstLatency": "2",
+        "IntervalMin": "1",
+        "IntervalMax": "1",
+        "BRAM_18K": "1",
+        "DSP": "2",
+        "FF": "89",
+        "LUT": "190",
+        "URAM": "0",
+        "AvailableBRAM_18K": "5376",
+        "AvailableDSP": "12288",
+        "AvailableFF": "3456000",
+        "AvailableLUT": "1728000",
+        "AvailableURAM": "1280"
+    }
+}

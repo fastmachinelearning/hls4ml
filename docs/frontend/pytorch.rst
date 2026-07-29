@@ -18,3 +18,6 @@ of the model. If the ``io_parallel`` I/O type (see :ref:`Concepts`) is used, a t
 Outputs are not transposed back by default, but in ``io_parallel`` case, a transpose node can be added. If not needed, these adjustments can also be switched off. See :py:class:`~hls4ml.utils.config.config_from_pytorch_model` for details.
 
 The equivalent of Keras extension API is not yet available for PyTorch parser, and will be provided in the future.
+
+.. note::
+    Experimental spiking layer support is available for selected modules. See :doc:`../advanced/snn` for details.

@@ -27,7 +27,7 @@ except ImportError:
     __torch_profiling_enabled__ = False
 
 try:
-    import qkeras
+    from qkeras import QActivation
 
     __qkeras_profiling_enabled__ = True
 except ImportError:
@@ -37,7 +37,7 @@ __keras_activations = list()
 if __keras_profiling_enabled__:
     __keras_activations.append(keras.layers.Activation)
 if __qkeras_profiling_enabled__:
-    __keras_activations.append(qkeras.QActivation)
+    __keras_activations.append(QActivation)
 
 
 def get_unoptimized_hlsmodel(model):

@@ -13,7 +13,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('activation', ['relu', None])
-def test_trace(backend, activation):
+def test_trace(test_case_id, backend, activation):
     """Test the tracing feature with a simple Keras model."""
     model = tf.keras.models.Sequential()
     model.add(
@@ -43,7 +43,7 @@ def test_trace(backend, activation):
     for layer in config['LayerName'].keys():
         config['LayerName'][layer]['Trace'] = True
 
-    output_dir = str(test_root_path / f'hls4mlprj_trace_{backend}_{activation}')
+    output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
 

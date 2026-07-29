@@ -71,8 +71,8 @@ def data():
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
-def test_multi_clone(model_multi_clone, data, backend: str):
-    output_dir = str(test_root_path / f'hls4mlprj_stream_clone_multiclone_{backend}')
+def test_multi_clone(test_case_id, model_multi_clone, data, backend: str):
+    output_dir = str(test_root_path / test_case_id)
     hls_config = hls4ml.utils.config_from_keras_model(
         model_multi_clone, default_precision='fixed<24,3>', granularity='name', backend=backend
     )
@@ -91,8 +91,8 @@ def test_multi_clone(model_multi_clone, data, backend: str):
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'oneAPI'])
-def test_clone_precision_inheritance(model_clone_precision_inheritance, data, backend: str):
-    output_dir = str(test_root_path / f'hls4mlprj_stream_clone_precision_{backend}')
+def test_clone_precision_inheritance(test_case_id, model_clone_precision_inheritance, data, backend: str):
+    output_dir = str(test_root_path / test_case_id)
     layer_config = {
         'inp': {'Precision': 'fixed<32,5>'},
         'x': {'Precision': 'fixed<32,5>'},

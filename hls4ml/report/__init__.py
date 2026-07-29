@@ -3,6 +3,7 @@ from hls4ml.report.catapult_report import (
     qofr,  # noqa: F401
     read_catapult_report,  # noqa: F401
 )
+from hls4ml.report.libero_report import parse_libero_report  # noqa: F401
 from hls4ml.report.oneapi_report import (
     parse_oneapi_report,  # noqa: F401
     print_oneapi_report,  # noqa: F401

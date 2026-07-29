@@ -51,8 +51,10 @@
     advanced/precision
     advanced/fifo_depth
     advanced/extension
+    advanced/snn
     advanced/model_optimization
     advanced/bramfactor
+    advanced/plugins
 
 .. toctree::
     :hidden:

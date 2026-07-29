@@ -6,7 +6,7 @@ from quantizers import get_fixed_quantizer_np
 
 from hls4ml.model.types import FixedPrecisionType
 
-from ._base import KerasV3LayerHandler, QLayerHandler, register
+from ._base import KerasV3LayerHandler, QLayerHandler
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -15,7 +15,6 @@ if typing.TYPE_CHECKING:
 from decimal import Decimal
 
 
-@register
 class QUnaryLUTHandler(QLayerHandler, KerasV3LayerHandler):
     handles = ('hgq.layers.activation.QUnaryFunctionLUT',)
 

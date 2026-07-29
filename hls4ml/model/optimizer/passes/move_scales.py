@@ -180,7 +180,6 @@ class BiasDownAdd(OptimizerPass):
             model.insert_node(new_node)
             return True
         else:
-            warnings.warn('Failed to propagate quantization bias down Add node; model probably not suppored.', stacklevel=1)
             return False
 
 

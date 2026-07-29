@@ -18,7 +18,7 @@ Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for
 1. In the pull request description, clearly document all changes made and the expected behavior.
 1. If you are introducing new functionality, add at least one unit test under the `test` folder and make sure it passes before you submit the pull request.
 1. Similarly, if you are fixing a bug, add at least one unit test under the `test` folder such that the master branch fails the test and your branch passes the test.
-1. Install and run `pre-commit` on the files that you have edited. We are adiabatically turning on linting for the full repository (see [#678](https://github.com/fastmachinelearning/hls4ml/pull/678)).
+1. Install and run `pre-commit` on the files that you have edited.
 1. Submit the pull request to the [main](https://github.com/fastmachinelearning/hls4ml) branch.
 
 ## Code Reviews
@@ -48,7 +48,7 @@ include:
 
 ### Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
+This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 1.4,
 available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
 
 For answers to common questions about this code of conduct, see

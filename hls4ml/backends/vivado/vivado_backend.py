@@ -163,6 +163,8 @@ class VivadoBackend(FPGABackend):
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
+            'vivado:sparse_graph_optimizer',
+            'vivado:sparse_fix_input_precision',
             'vivado:remove_final_reshape',
             'vivado:optimize_pointwise_conv',
             'vivado:inplace_parallel_reshape',
@@ -187,6 +189,7 @@ class VivadoBackend(FPGABackend):
             'vivado:set_pipeline_style',
             'vivado:d_a_latency_dense_template',
             'vivado:d_a_latency_conv_template',
+            'vivado:d_a_combinational_template',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 

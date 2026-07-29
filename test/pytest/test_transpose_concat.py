@@ -28,14 +28,13 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
-def hls_model(keras_model, backend, io_type):
+def hls_model(keras_model, request, test_case_id):
+    io_type, backend = request.param
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, default_precision='ap_fixed<16,3,AP_RND_CONV,AP_SAT>', granularity='name', backend=backend
     )
     hls_config['LayerName']['relu']['Precision'] = 'ap_ufixed<17,3>'
-    output_dir = str(test_root_path / f'hls4mlprj_transpose_{backend}_{io_type}')
+    output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, backend=backend, output_dir=output_dir
     )
@@ -44,8 +43,30 @@ def hls_model(keras_model, backend, io_type):
     return hls_model
 
 
-@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize(
+    'hls_model',
+    [
+        ('io_stream', 'Vivado'),
+        ('io_stream', 'Vitis'),
+        ('io_stream', 'Quartus'),
+        ('io_stream', 'oneAPI'),
+        ('io_parallel', 'Vivado'),
+        ('io_parallel', 'Vitis'),
+        ('io_parallel', 'Quartus'),
+        ('io_parallel', 'oneAPI'),
+    ],
+    indirect=True,
+    ids=[
+        'vivado_stream',
+        'vitis_streamq',
+        'quartus_stream',
+        'oneapi_stream',
+        'vivado_parallel',
+        'vitis_parallel',
+        'quartus_parallel',
+        'oneapi_parallel',
+    ],
+)
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model
@@ -73,7 +94,7 @@ def data_highdim():
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
-def test_highdim_permute(data_highdim, keras_model_highdim, io_type, backend):
+def test_highdim_permute(test_case_id, data_highdim, keras_model_highdim, io_type, backend):
     X = data_highdim
     model = keras_model_highdim
 
@@ -81,7 +102,7 @@ def test_highdim_permute(data_highdim, keras_model_highdim, io_type, backend):
         model,
         io_type=io_type,
         backend=backend,
-        output_dir=str(test_root_path / f'hls4mlprj_highdim_transpose_{backend}_{io_type}'),
+        output_dir=str(test_root_path / test_case_id),
     )
     model_hls.compile()
     y_keras = model.predict(X)

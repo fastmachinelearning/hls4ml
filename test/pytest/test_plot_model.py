@@ -35,29 +35,29 @@ def load_cnn_model():
     return model
 
 
-@pytest.fixture(scope='module')
-def convert_mlp(load_mlp_model):
+@pytest.fixture
+def convert_mlp(test_case_id, load_mlp_model):
     model = load_mlp_model
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='vitis')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
-        output_dir=str(test_root_path / 'hls4mlprj_mlp'),
+        output_dir=str(test_root_path / test_case_id),
         part='xcu250-figd2104-2L-e',
     )
     hls_model.compile()
     return hls_model
 
 
-@pytest.fixture(scope='module')
-def convert_cnn(load_cnn_model):
+@pytest.fixture
+def convert_cnn(test_case_id, load_cnn_model):
     model = load_cnn_model
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='vitis')
     config['LayerName']['cnn2D_1_relu']['Precision']['accum'] = 'ap_fixed<33,17>'
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
-        output_dir=str(test_root_path / 'hls4mlprj_cnn'),
+        output_dir=str(test_root_path / test_case_id),
         part='xcu250-figd2104-2L-e',
     )
     hls_model.compile()

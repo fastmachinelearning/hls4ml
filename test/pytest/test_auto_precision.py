@@ -121,7 +121,9 @@ def keras_model_sepconv2d():
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('model_type', ['conv1d', 'conv2d'])
-def test_auto_precision_conv(keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend):
+def test_auto_precision_conv(
+    test_case_id, keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend
+):
     if model_type == 'conv1d':
         model = keras_model_conv1d
         data = data_2d
@@ -152,7 +154,7 @@ def test_auto_precision_conv(keras_model_conv1d, keras_model_conv2d, data_2d, da
         },
     }
 
-    odir = str(test_root_path / f'hls4mlprj_auto_{model_type}_{backend}_{io_type}')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
@@ -170,7 +172,7 @@ def test_auto_precision_conv(keras_model_conv1d, keras_model_conv2d, data_2d, da
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No SeparableConv1D/2D in Quartus
 @pytest.mark.parametrize('model_type', ['sepconv1d', 'sepconv2d'])
 def test_auto_precision_sepconv(
-    keras_model_sepconv1d, keras_model_sepconv2d, data_2d, data_3d, model_type, io_type, backend
+    test_case_id, keras_model_sepconv1d, keras_model_sepconv2d, data_2d, data_3d, model_type, io_type, backend
 ):
     if model_type == 'sepconv1d':
         model = keras_model_sepconv1d
@@ -201,7 +203,7 @@ def test_auto_precision_sepconv(
             },
         },
     }
-    odir = str(test_root_path / f'hls4mlprj_auto_{model_type}_{backend}_{io_type}')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )
@@ -217,7 +219,7 @@ def test_auto_precision_sepconv(
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
+def test_auto_precision_dense(test_case_id, keras_model_dense, data_1d, io_type, backend):
     model = keras_model_dense
     data = data_1d
 
@@ -243,7 +245,7 @@ def test_auto_precision_dense(keras_model_dense, data_1d, io_type, backend):
             },
         },
     }
-    odir = str(test_root_path / f'hls4mlprj_auto_dense_{backend}_{io_type}')
+    odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
     )

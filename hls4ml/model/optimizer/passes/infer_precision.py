@@ -118,6 +118,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
         # No need to change the name of the NamedType since we use the default precision
         node.types[type_name].precision = default_precision
+        weight_name = type_name.removesuffix('_t')
+        if weight_name in node.weights:
+            node.weights[weight_name].update_precision(default_precision)
 
     def _infer_output_matching_precision(self, node, types_to_infer):
         assert 'result_t' in types_to_infer and len(types_to_infer) == 1

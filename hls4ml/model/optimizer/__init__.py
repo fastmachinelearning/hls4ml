@@ -74,6 +74,7 @@ register_flow(
     [
         'channels_last_converter',
         'separable_to_depthwise_and_conv',
+        'convert_sparse_flatten',
         'remove_transpose_before_flatten',
         'remove_nop_transpose',
         'remove_single_channel_transpose',
@@ -90,6 +91,7 @@ register_flow(
         'bit_exact',
         'fuse_fixed_point_quantizer',
         'fix_input_precision',
+        'propagate_snn_readout_window_size',
         'eliminate_linear_activation',
         'merge_linear_activation',
         # many of the above optimzers need to be done before this

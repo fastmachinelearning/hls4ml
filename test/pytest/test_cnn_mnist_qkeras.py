@@ -41,8 +41,24 @@ def mnist_model():
 
 
 @pytest.fixture
+def hls_model(mnist_model, request, test_case_id):
+    backend, io_type, strategy = request.param
+    keras_model = mnist_model
+    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
+    hls_config['Model']['Strategy'] = strategy
+    hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
+    output_dir = str(test_root_path / test_case_id)
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+
+    hls_model.compile()
+    return hls_model
+
+
 @pytest.mark.parametrize(
-    'backend,io_type,strategy',
+    'hls_model',
     [
         ('Quartus', 'io_parallel', 'resource'),
         ('Quartus', 'io_stream', 'resource'),
@@ -55,35 +71,18 @@ def mnist_model():
         ('Vitis', 'io_stream', 'latency'),
         ('Vitis', 'io_stream', 'resource'),
     ],
-)
-def hls_model(mnist_model, backend, io_type, strategy):
-    keras_model = mnist_model
-    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
-    hls_config['Model']['Strategy'] = strategy
-    hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
-    output_dir = str(test_root_path / f'hls4mlprj_cnn_mnist_qkeras_{backend}_{io_type}_{strategy}')
-
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
-    )
-
-    hls_model.compile()
-    return hls_model
-
-
-@pytest.mark.parametrize(
-    'backend,io_type,strategy',
-    [
-        ('Quartus', 'io_parallel', 'resource'),
-        ('Quartus', 'io_stream', 'resource'),
-        ('Vivado', 'io_parallel', 'resource'),
-        ('Vivado', 'io_parallel', 'latency'),
-        ('Vivado', 'io_stream', 'latency'),
-        ('Vivado', 'io_stream', 'resource'),
-        ('Vitis', 'io_parallel', 'resource'),
-        ('Vitis', 'io_parallel', 'latency'),
-        ('Vitis', 'io_stream', 'latency'),
-        ('Vitis', 'io_stream', 'resource'),
+    indirect=True,
+    ids=[
+        'Quartus_io_parallel_resource',
+        'Quartus_io_stream_resource',
+        'Vivado_io_parallel_resource',
+        'Vivado_io_parallel_latency',
+        'Vivado_io_stream_latency',
+        'Vivado_io_stream_resource',
+        'Vitis_io_parallel_resource',
+        'Vitis_io_parallel_latency',
+        'Vitis_io_stream_latency',
+        'Vitis_io_stream_resource',
     ],
 )
 def test_accuracy(mnist_data, mnist_model, hls_model):
