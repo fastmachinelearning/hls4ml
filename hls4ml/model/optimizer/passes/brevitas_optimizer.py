@@ -18,7 +18,6 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
     def transform(self, model, node):
         # See if Quant layer needs to be added for the output
         if 'output_quantization' in node.attributes.keys() and not len(node.attributes['output_quantization']) == 0:
-            print(node.attributes['output_quantization'])
             attributes = {}
 
             input = node.name
@@ -37,7 +36,8 @@ class BrevitasInputOutputOptimizer(OptimizerPass):
 
             node.attributes['output_quantization'] = {}
 
-        elif 'input_quantization' in node.attributes.keys() and not len(node.attributes['input_quantization']) == 0:
+        # See if Quant layers need to be added for the inputs
+        if 'input_quantization' in node.attributes.keys() and not len(node.attributes['input_quantization']) == 0:
             attributes = {}
 
             # Other attributes

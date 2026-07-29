@@ -60,6 +60,7 @@ class QuantModelLinear(Module):
 @pytest.mark.parametrize('io_quant', ['Int8ActPerTensorFixedPoint'])
 def test_quantlinear(backend, io_type, weight_quant, io_quant):
     model = QuantModelLinear(weight_quant, io_quant)
+    model.eval()  # brevitas act quantizers keep collecting statistics in training mode
 
     x = torch.rand(1, 4)
     pytorch_prediction = model(x).detach().numpy()
@@ -84,6 +85,7 @@ def test_quantlinear(backend, io_type, weight_quant, io_quant):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantconv1d(backend, io_type):
     model = QuantModelConv1d()
+    model.eval()  # brevitas act quantizers keep collecting statistics in training mode
 
     n_in = 3
     n_out = 6
@@ -144,6 +146,7 @@ def test_quantconv1d(backend, io_type):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantconv2d(backend, io_type):
     model = QuantModelConv2d()
+    model.eval()  # brevitas act quantizers keep collecting statistics in training mode
 
     n_in = 3
     n_out = 6
@@ -265,6 +268,7 @@ class QuantUpsample2DModel(nn.Module):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_pytorch_upsampling1d(data_1d, io_type, backend):
     model = QuantUpsample1DModel()
+    model.eval()  # brevitas act quantizers keep collecting statistics in training mode
 
     config = hls4ml.utils.config_from_pytorch_model(
         model,
@@ -295,6 +299,7 @@ def test_pytorch_upsampling1d(data_1d, io_type, backend):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_pytorch_upsampling2d(data_2d, io_type, backend):
     model = QuantUpsample2DModel()
+    model.eval()  # brevitas act quantizers keep collecting statistics in training mode
 
     config = hls4ml.utils.config_from_pytorch_model(
         model,
@@ -328,6 +333,7 @@ class QuantEltwiseAddModel(nn.Module):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_brevitas_quanteltwiseadd(io_type, backend):
     model = QuantEltwiseAddModel()
+    model.eval()  # brevitas act quantizers keep collecting statistics in training mode
 
     x = torch.rand(1, 4, 4)
     y = torch.rand(1, 4, 4)
@@ -352,4 +358,5 @@ def test_brevitas_quanteltwiseadd(io_type, backend):
     pred_shape = pytorch_prediction.shape
     hls_prediction = hls_prediction.reshape(pred_shape)
 
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=5e-2, atol=0.05)
+    # agreement is exact up to the 2**-7 LSB of the output quantizer
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.02)

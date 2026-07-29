@@ -103,7 +103,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
         if class_object.input_quant.is_quant_enabled:
             layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
         if class_object.output_quant.is_quant_enabled:
-            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True)
+            layer = addQuantizationParameters(layer, class_object.output_quant, 'output', act=True)
 
     if class_object is not None:
         layer['n_in'] = class_object.in_features

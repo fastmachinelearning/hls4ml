@@ -53,7 +53,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
         if class_object.input_quant.is_quant_enabled:
             layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
         if class_object.output_quant.is_quant_enabled:
-            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True)
+            layer = addQuantizationParameters(layer, class_object.output_quant, 'output', act=True)
 
     else:
         layer['weight_data'] = class_object.weight.data.numpy()
@@ -138,7 +138,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
         if class_object.input_quant.is_quant_enabled:
             layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
         if class_object.output_quant.is_quant_enabled:
-            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True)
+            layer = addQuantizationParameters(layer, class_object.output_quant, 'output', act=True)
 
     else:
         layer['weight_data'] = class_object.weight.data.numpy()

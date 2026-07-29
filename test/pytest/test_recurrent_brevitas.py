@@ -67,4 +67,4 @@ def test_rnn(backend, io_type):
 
     hls_prediction = np.reshape(hls_model.predict([X_input.detach().numpy(), h0.detach().numpy()]), pytorch_prediction.shape)
 
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, atol=2)  # quite bad accuracy so far
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, atol=0.3)

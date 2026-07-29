@@ -60,7 +60,7 @@ def parse_merge_layer(operation, layer_name, input_names, input_shapes, node, cl
         if class_object.input_quant.is_quant_enabled:
             layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
         if class_object.output_quant.is_quant_enabled:
-            layer = addQuantizationParameters(layer, class_object.input_quant, 'output', act=True, scale_up=True)
+            layer = addQuantizationParameters(layer, class_object.output_quant, 'output', act=True)
 
     output_shape = input_shapes[0][:]
 

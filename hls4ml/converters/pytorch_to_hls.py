@@ -82,7 +82,7 @@ def convert_uaq_to_apfixed(bitwidth, scale_factor):
 
 # embed quantization information into the layer dictionary for a Quant layer
 # so that this layer can be added to the model
-def addQuantizationParameters(layer, quant_object, quant_type, act=False, scale_up=False):
+def addQuantizationParameters(layer, quant_object, quant_type, act=False):
     if not act:
         # currently not used, might be use later for non-power-of-2 scales
         bit_width = int(quant_object.bit_width)
@@ -98,9 +98,6 @@ def addQuantizationParameters(layer, quant_object, quant_type, act=False, scale_
         bit_width = int(quant_object.bit_width())
         signed = quant_object.is_signed
         scale = float(quant_object.scale())
-        # bit of a hack to make adding operations with QuantEltWiseAdd work
-        if scale_up:
-            scale = 2 ** (math.log2(scale) + 1)
         zeropoint = float(quant_object.zero_point())
         narrow = quant_object.is_narrow_range
         rounding_mode = quant_object.rounding_mode

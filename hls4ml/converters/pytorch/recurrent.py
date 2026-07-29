@@ -2,7 +2,7 @@ import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, convert_uaq_to_apfixed, pytorch_handler
 from hls4ml.model.quantizers import BrevitasQuantizer
-from hls4ml.model.types import FixedPrecisionType, NamedType
+from hls4ml.model.types import FixedPrecisionType
 
 rnn_layers = ['RNN', 'LSTM', 'GRU']
 
@@ -136,7 +136,8 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
         # use the already quantized tensor from brevitas
         if mantissa == 0.5:
             ap_fixed_params = convert_uaq_to_apfixed(width, float(RNNObject.gate_params.input_weight.quant_weight().scale))
-            layer['weight_data'] = RNNObject.gate_params.input_weight.quant_weight().detach().value.numpy()
+            # transpose to match the keras order used in the HLS code, as in parse_rnn_layer
+            layer['weight_data'] = RNNObject.gate_params.input_weight.quant_weight().detach().value.numpy().transpose()
             layer['weight_quantizer'] = BrevitasQuantizer(
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
             )
@@ -155,7 +156,10 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
         # use the already quantized tensor from brevitas
         if mantissa == 0.5:
             ap_fixed_params = convert_uaq_to_apfixed(width, float(RNNObject.gate_params.hidden_weight.quant_weight().scale))
-            layer['recurrent_weight_data'] = RNNObject.gate_params.hidden_weight.quant_weight().detach().value.numpy()
+            # transpose to match the keras order used in the HLS code, as in parse_rnn_layer
+            layer['recurrent_weight_data'] = (
+                RNNObject.gate_params.hidden_weight.quant_weight().detach().value.numpy().transpose()
+            )
             layer['recurrent_weight_quantizer'] = BrevitasQuantizer(
                 width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
             )
@@ -185,27 +189,18 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
                 Please used QONNX instead."""
             )
     else:
-        layer['bias_data'] = np.zeros(layer['weight_data'].shape[0])
+        layer['bias_data'] = np.zeros(layer['n_out'])
         layer['bias_quantizer'] = layer['weight_quantizer']
 
-    layer['recurrent_bias_data'] = np.zeros(layer['recurrent_weight_data'].shape[0])
+    # brevitas folds both pytorch biases into a single one, so the recurrent bias is always zero
+    layer['recurrent_bias_data'] = np.zeros(layer['n_out'])
     layer['recurrent_bias_quantizer'] = layer['weight_quantizer']
 
-    acc_scale = RNNObject.cell.gate_acc_quant.scale()
-    acc_bitwdith = int(RNNObject.cell.gate_acc_quant.bit_width())
-    mantissa, _ = np.frexp(acc_scale)
-    # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-    # use the already quantized tensor from brevitas
-    if mantissa == 0.5:
-        ap_fixed_params = convert_uaq_to_apfixed(acc_bitwdith, acc_scale)
-        precision = FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-        layer['accum_t'] = NamedType(layer['name'] + '_accum_t', precision)
-
-    else:
-        raise Exception(
-            """Non-power of 2 quantization of weights not supported when injecting brevitas models.
-            Please used QONNX instead."""
-        )
+    # NOTE: brevitas' gate_acc_quant quantizes the gate accumulator *result*, it is not a statement about
+    # how wide the accumulator itself has to be. Mapping it onto hls4ml's accum_t makes the accumulator far
+    # too narrow (an 8 bit type with the activation's scale saturates at +-1), so the dot products wrap and
+    # the layer produces garbage. accum_t is therefore left to the normal hls4ml precision inference, as in
+    # parse_rnn_layer for unquantized RNNs.
 
     if RNNObject.cell.output_quant.is_quant_enabled:
         layer = addQuantizationParameters(layer, RNNObject.cell.output_quant, 'output', act=True)
