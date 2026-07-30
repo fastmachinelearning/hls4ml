@@ -320,6 +320,50 @@ def test_pytorch_upsampling2d(data_2d, io_type, backend):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
 
 
+class QuantBitExactModel(Module):
+    def __init__(self):
+        super().__init__()
+        self.lin1 = qnn.QuantLinear(
+            8, 8, bias=False, weight_quant=Int8WeightPerTensorFixedPoint, input_quant=Int8ActPerTensorFixedPoint
+        )
+        self.relu1 = qnn.QuantReLU(act_quant=Int8ActPerTensorFixedPoint)
+
+    def forward(self, x):
+        return self.relu1(self.lin1(x))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+def test_brevitas_bit_exact(backend):
+    """A fully quantized model should reproduce brevitas exactly, without tuning any precision.
+
+    The input quantizer becomes a FixedPointQuantizer, which enables the model-wide bit_exact flow. It
+    folds the quantizer into the input port (so the input is not rounded twice) and derives an
+    accumulator wide enough that the dot product cannot overflow.
+    """
+    model = QuantBitExactModel()
+    model.eval()
+
+    x = torch.rand(1, 8)
+    pytorch_prediction = model(x).detach().numpy()
+
+    config = config_from_pytorch_model(model, input_shape=(None, 8), default_precision='ap_fixed<16,6>')
+    output_dir = str(test_root_path / f'hls4mlprj_brevitas_bit_exact_{backend}')
+    hls_model = convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type='io_parallel'
+    )
+
+    # The quantizer should have been fused into the input, rather than left as a separate rounding step
+    input_precision = hls_model.graph['x'].get_output_variable().type.precision
+    assert input_precision.width == 8
+    assert input_precision.integer == 1
+    assert str(input_precision.rounding_mode) == 'RND_CONV'
+
+    hls_model.compile()
+    hls_prediction = np.reshape(hls_model.predict(x.detach().numpy()), pytorch_prediction.shape)
+
+    np.testing.assert_array_equal(hls_prediction, pytorch_prediction)
+
+
 class QuantEltwiseAddModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -358,5 +402,6 @@ def test_brevitas_quanteltwiseadd(io_type, backend):
     pred_shape = pytorch_prediction.shape
     hls_prediction = hls_prediction.reshape(pred_shape)
 
-    # agreement is exact up to the 2**-7 LSB of the output quantizer
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=0.02)
+    # Both the inputs and the output are quantized by brevitas, so the FixedPointQuantizer nodes let the
+    # bit_exact flow derive precisions that reproduce brevitas exactly, with no tolerance at all.
+    np.testing.assert_array_equal(hls_prediction, pytorch_prediction)

@@ -13,7 +13,24 @@ Brevitas
 ========
 
 Models quantized with `Brevitas <https://xilinx.github.io/brevitas/>`_ can be ingested directly, without an intermediate ONNX export. The quantized weights are taken from the Brevitas ``QuantTensor`` and the corresponding
-``ap_fixed`` precision is derived from the quantizer's bit width and scale. Quantization attached to the input or output of a layer is turned into a ``Quant`` node, which the QONNX optimizer passes then fold into the surrounding layers.
+``ap_fixed`` precision is derived from the quantizer's bit width and scale. Quantization attached to the input or output of a layer becomes a ``FixedPointQuantizer`` node where it maps onto a plain fixed-point type, and a QONNX
+``Quant`` node otherwise (a non-zero zero-point, or a scale that is not a power of two).
+
+Bit-exactness
+-------------
+
+``FixedPointQuantizer`` nodes enable the model-wide :py:class:`~hls4ml.model.optimizer.passes.bit_exact.BitExact` flow, which derives every precision in the model by quantized interval arithmetic. Where a model quantizes its
+own inputs and outputs this makes the generated firmware reproduce Brevitas *exactly*, with no precision tuning by hand:
+
+* The input quantizer is folded into the model's input port, so an incoming value is rounded once onto the quantizer's grid rather than being truncated to the input type and then rounded again.
+* Accumulators are widened to whatever the dot product actually needs, so they cannot overflow.
+
+Two things to be aware of:
+
+* A layer that has no input quantizer (only ``weight_quant``, say) is compared against a Brevitas model that is still computing in float32 for that tensor, so exact agreement is not possible in principle. Add a ``QuantIdentity``
+  or an ``input_quant`` if you need it.
+* The flow has no handler for some layers, ``SimpleRNN`` (from ``QuantRNN``) and ``Resize`` (from ``QuantUpsample*``) among them. Models containing those keep the ``Quant`` representation and the ordinary precision inference, so
+  they behave as before. Setting ``BitExact`` to ``True`` or ``False`` in the model config overrides this choice.
 
 The following Brevitas modules are supported:
 
