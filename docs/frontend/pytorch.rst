@@ -41,9 +41,8 @@ The following Brevitas modules are supported:
 * ``QuantEltwiseAdd``
 * ``QuantUpsample``, ``QuantUpsamplingNearest2d``, ``QuantUpsamplingBilinear2d``
 * ``QuantRNN``, ``QuantLSTM``
-* ``QuantDropout`` (skipped, as in the unquantized PyTorch parser)
 
-Brevitas provides no ``QuantGRU``, so hls4ml's GRU layer is reachable only through the unquantized ``torch.nn.GRU``.
+Brevitas provides no ``QuantGRU``, so hls4ml's GRU layer is reachable only through the unquantized ``torch.nn.GRU``. There is likewise no ``QuantDropout``; use ``torch.nn.Dropout``, which the parser skips.
 
 .. warning::
     Brevitas' recurrent layers take their initial states as separate arguments — ``QuantRNN.forward(inp, hx=None)`` and
