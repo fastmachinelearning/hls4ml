@@ -1,8 +1,6 @@
 import numpy as np
 
-from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, convert_uaq_to_apfixed, pytorch_handler
-from hls4ml.model.quantizers import BrevitasQuantizer
-from hls4ml.model.types import FixedPrecisionType
+from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, brevitas_quant_to_hls, pytorch_handler
 
 rnn_layers = ['RNN', 'LSTM', 'GRU']
 
@@ -85,45 +83,6 @@ quant_rnn_layers = ['QuantRNN', 'QuantLSTM']
 lstm_gate_order = ('input_gate_params', 'forget_gate_params', 'cell_gate_params', 'output_gate_params')
 
 
-def _quant_tensor_precision(quant_tensor):
-    """Number of integer and fractional bits of the ap_fixed type that exactly holds a brevitas tensor.
-
-    The integer count includes the sign bit, matching hls4ml's FixedPrecisionType.
-    """
-    width = int(quant_tensor.bit_width)
-    scale = float(quant_tensor.scale.detach())
-    mantissa, _ = np.frexp(scale)
-    if mantissa != 0.5:
-        raise Exception(
-            """Non-power of 2 quantization of weights not supported when injecting brevitas models.
-            Please used QONNX instead."""
-        )
-    fract_bitwidth, int_bitwidth = convert_uaq_to_apfixed(width, scale)
-    return int(int_bitwidth), int(fract_bitwidth), bool(quant_tensor.signed)
-
-
-def _brevitas_quant_to_hls(quant_tensors, transpose=False):
-    """Turn one or more brevitas quant tensors into a weight array plus the matching hls4ml quantizer.
-
-    Several tensors are concatenated along axis 0, which is how the per-gate LSTM weights combine into
-    the single tensor the HLS code expects. Each gate carries its own quantizer, so the returned type is
-    widened to whatever exactly represents all of them; it collapses to the common type when the scales
-    agree. Transposing afterwards matches the keras order used in the HLS code, as in parse_rnn_layer.
-    """
-    precisions = [_quant_tensor_precision(t) for t in quant_tensors]
-    integer = max(p[0] for p in precisions)
-    fractional = max(p[1] for p in precisions)
-    signed = any(p[2] for p in precisions)
-    width = integer + fractional
-
-    data = np.concatenate([t.detach().value.numpy() for t in quant_tensors], axis=0)
-    if transpose:
-        data = data.transpose()
-
-    quantizer = BrevitasQuantizer(width, FixedPrecisionType(width=width, integer=integer, signed=signed))
-    return data, quantizer
-
-
 @pytorch_handler(*quant_rnn_layers)
 def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert operation in quant_rnn_layers
@@ -186,15 +145,15 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
         biases = [RNNObject.gate_params.quant_bias()]
 
     if all(gate.input_weight.weight_quant.is_quant_enabled for gate in gates):
-        layer['weight_data'], layer['weight_quantizer'] = _brevitas_quant_to_hls(input_weights, transpose=True)
+        layer['weight_data'], layer['weight_quantizer'] = brevitas_quant_to_hls(input_weights, transpose=True)
 
     if all(gate.hidden_weight.weight_quant.is_quant_enabled for gate in gates):
-        layer['recurrent_weight_data'], layer['recurrent_weight_quantizer'] = _brevitas_quant_to_hls(
+        layer['recurrent_weight_data'], layer['recurrent_weight_quantizer'] = brevitas_quant_to_hls(
             hidden_weights, transpose=True
         )
 
     if all(bias is not None for bias in biases):
-        layer['bias_data'], layer['bias_quantizer'] = _brevitas_quant_to_hls(biases)
+        layer['bias_data'], layer['bias_quantizer'] = brevitas_quant_to_hls(biases)
     else:
         layer['bias_data'] = np.zeros(n_gates * layer['n_out'])
         layer['bias_quantizer'] = layer['weight_quantizer']

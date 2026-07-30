@@ -405,3 +405,113 @@ def test_brevitas_quanteltwiseadd(io_type, backend):
     # Both the inputs and the output are quantized by brevitas, so the FixedPointQuantizer nodes let the
     # bit_exact flow derive precisions that reproduce brevitas exactly, with no tolerance at all.
     np.testing.assert_array_equal(hls_prediction, pytorch_prediction)
+
+
+class QuantHardTanhModel(Module):
+    def __init__(self):
+        super().__init__()
+        # QuantHardTanh's activation is an Identity; the clamping comes from the quantizer, whose range
+        # is [min_val, max_val]
+        self.act = qnn.QuantHardTanh(act_quant=Int8ActPerTensorFixedPoint, min_val=-1.0, max_val=1.0)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.act(x))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_brevitas_quanthardtanh(backend, io_type):
+    model = QuantHardTanhModel()
+    model.eval()  # brevitas act quantizers keep collecting statistics in training mode
+
+    # deliberately exceed the clamp range so saturation is exercised
+    x = torch.randn(1, 8) * 3
+    pytorch_prediction = model(x).detach().numpy()
+
+    config = config_from_pytorch_model(model, (None, 8), default_precision='ap_fixed<32,16>')
+    odir = str(test_root_path / f'hls4mlprj_brevitas_quanthardtanh_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(x.detach().numpy()).reshape(pytorch_prediction.shape)
+
+    np.testing.assert_array_equal(hls_prediction, pytorch_prediction)
+
+
+class QuantScaleBiasModel(Module):
+    def __init__(self, layer_cls):
+        super().__init__()
+        self.sb = layer_cls(num_features=4, weight_quant=Int8WeightPerTensorFixedPoint)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.sb(x))
+
+
+@pytest.mark.parametrize('layer', ['QuantScaleBias', 'BatchNorm1dToQuantScaleBias', 'BatchNorm2dToQuantScaleBias'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_brevitas_quantscalebias(layer, backend):
+    layer_cls = getattr(qnn, layer)
+    if layer == 'QuantScaleBias':
+        model = QuantScaleBiasModel(lambda num_features, weight_quant: layer_cls(num_features, True, weight_quant))
+    else:
+        model = QuantScaleBiasModel(layer_cls)
+    model.eval()
+
+    x = torch.randn(1, 4, 4, 4)
+    pytorch_prediction = model(x).detach().numpy()
+
+    config = config_from_pytorch_model(
+        model, (None, 4, 4, 4), default_precision='ap_fixed<32,16>', channels_last_conversion='full', transpose_outputs=True
+    )
+    odir = str(test_root_path / f'hls4mlprj_brevitas_scalebias_{layer}_{backend}')
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, io_type='io_parallel', output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(x.detach().numpy()).reshape(pytorch_prediction.shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=1e-3)
+
+
+class TruncAvgPoolModel(Module):
+    def __init__(self, adaptive):
+        super().__init__()
+        self.identity = qnn.QuantIdentity(act_quant=Int8ActPerTensorFixedPoint, return_quant_tensor=True)
+        if adaptive:
+            self.pool = qnn.TruncAdaptiveAvgPool2d(output_size=1)
+        else:
+            self.pool = qnn.TruncAvgPool2d(kernel_size=2, stride=2)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.pool(self.identity(x)))
+
+
+@pytest.mark.parametrize('adaptive', [False, True])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_brevitas_truncavgpool(adaptive, backend):
+    model = TruncAvgPoolModel(adaptive)
+    model.eval()
+
+    x = torch.rand(1, 4, 4, 4)
+    # the pool is fed a QuantTensor, so it returns one too
+    pytorch_prediction = model(x).value.detach().numpy()
+
+    config = config_from_pytorch_model(
+        model, (None, 4, 4, 4), default_precision='ap_fixed<32,16>', channels_last_conversion='full', transpose_outputs=True
+    )
+    odir = str(test_root_path / f'hls4mlprj_brevitas_truncavgpool_{adaptive}_{backend}')
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, io_type='io_parallel', output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(x.detach().numpy()).reshape(pytorch_prediction.shape)
+
+    # exact on vivado; quartus rounds the average differently and lands within one 2**-7 LSB
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.0, atol=1e-2)

@@ -62,12 +62,20 @@ def _as_fixed_point_quantizer_attributes(quantization, shape):
 
 
 def _bit_exact_can_handle(model):
-    """Whether every layer in the graph is one the bit_exact flow knows how to walk.
+    """Whether the bit_exact flow can be run over this graph.
 
-    Inserting a FixedPointQuantizer switches the whole model over to the bit_exact flow, which raises
-    NotImplementedError on any layer it has no handler for (SimpleRNN and Resize among them). So only
-    use the fixed-point representation when the entire graph can be handled; otherwise stay on the
-    QONNX Quant path, which does not depend on bit_exact.
+    Inserting a FixedPointQuantizer switches the whole model over to the bit_exact flow, so it has to be
+    able to walk every layer. Two things disqualify a graph:
+
+    * a layer bit_exact has no produce_kif handler for at all, which raises NotImplementedError
+      (SimpleRNN, LSTM and Resize among them);
+    * a pooling layer, because bit_exact additionally assumes each model input reaches a
+      FixedPointQuantizer through nothing but reshapes, transposes and concatenations. Pooling breaks
+      that walk in FixInputPrecision, and the rank change of a global pooling also trips the ndim
+      assertion in _request_kif. These models keep their input quantizer as a Quant node anyway, so the
+      fixed-point representation buys them nothing.
+
+    Anything disqualified stays on the QONNX Quant path, which does not depend on bit_exact.
     """
     from hls4ml.model.optimizer.passes.bit_exact import _produce_kif
 
@@ -79,6 +87,8 @@ def _bit_exact_can_handle(model):
     for node in model.graph.values():
         if node.class_name in transient_class_names:
             continue
+        if 'Pooling' in node.class_name:
+            return False
         if _produce_kif.dispatch(type(node)) is unhandled:
             return False
     return True

@@ -2,7 +2,12 @@ import math
 
 import numpy as np
 
-from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, convert_uaq_to_apfixed, pytorch_handler
+from hls4ml.converters.pytorch_to_hls import (
+    addQuantizationParameters,
+    brevitas_quant_to_hls,
+    convert_uaq_to_apfixed,
+    pytorch_handler,
+)
 from hls4ml.model.quantizers import BrevitasQuantizer
 from hls4ml.model.types import FixedPrecisionType
 from hls4ml.utils.einsum_utils import _validate_einsum_expr
@@ -25,10 +30,13 @@ def parse_constant_layer(operation, layer_name, node):
     return layer, output_shape
 
 
-# A QuantIdentity layer does nothing but quantize its inputs. Insert `Quant` node to be processed by QONNX optimizers
-@pytorch_handler('QuantIdentity')
+# A QuantIdentity layer does nothing but quantize its inputs. Insert `Quant` node to be processed by QONNX optimizers.
+# QuantHardTanh is handled here too: its activation is an Identity, and the clamping it is named after is produced by
+# the saturating quantizer, whose range is exactly [min_val, max_val]. So it is a QuantIdentity with a set range,
+# rather than anything resembling hls4ml's HardActivation (which implements a scaled hard sigmoid).
+@pytorch_handler('QuantIdentity', 'QuantHardTanh')
 def parse_quantidentity_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-    assert 'QuantIdentity' in operation
+    assert operation in ('QuantIdentity', 'QuantHardTanh')
 
     layer = {}
     layer['inputs'] = input_names
@@ -45,7 +53,7 @@ def parse_quantidentity_layer(operation, layer_name, input_names, input_shapes, 
         layer['rounding_mode'] = class_object.act_quant.rounding_mode
 
     else:
-        raise Exception("""QuantIdentify layer without act quant does nothing, please remove from model.""")
+        raise Exception(f"""{operation} layer without act quant does nothing, please remove from model.""")
     output_shape = input_shapes[0]
 
     return layer, output_shape
@@ -198,6 +206,55 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
 
     output_shape = input_shapes[0]
     return layer, output_shape
+
+
+# brevitas' ScaleBias applies a per-channel scale and bias, which is what hls4ml's BatchNormalization computes once
+# the statistics have been folded in. BatchNorm1d/2dToQuantScaleBias subclass QuantScaleBias with exactly that folding
+# already done, so one handler covers all of them.
+scale_bias_layers = ['ScaleBias', 'QuantScaleBias', 'BatchNorm1dToQuantScaleBias', 'BatchNorm2dToQuantScaleBias']
+
+
+@pytorch_handler(*scale_bias_layers)
+def parse_scale_bias_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation in scale_bias_layers
+
+    layer = {}
+
+    layer['class_name'] = 'BatchNormalization'
+    layer['data_format'] = 'channels_first'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+    layer['use_gamma'] = layer['use_beta'] = True
+
+    if 'Quant' in operation and class_object.weight_quant.is_quant_enabled:
+        layer['scale_data'], layer['scale_quantizer'] = brevitas_quant_to_hls(class_object.quant_weight())
+    else:
+        layer['scale_data'] = class_object.weight.data.numpy()
+
+    if class_object.bias is None:
+        layer['bias_data'] = np.zeros_like(layer['scale_data'])
+    elif 'Quant' in operation and class_object.bias_quant.is_quant_enabled:
+        layer['bias_data'], layer['bias_quantizer'] = brevitas_quant_to_hls(class_object.quant_bias())
+    else:
+        layer['bias_data'] = class_object.bias.data.numpy()
+
+    if 'Quant' in operation:
+        if class_object.input_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.input_quant, 'input', act=True)
+        if class_object.output_quant.is_quant_enabled:
+            layer = addQuantizationParameters(layer, class_object.output_quant, 'output', act=True)
+
+    in_size = 1
+    for dim in input_shapes[0][1:]:
+        in_size *= dim
+    layer['n_in'] = layer['n_out'] = in_size
+
+    if len(input_shapes[0]) == 2:
+        layer['n_filt'] = -1
+    else:
+        layer['n_filt'] = input_shapes[0][1]  # Always channel first for Pytorch
+
+    return layer, [shape for shape in input_shapes[0]]
 
 
 batchnorm_layers = ['BatchNorm2d', 'BatchNorm1d', 'Batch_norm']

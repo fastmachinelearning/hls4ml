@@ -1188,7 +1188,7 @@ class BatchNormalization(Layer):
             scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
             self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         else:
-            self.add_weights_variable(name='scale', var_name='s{index}')
+            self.add_weights_variable(name='scale', var_name='s{index}', quantizer=self.get_attr('scale_quantizer'))
 
         if self.get_attr('bias_data') is None:
             beta = self.get_attr('beta_data')
@@ -1196,7 +1196,7 @@ class BatchNormalization(Layer):
             bias = beta - scale * mean
             self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
         else:
-            self.add_weights_variable(name='bias', var_name='b{index}')
+            self.add_weights_variable(name='bias', var_name='b{index}', quantizer=self.get_attr('bias_quantizer'))
 
 
 # TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense

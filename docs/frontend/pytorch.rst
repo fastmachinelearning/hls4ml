@@ -37,8 +37,10 @@ The following Brevitas modules are supported:
 * ``QuantLinear``
 * ``QuantConv1d``, ``QuantConv2d``
 * ``QuantReLU``, ``QuantSigmoid``, ``QuantTanh``
-* ``QuantIdentity``
+* ``QuantIdentity``, ``QuantHardTanh``
 * ``QuantEltwiseAdd``
+* ``QuantScaleBias``, ``BatchNorm1dToQuantScaleBias``, ``BatchNorm2dToQuantScaleBias``
+* ``TruncAvgPool2d``, ``TruncAdaptiveAvgPool2d`` (the adaptive one only down to a single value per channel)
 * ``QuantUpsample``, ``QuantUpsamplingNearest2d``, ``QuantUpsamplingBilinear2d``
 * ``QuantRNN``, ``QuantLSTM``
 
@@ -56,7 +58,9 @@ Three limitations apply:
 
 * Only power-of-2 quantization scales are supported. A layer with a non power-of-2 scale raises an exception at parse time; export to QONNX (see `here <https://xilinx.github.io/brevitas/tutorials/onnx_export.html>`_) and use the ``hls4ml`` QONNX frontend for those models.
 * The ``QuantUpsample*`` layers are only available with the ``io_parallel`` I/O type.
-* Brevitas' quantized pooling layers (``TruncAvgPool2d``, ``TruncAdaptiveAvgPool2d``) are not supported yet, nor are recurrent layers with ``num_layers > 1`` or ``bidirectional=True``.
+* Recurrent layers with ``num_layers > 1`` or ``bidirectional=True`` are not supported.
+* ``QuantCat`` cannot be used: its ``forward`` calls ``QuantTensor.cat``, which does not exist in Brevitas 0.13, so the layer raises ``AttributeError`` before hls4ml ever sees it. Concatenate unquantized tensors with ``torch.cat`` instead.
+* There is no hls4ml equivalent for ``QuantConv3d``, the ``QuantConvTranspose*`` layers, the attention layers, ``QuantEmbedding`` or ``HadamardClassifier``.
 * Recurrent layers are not bit-exact. hls4ml evaluates the cell in its accumulator precision with lookup-table activations and does not model brevitas' per-gate accumulator, sigmoid, tanh and cell-state quantizers.
 
 .. note::
