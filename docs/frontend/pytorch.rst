@@ -40,8 +40,16 @@ The following Brevitas modules are supported:
 * ``QuantIdentity``
 * ``QuantEltwiseAdd``
 * ``QuantUpsample``, ``QuantUpsamplingNearest2d``, ``QuantUpsamplingBilinear2d``
-* ``QuantRNN``
+* ``QuantRNN``, ``QuantLSTM``
 * ``QuantDropout`` (skipped, as in the unquantized PyTorch parser)
+
+Brevitas provides no ``QuantGRU``, so hls4ml's GRU layer is reachable only through the unquantized ``torch.nn.GRU``.
+
+.. warning::
+    Brevitas' recurrent layers take their initial states as separate arguments — ``QuantRNN.forward(inp, hx=None)`` and
+    ``QuantLSTM.forward(inp, hx=None, cx=None)`` — not as the tuple ``torch.nn.LSTM`` expects. Writing
+    ``self.rnn(x, (h0, c0))`` binds the whole tuple to ``hx`` and leaves ``cx`` unset, which silently produces a
+    different result rather than raising.
 
 Unquantized ``torch.nn`` layers can be mixed freely into the model; pooling in particular is handled by the ordinary ``nn.MaxPool1d``/``nn.MaxPool2d``/``nn.AvgPool1d``/``nn.AvgPool2d`` parsers.
 
@@ -49,7 +57,8 @@ Three limitations apply:
 
 * Only power-of-2 quantization scales are supported. A layer with a non power-of-2 scale raises an exception at parse time; export to QONNX (see `here <https://xilinx.github.io/brevitas/tutorials/onnx_export.html>`_) and use the ``hls4ml`` QONNX frontend for those models.
 * The ``QuantUpsample*`` layers are only available with the ``io_parallel`` I/O type.
-* Brevitas' quantized pooling layers (``TruncAvgPool2d``, ``TruncAdaptiveAvgPool2d``) and ``QuantLSTM`` are not supported yet.
+* Brevitas' quantized pooling layers (``TruncAvgPool2d``, ``TruncAdaptiveAvgPool2d``) are not supported yet, nor are recurrent layers with ``num_layers > 1`` or ``bidirectional=True``.
+* Recurrent layers are not bit-exact. hls4ml evaluates the cell in its accumulator precision with lookup-table activations and does not model brevitas' per-gate accumulator, sigmoid, tanh and cell-state quantizers.
 
 .. note::
     Call ``model.eval()`` before converting. Brevitas activation quantizers collect statistics in training mode, so the scale a model reports can change with every forward pass while it is still in training mode, and ``hls4ml`` would capture whichever value happened to be current.

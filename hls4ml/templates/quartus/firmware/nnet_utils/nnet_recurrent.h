@@ -606,6 +606,14 @@ void lstm_cell(data_T inputs[CONFIG_T::n_in], res_T hidden_state[CONFIG_T::n_out
     typename CONFIG_T::accum_t cell_act_multp[CONFIG_T::n_out] hls_register;
     typename CONFIG_T::accum_t cell_act_add[CONFIG_T::n_out] hls_register;
 
+    // The incoming cell state can be quantized more narrowly than the accumulator (brevitas' io_quant
+    // does exactly that), so widen it before it is multiplied with a gate output.
+    typename CONFIG_T::accum_t cell_state_acc[CONFIG_T::n_out] hls_register;
+    #pragma unroll
+    for (int x = 0; x < CONFIG_T::n_out; x++) {
+        cell_state_acc[x] = cell_state[x];
+    }
+
     //-----------Gate I Calculations
     // Weight multiplication
     multiply_W<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, CONFIG_T::n_in, CONFIG_T::n_out>(
@@ -696,7 +704,8 @@ void lstm_cell(data_T inputs[CONFIG_T::n_in], res_T hidden_state[CONFIG_T::n_out
 
     //-----------Cell State Calculation
     // Vector multiplication
-    multiply_vectors<typename CONFIG_T::accum_t, res_T, CONFIG_T::n_out>(gate_f, cell_state, cell_act_multp);
+    multiply_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(gate_f, cell_state_acc,
+                                                                                              cell_act_multp);
 
     // Vector addition
     add_vectors<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t, CONFIG_T::n_out>(gate_ic, cell_act_multp,
@@ -835,8 +844,11 @@ INIT_LOOP:
         }
 
         // Do LSTM
-        lstm_cell<data_T, res_T, CONFIG_T>(in, hidden_state_temp, h, cell_state_temp, c, WI, WF, WC, WO, RWI, RWF, RWC, RWO,
-                                           BI, BF, BC, BO);
+        // The state arrays are h_T/s_T rather than res_T here, since they carry the precision of the
+        // initial states, which can be quantized independently of the layer output (as brevitas' io_quant
+        // does). Instantiate the cell on that type, as nnet::lstm already does for vivado.
+        lstm_cell<data_T, h_T, CONFIG_T>(in, hidden_state_temp, h, cell_state_temp, c, WI, WF, WC, WO, RWI, RWF, RWC, RWO,
+                                         BI, BF, BC, BO);
 
         // Write result
         #pragma unroll

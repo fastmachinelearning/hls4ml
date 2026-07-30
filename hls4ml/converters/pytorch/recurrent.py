@@ -77,7 +77,51 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
     return layer, output_shape
 
 
-quant_rnn_layers = ['QuantRNN']  # QuantLSTM very complex, might come later. No QuantGRU in brevitas at this point
+# brevitas has no QuantGRU (it defines only QuantRNN and QuantLSTM in brevitas.nn.quant_rnn), so hls4ml's
+# GRU layer is reachable only through the unquantized torch.nn.GRU path.
+quant_rnn_layers = ['QuantRNN', 'QuantLSTM']
+
+# pytorch concatenates the LSTM gates as input, forget, cell, output, and the HLS code follows suit
+lstm_gate_order = ('input_gate_params', 'forget_gate_params', 'cell_gate_params', 'output_gate_params')
+
+
+def _quant_tensor_precision(quant_tensor):
+    """Number of integer and fractional bits of the ap_fixed type that exactly holds a brevitas tensor.
+
+    The integer count includes the sign bit, matching hls4ml's FixedPrecisionType.
+    """
+    width = int(quant_tensor.bit_width)
+    scale = float(quant_tensor.scale.detach())
+    mantissa, _ = np.frexp(scale)
+    if mantissa != 0.5:
+        raise Exception(
+            """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+            Please used QONNX instead."""
+        )
+    fract_bitwidth, int_bitwidth = convert_uaq_to_apfixed(width, scale)
+    return int(int_bitwidth), int(fract_bitwidth), bool(quant_tensor.signed)
+
+
+def _brevitas_quant_to_hls(quant_tensors, transpose=False):
+    """Turn one or more brevitas quant tensors into a weight array plus the matching hls4ml quantizer.
+
+    Several tensors are concatenated along axis 0, which is how the per-gate LSTM weights combine into
+    the single tensor the HLS code expects. Each gate carries its own quantizer, so the returned type is
+    widened to whatever exactly represents all of them; it collapses to the common type when the scales
+    agree. Transposing afterwards matches the keras order used in the HLS code, as in parse_rnn_layer.
+    """
+    precisions = [_quant_tensor_precision(t) for t in quant_tensors]
+    integer = max(p[0] for p in precisions)
+    fractional = max(p[1] for p in precisions)
+    signed = any(p[2] for p in precisions)
+    width = integer + fractional
+
+    data = np.concatenate([t.detach().value.numpy() for t in quant_tensors], axis=0)
+    if transpose:
+        data = data.transpose()
+
+    quantizer = BrevitasQuantizer(width, FixedPrecisionType(width=width, integer=integer, signed=signed))
+    return data, quantizer
 
 
 @pytorch_handler(*quant_rnn_layers)
@@ -127,73 +171,36 @@ def parse_quant_rnn_layer(operation, layer_name, input_names, input_shapes, node
 
     RNNObject = class_object._modules['layers'][0][0]
 
-    if RNNObject.gate_params.input_weight.weight_quant.is_quant_enabled:
-        width = int(RNNObject.gate_params.input_weight.quant_weight().bit_width)
-        scale = RNNObject.gate_params.input_weight.quant_weight().scale.detach().numpy()
-        signed = RNNObject.gate_params.input_weight.quant_weight().signed
-        mantissa, _ = np.frexp(scale)
-        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-        # use the already quantized tensor from brevitas
-        if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(width, float(RNNObject.gate_params.input_weight.quant_weight().scale))
-            # transpose to match the keras order used in the HLS code, as in parse_rnn_layer
-            layer['weight_data'] = RNNObject.gate_params.input_weight.quant_weight().detach().value.numpy().transpose()
-            layer['weight_quantizer'] = BrevitasQuantizer(
-                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
-            )
-        else:
-            raise Exception(
-                """Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead."""
-            )
-
-    if RNNObject.gate_params.hidden_weight.weight_quant.is_quant_enabled:
-        width = int(RNNObject.gate_params.hidden_weight.quant_weight().bit_width)
-        scale = RNNObject.gate_params.hidden_weight.quant_weight().scale.detach().numpy()
-        signed = RNNObject.gate_params.input_weight.quant_weight().signed
-        mantissa, _ = np.frexp(scale)
-        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-        # use the already quantized tensor from brevitas
-        if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(width, float(RNNObject.gate_params.hidden_weight.quant_weight().scale))
-            # transpose to match the keras order used in the HLS code, as in parse_rnn_layer
-            layer['recurrent_weight_data'] = (
-                RNNObject.gate_params.hidden_weight.quant_weight().detach().value.numpy().transpose()
-            )
-            layer['recurrent_weight_quantizer'] = BrevitasQuantizer(
-                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=signed)
-            )
-        else:
-            raise Exception(
-                """Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead."""
-            )
-
-    input_bias = RNNObject.gate_params.quant_bias()
-    if input_bias is not None:
-        width = int(input_bias.bit_width)
-        scale = input_bias.scale.detach().numpy()
-        mantissa, _ = np.frexp(scale)
-        # if scale is power of 2 we can simply use hls4ml FixedPrecisionType and directly
-        # use the already quantized tensor from brevitas
-        if mantissa == 0.5:
-            ap_fixed_params = convert_uaq_to_apfixed(width, scale)
-
-            layer['bias_data'] = input_bias.detach().value.numpy()
-            layer['bias_quantizer'] = BrevitasQuantizer(
-                width, FixedPrecisionType(width=width, integer=int(ap_fixed_params[1]), signed=True)
-            )
-        else:
-            raise Exception(
-                """Non-power of 2 quantization of weights not supported when injecting brevitas models.
-                Please used QONNX instead."""
-            )
+    if layer['class_name'] == 'LSTM':
+        # An LSTM keeps one GateParams per gate; the HLS code wants them concatenated in pytorch's order
+        gates = [getattr(RNNObject, gate) for gate in lstm_gate_order]
+        n_gates = len(gates)
+        input_weights = [gate.input_weight.quant_weight() for gate in gates]
+        hidden_weights = [gate.hidden_weight.quant_weight() for gate in gates]
+        biases = [gate.quant_bias() for gate in gates]
     else:
-        layer['bias_data'] = np.zeros(layer['n_out'])
+        gates = [RNNObject.gate_params]
+        n_gates = 1
+        input_weights = [RNNObject.gate_params.input_weight.quant_weight()]
+        hidden_weights = [RNNObject.gate_params.hidden_weight.quant_weight()]
+        biases = [RNNObject.gate_params.quant_bias()]
+
+    if all(gate.input_weight.weight_quant.is_quant_enabled for gate in gates):
+        layer['weight_data'], layer['weight_quantizer'] = _brevitas_quant_to_hls(input_weights, transpose=True)
+
+    if all(gate.hidden_weight.weight_quant.is_quant_enabled for gate in gates):
+        layer['recurrent_weight_data'], layer['recurrent_weight_quantizer'] = _brevitas_quant_to_hls(
+            hidden_weights, transpose=True
+        )
+
+    if all(bias is not None for bias in biases):
+        layer['bias_data'], layer['bias_quantizer'] = _brevitas_quant_to_hls(biases)
+    else:
+        layer['bias_data'] = np.zeros(n_gates * layer['n_out'])
         layer['bias_quantizer'] = layer['weight_quantizer']
 
     # brevitas folds both pytorch biases into a single one, so the recurrent bias is always zero
-    layer['recurrent_bias_data'] = np.zeros(layer['n_out'])
+    layer['recurrent_bias_data'] = np.zeros(n_gates * layer['n_out'])
     layer['recurrent_bias_quantizer'] = layer['weight_quantizer']
 
     # NOTE: brevitas' gate_acc_quant quantizes the gate accumulator *result*, it is not a statement about
