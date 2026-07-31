@@ -53,6 +53,7 @@ optional-dependencies.qkeras = [
 optional-dependencies.qkeras-v3 = [ "qkeras-v3" ]
 optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.snn = [ "snntorch", "torch" ]
+optional-dependencies.sparsepixels = [ "sparsepixels>=0.3" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [
   "calmjs-parse",
@@ -74,6 +75,7 @@ optional-dependencies.testing-keras3 = [
   "hgq2>=0.1.7",
   "keras>=3.10",
   "pquant-ml",
+  "sparsepixels>=0.3",
   "tensorflow>=2.15",
 ]
 optional-dependencies.testing-qkeras-v3 = [
@@ -122,8 +124,8 @@ lint.unfixable = []
 [tool.check-manifest]
 ignore = [
   ".github/**",
-  "docs/**",
   ".pre-commit-config.yaml",
-  "Jenkinsfile",
+  "docs/**",
   "hls4ml/_version.py",
+  "Jenkinsfile",
 ]
