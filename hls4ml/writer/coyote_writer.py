@@ -1,11 +1,13 @@
+import glob
 import os
 import stat
-import glob
-import numpy as np
 from pathlib import Path
 from shutil import copyfile, copytree, move, rmtree
 
+import numpy as np
+
 from hls4ml.writer.vitis_writer import VitisWriter
+
 
 class CoyoteWriter(VitisWriter):
     def __init__(self):
@@ -29,7 +31,7 @@ class CoyoteWriter(VitisWriter):
 
         Args:
             model (ModelGraph): the hls4ml model
-        """      
+        """
         srcpath = f'{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp'
         dstpath = f'{model.config.get_output_dir()}/src/{model.config.get_project_name()}_bridge.cpp'
         move(srcpath, dstpath)
@@ -98,7 +100,6 @@ class CoyoteWriter(VitisWriter):
             elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 if model.config.get_writer_config()['WriteWeightsTxt']:
-
                     newline += '#ifndef __SYNTHESIS__\n'
                     newline += '    static bool loaded_weights = false;\n'
                     newline += '    if (!loaded_weights) {\n'
@@ -132,7 +133,7 @@ class CoyoteWriter(VitisWriter):
             elif '// hls-fpga-machine-learning insert IO' in line:
                 newline = line
                 newline += indent + '#pragma HLS INLINE OFF\n'
-    
+
                 pipeline_style = model.config.pipeline_style
                 pipeline_ii = model.config.pipeline_ii
                 pipeline_pragma = indent + f'#pragma HLS {pipeline_style.upper()}'
@@ -186,7 +187,7 @@ class CoyoteWriter(VitisWriter):
     def write_nnet_utils_overrides(self, model):
         """
         Writes the HLS templates, both from Vitis and from Coyote
-        
+
         Args:
             model (ModelGraph): the hls4ml model
         """
@@ -216,7 +217,7 @@ class CoyoteWriter(VitisWriter):
             model (ModelGraph): the hls4ml model
         """
         filedir = Path(__file__).parent
-        
+
         # build_lib.sh
         build_lib_src = (filedir / '../templates/coyote/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
@@ -239,9 +240,9 @@ class CoyoteWriter(VitisWriter):
     def write_model_wrapper(self, model):
         """
         Generate the model_wrapper and vfpga_top
-        
+
         model_wrapper encapsulates the hls4ml model kernel as well as AXI-to-data
-        and data-to-AXI converters. More details on the model_wrapper and these 
+        and data-to-AXI converters. More details on the model_wrapper and these
         converters can be found in model_wrapper.hpp.
 
         vfpga_top.svh is a simple SystemVerilog header that is needed to synthesize
@@ -254,7 +255,7 @@ class CoyoteWriter(VitisWriter):
 
         if not os.path.isdir(f'{model.config.get_output_dir()}/src/hls/model_wrapper'):
             os.makedirs(f'{model.config.get_output_dir()}/src/hls/model_wrapper')
-        
+
         # model_wrapper.h
         srcpath = (filedir / '../templates/coyote/model_wrapper.hpp').resolve()
         dstpath = f'{model.config.get_output_dir()}/src/hls/model_wrapper/model_wrapper.hpp'
@@ -282,17 +283,19 @@ class CoyoteWriter(VitisWriter):
                 for inp in model_inputs:
                     newline += indent + inp.definition_cpp() + ';\n'
                     newline += indent + self._make_array_pragma(inp) + '\n\n'
-                    
+
                 for out in model_outputs:
                     newline += indent + out.definition_cpp() + ';\n'
                     newline += indent + self._make_array_pragma(out) + '\n\n'
-                    
+
             elif '// hls-fpga-machine-learning insert top-level function' in line:
                 newline = ''
 
                 for inp in model_inputs:
-                    newline += indent + f'nnet::axi_stream_to_data<{inp.type.name}, float, {inp.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>(data_in, {inp.name});\n'
-                
+                    newline += (
+                        indent
+                        + f'nnet::axi_stream_to_data<{inp.type.name}, float, {inp.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>(data_in, {inp.name});\n'  # noqa: E501
+                    )
                 input_vars = ','.join([i.name for i in model_inputs])
                 output_vars = ','.join([o.name for o in model_outputs])
                 all_vars = ','.join(filter(None, [input_vars, output_vars]))
@@ -300,7 +303,10 @@ class CoyoteWriter(VitisWriter):
                 newline += top_level
 
                 for out in model_outputs:
-                    newline += indent + f'nnet::data_to_axi_stream<{out.type.name}, float, {out.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>({out.name}, data_out);\n'
+                    newline += (
+                        indent
+                        + f'nnet::data_to_axi_stream<{out.type.name}, float, {out.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>({out.name}, data_out);\n'  # noqa: E501
+                    )
 
             else:
                 newline = line
@@ -324,8 +330,8 @@ class CoyoteWriter(VitisWriter):
     def write_host_code(self, model):
         """
         Generates the host code, namely myproject_host.cpp and host_libs.hpp
-        host_libs.hpp implements the "glue" logic which interacts with the Coyote 
-        software library. myproject_host.cpp is a stand-alone program that can be 
+        host_libs.hpp implements the "glue" logic which interacts with the Coyote
+        software library. myproject_host.cpp is a stand-alone program that can be
         compiled and used to run model inference on an FPGA, with inputs from tb_data.
 
         Args:
@@ -357,7 +363,7 @@ class CoyoteWriter(VitisWriter):
                     newline += indent + f'constexpr const unsigned int in_size = {inp.size_cpp()};\n'
                 for out in model_outputs:
                     newline += indent + f'constexpr const unsigned int out_size = {out.size_cpp()};\n'
-            
+
             else:
                 newline = line
 
@@ -368,14 +374,14 @@ class CoyoteWriter(VitisWriter):
 
         # host_libs.hpp
         copyfile(
-            (filedir / '../templates/coyote/host_libs.hpp').resolve(), 
-            Path(model.config.get_output_dir()) / 'src/host_libs.hpp'
+            (filedir / '../templates/coyote/host_libs.hpp').resolve(),
+            Path(model.config.get_output_dir()) / 'src/host_libs.hpp',
         )
 
         # host_libs.cpp
         copyfile(
-            (filedir / '../templates/coyote/host_libs.cpp').resolve(), 
-            Path(model.config.get_output_dir()) / 'src/host_libs.cpp'
+            (filedir / '../templates/coyote/host_libs.cpp').resolve(),
+            Path(model.config.get_output_dir()) / 'src/host_libs.cpp',
         )
 
     def __make_dat_file(self, original_path, project_path):
@@ -389,10 +395,10 @@ class CoyoteWriter(VitisWriter):
         """
 
         # Take in data from current supported data files
-        if original_path[-3:] == "npy":
+        if original_path[-3:] == 'npy':
             data = np.load(original_path)
         else:
-            raise Exception("Unsupported input/output data files.")
+            raise Exception('Unsupported input/output data files.')
 
         # Faltten data, just keep first dimension
         data = data.reshape(data.shape[0], -1)
@@ -400,11 +406,11 @@ class CoyoteWriter(VitisWriter):
         def print_data(f):
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    f.write(str(data[i][j]) + " ")
-                f.write("\n")
+                    f.write(str(data[i][j]) + ' ')
+                f.write('\n')
 
         # Print out in dat file
-        with open(project_path, "w") as f:
+        with open(project_path, 'w') as f:
             print_data(f)
 
     def write_test_bench(self, model):
@@ -435,7 +441,7 @@ class CoyoteWriter(VitisWriter):
                 self.__make_dat_file(
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
-        
+
         src_path = (filedir / '../templates/coyote/myproject_test.cpp').resolve()
         dst_path = Path(model.config.get_output_dir()) / 'src' / f'{model.config.get_project_name()}_test.cpp'
         with open(src_path) as f:
@@ -460,7 +466,10 @@ class CoyoteWriter(VitisWriter):
                     newline += indent + f'float {inp.name}[{inp.size_cpp()}];\n'
                     newline += indent + f'nnet::copy_data<float, float, {offset}, {inp.size_cpp()}>(in, {inp.name});\n'
                     newline += indent + 'hls::stream<axi_s> data_in;\n'
-                    newline += indent + f'nnet::data_to_axi_stream<float, float, {inp.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>({inp.name}, data_in);\n'
+                    newline += (
+                        indent
+                        + f'nnet::data_to_axi_stream<float, float, {inp.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>({inp.name}, data_in);\n'  # noqa: E501
+                    )
                     offset += inp.size()
                 for out in model_outputs:
                     newline += indent + f'float {out.name}[{out.size_cpp()}];\n'
@@ -472,7 +481,10 @@ class CoyoteWriter(VitisWriter):
                     newline += indent + f'float {inp.name}[{inp.size_cpp()}];\n'
                     newline += indent + f'nnet::fill_zero<float, {inp.size_cpp()}>({inp.name});\n'
                     newline += indent + 'hls::stream<axi_s> data_in;\n'
-                    newline += indent + f'nnet::data_to_axi_stream<float, float, {inp.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>({inp.name}, data_in);\n'
+                    newline += (
+                        indent
+                        + f'nnet::data_to_axi_stream<float, float, {inp.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>({inp.name}, data_in);\n'  # noqa: E501
+                    )
 
                 for out in model_outputs:
                     newline += indent + f'float {out.name}[{out.size_cpp()}];\n'
@@ -481,7 +493,10 @@ class CoyoteWriter(VitisWriter):
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
                 newline += indent + 'model_wrapper(data_in, data_out);\n'
-                newline += indent + f'nnet::axi_stream_to_data<float, float, {out.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>(data_out, {out.name});\n'
+                newline += (
+                    indent
+                    + f'nnet::axi_stream_to_data<float, float, {out.size_cpp()}, COYOTE_AXI_STREAM_BITS, 8 * sizeof(float)>(data_out, {out.name});\n'  # noqa: E501
+                )
 
             elif '// hls-fpga-machine-learning insert predictions' in line:
                 newline = line
