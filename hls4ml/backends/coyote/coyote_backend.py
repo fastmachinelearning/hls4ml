@@ -1,7 +1,9 @@
 import os
 import subprocess
-from hls4ml.model.flow import get_flow, register_flow
+
 from hls4ml.backends import VitisBackend, VivadoBackend
+from hls4ml.model.flow import get_flow, register_flow
+
 
 class CoyoteBackend(VitisBackend):
     """
@@ -16,7 +18,7 @@ class CoyoteBackend(VitisBackend):
     Currently, this backend supports batched inference of a single model on hardware.
     In the future, it can easily be extended with the following capabilities, leveraging
     Coyote's features:
-        - Distributed inference 
+        - Distributed inference
         - Multiple parallel instances of hls4ml models (same or distinct models)
         - Dynamic, run-time reconfiguration of models
 
@@ -86,7 +88,7 @@ class CoyoteBackend(VitisBackend):
         bitfile: bool = False,
         timing_opt: bool = False,
         hls_clock_period: float = 4,
-        hls_clock_uncertainty: float = 27
+        hls_clock_uncertainty: float = 27,
     ):
         """
         Synthesizes the hls4ml model bitstream as part of the Coyote shell
@@ -109,7 +111,7 @@ class CoyoteBackend(VitisBackend):
 
         NOTE: Currently, the hardware will synthesize with a default clock period of 4ns / 250 MHz frequency,
         since this is the default frequency of Coyote (since the XDMA core defaults to 250 MHz). Coyote allows
-        one to specify a different clock period for the model and use a clock-domain crossing (CDC) between the 
+        one to specify a different clock period for the model and use a clock-domain crossing (CDC) between the
         XDMA region and the model. This option is currently not exposed as part of the hls4ml backend, but advanced
         users can easily set in the the CMake configuration of Coyote.
 
@@ -152,4 +154,3 @@ class CoyoteBackend(VitisBackend):
         os.makedirs(sw_build_dir, exist_ok=True)
         subprocess.run('cmake ../../ -DFLOW=sw', shell=True, cwd=sw_build_dir, check=True)
         subprocess.run('make', shell=True, cwd=sw_build_dir, check=True)
-

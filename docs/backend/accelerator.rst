@@ -130,12 +130,12 @@ Similar to the ``VivadoAccelerator``backend, we first generate a bitstream from 
     hls_model.build(bitfile=True)
 
 After this command completes, the FPGA must be programmed with the bistream. Additionally, the Coyote driver must be loaded.
-For some platforms, Coyote provides utility functions to load the bitstream and driver. For others, this can be achieved using 
+For some platforms, Coyote provides utility functions to load the bitstream and driver. For others, this can be achieved using
 the Vivado hardware manager and Linux commands. More detail can be found in the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
 
 Finally, we can create a ``CoyoteOverlay`` object, which can be used to run inference on the FPGA. Additionally, the overlay provides a utility
 functon to load the model bitstream and driver for some clusters.
-When running inference, we must provide the input tensor and the shape of the output tensor (to allocate the buffers for the data transfer). 
+When running inference, we must provide the input tensor and the shape of the output tensor (to allocate the buffers for the data transfer).
 Optionally, batch size can be specified..
 The ``predict`` method will send the input data to the FPGA and return the output data ``y_hw``.
 

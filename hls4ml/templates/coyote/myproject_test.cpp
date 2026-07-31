@@ -5,19 +5,18 @@
  * but adapted to call the model_wrapper rather than the model directly.
  */
 
-
-#include <vector>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
-#include "hls_stream.h"
 #include "ap_axi_sdata.h"
+#include "hls_stream.h"
 
-#include "model_wrapper.hpp"
 #include "firmware/myproject.h"
-#include "firmware/nnet_utils/nnet_helpers.h"
 #include "firmware/nnet_utils/nnet_axi_utils.h"
 #include "firmware/nnet_utils/nnet_axi_utils_stream.h"
+#include "firmware/nnet_utils/nnet_helpers.h"
+#include "model_wrapper.hpp"
 
 #define CHECKPOINT 5000
 
@@ -28,11 +27,11 @@ int main(int argc, char **argv) {
     std::ifstream fin("tb_data/tb_input_features.dat");
     std::ifstream fpr("tb_data/tb_output_predictions.dat");
 
-    #ifdef RTL_SIM
-        std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";
-    #else
-        std::string RESULTS_LOG = "tb_data/csim_results.log";
-    #endif
+#ifdef RTL_SIM
+    std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";
+#else
+    std::string RESULTS_LOG = "tb_data/csim_results.log";
+#endif
     std::ofstream fout(RESULTS_LOG);
 
     std::string iline;
@@ -67,7 +66,7 @@ int main(int argc, char **argv) {
             if (e % CHECKPOINT == 0) {
                 std::cout << "Predictions" << std::endl;
                 // hls-fpga-machine-learning insert predictions
-                
+
                 std::cout << "Quantized predictions" << std::endl;
                 // hls-fpga-machine-learning insert quantized
             }
