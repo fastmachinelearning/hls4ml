@@ -7,5 +7,6 @@ array set opt {
     export     0
     vsynth     0
     fifo_opt   0
+    bitfile    0
     pnr        0
 }
