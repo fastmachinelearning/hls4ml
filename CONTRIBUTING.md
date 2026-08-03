@@ -26,6 +26,18 @@ Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for
 We will review your contribution and, if any additional fixes or modifications are necessary, may provide feedback to guide you.
 When accepted, your pull request will be merged to the repository.
 
+## Use of AI tools
+
+Usage of AI tools in development for hls4ml is generally allowed. However, we require all contributers to adhere to the following guidelines:
+
+- Contributed code must still be you own original work. It is your responsibility to make sure that the generated code is compatible with the [hls4ml license](LICENSE.txt), [these Contributor Guidelines](CONTRIBUTING.md), and it doesn't violate the lincense of either the AI tool or any third-party license obligations.
+- The AI tool name and version must be disclosed in the PR description.
+- Ensure you have reviewed and fully understand the generated code and be prepared to explain the reasoning behind it during review.
+- AI coding agents tend to be very verbose. Please review generated code and especially comments and trim unnecessary clutter.
+- Do not spam the repository with issues and pull request for problems that have no likelihood of appearing in real world applications. Focus instead on fixing or improving hls4ml for real users.
+
+Submissions that appear unreviewed or copied directly from an AI tool without proper understanding may be requested to be revised or declined.
+
 ## Code of Conduct
 
 In the interest of fostering an open and welcoming environment, we as
