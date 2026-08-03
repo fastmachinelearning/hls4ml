@@ -86,9 +86,13 @@ class QSoftmaxHandler(QLayerHandler):
         # The default width may be too small (e.g., 8 bits) for large input ranges,
         # causing approximation errors that preserve normalization but flip the argmax.
         if inv_inp_t.width < 16:
-            inv_inp_t = FixedPrecisionType(16, inv_inp_t.integer, signed=inv_inp_t.signed,
-                                          rounding_mode=inv_inp_t.rounding_mode,
-                                          saturation_mode=inv_inp_t.saturation_mode)
+            inv_inp_t = FixedPrecisionType(
+                16,
+                inv_inp_t.integer,
+                signed=inv_inp_t.signed,
+                rounding_mode=inv_inp_t.rounding_mode,
+                saturation_mode=inv_inp_t.saturation_mode,
+            )
         exp_scale = layer.input_scaler
 
         inv_table_size = 2**inv_inp_t.width
