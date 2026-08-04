@@ -327,6 +327,11 @@ def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
     elif fmt == 'summary':
         data = []
 
+    if isinstance(X, (list, tuple)):
+        X = [np.ascontiguousarray(Xi) for Xi in X]
+    else:
+        X = np.ascontiguousarray(X)
+
     _, trace = model.trace(np.ascontiguousarray(X))
 
     if len(trace) == 0:
