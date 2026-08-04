@@ -59,12 +59,15 @@ def serialize_model(model, file_path):
         with open(config_path, 'w') as config_file:
             json.dump(config_dict, config_file, indent=4)
 
-        if config_dict.get('InputData', None) is not None:
-            tb_data_src_path = Path(config_dict['InputData'])
+        model_config = config_dict['config']
+
+        if model_config.get('InputData') is not None:
+            tb_data_src_path = Path(model_config['InputData'])
             tb_data_dst_path = dest_path / ('input_data_tb' + tb_data_src_path.suffix)
             tb_data_dst_path.write_bytes(tb_data_src_path.read_bytes())
-        if config_dict.get('OutputPredictions', None) is not None:
-            tb_data_src_path = Path(config_dict['OutputPredictions'])
+
+        if model_config.get('OutputPredictions') is not None:
+            tb_data_src_path = Path(model_config['OutputPredictions'])
             tb_data_dst_path = dest_path / ('output_data_tb' + tb_data_src_path.suffix)
             tb_data_dst_path.write_bytes(tb_data_src_path.read_bytes())
 
