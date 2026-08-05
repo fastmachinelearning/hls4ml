@@ -54,6 +54,14 @@ def get_kernel_inp_kif(node: Layer) -> tuple[np.ndarray, np.ndarray, np.ndarray]
     raise NotImplementedError(f'Layer {node.name} of type {node.__class__.__name__} is not supported by DA optimizer.')
 
 
+def _maybe_fuse_ternary_adders_backend(comb, backend: str):
+    if backend in ('vitis', 'vivado'):
+        from alkaid.trace.passes import add_surrogate, dead_code_elimin, fuse_ternary_adders
+
+        return add_surrogate(dead_code_elimin(fuse_ternary_adders(comb)), _skip_op8_cost=True)
+    return comb
+
+
 @get_kernel_inp_kif.register
 def _(node: Dense):
     k, i, f = _get_input_kif(node)
@@ -115,8 +123,10 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.hls import hls_logic_and_bridge_gen
-        from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
+        from alkaid.cmvm import solver_options_t
+        from alkaid.codegen.hls import hls_logic_and_bridge_gen
+        from alkaid.trace import FVArray, trace
+        from alkaid.trace.passes import add_surrogate, dead_code_elimin
 
         kernel: np.ndarray = node.attributes['weight'].data
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -125,23 +135,24 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
         k, i, f = get_kernel_inp_kif(node)
         hard_dc = int(os.environ.get('DA_HARD_DC', 2))
-        options = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
-        inp = FixedVariableArray.from_kif(k, i, f, HWConfig(1, -1, -1), solver_options=options)
+        options: solver_options_t = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
+        inp = FVArray.from_kif(k, i, f, solver_options=options)
         out = inp @ kernel
         if node.attributes['bias'] is not None:
             bias = node.attributes['bias'].data.ravel()
             assert len(bias) == n_out
             out += bias
-        sol = comb_trace(inp, out)
-        node.attributes['da_kernel_cost'] = sol.cost
-
         backend = model.config.get_config_value('Backend').lower()
         assert backend in ('vitis', 'vivado')
+        comb = trace(inp, out)
+        comb = _maybe_fuse_ternary_adders_backend(comb, backend)
+        comb = add_surrogate(dead_code_elimin(comb), _skip_op8_cost=True)
+        node.attributes['da_kernel_cost'] = comb.cost
         flavor = 'vitis'
 
         pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
 
-        fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+        fn_str, _ = hls_logic_and_bridge_gen(comb, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
         io_type = node.model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
@@ -361,8 +372,9 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.hls import hls_logic_and_bridge_gen
-        from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
+        from alkaid.cmvm import solver_options_t
+        from alkaid.codegen.hls import hls_logic_and_bridge_gen
+        from alkaid.trace import FVArray, trace
 
         kernel: np.ndarray = node.attributes['weight'].data
         I, C, L_ker = kernel.shape
@@ -382,15 +394,16 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
             _k, _i, _f = (v[i] for v in inp_kifs)
             fn_name = f'einsum_{node.index}_da_{i}_of_{I}'
             hard_dc = int(os.environ.get('DA_HARD_DC', 2))
-            options = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
-            inp = FixedVariableArray.from_kif(_k, _i, _f, HWConfig(1, -1, -1), solver_options=options)
+            options: solver_options_t = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
+            inp = FVArray.from_kif(_k, _i, _f, solver_options=options)
             out = inp @ kernel[i]
-            sol = comb_trace(inp, out)
+            comb = trace(inp, out)
+            comb = _maybe_fuse_ternary_adders_backend(comb, backend)
 
-            node.attributes['da_kernel_cost'] += sol.cost
+            node.attributes['da_kernel_cost'] += comb.cost
 
             pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
-            fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+            fn_str, _ = hls_logic_and_bridge_gen(comb, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
             fn_strs.append(fn_str)
             fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'
@@ -415,9 +428,9 @@ class DACombinationalTemplate(OptimizerPass):
         return isinstance(node, DACombinational)
 
     def transform(self, model: 'ModelGraph', node: DACombinational):
-        from da4ml.codegen.hls import hls_logic_and_bridge_gen
-        from da4ml.codegen.hls.hls_codegen import get_io_types
-        from da4ml.trace import FixedVariableArrayInput, comb_trace
+        from alkaid.codegen.hls import hls_logic_and_bridge_gen
+        from alkaid.codegen.hls.hls_codegen import get_io_types
+        from alkaid.trace import FVArrayInput, trace
 
         io_type = model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
@@ -429,14 +442,16 @@ class DACombinationalTemplate(OptimizerPass):
             B, I, s = inp_p.width, inp_p.integer, inp_p.signed
             i, f = I - s, B - I
             comb = node.attributes['da_comb_logic']
-            inp = FixedVariableArrayInput(comb.shape[0]).quantize(s, i, f)
+            inp = FVArrayInput(comb.shape[0]).quantize(s, i, f)
             out = comb(inp)
-            comb = comb_trace(inp, out)
+            comb = trace(inp, out)
             node.attributes['da_comb_logic'] = comb
 
         comb = node.attributes['da_comb_logic']
-
         backend = model.config.get_config_value('Backend').lower()
+        comb = _maybe_fuse_ternary_adders_backend(comb, backend)
+        node.attributes['da_comb_logic'] = comb
+
         if backend in ('vitis', 'vivado'):
             flavor = 'vitis'
         elif backend == 'oneapi':

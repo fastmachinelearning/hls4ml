@@ -746,13 +746,13 @@ def _(layer: UnaryLUT):
 
 @_produce_kif.register
 def _(layer: DACombinational):
-    from da4ml.trace import FixedVariableArray, comb_trace
+    from alkaid.trace import FVArray, trace
 
     kifs = [np.array(kif).reshape(3, -1) for kif in get_input_kifs(layer)]
     kif = np.concatenate(kifs, axis=1)
-    inp = FixedVariableArray.from_kif(*kif)
+    inp = FVArray.from_kif(*kif)
     out = layer.attributes['da_comb_logic'](inp.ravel())
-    comb = comb_trace(inp, out)
+    comb = trace(inp, out)
     k, i, f = comb.out_kifs
     shape = get_output_shape(layer)
 

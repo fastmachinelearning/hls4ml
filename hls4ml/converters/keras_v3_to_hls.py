@@ -184,8 +184,8 @@ class KerasV3HandlerDispatcher:
             except KeyError:
                 pass  # missing DA handler
             except ImportError:
-                print('da4ml not installed. Set `allow_da_fallback=False` to disable DA fallback.')
-                pass  # da4ml not installed
+                print('alkaid not installed. Set `allow_da_fallback=False` to disable DA fallback.')
+                pass  # alkaid not installed
         if self.allow_v2_fallback:
             ret = self.v2_call(layer, inp_tensors, out_tensors)
             if ret is not None:
@@ -198,8 +198,8 @@ class KerasV3HandlerDispatcher:
         self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
     ):
         import keras
-        from da4ml.converter import trace_model
-        from da4ml.trace import FixedVariableArrayInput, comb_trace
+        from alkaid.converter import trace_model
+        from alkaid.trace import FVArrayInput, trace
 
         if len(out_tensors) > 1:
             n_out = len(out_tensors)
@@ -211,9 +211,9 @@ class KerasV3HandlerDispatcher:
         try:
             inp, out = trace_model(_model)  # When input bw can be determined automatically
         except (AssertionError, ValueError):
-            inp = tuple(FixedVariableArrayInput(tuple(shape)).quantize(1, 32, 32) for shape in input_shapes)
+            inp = tuple(FVArrayInput(tuple(shape)).quantize(1, 32, 32) for shape in input_shapes)
             inp, out = trace_model(_model, inputs=inp)
-        comb = comb_trace(inp, out)
+        comb = trace(inp, out)
         input_names = [t.name for t in inp_tensors]
         output_names = [t.name for t in out_tensors]
 
