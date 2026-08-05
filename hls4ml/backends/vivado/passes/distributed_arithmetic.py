@@ -54,14 +54,6 @@ def get_kernel_inp_kif(node: Layer) -> tuple[np.ndarray, np.ndarray, np.ndarray]
     raise NotImplementedError(f'Layer {node.name} of type {node.__class__.__name__} is not supported by DA optimizer.')
 
 
-def _maybe_fuse_ternary_adders_backend(comb, backend: str):
-    if backend in ('vitis', 'vivado'):
-        from alkaid.trace.passes import add_surrogate, dead_code_elimin, fuse_ternary_adders
-
-        return add_surrogate(dead_code_elimin(fuse_ternary_adders(comb)), _skip_op8_cost=True)
-    return comb
-
-
 @get_kernel_inp_kif.register
 def _(node: Dense):
     k, i, f = _get_input_kif(node)
@@ -126,7 +118,6 @@ class DistributedArithmeticCodegen(OptimizerPass):
         from alkaid.cmvm import solver_options_t
         from alkaid.codegen.hls import hls_logic_and_bridge_gen
         from alkaid.trace import FVArray, trace
-        from alkaid.trace.passes import add_surrogate, dead_code_elimin
 
         kernel: np.ndarray = node.attributes['weight'].data
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -145,8 +136,6 @@ class DistributedArithmeticCodegen(OptimizerPass):
         backend = model.config.get_config_value('Backend').lower()
         assert backend in ('vitis', 'vivado')
         comb = trace(inp, out)
-        comb = _maybe_fuse_ternary_adders_backend(comb, backend)
-        comb = add_surrogate(dead_code_elimin(comb), _skip_op8_cost=True)
         node.attributes['da_kernel_cost'] = comb.cost
         flavor = 'vitis'
 
@@ -398,7 +387,6 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
             inp = FVArray.from_kif(_k, _i, _f, solver_options=options)
             out = inp @ kernel[i]
             comb = trace(inp, out)
-            comb = _maybe_fuse_ternary_adders_backend(comb, backend)
 
             node.attributes['da_kernel_cost'] += comb.cost
 
@@ -449,7 +437,6 @@ class DACombinationalTemplate(OptimizerPass):
 
         comb = node.attributes['da_comb_logic']
         backend = model.config.get_config_value('Backend').lower()
-        comb = _maybe_fuse_ternary_adders_backend(comb, backend)
         node.attributes['da_comb_logic'] = comb
 
         if backend in ('vitis', 'vivado'):
