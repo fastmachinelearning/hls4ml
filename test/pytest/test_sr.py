@@ -107,7 +107,7 @@ def test_sr_backend_config(test_case_id, part, clock_period, clock_unc, compiler
     read_clock_unc = hls_model.config.get_config_value('ClockUncertainty')
     expected_unc = clock_unc
     if expected_unc is None:
-        if compiler == 'vivado_hls':
+        if compiler == 'vivado_hls' or compiler == 'vitis_hls':
             expected_unc = '12.5%'
         else:
             expected_unc = '27%'
