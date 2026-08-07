@@ -490,7 +490,6 @@ def _(layer: Conv1D | Conv2D):
     in_per_group = kernel.shape[-2]
     n_chan = k_in.shape[-1]
     if in_per_group == n_chan:
-        # Standard (non-grouped) convolution: kernel covers every input channel.
         k_in, i_in, f_in = im2col(kernel.shape, k_in, i_in, f_in)
         k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -500,11 +499,8 @@ def _(layer: Conv1D | Conv2D):
         k, i, f = qint_out.to_kif()
         return k.astype(np.int16), i, f
 
-    # Grouped / depthwise convolution: the kernel stores only ``in_per_group``
-    # input channels (groups = n_chan // in_per_group). Each group is an
-    # independent standard convolution over its own channel slice; process the
-    # groups separately and concatenate along the channel axis. Depthwise is the
-    # degenerate groups == n_chan (in_per_group == 1) case.
+    # Grouped/depthwise: process each group as an independent conv over its channel
+    # slice and concatenate along the channel axis.
     out_chan = kernel.shape[-1]
     groups = n_chan // in_per_group
     out_per_group = out_chan // groups
