@@ -296,7 +296,7 @@ class XLSBackend(FPGABackend):
 
     @staticmethod
     @requires('xls')
-    def get_top_function(model: ModelGraph, x: np.floating | NDArray[np.floating[Any]]) -> tuple[Callable, np.dtype]:
+    def get_top_function(model: ModelGraph, x) -> tuple[Callable, None]:
         import xls
 
         # Cache JIT function to avoid reparsing IR file.
@@ -339,19 +339,8 @@ class XLSBackend(FPGABackend):
             for i in range(len(output_vars)):
                 outputs[i][:] = np.reshape(output[i], -1)
 
-        # TODO: this duplicates ModelGraph._get_top_function().
-        # NB: ctype is not used in XLS, but it is required by ModelGraph._predict
-        x0 = x[0] if isinstance(x, (list, tuple)) else x
-        if np.asarray(x0).dtype in [np.single, np.float32]:
-            ctype = np.float32
-        elif np.asarray(x0).dtype in [np.double, np.float64]:
-            ctype = np.float64
-        else:
-            raise TypeError(
-                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
-                    np.asarray(x0).dtype
-                )
-            )
+        # NB: ctype is not used in XLS, but it is required by ModelGraph._predict API
+        ctype = None
 
         return top_function, ctype
 
