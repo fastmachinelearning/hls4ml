@@ -66,6 +66,10 @@ class CoyoteOverlay:
         if not np.issubdtype(X.dtype, np.floating):
             logging.warning('CoyoteOverlay only supports (for now) floating-point inputs; casting input data to float')
             X = X.astype(np.float32)
+        if len(X) < batch_size:
+            raise ValueError(f'Number of input samples ({len(X)}) must be at least batch_size ({batch_size})')
+        if len(X) % batch_size != 0:
+            logging.warning(f'Number of input samples ({len(X)}) is not a multiple of batch_size ({batch_size}); remaining samples will be dropped')
         y = np.empty((len(X), *y_shape))
         np_pointer_nd = np.ctypeslib.ndpointer(dtype=np.float32, ndim=len(X[0].shape), flags='C')
         self.coyote_lib.set_inference_data.argtypes = [ctypes.POINTER(ctypes.c_void_p), np_pointer_nd, ctypes.c_uint]
@@ -100,7 +104,8 @@ class CoyoteOverlay:
         self.coyote_lib.free_model_inference(model)
         if verbose:
             print(f'Batch size: {batch_size}; batches processed: {total_batches}')
-            print(f'Mean latency: {round(avg_latency / total_batches, 3)}us (inference only)')
-            print(f'Mean throughput: {round(avg_throughput / total_batches, 1)} samples/s (inference only)')
+            if total_batches > 0:
+                print(f'Mean latency: {round(avg_latency / total_batches, 3)}us (inference only)')
+                print(f'Mean throughput: {round(avg_throughput / total_batches, 1)} samples/s (inference only)')
 
         return y

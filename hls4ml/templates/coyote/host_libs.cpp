@@ -25,7 +25,7 @@ CoyoteInference::~CoyoteInference() {}
 void CoyoteInference::flush() {
     // Reset output tensors to zero
     for (unsigned int i = 0; i < batch_size; i++) {
-        memset(dst_mems[i], 0, out_size);
+        memset(dst_mems[i], 0, out_size * sizeof(float));
     }
 
     // Clear completion counters

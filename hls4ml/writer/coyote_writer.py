@@ -253,8 +253,7 @@ class CoyoteWriter(VitisWriter):
         """
         filedir = Path(__file__).parent
 
-        if not os.path.isdir(f'{model.config.get_output_dir()}/src/hls/model_wrapper'):
-            os.makedirs(f'{model.config.get_output_dir()}/src/hls/model_wrapper')
+        os.makedirs(f'{model.config.get_output_dir()}/src/hls/model_wrapper', exist_ok=True)
 
         # model_wrapper.h
         srcpath = (filedir / '../templates/coyote/model_wrapper.hpp').resolve()
@@ -339,8 +338,7 @@ class CoyoteWriter(VitisWriter):
         """
         filedir = Path(__file__).parent
 
-        if not os.path.isdir(f'{model.config.get_output_dir()}/src/'):
-            os.makedirs(f'{model.config.get_output_dir()}/src/')
+        os.makedirs(f'{model.config.get_output_dir()}/src/', exist_ok=True)
 
         # myproject_host.cpp
         src_path = (filedir / '../templates/coyote/myproject_host.cpp').resolve()
