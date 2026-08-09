@@ -223,21 +223,32 @@ void sparse_relu(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_
 // mapping to it (the is_first test); duplicate pixels of the same cell emit 0. The averaging reads
 // only the input array (no scratch mutation), so it is safe to partially unroll. Two independent
 // knobs: pixel_parallel_factor (N_sparse axis) and chan_parallel_factor (n_chan axis).
-template <class data_T, class res_T, class hash_T, class accum_T, int N_sparse, int n_chan, int pool_size,
-          int pixel_parallel_factor = N_sparse, int chan_parallel_factor = n_chan>
+// Pool height and width are independent (asymmetric pooling). A pooled coordinate falling outside
+// the valid output grid (partial window of an odd input dimension under 'valid' pooling) has its
+// features zeroed, matching the dense layer dropping that window; zero-feature pixels are inert in
+// every downstream sparse kernel. The averaging divides by the full pool area as one reciprocal
+// multiply per axis (skipped for a unit axis, whose reciprocal 1.0 the fixed-point type cannot
+// hold); for square pools this reproduces the previous two-multiply arithmetic exactly.
+template <class data_T, class res_T, class hash_T, class accum_T, int N_sparse, int n_chan, int in_height, int in_width,
+          int pool_height, int pool_width, int pixel_parallel_factor = N_sparse, int chan_parallel_factor = n_chan>
 void sparse_pooling_avg(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_feat_out[N_sparse * n_chan],
                         hash_T sparse_arr_hash_in[N_sparse * 2], hash_T sparse_arr_hash_out[N_sparse * 2]) {
 
-    constexpr double _pool_size_recip_d = 1.0 / double(pool_size);
-    const ap_fixed<10, 0> pool_size_recip = _pool_size_recip_d;
+    constexpr int out_height = in_height / pool_height;
+    constexpr int out_width = in_width / pool_width;
+    // Unsigned reciprocals: 1/2 = 0.5 needs the unsigned [0, 1) range (signed ap_fixed<10,0> tops
+    // out just below 0.5 and would wrap). Truncation at 10 fractional bits matches the previous
+    // signed type for every value below 0.5, so square-pool results are unchanged.
+    const ap_ufixed<10, 0> pool_h_recip = 1.0 / double(pool_height); // only used when pool_height > 1
+    const ap_ufixed<10, 0> pool_w_recip = 1.0 / double(pool_width);  // only used when pool_width > 1
 
     int hash_tmp[N_sparse * 2];
     #pragma HLS ARRAY_PARTITION variable = hash_tmp type = complete dim = 0
 ComputePooledLoc:
     for (int i = 0; i < N_sparse; i++) {
         #pragma HLS UNROLL
-        hash_tmp[2 * i] = (sparse_arr_hash_in[2 * i] - 1) / pool_size + 1;
-        hash_tmp[2 * i + 1] = (sparse_arr_hash_in[2 * i + 1] - 1) / pool_size + 1;
+        hash_tmp[2 * i] = (sparse_arr_hash_in[2 * i] - 1) / pool_height + 1;
+        hash_tmp[2 * i + 1] = (sparse_arr_hash_in[2 * i + 1] - 1) / pool_width + 1;
     }
 
 HashOutLoop:
@@ -245,6 +256,7 @@ HashOutLoop:
         #pragma HLS UNROLL factor = pixel_parallel_factor
         int h_out = hash_tmp[2 * i_pixel];
         int w_out = hash_tmp[2 * i_pixel + 1];
+        bool valid = (h_out <= out_height) && (w_out <= out_width);
 
         bool is_first = true;
     FirstCheck:
@@ -270,8 +282,17 @@ HashOutLoop:
                     acc += sparse_arr_feat_in[n_chan * j_pixel + i_chan];
                 }
             }
-            sparse_arr_feat_out[n_chan * i_pixel + i_chan] =
-                is_first ? (res_T)(acc * pool_size_recip * pool_size_recip) : (res_T)0;
+            res_T avg;
+            if (pool_height > 1 && pool_width > 1) {
+                avg = (res_T)(acc * pool_h_recip * pool_w_recip);
+            } else if (pool_height > 1) {
+                avg = (res_T)(acc * pool_h_recip);
+            } else if (pool_width > 1) {
+                avg = (res_T)(acc * pool_w_recip);
+            } else {
+                avg = (res_T)acc;
+            }
+            sparse_arr_feat_out[n_chan * i_pixel + i_chan] = (is_first && valid) ? avg : (res_T)0;
         }
         sparse_arr_hash_out[2 * i_pixel] = h_out;
         sparse_arr_hash_out[2 * i_pixel + 1] = w_out;
@@ -282,18 +303,23 @@ HashOutLoop:
 // is_first test), but takes the per-channel maximum of the active pixels in the cell, floored at 0
 // to match dense max pooling over the zero-masked window. Two independent knobs:
 // pixel_parallel_factor (N_sparse axis) and chan_parallel_factor (n_chan axis).
-template <class data_T, class res_T, class hash_T, int N_sparse, int n_chan, int pool_size,
-          int pixel_parallel_factor = N_sparse, int chan_parallel_factor = n_chan>
+// Pool height and width are independent (asymmetric pooling); out-of-range pooled coordinates are
+// zeroed as in the average version.
+template <class data_T, class res_T, class hash_T, int N_sparse, int n_chan, int in_height, int in_width, int pool_height,
+          int pool_width, int pixel_parallel_factor = N_sparse, int chan_parallel_factor = n_chan>
 void sparse_pooling_max(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_feat_out[N_sparse * n_chan],
                         hash_T sparse_arr_hash_in[N_sparse * 2], hash_T sparse_arr_hash_out[N_sparse * 2]) {
+
+    constexpr int out_height = in_height / pool_height;
+    constexpr int out_width = in_width / pool_width;
 
     int hash_tmp[N_sparse * 2];
     #pragma HLS ARRAY_PARTITION variable = hash_tmp type = complete dim = 0
 ComputePooledLoc:
     for (int i = 0; i < N_sparse; i++) {
         #pragma HLS UNROLL
-        hash_tmp[2 * i] = (sparse_arr_hash_in[2 * i] - 1) / pool_size + 1;
-        hash_tmp[2 * i + 1] = (sparse_arr_hash_in[2 * i + 1] - 1) / pool_size + 1;
+        hash_tmp[2 * i] = (sparse_arr_hash_in[2 * i] - 1) / pool_height + 1;
+        hash_tmp[2 * i + 1] = (sparse_arr_hash_in[2 * i + 1] - 1) / pool_width + 1;
     }
 
 HashOutLoop:
@@ -301,6 +327,7 @@ HashOutLoop:
         #pragma HLS UNROLL factor = pixel_parallel_factor
         int h_out = hash_tmp[2 * i_pixel];
         int w_out = hash_tmp[2 * i_pixel + 1];
+        bool valid = (h_out <= out_height) && (w_out <= out_width);
 
         bool is_first = true;
     FirstCheck:
@@ -327,7 +354,7 @@ HashOutLoop:
                     vmax = v;
                 }
             }
-            sparse_arr_feat_out[n_chan * i_pixel + i_chan] = is_first ? (res_T)vmax : (res_T)0;
+            sparse_arr_feat_out[n_chan * i_pixel + i_chan] = (is_first && valid) ? (res_T)vmax : (res_T)0;
         }
         sparse_arr_hash_out[2 * i_pixel] = h_out;
         sparse_arr_hash_out[2 * i_pixel + 1] = w_out;
