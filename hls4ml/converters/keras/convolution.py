@@ -8,6 +8,13 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
+    dilation = keras_layer['config'].get('dilation_rate', [1])[0]
+    if dilation != 1:
+        raise NotImplementedError(
+            f'Layer {layer["name"]}: dilation_rate={dilation} is not supported. '
+            "hls4ml's Conv1D implementation would silently ignore dilation."
+        )
+
     (*_, layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
 
     if layer['class_name'] in ['Conv1D', 'QConv1D']:
