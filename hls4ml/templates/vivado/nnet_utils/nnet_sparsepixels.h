@@ -227,8 +227,7 @@ void sparse_relu(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_
 // the valid output grid (partial window of an odd input dimension under 'valid' pooling) has its
 // features zeroed, matching the dense layer dropping that window; zero-feature pixels are inert in
 // every downstream sparse kernel. The averaging divides by the full pool area as one reciprocal
-// multiply per axis (skipped for a unit axis, whose reciprocal 1.0 the fixed-point type cannot
-// hold); for square pools this reproduces the previous two-multiply arithmetic exactly.
+// multiply per axis, skipped for a unit axis whose reciprocal 1.0 the fixed-point type cannot hold.
 template <class data_T, class res_T, class hash_T, class accum_T, int N_sparse, int n_chan, int in_height, int in_width,
           int pool_height, int pool_width, int pixel_parallel_factor = N_sparse, int chan_parallel_factor = n_chan>
 void sparse_pooling_avg(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T sparse_arr_feat_out[N_sparse * n_chan],
@@ -236,9 +235,8 @@ void sparse_pooling_avg(data_T sparse_arr_feat_in[N_sparse * n_chan], res_T spar
 
     constexpr int out_height = in_height / pool_height;
     constexpr int out_width = in_width / pool_width;
-    // Unsigned reciprocals: 1/2 = 0.5 needs the unsigned [0, 1) range (signed ap_fixed<10,0> tops
-    // out just below 0.5 and would wrap). Truncation at 10 fractional bits matches the previous
-    // signed type for every value below 0.5, so square-pool results are unchanged.
+    // Unsigned reciprocals: 1/2 = 0.5 needs the unsigned [0, 1) range, since a signed
+    // ap_fixed<10, 0> tops out just below 0.5 and would wrap.
     const ap_ufixed<10, 0> pool_h_recip = 1.0 / double(pool_height); // only used when pool_height > 1
     const ap_ufixed<10, 0> pool_w_recip = 1.0 / double(pool_width);  // only used when pool_width > 1
 
