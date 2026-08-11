@@ -824,14 +824,15 @@ def _(layer: SparseActivation):
 @_produce_kif.register
 def _(layer: SparsePooling2D):
     k_in, i_in, f_in = get_input_kifs(layer)[0]
-    # Average pooling divides by pool_size^2, which adds ceil(log2(pool_size^2)) fractional bits
-    # (matching standard Pooling2D). Max pooling just selects an input, so the precision is unchanged.
-    pool_size = layer.attributes['pool_size']
+    # Average pooling divides by the pool area, which adds ceil(log2(pool_height * pool_width))
+    # fractional bits (matching standard Pooling2D). Max pooling just selects an input, so the
+    # precision is unchanged.
+    pool_area = layer.attributes['pool_height'] * layer.attributes['pool_width']
     n_chan = layer.attributes['n_chan']
     if layer.attributes.get('pool_op', 'avg') == 'max':
         extra_f = 0
     else:
-        extra_f = int(np.ceil(np.log2(pool_size * pool_size)))
+        extra_f = int(np.ceil(np.log2(pool_area)))
     k_ch = k_in[:n_chan]
     i_ch = i_in[:n_chan]
     f_ch = f_in[:n_chan] + extra_f
