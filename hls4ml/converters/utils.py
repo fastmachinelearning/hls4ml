@@ -291,6 +291,22 @@ def compute_padding_2d_pytorch(
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
 
 
+def is_depthwise_conv(class_object):
+    """Checks if a given convolutional layer is a depthwise convolution.
+
+    Args:
+        class_object: The convolutional layer to check.
+    Returns:
+        bool: True if the layer is a depthwise convolution, False otherwise.
+    """
+    groups = getattr(class_object, 'groups', 1)
+    return (
+        groups > 1
+        and groups == getattr(class_object, 'in_channels', 1)
+        and groups == getattr(class_object, 'out_channels', 1)
+    )
+
+
 class IsolatedLayerReader:
     def __init__(self, layer):
         self.layer = layer
