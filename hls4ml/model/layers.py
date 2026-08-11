@@ -418,8 +418,8 @@ class Constant(Layer):
 
 class Quant(Layer):  # The QONNX quantization layer
     """
-    This is a QONNX quantization layer. Optimizations should convert it
-    before HLS is produced.
+    This is a QONNX quantization layer. Can also be inserted in direct brevitas parsing.
+    Optimizations should convert it before HLS is produced.
     """
 
     _expected_attributes = [
@@ -495,6 +495,8 @@ class Dense(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        Attribute('input_quantization', value_type=dict, default={}),
+        Attribute('output_quantization', value_type=dict, default={}),
     ]
 
     def initialize(self):
@@ -537,6 +539,8 @@ class Conv1D(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        Attribute('input_quantization', value_type=dict, default={}),
+        Attribute('output_quantization', value_type=dict, default={}),
     ]
 
     def initialize(self):
@@ -642,6 +646,8 @@ class Conv2D(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        Attribute('input_quantization', value_type=dict, default={}),
+        Attribute('output_quantization', value_type=dict, default={}),
     ]
 
     def initialize(self):
@@ -1182,7 +1188,7 @@ class BatchNormalization(Layer):
             scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
             self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         else:
-            self.add_weights_variable(name='scale', var_name='s{index}')
+            self.add_weights_variable(name='scale', var_name='s{index}', quantizer=self.get_attr('scale_quantizer'))
 
         if self.get_attr('bias_data') is None:
             beta = self.get_attr('beta_data')
@@ -1190,7 +1196,7 @@ class BatchNormalization(Layer):
             bias = beta - scale * mean
             self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
         else:
-            self.add_weights_variable(name='bias', var_name='b{index}')
+            self.add_weights_variable(name='bias', var_name='b{index}', quantizer=self.get_attr('bias_quantizer'))
 
 
 # TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
@@ -1465,15 +1471,19 @@ class SimpleRNN(Layer):
             )
 
         # weights
-        self.add_weights()
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
 
         # recurrent weights
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}')
+        self.add_weights_variable(
+            name='recurrent_weight', var_name='wr{index}', quantizer=self.get_attr('recurrent_weight_quantizer')
+        )
 
         # biases
-        self.add_weights_variable(name='bias', var_name='b{index}')
+        self.add_weights_variable(name='bias', var_name='b{index}', quantizer=self.get_attr('bias_quantizer'))
         if 'pytorch' in self.attributes.keys():
-            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
+            self.add_weights_variable(
+                name='recurrent_bias', var_name='br{index}', quantizer=self.get_attr('recurrent_bias_quantizer')
+            )
 
 
 class LSTM(Layer):
@@ -1515,20 +1525,32 @@ class LSTM(Layer):
             )
 
         # weights
-        self.add_weights()
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
 
         # recurrent weights
         recurrent_weight = self.get_attr('recurrent_weight_data')
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+        self.add_weights_variable(
+            name='recurrent_weight',
+            var_name='wr{index}',
+            data=recurrent_weight,
+            quantizer=self.get_attr('recurrent_weight_quantizer'),
+        )
 
         # biases
-        self.add_weights_variable(name='bias', var_name='b{index}')
+        self.add_weights_variable(name='bias', var_name='b{index}', quantizer=self.get_attr('bias_quantizer'))
 
         if 'pytorch' in self.attributes.keys():
-            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
+            self.add_weights_variable(
+                name='recurrent_bias', var_name='br{index}', quantizer=self.get_attr('recurrent_bias_quantizer')
+            )
         else:
             recurrent_bias = np.zeros(recurrent_weight.shape[1])
-            self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+            self.add_weights_variable(
+                name='recurrent_bias',
+                var_name='br{index}',
+                data=recurrent_bias,
+                quantizer=self.get_attr('recurrent_bias_quantizer'),
+            )
 
 
 class GRU(Layer):
@@ -1571,14 +1593,18 @@ class GRU(Layer):
             )
 
         # weights
-        self.add_weights()
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
 
         # recurrent weights
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}')
+        self.add_weights_variable(
+            name='recurrent_weight', var_name='wr{index}', quantizer=self.get_attr('recurrent_weight_quantizer')
+        )
 
         # biases
-        self.add_weights_variable(name='bias', var_name='b{index}')
-        self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
+        self.add_weights_variable(name='bias', var_name='b{index}', quantizer=self.get_attr('bias_quantizer'))
+        self.add_weights_variable(
+            name='recurrent_bias', var_name='br{index}', quantizer=self.get_attr('recurrent_bias_quantizer')
+        )
 
 
 class TimeDistributed(Layer):

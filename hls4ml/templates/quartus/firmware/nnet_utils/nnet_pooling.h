@@ -55,8 +55,11 @@ template <int W, int N> ac_int<W, true> avg(ac_int<W, true> (&x)[N]) {
 }
 
 // Returns the mean value of an array of size N
-// Overload of the above function; using a wider accumulator than the input to avoid overflow
-template <int W, int I, int N> ac_fixed<W, I, true> avg(ac_fixed<W, I, true> (&x)[N]) {
+// Overload of the above function; using a wider accumulator than the input to avoid overflow.
+// The quantization and overflow modes are template parameters so that saturating types, which is what
+// quantized models feed into pooling, also get the wider accumulator. Matching only the default modes
+// would send them to the generic overload above, which accumulates in the input type and saturates.
+template <int W, int I, ac_q_mode Q, ac_o_mode O, int N> ac_fixed<W, I, true, Q, O> avg(ac_fixed<W, I, true, Q, O> (&x)[N]) {
     hls_register ac_fixed<W + ceillog2(N), I + ceillog2(N), true> tmp = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
@@ -69,7 +72,7 @@ template <int W, int I, int N> ac_fixed<W, I, true> avg(ac_fixed<W, I, true> (&x
     tmp /= N;
 
     // Cast back to original type
-    ac_fixed<W, I, true> y = tmp;
+    ac_fixed<W, I, true, Q, O> y = tmp;
     return y;
 }
 
@@ -160,10 +163,12 @@ FiltLoop:
             res[(inp_col / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] =
                 static_cast<res_T>(pool_op<data_T, CONFIG_T::pool_width, CONFIG_T::pool_op>(pool));
 
-            // If the pool op is Average, the zero-padding needs to be removed from the results
+            // If the pool op is Average, the zero-padding needs to be removed from the results.
+            // Computed in accum_t rather than data_T, which for a narrow quantized input cannot represent
+            // the pool width and would saturate to its maximum.
             if (CONFIG_T::pool_op == Average)
                 res[(inp_col / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] *=
-                    (static_cast<data_T>(CONFIG_T::pool_width) / img_overlap);
+                    (static_cast<typename CONFIG_T::accum_t>(CONFIG_T::pool_width) / img_overlap);
         }
     }
 }
@@ -275,11 +280,14 @@ FiltLoop:
                     static_cast<res_T>(
                         pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool));
 
-                // If the pool op is Average, the zero-padding needs to be removed from the results
+                // If the pool op is Average, the zero-padding needs to be removed from the results.
+                // The correction is computed in accum_t rather than data_T: the pool dimensions are small
+                // integers, which a narrow input type (an 8 bit quantized activation, say) cannot represent
+                // and would silently saturate to its maximum.
                 if (CONFIG_T::pool_op == Average)
                     res[(inp_col / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                         (inp_width / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] *=
-                        (static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) /
+                        (static_cast<typename CONFIG_T::accum_t>(CONFIG_T::pool_height * CONFIG_T::pool_width) /
                          img_overlap);
             }
         }

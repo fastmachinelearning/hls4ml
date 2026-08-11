@@ -1,6 +1,10 @@
+import math
+
 import numpy as np
 
 from hls4ml.model import ModelGraph
+from hls4ml.model.quantizers import BrevitasQuantizer
+from hls4ml.model.types import FixedPrecisionType
 from hls4ml.utils.dependency import requires
 
 
@@ -59,6 +63,105 @@ def get_weights_data(data_reader, layer_name, var_name):
         return data[0]
     else:
         return (*data,)
+
+
+def convert_uaq_to_apfixed(bitwidth, scale_factor):
+    """
+    parameters:
+    bitwidth: int
+    scale_factor: float
+    zero_point: float
+
+    return:
+    int_bitwidth: int
+    fract_bitwidth: int
+    """
+    fract_bitwidth = -math.log2(scale_factor)
+    int_bitwidth = bitwidth - fract_bitwidth
+
+    return (fract_bitwidth, int_bitwidth)
+
+
+def _quant_tensor_precision(quant_tensor):
+    """Number of integer and fractional bits of the ap_fixed type that exactly holds a brevitas tensor.
+
+    The integer count includes the sign bit, matching hls4ml's FixedPrecisionType.
+    """
+    width = int(quant_tensor.bit_width)
+    scale = float(quant_tensor.scale.detach())
+    mantissa, _ = np.frexp(scale)
+    if mantissa != 0.5:
+        raise Exception(
+            """Non-power of 2 quantization of weights not supported when injecting brevitas models.
+            Please used QONNX instead."""
+        )
+    fract_bitwidth, int_bitwidth = convert_uaq_to_apfixed(width, scale)
+    return int(int_bitwidth), int(fract_bitwidth), bool(quant_tensor.signed)
+
+
+def brevitas_quant_to_hls(quant_tensors, transpose=False):
+    """Turn one or more brevitas quant tensors into a weight array plus the matching hls4ml quantizer.
+
+    Passing a sequence concatenates the tensors along axis 0, which is how the per-gate LSTM weights combine
+    into the single tensor the HLS code expects. Each tensor carries its own quantizer, so the returned type
+    is widened to whatever exactly represents all of them; it collapses to the common type when the scales
+    agree. Transposing afterwards matches the keras order used in the HLS code, as in parse_rnn_layer.
+    """
+    # brevitas' quant tensors are NamedTuples, so an isinstance check against tuple would happily iterate
+    # over their fields instead of treating a single tensor as one item
+    if hasattr(quant_tensors, 'bit_width'):
+        quant_tensors = [quant_tensors]
+
+    precisions = [_quant_tensor_precision(t) for t in quant_tensors]
+    integer = max(p[0] for p in precisions)
+    fractional = max(p[1] for p in precisions)
+    signed = any(p[2] for p in precisions)
+    width = integer + fractional
+
+    data = np.concatenate([t.detach().value.numpy() for t in quant_tensors], axis=0)
+    if transpose:
+        data = data.transpose()
+
+    quantizer = BrevitasQuantizer(width, FixedPrecisionType(width=width, integer=integer, signed=signed))
+    return data, quantizer
+
+
+# embed quantization information into the layer dictionary for a Quant layer
+# so that this layer can be added to the model
+def addQuantizationParameters(layer, quant_object, quant_type, act=False):
+    if not act:
+        # currently not used, might be use later for non-power-of-2 scales
+        bit_width = int(quant_object.bit_width)
+        signed = quant_object.signed
+        scale = float(quant_object.scale)
+        zeropoint = float(quant_object.zero_point)
+        if signed:
+            narrow = True
+        else:
+            narrow = False
+        rounding_mode = 'ROUND'
+    else:
+        bit_width = int(quant_object.bit_width())
+        signed = quant_object.is_signed
+        scale = float(quant_object.scale())
+        zeropoint = float(quant_object.zero_point())
+        narrow = quant_object.is_narrow_range
+        # trunc quantizers report their rounding mode in lower case, unlike the activation quantizers
+        rounding_mode = quant_object.rounding_mode.upper()
+        if signed is None:
+            # A trunc quantizer inherits signedness from whatever it is fed, so it cannot report it here.
+            # Assume signed, which represents unsigned data correctly at the cost of one bit of range.
+            signed = True
+
+    layer[f'{quant_type}_quantization'] = {
+        'bit_width': bit_width,
+        'signed': signed,
+        'scale': scale,
+        'zeropoint': zeropoint,
+        'narrow': narrow,
+        'rounding_mode': rounding_mode,
+    }
+    return layer
 
 
 # ----------------------Layer handling--------------------- #
@@ -144,7 +247,7 @@ def parse_pytorch_model(config, verbose=True):
     tracer = CustomFXTracer()
     traced_model = tracer.trace(model)
     # Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Sequential']
+    skip_layers = ['Dropout', 'QuantDropout', 'Sequential']
 
     # Define layers with associated Quantizer
     quantizer_layers = [
@@ -212,6 +315,10 @@ def parse_pytorch_model(config, verbose=True):
             if pytorch_class not in supported_layers:
                 raise Exception(f'Unsupported layer {pytorch_class}')
 
+            if 'IOType' in config.keys():
+                if 'QuantUpsampl' in pytorch_class and config['IOType'] == 'io_stream':
+                    raise Exception('Quant upsampling layers currently not supported with io_stream')
+
             if layer_counter != 0:
                 input_shapes = [output_shape]  # In case there are multiple inputs
 
@@ -236,7 +343,7 @@ def parse_pytorch_model(config, verbose=True):
 
             # parse info from class object
             input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
-            if pytorch_class in ['RNN', 'GRU', 'LSTM']:
+            if pytorch_class in ['RNN', 'GRU', 'LSTM', 'QuantRNN', 'QuantLSTM']:
                 input_shapes = []
                 input_names = []
                 for arg in node.args:

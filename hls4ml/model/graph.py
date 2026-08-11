@@ -604,7 +604,9 @@ class ModelGraph(Serializable):
                 next_nodes.append(x)
 
         if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] in prev_node.outputs), None)
+            next_node = next(
+                (x for x in self.graph.values() if x.inputs and set(x.inputs).intersection(prev_node.outputs)), None
+            )
         else:
             if before not in next_nodes:
                 raise Exception(
@@ -617,7 +619,16 @@ class ModelGraph(Serializable):
         if next_node is not None:
             next_node.inputs[input_idx] = node.outputs[0]
         else:
+            # The inserted node takes over as a model output. The previous node must give up the
+            # 'result_t' type name it was given while it was the output, otherwise both nodes carry
+            # the same type name and only one of the two precisions survives into defines.h.
+            for out_name in prev_node.outputs:
+                out_var = prev_node.get_output_variable(output_name=out_name)
+                if out_var is not None and out_var.type.name == 'result_t':
+                    out_var.type.name = f'layer{prev_node.index}_t'
             self.outputs = [node.outputs[0] if name == prev_node.outputs[0] else name for name in self.outputs]
+            for out_name in node.outputs:
+                self.register_output_variable(out_name, node.get_output_variable(output_name=out_name))
 
         new_graph = OrderedDict()
         for k, v in self.graph.items():
@@ -704,7 +715,6 @@ class ModelGraph(Serializable):
             for i, n in enumerate(node.outputs):
                 if n in repl:
                     node.outputs[i] = repl[n]
-
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
     def split_node(self, old_node, new_node1, new_node2):

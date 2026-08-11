@@ -1,7 +1,15 @@
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import addQuantizationParameters, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 
-pooling_layers = ['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d']
+# brevitas' TruncAvgPool2d subclasses torch.nn.AvgPool2d, so all the shape handling below applies unchanged;
+# the only addition is its trunc_quant, which quantizes the pooled result.
+pooling_layers = [
+    'MaxPool1d',
+    'MaxPool2d',
+    'AvgPool1d',
+    'AvgPool2d',
+    'TruncAvgPool2d',
+]
 
 
 @pytorch_handler(*pooling_layers)
@@ -10,13 +18,13 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
 
     layer = {}
 
-    if operation == 'MaxPool1d':
+    if 'MaxPool1d' in operation:
         layer['class_name'] = 'MaxPooling1D'
-    if operation == 'MaxPool2d':
+    if 'MaxPool2d' in operation:
         layer['class_name'] = 'MaxPooling2D'
     if operation == 'AvgPool1d':
         layer['class_name'] = 'AveragePooling1D'
-    if operation == 'AvgPool2d':
+    if operation in ('AvgPool2d', 'TruncAvgPool2d'):
         layer['class_name'] = 'AveragePooling2D'
 
     layer['name'] = layer_name
@@ -139,4 +147,37 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
         elif layer['data_format'] == 'channels_first':
             output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
 
+    # brevitas' trunc_quant exposes the same interface as an activation quantizer, so it becomes a Quant node
+    # on the pooled result
+    if 'Trunc' in operation and class_object.trunc_quant.is_quant_enabled:
+        layer = addQuantizationParameters(layer, class_object.trunc_quant, 'output', act=True)
+
     return layer, output_shape
+
+
+@pytorch_handler('AdaptiveAvgPool2d', 'TruncAdaptiveAvgPool2d')
+def parse_adaptive_pooling_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    """Adaptive average pooling down to a single value per channel, i.e. hls4ml's GlobalAveragePooling2D."""
+    assert operation in ('AdaptiveAvgPool2d', 'TruncAdaptiveAvgPool2d')
+
+    output_size = class_object.output_size
+    if not isinstance(output_size, (list, tuple)):
+        output_size = (output_size, output_size)
+    if tuple(output_size) != (1, 1):
+        raise Exception(
+            f'hls4ml only supports adaptive average pooling down to a single value per channel, '
+            f'got output_size={class_object.output_size}'
+        )
+
+    layer = {}
+    layer['class_name'] = 'GlobalAveragePooling2D'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+    layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
+
+    (*_, layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
+
+    if 'Trunc' in operation and class_object.trunc_quant.is_quant_enabled:
+        layer = addQuantizationParameters(layer, class_object.trunc_quant, 'output', act=True)
+
+    return layer, [input_shapes[0][0], layer['n_filt']]
