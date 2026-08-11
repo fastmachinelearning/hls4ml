@@ -19,5 +19,5 @@ def test_conv1d_rejects_unsupported_dilation():
         },
     }
 
-    with pytest.raises(NotImplementedError, match='dilation_rate=2 is not supported'):
+    with pytest.raises(NotImplementedError, match='dilation_rate > 1 is not supported'):
         parse_conv1d_layer(keras_layer, ['input'], [[None, 64, 1]], data_reader=Mock())
