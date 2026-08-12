@@ -11,18 +11,19 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.fixture()
-def generate_data(input_shape, implementation):
+def generate_data(input_shape, strategy):
     shape = (5000, *input_shape)
     d = np.random.normal(0, 2, shape)
     modify_entries = np.random.randint(0, 1, shape) < 0.05
     d[modify_entries] = d[modify_entries] * 5 + 10
     clip_min = -32
-    clip_max = 0 if implementation == 'latency' else 31
+    clip_max = 0 if strategy == 'latency' else 31
     return np.clip(d, clip_min, clip_max)
 
 
+@pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'XLS'])
-@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax'])
+@pytest.mark.parametrize('strategy', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
@@ -38,22 +39,25 @@ def generate_data(input_shape, implementation):
     ],
 )
 def test_softmax(
-    test_case_id, backend, implementation, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
+    test_case_id, softmax_impl, backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
 ):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
-    if backend == 'Catapult' and implementation == 'argmax':
+    if backend == 'Catapult' and strategy == 'argmax':
         pytest.skip('Catapult backend does not support argmax implementation')
 
     X = generate_data
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+    if softmax_impl == 'activation':
+        model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+    else:
+        model.add(tf.keras.layers.Softmax(input_shape=input_shape, name='softmax'))
     model.compile()
 
     table_type = f'fixed<{table_bits}, RND, SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    cfg['LayerName']['softmax']['implementation'] = implementation
+    cfg['LayerName']['softmax']['implementation'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = table_type
     cfg['LayerName']['softmax']['exp_table_t'] = table_type
     cfg['LayerName']['softmax']['accum_t'] = table_type
@@ -82,14 +86,18 @@ def test_softmax(
     assert acc_hls4ml >= 0.98
 
 
+@pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_softmax_skipped(test_case_id, backend, io_type):
+def test_softmax_skipped(test_case_id, softmax_impl, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     X = np.random.rand(100, 10)
     dense = tf.keras.layers.Dense(14, input_shape=(10,), name='dense')
-    softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
+    if softmax_impl == 'activation':
+        softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
+    else:
+        softmax = tf.keras.layers.Softmax(name='softmax')
     model = tf.keras.models.Sequential([dense, softmax])
     model.compile()
 

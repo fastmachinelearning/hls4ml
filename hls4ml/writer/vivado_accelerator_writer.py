@@ -179,7 +179,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                             + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j].data);\n'
                         )
                         newline += (
-                            indent + indent + indent + 'is_last |= (in[i * input_t::size + j].last == 1)? true : false;\n'
+                            indent + indent + indent + 'is_last |= (in[i * {input_t}::size + j].last == 1)? true : false;\n'
                         )
                     else:
                         newline += (

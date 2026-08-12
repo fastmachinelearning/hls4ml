@@ -27,10 +27,10 @@
 #endif
 // FIXME AP_AUTOCC cannot handle many standard headers, so declare instead of
 // include.
-// #include <complex>
-namespace std {
-template<typename _Tp> class complex;
-}
+#include <complex>
+// namespace std {
+// template<typename _Tp> class complex;
+// }
 
 /*
   TODO: Modernize the code using C++11/C++14

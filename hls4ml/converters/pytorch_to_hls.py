@@ -1,5 +1,6 @@
 import numpy as np
 
+from hls4ml.converters.utils import is_depthwise_conv
 from hls4ml.model import ModelGraph
 from hls4ml.utils.dependency import requires
 
@@ -278,8 +279,8 @@ def parse_pytorch_model(config, verbose=True):
             if 'Conv' in pytorch_class:
                 if not class_object.padding_mode == 'zeros':
                     raise Exception('Padding modes other than "zeros" not implemented yet')
-                if not class_object.groups == 1:
-                    raise Exception('Non-default options for groups not implemented yet')
+                if not (class_object.groups == 1 or is_depthwise_conv(class_object)):
+                    raise Exception('Non-default options for groups outside of depthwise convolution not implemented yet')
 
             # Process the layer
             layer, output_shape = layer_handlers[pytorch_class](
