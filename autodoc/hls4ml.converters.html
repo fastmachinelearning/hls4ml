@@ -1100,6 +1100,23 @@ columns to be added is odd, it will add the extra column to the right/bottom.</p
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.utils.is_depthwise_conv">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">is_depthwise_conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.is_depthwise_conv" title="Link to this definition"></a></dt>
+<dd><p>Checks if a given convolutional layer is a depthwise convolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>class_object</strong> – The convolutional layer to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the layer is a depthwise convolution, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.parse_data_format">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">parse_data_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'channels_last'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.parse_data_format" title="Link to this definition"></a></dt>
 <dd><p>Parses the given input shape according to the specified data format.</p>
