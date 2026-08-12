@@ -1,5 +1,10 @@
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
-from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
+from hls4ml.converters.utils import (
+    compute_padding_1d_pytorch,
+    compute_padding_2d_pytorch,
+    is_depthwise_conv,
+    parse_data_format,
+)
 
 
 @pytorch_handler('Conv1d')
@@ -13,7 +18,18 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv1D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    layer['weight_data'] = class_object.weight.data.numpy()
+    if is_depthwise_conv(class_object):
+        layer['class_name'] = 'DepthwiseConv1D'
+        layer['depthwise_data'] = (
+            class_object.weight.data.numpy().reshape(  # (n_chan, depth_mult, spatial) -> (depth_mult, n_chan, spatial)
+                1,
+                class_object.in_channels,
+                *class_object.kernel_size,
+            )
+        )
+        layer['depth_multiplier'] = 1
+    else:
+        layer['weight_data'] = class_object.weight.data.numpy()
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:
@@ -58,7 +74,18 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    layer['weight_data'] = class_object.weight.data.numpy()
+    if is_depthwise_conv(class_object):
+        layer['class_name'] = 'DepthwiseConv2D'
+        layer['depthwise_data'] = (
+            class_object.weight.data.numpy().reshape(  # (n_chan, depth_mult, spatial) -> (depth_mult, n_chan, spatial)
+                1,
+                class_object.in_channels,
+                *class_object.kernel_size,
+            )
+        )
+        layer['depth_multiplier'] = 1
+    else:
+        layer['weight_data'] = class_object.weight.data.numpy()
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:
