@@ -1,5 +1,7 @@
 import math
 
+import numpy as np
+
 
 def parse_data_format(input_shape, data_format='channels_last'):
     """Parses the given input shape according to the specified data format.
@@ -287,3 +289,31 @@ def compute_padding_2d_pytorch(
             pad_left = pad_width
 
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
+
+
+def is_depthwise_conv(class_object):
+    """Checks if a given convolutional layer is a depthwise convolution.
+
+    Args:
+        class_object: The convolutional layer to check.
+    Returns:
+        bool: True if the layer is a depthwise convolution, False otherwise.
+    """
+    groups = getattr(class_object, 'groups', 1)
+    return (
+        groups > 1
+        and groups == getattr(class_object, 'in_channels', 1)
+        and groups == getattr(class_object, 'out_channels', 1)
+    )
+
+
+class IsolatedLayerReader:
+    def __init__(self, layer):
+        self.layer = layer
+
+    def get_weights_data(self, layer_name, var_name):
+        assert layer_name == self.layer.name, f'Processing {self.layer.name}, but handler tried to read {layer_name}'
+        for w in self.layer.weights:
+            if var_name in w.name:
+                return np.array(w)
+        return None

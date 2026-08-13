@@ -1037,6 +1037,115 @@ class TernaryTanh(Activation):
         super().initialize()
 
 
+class IFNeuron(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+        Attribute('window_size', value_type=int, default=0, configurable=False),
+        Attribute('threshold', value_type=float),
+        Attribute('threshold_mode', value_type=str, default='scalar'),
+        ChoiceAttribute('reset_mechanism', choices=['subtract', 'zero'], default='subtract', configurable=False),
+        TypeAttribute('threshold'),
+        TypeAttribute('membrane'),
+    ]
+
+    def initialize(self):
+        shape = list(self.get_input_variable().shape)
+        shape[-1] = self.attributes['n_out']
+        self.add_output_variable(shape)
+        self._set_type_t('threshold')
+        self._set_type_t('membrane')
+        if self.get_attr('threshold_mode', 'scalar') == 'vector':
+            threshold = self.get_attr('threshold_data')
+            if threshold is None or len(threshold) != self.attributes['n_out']:
+                raise Exception('IFNeuron threshold vector must be present and have length n_out')
+            threshold_t = self.get_attr('threshold_t')
+            self.add_weights_variable(
+                name='threshold_vec',
+                var_name='th{index}',
+                type_name=threshold_t.name,
+                precision=threshold_t.precision,
+                data=threshold,
+            )
+
+
+class LIFNeuron(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+        Attribute('window_size', value_type=int, default=0, configurable=False),
+        Attribute('threshold', value_type=float),
+        Attribute('threshold_mode', value_type=str, default='scalar'),
+        Attribute('beta', value_type=float),
+        Attribute('beta_mode', value_type=str, default='scalar'),
+        ChoiceAttribute('reset_mechanism', choices=['subtract', 'zero'], default='subtract', configurable=False),
+        TypeAttribute('beta'),
+        TypeAttribute('threshold'),
+        TypeAttribute('membrane'),
+    ]
+
+    def initialize(self):
+        shape = list(self.get_input_variable().shape)
+        shape[-1] = self.attributes['n_out']
+        self.add_output_variable(shape)
+        self._set_type_t('beta')
+        self._set_type_t('threshold')
+        self._set_type_t('membrane')
+        if self.get_attr('threshold_mode', 'scalar') == 'vector':
+            threshold = self.get_attr('threshold_data')
+            if threshold is None or len(threshold) != self.attributes['n_out']:
+                raise Exception('LIFNeuron threshold vector must be present and have length n_out')
+            threshold_t = self.get_attr('threshold_t')
+            self.add_weights_variable(
+                name='threshold_vec',
+                var_name='th{index}',
+                type_name=threshold_t.name,
+                precision=threshold_t.precision,
+                data=threshold,
+            )
+        if self.get_attr('beta_mode', 'scalar') == 'vector':
+            beta = self.get_attr('beta_data')
+            if beta is None or len(beta) != self.attributes['n_out']:
+                raise Exception('LIFNeuron beta vector must be present and have length n_out')
+            beta_t = self.get_attr('beta_t')
+            self.add_weights_variable(
+                name='beta_vec',
+                var_name='be{index}',
+                type_name=beta_t.name,
+                precision=beta_t.precision,
+                data=beta,
+            )
+
+
+class SNNReadout(Layer):
+    _expected_attributes = [
+        Attribute('n_classes'),
+        Attribute('window_size', value_type=int, default=1),
+        Attribute('class_threshold', value_type=int, default=1),
+        Attribute('beta', value_type=float, default=1.0),
+        ChoiceAttribute('output_mode', choices=['spike', 'membrane'], default='spike'),
+        ChoiceAttribute(
+            'state_reset_policy',
+            choices=['fixed_window', 'tlast', 'host_pulse', 'never'],
+            default='fixed_window',
+            configurable=False,
+        ),
+        ChoiceAttribute(
+            'decision_rule',
+            choices=['argmax_spike_count', 'first_to_threshold', 'threshold_then_argmax', 'binary_logit', 'argmax_membrane'],
+            default='argmax_membrane',
+            configurable=False,
+        ),
+        TypeAttribute('membrane'),
+    ]
+
+    def initialize(self):
+        shape = list(self.get_input_variable().shape)
+        shape[-1] = 1
+        self.add_output_variable(shape)
+        self._set_type_t('membrane')
+
+
 class BatchNormOnnx(Layer):
     """
     A transient layer formed from ONNX BatchNormalization that gets converted to
@@ -1782,6 +1891,96 @@ class DACombinational(Layer):
         self.add_output_variable(shape)
 
 
+class SparseInputReduce(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('n_chan'),
+        Attribute('n_sparse'),
+        Attribute('threshold', value_type=float),
+        Attribute('hash_bits', value_type=int, default=10),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
+class SparseConv2D(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('kernel_size'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('accum'),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_filt']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+    def add_bias(self, quantizer=None):
+        data = self.get_attr('bias_data', None)
+        precision = None
+        type_name = None
+        if data is None:
+            data = np.zeros(self.attributes['n_filt'])
+            precision = IntegerPrecisionType(width=1, signed=False)
+            type_name = 'bias{index}_t'
+            quantizer = None
+        self.add_weights_variable(
+            name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantizer=quantizer
+        )
+
+
+class SparseActivation(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('activation', value_type=str),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
+class SparsePooling2D(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('pool_height'),
+        Attribute('pool_width'),
+        Attribute('pool_op', value_type=str, default='avg'),  # 'avg' or 'max'
+        TypeAttribute('accum'),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['n_sparse'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
+class SparseFlatten(Layer):
+    _expected_attributes = [
+        Attribute('n_sparse'),
+        Attribute('n_chan'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+    ]
+
+    def initialize(self):
+        shape = [self.attributes['out_height'] * self.attributes['out_width'] * self.attributes['n_chan']]
+        self.add_output_variable(shape)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1793,6 +1992,9 @@ layer_map = {
     'ELU': ParametrizedActivation,
     'PReLU': PReLU,
     'Softmax': Softmax,
+    'IFNeuron': IFNeuron,
+    'LIFNeuron': LIFNeuron,
+    'SNNReadout': SNNReadout,
     'TernaryTanh': TernaryTanh,
     'HardActivation': HardActivation,
     'Reshape': Reshape,
@@ -1860,6 +2062,12 @@ layer_map = {
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
     'DACombinational': DACombinational,
+    # Sparsepixels layers:
+    'SparseInputReduce': SparseInputReduce,
+    'SparseConv2D': SparseConv2D,
+    'SparseActivation': SparseActivation,
+    'SparsePooling2D': SparsePooling2D,
+    'SparseFlatten': SparseFlatten,
 }
 
 

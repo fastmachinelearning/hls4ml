@@ -1,5 +1,6 @@
 import numpy as np
 
+from hls4ml.converters.utils import is_depthwise_conv
 from hls4ml.model import ModelGraph
 from hls4ml.utils.dependency import requires
 
@@ -146,6 +147,18 @@ def parse_pytorch_model(config, verbose=True):
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Sequential']
 
+    # Define layers with associated Quantizer
+    quantizer_layers = [
+        'PQDense',
+        'PQBatchNorm1d',
+        'PQBatchNorm2d',
+        'PQConv1d',
+        'PQConv2d',
+        'PQAvgPool1d',
+        'PQAvgPool2d',
+        'PQActivation',
+    ]
+
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
 
@@ -266,28 +279,51 @@ def parse_pytorch_model(config, verbose=True):
             if 'Conv' in pytorch_class:
                 if not class_object.padding_mode == 'zeros':
                     raise Exception('Padding modes other than "zeros" not implemented yet')
-                if not class_object.groups == 1:
-                    raise Exception('Non-default options for groups not implemented yet')
+                if not (class_object.groups == 1 or is_depthwise_conv(class_object)):
+                    raise Exception('Non-default options for groups outside of depthwise convolution not implemented yet')
 
             # Process the layer
             layer, output_shape = layer_handlers[pytorch_class](
                 pytorch_class, layer_name, input_names, input_shapes, node, class_object, reader, config
             )
 
-            if verbose:
-                print(
-                    'Layer name: {}, layer type: {}, input shape: {}'.format(
-                        layer['name'],
-                        layer['class_name'],
-                        input_shapes,
+            if isinstance(layer, dict):
+                if verbose:
+                    print(
+                        'Layer name: {}, layer type: {}, input shape: {}'.format(
+                            layer['name'],
+                            layer['class_name'],
+                            input_shapes,
+                        )
                     )
-                )
-            layer_list.append(layer)
+                layer_list.append(layer)
 
-            assert output_shape is not None
-            output_shapes[layer['name']] = output_shape
+                assert output_shape is not None
+                output_shapes[layer['name']] = output_shape
 
-            layer_counter += 1
+                layer_counter += 1
+
+            else:
+                for lay, out_shape in zip(layer, output_shape):
+                    if verbose:
+                        print(
+                            'Layer name: {}, layer type: {}, input shape: {}'.format(
+                                lay['name'],
+                                lay['class_name'],
+                                input_shapes,
+                            )
+                        )
+                    layer_list.append(lay)
+
+                    assert out_shape is not None
+                    output_shapes[lay['name']] = out_shape
+
+                    layer_counter += 1
+
+                # Handle layers with output quantizer (assuming only one output)
+                if pytorch_class in quantizer_layers:
+                    if getattr(class_object, 'quantize_output', False) and hasattr(class_object, 'output_quantizer'):
+                        inputs_map[layer_name] = layer[-1]['name']
 
         if node.op == 'placeholder':
             # 'placeholder' indicates an input layer. Multiple inputs are supported
