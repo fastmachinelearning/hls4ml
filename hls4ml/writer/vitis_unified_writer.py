@@ -105,6 +105,13 @@ class VitisUnifiedWriter(VitisWriter):
         return 'dma_data_packet'
 
     @staticmethod
+    def _get_clock_period_ns(model):
+        clock_period_ns = float(model.config.get_config_value('ClockPeriod'))
+        if clock_period_ns <= 0:
+            raise ValueError('ClockPeriod must be positive')
+        return clock_period_ns
+
+    @staticmethod
     def _gen_hex_addr_list(start_addr, stride, size, indent):
         return [f'{indent}{hex(start_addr + index * stride)}' for index in range(size)]
 
@@ -150,6 +157,7 @@ class VitisUnifiedWriter(VitisWriter):
     def _write_hls_kernel_config(self, model, is_csim=False):
         filedir = os.path.dirname(os.path.abspath(__file__))
         suffix = 'csim' if is_csim else 'cosim'
+        clock_period_ns = self._get_clock_period_ns(model)
         with (
             open(os.path.join(filedir, '../templates/vitis_unified/hls_kernel_config.cfg')) as fin,
             open(f'{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg', 'w') as fout,
@@ -158,7 +166,7 @@ class VitisUnifiedWriter(VitisWriter):
                 if '{PART}' in line:
                     line = line.replace('{PART}', model.config.get_config_value('Part'))
                 if '{CLK}' in line:
-                    line = line.replace('{CLK}', model.config.get_config_value('ClockPeriod'))
+                    line = line.replace('{CLK}', f'{clock_period_ns:g}ns')
                 if '{CLK_UC}' in line:
                     line = line.replace('{CLK_UC}', model.config.get_config_value('ClockUncertainty'))
                 if '{OUTDIR}' in line:
@@ -259,13 +267,14 @@ fi
 
     def _write_linker_config(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
+        clock_frequency_hz = round(1_000_000_000 / self._get_clock_period_ns(model))
         with (
             open(os.path.join(filedir, '../templates/vitis_unified/vitis_workspace/system_link/link_system.cfg')) as fin,
             open(f'{self.get_vitis_linker_dir(model)}/link_system.cfg', 'w') as fout,
         ):
             for line in fin.readlines():
                 if '{CLK}' in line:
-                    line = line.replace('{CLK}', str(100_000_000))
+                    line = line.replace('{CLK}', str(clock_frequency_hz))
                 if '{KERNEL_NAME}' in line:
                     line = line.replace('{KERNEL_NAME}', self._get_top_wrap_func_name(model, self._is_axi_master()))
                 if '{GUI_STATUS}' in line:
