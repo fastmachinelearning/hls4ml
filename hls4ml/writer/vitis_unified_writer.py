@@ -407,8 +407,8 @@ fi
                         + '#pragma HLS INTERFACE s_axilite port=batch_size bundle=control\n'
                     )
                 elif '// hls-fpga-machine-learning insert stream decl' in line:
-                    in_depth = model.get_input_variables()[0].pragma[1]
-                    out_depth = model.get_output_variables()[0].pragma[1]
+                    in_depth = self.vitis_unified_config.get_in_stream_buf_size()
+                    out_depth = self.vitis_unified_config.get_out_stream_buf_size()
                     newline = ''
                     newline += indent + f'static hls::stream<{inp.type.name}> model_input_stream("model_input");\n'
                     newline += indent + f'static hls::stream<{out.type.name}> model_output_stream("model_output");\n\n'
