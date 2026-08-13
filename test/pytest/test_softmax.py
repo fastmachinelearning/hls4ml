@@ -21,7 +21,7 @@ def generate_data(input_shape):
 
 @pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
-@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax', 'stable'])
+@pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax', 'legacy'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
