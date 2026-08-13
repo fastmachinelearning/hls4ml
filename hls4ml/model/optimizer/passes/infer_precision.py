@@ -622,7 +622,8 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             exp_w = node.types['exp_table_t'].precision.width
             exp_i = node.types['exp_table_t'].precision.integer
             exp_s = node.types['exp_table_t'].precision.signed
-            ceillog = math.ceil(np.log2(node.get_attr('n_in')))
+            n_slice = node.get_attr('n_in') // node.get_attr('n_inner') // node.get_attr('n_outer')
+            ceillog = math.ceil(np.log2(n_slice))
             node.types['accum_t'].precision = FixedPrecisionType(exp_w + ceillog, exp_i + ceillog, signed=exp_s)
             inferred_types.append('accum_t')
 
