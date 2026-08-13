@@ -11,14 +11,12 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.fixture()
-def generate_data(input_shape, strategy):
+def generate_data(input_shape):
     shape = (5000, *input_shape)
     d = np.random.normal(0, 2, shape)
     modify_entries = np.random.randint(0, 1, shape) < 0.05
     d[modify_entries] = d[modify_entries] * 5 + 10
-    clip_min = -32
-    clip_max = 0 if strategy == 'latency' else 31
-    return np.clip(d, clip_min, clip_max)
+    return np.clip(d, -32, 31)
 
 
 @pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
@@ -43,8 +41,6 @@ def test_softmax(
 ):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
-    if backend == 'Catapult' and strategy == 'argmax':
-        pytest.skip('Catapult backend does not support argmax implementation')
 
     X = generate_data
     model = tf.keras.models.Sequential()
@@ -57,7 +53,10 @@ def test_softmax(
     table_type = f'fixed<{table_bits}, RND, SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    cfg['LayerName']['softmax']['implementation'] = strategy
+    # TODO this line does not work and should be replaced with
+    # cfg['LayerName']['softmax']['implementation'] = strategy
+    # See https://github.com/fastmachinelearning/hls4ml/issues/1443
+    cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = table_type
     cfg['LayerName']['softmax']['exp_table_t'] = table_type
     cfg['LayerName']['softmax']['accum_t'] = table_type
