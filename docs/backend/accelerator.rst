@@ -75,3 +75,156 @@ The ``predict`` method will send the input data to the PL and return the output 
 
     nn = NeuralNetworkOverlay('hls4ml_nn.bit', X_test.shape, y_test.shape)
     y_hw, latency, throughput = nn.predict(X_test, profile=True)
+
+================
+VitisAccelerator
+================
+
+The ``VitsAccelerator`` backend leverages the `Vitis System Design Flow <https://www.xilinx.com/products/design-tools/vitis.html#design-flows>`_ to automate and simplify the creation of an hls4ml project targeting `AMD Alveo PCIe accelerators <https://www.amd.com/en/products/accelerators/alveo.html>`_.
+The Vitis accelerator backend has been tested with the following boards:
+
+* `Alveo u50 <https://www.xilinx.com/products/boards-and-kits/alveo/u50.html>`_
+* `Alveo u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_
+* `Alveo u250 <https://www.xilinx.com/products/boards-and-kits/alveo/u250.html>`_
+* `Versal vck5000 <https://www.xilinx.com/products/boards-and-kits/vck5000.html>`_
+
+Options
+=======
+
+As PCIe accelerators are not suitable for ultra-low latency applications, it is assumed that they are used for high-throughput applications. To accommodate this, the backend supports the following options to optimize the kernel for throughput:
+
+    * ``num_kernel``: Number of kernel instance to implement in the hardware architecture.
+    * ``num_thread``: Number of host threads used to exercise the kernels in the host application.
+    * ``batchsize``: Number of samples to be processed in a single kernel execution.
+
+Additionaly, the backend proposes the following options to customize the implementation:
+
+    * ``board``: The target board, must match one entry in ``supported_boards.json``.
+    * ``clock_period``: The target clock period in ns.
+    * ``hw_quant``: Is arbitrary precision quantization performed in hardware or not. If True, the quantization is performed in hardware and float are used at the kernel interface, otherwise it is performed in software and arbitrary precision types are used at the interface. (Defaults to  ``False``).
+    * ``vivado_directives``: A list of strings to be added under the ``[Vivado]`` section of the generated ``accelerator_card.cfg`` link configuration file. Can be used to add custom directives to the Vivado project.
+
+
+The backend also supports the global option ``io_type``, which also controls how input/output data is transferred between the FPGA memory banks and the model.
+
+**Note:** ``io_stream`` may fail for very large inputs, while ``io_parallel`` can have issues with large convolutional models.
+
+Platform selection
+==================
+
+The Vitis System Design Flow requires a platform (``.xpfm``) describing the hardware and runtime environment.
+The backend always retrieves all installed platforms using ``platforminfo``.
+
+* If a ``platform`` argument is provided, it will try to use that platform.
+* If no ``platform`` is given, the backend will use the ``board`` argument to select a default platform.
+
+
+Kernel wrapper
+==============
+
+To integrate with the Vitis System Design Flow and run on an accelerator, the generated ``hls4ml`` model must be encapsulated and built as a Vitis kernel (``.xo`` file) and linked into a binary file (``.xclbin``) during the implementation step. On the host side, standard C++ code using either `OpenCL <https://xilinx.github.io/XRT/master/html/opencl_extension.html>`_ or `XRT API <https://xilinx.github.io/XRT/master/html/xrt_native_apis.html>`_ can be used to download the ``.xclbin`` file to the accelerator card and use any kernel it contains.
+
+The ``VitisAccelerator`` backend automatically generates a kernel wrapper, an host code example, and a Makefile to build the project.
+
+**Note:** The current implementation of the kernel wrapper code is oriented toward throughput benchmarking and not general inference uses (See :ref:`here<hardware_predict-method>`). It can nonetheless be further customized to fit specific applications.
+
+
+Build workflow
+==============
+
+At the call of the ``build`` method, the following option affect the build process:
+
+    * ``reset``: If True, clears files generated during previous build processes (Equivalent to ``make clean`` in build folder).
+    * ``target``: Can be one of ``hw``, ``hw_emu``, ``sw_emu``, to define which build target to use (Default is ``hw``).
+    * ``debug``: If True, compiles the c++ host code and the HLS in debug mode.
+
+Once the project is generated, it possible to run manually the build steps by using one of the following ``make`` targets in the generated project directory:
+
+    * ``host``: Compiles the host application.
+    * ``hls``: Produces only the kernel's object file.
+    * ``xclbin``: Produces only the kernel's .xclbin file.
+    * ``clean``: Removes all generated files.
+    * ``run``: Run the host application using the .xclbin file and the input data present in ``tb_data/tb_input_features.dat``.
+
+It is also possible to run the full build process by calling ``make`` without any target. Modifications to the ``accelerator_card.cfg`` file can be done manually before running the build process (e.g., to change the clock period, or add addition ``.xo`` kernel to the build).
+
+Hardware Inference workflow
+===========================
+
+The host code can also be used for inference directly in a Python script through the ``hardware_predict`` method :
+
+    * ``target``: Can be one of ``hw``, ``hw_emu``, ``sw_emu``, to define which build target to use (Default is ``hw``).
+    * ``debug``: If True, uses the c++ host code compiled in debug mode.
+    * ``profilingRepeat``: Number of times to repeat the inference for profiling (Default is -1, no repeat).
+    * ``method``: Can be ``file`` or ``lib``, to define how the host code is called (Default is ``lib``).
+      If ``file``, the host code is called as a separate process (input and output are passed through files), if ``lib``, the host code is called as a shared library.
+
+Example
+=======
+
+The following example is a modified version of `hsl4ml example 7 <https://github.com/fastmachinelearning/hls4ml-tutorial/blob/master/part7_deployment.ipynb>`_.
+
+.. code-block:: Python
+
+    import hls4ml
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir='model_3/hls4ml_prj_vitis_accel',
+        backend='VitisAccelerator',
+        board='alveo-u55c',
+        num_kernel=4,
+        num_thread=8,
+        batchsize=8192,
+        hw_quant=False,
+        vivado_directives=["prop=run.impl_1.STEPS.PLACE_DESIGN.ARGS.DIRECTIVE=Explore"]
+    )
+
+    build = True    # Change to False to skip the build step
+    if build:
+        hls_model.compile()
+        hls_model.build()
+
+    y = hls_model.predict_hardware(x) # Limited to batchsize * num_kernel * num_thread for now
+
+C++ Host code
+=============
+
+This section describes the C++ host application provided alongside the Python interface.
+It serves as a low-level example of how to interact with the generated model directly from C++, and is particularly useful for benchmarking and performance evaluation on FPGA hardware.
+
+Once built, the host program can be executed to load the FPGA and run inferences:
+
+.. code-block:: Bash
+
+    ./host
+
+Compared to the Python ``hardware_predict`` method, this C++ host code offers a more efficient way to benchmark execution time on the board.
+
+If the FPGA contains multiple Computing Units (CUs - instances of the model), the program can take advantage of multithreading to access them in parallel.
+It also supports multiple threads per CU to increase throughput by overlapping data transfer, computation, and result retrieval.
+The batch size can be set dynamically for each inference.
+
+The program reads input from an ASCII file containing space-separated values, one line per model input.
+By default, the Python code generates input and reference (golden) output files if test data are provided when creating the model.
+If not, you can generate such files manually, for example using ``numpy.savetxt``.
+
+The generated host code application support the following options to tweak the execution:
+
+ * ``-d``: device BDF to use (can be specified multiple times)
+ * ``-x``: XCLBIN path (default to the relative path of generated XCLBIN)
+ * ``-b``: Batch size (default to value specified during model creation)
+ * ``-i``: input feature file
+ * ``-o``: output feature file
+ * ``-c``: maximum computing units count to use
+ * ``-n``: number of worker threads per CU
+ * ``-r``: Number of repetitions of the input feature file (useful for artificially increasing dataset size during benchmarking)
+ * ``-v``: enable verbose output
+ * ``-h``: print help
+
+By default, all available CUs on all compatible devices will be used, with three worker threads per CU.
+The following command limits execution to a single device, one CU, and one worker thread:
+
+.. code-block:: Bash
+
+    ./host -d 0000:c1:00.1 -c 1 -n 1
