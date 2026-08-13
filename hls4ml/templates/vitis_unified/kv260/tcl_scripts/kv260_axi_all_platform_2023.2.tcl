@@ -49,7 +49,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 set list_projs [get_projects -quiet]
 if { $list_projs eq "" } {
-   create_project project_1 myproj -part xck26-sfvc784-2LV-c
+   create_project project_1 myproj -part xck26-sfvc784-2LV-c -force
    set_property board_part xilinx.com:kv260_som:part0:1.4 [current_project]
    set_property board_connections {som240_1_connector xilinx.com:kv260_carrier:som240_1_connector:1.3} [current_project]
 }

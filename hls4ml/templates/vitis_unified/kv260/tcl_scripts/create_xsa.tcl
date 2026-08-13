@@ -12,7 +12,8 @@
 #   output/kv260_axi_all_platform.xsa
 #
 # Requirements:
-#   Vivado 2023.2 with KV260 board files installed
+#   Vivado 2023.2 or 2025.2 with KV260 board files installed.
+#   For Vivado 2023.2, Zynq Ultrascale+ MPSoC may be required.
 #
 # Note: For a clean run, remove the myproj/ directory first if it
 #       exists from a previous run.
@@ -24,13 +25,27 @@ set xsa_path   [file join $output_dir "kv260_axi_all_platform.xsa"]
 
 file mkdir $output_dir
 
-# Change to script directory so kv260_axi_all_platform.tcl is found
-cd $script_dir
+
+# ----------------------------------------------------------------
+# Vivado Version check
+# ----------------------------------------------------------------
+#if { [string first [version -short] {2023.2 2025.2}]  == -1 } { puts "nope" } else { puts "yes" }
+set supported_versions { 2023.2 2025.2 }
+set current_vivado_version [version -short]
+
+if { [string first $current_vivado_version $supported_versions] == -1 } {
+    puts ""
+    catch {common::send_gid_msg -ssname BD::TCL -id 2042 -severity "ERROR" "Vivado version is not supported with current scripts for creating the project/board design."}
+    return 1
+}
+set filename [format "kv260_axi_all_platform_%s.tcl" $current_vivado_version]
 
 # ----------------------------------------------------------------
 # Build block design (creates project + BD via kv260_axi_all_platform.tcl)
 # ----------------------------------------------------------------
-source [file join $script_dir "kv260_axi_all_platform.tcl"]
+# Change to script directory so kv260_axi_all_platform_<version>.tcl is found
+cd $script_dir
+source [file join $script_dir $filename]
 
 # ----------------------------------------------------------------
 # Create HDL wrapper
