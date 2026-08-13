@@ -59,6 +59,7 @@ class SymbolicExpressionWriter(VivadoWriter):
         """
 
         filedir = Path(__file__).parent
+        compiler = model.config.get_config_value('Compiler')
 
         # project.tcl
         prj_tcl_dst = Path(f'{model.config.get_output_dir()}/project.tcl')
@@ -77,9 +78,18 @@ class SymbolicExpressionWriter(VivadoWriter):
             f.write('set version "{}"\n'.format(model.config.get_config_value('Version', '1.0.0')))
 
         # build_prj.tcl
-        srcpath = (filedir / '../templates/vivado/build_prj.tcl').resolve()
+        if compiler == 'vitis_hls':
+            srcpath = (filedir / '../templates/vitis/build_prj.tcl').resolve()
+        else:
+            srcpath = (filedir / '../templates/vivado/build_prj.tcl').resolve()
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
+
+        # build_opt.tcl — required by the vitis build_prj.tcl, since vitis-run doesn't accept TCL arguments
+        if compiler == 'vitis_hls':
+            srcpath = (filedir / '../templates/vitis/build_opt.tcl').resolve()
+            dstpath = f'{model.config.get_output_dir()}/build_opt.tcl'
+            copyfile(str(srcpath), dstpath)
 
         # vivado_synth.tcl
         srcpath = (filedir / '../templates/vivado/vivado_synth.tcl').resolve()
@@ -87,6 +97,7 @@ class SymbolicExpressionWriter(VivadoWriter):
         copyfile(srcpath, dstpath)
 
         # build_lib.sh
+        # Vitis HLS 2022.2+ ships fpo_v7_1; Vivado HLS ships fpo_v7_0.
         build_lib_src = (filedir / '../templates/symbolic/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
@@ -94,6 +105,10 @@ class SymbolicExpressionWriter(VivadoWriter):
                 line = line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
                 line = line.replace('mylibspath', model.config.get_config_value('HLSLibsPath'))
+
+                if compiler == 'vitis_hls':
+                    line = line.replace('fpo_v7_0', 'fpo_v7_1')
+                    line = line.replace('Ip_floating_point_v7_0', 'Ip_floating_point_v7_1')
 
                 if 'LDFLAGS=' in line and not os.path.exists(model.config.get_config_value('HLSLibsPath')):
                     line = 'LDFLAGS=\n'

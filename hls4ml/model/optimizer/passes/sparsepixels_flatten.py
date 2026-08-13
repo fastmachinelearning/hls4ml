@@ -34,13 +34,13 @@ class ConvertSparseFlatten(OptimizerPass):
         cur = inp
         while cur is not None and not isinstance(cur, SparseInputReduce):
             if isinstance(cur, SparsePooling2D):
-                pool_sizes.append(cur.get_attr('pool_size'))
+                pool_sizes.append((cur.get_attr('pool_height'), cur.get_attr('pool_width')))
             cur = cur.get_input_node()
         if cur is None:
             return False
         height, width = cur.get_attr('in_height'), cur.get_attr('in_width')
-        for pool_size in pool_sizes:
-            height, width = height // pool_size, width // pool_size
+        for pool_h, pool_w in pool_sizes:
+            height, width = height // pool_h, width // pool_w
 
         attrs = {
             'n_sparse': n_sparse,
