@@ -8,8 +8,8 @@ class FixSoftmaxTableSize(OptimizerPass):
     def match(self, node):
         if not isinstance(node, Softmax):
             return False
-        if 'inv_table_size' in node.attributes:
-            return False  # handler generating inv_table_size sets it properly
+        if node.get_attr('table_sizes_checked'):
+            return False  # This optimizer has already run
         return True
 
     def transform(self, model, node: Layer):

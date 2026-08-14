@@ -44,7 +44,6 @@ from hls4ml.model.types import (
     IntegerPrecisionType,
     PrecisionType,
     RoundingMode,
-    SaturationMode,
     StandardFloatPrecisionType,
     UnspecifiedPrecisionType,
     XnorPrecisionType,
@@ -129,16 +128,12 @@ class FPGABackend(Backend):
             ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip),
             TypeAttribute(
                 'exp_table',
-                default=FixedPrecisionType(
-                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
-                ),
+                default=UnspecifiedPrecisionType(),
                 description=descriptions.table_type,
             ),
             TypeAttribute(
                 'inv_table',
-                default=FixedPrecisionType(
-                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
-                ),
+                default=UnspecifiedPrecisionType(),
                 description=descriptions.table_type,
             ),
             TypeAttribute(
